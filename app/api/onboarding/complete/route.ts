@@ -35,6 +35,7 @@ import { seedVaultFromOnboarding } from '@/lib/vault/onboarding-seeder';
 import { runLaunchPipeline } from '@/lib/autopilot/launch-pipeline';
 import { ensureOnboardingOrganization } from '@/lib/onboarding/ensure-org';
 import { migrateOrphanRecordsToOrg } from '@/lib/onboarding/persist';
+import { authGeneral } from '@/lib/middleware/api-rate-limit';
 
 // ============================================================================
 // Validation — body is optional (endpoint is auth-gated, no required fields)
@@ -52,311 +53,315 @@ const completeOnboardingSchema = z
 // ============================================================================
 
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
-
-    // Validate optional body (reject unexpected fields)
-    const rawBody = await request.json().catch(() => ({}));
-    const parsed = completeOnboardingSchema.safeParse(rawBody);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        onboardingComplete: true,
-        activeOrganizationId: true,
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Already completed — idempotent
-    if (user.onboardingComplete) {
-      return NextResponse.json({ success: true, alreadyComplete: true });
-    }
-
-    // Find the user's organisation (created during scan/review). If the
-    // Brand Mirror path skipped review, provision it now so completion
-    // cannot fail with "no organisation".
-    let org = await prisma.organization.findFirst({
-      where: { users: { some: { id: user.id } } },
-      select: { id: true, name: true },
-    });
-
-    if (!org) {
-      const provisioned = await ensureOnboardingOrganization(
-        user.id,
-        user.name || 'My Business'
-      );
-      if (provisioned) {
-        org = await prisma.organization.findUnique({
-          where: { id: provisioned.id },
-          select: { id: true, name: true },
-        });
-      }
-    }
-
-    if (!org) {
-      return NextResponse.json(
-        {
-          error:
-            'No organisation found. Please complete the business analysis first.',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Load pipeline data for persona creation
-    let pipelineData: Record<string, unknown> | null = null;
+  return authGeneral(request, async () => {
     try {
-      const progress = await prisma.onboardingProgress.findFirst({
-        where: { userId: user.id, organizationId: org.id },
-        select: { auditData: true },
-      });
-      pipelineData = progress?.auditData as Record<string, unknown> | null;
-    } catch {
-      // Non-fatal — persona creation will use defaults
-    }
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) return unauthorizedResponse();
 
-    // Run completion in a transaction
-    await prisma.$transaction(async tx => {
-      // Serialise concurrent onboarding completions for THIS org before the
-      // check-then-create below. Without it two callers can both read "no other
-      // owner exists" and both mint an ownership (SYN-1108 race). A per-org
-      // advisory xact lock is held until this transaction commits, so the second
-      // caller blocks, then re-reads and sees the first owner and refuses.
-      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
-
-      // 1b. Attach orphan OAuth connections + BYOK credentials to this org
-      await migrateOrphanRecordsToOrg(user.id, org.id);
-
-      // 1. Create BusinessOwnership if missing — but only for a LEGITIMATE
-      //    first-org bootstrap. A brand-new user who created their own org in
-      //    the review step SHOULD become its owner. However, if the org is
-      //    already owned by someone ELSE, the caller is a member/collaborator of
-      //    an existing tenant: completing onboarding must NOT silently seat them
-      //    as a co-owner (SYN-1108 issuer-rank escalation). In that case we still
-      //    finish onboarding for them, minus any ownership grant.
-      const existingOwnership = await tx.businessOwnership.findFirst({
-        where: { ownerId: user.id, organizationId: org.id },
-      });
-
-      const foreignOwnership = await tx.businessOwnership.findFirst({
-        where: { organizationId: org.id, ownerId: { not: user.id } },
-        select: { id: true },
-      });
-
-      // Owner if they already own this org, or no one else owns it yet (bootstrap).
-      const isLegitimateOwner = Boolean(existingOwnership) || !foreignOwnership;
-
-      if (!existingOwnership && isLegitimateOwner) {
-        await tx.businessOwnership.create({
-          data: {
-            ownerId: user.id,
-            organizationId: org.id,
-            displayName: org.name,
-            isActive: true,
-          },
-        });
-      } else if (foreignOwnership) {
-        logger.warn(
-          '[complete] ownership mint refused — org already owned by another user',
-          { userId: user.id, orgId: org.id }
+      // Validate optional body (reject unexpected fields)
+      const rawBody = await request.json().catch(() => ({}));
+      const parsed = completeOnboardingSchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten() },
+          { status: 400 }
         );
       }
 
-      // 2. Set user's active organisation. Only flag multi-business ownership
-      //    when the user legitimately owns this org.
-      const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
-      await tx.user.update({
-        where: { id: user.id },
-        data: {
-          activeOrganizationId: org.id,
-          organizationId: org.id,
-          isMultiBusinessOwner: isLegitimateOwner,
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
           onboardingComplete: true,
-          apiKeyConfigured,
+          activeOrganizationId: true,
         },
       });
 
-      // 3. Create persona from AI-suggested data
-      const personaName =
-        (pipelineData?.suggestedPersonaName as string) || `${org.name} AI`;
-      const personaTone =
-        (pipelineData?.suggestedTone as string) || 'professional';
-      const keyTopics = (pipelineData?.keyTopics as string[]) || [];
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
 
-      await tx.persona.create({
-        data: {
-          name: personaName,
-          tone: personaTone,
-          description:
-            keyTopics.length > 0 ? `Topics: ${keyTopics.join(', ')}` : null,
-          status: 'active',
-          userId: user.id,
-        },
+      // Already completed — idempotent
+      if (user.onboardingComplete) {
+        return NextResponse.json({ success: true, alreadyComplete: true });
+      }
+
+      // Find the user's organisation (created during scan/review). If the
+      // Brand Mirror path skipped review, provision it now so completion
+      // cannot fail with "no organisation".
+      let org = await prisma.organization.findFirst({
+        where: { users: { some: { id: user.id } } },
+        select: { id: true, name: true },
       });
 
-      // 3.5. Upsert BrandDNA from pipeline audit data
-      const brandColours = pipelineData?.brandColours;
-      const colourRecord =
-        brandColours &&
-        typeof brandColours === 'object' &&
-        !Array.isArray(brandColours)
-          ? (brandColours as {
-              primary?: string;
-              secondary?: string;
-            })
-          : null;
-      const colourList = Array.isArray(brandColours)
-        ? (brandColours as string[])
-        : [];
-      const targetAudience = (pipelineData?.targetAudience as string) || '';
-      const industry = (pipelineData?.industry as string) || '';
-      const sourceUrl =
-        (pipelineData?.url as string) ||
-        (pipelineData?.websiteUrl as string) ||
-        '';
+      if (!org) {
+        const provisioned = await ensureOnboardingOrganization(
+          user.id,
+          user.name || 'My Business'
+        );
+        if (provisioned) {
+          org = await prisma.organization.findUnique({
+            where: { id: provisioned.id },
+            select: { id: true, name: true },
+          });
+        }
+      }
 
-      const brandDnaData = {
-        businessName: org.name,
-        industry,
-        primaryColour: colourRecord?.primary ?? colourList[0] ?? null,
-        secondaryColour: colourRecord?.secondary ?? colourList[1] ?? null,
-        brandVoice: { tone: personaTone },
-        persona: {
-          description: targetAudience || null,
-          values: keyTopics,
-        },
-        sourceUrl,
-      };
+      if (!org) {
+        return NextResponse.json(
+          {
+            error:
+              'No organisation found. Please complete the business analysis first.',
+          },
+          { status: 400 }
+        );
+      }
 
-      await tx.brandDNA.upsert({
-        where: { organizationId: org.id },
-        create: { organizationId: org.id, ...brandDnaData },
-        update: brandDnaData,
-      });
-
-      // 4. Update OnboardingProgress
+      // Load pipeline data for persona creation
+      let pipelineData: Record<string, unknown> | null = null;
       try {
-        await tx.onboardingProgress.updateMany({
+        const progress = await prisma.onboardingProgress.findFirst({
           where: { userId: user.id, organizationId: org.id },
+          select: { auditData: true },
+        });
+        pipelineData = progress?.auditData as Record<string, unknown> | null;
+      } catch {
+        // Non-fatal — persona creation will use defaults
+      }
+
+      // Run completion in a transaction
+      await prisma.$transaction(async tx => {
+        // Serialise concurrent onboarding completions for THIS org before the
+        // check-then-create below. Without it two callers can both read "no other
+        // owner exists" and both mint an ownership (SYN-1108 race). A per-org
+        // advisory xact lock is held until this transaction commits, so the second
+        // caller blocks, then re-reads and sees the first owner and refuses.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${org.id}))`;
+
+        // 1b. Attach orphan OAuth connections + BYOK credentials to this org
+        await migrateOrphanRecordsToOrg(user.id, org.id);
+
+        // 1. Create BusinessOwnership if missing — but only for a LEGITIMATE
+        //    first-org bootstrap. A brand-new user who created their own org in
+        //    the review step SHOULD become its owner. However, if the org is
+        //    already owned by someone ELSE, the caller is a member/collaborator of
+        //    an existing tenant: completing onboarding must NOT silently seat them
+        //    as a co-owner (SYN-1108 issuer-rank escalation). In that case we still
+        //    finish onboarding for them, minus any ownership grant.
+        const existingOwnership = await tx.businessOwnership.findFirst({
+          where: { ownerId: user.id, organizationId: org.id },
+        });
+
+        const foreignOwnership = await tx.businessOwnership.findFirst({
+          where: { organizationId: org.id, ownerId: { not: user.id } },
+          select: { id: true },
+        });
+
+        // Owner if they already own this org, or no one else owns it yet (bootstrap).
+        const isLegitimateOwner =
+          Boolean(existingOwnership) || !foreignOwnership;
+
+        if (!existingOwnership && isLegitimateOwner) {
+          await tx.businessOwnership.create({
+            data: {
+              ownerId: user.id,
+              organizationId: org.id,
+              displayName: org.name,
+              isActive: true,
+            },
+          });
+        } else if (foreignOwnership) {
+          logger.warn(
+            '[complete] ownership mint refused — org already owned by another user',
+            { userId: user.id, orgId: org.id }
+          );
+        }
+
+        // 2. Set user's active organisation. Only flag multi-business ownership
+        //    when the user legitimately owns this org.
+        const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
+        await tx.user.update({
+          where: { id: user.id },
           data: {
-            currentStage: 'complete',
-            status: 'completed',
-            completedAt: new Date(),
+            activeOrganizationId: org.id,
+            organizationId: org.id,
+            isMultiBusinessOwner: isLegitimateOwner,
+            onboardingComplete: true,
+            apiKeyConfigured,
+          },
+        });
+
+        // 3. Create persona from AI-suggested data
+        const personaName =
+          (pipelineData?.suggestedPersonaName as string) || `${org.name} AI`;
+        const personaTone =
+          (pipelineData?.suggestedTone as string) || 'professional';
+        const keyTopics = (pipelineData?.keyTopics as string[]) || [];
+
+        await tx.persona.create({
+          data: {
+            name: personaName,
+            tone: personaTone,
+            description:
+              keyTopics.length > 0 ? `Topics: ${keyTopics.join(', ')}` : null,
+            status: 'active',
+            userId: user.id,
+          },
+        });
+
+        // 3.5. Upsert BrandDNA from pipeline audit data
+        const brandColours = pipelineData?.brandColours;
+        const colourRecord =
+          brandColours &&
+          typeof brandColours === 'object' &&
+          !Array.isArray(brandColours)
+            ? (brandColours as {
+                primary?: string;
+                secondary?: string;
+              })
+            : null;
+        const colourList = Array.isArray(brandColours)
+          ? (brandColours as string[])
+          : [];
+        const targetAudience = (pipelineData?.targetAudience as string) || '';
+        const industry = (pipelineData?.industry as string) || '';
+        const sourceUrl =
+          (pipelineData?.url as string) ||
+          (pipelineData?.websiteUrl as string) ||
+          '';
+
+        const brandDnaData = {
+          businessName: org.name,
+          industry,
+          primaryColour: colourRecord?.primary ?? colourList[0] ?? null,
+          secondaryColour: colourRecord?.secondary ?? colourList[1] ?? null,
+          brandVoice: { tone: personaTone },
+          persona: {
+            description: targetAudience || null,
+            values: keyTopics,
+          },
+          sourceUrl,
+        };
+
+        await tx.brandDNA.upsert({
+          where: { organizationId: org.id },
+          create: { organizationId: org.id, ...brandDnaData },
+          update: brandDnaData,
+        });
+
+        // 4. Update OnboardingProgress
+        try {
+          await tx.onboardingProgress.updateMany({
+            where: { userId: user.id, organizationId: org.id },
+            data: {
+              currentStage: 'complete',
+              status: 'completed',
+              completedAt: new Date(),
+            },
+          });
+        } catch {
+          // Non-fatal
+        }
+      });
+
+      // Fire welcome email (fire-and-forget)
+      try {
+        sendWelcomeSequenceDay0(user.email, user.name ?? undefined);
+      } catch {
+        // Non-fatal
+      }
+
+      // Store email sequence start timestamp
+      try {
+        const currentPrefs = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { preferences: true },
+        });
+        const existingPrefs =
+          currentPrefs?.preferences !== null &&
+          typeof currentPrefs?.preferences === 'object' &&
+          !Array.isArray(currentPrefs?.preferences)
+            ? (currentPrefs.preferences as Record<string, unknown>)
+            : {};
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            preferences: {
+              ...existingPrefs,
+              emailSequenceStartedAt: new Date().toISOString(),
+            },
           },
         });
       } catch {
         // Non-fatal
       }
-    });
 
-    // Fire welcome email (fire-and-forget)
-    try {
-      sendWelcomeSequenceDay0(user.email, user.name ?? undefined);
-    } catch {
-      // Non-fatal
-    }
+      const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
 
-    // Store email sequence start timestamp
-    try {
-      const currentPrefs = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { preferences: true },
+      const newToken = await generateToken({
+        userId: user.id,
+        email: user.email,
+        onboardingComplete: true,
+        apiKeyConfigured,
       });
-      const existingPrefs =
-        currentPrefs?.preferences !== null &&
-        typeof currentPrefs?.preferences === 'object' &&
-        !Array.isArray(currentPrefs?.preferences)
-          ? (currentPrefs.preferences as Record<string, unknown>)
-          : {};
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          preferences: {
-            ...existingPrefs,
-            emailSequenceStartedAt: new Date().toISOString(),
-          },
-        },
+      const response = NextResponse.json({
+        success: true,
+        organizationId: org.id,
       });
-    } catch {
-      // Non-fatal
-    }
 
-    const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
-
-    const newToken = await generateToken({
-      userId: user.id,
-      email: user.email,
-      onboardingComplete: true,
-      apiKeyConfigured,
-    });
-
-    const response = NextResponse.json({
-      success: true,
-      organizationId: org.id,
-    });
-
-    const isProduction = process.env.NODE_ENV === 'production';
-    response.cookies.set('auth-token', newToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    // Seed vault with credentials (non-fatal, best-effort)
-    try {
-      await seedVaultFromOnboarding(user.id, org.id);
-    } catch (vaultErr) {
-      logger.warn('[complete] Vault seeding failed (non-fatal)', {
-        error: vaultErr instanceof Error ? vaultErr.message : String(vaultErr),
+      const isProduction = process.env.NODE_ENV === 'production';
+      response.cookies.set('auth-token', newToken, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
       });
-    }
 
-    // Launch autopilot content pipeline (fire-and-forget)
-    try {
-      runLaunchPipeline({ userId: user.id, organizationId: org.id }).catch(
-        err => {
-          logger.warn('[complete] Autopilot launch failed (non-fatal)', {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
+      // Seed vault with credentials (non-fatal, best-effort)
+      try {
+        await seedVaultFromOnboarding(user.id, org.id);
+      } catch (vaultErr) {
+        logger.warn('[complete] Vault seeding failed (non-fatal)', {
+          error:
+            vaultErr instanceof Error ? vaultErr.message : String(vaultErr),
+        });
+      }
+
+      // Launch autopilot content pipeline (fire-and-forget)
+      try {
+        runLaunchPipeline({ userId: user.id, organizationId: org.id }).catch(
+          err => {
+            logger.warn('[complete] Autopilot launch failed (non-fatal)', {
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        );
+      } catch {
+        // Non-fatal — autopilot will retry via daily cron
+      }
+
+      logger.info('[complete] Onboarding completed', {
+        userId: user.id,
+        orgId: org.id,
+      });
+
+      return response;
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      logger.error(
+        '[complete] Onboarding completion failed',
+        error instanceof Error ? error : undefined,
+        { message: msg }
       );
-    } catch {
-      // Non-fatal — autopilot will retry via daily cron
+      return NextResponse.json(
+        { error: 'Failed to complete onboarding' },
+        { status: 500 }
+      );
     }
-
-    logger.info('[complete] Onboarding completed', {
-      userId: user.id,
-      orgId: org.id,
-    });
-
-    return response;
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    logger.error(
-      '[complete] Onboarding completion failed',
-      error instanceof Error ? error : undefined,
-      { message: msg }
-    );
-    return NextResponse.json(
-      { error: 'Failed to complete onboarding' },
-      { status: 500 }
-    );
-  }
+  });
 }

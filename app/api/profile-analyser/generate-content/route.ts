@@ -18,6 +18,7 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { OpenRouterClient } from '@/lib/ai/openrouter-client';
 import { logger } from '@/lib/logger';
+import { authGeneral } from '@/lib/middleware/api-rate-limit';
 import type { ProfileData, SupportedPlatform } from '../route';
 
 // ---------------------------------------------------------------------------
@@ -26,24 +27,81 @@ import type { ProfileData, SupportedPlatform } from '../route';
 
 const DEFAULT_SLOTS: Record<SupportedPlatform, ScheduleSlot[]> = {
   instagram: [
-    { day: 'Tuesday', time: '9:00 AM – 11:00 AM', rationale: 'Highest mid-week morning engagement on Instagram for most niches.' },
-    { day: 'Wednesday', time: '11:00 AM', rationale: 'Peak mid-week slot — audiences check feeds during lunch breaks.' },
-    { day: 'Thursday', time: '9:00 AM – 11:00 AM', rationale: 'Second highest weekday traffic before the weekend slowdown.' },
+    {
+      day: 'Tuesday',
+      time: '9:00 AM – 11:00 AM',
+      rationale:
+        'Highest mid-week morning engagement on Instagram for most niches.',
+    },
+    {
+      day: 'Wednesday',
+      time: '11:00 AM',
+      rationale:
+        'Peak mid-week slot — audiences check feeds during lunch breaks.',
+    },
+    {
+      day: 'Thursday',
+      time: '9:00 AM – 11:00 AM',
+      rationale: 'Second highest weekday traffic before the weekend slowdown.',
+    },
   ],
   twitter: [
-    { day: 'Monday', time: '8:00 AM – 10:00 AM', rationale: 'Twitter peaks early Monday as users catch up with the week ahead.' },
-    { day: 'Wednesday', time: '9:00 AM', rationale: 'Mid-week sweet spot for maximum impressions and retweets.' },
-    { day: 'Friday', time: '9:00 AM – 12:00 PM', rationale: 'Friday mornings outperform evenings for professional content.' },
+    {
+      day: 'Monday',
+      time: '8:00 AM – 10:00 AM',
+      rationale:
+        'Twitter peaks early Monday as users catch up with the week ahead.',
+    },
+    {
+      day: 'Wednesday',
+      time: '9:00 AM',
+      rationale: 'Mid-week sweet spot for maximum impressions and retweets.',
+    },
+    {
+      day: 'Friday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'Friday mornings outperform evenings for professional content.',
+    },
   ],
   linkedin: [
-    { day: 'Tuesday', time: '9:00 AM – 12:00 PM', rationale: 'LinkedIn professionals are most active Tuesday–Thursday mornings.' },
-    { day: 'Wednesday', time: '9:00 AM – 12:00 PM', rationale: 'Peak engagement day for thought-leadership and career content.' },
-    { day: 'Thursday', time: '9:00 AM – 12:00 PM', rationale: 'Decision-makers check LinkedIn Thursday to wrap the work week.' },
+    {
+      day: 'Tuesday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'LinkedIn professionals are most active Tuesday–Thursday mornings.',
+    },
+    {
+      day: 'Wednesday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'Peak engagement day for thought-leadership and career content.',
+    },
+    {
+      day: 'Thursday',
+      time: '9:00 AM – 12:00 PM',
+      rationale:
+        'Decision-makers check LinkedIn Thursday to wrap the work week.',
+    },
   ],
   tiktok: [
-    { day: 'Tuesday', time: '7:00 PM – 9:00 PM', rationale: 'TikTok evening sessions spike Tuesday when users wind down.' },
-    { day: 'Thursday', time: '7:00 PM – 9:00 PM', rationale: 'Pre-weekend energy drives higher completion rates Thursday evening.' },
-    { day: 'Friday', time: '7:00 PM – 9:00 PM', rationale: 'Weekend mood starts Friday night — entertainment content peaks.' },
+    {
+      day: 'Tuesday',
+      time: '7:00 PM – 9:00 PM',
+      rationale: 'TikTok evening sessions spike Tuesday when users wind down.',
+    },
+    {
+      day: 'Thursday',
+      time: '7:00 PM – 9:00 PM',
+      rationale:
+        'Pre-weekend energy drives higher completion rates Thursday evening.',
+    },
+    {
+      day: 'Friday',
+      time: '7:00 PM – 9:00 PM',
+      rationale:
+        'Weekend mood starts Friday night — entertainment content peaks.',
+    },
   ],
 };
 
@@ -96,7 +154,10 @@ const bodySchema = z.object({
 // ---------------------------------------------------------------------------
 
 function buildSchedulingSlots(profile: ProfileData): ScheduleSlot[] {
-  if (profile.audienceActivityPatterns && profile.audienceActivityPatterns.length > 0) {
+  if (
+    profile.audienceActivityPatterns &&
+    profile.audienceActivityPatterns.length > 0
+  ) {
     // Sort patterns by score descending, take top 3
     const top3 = [...profile.audienceActivityPatterns]
       .sort((a, b) => b.score - a.score)
@@ -190,62 +251,67 @@ Requirements for improvementTips (3–5 tips):
 // ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
-  try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) return unauthorizedResponse();
-
-    const rawBody = await request.json().catch(() => ({}));
-    const parsed = bodySchema.safeParse(rawBody);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    const { profile, topic } = parsed.data;
-    const schedulingSlots = buildSchedulingSlots(profile as ProfileData);
-    const prompt = buildPrompt(profile as ProfileData, topic);
-
-    const ai = new OpenRouterClient();
-    const aiResponse = await ai.complete({
-      model: ai.models.balanced,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.8,
-      max_tokens: 2000,
-    });
-
-    const rawText = aiResponse.choices[0]?.message?.content ?? '';
-
-    // Strip markdown fences if present
-    const jsonText = rawText
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/, '')
-      .trim();
-
-    let aiResult: { posts: GenerateContentResult['posts']; improvementTips: string[] };
+  return authGeneral(request, async () => {
     try {
-      aiResult = JSON.parse(jsonText);
-    } catch {
-      logger.error('Failed to parse AI JSON response', { rawText });
+      const userId = await getUserIdFromRequestOrCookies(request);
+      if (!userId) return unauthorizedResponse();
+
+      const rawBody = await request.json().catch(() => ({}));
+      const parsed = bodySchema.safeParse(rawBody);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: parsed.error.flatten() },
+          { status: 400 }
+        );
+      }
+
+      const { profile, topic } = parsed.data;
+      const schedulingSlots = buildSchedulingSlots(profile as ProfileData);
+      const prompt = buildPrompt(profile as ProfileData, topic);
+
+      const ai = new OpenRouterClient();
+      const aiResponse = await ai.complete({
+        model: ai.models.balanced,
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.8,
+        max_tokens: 2000,
+      });
+
+      const rawText = aiResponse.choices[0]?.message?.content ?? '';
+
+      // Strip markdown fences if present
+      const jsonText = rawText
+        .replace(/^```(?:json)?\s*/i, '')
+        .replace(/\s*```$/, '')
+        .trim();
+
+      let aiResult: {
+        posts: GenerateContentResult['posts'];
+        improvementTips: string[];
+      };
+      try {
+        aiResult = JSON.parse(jsonText);
+      } catch {
+        logger.error('Failed to parse AI JSON response', { rawText });
+        return NextResponse.json(
+          { error: 'AI returned an unexpected format. Please try again.' },
+          { status: 502 }
+        );
+      }
+
+      const result: GenerateContentResult = {
+        posts: aiResult.posts ?? [],
+        schedulingSlots,
+        improvementTips: aiResult.improvementTips ?? [],
+      };
+
+      return NextResponse.json({ success: true, result });
+    } catch (err) {
+      logger.error('Profile analyser generate-content error', { err });
       return NextResponse.json(
-        { error: 'AI returned an unexpected format. Please try again.' },
-        { status: 502 }
+        { error: 'Failed to generate content. Please try again.' },
+        { status: 500 }
       );
     }
-
-    const result: GenerateContentResult = {
-      posts: aiResult.posts ?? [],
-      schedulingSlots,
-      improvementTips: aiResult.improvementTips ?? [],
-    };
-
-    return NextResponse.json({ success: true, result });
-  } catch (err) {
-    logger.error('Profile analyser generate-content error', { err });
-    return NextResponse.json(
-      { error: 'Failed to generate content. Please try again.' },
-      { status: 500 }
-    );
-  }
+  });
 }
