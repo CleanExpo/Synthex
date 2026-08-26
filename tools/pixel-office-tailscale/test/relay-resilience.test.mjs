@@ -36,22 +36,32 @@ test('relay registers before pairing, so a satellite that boots first is still r
     // boot leaves no registry entry, claude-hook.js has no target, no event
     // ever arrives, and the pairing that would have written the entry is never
     // attempted. The machine stays invisible forever.
-    assert.ok(fs.existsSync(RELAY_REGISTRY_FILE), 'registry entry exists with the hub unreachable');
+    assert.ok(
+      fs.existsSync(RELAY_REGISTRY_FILE),
+      'registry entry exists with the hub unreachable'
+    );
     const entry = JSON.parse(fs.readFileSync(RELAY_REGISTRY_FILE, 'utf8'));
     assert.equal(entry.port, 45311);
-    assert.equal(entry.pid, process.pid, 'entry claims OUR pid, satisfying the liveness rule');
-    assert.ok(entry.token.length > 0, 'token is non-empty or the registry validator rejects it');
+    assert.equal(
+      entry.pid,
+      process.pid,
+      'entry claims OUR pid, satisfying the liveness rule'
+    );
+    assert.ok(
+      entry.token.length > 0,
+      'token is non-empty or the registry validator rejects it'
+    );
   }));
 
 test('a hook posted while the hub is down is dropped, not fatal', () =>
-  withRelay(45312, async (relay) => {
+  withRelay(45312, async relay => {
     // Drop this relay's registry entry before posting. Leaving it in place lets
     // the REAL claude-hook.js on the developer's machine discover the test
     // relay and post live events into it, which makes an exact drop count
     // flaky. (It also demonstrates the discovery mechanism works.)
     fs.rmSync(RELAY_REGISTRY_FILE, { force: true });
     let unhandled = null;
-    const onUnhandled = (err) => {
+    const onUnhandled = err => {
       unhandled = err;
     };
     process.on('unhandledRejection', onUnhandled);
@@ -59,16 +69,27 @@ test('a hook posted while the hub is down is dropped, not fatal', () =>
       const res = await fetch('http://127.0.0.1:45312/api/hooks/claude', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ hook_event_name: 'Stop', session_id: 's', cwd: '/tmp/p' }),
+        body: JSON.stringify({
+          hook_event_name: 'Stop',
+          session_id: 's',
+          cwd: '/tmp/p',
+        }),
       });
       // The hook is answered immediately and forwarded in the background, so
       // an unreachable hub must never make Claude Code see a failing hook.
       assert.equal(res.status, 200);
-      await new Promise((r) => setTimeout(r, 1500));
-      assert.equal(unhandled, null, 'no unhandled rejection (this used to kill the relay)');
+      await new Promise(r => setTimeout(r, 1500));
+      assert.equal(
+        unhandled,
+        null,
+        'no unhandled rejection (this used to kill the relay)'
+      );
       assert.equal(relay.stats.dropped, 1, 'the drop is counted');
       assert.equal(relay.stats.forwarded, 0);
-      assert.ok(relay.stats.lastError, 'the reason is recorded for /__relay/health');
+      assert.ok(
+        relay.stats.lastError,
+        'the reason is recorded for /__relay/health'
+      );
     } finally {
       process.off('unhandledRejection', onUnhandled);
     }

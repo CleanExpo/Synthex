@@ -22,8 +22,18 @@ export function servicePaths() {
   if (process.platform === 'darwin') {
     return {
       kind: 'launchd',
-      plist: path.join(os.homedir(), 'Library', 'LaunchAgents', `${LABEL}.plist`),
-      log: path.join(os.homedir(), 'Library', 'Logs', 'pixel-office-tailscale.log'),
+      plist: path.join(
+        os.homedir(),
+        'Library',
+        'LaunchAgents',
+        `${LABEL}.plist`
+      ),
+      log: path.join(
+        os.homedir(),
+        'Library',
+        'Logs',
+        'pixel-office-tailscale.log'
+      ),
     };
   }
   if (process.platform === 'win32') {
@@ -40,7 +50,7 @@ export function servicePaths() {
       'Windows',
       'Start Menu',
       'Programs',
-      'Startup',
+      'Startup'
     );
     return {
       kind: 'startup-folder',
@@ -53,16 +63,28 @@ export function servicePaths() {
   }
   return {
     kind: 'systemd',
-    unit: path.join(os.homedir(), '.config', 'systemd', 'user', 'pixel-office-tailscale.service'),
+    unit: path.join(
+      os.homedir(),
+      '.config',
+      'systemd',
+      'user',
+      'pixel-office-tailscale.service'
+    ),
     log: null,
   };
 }
 
 /** Install autostart for `pixel-office <command>` (normally 'relay' or 'hub'). */
-export function installService({ command, nodeBin = process.execPath, cliPath }) {
+export function installService({
+  command,
+  nodeBin = process.execPath,
+  cliPath,
+}) {
   const paths = servicePaths();
-  if (paths.kind === 'launchd') return installLaunchAgent({ command, nodeBin, cliPath, paths });
-  if (paths.kind === 'startup-folder') return installStartupItem({ command, nodeBin, cliPath, paths });
+  if (paths.kind === 'launchd')
+    return installLaunchAgent({ command, nodeBin, cliPath, paths });
+  if (paths.kind === 'startup-folder')
+    return installStartupItem({ command, nodeBin, cliPath, paths });
   return installSystemdUnit({ command, nodeBin, cliPath, paths });
 }
 
@@ -83,9 +105,13 @@ export function uninstallService() {
     return { removed: paths.shim };
   }
   try {
-    execFileSync('systemctl', ['--user', 'disable', '--now', 'pixel-office-tailscale'], {
-      stdio: 'ignore',
-    });
+    execFileSync(
+      'systemctl',
+      ['--user', 'disable', '--now', 'pixel-office-tailscale'],
+      {
+        stdio: 'ignore',
+      }
+    );
   } catch {
     /* not enabled */
   }
@@ -171,7 +197,11 @@ export function startServiceNow() {
   if (paths.kind === 'launchd') {
     // `launchctl load` already started it; kickstart is the idempotent nudge.
     try {
-      execFileSync('launchctl', ['kickstart', '-k', `gui/${process.getuid()}/${LABEL}`]);
+      execFileSync('launchctl', [
+        'kickstart',
+        '-k',
+        `gui/${process.getuid()}/${LABEL}`,
+      ]);
     } catch {
       /* already running is fine */
     }
@@ -199,6 +229,14 @@ WantedBy=default.target
   fs.mkdirSync(path.dirname(paths.unit), { recursive: true });
   fs.writeFileSync(paths.unit, unit);
   execFileSync('systemctl', ['--user', 'daemon-reload']);
-  execFileSync('systemctl', ['--user', 'enable', '--now', 'pixel-office-tailscale']);
-  return { installed: paths.unit, log: 'journalctl --user -u pixel-office-tailscale' };
+  execFileSync('systemctl', [
+    '--user',
+    'enable',
+    '--now',
+    'pixel-office-tailscale',
+  ]);
+  return {
+    installed: paths.unit,
+    log: 'journalctl --user -u pixel-office-tailscale',
+  };
 }

@@ -25,7 +25,13 @@ function secretsMatch(a, b) {
  * key, and trade it for whatever the CURRENT office token happens to be. A hub
  * restart therefore costs a satellite one failed POST, not a manual re-pair.
  */
-export function startPairServer({ pairKey, pairPort, officePort, machine, onLog }) {
+export function startPairServer({
+  pairKey,
+  pairPort,
+  officePort,
+  machine,
+  onLog,
+}) {
   const log = onLog ?? (() => {});
 
   const server = http.createServer((req, res) => {
@@ -44,7 +50,9 @@ export function startPairServer({ pairKey, pairPort, officePort, machine, onLog 
 
     // Never hand back the relay's own entry: on a machine that is both hub and
     // satellite that would point a satellite at a loop.
-    const office = readLiveServers().find((s) => s.file !== RELAY_REGISTRY_FILENAME);
+    const office = readLiveServers().find(
+      s => s.file !== RELAY_REGISTRY_FILENAME
+    );
     if (!office) {
       log(`pair from ${req.socket.remoteAddress} -> no live office server`);
       res.writeHead(503, { 'content-type': 'application/json' });
@@ -52,7 +60,9 @@ export function startPairServer({ pairKey, pairPort, officePort, machine, onLog 
       return;
     }
 
-    log(`pair OK from ${req.socket.remoteAddress} -> office port ${office.port}`);
+    log(
+      `pair OK from ${req.socket.remoteAddress} -> office port ${office.port}`
+    );
     res.writeHead(200, { 'content-type': 'application/json' });
     res.end(
       JSON.stringify({
@@ -61,7 +71,7 @@ export function startPairServer({ pairKey, pairPort, officePort, machine, onLog 
         machine,
         protocol: office.protocol ?? SERVER_REGISTRY_PROTOCOL_VERSION,
         expectedProtocol: SERVER_REGISTRY_PROTOCOL_VERSION,
-      }),
+      })
     );
   });
 
@@ -114,7 +124,9 @@ export function superviseOffice({ officePort, onLog }) {
     if (!target?.pid) return;
     try {
       if (process.platform === 'win32') {
-        execFileSync('taskkill', ['/PID', String(target.pid), '/T', '/F'], { stdio: 'ignore' });
+        execFileSync('taskkill', ['/PID', String(target.pid), '/T', '/F'], {
+          stdio: 'ignore',
+        });
       } else {
         process.kill(-target.pid, 'SIGKILL');
       }
@@ -125,15 +137,22 @@ export function superviseOffice({ officePort, onLog }) {
 
   function spawnOffice() {
     if (stopping) return;
-    const args = ['--yes', 'pixel-agents', '--host', '0.0.0.0', '--port', String(officePort)];
+    const args = [
+      '--yes',
+      'pixel-agents',
+      '--host',
+      '0.0.0.0',
+      '--port',
+      String(officePort),
+    ];
     child = spawn(process.platform === 'win32' ? 'npx.cmd' : 'npx', args, {
       stdio: ['ignore', 'pipe', 'pipe'],
       shell: process.platform === 'win32',
       // Own process group on POSIX so killTree can signal the whole tree.
       detached: process.platform !== 'win32',
     });
-    child.stdout.on('data', (d) => log(`[office] ${String(d).trimEnd()}`));
-    child.stderr.on('data', (d) => log(`[office] ${String(d).trimEnd()}`));
+    child.stdout.on('data', d => log(`[office] ${String(d).trimEnd()}`));
+    child.stderr.on('data', d => log(`[office] ${String(d).trimEnd()}`));
   }
 
   async function tick() {
@@ -155,7 +174,7 @@ export function superviseOffice({ officePort, onLog }) {
   // Adopt rather than fight: an office already serving this port (a manual
   // `npx pixel-agents`, or the VS Code extension) is the office. Spawning a
   // second one would only lose a race for the port.
-  void healthy().then((up) => {
+  void healthy().then(up => {
     if (up) log(`[office] already serving on ${officePort} - adopting it`);
     else spawnOffice();
   });
@@ -172,6 +191,8 @@ export function superviseOffice({ officePort, onLog }) {
 /** Current hub state, for `pixel-office status`. */
 export function hubStatus() {
   const config = readConfig();
-  const servers = readLiveServers().filter((s) => s.file !== RELAY_REGISTRY_FILENAME);
+  const servers = readLiveServers().filter(
+    s => s.file !== RELAY_REGISTRY_FILENAME
+  );
   return { config, servers, relayFile: RELAY_REGISTRY_FILE };
 }

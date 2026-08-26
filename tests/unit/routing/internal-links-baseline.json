@@ -1,0 +1,30 @@
+{
+  "_comment": "Known unresolvable internal links, frozen 18/08/2026. The guard in internal-links.test.ts fails on anything NEW. Fix a link, then delete its entry here - the test also fails if a listed entry no longer reproduces, so the baseline cannot rot.",
+  "_falsePositiveNote": "Entries marked known-safe are not defects. The scanner reads href= in source, not what renders, so a component that accepts an href prop and deliberately renders no link shows up here. Do not change those routes.",
+  "knownUnresolved": {
+    "/dashboard/seo/hreflang": {
+      "reason": "known-safe: SEOToolCard receives this href but the comingSoon branch (app/dashboard/seo/page.tsx:91) renders a div with a toast, never a Link. No 404 is reachable.",
+      "sites": ["app/dashboard/seo/page.tsx:387"]
+    },
+    "/dashboard/seo/content": {
+      "reason": "known-safe: same comingSoon branch as above. No 404 is reachable.",
+      "sites": ["app/dashboard/seo/page.tsx:394"]
+    },
+    "/docs/getting-started": {
+      "reason": "REAL defect. app/docs/ contains only page.tsx, no subdirectories. Needs a founder decision on whether docs pages get written or the cards point elsewhere.",
+      "sites": ["app/docs/page.tsx:38"]
+    },
+    "/docs/user-guide": {
+      "reason": "REAL defect. Same as above.",
+      "sites": ["app/docs/page.tsx:68"]
+    },
+    "/docs/advanced-features": {
+      "reason": "REAL defect. Nearest existing route is /features.",
+      "sites": ["app/docs/page.tsx:128"]
+    },
+    "/docs/team-collaboration": {
+      "reason": "REAL defect. No existing route covers this.",
+      "sites": ["app/docs/page.tsx:158"]
+    }
+  }
+}

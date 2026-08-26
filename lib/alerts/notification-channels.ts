@@ -58,6 +58,140 @@ import { getLinearClient } from '@/lib/linear/client';
 // TYPES
 // ============================================================================
 
+type EnvReader = Record<string, string | undefined>;
+
+type TelegramCredentialSource = {
+  botTokenEnv: string;
+  chatIdEnv: string;
+  label: string;
+};
+
+const TELEGRAM_CREDENTIAL_SOURCES: TelegramCredentialSource[] = [
+  {
+    botTokenEnv: 'TELEGRAM_BOT_TOKEN',
+    chatIdEnv: 'TELEGRAM_CHAT_ID',
+    label: 'legacy',
+  },
+  {
+    botTokenEnv: 'SYNTHEX_TELEGRAM_BOT_TOKEN',
+    chatIdEnv: 'SYNTHEX_TELEGRAM_CHAT_ID',
+    label: 'synthex',
+  },
+  {
+    botTokenEnv: 'HERMES_TELEGRAM_BOT_TOKEN',
+    chatIdEnv: 'HERMES_TELEGRAM_CHAT_ID',
+    label: 'hermes',
+  },
+];
+
+const TELEGRAM_BOT_TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
+const TELEGRAM_CHAT_ID_REGEX = /^-?\d{8,}$/;
+
+interface TelegramConfigResolution {
+  source: TelegramCredentialSource['label'] | null;
+  valid: boolean;
+  reason: string | null;
+  config?: TelegramConfig['config'];
+}
+
+function readEnvValue(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
+}
+
+function isValidTelegramBotToken(token: string): boolean {
+  return TELEGRAM_BOT_TOKEN_REGEX.test(token);
+}
+
+function isValidTelegramChatId(chatId: string): boolean {
+  return TELEGRAM_CHAT_ID_REGEX.test(chatId);
+}
+
+/**
+ * Resolve Telegram credentials from env using safe fallbacks and strict format checks.
+ *
+ * Why: past incidents have shown valid-looking but broken values (for example,
+ * 11-character placeholders) can pass presence checks and leave alerts silently
+ * "ready" while failing at runtime.
+ */
+export function resolveTelegramChannelConfig(
+  env: EnvReader = process.env
+): TelegramConfigResolution {
+  let firstConfiguredMissingPair: TelegramConfigResolution | undefined;
+  let firstInvalidPair: TelegramConfigResolution | undefined;
+
+  for (const source of TELEGRAM_CREDENTIAL_SOURCES) {
+    const botToken = readEnvValue(env[source.botTokenEnv]);
+    const chatId = readEnvValue(env[source.chatIdEnv]);
+
+    if (!botToken || !chatId) {
+      if (botToken || chatId) {
+        firstConfiguredMissingPair = {
+          source: source.label,
+          valid: false,
+          reason: `${source.label}: telegram credentials are partially configured`,
+        };
+      }
+      continue;
+    }
+
+    if (!isValidTelegramBotToken(botToken)) {
+      if (!firstInvalidPair) {
+        firstInvalidPair = {
+          source: source.label,
+          valid: false,
+          reason: `${source.label}: TELEGRAM_BOT_TOKEN format invalid`,
+        };
+      }
+      continue;
+    }
+
+    if (!isValidTelegramChatId(chatId)) {
+      if (!firstInvalidPair) {
+        firstInvalidPair = {
+          source: source.label,
+          valid: false,
+          reason: `${source.label}: TELEGRAM_CHAT_ID format invalid`,
+        };
+      }
+      continue;
+    }
+
+    return {
+      source: source.label,
+      valid: true,
+      reason: null,
+      config: {
+        botToken,
+        chatId,
+        parseMode: 'MarkdownV2',
+      },
+    };
+  }
+
+  if (firstConfiguredMissingPair) {
+    return firstConfiguredMissingPair;
+  }
+
+  if (firstInvalidPair) {
+    return firstInvalidPair;
+  }
+
+  return {
+    source: null,
+    valid: false,
+    reason: 'TELEGRAM credentials are not configured',
+  };
+}
+
 /** Slack webhook payload structure */
 interface SlackAttachmentField {
   title: string;
@@ -865,20 +999,21 @@ export class AlertManager {
     }
 
     // SYN-910 / HER-1b — Telegram channel.
-    if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-      const telegramConfig: TelegramConfig = {
+    const telegramConfigResolution = resolveTelegramChannelConfig(process.env);
+    if (telegramConfigResolution.valid && telegramConfigResolution.config) {
+      this.channels.push({
         type: NotificationChannel.TELEGRAM,
         enabled: true,
         minSeverity:
           (process.env.ALERT_TELEGRAM_MIN_SEVERITY as AlertSeverity) ||
           AlertSeverity.ERROR,
-        config: {
-          botToken: process.env.TELEGRAM_BOT_TOKEN,
-          chatId: process.env.TELEGRAM_CHAT_ID,
-          parseMode: 'MarkdownV2',
-        },
-      };
-      this.channels.push(telegramConfig);
+        config: telegramConfigResolution.config,
+      });
+    } else if (telegramConfigResolution.source) {
+      logger.warn('[HERMES] Telegram channel disabled due to invalid/missing config', {
+        source: telegramConfigResolution.source,
+        reason: telegramConfigResolution.reason,
+      });
     }
 
     // SYN-910 / HER-1b — Linear channel (uses LINEAR_API_KEY via lib/linear/client.ts).
@@ -1171,21 +1306,20 @@ async function dispatchEscalation(
 
   switch (channel) {
     case NotificationChannel.TELEGRAM: {
-      const botToken = process.env.TELEGRAM_BOT_TOKEN;
-      const chatId = process.env.TELEGRAM_CHAT_ID;
-      if (!botToken || !chatId) {
+      const telegramConfigResolution = resolveTelegramChannelConfig(process.env);
+
+      if (!telegramConfigResolution.valid || !telegramConfigResolution.config) {
         return {
           channel,
           success: false,
-          error: 'TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured',
+          error:
+            telegramConfigResolution.reason ||
+            'Telegram credentials are not configured',
           timestamp: new Date(),
         };
       }
-      return sendTelegramAlert(alert, {
-        botToken,
-        chatId,
-        parseMode: 'MarkdownV2',
-      });
+
+      return sendTelegramAlert(alert, telegramConfigResolution.config);
     }
     case NotificationChannel.LINEAR: {
       const teamId = process.env.HERMES_LINEAR_TEAM_ID;

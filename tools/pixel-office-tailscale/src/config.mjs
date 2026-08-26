@@ -2,7 +2,12 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 
-import { CONFIG_PATH, DEFAULT_OFFICE_PORT, DEFAULT_PAIR_PORT, DEFAULT_RELAY_PORT } from './constants.mjs';
+import {
+  CONFIG_PATH,
+  DEFAULT_OFFICE_PORT,
+  DEFAULT_PAIR_PORT,
+  DEFAULT_RELAY_PORT,
+} from './constants.mjs';
 
 /**
  * Config shape (~/.pixel-office-tailscale.json):
@@ -30,7 +35,9 @@ export function readConfig() {
 export function writeConfig(config) {
   // 0600: the pair key is a credential. On Windows the mode is advisory, but
   // setting it costs nothing and is correct everywhere else.
-  fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`, { mode: 0o600 });
+  fs.writeFileSync(CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`, {
+    mode: 0o600,
+  });
   return CONFIG_PATH;
 }
 

@@ -1,7 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { SERVERS_REGISTRY_DIR, SERVER_REGISTRY_PROTOCOL_VERSION } from './constants.mjs';
+import {
+  SERVERS_REGISTRY_DIR,
+  SERVER_REGISTRY_PROTOCOL_VERSION,
+} from './constants.mjs';
 
 /** True if a process with this PID is alive on THIS machine. */
 export function isProcessAlive(pid) {
@@ -25,14 +28,18 @@ export function isProcessAlive(pid) {
 export function readLiveServers() {
   let files;
   try {
-    files = fs.readdirSync(SERVERS_REGISTRY_DIR).filter((f) => f.endsWith('.json'));
+    files = fs
+      .readdirSync(SERVERS_REGISTRY_DIR)
+      .filter(f => f.endsWith('.json'));
   } catch {
     return [];
   }
   const live = [];
   for (const file of files) {
     try {
-      const entry = JSON.parse(fs.readFileSync(path.join(SERVERS_REGISTRY_DIR, file), 'utf8'));
+      const entry = JSON.parse(
+        fs.readFileSync(path.join(SERVERS_REGISTRY_DIR, file), 'utf8')
+      );
       if (!isValidEntry(entry)) continue;
       if (!isProcessAlive(entry.pid)) continue;
       live.push({ ...entry, file });

@@ -1,0 +1,54 @@
+{
+  "name": "@unite-group/control-module",
+  "version": "0.1.0",
+  "description": "Spec-driven Command Centre control module (ontology, intake, routing, gates, qa, generation, hermes, research) extracted from Synthex for cross-repo reuse. Persistence is host-injected via createCommandPacketService(prisma).",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./hermes/hermes-handoff.service": {
+      "types": "./dist/hermes/hermes-handoff.service.d.ts",
+      "import": "./dist/hermes/hermes-handoff.service.js",
+      "require": "./dist/hermes/hermes-handoff.service.cjs"
+    },
+    "./intake/command-packet.service": {
+      "types": "./dist/intake/command-packet.service.d.ts",
+      "import": "./dist/intake/command-packet.service.js",
+      "require": "./dist/intake/command-packet.service.cjs"
+    },
+    "./intake/board-input.schema": {
+      "types": "./dist/intake/board-input.schema.d.ts",
+      "import": "./dist/intake/board-input.schema.js",
+      "require": "./dist/intake/board-input.schema.cjs"
+    },
+    "./ontology/command-ontology.schema": {
+      "types": "./dist/ontology/command-ontology.schema.d.ts",
+      "import": "./dist/ontology/command-ontology.schema.js",
+      "require": "./dist/ontology/command-ontology.schema.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "prepare": "tsup",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "5.9.3"
+  }
+}

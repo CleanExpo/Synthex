@@ -1,4 +1,4 @@
-# Post-Compact Verification Hook
+﻿# Post-Compact Verification Hook
 # Fires AFTER context compaction to verify critical state was preserved.
 # Companion to pre-compact-save.ps1 which saves state BEFORE compaction.
 

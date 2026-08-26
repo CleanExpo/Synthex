@@ -39,7 +39,10 @@ export function tailnetNodes() {
   if (!bin) return { ok: false, error: 'tailscale CLI not found', nodes: [] };
   let raw;
   try {
-    raw = execFileSync(bin, ['status', '--json'], { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+    raw = execFileSync(bin, ['status', '--json'], {
+      encoding: 'utf8',
+      maxBuffer: 8 * 1024 * 1024,
+    });
   } catch (err) {
     return { ok: false, error: err.message, nodes: [] };
   }
@@ -47,7 +50,11 @@ export function tailnetNodes() {
   try {
     data = JSON.parse(raw);
   } catch (err) {
-    return { ok: false, error: `unparseable tailscale status: ${err.message}`, nodes: [] };
+    return {
+      ok: false,
+      error: `unparseable tailscale status: ${err.message}`,
+      nodes: [],
+    };
   }
 
   const nodes = [];
@@ -79,10 +86,13 @@ function toNode(entry, isSelf) {
   return {
     name: entry.HostName ?? '',
     dnsName: (entry.DNSName ?? '').replace(/\.$/, ''),
-    ip: (entry.TailscaleIPs ?? []).find((a) => a.includes('.')) ?? '',
+    ip: (entry.TailscaleIPs ?? []).find(a => a.includes('.')) ?? '',
     os: entry.OS ?? '',
     online: isSelf ? true : Boolean(entry.Online),
-    lastSeen: entry.LastSeen && !entry.LastSeen.startsWith('0001') ? entry.LastSeen : null,
+    lastSeen:
+      entry.LastSeen && !entry.LastSeen.startsWith('0001')
+        ? entry.LastSeen
+        : null,
     self: isSelf,
   };
 }

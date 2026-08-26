@@ -4,9 +4,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMissionOrg } from '@/lib/mission-control/api-auth';
-import {
-  getLastRepoFullName,
-} from '@/lib/mission-control/mission-store';
+import { getLastRepoFullName } from '@/lib/mission-control/mission-store';
 import {
   isGitHubConfigured,
   listAccessibleRepos,

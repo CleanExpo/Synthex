@@ -8,10 +8,7 @@ import { z } from 'zod';
 import { DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { requireMissionOrg } from '@/lib/mission-control/api-auth';
 import { createLinearIssuesFromDrafts } from '@/lib/mission-control/linear-projects';
-import {
-  getMission,
-  updateMission,
-} from '@/lib/mission-control/mission-store';
+import { getMission, updateMission } from '@/lib/mission-control/mission-store';
 import type { MissionDraftTicket } from '@/lib/mission-control/types';
 
 const DraftPatchSchema = z.object({
@@ -64,10 +61,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existing = await getMission(
-    auth.organizationId,
-    parsed.data.missionId
-  );
+  const existing = await getMission(auth.organizationId, parsed.data.missionId);
   if (!existing) {
     return NextResponse.json({ error: 'Mission not found' }, { status: 404 });
   }
@@ -96,8 +90,7 @@ export async function POST(request: NextRequest) {
         ...cur,
         title: patch.title ?? cur.title,
         description: patch.description ?? cur.description,
-        acceptanceCriteria:
-          patch.acceptanceCriteria ?? cur.acceptanceCriteria,
+        acceptanceCriteria: patch.acceptanceCriteria ?? cur.acceptanceCriteria,
         technicalNotes: patch.technicalNotes ?? cur.technicalNotes,
         suggestedFiles: patch.suggestedFiles ?? cur.suggestedFiles,
         estimateHours: patch.estimateHours ?? cur.estimateHours,

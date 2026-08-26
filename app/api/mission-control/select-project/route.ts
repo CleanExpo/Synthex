@@ -7,10 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { requireMissionOrg } from '@/lib/mission-control/api-auth';
-import {
-  getMission,
-  updateMission,
-} from '@/lib/mission-control/mission-store';
+import { getMission, updateMission } from '@/lib/mission-control/mission-store';
 import { listLinearProjects } from '@/lib/mission-control/linear-projects';
 
 const Schema = z.object({
@@ -40,10 +37,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existing = await getMission(
-    auth.organizationId,
-    parsed.data.missionId
-  );
+  const existing = await getMission(auth.organizationId, parsed.data.missionId);
   if (!existing) {
     return NextResponse.json({ error: 'Mission not found' }, { status: 404 });
   }

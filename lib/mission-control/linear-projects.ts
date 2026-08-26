@@ -80,7 +80,8 @@ export async function resolveDefaultTeamId(): Promise<string> {
       }
     }
   `);
-  const team = data.teams.nodes.find(t => t.key === 'SYN') ?? data.teams.nodes[0];
+  const team =
+    data.teams.nodes.find(t => t.key === 'SYN') ?? data.teams.nodes[0];
   if (!team) {
     throw new Error('LINEAR_NO_TEAM');
   }
@@ -134,7 +135,10 @@ export async function createLinearProject(input: {
   };
 }
 
-function formatIssueDescription(ticket: MissionDraftTicket, goal: string): string {
+function formatIssueDescription(
+  ticket: MissionDraftTicket,
+  goal: string
+): string {
   const ac =
     ticket.acceptanceCriteria.length > 0
       ? ticket.acceptanceCriteria.map(c => `- [ ] ${c}`).join('\n')
@@ -160,9 +164,7 @@ function formatIssueDescription(ticket: MissionDraftTicket, goal: string): strin
     `## Suggested files / areas`,
     files,
     '',
-    ticket.estimateHours
-      ? `**Estimate:** ~${ticket.estimateHours}h`
-      : '',
+    ticket.estimateHours ? `**Estimate:** ~${ticket.estimateHours}h` : '',
     '',
     `_Created via Synthex Mission Control_`,
   ]

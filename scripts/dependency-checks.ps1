@@ -1,4 +1,4 @@
-# Synthex Dependency Verification Functions (PowerShell)
+﻿# Synthex Dependency Verification Functions (PowerShell)
 # Reusable functions for checking npm dependencies on Windows
 # Dot-source this file: . .\scripts\dependency-checks.ps1
 # Adapted from NodeJS-Starter-V1 for Synthex (npm, single-package workspace, Windows 11)

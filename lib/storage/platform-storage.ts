@@ -3,6 +3,8 @@ import path from 'node:path';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+// A one-hour podcast at 192 kbps is ~86 MB, so audio cap matches video.
+const MAX_AUDIO_SIZE = 100 * 1024 * 1024;
 
 const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
@@ -11,11 +13,47 @@ const ALLOWED_IMAGE_TYPES = [
   'image/webp',
 ] as const;
 
-const ALLOWED_VIDEO_TYPES = ['video/mp4'] as const;
-const ALLOWED_TYPES: readonly string[] = [
-  ...ALLOWED_IMAGE_TYPES,
-  ...ALLOWED_VIDEO_TYPES,
-];
+// `video/quicktime` is what an iPhone records.
+// `video/webm` is the standard browser recording format.
+const ALLOWED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/quicktime',
+  'video/webm',
+] as const;
+
+// `audio/x-wav` included alongside `audio/wav` — browsers disagree on
+// which MIME type they report for the same .wav file.
+const ALLOWED_AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/mp4',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/webm',
+  'audio/aac',
+  'audio/ogg',
+  'audio/flac',
+] as const;
+
+/** A broad kind of media — used to pick both the MIME allowlist and size cap. */
+export type MediaCategory = 'image' | 'video' | 'audio';
+
+const TYPES_BY_CATEGORY: Record<MediaCategory, readonly string[]> = {
+  image: ALLOWED_IMAGE_TYPES,
+  video: ALLOWED_VIDEO_TYPES,
+  audio: ALLOWED_AUDIO_TYPES,
+};
+
+const SIZE_BY_CATEGORY: Record<MediaCategory, number> = {
+  image: MAX_IMAGE_SIZE,
+  video: MAX_VIDEO_SIZE,
+  audio: MAX_AUDIO_SIZE,
+};
+
+const SIZE_LABEL_BY_CATEGORY: Record<MediaCategory, string> = {
+  image: '10 MB',
+  video: '100 MB',
+  audio: '100 MB',
+};
 
 export interface UploadResult {
   url: string;
@@ -24,21 +62,33 @@ export interface UploadResult {
   mimeType: string;
 }
 
-export function validateFile(file: {
-  size: number;
-  type: string;
-}): string | null {
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return `Unsupported file type: ${file.type}. Allowed: ${ALLOWED_TYPES.join(', ')}`;
+/**
+ * Validate a file against the allowed types and size caps.
+ *
+ * @param file - File metadata to validate.
+ * @param categories - Which media categories to allow. Defaults to images +
+ *   video (the conservative public-facing policy). Pass `['image','video','audio']`
+ *   for authenticated media-library uploads.
+ * @returns An error string if invalid, or null if the file is acceptable.
+ */
+export function validateFile(
+  file: { size: number; type: string },
+  categories: MediaCategory[] = ['image', 'video']
+): string | null {
+  const allowed = categories.flatMap(c => [...TYPES_BY_CATEGORY[c]]);
+
+  if (!allowed.includes(file.type)) {
+    return `Unsupported file type: ${file.type}. Allowed: ${allowed.join(', ')}`;
   }
 
-  const isVideo = (ALLOWED_VIDEO_TYPES as readonly string[]).includes(
-    file.type
-  );
-  const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+  const category = categories.find(c =>
+    (TYPES_BY_CATEGORY[c] as readonly string[]).includes(file.type)
+  )!;
+  const maxSize = SIZE_BY_CATEGORY[category];
+  const sizeLabel = SIZE_LABEL_BY_CATEGORY[category];
 
   if (file.size > maxSize) {
-    return `File too large. Maximum size is ${isVideo ? '100 MB' : '10 MB'}.`;
+    return `File too large. Maximum size is ${sizeLabel}.`;
   }
 
   return null;

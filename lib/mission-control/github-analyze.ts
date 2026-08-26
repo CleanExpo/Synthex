@@ -45,7 +45,9 @@ export function isGitHubConfigured(): boolean {
   return Boolean(githubToken());
 }
 
-export async function listAccessibleRepos(limit = 30): Promise<
+export async function listAccessibleRepos(
+  limit = 30
+): Promise<
   Array<{ fullName: string; description: string | null; private: boolean }>
 > {
   const data = await ghFetch<
@@ -54,7 +56,9 @@ export async function listAccessibleRepos(limit = 30): Promise<
       description: string | null;
       private: boolean;
     }>
-  >(`/user/repos?per_page=${limit}&sort=updated&affiliation=owner,collaborator,organization_member`);
+  >(
+    `/user/repos?per_page=${limit}&sort=updated&affiliation=owner,collaborator,organization_member`
+  );
   return data.map(r => ({
     fullName: r.full_name,
     description: r.description,

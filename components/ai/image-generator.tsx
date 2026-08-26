@@ -623,7 +623,7 @@ export function ImageGenerator({
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
               <p className="text-sm text-amber-200">{error}</p>
               <Link
-                href="/reference-library"
+                href="/dashboard/reference-library"
                 className="inline-block text-xs font-medium text-amber-300 underline underline-offset-2 hover:text-amber-200"
               >
                 Add real photos to the reference library

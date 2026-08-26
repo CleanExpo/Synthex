@@ -65,6 +65,12 @@ export interface ReferenceSubjectSummary {
   rights: string;
   vendor?: string;
   rightsBasis?: string;
+  /**
+   * Public path to the subject's first image, for showing a thumbnail. Same
+   * `/reference-library/{industry}/{file}` form the resolver returns. Absent
+   * when the subject has no images.
+   */
+  previewImage?: string;
 }
 export interface ReferenceSetSummary {
   industry: string;
@@ -109,6 +115,9 @@ export function listFromManifest(m: Manifest): ReferenceSetSummary[] {
       rights: s.rights ?? 'unknown',
       vendor: s.provenance?.vendorRaw,
       rightsBasis: s.provenance?.rightsBasis,
+      previewImage: s.images?.[0]
+        ? `/reference-library/${industry}/${s.images[0].file}`
+        : undefined,
     })),
   }));
 }

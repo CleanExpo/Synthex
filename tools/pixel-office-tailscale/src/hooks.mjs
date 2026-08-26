@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { CLAUDE_HOOK_EVENTS, CLAUDE_SETTINGS_PATH, HOOK_SCRIPT_PATH } from './constants.mjs';
+import {
+  CLAUDE_HOOK_EVENTS,
+  CLAUDE_SETTINGS_PATH,
+  HOOK_SCRIPT_PATH,
+} from './constants.mjs';
 
 /**
  * Install the pixel-agents Claude Code hooks on a satellite machine.
@@ -26,13 +30,14 @@ export function installHooks({
   // that machine -- the alternative is starting an office there just to make it
   // drop the file, which then also has to be consented to and torn down.
   if (sourceScript) {
-    if (!fs.existsSync(sourceScript)) throw new Error(`no hook script at ${sourceScript}`);
+    if (!fs.existsSync(sourceScript))
+      throw new Error(`no hook script at ${sourceScript}`);
     fs.mkdirSync(path.dirname(scriptPath), { recursive: true });
     fs.copyFileSync(sourceScript, scriptPath);
   }
   if (!fs.existsSync(scriptPath)) {
     throw new Error(
-      `hook script missing at ${scriptPath}. Claude Code would spawn a dead node process for every event, which is worse than no hooks. Copy claude-hook.js there first.`,
+      `hook script missing at ${scriptPath}. Claude Code would spawn a dead node process for every event, which is worse than no hooks. Copy claude-hook.js there first.`
     );
   }
 
@@ -45,11 +50,14 @@ export function installHooks({
   let alreadyPresent = 0;
   for (const event of CLAUDE_HOOK_EVENTS) {
     const entries = hooks[event] ?? (hooks[event] = []);
-    if (entries.some((e) => (e.hooks ?? []).some((h) => h.command === command))) {
+    if (entries.some(e => (e.hooks ?? []).some(h => h.command === command))) {
       alreadyPresent += 1;
       continue;
     }
-    entries.push({ matcher: '', hooks: [{ type: 'command', command, timeout: 5 }] });
+    entries.push({
+      matcher: '',
+      hooks: [{ type: 'command', command, timeout: 5 }],
+    });
     added += 1;
   }
 
@@ -58,7 +66,10 @@ export function installHooks({
 }
 
 /** Remove only our own commands, leaving every third-party hook untouched. */
-export function uninstallHooks({ settingsPath = CLAUDE_SETTINGS_PATH, scriptPath = HOOK_SCRIPT_PATH } = {}) {
+export function uninstallHooks({
+  settingsPath = CLAUDE_SETTINGS_PATH,
+  scriptPath = HOOK_SCRIPT_PATH,
+} = {}) {
   const settings = readSettings(settingsPath);
   const command = `node "${scriptPath}"`;
   const hooks = settings.hooks ?? {};
@@ -69,7 +80,7 @@ export function uninstallHooks({ settingsPath = CLAUDE_SETTINGS_PATH, scriptPath
     if (!Array.isArray(entries)) continue;
     const kept = [];
     for (const entry of entries) {
-      const inner = (entry.hooks ?? []).filter((h) => h.command !== command);
+      const inner = (entry.hooks ?? []).filter(h => h.command !== command);
       if (inner.length !== (entry.hooks ?? []).length) removed += 1;
       if (inner.length > 0) kept.push({ ...entry, hooks: inner });
     }
@@ -81,12 +92,17 @@ export function uninstallHooks({ settingsPath = CLAUDE_SETTINGS_PATH, scriptPath
   return { removed, settingsPath };
 }
 
-export function hooksInstalled({ settingsPath = CLAUDE_SETTINGS_PATH, scriptPath = HOOK_SCRIPT_PATH } = {}) {
+export function hooksInstalled({
+  settingsPath = CLAUDE_SETTINGS_PATH,
+  scriptPath = HOOK_SCRIPT_PATH,
+} = {}) {
   const settings = readSettings(settingsPath);
   const command = `node "${scriptPath}"`;
   const hooks = settings.hooks ?? {};
-  return CLAUDE_HOOK_EVENTS.filter((event) =>
-    (hooks[event] ?? []).some((e) => (e.hooks ?? []).some((h) => h.command === command)),
+  return CLAUDE_HOOK_EVENTS.filter(event =>
+    (hooks[event] ?? []).some(e =>
+      (e.hooks ?? []).some(h => h.command === command)
+    )
   );
 }
 

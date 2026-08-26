@@ -2,9 +2,7 @@
  * Mission Control gate tests — project required, approval required, coming soon locked.
  */
 
-import {
-  draftTicketsFromGoal,
-} from '@/lib/mission-control/draft-tickets';
+import { draftTicketsFromGoal } from '@/lib/mission-control/draft-tickets';
 import { COMING_SOON_STAGES } from '@/lib/mission-control/types';
 
 describe('mission-control draft gates', () => {
@@ -34,7 +32,10 @@ describe('mission-control draft gates', () => {
 describe('mission-control approve schema intent', () => {
   it('documents that approve must be literal true (API contract)', () => {
     // Mirrors approve-tickets route: approve: z.literal(true)
-    const body = { approve: true as const, missionId: '00000000-0000-0000-0000-000000000001' };
+    const body = {
+      approve: true as const,
+      missionId: '00000000-0000-0000-0000-000000000001',
+    };
     expect(body.approve).toBe(true);
     expect(body.approve === true).toBe(true);
     // falsy / missing must not pass a literal(true) gate

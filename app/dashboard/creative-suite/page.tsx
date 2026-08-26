@@ -9,6 +9,9 @@ import {
   Calendar,
   BarChart3,
   Search,
+  Image as ImageIcon,
+  Camera,
+  Wand2,
 } from '@/components/icons';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
@@ -60,10 +63,30 @@ const CIS_CARDS: CISCard[] = [
     href: '/dashboard/analytics',
   },
   {
+    icon: Wand2,
+    title: 'Campaign Concept Studio',
+    description:
+      'Generate campaign concepts, copy variants, image prompts, and launch-ready checklists',
+    href: '/dashboard/campaign-concept-studio',
+  },
+  {
     icon: Search,
     title: 'Research',
     description: 'Discover trends and insights to inform your content strategy',
     href: '/dashboard/research',
+  },
+  {
+    icon: ImageIcon,
+    title: 'Media Library',
+    description:
+      'Browse every image, video and audio file you have uploaded or generated',
+    href: '/dashboard/media',
+  },
+  {
+    icon: Camera,
+    title: 'Reference Library',
+    description: 'The owned real photos every generated image is grounded in',
+    href: '/dashboard/reference-library',
   },
 ];
 

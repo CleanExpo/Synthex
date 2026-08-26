@@ -208,13 +208,27 @@ describe('GET /api/cron/publish-scheduled — autopilot publish-safety gate', ()
 
     const written = gated![0] as {
       data: {
-        metadata: { publishGate: { allowed: boolean; blockers: string[] } };
+        metadata: {
+          publishGate: { allowed: boolean; blockers: string[] };
+          campaignAuthorityManifest?: {
+            approval?: { scheduledBy?: string; scheduledAt?: string };
+          };
+        };
       };
     };
     expect(written.data.metadata.publishGate.allowed).toBe(false);
     expect(written.data.metadata.publishGate.blockers).toContain(
       'campaign_self_authored_scheduler_missing'
     );
+    // F1 guard: the route must not fabricate a human scheduler on a
+    // machine-authored post. Mutant D2 sets scheduledBy='u1'; this
+    // assertion kills it.
+    expect(
+      written.data.metadata.campaignAuthorityManifest?.approval?.scheduledBy
+    ).toBeUndefined();
+    expect(
+      written.data.metadata.campaignAuthorityManifest?.approval?.scheduledAt
+    ).toBeUndefined();
 
     // The platform must never be contacted for a post the gate refused.
     expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();

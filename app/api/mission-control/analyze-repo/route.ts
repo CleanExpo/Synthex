@@ -8,10 +8,7 @@ import { z } from 'zod';
 import { DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
 import { requireMissionOrg } from '@/lib/mission-control/api-auth';
 import { analyzeRepository } from '@/lib/mission-control/github-analyze';
-import {
-  getMission,
-  updateMission,
-} from '@/lib/mission-control/mission-store';
+import { getMission, updateMission } from '@/lib/mission-control/mission-store';
 
 const Schema = z.object({
   missionId: z.string().uuid(),
@@ -43,10 +40,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const existing = await getMission(
-    auth.organizationId,
-    parsed.data.missionId
-  );
+  const existing = await getMission(auth.organizationId, parsed.data.missionId);
   if (!existing) {
     return NextResponse.json({ error: 'Mission not found' }, { status: 404 });
   }
