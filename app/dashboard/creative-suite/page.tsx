@@ -11,6 +11,7 @@ import {
   Search,
   Image as ImageIcon,
   Camera,
+  Wand2,
 } from '@/components/icons';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
@@ -60,6 +61,13 @@ const CIS_CARDS: CISCard[] = [
     description:
       'Track performance and insights across all connected platforms',
     href: '/dashboard/analytics',
+  },
+  {
+    icon: Wand2,
+    title: 'Campaign Concept Studio',
+    description:
+      'Generate campaign concepts, copy variants, image prompts, and launch-ready checklists',
+    href: '/dashboard/campaign-concept-studio',
   },
   {
     icon: Search,

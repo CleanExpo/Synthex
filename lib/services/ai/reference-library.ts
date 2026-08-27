@@ -52,6 +52,12 @@ export interface ReferenceSubjectSummary {
   previewImage?: string;
   vendor?: string;
   rightsBasis?: string;
+  /**
+   * Public path to the subject's first image, for showing a thumbnail. Same
+   * `/reference-library/{industry}/{file}` form the resolver returns. Absent
+   * when the subject has no images.
+   */
+  previewImage?: string;
 }
 export interface ReferenceSetSummary {
   industry: string;

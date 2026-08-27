@@ -58,26 +58,25 @@ jest.mock('@/lib/platform/server', () => ({
   createServerClient: jest.fn(),
 }));
 
-// Prisma mock (used by /api/user/export and /api/user/profile)
-jest.mock('@/lib/prisma', () => ({
-  __esModule: true,
-  default: {
+// Prisma mock (used by /api/user/account, /api/user/export and /api/user/profile)
+jest.mock('@/lib/prisma', () => {
+  const mockPrisma = {
     user: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
-    campaign: { findMany: jest.fn() },
-    platformConnection: { findMany: jest.fn() },
+    session: { deleteMany: jest.fn() },
+    account: { deleteMany: jest.fn() },
+    campaign: { findMany: jest.fn(), deleteMany: jest.fn() },
+    platformConnection: { findMany: jest.fn(), deleteMany: jest.fn() },
     post: { findMany: jest.fn() },
     subscription: { findUnique: jest.fn() },
     auditLog: { create: jest.fn() },
-  },
-  prisma: {
-    user: { findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
-    campaign: { findMany: jest.fn() },
-    platformConnection: { findMany: jest.fn() },
-    post: { findMany: jest.fn() },
-    subscription: { findUnique: jest.fn() },
-    auditLog: { create: jest.fn() },
-  },
-}));
+  };
+
+  return {
+    __esModule: true,
+    default: mockPrisma,
+    prisma: mockPrisma,
+  };
+});
 
 // auth/jwt-utils mock
 jest.mock('@/lib/auth/jwt-utils', () => ({
@@ -231,20 +230,28 @@ describe.skip('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () =>
     // Restore audit mock
     mockLogAuditEvent.mockResolvedValue(undefined);
 
-    // Authenticated user by default
+    // Authenticated user via jwt-utils (route now uses getUserIdFromRequestOrCookies)
+    mockGetUserId.mockResolvedValue('user-gdpr-1');
+
+    // Prisma deletion mocks for the account erasure flow
+    mockPrismaDefault.session.deleteMany.mockResolvedValue({ count: 1 });
+    mockPrismaDefault.account.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrismaDefault.platformConnection.deleteMany.mockResolvedValue({
+      count: 0,
+    });
+    mockPrismaDefault.campaign.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrismaDefault.user.delete.mockResolvedValue({});
+
+    // Legacy Supabase mocks (route no longer uses these — kept to avoid undefined errors)
     mockSupabaseGetUser.mockResolvedValue({
       data: { user: mockSupabaseUser },
       error: null,
     } as any);
-
-    // Each .from() call returns a fresh builder where .delete().eq() resolves cleanly
     mockSupabaseFrom.mockReturnValue({
       delete: jest.fn().mockReturnValue({
         eq: jest.fn().mockResolvedValue({ error: null }),
       }),
     } as any);
-
-    // Server client for admin deleteUser
     mockCreateServerClient.mockReturnValue({
       auth: {
         admin: {
@@ -255,6 +262,8 @@ describe.skip('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () =>
   });
 
   it('returns 401 when Authorization header is missing', async () => {
+    mockGetUserId.mockResolvedValue(null);
+
     const req = createMockNextRequest({
       method: 'DELETE',
       body: { confirmation: 'DELETE_MY_ACCOUNT' },
@@ -268,11 +277,8 @@ describe.skip('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () =>
     expect(body.error).toBeDefined();
   });
 
-  it('returns 401 when the Supabase token is rejected', async () => {
-    mockSupabaseGetUser.mockResolvedValue({
-      data: { user: null },
-      error: new Error('Invalid JWT'),
-    } as any);
+  it('returns 401 when the token is rejected', async () => {
+    mockGetUserId.mockResolvedValue(null);
 
     const res = await accountDELETE(
       makeAccountRequest({ confirmation: 'DELETE_MY_ACCOUNT' }) as any
@@ -321,32 +327,17 @@ describe.skip('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () =>
     expect(body.message).toContain('deleted successfully');
   });
 
-  it('returns 500 when a DB table deletion fails (does not delete auth record)', async () => {
-    // First .from() call succeeds, subsequent calls return an error
-    let callCount = 0;
-    mockSupabaseFrom.mockImplementation(
-      () =>
-        ({
-          delete: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({
-              error: callCount++ === 0 ? { message: 'FK violation' } : null,
-            }),
-          }),
-        }) as any
+  it('returns 500 when a DB table deletion fails', async () => {
+    // Route uses named `prisma` export — mock on the named export, not default
+    mockPrismaNamedDefault.session.deleteMany.mockRejectedValue(
+      new Error('FK violation')
     );
-
-    // Reset createServerClient mock so we can assert it was NOT called
-    const mockAdminDeleteUser = jest.fn();
-    mockCreateServerClient.mockReturnValue({
-      auth: { admin: { deleteUser: mockAdminDeleteUser } },
-    } as any);
 
     const res = await accountDELETE(
       makeAccountRequest({ confirmation: 'DELETE_MY_ACCOUNT' }) as any
     );
 
     expect(res.status).toBe(500);
-    expect(mockAdminDeleteUser).not.toHaveBeenCalled();
   });
 });
 
@@ -356,6 +347,18 @@ describe.skip('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () =>
 
 describe.skip('GET /api/user/account — account status', () => {
   beforeEach(() => {
+    // Route uses jwt-utils + prisma (named export)
+    mockGetUserId.mockResolvedValue('user-gdpr-1');
+    mockPrismaNamedDefault.user.findUnique.mockResolvedValue({
+      id: 'user-gdpr-1',
+      email: 'gdpr@example.com',
+      emailVerified: true,
+      createdAt: new Date('2024-01-01'),
+      lastLogin: null,
+      authProvider: 'local',
+    });
+
+    // Legacy Supabase mock (not used by route anymore)
     mockSupabaseGetUser.mockResolvedValue({
       data: { user: mockSupabaseUser },
       error: null,
@@ -363,6 +366,8 @@ describe.skip('GET /api/user/account — account status', () => {
   });
 
   it('returns 401 without Authorization header', async () => {
+    mockGetUserId.mockResolvedValue(null);
+
     const req = createMockNextRequest({
       method: 'GET',
       url: 'http://localhost:3000/api/user/account',
