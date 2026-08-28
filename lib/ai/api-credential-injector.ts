@@ -19,11 +19,15 @@ import { hasPlatformAIKey } from '@/lib/ai/platform-keys';
 
 /**
  * Maps our credential provider names to the provider factory names.
- * Users may store keys under 'openai' which should route through OpenRouter.
+ *
+ * Each provider MUST map to its own factory. A user's OpenAI key
+ * (`sk-...`/`sk-proj-...`) must go to the OpenAI provider — mapping it to
+ * 'openrouter' sent the user's secret as a Bearer token to openrouter.ai,
+ * which both failed the call AND leaked the key to an unrelated third party.
  */
 const PROVIDER_MAP: Record<string, string> = {
   openrouter: 'openrouter',
-  openai: 'openrouter', // OpenAI keys work through OpenRouter
+  openai: 'openai',
   anthropic: 'anthropic',
   google: 'google',
 };
@@ -54,14 +58,17 @@ export async function getUserProviderApiKey(
       return null;
     }
 
-    // Check if key was validated and is still valid
+    // A key explicitly validated and found invalid must NOT be used: sending a
+    // known-bad key wastes provider calls and (for mis-provider'd keys) risks
+    // transmitting the secret to the wrong endpoint. Refuse and let the caller
+    // fall through / prompt the user to reconnect.
     if (credential.isValid === false && credential.lastValidatedAt) {
-      logger.warn('User API key was previously marked invalid', {
+      logger.warn('Skipping user API key previously marked invalid', {
         userId,
         provider,
         credentialId: credential.id,
       });
-      // Still attempt to use it — it may have been fixed since validation
+      return null;
     }
 
     const decryptedKey = decryptApiKey(credential.encryptedKey);
@@ -122,7 +129,11 @@ export async function resolveAIProvider(userId: string): Promise<AIProvider> {
   if (userCreds) {
     return getAIProvider({
       apiKey: userCreds.apiKey,
-      provider: userCreds.provider as 'openrouter' | 'anthropic' | 'google',
+      provider: userCreds.provider as
+        | 'openai'
+        | 'openrouter'
+        | 'anthropic'
+        | 'google',
     });
   }
   return getAIProvider();

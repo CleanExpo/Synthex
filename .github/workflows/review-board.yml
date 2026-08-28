@@ -32,7 +32,13 @@ jobs:
         run: npm install -g @anthropic-ai/claude-code
 
       - name: Write manifest to file
-        run: echo '${{ steps.triage.outputs.manifest }}' > .claude/review-board/manifest.json
+        # Pass the PR-derived manifest through an env binding and write it with
+        # printf — never interpolate `${{ }}` inside a run: script, where a single
+        # quote in the manifest would break out of the command and inject shell on a
+        # runner holding ANTHROPIC_API_KEY and pull-requests:write.
+        env:
+          MANIFEST: ${{ steps.triage.outputs.manifest }}
+        run: printf '%s' "$MANIFEST" > .claude/review-board/manifest.json
 
       - name: Run Review Board
         id: review
@@ -47,10 +53,16 @@ jobs:
       - name: Post Review (on success)
         if: steps.review.outcome == 'success' && hashFiles('.claude/review-board/latest-review.md') != ''
         run: |
-          VERDICT=$(cat .claude/review-board/latest-verdict.txt 2>/dev/null || echo "comment")
-          gh pr review ${{ github.event.pull_request.number }} \
+          VERDICT=$(tr -d '[:space:]' < .claude/review-board/latest-verdict.txt 2>/dev/null || echo "comment")
+          # The verdict file is written by the LLM — constrain it to a literal
+          # allowlist before it reaches `gh pr review --$VERDICT`.
+          case "$VERDICT" in
+            approve|request-changes|comment) ;;
+            *) VERDICT=comment ;;
+          esac
+          gh pr review "$PR_NUMBER" \
             --body-file .claude/review-board/latest-review.md \
-            --$VERDICT
+            "--$VERDICT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
