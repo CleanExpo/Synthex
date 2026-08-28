@@ -44,12 +44,6 @@ export interface ReferenceSubjectSummary {
   label: string;
   count: number;
   rights: string;
-  /**
-   * Public path to the subject's first image, for showing a thumbnail. Same
-   * `/reference-library/{industry}/{file}` form the resolver returns. Absent
-   * when the subject has no images.
-   */
-  previewImage?: string;
   vendor?: string;
   rightsBasis?: string;
   /**
