@@ -29,18 +29,46 @@ beforeEach(() => {
 });
 
 describe('evaluateContent', () => {
-  it('returns "schedule" when score >= autoApproveThreshold', () => {
+  // Safety contract: the pure-regex scorer must NEVER auto-publish on its own.
+  // 'schedule' is now UNREACHABLE from this function — the allowAutoApprove opt-in
+  // that could unlock it was deleted, because a contract enforced by convention is
+  // one a future caller can get wrong (found by independent review, P1).
+  it('does NOT auto-publish on a high regex score by default — holds as draft', () => {
     mockScore.mockReturnValue({ overall: 85, dimensions: baseDimensions });
     const result = evaluateContent('Great content here', 'twitter', 80, 65);
-    expect(result.decision).toBe('schedule');
+    expect(result.decision).toBe('draft');
     expect(result.score).toBe(85);
-    expect(result.reason).toContain('auto-approve');
   });
 
-  it('returns "schedule" when score exactly equals threshold', () => {
-    mockScore.mockReturnValue({ overall: 80, dimensions: baseDimensions });
+  it('never returns "schedule" for spam-shaped max-score content without opt-in', () => {
+    // The generator's own degraded fallback (emoji + urgency + power words) is
+    // engineered to hit the regex scorer's ceiling; it must still not auto-publish.
+    mockScore.mockReturnValue({ overall: 100, dimensions: baseDimensions });
+    const spam = '⚡ LIMITED TIME: buy now! Act NOW! ⏰ #deal #sale';
+    const result = evaluateContent(spam, 'twitter', 80, 65);
+    expect(result.decision).not.toBe('schedule');
+    expect(result.decision).toBe('draft');
+  });
+
+  it.each([0, 64, 65, 79, 80, 85, 100])(
+    'never returns "schedule" at any score (%i) — the opt-in is gone',
+    overall => {
+      // Sweeps below min, at min, below the auto bar, AT the auto bar and above.
+      // Previously an `allowAutoApprove` argument unlocked 'schedule' here; there
+      // is no argument left that can, and this asserts it across the whole range
+      // rather than at the one score a regression would be least likely to pick.
+      mockScore.mockReturnValue({ overall, dimensions: baseDimensions });
+      const result = evaluateContent('Content', 'twitter', 80, 65);
+      expect(result.decision).not.toBe('schedule');
+      expect(result.decision).toBe(overall >= 65 ? 'draft' : 'reject');
+    }
+  );
+
+  it('holds content at or above the auto bar, and says why', () => {
+    mockScore.mockReturnValue({ overall: 90, dimensions: baseDimensions });
     const result = evaluateContent('Content', 'twitter', 80, 65);
-    expect(result.decision).toBe('schedule');
+    expect(result.decision).toBe('draft');
+    expect(result.reason).toContain('only the LLM judge may schedule');
   });
 
   it('returns "draft" when score between min and auto thresholds', () => {
@@ -78,11 +106,17 @@ describe('evaluateContent', () => {
     expect(mockScore).toHaveBeenCalledWith('Content', 'tiktok');
   });
 
-  it('handles custom thresholds correctly', () => {
+  it('honours custom thresholds for the reject/draft boundary', () => {
+    // This used to assert that low thresholds plus the opt-in auto-approved a 55.
+    // The opt-in is gone, so custom thresholds now move only the reject/draft
+    // line — which is the whole of what this regex stage is allowed to decide.
     mockScore.mockReturnValue({ overall: 55, dimensions: baseDimensions });
-    // With very low thresholds, 55 should auto-approve
-    const result = evaluateContent('Content', 'twitter', 50, 30);
-    expect(result.decision).toBe('schedule');
+    expect(evaluateContent('Content', 'twitter', 50, 30).decision).toBe(
+      'draft'
+    );
+    expect(evaluateContent('Content', 'twitter', 50, 60).decision).toBe(
+      'reject'
+    );
   });
 
   it('always includes score in result', () => {

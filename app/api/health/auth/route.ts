@@ -56,18 +56,14 @@ export async function GET() {
       checks.errors.push(`Monitoring error: ${error}`);
     }
 
-    // Test 4: Database connectivity
+    // Test 4: Database connectivity — real round-trip via Prisma (`SELECT 1`),
+    // not the fail-loud stub. The check is only true when the query actually returns.
     try {
-      const { createClient } = await import('@/lib/platform/noop-client');
-      const platform = createClient();
-
-      const { error } = await platform
-        .from('sessions')
-        .select('count')
-        .limit(1);
-      checks.checks.database = !error;
-      if (error) {
-        checks.errors.push(`Database error: ${error.message}`);
+      const { checkDatabaseHealth } = await import('@/lib/prisma');
+      const db = await checkDatabaseHealth();
+      checks.checks.database = db.healthy;
+      if (!db.healthy) {
+        checks.errors.push(`Database error: ${db.error ?? 'unhealthy'}`);
       }
     } catch (error) {
       checks.checks.database = false;

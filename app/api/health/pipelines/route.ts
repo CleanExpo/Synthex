@@ -16,7 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/auth/with-auth';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 
@@ -51,42 +51,30 @@ interface PipelinesResponse {
   overall: 'healthy' | 'degraded' | 'down';
 }
 
-// ── Supabase service-role client (lazy singleton) ─────────────────────────────
-
-let _svc: ReturnType<typeof createClient> | null = null;
-
-function getSvc() {
-  if (!_svc) {
-    _svc = createClient();
-  }
-  return _svc;
-}
-
 // ── Pipeline status query ─────────────────────────────────────────────────────
 
 async function fetchPipelineStatuses(): Promise<PipelineStatus[]> {
   const since = new Date();
   since.setHours(since.getHours() - 48);
 
-  const { data, error } = await (
-    getSvc() as ReturnType<typeof createClient<any>>
-  )
-    .from('edge_function_logs')
-    .select(
-      'function_name, status, clients_processed, clients_failed, duration_ms, created_at'
-    )
-    .gte('created_at', since.toISOString())
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    throw new Error(`edge_function_logs query failed: ${error.message}`);
-  }
+  const rows = await prisma.edgeFunctionLog.findMany({
+    where: { createdAt: { gte: since } },
+    select: {
+      functionName: true,
+      status: true,
+      clientsProcessed: true,
+      clientsFailed: true,
+      durationMs: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: 'desc' },
+  });
 
   // Deduplicate — retain only the most recent row per function_name
   const latestByName = new Map<string, Record<string, unknown>>();
-  for (const row of data ?? []) {
-    if (!latestByName.has(row.function_name)) {
-      latestByName.set(row.function_name, row);
+  for (const row of rows) {
+    if (!latestByName.has(row.functionName)) {
+      latestByName.set(row.functionName, row);
     }
   }
 
@@ -104,11 +92,11 @@ async function fetchPipelineStatuses(): Promise<PipelineStatus[]> {
     }
     return {
       name,
-      lastRunAt: row.created_at as string,
+      lastRunAt: (row.createdAt as Date).toISOString(),
       status: row.status as 'success' | 'partial' | 'failed',
-      clientsProcessed: (row.clients_processed as number) ?? 0,
-      clientsFailed: (row.clients_failed as number) ?? 0,
-      durationMs: (row.duration_ms as number) ?? null,
+      clientsProcessed: (row.clientsProcessed as number) ?? 0,
+      clientsFailed: (row.clientsFailed as number) ?? 0,
+      durationMs: (row.durationMs as number) ?? null,
     };
   });
 }

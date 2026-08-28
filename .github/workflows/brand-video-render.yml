@@ -7,9 +7,13 @@ name: Brand Video Render
 
 on:
   workflow_dispatch:
-  schedule:
-    # Every ~5 minutes — the worker exits immediately when the queue is empty.
-    - cron: '*/5 * * * *'
+  # Schedule disabled (SYN-1070 fallout): scripts/brand-video-worker.ts:149 calls
+  # requireEnv() with no argument (process.env[undefined] -> exit 1) AND its DB client
+  # is the removed Supabase stub, so every scheduled run has FAILED since 2026-08-18,
+  # burning ~288 Actions runs/day and drowning real CI signal. Re-enable only after the
+  # worker is repaired (real client + valid requireEnv call) or the feature is removed.
+  # schedule:
+  #   - cron: '*/5 * * * *'
 
 # Don't overlap renders; let an in-flight run finish.
 concurrency:

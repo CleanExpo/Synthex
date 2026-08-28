@@ -145,7 +145,7 @@ export async function resolvePrivateReferenceUrls(
       .from(BUCKET)
       .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
     if (error || !data) return [];
-    return data
+    return (data as Array<{ signedUrl?: string }>)
       .map(d => d.signedUrl)
       .filter((u): u is string => typeof u === 'string' && u.length > 0);
   } catch (err) {

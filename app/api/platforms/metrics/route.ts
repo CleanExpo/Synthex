@@ -30,11 +30,20 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 export async function GET(request: NextRequest) {
   try {
-    // Security check
+    // Security check — this endpoint returns a user's own platform metrics and
+    // MUST be authenticated. Under the previous PUBLIC_READ policy an unauthenticated
+    // request left userId undefined, which degraded the tenant filter to `{}` and
+    // returned up to 1000 posts across ALL tenants (cross-tenant data leak).
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.PUBLIC_READ
+      DEFAULT_POLICIES.AUTHENTICATED_READ
     );
+    if (!security.allowed || !security.context.userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     const userId = security.context.userId;
 
     // Get time range
@@ -45,22 +54,21 @@ export async function GET(request: NextRequest) {
     startDate.setDate(startDate.getDate() - days);
 
     // Fetch platform connections for the user
-    const connections = userId
-      ? await prisma.platformConnection.findMany({
-          where: { userId, isActive: true },
-          select: {
-            platform: true,
-            metadata: true,
-            lastSync: true,
-          },
-        })
-      : [];
+    const connections = await prisma.platformConnection.findMany({
+      where: { userId, isActive: true },
+      select: {
+        platform: true,
+        metadata: true,
+        lastSync: true,
+      },
+    });
 
-    // Fetch posts and their analytics
-    const campaignFilter = userId ? { campaign: { userId } } : {};
+    // Fetch posts and their analytics — tenant scope is a required literal, never
+    // a conditionally-empty spread. deletedAt:null excludes soft-deleted rows.
     const posts = await prisma.post.findMany({
       where: {
-        ...campaignFilter,
+        campaign: { userId },
+        deletedAt: null,
         createdAt: { gte: startDate },
         status: { in: ['published', 'scheduled'] },
       },
