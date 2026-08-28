@@ -186,7 +186,12 @@ tape, scope sheets). Name each direction in the manifest.
   > skill instructing an agent to call a provider tool. CI does not have your
   > back on this one — the rule above is the whole mechanism.
 
-- **`supplied`** — brand-owned assets under `public/` only. Never the web,
+- **`supplied`** — **also blocked in v1.** The contract in §1 accepts `none` and
+  nothing else; an invocation asking for `supplied` is refused with the reason,
+  not silently reinterpreted. The rules below are the v2 contract, recorded now
+  so the gap is legible:
+
+  Brand-owned assets under `public/` only. Never the web,
   stock sites, or another brand's folder. Note `public/logos/` **does not
   exist**: all 21 declared brand logo paths are absent
   (`config/brand-logo-baseline.json`, SYN-1133). Every run therefore records
@@ -205,8 +210,18 @@ tape, scope sheets). Name each direction in the manifest.
   point at `file://` paths under `public/fonts/<BRAND>/`, matching the `src`
   values already declared in the brand's `typography` block. A font that fails
   to load silently ruins a design and you would never know why quality varied.
-  The renderer aborts every non-`file:` request and fails the run, so a remote
-  `@import` or Google Fonts link is a hard error, not a silent fallback.
+  A remote `@import` or Google Fonts link is a hard error, not a silent fallback:
+  the renderer's request guard aborts remote schemes (`http(s):`) and fails
+  the run.
+- **What the guard does not reach.** Chromium resolves `data:` and `file:`
+  subresources internally, so they never hit the guard. An inlined base64 face
+  therefore bypasses the self-hosting contract **without tripping anything** —
+  that one is on you to catch when you read the board. Do not inline a face to
+  dodge the rule.
+- A face that fails to load **fails the render** (exit 1). `document.fonts.ready`
+  resolves even when a face errored, so the renderer checks each `FontFace`'s
+  status and reports `fontsLoaded` / `fontsFailed` in its receipt. A green
+  receipt now means the design's own type actually drew.
 - No font file on disk ⇒ record `missing-font:<BRAND>/<family>` in
   `manifest.gaps`, use the nearest system-safe stack, and **say so in the run
   summary**. A CARSI board that silently falls back from Lora to a system serif
@@ -230,8 +245,18 @@ it. A picture is worth a thousand tokens; code that "looks right" routinely
 renders wrong. **A run that critiques without reading the PNGs has skipped this
 step and is invalid** — say so and re-do it rather than scoring from HTML.
 
-Exit codes: `0` ok · `1` render failure **or blocked network requests** · `2`
-bad args. On `1` with `blocked > 0` the board violated §7 — fix the board, do
+**Fluid assets render twice.** `landing_page` and `hero_section` have no fixed
+canvas — §11 requires them to hold at 1440 wide _and_ at 390. Render both and
+read both PNGs back; a hero judged only at desktop width is not judged. Every
+other asset in the §11 table has one fixed size and renders once.
+
+```bash
+node scripts/design/render-board.mjs <run>/v1/board.html <run>/v1/desktop.png 1440x1024
+node scripts/design/render-board.mjs <run>/v1/board.html <run>/v1/mobile.png  390x844
+```
+
+Exit codes: `0` ok · `1` render failure, a blocked network request, **or a font
+that failed to load** · `2` bad args. On `1` with `blocked > 0` the board violated §7 — fix the board, do
 not retry. One-time per machine: `npx playwright install chromium` (playwright
 is already a repo dependency; only the browser binary may be missing).
 
@@ -321,7 +346,7 @@ respected.
 throwaway explorations never touch the repo:
 
 ```
-.artifacts/design-runs/<BRAND>-<subject-slug>-<yyyy-mm-dd>/
+.artifacts/design-runs/<BRAND>-<subject-slug>-<yyyy-mm-dd>-<nn>/
   v1/ v2/ v3/   board.html · post.png · tokens.json · copy.md · caption.md
   manifest.json · critique.json
 ```
@@ -334,6 +359,11 @@ docs/marketing-agency/design-runs/<run-id>/
 public/marketing-agency/design-runs/<run-id>/
   <winner>.png
 ```
+
+`<nn>` is a two-digit sequence starting at `01`: check `.artifacts/design-runs/`
+for existing directories on the same date stem and take the next free number. Two
+runs of the same brief on one day would otherwise land in the same directory, and
+the second would overwrite the first's boards, manifest and critique.
 
 PNGs go under `public/` because `.gitignore:192` is a blanket `*.png` that
 allowlists only `public/**`, `components/**` and `app/**`. A PNG written under

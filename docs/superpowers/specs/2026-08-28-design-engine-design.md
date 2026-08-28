@@ -63,10 +63,22 @@ in `public/marketing-agency/design-runs/<run-id>/`. PNGs must sit under
 matches the existing campaign convention.
 
 **The critic is context-isolated, not cross-vendor.** Codex is not installed
-here. The `design-critic` subagent holds `tools: Read` only, so it mechanically
-cannot reach the boards' source or the skill — but it is the same model and
-account, and the skill says so in those words. Mislabelled review is worse than
-no review.
+here. The `design-critic` subagent holds `tools: Read` only — no Bash, Grep or
+Glob, so it cannot search the tree or run anything.
+
+**Corrected 2026-08-28 (post-merge review):** an earlier draft of this section
+claimed the critic "mechanically cannot reach the boards' source". That was
+wrong. `.claude/settings.json` grants `Read` bare, and an agent's `tools:` list
+does not path-scope it, so nothing at the filesystem level stops the critic
+opening `board.html` or the rubric. The boundary is the dispatch prompt and the
+instruction in the agent file — a discipline, not a sandbox. The agent file now
+says so in those words rather than implying an enforcement that does not exist.
+Real path scoping would need a dispatcher-level `Read(<path>)` permission rule
+or an isolated filesystem; until one of those lands, the honest claim is the
+weaker one.
+
+It is also the same model and account. Mislabelled review is worse than no
+review, and an overstated boundary is a mislabelled review.
 
 ## Defects found in the uploaded material
 

@@ -10,7 +10,8 @@ collision check will fail the run.
 2. **Editorial print** — display serif, columns, pull-quote, paper texture
 3. **Neo-brutalist** — raw borders, hard shadows, clashing brights
 4. **Luxury minimal** — extreme whitespace, hairline rules, ink + one metallic
-5. **Retro-futurism / Y2K** — chrome type, deliberate gradients, optimism
+5. **Retro-futurism / Y2K** — chrome type, optimism; gradients only where the
+   brief asks for them, and never the purple-to-blue ramp §10 bans
 6. **Terminal / engineering** — monospace, blueprint linework, data-dense
 7. **Organic craft** — hand-drawn marks, warm paper, imperfect shapes
 8. **Art-deco geometry** — symmetry, sunbursts, gold linework
