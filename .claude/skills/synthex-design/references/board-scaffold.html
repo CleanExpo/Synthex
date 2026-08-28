@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+  Art-board scaffold — 1080x1440 (instagram_post).
+
+  Rules this file exists to enforce:
+    1. ZERO remote URLs. The renderer aborts every non-file: request and fails
+       the run. No Google Fonts link, no @import, no CDN.
+    2. Fonts load from public/fonts/<brand>/ via relative file paths. Swap the
+       src values for the ones declared in the brand's typography block
+       (packages/brand-config/src/brands/<slug>.ts).
+    3. Tokens first as CSS custom properties, then layout. Copy the values from
+       <slug>.design.md — never invent a hex.
+    4. Exact canvas size, no scrollbars, no margin.
+
+  Replace every REPLACE-ME. Delete the safe-area guide before rendering.
+-->
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<title>art-board</title>
+<style>
+  /* ---- fonts: local files only ------------------------------------------ */
+  @font-face {
+    font-family: 'BrandDisplay';
+    src: url('../../../../public/fonts/REPLACE-ME-slug/REPLACE-ME-Display.woff2') format('woff2');
+    font-weight: 700;
+    font-display: block;
+  }
+  @font-face {
+    font-family: 'BrandBody';
+    src: url('../../../../public/fonts/REPLACE-ME-slug/REPLACE-ME-Body.woff2') format('woff2');
+    font-weight: 400;
+    font-display: block;
+  }
+
+  /* ---- tokens: copy from <slug>.design.md -------------------------------- */
+  :root {
+    --primary:    #REPLACE;
+    --secondary:  #REPLACE;
+    --accent:     #REPLACE;
+    --surface:    #REPLACE;
+    --on-surface: #REPLACE;
+
+    /* §11 legibility floor on a 1080-wide canvas */
+    --hook-size:    88px;   /* minimum */
+    --support-size: 44px;   /* minimum for the smallest text */
+    --safe-area:    48px;   /* the brand's logo.safeAreaPx */
+  }
+
+  /* ---- canvas ----------------------------------------------------------- */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1440px; overflow: hidden; }
+  body {
+    background: var(--surface);
+    color: var(--on-surface);
+    font-family: 'BrandBody', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: var(--safe-area);
+  }
+
+  .hook {
+    font-family: 'BrandDisplay', Georgia, serif;
+    font-size: var(--hook-size);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  .support { font-size: var(--support-size); line-height: 1.4; max-width: 78%; }
+  .cta     { font-size: var(--support-size); font-weight: 700; }
+
+  /* Safe-area guide — DELETE before the real render. */
+  .guide {
+    position: fixed; inset: var(--safe-area);
+    outline: 1px dashed rgba(255, 0, 0, 0.4); pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div class="guide"></div>
+
+  <header class="hook">REPLACE-ME hook, seven words or fewer</header>
+
+  <main class="support">
+    REPLACE-ME support line, eighteen words or fewer. Claims only from the
+    approved FACTS list, or the literal [NEEDS APPROVAL: claim] placeholder.
+  </main>
+
+  <footer class="cta">REPLACE-ME CTA</footer>
+</body>
+</html>

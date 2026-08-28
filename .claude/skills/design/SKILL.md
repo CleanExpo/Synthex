@@ -37,6 +37,14 @@ context: fork
 
 # Design Agent
 
+> **Scope boundary.** This skill governs **product UI** — `app/`,
+> `components/`, `lib/` — under `.claude/DESIGN.md`. Marketing art-boards
+> (Instagram posts, ads, OG images, campaign creative for a portfolio brand)
+> are governed by the `synthex-design` skill, whose anti-slop list
+> deliberately bans glassmorphism, Inter display type and gradients. Those
+> bans are correct there and wrong here — never cite them in a product-UI
+> review, and never apply this file's tokens to a client art-board.
+
 ## Purpose
 
 Maintains SYNTHEX's glassmorphic design system consistency, implements responsive

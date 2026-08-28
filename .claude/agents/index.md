@@ -20,12 +20,13 @@ Routes tasks to the correct specialist agent. Read this before dispatching any a
 
 ## Specialists
 
-| Agent               | File                 | Trigger On                                                                                                       |
-| ------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| **build-engineer**  | `build-engineer.md`  | Vercel deployments, build failures, env config, `vercel.json`, edge function issues, CI pipeline errors          |
-| **code-architect**  | `code-architect.md`  | Architecture decisions, refactoring strategy, PR analysis, design reviews, cross-system dependencies             |
-| **qa-sentinel**     | `qa-sentinel.md`     | Test coverage, Jest config, quality gates, CI failures, coverage thresholds, regression detection                |
-| **senior-reviewer** | `senior-reviewer.md` | Post-implementation code review. Runs after significant code changes. Returns Blockers / Warnings / Suggestions. |
+| Agent               | File                 | Trigger On                                                                                                                                              |
+| ------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **build-engineer**  | `build-engineer.md`  | Vercel deployments, build failures, env config, `vercel.json`, edge function issues, CI pipeline errors                                                 |
+| **code-architect**  | `code-architect.md`  | Architecture decisions, refactoring strategy, PR analysis, design reviews, cross-system dependencies                                                    |
+| **qa-sentinel**     | `qa-sentinel.md`     | Test coverage, Jest config, quality gates, CI failures, coverage thresholds, regression detection                                                       |
+| **senior-reviewer** | `senior-reviewer.md` | Post-implementation code review. Runs after significant code changes. Returns Blockers / Warnings / Suggestions.                                        |
+| **design-critic**   | `design-critic.md`   | Independent-context scoring of rendered marketing art-boards. Dispatched by `synthex-design` §9. Holds `Read` only — it never sees the build reasoning. |
 
 ---
 
@@ -36,6 +37,7 @@ Build / deploy failures     → build-engineer
 Architecture questions      → code-architect
 Test failures / coverage    → qa-sentinel
 Post-task code review       → senior-reviewer
+Rendered art-board scoring  → design-critic (never for product UI)
 Multi-domain / ambiguous    → hive-mind (orchestrates specialists)
 Specialist not listed above → codex-agent-loader skill (136 on-demand agents)
 ```
