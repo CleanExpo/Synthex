@@ -95,7 +95,13 @@ external/
 .tmp_control_new/
 .tmp_ug/
 
-node_modules/
+# No trailing slash ON PURPOSE. `node_modules/` matches DIRECTORIES only, and a
+# linked git worktree symlinks node_modules at the main checkout rather than
+# installing a second copy. A symlink is not a directory, so it escaped this
+# pattern, showed as untracked, and read as a dirty worktree to the PR release
+# gate — which refuses to issue a receipt against one. Without the slash the
+# pattern matches the file, the directory and the symlink alike.
+node_modules
 
 .next/
 .next-dev/
