@@ -2,7 +2,7 @@
   "name": "Synthex",
   "version": "1.0.0",
   "description": "AI-powered marketing automation platform \u2014 Next.js 15 + Supabase + Prisma + Vercel",
-  "model": "claude-sonnet-4-6",
+  "model": "claude-opus-5",
   "maxTokens": 164000,
   "permissions": {
     "allow": [
