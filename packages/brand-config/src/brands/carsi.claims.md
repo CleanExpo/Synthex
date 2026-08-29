@@ -15,31 +15,76 @@ brand: carsi
 #   verified_on  DD/MM/YYYY
 #   vg_ref       the row id in .claude/memory/verification-gates.md, if one exists
 #   expires_on   optional — pricing and coverage claims should carry one
-facts_approved: []
+facts_approved:
+  - claim: 'From $20 per course'
+    source_url: 'https://carsi.com.au/pricing'
+    verified_on: 29/08/2026
+    vg_ref: VG-60
+    expires_on: 28/02/2027
+    note: >-
+      The site says "From $20", a floor rather than a fixed price. Do not render
+      this as "$20 entry" or "$20 a course" — that states more than the source
+      supports. Must appear with the AUD/GST qualifier below.
+  - claim: '$795 a year for access to all published courses'
+    source_url: 'https://carsi.com.au/pricing'
+    verified_on: 29/08/2026
+    vg_ref: VG-60
+    expires_on: 28/02/2027
+    note: >-
+      Source wording is "100% access to all published CARSI courses for one
+      learner for 12 months". One learner — never render as team or seat
+      pricing. Must appear with the AUD/GST qualifier below.
+  - claim: 'Prices in AUD, GST included'
+    source_url: 'https://carsi.com.au/pricing'
+    verified_on: 29/08/2026
+    vg_ref: VG-60
+    expires_on: 28/02/2027
+    note: >-
+      Not a standalone claim. Australian Consumer Law requires a single total
+      price inclusive of GST; any board carrying a price carries this too.
 anti_references: []
 claim_review_owner: founder
 ---
 
 ## Approved Facts
 
-**Empty.** Until the founder fills this list, every claim the design engine
-wants to make renders as the literal placeholder `[NEEDS APPROVAL: claim]`.
-That is the safe default, not a blocker — a claim-free board is a correct
-pilot result.
+**Pricing only.** VG-60 was copied in on 29/08/2026 by founder instruction.
+Every other claim still renders as the literal placeholder
+`[NEEDS APPROVAL: claim]` — the safe default, not a blocker.
+
+**Pricing must never carry an accreditation descriptor.** The source page
+describes courses as "IICRC CEC Accredited", but VG-02 (IICRC CEC provider
+status) is `[verification needed]`, so that descriptor is not publishable by
+Synthex on any surface. Render the price without it. A board saying
+"IICRC CEC accredited course from $20" is an ACL exposure even though the
+price half is approved.
+
+**Source correction, unresolved in the registry.** VG-60's "verification
+source" column reads `ccwonline.com.au [sic — site URL TBC]` — CCW's domain,
+not CARSI's, and CCW sits outside the Nexus under the L1–L9 carve-out. Its
+status column separately says "CARSI site /pricing". The live page at
+<https://carsi.com.au/pricing> was fetched on 29/08/2026 and carries both
+figures, so that is the source recorded here. **The registry row itself still
+says ccwonline.com.au and has not been corrected — only `foundation-keeper`
+may write to `verification-gates.md`.**
+
+**Teams pricing is not approved.** The same page lists Teams Starter $299/yr,
+Teams Growth $799/yr and Full Library $2,499/yr, all marked "Coming Soon".
+VG-60 does not cover them and they are not in `facts_approved`.
 
 ### Candidates awaiting founder sign-off
 
 Sourced from `.claude/memory/verification-gates.md`. Only `foundation-keeper`
 may flip a gate, and verbal confirmation does not flip one.
 
-| Candidate claim                               | VG row       | Status                                        | May print?                                                      |
-| --------------------------------------------- | ------------ | --------------------------------------------- | --------------------------------------------------------------- |
-| Pricing — $20 entry / $795-a-year all-access  | VG-60        | `[verified-26/04/2026 · CARSI site /pricing]` | Yes, once copied into `facts_approved` with its source and date |
-| IICRC CEC provider status                     | VG-02        | `[verification needed]`                       | **No — not publishable in any form**                            |
-| IICRC S500 / S520 licensed publication access | VG-04, VG-05 | `[verification needed]`                       | No                                                              |
-| Catalogue depth / active course inventory     | VG-63        | `[verification needed]`                       | No                                                              |
-| Subscriber base figures                       | VG-64        | `[verification needed]`                       | No                                                              |
-| CEC hours per course                          | none         | Internal metric — founder, 29/08/2026         | **No — internal number, never a marketing claim**               |
+| Candidate claim                                        | VG row       | Status                                                                | May print?                                                 |
+| ------------------------------------------------------ | ------------ | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Pricing — from $20 per course / $795-a-year all-access | VG-60        | `[verified-26/04/2026]` · re-checked against the live page 29/08/2026 | **Approved** — now in `facts_approved`, expires 28/02/2027 |
+| IICRC CEC provider status                              | VG-02        | `[verification needed]`                                               | **No — not publishable in any form**                       |
+| IICRC S500 / S520 licensed publication access          | VG-04, VG-05 | `[verification needed]`                                               | No                                                         |
+| Catalogue depth / active course inventory              | VG-63        | `[verification needed]`                                               | No                                                         |
+| Subscriber base figures                                | VG-64        | `[verification needed]`                                               | No                                                         |
+| CEC hours per course                                   | none         | Internal metric — founder, 29/08/2026                                 | **No — internal number, never a marketing claim**          |
 
 ## Anti-references
 
