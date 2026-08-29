@@ -1,0 +1,354 @@
+{
+  "subject": "RestoreAssist — the job-close system water-damage restoration tradies use to turn field readings into insurer-facing inspection reports.",
+  "asset": "linkedin_post",
+  "dims": "1200x627",
+  "brand": "ra",
+  "status": "DRAFT",
+  "run_id": "ra-job-close-system-2026-08-29-01",
+  "goal": "trial start",
+  "audience": "Australian water-damage restoration tradies (sole traders and small companies); secondary, insurer claims teams and assessor networks",
+  "asset_reason": "ra.ts declares defaultChannel:'linkedin' and the secondary audience is insurer claims teams. Portrait and other funnel formats are exercised at /lock, not here.",
+  "imagery": {
+    "mode": "none"
+  },
+  "category_default_avoided": "Restoration-software posts in this space default to a photo of a tech in PPE beside an air mover, with a blue-gradient UI screenshot floating over it; no variation uses a person, a device mockup, a photograph or a gradient.",
+  "sources_read": [
+    "packages/brand-config/src/brands/ra.design.md",
+    "packages/brand-config/src/brands/ra.ts",
+    "packages/brand-config/src/brands/ra.claims.md",
+    "docs/marketing-agency/design-runs/taste/PRINCIPLES.md",
+    "docs/marketing-agency/design-runs/taste/ra.md (did not exist before this run)"
+  ],
+  "token_status": "ra.ts declares no tokenStatus field, so it is not 'proposal' — the SKILL.md §2 STOP condition does not apply. (john-coutis is the only brand carrying tokenStatus:'proposal'.)",
+  "axis_constraint": "ra.ts declares two type families — Inter (display 800 / body 400) and JetBrains Mono (500). With three directions required, typeface class cannot vary; all three boards set display in Inter 800, which is the brand's own declared display face and therefore NOT a slop tell under SKILL.md §10. The axis is varied by role and treatment instead: mono-as-header-chips (v1), mono-as-the-whole-dataset (v2), mono absent (v3). Collision judged on colour strategy, layout system and cultural reference only.",
+  "type_ramp": {
+    "problem": "ra.design.md's ramp is anchored to 1920x1080 video (display-xl 96px … caption 13px). Scaling it to a 1200-wide box by width (x0.625) would put caption at 8px and body at 12px — roughly six times below SKILL.md §11's legibility floor. The ramp could not be scaled; it had to be re-anchored.",
+    "derivation": "§11's floor is stated 'on a 1080-wide canvas', so it is read as a proportion of canvas width, not an absolute: hook 88/1080 = 8.15%, smallest text 44/1080 = 4.07%. Applied to 1200 wide: hook >= 98px, ALL other text >= 49px. Cross-check against displayed size: an Instagram 1080x1440 board at 88px shows ~31.8 CSS px on a 390pt phone; a LinkedIn 1200x627 board at 98px shows ~30.6 CSS px on the same device. The two anchorings agree to within 4%.",
+    "ramp_used": {
+      "hook": "98px (v2, v3) / 110px (v1)",
+      "support": "54px (v1) / 49px (v2, v3)",
+      "meta_and_mono": "49px — at the floor"
+    },
+    "consequence": "A 49px floor on every element in a 627px-tall box is severely constraining: the usable height inside the 48px safe area is 531px, which is about eight text rows total. The binding design lesson is that a landscape social box forces a SHORT hook — §5 permits seven words, but at 98px a seven-word hook costs three lines and 306px, half the board. All three hooks were cut to four to six words for this reason, not for style."
+  },
+  "gaps": ["missing-logo:ra", "missing-consumer:design_runs"],
+  "gap_detail": {
+    "missing-logo:ra": "public/logos/ does not exist at all; ra.ts declares logos/ra/primary.svg, inverted.svg and icon.svg, none of which are present. Every board composes without a logo and identifies the brand with a caption-type eyebrow reading 'RestoreAssist' — never 'RA' (ra.ts doNot), never styled as a lock-up. The fix is to commission the asset, not to set a wordmark in type and call it the logo.",
+    "missing-consumer:design_runs": "No design_runs table is applied and no Linear task was created. The committed index row at docs/marketing-agency/design-runs/README.md is the only consumer of this manifest."
+  },
+  "fonts": {
+    "status": "resolved — no missing-font gap",
+    "detail": "public/fonts/ra/ holds Inter-ExtraBold.woff2 (800), Inter-Regular.woff2 (400) and JetBrainsMono-Medium.woff2 (500), matching ra.ts typography exactly. All boards load them by relative file:// path. Every render returned blocked:0 and fontsFailed:[] — the design's own type is what drew."
+  },
+  "palette_finding": {
+    "claim": "RA's warm earth #8A6B4E is a FIELD colour, never a text ground or a text colour; the accent #D4A574 carries text only on the navy ground.",
+    "evidence": "[VERIFIED] Measured from rendered pixels via a probe board (_probe/), not arithmetic: neutral-50 on #8A6B4E = 4.48:1 FAIL · navy on #8A6B4E = 2.81:1 FAIL · #8A6B4E on neutral-50 = 4.48:1 FAIL · neutral-500 #78716C on neutral-50 = 4.40:1 FAIL · tan #D4A574 on neutral-50 = 2.04:1 FAIL · tan on navy = 6.17:1 PASS.",
+    "consequence": "Four of RA's seven plausible text pairs fail the §11 floor, three of them by less than 0.1 — close enough that arithmetic intuition would have passed them. Every board therefore uses warm earth only as a text-free field (v1's carbon strip, v3's wet line) and places tan only as a CTA fill with navy type. This is a design constraint of the RA palette, not a choice made by this run."
+  },
+  "contrast_method": "Measured from the rendered PNG pixels with .artifacts/design-runs/ra-job-close-system-2026-08-29-01/measure-contrast.mjs (sharp, raw RGB, WCAG 2.1 relative luminance). Per named text region the true ink and true ground are the luminance extremes — greyscale antialiasing only interpolates between them — and a 2nd/98th-percentile pair is reported alongside as a stability check. The two agreed to within 0.01 on every region, confirming each rect captured exactly one ink/ground pair. Regions are recorded per variation in regions.json.",
+  "variations": [
+    {
+      "name": "job-card",
+      "direction": "Industrial documentation / carbon-copy work docket",
+      "files": [
+        "v1/board.html",
+        "v1/post.png",
+        "v1/tokens.json",
+        "v1/copy.md",
+        "v1/caption.md",
+        "v1/regions.json"
+      ],
+      "hook": "Readings in. Report out.",
+      "support": "Free 15-day trial, including 50 inspection report credits.",
+      "cta": "Start free",
+      "imagery": {
+        "mode": "none"
+      },
+      "tokens": {
+        "palette": {
+          "ground": "#1C2E47",
+          "type": "#F5F5F4",
+          "cta_fill": "#D4A574",
+          "cta_type": "#1C2E47",
+          "field_only": "#8A6B4E"
+        },
+        "type": {
+          "hook": "Inter 800 110px",
+          "support": "Inter 400 54px",
+          "meta": "Inter 500 49px",
+          "mono": "JetBrains Mono 500 49px"
+        },
+        "signature": "A docket rule pair — 2px above, 1px below — bracketing the hook band, closed by a full-bleed text-free warm-earth carbon strip with a 4px tan edge"
+      },
+      "contrast_measured": {
+        "hook": 12.57,
+        "eyebrow": 12.57,
+        "mono_chip": 12.57,
+        "support": 12.57,
+        "cta": 6.16,
+        "regions_pass": "5/5"
+      },
+      "scores": {
+        "self": {
+          "distinctive": 4,
+          "hierarchy": 4,
+          "clarity3s": 4,
+          "contrast": 5,
+          "platform": 4,
+          "cta": 5,
+          "spacing": 4,
+          "fidelity": 5,
+          "copy": 5,
+          "client_pay": 4,
+          "total": 44
+        },
+        "critic": null
+      },
+      "recommended": false,
+      "why": "In the rendered board the docket bracket reads and the hook lands, but the support block stops at x≈770 and leaves the quadrant beneath the CTA empty — the composition's weight sits left of its action. Navy-with-reversed-Inter is also the most category-default ground in the set."
+    },
+    {
+      "name": "drying-log",
+      "direction": "Data-led / the moisture log as the whole composition",
+      "files": [
+        "v2/board.html",
+        "v2/post.png",
+        "v2/tokens.json",
+        "v2/copy.md",
+        "v2/caption.md",
+        "v2/regions.json"
+      ],
+      "hook": "One log. One report.",
+      "support": "Built for restoration work across Australia and New Zealand.",
+      "cta": "Start free",
+      "imagery": {
+        "mode": "none"
+      },
+      "tokens": {
+        "palette": {
+          "ground": "#F5F5F4",
+          "type": "#1C2E47",
+          "cta_fill": "#D4A574",
+          "cta_type": "#1C2E47",
+          "hairline": "#E7E5E4"
+        },
+        "type": {
+          "hook": "Inter 800 98px",
+          "support": "Inter 400 49px",
+          "brand": "Inter 500 49px +0.12em",
+          "mono": "JetBrains Mono 500 49px"
+        },
+        "signature": "A ruled drying-log ledger whose right-hand column is an action column, split off by a vertical hairline and holding the CTA and the SAMPLE stamp"
+      },
+      "signature_rule": "rows = floor((ledgerBox - headerRow) / minRowHeight), minRowHeight = 1.25 x the 4.07%-of-width text floor (61px at 1200 wide), ledgerBox measured after the hook, support and gaps are laid out. At 1200x627: ledgerBox = 531 - 102 - 20 - 24 - 130 = 255, so floor((255-60)/61) = 3 rows. Below 2 rows the ledger HIDES ITSELF and the board falls back to hook + CTA — a one-row ledger is a caption pretending to be a system. Above 8 rows it caps at 8, beyond which the falling WME column stops reading as a trend. This is the stated extremes rule PRINCIPLES.md line 3 requires.",
+      "contrast_measured": {
+        "hook": 12.57,
+        "ledger_header": 12.57,
+        "ledger_row": 12.57,
+        "brand": 12.57,
+        "sample_stamp": 12.57,
+        "support": 12.57,
+        "cta": 6.16,
+        "regions_pass": "7/7"
+      },
+      "scores": {
+        "self": {
+          "distinctive": 5,
+          "hierarchy": 4,
+          "clarity3s": 4,
+          "contrast": 5,
+          "platform": 5,
+          "cta": 4,
+          "spacing": 4,
+          "fidelity": 5,
+          "copy": 5,
+          "client_pay": 4,
+          "total": 45
+        },
+        "critic": null
+      },
+      "recommended": false,
+      "why": "The rendered ledger genuinely reads as a drying log — the 24.6 → 19.1 → 14.8 fall is legible at a glance and the action column now has a real right edge. It is the most template-ready board in the set. Held back because the eye can land on the data first and read the board as a table rather than as an advertisement, and the embedded CTA is second rather than co-equal."
+    },
+    {
+      "name": "sweep",
+      "direction": "The wet line — the taped boundary a tech marks where water stopped",
+      "files": [
+        "v3/board.html",
+        "v3/post.png",
+        "v3/tokens.json",
+        "v3/copy.md",
+        "v3/caption.md",
+        "v3/regions.json"
+      ],
+      "hook": "Draw the line. Send the report.",
+      "support": "Free 15-day trial, including 50 inspection report credits.",
+      "cta": "Start free",
+      "imagery": {
+        "mode": "none"
+      },
+      "tokens": {
+        "palette": {
+          "wet_field": "#1C2E47",
+          "dry_field": "#F5F5F4",
+          "line": "#8A6B4E",
+          "cta_fill": "#D4A574",
+          "cta_type": "#1C2E47"
+        },
+        "type": {
+          "hook": "Inter 800 98px",
+          "support": "Inter 400 49px",
+          "meta": "Inter 500 49px",
+          "mono": "absent by design"
+        },
+        "signature": "A stepped warm-earth wet-line running full-bleed across the board, dividing a navy wet field from a light dry field. RA's declared 'sweep' motion signature rendered static."
+      },
+      "signature_rule": "The line sits at 59.4% of height; step depth is 7.2% of height; the riser stands one 56px gutter clear of the hook's longest line rather than at a fixed column, so it can never collide with the type at any measure. Below ~400px tall the step FLATTENS to a straight line — a step under 24px reads as a rendering artefact, not a mark. Below ~320px tall the line hides entirely and the board falls back to a flat navy field with the hook reversed out of it.",
+      "contrast_measured": {
+        "hook": 12.57,
+        "eyebrow": 12.57,
+        "support": 12.57,
+        "cta": 6.16,
+        "regions_pass": "4/4"
+      },
+      "scores": {
+        "self": {
+          "distinctive": 5,
+          "hierarchy": 5,
+          "clarity3s": 5,
+          "contrast": 5,
+          "platform": 5,
+          "cta": 5,
+          "spacing": 4,
+          "fidelity": 5,
+          "copy": 5,
+          "client_pay": 5,
+          "total": 49
+        },
+        "critic": null
+      },
+      "recommended": true,
+      "why": "In the rendered board the stepped earth line reads as a taped wet-line and the hook sits wholly inside the navy above it, clearing the step by 49px with the riser 56px clear of the type — the concept survived the render intact, which is the test PRINCIPLES.md line 2 sets. Its signature is a composition rather than a figure, so it does not depend on a claim (PRINCIPLES.md line 1), and it is the only direction that carries RA's own declared motion signature, so a locked template would propagate coherently into video."
+    }
+  ],
+  "critique": {
+    "stage_1": "self, from the rendered PNGs — see critique.json",
+    "stage_2": "NOT PERFORMED — blocked. No in-process subagent dispatch exists in this session, and the only independent-context route (a new remote session) would run in a fresh container that cannot Read PNGs living as uncommitted files in this working tree. The dispatch payload is prepared verbatim in critique.json.stage_2.dispatch_payload_prepared.",
+    "recommendation_confidence": "The recommendation rests on stage-1 scores only, which are the builder's own. Per .claude/rules/fabel-evidence-standard.md they are [UNCONFIRMED] until an independent reader scores the same PNGs.",
+    "stage_2_after_lock": "STILL NOT PERFORMED. The founder's lock on 29/08/2026 is a founder judgement on the rendered boards, not a critic verdict. Locking a variation does not convert its stage-1 self-scores into independent ones — every score in critique.json remains [UNCONFIRMED] by any reader who had not seen the build."
+  },
+  "consumer": "docs/marketing-agency/design-runs/README.md index row. No design_runs table is applied and no Linear task was created (Linear MCP not authorised).",
+  "publishability": "No [NEEDS APPROVAL: …] placeholder appears on any board, so all three are promotable under SKILL.md §12 once a lock decision is taken.",
+  "ai_disclosure": "not required — pure typographic boards, no generated or photographic imagery (SKILL.md §14)",
+  "founder_decision": {
+    "chosen": "sweep (v3)",
+    "decided_by": "founder",
+    "decided_on": "2026-08-29",
+    "basis": "The founder viewed all three rendered boards and chose sweep. This is an explicit founder call, not an engine recommendation being rubber-stamped.",
+    "diverges_from_engine_recommendation": false,
+    "engine_recommended": "sweep (v3)",
+    "agreement_is_weak_evidence": "The engine and the founder agree, but the engine's recommendation rests on stage-1 self-scores only. Two readings, one of which is the builder's own, is not independent confirmation.",
+    "reason": "sweep's signature is a composition rather than a figure, so it does not depend on a claim (PRINCIPLES.md line 1) — which matters for a brand with exactly two approved facts. It is also the only direction carrying ra.ts motion.signature 'sweep' rendered static, so a locked template propagates coherently into video.",
+    "locked": true,
+    "claim_resolution": "None required. No board in this run carried a [NEEDS APPROVAL: …] placeholder; both on-canvas claims are verbatim ra.claims.md facts_approved."
+  },
+  "template": {
+    "html": "docs/marketing-agency/design-runs/templates/ra/sweep.html",
+    "tokens": "docs/marketing-agency/design-runs/templates/ra/sweep.tokens.json",
+    "slots": [
+      "TITLE",
+      "W",
+      "H",
+      "SAFE",
+      "EYEBROW",
+      "HOOK",
+      "SUPPORT",
+      "CTA",
+      "IMAGE",
+      "REPO_ROOT"
+    ],
+    "fidelity": "The template refilled at 1200x627 with the locked copy renders byte-identical (cmp) to the promoted winner PNG. The promoted board itself also re-renders byte-identical to public/marketing-agency/design-runs/ra-job-close-system-2026-08-29-01/sweep.png after the font-path rebase.",
+    "signature_is_executable": "The §13 step-4 rule is code in the template, not prose about it: the line, step, thickness, tick and riser are all derived from the measured box, and both degradation paths were rendered and looked at rather than asserted.",
+    "corrections_made_at_lock": [
+      "PORTRAIT RULE. 59.4% of height is a LANDSCAPE proportion. Carried onto 1080x1440 it stranded the tape in an empty light field with the support marooned ~400px below — two voids with the message squeezed between. On a portrait box the dry field is now sized to its content.",
+      "RISER PLACEMENT. The manifest and tokens.json said 'one 56px gutter clear of the hook's longest line rather than at a fixed column'; the board's source comment said '80.7% of width'. The pixels settle it — hook right edge 802.4, riser 968 — so 56px was the CONSTRAINT the column was checked against, not the placement. The template applies the column first and the gutter as an override.",
+      "LONE CTA. With the support empty, flex space-between put the og-image's CTA at the bottom-LEFT where the locked board puts it hard right. A single-item bottom row now justifies to flex-end."
+    ]
+  },
+  "funnel": {
+    "rendered_and_inspected": true,
+    "method": "Every format rendered with scripts/design/render-board.mjs and the PNG read back into context and looked at (SKILL.md §8, PRINCIPLES.md line 3). All receipts blocked:0, fontsFailed:[].",
+    "assets": [
+      {
+        "name": "landing-hero",
+        "dims": "1600x900",
+        "line": 535,
+        "step": 65,
+        "riser": 1291,
+        "flat": false
+      },
+      {
+        "name": "post-2",
+        "dims": "1080x1440",
+        "line": 1232,
+        "step": 104,
+        "riser": 871,
+        "flat": false
+      },
+      {
+        "name": "post-3",
+        "dims": "1080x1440",
+        "line": 1232,
+        "step": 104,
+        "riser": 871,
+        "flat": false
+      },
+      {
+        "name": "post-4",
+        "dims": "1080x1440",
+        "line": 1232,
+        "step": 104,
+        "riser": 871,
+        "flat": false
+      },
+      {
+        "name": "story",
+        "dims": "1080x1920",
+        "line": 1605,
+        "step": 138,
+        "riser": 871,
+        "flat": false,
+        "note": "safeY 155 — §11's centre 1080x1610 story safe zone"
+      },
+      {
+        "name": "og-image",
+        "dims": "1200x630",
+        "line": 374,
+        "step": 45,
+        "riser": 968,
+        "flat": false
+      },
+      {
+        "name": "email-header",
+        "dims": "1200x400",
+        "line": 270,
+        "step": 29,
+        "riser": 968,
+        "flat": false,
+        "note": "line pushed down from the proportional 238 to clear the hook; exported at 2x (2400x800) per §11"
+      }
+    ],
+    "degradation_proven": {
+      "hide": "1200x320 and 1200x240 both hide the line and fall back to a flat navy field with the hook reversed out. Rendered and looked at.",
+      "flatten": "600x300 renders a straight full-bleed line with no riser. Rendered and looked at.",
+      "reachability": "At 1200 wide the HIDE rule fires before the FLATTEN rule — a width-derived 98px hook plus its eyebrow needs more height than any box short enough to flatten (H < 333). Flatten is reachable only on narrower canvases."
+    },
+    "weakest": "story (1080x1920) — roughly 1200px of unbroken navy between hook and line. Deliberate negative space rather than an error, but the board to revisit first."
+  },
+  "promoted": {
+    "on": "2026-08-29",
+    "record": "docs/marketing-agency/design-runs/ra-job-close-system-2026-08-29-01/",
+    "assets": "public/marketing-agency/design-runs/ra-job-close-system-2026-08-29-01/",
+    "trackability_checked": "git check-ignore -v run on all 11 target paths before writing. Three matched .gitignore lines beginning '!' (negations at .gitignore:193 and :199), which means NOT ignored — the check-ignore exit code alone would have misread those as blockers. No target path is ignored."
+  }
+}

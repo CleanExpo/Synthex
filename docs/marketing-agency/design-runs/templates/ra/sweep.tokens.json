@@ -1,0 +1,92 @@
+{
+  "name": "sweep",
+  "brand": "ra",
+  "locked_on": "2026-08-29",
+  "locked_from_run": "ra-job-close-system-2026-08-29-01",
+  "locked_variation": "v3",
+  "locked_by": "founder — explicit decision, not an engine recommendation being rubber-stamped",
+  "palette": {
+    "wet_field": "#1C2E47",
+    "dry_field": "#F5F5F4",
+    "line": "#8A6B4E",
+    "type_on_wet": "#F5F5F4",
+    "type_on_dry": "#1C2E47",
+    "cta_fill": "#D4A574",
+    "cta_type": "#1C2E47"
+  },
+  "type": {
+    "display": {
+      "family": "Inter",
+      "weight": 800,
+      "line_height": 1.04,
+      "letter_spacing": "-0.02em"
+    },
+    "body": { "family": "Inter", "weight": 400, "line_height": 1.32 },
+    "eyebrow": { "weight": 500, "letter_spacing": "0.10em", "line_height": 1 },
+    "mono": "absent by design — the typeface axis is varied by treatment, not family",
+    "ramp_is_derived": {
+      "why": "taste/ra.md CONSTRAINT — ra.design.md's ramp is anchored to 1920x1080 video and cannot be scaled to a social box; it must be re-anchored. §11's floor is read as a proportion of canvas width.",
+      "hook_px": "round(W * 0.0815)  — 98 at 1200 · 88 at 1080 · 130 at 1600",
+      "floor_px": "round(W * 0.0407) — 49 at 1200 · 44 at 1080 · 65 at 1600; support, eyebrow and CTA all sit on this floor"
+    }
+  },
+  "layout": {
+    "safe_area_px": 48,
+    "safe_area_px_story": "round(H * 0.08073) when H >= 1.7 * W — 155 at 1080x1920, keeping all text inside §11's centre 1080x1610 story safe zone",
+    "structure": "corner-anchored blocks — eyebrow + hook top-left in the wet field, support + CTA bottom row in the dry field",
+    "gutter_px": "round(W * 0.0467) — 56 at 1200",
+    "hook_margin_top_px": "round(hook * 0.2245) — 22 at hook 98",
+    "support_max_width_px": "round(W * 0.6167) — 740 at 1200",
+    "cta": {
+      "padding_px": "round(floor * 0.449) round(floor * 0.6122) round(floor * 0.5306) — 22 30 26 at floor 49",
+      "radius_px": "round(floor * 0.1633) — 8 at floor 49"
+    }
+  },
+  "signature": "A stepped warm-earth wet-line running full-bleed across the board, dividing a navy wet field from a light dry field — the tape mark a tech leaves where the water stopped. RA's declared 'sweep' motion signature rendered static.",
+  "signature_rule": {
+    "line_y": "round(H * 0.594) on a LANDSCAPE box. On a PORTRAIT box (H > W) the 59.4% proportion is dropped and the dry field is sized to its content instead — the line sits one clearance above the bottom block. Carried literally onto 1080x1440 the landscape proportion stranded the tape in an empty light field with the support marooned 400px below it.",
+    "line_y_clamp": "always clamped into [top_block_bottom + clearance, bottom_block_top - clearance], so a short box pushes the line DOWN rather than letting it cross the hook (the 1200x400 email header is exactly this case)",
+    "clearance_px": "the floor text size — 49 at 1200",
+    "step_depth_px": "round(H * 0.072) — 45 at 627",
+    "thickness_px": "max(4, round(W * 0.008333)) — 10 at 1200",
+    "tick_px": "step + thickness, so the riser corner always closes — 55 at the locked size",
+    "riser_x": "max(round(W * 0.80667), round(hook_block_right + gutter)) — the locked column, PUSHED RIGHT whenever it would fall within one gutter of the hook's measured right edge. Measured after document.fonts.ready; measuring a fallback face mis-places it.",
+    "flattens_when": "step < 24px (i.e. H < 333px), or the riser would need to pass W - 2*gutter. A step under 24px reads as a rendering artefact, not a taped mark. Proven at 600x300: straight line, no riser.",
+    "hides_when": "the hook block and the bottom block leave no band where the line can sit clear of both. The board falls back to a flat navy field with all type reversed out. Proven at 1200x320 and 1200x240.",
+    "reachability_note": "At 1200 wide the hide rule fires before the flatten rule — a 98px hook plus its eyebrow needs more height than any box short enough to flatten. Flatten is reachable only on narrower canvases, where the width-derived ramp shrinks the type with the box."
+  },
+  "contrast_measured": {
+    "method": "WCAG 2.1 from rendered PNG pixels, not arithmetic — see the run's measure-contrast.mjs",
+    "type_on_wet": "12.57:1",
+    "type_on_dry": "12.57:1",
+    "cta_type_on_cta_fill": "6.16:1"
+  },
+  "constraints": {
+    "warm_earth_is_a_field_colour": "#8A6B4E carries NO type at any size. Measured: neutral-50 on it 4.48:1, navy on it 2.81:1 — both fail the §11 4.5:1 floor. Here it is the line and nothing else.",
+    "tan_only_as_cta_fill": "#D4A574 carries type only on navy (6.16:1). Tan on neutral-50 measures 2.04:1.",
+    "display_family": "Inter 800 is ra.ts typography.display — the brand's own declared face, which SKILL.md §10 explicitly exempts from the Inter-as-display ban. Do not substitute a face ra.ts has not declared.",
+    "short_hooks": "Four to six words. At the derived hook size a seven-word hook costs three lines and half a landscape board.",
+    "no_logo": "missing-logo:ra — public/logos/ does not exist. Identify the brand with the caption-type eyebrow 'RestoreAssist'. Never 'RA' (ra.ts doNot), never styled as a lock-up.",
+    "claims": "Only ra.claims.md facts_approved may render. No price, no aggregate rating or review count, no NCC 2022 in any form, no app-store claim, and never drop 'aligned' from a standards claim.",
+    "no_shadows": true
+  },
+  "font_src": {
+    "Inter-ExtraBold": "public/fonts/ra/Inter-ExtraBold.woff2",
+    "Inter-Regular": "public/fonts/ra/Inter-Regular.woff2",
+    "JetBrainsMono-Medium": "public/fonts/ra/JetBrainsMono-Medium.woff2"
+  },
+  "template": "docs/marketing-agency/design-runs/templates/ra/sweep.html",
+  "template_slots": [
+    "TITLE",
+    "W",
+    "H",
+    "SAFE",
+    "EYEBROW",
+    "HOOK",
+    "SUPPORT",
+    "CTA",
+    "IMAGE",
+    "REPO_ROOT"
+  ],
+  "template_fidelity": "The template refilled at 1200x627 with the locked copy renders byte-identical (cmp) to the promoted winner PNG."
+}
