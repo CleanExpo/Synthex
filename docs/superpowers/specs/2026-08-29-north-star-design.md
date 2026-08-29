@@ -215,9 +215,17 @@ guard (new industry string outside the canonical map fails CI);
 1. GSC property per publishing domain, registered as gate entries; the
    `gsc-adapter.ts` bridge gets its missing route/cron so scoring models see
    live rows (today: CLI-only `[VERIFIED]`).
-2. GA4 per brand: provision, register in `verification-gates.md`
-   (`[UNCONFIRMED as live today]` — the skills' property ids are worked
-   examples, not verified properties).
+2. GA4 at **organisation** level: provision, register in
+   `verification-gates.md` (`[UNCONFIRMED as live today]` — the skills'
+   property ids are worked examples, not verified properties). Per-brand GA4
+   is **not** in scope: `GA4Property` is keyed
+   `@@unique([organizationId, propertyId])` with no brand relation
+   `[VERIFIED prisma/schema.prisma:5422-5436]`, and
+   `/api/integrations/ga4/select-property` resolves on that pair, so an
+   organisation running several brands cannot attribute a property to one of
+   them. Brand-level GA4 would need a schema change plus brand-aware
+   authorisation — a separate decision, deliberately not smuggled in here.
+   Until it is taken, brand-level GA4 metrics are `DATA_REQUIRED`.
 3. **Doc-freshness mechanism** (the operational meaning of "know the docs
    like no one else"): a `KnowledgeSource` registry — URL, tier (1–4),
    `last_verified_date`, content hash; weekly cron fetch-hash-diff flags
@@ -280,9 +288,30 @@ credible experience in or adjacent to the sector; ≥1 substantiatable claim
 source identified; domain decision made (G3); unit-economics hypothesis with
 a CAC ceiling (G7). Then the playbook runs without new engineering.
 
-**DoD:** the finish-line sentence, plus the third board metric armed:
-content-attributed revenue join (Stripe → UTM/GSC source) live, honestly
-reported as `[window not yet elapsed]` until ~Dec 2026 `[INFERENCE]`.
+**DoD:** the finish-line sentence, plus the third board metric armed.
+
+**The attribution key chain, stated because the first draft got it wrong.**
+Search Console reports search dimensions — query, page, country, device,
+searchAppearance — and carries **no** UTM values; UTM parameters are Analytics
+campaign data. An earlier draft of this spec wrote the join as
+"Stripe → UTM/GSC source", which is not a join that exists. The real chain is:
+
+`platform_posts` row → the tagged outbound link it published
+(`utm_source` / `utm_medium` / `utm_campaign` / `utm_id`, generated per post)
+→ landing session (GA4 campaign data) → Stripe Checkout session
+(`client_reference_id` or metadata carrying the same `utm_id`) → the
+conversion.
+
+GSC is reserved for organic-search metrics and never appears in this chain.
+Because Phase 4 publishes to LinkedIn first, the tagged link is the only
+durable key — referrer alone is not one.
+
+**Armed means both cases are handled**, not just the happy one: an
+_attributed_ conversion resolves end to end, and an _unattributed_ conversion
+(direct, stripped parameters, cross-device) is counted as unattributed rather
+than silently dropped or optimistically assigned. A metric that can only
+describe its successes overstates itself. Reported `[window not yet elapsed]`
+until ~Dec 2026 `[INFERENCE]`.
 
 ---
 
@@ -302,13 +331,39 @@ throwaway DB, then **stop — founder applies**. `apply_migration` only; never
   `jtbd Json` (functional/emotional jobs, triggers — foundation shape),
   `voice Json` (vocabulary/emphasis/avoid — taxonomy `aiPersona` shape),
   `provenance` (`foundation | taxonomy-draft | client-research`),
-  `verifiedOn?`, `gateRef?`, `expiresOn?`. Unique (org, brand, sector,
-  sub-sector, name).
-- `KnowledgeSource` _(new, DDL)_ — `url`, `tier Int`, `contentHash`,
-  `lastVerifiedAt`, `confidence` (`CONFIRMED|INFERRED|SPECULATIVE`),
-  `sectorId?`. Feeds the freshness cron.
-- `CitationSample` _(new, DDL)_ — `panelRunAt`, `engine`, `prompt`,
-  `citedDomains Json`, `sectorId`. Directional only.
+  `verifiedOn?`, `gateRef?`, `expiresOn?`.
+
+  **Uniqueness.** `brandSlug` and `subSectorId` are both nullable, and
+  Postgres treats `NULL`s as distinct by default — so a naive composite
+  unique would silently permit duplicate org-scoped or whole-sector personas.
+  The constraint is therefore declared `NULLS NOT DISTINCT` over
+  (`organizationId`, `brandSlug`, `sectorId`, `subSectorId`, `name`), which
+  is available on the production instance `[VERIFIED — Synthex prod is
+PostgreSQL 17.4; NULLS NOT DISTINCT landed in PG 15]`. Prisma cannot yet
+  express this in schema syntax, so the migration adds it as a raw
+  `CREATE UNIQUE INDEX ... NULLS NOT DISTINCT` alongside the model.
+
+  **Publication eligibility — the predicate, not a sentiment.** A persona may
+  reach a publishable canvas **iff all** of: `provenance = 'foundation'` (a
+  `taxonomy-draft` row qualifies only once a foundation-grade row for the same
+  key supersedes it, at which point the draft is superseded, not promoted);
+  `gateRef` resolves to a gate whose registry state is approved; and
+  `expiresOn` is null or in the future. `taxonomy-draft` rows stay fully
+  usable for persona-stack assembly, briefing and drafting — they are rejected
+  **at the publish boundary only**, which is where the §7.6 workflow gates
+  already sit. §10 Phase 4 carries the guard test.
+
+- `KnowledgeSource` _(new, DDL)_ — `organizationId` (RLS key — §7.1 admits no
+  exception, and a source registry is second-brain data like any other),
+  `url`, `tier Int`, `contentHash`, `lastVerifiedAt`, `confidence`
+  (`CONFIRMED|INFERRED|SPECULATIVE`), `sectorId?`. Indexed on
+  `organizationId`; tenant-scoped RLS policy. Feeds the freshness cron.
+- `CitationSample` _(new, DDL)_ — `organizationId` (RLS key, as above),
+  `panelRunAt`, `engine`, `prompt`, `citedDomains Json`, `sectorId`. Indexed
+  on `organizationId`; tenant-scoped RLS policy. Directional only.
+
+  Both were specified without a tenancy key in the first draft, contradicting
+  §7.1. Corrected here rather than left for the implementer to notice.
 
 ---
 
@@ -339,16 +394,16 @@ throwaway DB, then **stop — founder applies**. `apply_migration` only; never
 
 ## 8. Risk & assumption register
 
-| #   | Risk / assumption                                                                               | Tag                                                              | Mitigation                                                                                               |
-| --- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| R1  | RLS is enabled on the live KG tables (the archived DDL declares it; live state not yet checked) | `[UNCONFIRMED]`                                                  | Phase 0 DoD includes `pg_policies` check before any multi-org write.                                     |
-| R2  | GA4 properties per brand exist                                                                  | `[UNCONFIRMED]`                                                  | Phase 2 provisions + registers; until then GA4-dependent metrics are `DATA_REQUIRED`.                    |
-| R3  | Named authors are available and willing                                                         | `[UNCONFIRMED — founder decision]`                               | Open question 1; Phase 3 blocks Phase 4 publishing, not Phase 0–2 engineering.                           |
-| R4  | Content-attributed revenue readable before ~Dec 2026                                            | `[INFERENCE — window arithmetic]`                                | Reported as `window not yet elapsed`, never back-filled optimistically.                                  |
-| R5  | The 34-vertical taxonomy fits AU sub-markets the founder targets                                | `[UNCONFIRMED]`                                                  | Taxonomy rows are drafts; foundation-grade profiles supersede. Sector Two entry gate re-validates.       |
-| R6  | Skill files carry broken foundation references (e.g. "Phase 3.1.2" vs §3.2 headings)            | `[VERIFIED intelligence-loop R6/spec:365]`                       | Persona extraction (Phase 1) reads the foundation directly with line anchors, never via skill citations. |
-| R7  | BullMQ worker infra for auto-research is deployable on current hosting                          | `[UNCONFIRMED]`                                                  | Phase 0.4 prefers the vercel.json cron chassis; BullMQ only if cron cadence proves insufficient.         |
-| R8  | The Aug 2026 spam update's "legitimate programmatic survived" holds for our pattern             | `[VERIFIED as reported — SEL/SER]`, generalisation `[INFERENCE]` | Per-sector intent tests + human-signal thresholds in every piece's kill criteria.                        |
+| #   | Risk / assumption                                                                               | Tag                                                              | Mitigation                                                                                                                                          |
+| --- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | RLS is enabled on the live KG tables (the archived DDL declares it; live state not yet checked) | `[UNCONFIRMED]`                                                  | Phase 0 DoD includes `pg_policies` check before any multi-org write.                                                                                |
+| R2  | GA4 is organisation-scoped, so brand-level attribution is unavailable                           | `[VERIFIED prisma/schema.prisma:5422-5436]`                      | Phase 2 provisions org-level GA4 and registers it; brand-level GA4 metrics stay `DATA_REQUIRED` until the schema decision in §5 Phase 2.2 is taken. |
+| R3  | Named authors are available and willing                                                         | `[UNCONFIRMED — founder decision]`                               | Open question 1; Phase 3 blocks Phase 4 publishing, not Phase 0–2 engineering.                                                                      |
+| R4  | Content-attributed revenue readable before ~Dec 2026                                            | `[INFERENCE — window arithmetic]`                                | Reported as `window not yet elapsed`, never back-filled optimistically.                                                                             |
+| R5  | The 34-vertical taxonomy fits AU sub-markets the founder targets                                | `[UNCONFIRMED]`                                                  | Taxonomy rows are drafts; foundation-grade profiles supersede. Sector Two entry gate re-validates.                                                  |
+| R6  | Skill files carry broken foundation references (e.g. "Phase 3.1.2" vs §3.2 headings)            | `[VERIFIED intelligence-loop R6/spec:365]`                       | Persona extraction (Phase 1) reads the foundation directly with line anchors, never via skill citations.                                            |
+| R7  | BullMQ worker infra for auto-research is deployable on current hosting                          | `[UNCONFIRMED]`                                                  | Phase 0.4 prefers the vercel.json cron chassis; BullMQ only if cron cadence proves insufficient.                                                    |
+| R8  | The Aug 2026 spam update's "legitimate programmatic survived" holds for our pattern             | `[VERIFIED as reported — SEL/SER]`, generalisation `[INFERENCE]` | Per-sector intent tests + human-signal thresholds in every piece's kill criteria.                                                                   |
 
 ---
 
@@ -374,13 +429,32 @@ throwaway DB, then **stop — founder applies**. `apply_migration` only; never
 
 ## 10. Verification plan
 
-Phase 0:
+Phase 0 — three separate gates, deliberately not collapsed into one:
 
 ```bash
+# (a) static / unit
 npx prisma validate
-npx jest --config config/jest/jest.worktree.cjs tests/unit/knowledge-graph/  # new guard: no-key ⇒ DATA_REQUIRED, builder writes, RLS check
+npx jest --config config/jest/jest.worktree.cjs tests/unit/knowledge-graph/  # no-key ⇒ DATA_REQUIRED; builder writes against a disposable DB
 npm run type-check && npm run lint && npm test
+
+# (b) live RLS gate — read-only, BLOCKING, exact tables
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
+  SELECT tablename, policyname, cmd
+  FROM pg_policies
+  WHERE schemaname = 'public'
+    AND tablename IN ('client_knowledge_entities','client_knowledge_edges');"
+# Fails the phase unless BOTH tables return their expected policies.
 ```
+
+**`npm run rls:coverage` is not a substitute and must not be cited as one.**
+It reads `prisma/schema.prisma` off disk with `readFileSync` and never opens a
+database connection `[VERIFIED scripts/validate-rls-coverage.js:18,81]`, so it
+cannot see a live policy — and these two tables are not in `schema.prisma`
+until Phase 0.2 lands anyway. The repo's live adversarial RLS job is
+non-blocking and does not assert these tables. Hence the explicit read-only
+`pg_policies` query above, blocking, before any multi-org write. This is the
+gate R1 promises; an earlier draft named it in the risk register but never
+placed it in the verification plan.
 
 Phase 1:
 
@@ -402,12 +476,17 @@ own-post gate: the new `platform_posts` row + linked post-dated
 
 ```bash
 npx jest --config config/jest/jest.worktree.cjs tests/unit/authors/         # no published piece without AuthorProfile + Person schema
+npx jest --config config/jest/jest.worktree.cjs tests/unit/personas/        # publish boundary rejects provenance='taxonomy-draft',
+                                                                            # an unapproved gateRef, or a past expiresOn — while the
+                                                                            # same draft row still assembles into a persona stack
 ```
 
 Programme metrics (the board's three, in order of arming): published-and-
 measured posts/week; verified-claims coverage (brands/sectors with ≥1
 verified case-study claim — measurable in-repo today); content-attributed
-paid revenue (Stripe→UTM/GSC join; CARSI $795 first).
+paid revenue (the Phase 5 key chain: tagged post link → GA4 campaign
+session → Stripe conversion, attributed **and** unattributed cases both
+handled; GSC is not in this chain; CARSI $795 first).
 
 ---
 
