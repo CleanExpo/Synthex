@@ -138,3 +138,33 @@ No `design_runs` table is applied and no Linear task was created (Linear MCP not
 authorised). The index row in `docs/marketing-agency/design-runs/README.md` is
 the only consumer of this manifest. Nothing was published, posted or scheduled —
 the engine has no publish path, and everything here remains DRAFT.
+
+## Claim correction — 29/08/2026, after the lock
+
+The locked board and four funnel formats originally carried
+`Free 15-day trial, including 50 inspection report credits`. **That claim has
+been withdrawn from every board in this run** and replaced with
+`Built for restoration work across Australia and New Zealand`.
+
+Review on [#928](https://github.com/CleanExpo/Synthex/pull/928) flagged that the
+trial claim omitted a material cost, and checking the source proved it right:
+<https://restoreassist.app/pricing> states that "Report generation on every plan
+— including your free trial — runs on your own Anthropic or OpenAI API key",
+billed separately by the provider, and /signup states "An Anthropic or OpenAI
+API key is required to operate RestoreAssist. You pay providers directly, at
+cost."
+
+A trial advertised as free while the customer must supply and pay for a
+third-party API key is a material omission. The register's approved string now
+carries that qualification inline, which makes it 108 characters — too long for
+a support line at the 49px floor. `ra.claims.md` states the rule for exactly
+this case: **drop the claim from the board, never the qualification from the
+claim.** So the boards took the AU/NZ fact instead, which is self-sufficient at
+board size.
+
+The composition is unchanged — this is a copy swap inside the locked signature,
+not a re-lock. The support line wraps naturally rather than on an authored
+`<br>`; the authored break left "Zealand" as a widow on a third line.
+
+The claim's final wording is the founder's, not this run's. It is marked
+`review_required: founder-wording` in `ra.claims.md`.

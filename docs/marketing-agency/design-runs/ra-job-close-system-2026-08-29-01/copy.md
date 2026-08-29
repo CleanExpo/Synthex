@@ -9,18 +9,18 @@ appears — which is what makes the set promotable under SKILL.md §12.
 
 - **Eyebrow:** RestoreAssist
 - **Hook:** Draw the line. Send the report.
-- **Support:** Free 15-day trial, including 50 inspection report credits.
+- **Support:** Built for restoration work across Australia and New Zealand.
 - **CTA:** Start free
 
 ## Funnel suite
 
 | Asset        | Dims      | Hook                            | Support                                                      | CTA        |
 | ------------ | --------- | ------------------------------- | ------------------------------------------------------------ | ---------- |
-| landing-hero | 1600×900  | Draw the line. Send the report. | Free 15-day trial, including 50 inspection report credits.   | Start free |
+| landing-hero | 1600×900  | Draw the line. Send the report. | Built for restoration work across Australia and New Zealand. | Start free |
 | post-2       | 1080×1440 | Readings taken. Report drafted. | Built for restoration work across Australia and New Zealand. | Start free |
-| post-3       | 1080×1440 | Mark the wall. Keep the record. | Free 15-day trial, including 50 inspection report credits.   | Start free |
-| post-4       | 1080×1440 | Finish the job at the job.      | Free 15-day trial, including 50 inspection report credits.   | Start free |
-| story        | 1080×1920 | Draw the line. Send the report. | Free 15-day trial, including 50 inspection report credits.   | Start free |
+| post-3       | 1080×1440 | Mark the wall. Keep the record. | Built for restoration work across Australia and New Zealand. | Start free |
+| post-4       | 1080×1440 | Finish the job at the job.      | Built for restoration work across Australia and New Zealand. | Start free |
+| story        | 1080×1920 | Draw the line. Send the report. | Built for restoration work across Australia and New Zealand. | Start free |
 | og-image     | 1200×630  | Draw the line. Send the report. | —                                                            | Start free |
 | email-header | 1200×400  | Draw the line.                  | —                                                            | —          |
 

@@ -98,7 +98,7 @@
     "claim_provenance": {
       "fail": false,
       "on_canvas_claims": [
-        "'Free 15-day trial, including 50 inspection report credits.' — verbatim ra.claims.md facts_approved[0]; appears on job-card and sweep",
+        "'Built for restoration work across Australia and New Zealand.' — verbatim ra.claims.md facts_approved[0]; appears on job-card and sweep",
         "'Built for restoration work across Australia and New Zealand.' — verbatim ra.claims.md facts_approved[1]; appears on drying-log"
       ],
       "needs_approval_placeholders": 0,
@@ -119,7 +119,7 @@
       "brief": "RestoreAssist — the job-close system water-damage restoration tradies use to turn field readings into insurer-facing inspection reports. Audience: Australian water-damage restoration tradies (sole traders and small companies); secondary, insurer claims teams and assessor networks. Goal: trial start. CTA: 'Start free'. Brand: ra. Asset: linkedin_post.",
       "dims": "1200x627",
       "facts": [
-        "Free 15-day trial, including 50 inspection report credits",
+        "Built for restoration work across Australia and New Zealand",
         "Built for restoration work across Australia and New Zealand"
       ],
       "pngs": [

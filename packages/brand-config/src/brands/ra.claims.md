@@ -14,17 +14,31 @@ brand: ra
 #   vg_ref       the row id in .claude/memory/verification-gates.md, if one exists
 #   expires_on   optional — coverage and offer claims should carry one
 facts_approved:
-  - claim: 'Free 15-day trial, including 50 inspection report credits'
-    source_url: 'https://restoreassist.app'
+  - claim: 'Free 15-day trial, 50 inspection report credits — reports run on your own Anthropic or OpenAI key, billed by them'
+    source_url: 'https://restoreassist.app/pricing'
     verified_on: 29/08/2026
     vg_ref: none
     expires_on: 28/02/2027
+    review_required: founder-wording
     note: >-
-      Source wording is "Start free — 15-day trial" and "15-day trial and 50
-      inspection report credits", with a live /signup path. Verified as actually
-      available on 29/08/2026, not a waitlist. Re-verify before reuse: a trial
-      length and a credit allowance are the two things most likely to change
-      quietly.
+      CORRECTED 29/08/2026 after review. The first version of this claim read
+      "Free 15-day trial, including 50 inspection report credits" and stopped
+      there. It was written from the homepage alone; /pricing was never fetched.
+      That page says: "Report generation on every plan — including your free
+      trial — runs on your own Anthropic or OpenAI API key", billed separately
+      by the provider, and /signup says "An Anthropic or OpenAI API key is
+      required to operate RestoreAssist. You pay providers directly, at cost."
+      A trial advertised as free while the customer must supply and pay for a
+      third-party API key is a material omission, and omitting it is the kind
+      of thing the ACL treats as misleading even where every word printed is
+      true. A canvas renders `claim` and never renders `note`, so the
+      qualification has to live in the string — the same reason CARSI's $795
+      claim carries "coming soon" inline.
+      THE FOUNDER OWNS THE FINAL WORDING. This phrasing is the shortest form
+      that still discloses who pays; it is deliberately an under-claim, not a
+      polished line. If it is judged too long for a board, the correct move is
+      to drop the claim from the board, never to drop the qualification from
+      the claim.
   - claim: 'Built for restoration work across Australia and New Zealand'
     source_url: 'https://restoreassist.app'
     verified_on: 29/08/2026
@@ -44,9 +58,33 @@ claim_review_owner: founder
 **Two claims, both offer-and-coverage.** Everything else renders as
 `[NEEDS APPROVAL: claim]` — the safe default, not a blocker.
 
-**No price is publishable.** The site states no price, no tier and no
-subscription cost as at 29/08/2026. There is therefore no source for any RA
-pricing claim, and none may be inferred from the trial terms.
+**No pricing claim is approved — but a pricing source exists.** An earlier
+version of this file said "the site states no price, no tier and no
+subscription cost". That was wrong, and wrong in an instructive way: it was
+inferred from the homepage, which was the only page fetched, and then written
+down as a verified fact. <https://restoreassist.app/pricing> publishes, as at
+29/08/2026:
+
+| Item            | Price                        | Per report |
+| --------------- | ---------------------------- | ---------- |
+| Free Trial      | $0 — 50 reports, 15 days     | —          |
+| Monthly         | $99/month — 50 reports/month | $1.98      |
+| 8 Reports Pack  | $20                          | $2.50      |
+| 25 Reports Pack | $50                          | $2.00      |
+| 60 Reports Pack | $100                         | $1.67      |
+| Add-ons         | $11/month each               | —          |
+
+Stated as "AUD, incl. GST. Tax invoices issued monthly." **Every per-report
+figure on that page is explicitly exclusive of AI provider costs**, which the
+customer pays directly.
+
+None of these are in `facts_approved`. Not because there is no source —
+there plainly is — but because approving a price is the founder's call, as
+VG-60 was for CARSI, and because any RA price printed on a canvas would have
+to carry the API-key cost the same way the trial claim now does. Distinguish
+the two states carefully: "not yet approved" is where RA pricing sits;
+"no source exists" is where the 4.8/50 rating sits, and they are not the
+same kind of blocked.
 
 ## The standards badges are the main exposure
 
@@ -89,16 +127,22 @@ App Store or Google Play link appears. Do not render an app-store badge, a
 Sourced from `.claude/memory/verification-gates.md`. Only `foundation-keeper`
 may flip a gate, and verbal confirmation does not flip one.
 
-| Candidate claim                       | VG row | Status                  | May print?                                       |
-| ------------------------------------- | ------ | ----------------------- | ------------------------------------------------ |
-| Free 15-day trial + 50 report credits | none   | Live-source verified    | **Approved** — in `facts_approved`               |
-| AU + NZ coverage                      | none   | Live-source verified    | **Approved** — in `facts_approved`               |
-| S500:2021-aligned report drafts       | none   | On site, hedged         | Only with "aligned" intact — never as compliance |
-| NCC 2022 compliance                   | VG-06  | `[verification needed]` | **No — not publishable in any form**             |
-| 4.8 / 50 aggregate rating             | VG-43  | `[verification needed]` | **No — and no live source exists**               |
-| iOS App Store availability            | VG-40  | `[verification needed]` | **No — no store link on the site**               |
-| GA4 + Search Console wired            | VG-44  | `[verification needed]` | Internal instrumentation, not a marketing claim  |
-| Trial signup conversion tracking      | VG-45  | `[verification needed]` | Internal instrumentation, not a marketing claim  |
+Rows already in `facts_approved` are listed **verbatim**, because a shortened
+paraphrase in this table is the thing most likely to get lifted onto a canvas
+instead of the approved string. The heading covers both states; the "May print?"
+column is the authority on which one a row is in.
+
+| Candidate claim                                                                                                     | VG row | Status                  | May print?                                                                       |
+| ------------------------------------------------------------------------------------------------------------------- | ------ | ----------------------- | -------------------------------------------------------------------------------- |
+| `Free 15-day trial, 50 inspection report credits — reports run on your own Anthropic or OpenAI key, billed by them` | none   | Live-source verified    | **Approved, wording pending founder** — in `facts_approved`                      |
+| `Built for restoration work across Australia and New Zealand`                                                       | none   | Live-source verified    | **Approved** — in `facts_approved`                                               |
+| $99/month · $20 / $50 / $100 report packs · AUD incl. GST                                                           | none   | Live source at /pricing | **Not yet approved** — founder's call, and any price must carry the API-key cost |
+| S500:2021-aligned report drafts                                                                                     | none   | On site, hedged         | Only with "aligned" intact — never as compliance                                 |
+| NCC 2022 compliance                                                                                                 | VG-06  | `[verification needed]` | **No — not publishable in any form**                                             |
+| 4.8 / 50 aggregate rating                                                                                           | VG-43  | `[verification needed]` | **No — and no live source exists**                                               |
+| iOS App Store availability                                                                                          | VG-40  | `[verification needed]` | **No — no store link on the site**                                               |
+| GA4 + Search Console wired                                                                                          | VG-44  | `[verification needed]` | Internal instrumentation, not a marketing claim                                  |
+| Trial signup conversion tracking                                                                                    | VG-45  | `[verification needed]` | Internal instrumentation, not a marketing claim                                  |
 
 ## Anti-references
 
