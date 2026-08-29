@@ -7,7 +7,7 @@
 > Rebuilding it is its own ticket — do not treat the counts as current.
 > `.claude/agents/index.md` is the accurate agent registry.
 
-## Agents (16)
+## Agents (17)
 
 | Agent                 | File                            | Domain                                                                   |
 | --------------------- | ------------------------------- | ------------------------------------------------------------------------ |

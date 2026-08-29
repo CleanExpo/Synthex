@@ -41,22 +41,27 @@ Concrete and located, e.g. "hook sits on the photo's brightest region, contrast
 
 ## Output — strict JSON only, nothing else
 
+**Every score is an integer from 1 to 5.** `0` is not a valid score and there is
+no "not applicable" — a criterion you cannot judge from the image is a `1` with
+the reason in `worst_three`. The numbers below are an illustrative shape, not a
+template to copy.
+
 ```json
 {
   "variations": [
     {
       "name": "...",
       "scores": {
-        "distinctive": 0,
-        "hierarchy": 0,
-        "clarity3s": 0,
-        "contrast": 0,
-        "platform": 0,
-        "cta": 0,
-        "spacing": 0,
-        "fidelity": 0,
-        "copy": 0,
-        "client_pay": 0
+        "distinctive": 3,
+        "hierarchy": 3,
+        "clarity3s": 3,
+        "contrast": 3,
+        "platform": 3,
+        "cta": 3,
+        "spacing": 3,
+        "fidelity": 3,
+        "copy": 3,
+        "client_pay": 3
       },
       "worst_three": ["...", "...", "..."],
       "claim_flags": [],

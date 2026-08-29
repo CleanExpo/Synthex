@@ -10,7 +10,7 @@ reads is a defect, so every run appends a row here.
 | --------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | Working set     | `.artifacts/design-runs/<run-id>/` (gitignored) | Every run. Boards, PNGs, manifest, critique. Throwaway explorations never touch the repo.               |
 | Promoted record | `docs/marketing-agency/design-runs/<run-id>/`   | On `/lock`, or an explicit "keep this run". The manifest, the critique, and the winning board's source. |
-| Promoted assets | `public/marketing-agency/design-runs/<run-id>/` | The winner PNG (plus losers kept as A/B material).                                                      |
+| Promoted assets | `public/marketing-agency/design-runs/<run-id>/` | The winner PNG only.                                                                                    |
 
 PNGs live under `public/` because `.gitignore:192` is a blanket `*.png` that
 allowlists only `public/**`, `components/**` and `app/**`. A PNG written under
@@ -22,7 +22,13 @@ with no consumer. This split also matches the existing campaign convention
 Anything under `public/` is served at a guessable URL on synthex.social. Never
 promote a board still carrying a `[NEEDS APPROVAL: …]` claim.
 
-`run-id` is `<brand>-<subject-slug>-<yyyy-mm-dd>`.
+`run-id` is `<brand>-<subject-slug>-<yyyy-mm-dd>-<nn>`, where `<nn>` is a
+two-digit sequence starting at `01`. Before writing, check
+`.artifacts/design-runs/` for existing directories on the same
+`<brand>-<subject-slug>-<yyyy-mm-dd>` stem and take the next free number —
+without it, a second run of the same brief on the same day silently overwrites
+the first, taking its boards, manifest and critique with it. The chosen id is
+the one used for the index row below and for the `/lock` promotion paths.
 
 ## Related files
 
