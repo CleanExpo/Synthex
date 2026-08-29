@@ -1,0 +1,59 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><title>carsi funnel/post-3</title><style>
+/* CARSI · calibration-field — locked 2026-08-29 from run
+   carsi-iicrc-cec-courses-2026-08-29-01 (v1). Tokens: calibration-field.tokens.json.
+   Slots: carsi funnel/post-3 1080 1440 CARSI Records that hold up later Documentation is part of the work, not paperwork added after it. See the courses 
+   Fill  with a data: URI from the grounded pipeline
+   (lib/services/ai/image-generation.ts) or leave the placeholder to keep the
+   tally field. Never a network URL — render-board.mjs aborts non-file: requests. */
+@font-face{font-family:'Lora';src:url('file:///home/user/Synthex/public/fonts/carsi/Lora-Bold.woff2') format('woff2');font-weight:700;font-display:block}
+@font-face{font-family:'Inter';src:url('file:///home/user/Synthex/public/fonts/carsi/Inter-Regular.woff2') format('woff2');font-weight:400;font-display:block}
+:root{--blue:#2563EB;--coffee:#2D2A26;--cream:#F2E8D5;--n50:#FBF8F2;--n100:#EFE7D9;--n900:#1A1714;--safe:48px}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1440px;overflow:hidden}
+body{background:var(--blue);color:var(--n50);font-family:'Inter',system-ui,sans-serif;
+padding:var(--safe);display:grid;grid-template-rows:auto 1fr auto}
+.mark{font-size:26px;letter-spacing:.22em;text-transform:uppercase}
+.field{display:grid;grid-template-columns:repeat(13,1fr);grid-template-rows:repeat(9,1fr);
+align-content:center;margin:64px 0}
+.field i{display:block;justify-self:start;align-self:center;width:34px;height:0;
+border-top:2px solid var(--n50)}
+.field img{width:100%;height:100%;object-fit:cover}
+.anchor{border-top:1px solid var(--n50);padding-top:36px}
+.hook{font-family:'Lora',Georgia,serif;font-size:84px;line-height:1.08}
+.support{margin-top:28px;font-size:34px;line-height:1.55;max-width:30ch}
+.meta{margin-top:40px;font-size:28px;letter-spacing:.06em}
+.cta{font-size:48px}
+</style></head><body>
+<header class="mark">CARSI</header>
+<section class="field" id="field"></section>
+<footer class="anchor">
+  <h1 class="hook">Records that hold up later</h1>
+  <p class="support">Documentation is part of the work, not paperwork added after it.</p>
+  <div class="meta"><span class="cta">See the courses</span></div>
+</footer>
+<script>
+/* Tally field. Columns and rows are derived from the field's own box so the
+   mark rhythm (76 x 96 px, the locked 1080x1440 cell) holds at every aspect
+   ratio instead of nine rows collapsing into a smudge on short formats.
+   At 1080x1440 the box is 984x868, which yields exactly 13 x 9 — the locked
+   winner renders byte-identical. A box too short for one clean row hides the
+   field's marks (keeping its grid space, so the anchor stays at the foot)
+   and lets the rule carry the header.
+   Skipped entirely when  was filled with real markup. */
+(function(){
+  var f=document.getElementById('field');
+  if(f.children.length||f.textContent.trim()) return;
+  var r=f.getBoundingClientRect();
+  if(r.height<40){f.style.visibility='hidden';return;}
+  var cl=function(v,lo,hi){return Math.max(lo,Math.min(hi,v));};
+  var C=cl(Math.round(r.width/76),3,24), R=cl(Math.round(r.height/96),1,9), h='';
+  f.style.gridTemplateColumns='repeat('+C+',1fr)';
+  f.style.gridTemplateRows='repeat('+R+',1fr)';
+  for(var y=1;y<=R;y++)for(var x=1;x<=C;x++){
+    var on=((x-y)%7+7)%7===0;
+    h+='<i style="grid-column:'+x+';grid-row:'+y+';opacity:'+(on?1:0.3)+'"></i>';
+  }
+  f.innerHTML=h;
+})();
+</script>
+</body></html>

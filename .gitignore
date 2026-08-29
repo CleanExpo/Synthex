@@ -184,7 +184,13 @@ bfg-secrets.txt
 tools/claude-seo/
 
 paperbanana/
+# Bare `templates/` matches a directory of that name at ANY depth. The
+# synthex-design engine locks themes to docs/marketing-agency/design-runs/
+# templates/<brand>/ (SKILL.md §13), which this silently swallowed — /lock
+# appeared to succeed while committing nothing. Re-included below.
 templates/
+!docs/marketing-agency/design-runs/templates/
+!docs/marketing-agency/design-runs/templates/**
 
 supabase/.branches/
 supabase/.temp/

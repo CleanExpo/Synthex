@@ -39,6 +39,6 @@ the one used for the index row below and for the `/lock` promotion paths.
 
 ## Run index
 
-| Date       | Brand | Asset          | Subject                            | Recommended     | Status | Gaps                                        | Record                                                                                    |
-| ---------- | ----- | -------------- | ---------------------------------- | --------------- | ------ | ------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| 2026-08-29 | carsi | instagram_post | IICRC continuing-education courses | `course-record` | DRAFT  | `missing-logo:carsi`, `missing-facts:carsi` | `.artifacts/design-runs/carsi-iicrc-cec-courses-2026-08-29-01/` — not promoted (unlocked) |
+| Date       | Brand | Asset          | Subject                            | Recommended                                                      | Status | Gaps                 | Record                                                                                                                       |
+| ---------- | ----- | -------------- | ---------------------------------- | ---------------------------------------------------------------- | ------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 2026-08-29 | carsi | instagram_post | IICRC continuing-education courses | `calibration-field` (locked; engine recommended `course-record`) | DRAFT  | `missing-logo:carsi` | [`carsi-iicrc-cec-courses-2026-08-29-01/`](carsi-iicrc-cec-courses-2026-08-29-01/) — locked, promoted, funnel suite rendered |
