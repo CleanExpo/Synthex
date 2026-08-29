@@ -1,0 +1,133 @@
+{
+  "subject": "CARSI's continuing-education courses for restoration technicians",
+  "asset": "instagram_post",
+  "dims": "1080x1440",
+  "brand": "carsi",
+  "status": "DRAFT",
+  "run_id": "carsi-iicrc-cec-courses-2026-08-29-01",
+  "category_default_avoided": "Training-provider posts in this space default to a smiling technician on a stock jobsite with a certification badge lock-up; no variation uses a person, a badge, or a photograph.",
+  "sources_read": [
+    "packages/brand-config/src/brands/carsi.design.md",
+    "packages/brand-config/src/brands/carsi.ts",
+    "packages/brand-config/src/brands/carsi.claims.md",
+    ".claude/memory/verification-gates.md"
+  ],
+  "axis_constraint": "carsi.ts declares only Lora (display) + Inter (body), and SKILL.md §10 bans Inter as display type, so all three variations set display in Lora. The typeface-class axis of §4 cannot vary for a two-family brand. Collision judged on colour strategy, layout system and cultural reference only.",
+  "gaps": ["missing-logo:carsi"],
+  "variations": [
+    {
+      "name": "calibration-field",
+      "direction": "Systematic repetition / calibration sheet",
+      "files": ["calibration-field/board.html"],
+      "hook": "Continuing education for technicians",
+      "cta": "See the courses",
+      "imagery": {
+        "mode": "none"
+      },
+      "tokens": {
+        "palette": {
+          "ground": "#2563EB",
+          "type": "#FBF8F2"
+        },
+        "type": {
+          "display": "Lora 700",
+          "body": "Inter 400"
+        },
+        "signature": "A 13x9 field of hairline tally marks, irregularly weighted — the reading grid as the whole upper field"
+      },
+      "contrast_measured": {
+        "type_on_ground": 4.88,
+        "marker_on_blue": "4.88:1"
+      },
+      "recommended": false,
+      "why": "Strongest scroll-stopper and the only board whose ground is blue, but the hook runs to four lines",
+      "revision": "Hook cut from four lines to two ('Continuing education for technicians'); eyebrow reduced to CARSI so the category is not stated twice; [NEEDS APPROVAL] marker moved off the CTA eye-line to a quiet line beneath it, at full opacity so it clears the 4.5:1 floor (4.88:1)."
+    },
+    {
+      "name": "course-record",
+      "direction": "Data-led / drying log",
+      "files": ["v2/post.png"],
+      "hook": "Every reading has a method behind it",
+      "cta": "See the courses",
+      "imagery": {
+        "mode": "none"
+      },
+      "tokens": {
+        "palette": {
+          "ground": "#2D2A26",
+          "type": "#F2E8D5",
+          "secondary": "#EFE7D9"
+        },
+        "type": {
+          "display": "Lora 700",
+          "body": "Inter 400"
+        },
+        "signature": "A four-row ruled ledger that reads as an actual course record, the withheld figure sitting in it as a row rather than a hero"
+      },
+      "contrast_measured": {
+        "type_on_ground": 11.75
+      },
+      "recommended": true,
+      "why": "Highest contrast on the board, the most patient and least sensational hook, and the only layout that is already a template — the four rows parameterise for a SERIES run"
+    },
+    {
+      "name": "ma-minimal",
+      "direction": "Japanese minimal (ma)",
+      "files": ["v3/post.png"],
+      "hook": "Practice, kept current",
+      "cta": "See the courses",
+      "imagery": {
+        "mode": "none"
+      },
+      "tokens": {
+        "palette": {
+          "ground": "#FBF8F2",
+          "type": "#1A1714",
+          "accent": "#2563EB"
+        },
+        "type": {
+          "display": "Lora 700",
+          "body": "Inter 400"
+        },
+        "signature": "A single blue hairline set to the headline measure, the only mark on the field"
+      },
+      "contrast_measured": {
+        "type_on_ground": 16.84,
+        "accent_on_ground": 4.88
+      },
+      "recommended": false,
+      "why": "Calmest and most on-voice, but names the least and leaves a large lower void"
+    }
+  ],
+  "critique": {
+    "stage_1": "self, from the rendered PNGs",
+    "stage_2": "independent-context review via the design-critic subagent (same model, isolated context — NOT cross-vendor)",
+    "collision_fail_first_pass": true,
+    "collision_note": "First pass failed: editorial-print and ma-minimal shared colour strategy AND layout system. v1 was redesigned onto a blue ground with a repeating-mark field to break it."
+  },
+  "consumer": "docs/marketing-agency/design-runs/README.md index row. No design_runs table is applied and no Linear task was created (Linear MCP not authorised).",
+  "founder_decision": {
+    "chosen": "calibration-field (v1)",
+    "diverges_from_engine_recommendation": true,
+    "engine_recommended": "course-record (v2)",
+    "reason": "v2's signature was the CEC-hours numeral as graphic; with facts_approved empty the numeral rendered [NEEDS APPROVAL] and the direction lost its hero element, leaving a void. v1's central idea is a graphic rather than a fact, so it survives an empty claims register.",
+    "locked": true,
+    "locked_on": "2026-08-29",
+    "claim_resolution": "The [NEEDS APPROVAL: hours per course] element was removed, not approved. The founder confirmed CEC hours are an internal number only, so it is out of scope for marketing surfaces permanently — recorded as a standing prohibition in carsi.claims.md rather than as a candidate awaiting sign-off."
+  },
+  "template": {
+    "tokens": "docs/marketing-agency/design-runs/templates/carsi/calibration-field.tokens.json",
+    "html": "docs/marketing-agency/design-runs/templates/carsi/calibration-field.html",
+    "fidelity": "Template output is byte-identical to the locked board (cmp, 1080x1440).",
+    "slots": ["TITLE", "W", "H", "EYEBROW", "HOOK", "SUPPORT", "CTA", "IMAGE"]
+  },
+  "funnel": [
+    "landing-hero 1600x900",
+    "post-2 1080x1440",
+    "post-3 1080x1440",
+    "post-4 1080x1440",
+    "story 1080x1920",
+    "og-image 1200x630",
+    "email-header 1200x400"
+  ]
+}

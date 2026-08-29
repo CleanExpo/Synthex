@@ -1,0 +1,50 @@
+{
+  "name": "calibration-field",
+  "brand": "carsi",
+  "locked_on": "2026-08-29",
+  "locked_from_run": "carsi-iicrc-cec-courses-2026-08-29-01",
+  "palette": {
+    "ground": "#2563EB",
+    "type": "#FBF8F2",
+    "rule": "#FBF8F2",
+    "field_mark": "#FBF8F2",
+    "field_mark_dim_opacity": 0.3
+  },
+  "type": {
+    "display": {
+      "family": "Lora",
+      "weight": 700,
+      "size_px": 84,
+      "line_height": 1.08
+    },
+    "body": { "family": "Inter", "weight": 400 },
+    "eyebrow": {
+      "size_px": 26,
+      "letter_spacing": "0.22em",
+      "transform": "uppercase"
+    },
+    "cta": { "size_px": 48 }
+  },
+  "layout": {
+    "safe_area_px": 48,
+    "grid": "header / field (1fr) / anchor",
+    "field": {
+      "columns": 13,
+      "rows": 9,
+      "mark_width_px": 34,
+      "mark_rule_px": 2
+    },
+    "anchor": { "rule_px": 1, "padding_top_px": 36 }
+  },
+  "signature": "A 13x9 field of hairline tally marks, irregularly weighted — the reading grid as the whole upper field",
+  "contrast_measured": { "type_on_ground": "4.88:1" },
+  "constraints": {
+    "display_family_locked": "Lora — carsi.ts declares only Lora + Inter; SKILL.md §10 bans Inter as display",
+    "no_shadows": true,
+    "claims": "Board must render claim-free. CEC hours are internal-only (carsi.claims.md)."
+  },
+  "font_src": {
+    "Lora": "public/fonts/carsi/Lora-Bold.woff2",
+    "Inter": "public/fonts/carsi/Inter-Regular.woff2"
+  }
+}

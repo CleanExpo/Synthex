@@ -39,6 +39,7 @@ may flip a gate, and verbal confirmation does not flip one.
 | IICRC S500 / S520 licensed publication access | VG-04, VG-05 | `[verification needed]`                       | No                                                              |
 | Catalogue depth / active course inventory     | VG-63        | `[verification needed]`                       | No                                                              |
 | Subscriber base figures                       | VG-64        | `[verification needed]`                       | No                                                              |
+| CEC hours per course                          | none         | Internal metric — founder, 29/08/2026         | **No — internal number, never a marketing claim**               |
 
 ## Anti-references
 
@@ -61,6 +62,11 @@ rather than inventing its own.
 - Do not imply IICRC endorsement or guaranteed certification outcomes.
 - Do not use testimonials, images, likenesses, or customer stories without
   consent evidence.
+- **Do not put CEC hours on a canvas.** Hours/CECs are an internal number
+  (founder, 29/08/2026). This is not a claim awaiting substantiation — it is
+  out of scope for marketing surfaces, so it will never move to
+  `facts_approved`. A design wanting an hours figure should be redesigned, not
+  escalated for approval.
 
 Also binding, from `carsi.ts` and `carsi.design.md`:
 
