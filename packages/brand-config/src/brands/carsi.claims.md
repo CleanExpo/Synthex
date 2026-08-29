@@ -10,7 +10,10 @@ brand: carsi
 # Every claim edit would otherwise force a package rebuild.
 #
 # facts_approved entries:
-#   claim        the exact wording that may appear on a canvas
+#   claim        the exact wording that may appear on a canvas. It MUST be
+#                self-sufficient: notes are never rendered, so every material
+#                qualification (who it covers, for how long, whether it can
+#                actually be bought) belongs INSIDE this string, not below it.
 #   source_url   where it is substantiated
 #   verified_on  DD/MM/YYYY
 #   vg_ref       the row id in .claude/memory/verification-gates.md, if one exists
@@ -25,15 +28,21 @@ facts_approved:
       The site says "From $20", a floor rather than a fixed price. Do not render
       this as "$20 entry" or "$20 a course" — that states more than the source
       supports. Must appear with the AUD/GST qualifier below.
-  - claim: '$795 a year for access to all published courses'
+  - claim: '$795 a year for one learner to access all published courses for 12 months — coming soon'
     source_url: 'https://carsi.com.au/pricing'
     verified_on: 29/08/2026
     vg_ref: VG-60
     expires_on: 28/02/2027
     note: >-
       Source wording is "100% access to all published CARSI courses for one
-      learner for 12 months". One learner — never render as team or seat
-      pricing. Must appear with the AUD/GST qualifier below.
+      learner for 12 months". The plan is labelled "Coming soon" on the pricing
+      page and CANNOT be purchased as of 29/08/2026 — only per-course buying and
+      the free tier are live. Advertising a price for an unavailable product is
+      misleading conduct under the ACL, so "coming soon" is part of the claim
+      string, not an optional note. Drop that phrase only when the plan is
+      actually purchasable, and re-verify the price on the same day.
+      Never render as team or seat pricing. Must appear with the AUD/GST
+      qualifier below.
   - claim: 'Prices in AUD, GST included'
     source_url: 'https://carsi.com.au/pricing'
     verified_on: 29/08/2026
@@ -68,9 +77,19 @@ figures, so that is the source recorded here. **The registry row itself still
 says ccwonline.com.au and has not been corrected — only `foundation-keeper`
 may write to `verification-gates.md`.**
 
-**Teams pricing is not approved.** The same page lists Teams Starter $299/yr,
-Teams Growth $799/yr and Full Library $2,499/yr, all marked "Coming Soon".
-VG-60 does not cover them and they are not in `facts_approved`.
+**Only per-course pricing is actually purchasable.** Re-checked 29/08/2026:
+the pricing page labels the $795 yearly membership **"Coming soon"**, alongside
+Teams Starter $299/yr, Teams Growth $799/yr and Full Library $2,499/yr. The only
+live options are per-course buying (from $20) and the free tier. The $795 claim
+therefore carries "— coming soon" **inside the claim string**, because a canvas
+renders `claim` and never renders `note`, and advertising a price for a product
+that cannot be bought is misleading conduct under the ACL. Teams pricing is not
+covered by VG-60 and is not approved in any form.
+
+**This makes VG-60's own wording stale.** The gate reads "$20 entry / $795/yr
+all-access" as at 26/04/2026, with no indication the annual plan is unreleased.
+A future re-verification should capture availability, not just the number —
+`foundation-keeper`'s call, not recorded here.
 
 ### Candidates awaiting founder sign-off
 
