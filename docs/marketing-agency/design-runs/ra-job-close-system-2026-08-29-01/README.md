@@ -62,7 +62,7 @@ described.
 | post-2/3/4    | 1080×1440 | 1232   | 104  | 871   | portrait — dry field sized to content                  |
 | story         | 1080×1920 | 1605   | 138  | 871   | portrait, plus §11's centre-1610 story safe area (155) |
 | og-image      | 1200×630  | 374    | 45   | 968   | proportional                                           |
-| email-header  | 1200×400  | 270    | 29   | 968   | line pushed down to clear the hook                     |
+| email-header  | 1200×400  | 303    | 29   | 968   | empty dry field — line sized to content, not 59.4%     |
 
 Three findings came out of rendering these rather than reasoning about them.
 
@@ -99,9 +99,16 @@ at 600×300, which renders a straight full-bleed line with no riser.
   hook and the line. It reads as deliberate negative space rather than an error,
   but it is the weakest board in the suite and the one to revisit first if a
   story is actually needed.
-- The **email header**'s dry field is empty below the line. That is faithful to
-  the concept — the dry side is the side with nothing on it — and it sits above
-  light email body content, but it is 130px of nothing in a 400px banner.
+- The **email header**'s dry field is empty below the line — faithful to the
+  concept, since the dry side is the side with nothing on it, and it sits above
+  light email body content. It was 130px of nothing in a 400px banner; the
+  content-sizing rule now also fires on a landscape box with an empty bottom
+  block, which takes it to 97px. The rule matters more than this 33px: the
+  orientation test alone let a landscape board keep a proportion derived from a
+  filled dry field, and on a taller box — 1600×900 with no support or CTA — that
+  leaves ~40% of the canvas holding nothing, which is exactly why CARSI's `ma`
+  board was rejected. Only visible because §13 step 4 renders every format and
+  looks at it.
 - The stage-1 critique's own note stands: at LinkedIn mobile scale the 10px
   riser renders about 3px and the step reads as a soft jog rather than a taped
   mark. Nothing in this lock addressed that.

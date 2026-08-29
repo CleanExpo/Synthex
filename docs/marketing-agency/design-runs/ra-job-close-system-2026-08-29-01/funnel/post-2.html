@@ -107,6 +107,18 @@ body{background:var(--n50);color:var(--primary);font-family:'RAInter',system-ui,
       to its content, because the locked proportion is a landscape one and
       carrying it onto a 3:4 or 9:16 canvas strands the tape in empty space.
 
+      An EMPTY dry field is the same failure as a portrait one, and the
+      orientation test alone missed it. The 2400x800 email header carries no
+      support line and no CTA, so it took the locked 59.4% and left 40% of the
+      canvas as a light void holding nothing — which is precisely why the CARSI
+      `ma` board was rejected ("the lower 45% reads as unfinished rather than as
+      intentional negative space; ma needs a weighted element holding the void
+      open, and there was none", taste/carsi.md). The condition that matters is
+      whether the dry field has content, not whether the box is portrait, so the
+      content-sized path now also applies whenever the bottom block is empty:
+      the line drops to one clearance above the safe area and the dry field
+      becomes a base rather than a half-canvas void.
+
    4. THE STEP FLATTENS. Below a 24px step depth the notch reads as a rendering
       artefact rather than as a taped mark, so the step is dropped and the line
       runs straight. 24px is 7.2% of 333px, so this is every box under ~333px
@@ -200,7 +212,7 @@ body{background:var(--n50);color:var(--primary);font-family:'RAInter',system-ui,
     // one clearance above the bottom block, the wet field takes the rest, and
     // the composition stays the one that was locked — hook top-left in the wet,
     // tape low, support and CTA in the dry.
-    var lineY = H > W ? maxY : Math.round(H * 0.594);
+    var lineY = (H > W || !botLive) ? maxY : Math.round(H * 0.594);
     lineY = Math.round(Math.min(Math.max(lineY, minY), maxY));
 
     // 4 — the step, and when it flattens.

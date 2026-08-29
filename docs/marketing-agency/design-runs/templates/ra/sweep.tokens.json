@@ -21,8 +21,16 @@
       "line_height": 1.04,
       "letter_spacing": "-0.02em"
     },
-    "body": { "family": "Inter", "weight": 400, "line_height": 1.32 },
-    "eyebrow": { "weight": 500, "letter_spacing": "0.10em", "line_height": 1 },
+    "body": {
+      "family": "Inter",
+      "weight": 400,
+      "line_height": 1.32
+    },
+    "eyebrow": {
+      "weight": 500,
+      "letter_spacing": "0.10em",
+      "line_height": 1
+    },
     "mono": "absent by design — the typeface axis is varied by treatment, not family",
     "ramp_is_derived": {
       "why": "taste/ra.md CONSTRAINT — ra.design.md's ramp is anchored to 1920x1080 video and cannot be scaled to a social box; it must be re-anchored. §11's floor is read as a proportion of canvas width.",
@@ -44,7 +52,7 @@
   },
   "signature": "A stepped warm-earth wet-line running full-bleed across the board, dividing a navy wet field from a light dry field — the tape mark a tech leaves where the water stopped. RA's declared 'sweep' motion signature rendered static.",
   "signature_rule": {
-    "line_y": "round(H * 0.594) on a LANDSCAPE box. On a PORTRAIT box (H > W) the 59.4% proportion is dropped and the dry field is sized to its content instead — the line sits one clearance above the bottom block. Carried literally onto 1080x1440 the landscape proportion stranded the tape in an empty light field with the support marooned 400px below it.",
+    "line_y": "round(H * 0.594) on a LANDSCAPE box. On a PORTRAIT box (H > W) the 59.4% proportion is dropped and the dry field is sized to its content instead — the line sits one clearance above the bottom block. Carried literally onto 1080x1440 the landscape proportion stranded the tape in an empty light field with the support marooned 400px below it. The same content-sizing applies on a LANDSCAPE box whose bottom block is EMPTY: the condition that matters is whether the dry field holds anything, not the box's orientation. With no support line and no CTA the line goes to the bottom of its clamp range, so the dry field is a base rather than a void. On the 1200x400 email header this moves the line 270 -> 303 and the dry field 130px -> 97px; the case it really guards is a taller landscape box with an empty bottom, where the proportional rule leaves ~40% of the canvas holding nothing.",
     "line_y_clamp": "always clamped into [top_block_bottom + clearance, bottom_block_top - clearance], so a short box pushes the line DOWN rather than letting it cross the hook (the 1200x400 email header is exactly this case)",
     "clearance_px": "the floor text size — 49 at 1200",
     "step_depth_px": "round(H * 0.072) — 45 at 627",
