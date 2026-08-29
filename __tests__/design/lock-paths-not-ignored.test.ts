@@ -51,6 +51,8 @@ const LOCK_TARGETS = [
   'docs/marketing-agency/design-runs/example-run-2026-01-01-01/copy.md',
   'docs/marketing-agency/design-runs/example-run-2026-01-01-01/winner/board.html',
   'docs/marketing-agency/design-runs/example-run-2026-01-01-01/winner/tokens.json',
+  // §13 step 3 — the funnel suite's source, written beside the winner.
+  'docs/marketing-agency/design-runs/example-run-2026-01-01-01/funnel/story.html',
   // §12 tier 2 — rendered boards. These are PNGs, so they live under
   // `public/` and depend on the `!public/**/*.png` negation holding.
   'public/marketing-agency/design-runs/example-run-2026-01-01-01/winner.png',

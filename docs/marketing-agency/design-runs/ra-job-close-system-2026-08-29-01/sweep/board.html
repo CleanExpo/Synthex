@@ -1,0 +1,78 @@
+<!doctype html>
+<!--
+  RestoreAssist · linkedin_post 1200x627 · direction: sweep
+  Signature: a stepped wet-line running full-bleed across the board — the tape
+  mark a tech leaves on a wall where the water stopped. Compositional, not a
+  figure, so it survives an empty claims register (taste/PRINCIPLES.md line 1).
+  SIGNATURE RULE at other box sizes (PRINCIPLES.md line 3): the line sits at
+  59.4% of height; the step depth is 7.2% of height; the riser stands at 80.7%
+  of width, which is chosen so it always falls clear of the hook's longest line
+  rather than at a fixed column. Below ~400px tall the step FLATTENS to a
+  straight line — a step under 24px reads as a rendering artefact, not a mark —
+  and below ~320px tall the line hides and the board falls back to a flat navy
+  field with the hook reversed out of it.
+-->
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<title>RestoreAssist — sweep</title>
+<style>
+  @font-face{font-family:'RAInter';src:url('../../../../../public/fonts/ra/Inter-Regular.woff2') format('woff2');font-weight:400;font-display:block}
+  @font-face{font-family:'RAInter';src:url('../../../../../public/fonts/ra/Inter-ExtraBold.woff2') format('woff2');font-weight:800;font-display:block}
+  @font-face{font-family:'RAMono';src:url('../../../../../public/fonts/ra/JetBrainsMono-Medium.woff2') format('woff2');font-weight:500;font-display:block}
+
+  :root{
+    --primary:#1C2E47; --secondary:#8A6B4E; --accent:#D4A574;
+    --n50:#F5F5F4;
+    --hook:98px; --support:49px; --meta:49px; --safe:48px;
+    --wet:372px;   /* boundary y, left of the riser — 59.4% of 627 */
+    --dry:327px;   /* boundary y, right of the riser — 45px step = 7.2% of 627 */
+    --riser:968px; /* 80.7% of width — clear of the hook's longest line */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1200px;height:627px;overflow:hidden}
+  body{background:var(--n50);color:var(--primary);font-family:'RAInter',system-ui,sans-serif;position:relative;overflow:hidden}
+
+  /* the wet field — everything above the stepped line */
+  .wet{
+    position:absolute;inset:0;background:var(--primary);
+    clip-path:polygon(0 0, 1200px 0, 1200px var(--dry), var(--riser) var(--dry), var(--riser) var(--wet), 0 var(--wet));
+  }
+  /* the tape mark itself */
+  .line{
+    position:absolute;inset:0;background:var(--secondary);
+    clip-path:polygon(
+      0 var(--wet), var(--riser) var(--wet), var(--riser) var(--dry), 1200px var(--dry),
+      1200px calc(var(--dry) + 10px), calc(var(--riser) + 10px) calc(var(--dry) + 10px),
+      calc(var(--riser) + 10px) calc(var(--wet) + 10px), 0 calc(var(--wet) + 10px));
+  }
+  .tick{position:absolute;left:var(--riser);top:var(--dry);width:10px;height:55px;background:var(--secondary)}
+
+  .top{position:absolute;left:var(--safe);top:var(--safe);color:var(--n50)}
+  .eyebrow{font-size:var(--meta);font-weight:500;letter-spacing:.10em;line-height:1}
+  .hook{font-size:var(--hook);font-weight:800;line-height:1.04;letter-spacing:-.02em;margin-top:22px}
+
+  .bottom{
+    position:absolute;left:var(--safe);right:var(--safe);bottom:var(--safe);
+    display:flex;justify-content:space-between;align-items:flex-end;gap:40px;
+  }
+  .support{font-size:var(--support);font-weight:400;line-height:1.32;max-width:740px}
+  .cta{background:var(--accent);color:var(--primary);font-size:var(--support);font-weight:800;line-height:1;border-radius:8px;padding:22px 30px 26px;white-space:nowrap}
+</style>
+</head>
+<body>
+  <div class="wet"></div>
+  <div class="line"></div>
+  <div class="tick"></div>
+
+  <div class="top">
+    <div class="eyebrow">RestoreAssist</div>
+    <h1 class="hook">Draw the line.<br>Send the report.</h1>
+  </div>
+
+  <div class="bottom">
+    <p class="support">Built for restoration work across Australia and New Zealand</p>
+    <div class="cta">Start free</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,139 @@
+{
+  "run_id": "ra-job-close-system-2026-08-29-01",
+  "stage_1": {
+    "performed": true,
+    "method": "self-critique from the rendered PNGs, read back into context with the Read tool after the final render of each board (SKILL.md §8)",
+    "bias_disclosure": "This is the builder scoring their own work. SKILL.md §9 exists because these scores carry self-justification bias; stage 2 is what removes it, and stage 2 did not run (see below). Treat every score here as [UNCONFIRMED] by an independent reader.",
+    "variations": [
+      {
+        "name": "job-card",
+        "scores": {
+          "distinctive": 4,
+          "hierarchy": 4,
+          "clarity3s": 4,
+          "contrast": 5,
+          "platform": 4,
+          "cta": 5,
+          "spacing": 4,
+          "fidelity": 5,
+          "copy": 5,
+          "client_pay": 4
+        },
+        "total": 44,
+        "worst_three": [
+          "The support block ends at x≈770, leaving the bottom-right quadrant below the CTA empty — the board's weight sits left while its action sits right, and nothing bridges them.",
+          "The two illustrative mono chips sit top-right, far from the hook, so the field-data idea reads as a garnish on the header rather than as the board's structure.",
+          "Navy ground with large reversed Inter is the most category-default of the three grounds — it is the direction most at risk of being mistaken for generic B2B SaaS."
+        ],
+        "claim_flags": [],
+        "slop_flags": [],
+        "edge_flags": []
+      },
+      {
+        "name": "drying-log",
+        "scores": {
+          "distinctive": 5,
+          "hierarchy": 4,
+          "clarity3s": 4,
+          "contrast": 5,
+          "platform": 5,
+          "cta": 4,
+          "spacing": 4,
+          "fidelity": 5,
+          "copy": 5,
+          "client_pay": 4
+        },
+        "total": 45,
+        "worst_three": [
+          "The CTA sits inside the ledger's action column, which makes it structurally elegant but visually embedded — it is second in hierarchy rather than clearly co-equal with the hook.",
+          "The ledger occupies the middle third and the hook the top; the eye can land on the numbers first and read the board as a data table before it reads it as an advertisement.",
+          "'RestoreAssist' in the header row still sits at the same optical size as the mono column labels, so at thumbnail scale the brand mark and the column headings compete."
+        ],
+        "claim_flags": [],
+        "slop_flags": [],
+        "edge_flags": [
+          "'RestoreAssist' terminates at x≈1152, exactly on the 48px safe boundary — touching it, not crossing it. Marginal, not a fail."
+        ]
+      },
+      {
+        "name": "sweep",
+        "scores": {
+          "distinctive": 5,
+          "hierarchy": 5,
+          "clarity3s": 5,
+          "contrast": 5,
+          "platform": 5,
+          "cta": 5,
+          "spacing": 4,
+          "fidelity": 5,
+          "copy": 5,
+          "client_pay": 5
+        },
+        "total": 49,
+        "worst_three": [
+          "The navy field's right third (x≈912–1200, y 48–327) carries nothing but the step notch — defensible as negative space in a sweep composition, but it is the board's weakest region.",
+          "No mono layer at all, so this is the least field-technical board of the three despite being the most conceptually specific to restoration work.",
+          "The step riser is the whole idea, and it is 10px wide — at LinkedIn mobile scale (~1200→375, a 3.2x reduction) it renders about 3px and the step reads as a soft jog rather than a taped mark."
+        ],
+        "claim_flags": [],
+        "slop_flags": [],
+        "edge_flags": []
+      }
+    ],
+    "collision": {
+      "fail": false,
+      "axis_constraint_applied": true,
+      "free_axes_judged": [
+        "colour strategy",
+        "layout system",
+        "cultural reference"
+      ],
+      "evidence": {
+        "colour strategy": "job-card = navy-dominant dark ground; drying-log = neutral-50-dominant light ground; sweep = bi-field navy/neutral-50 split with a warm-earth divider. Three distinct strategies.",
+        "layout system": "job-card = horizontal rule-banded docket; drying-log = tabular ledger grid with a split-off action column; sweep = stepped bi-field with corner-anchored blocks. Three distinct systems.",
+        "cultural reference": "job-card = carbon-copy work docket; drying-log = the moisture/drying log; sweep = the taped wet line on a wall. Three distinct references."
+      },
+      "note": "No pair shares two or more of the three free axes. The typeface-class axis is excluded per the recorded axis_constraint."
+    },
+    "claim_provenance": {
+      "fail": false,
+      "on_canvas_claims": [
+        "'Built for restoration work across Australia and New Zealand.' — verbatim ra.claims.md facts_approved[0]; appears on job-card and sweep",
+        "'Built for restoration work across Australia and New Zealand.' — verbatim ra.claims.md facts_approved[1]; appears on drying-log"
+      ],
+      "needs_approval_placeholders": 0,
+      "standing_prohibitions_checked": "No price, no aggregate rating or review count, no app-store claim, no NCC 2022 in any form, no S500 reference at all (the 'aligned' hedge is a candidate awaiting sign-off, not an approved fact, so it was designed around rather than placeholdered), no user or install counts, no competitor named.",
+      "illustrative_tokens": "All mono values (SAMPLE, WME 24.6%, DAY/TIME/WME/RH, 09:12, 24.6%, 71%, 08:47, 19.1%, 64%, 08:39, 14.8%, 58%) are illustrative and each board carrying them shows a visible SAMPLE marker. No standards citation, no real job, no real person."
+    },
+    "slop_scan": "No purple gradients, no glassmorphism, no nested cards, no icon tiles above headings, no decorative emoji, no meaningless 01/02/03 markers, no centred-everything, no stock clichés, two type families maximum per board. Inter as display type is ra.ts typography.display (Inter 800) — the brand's own declared face, which SKILL.md §10 explicitly exempts.",
+    "edge_safety": "All critical elements inside the 48px logo.safeAreaPx. One marginal: drying-log's brand mark terminates on the boundary.",
+    "contrast_measured_from_pixels": "16 of 16 text regions pass 4.5:1 across the three final boards. Navy/neutral-50 pairs measure 12.57:1; navy-on-tan CTA measures 6.16:1. Method and regions in measure-contrast.mjs and each variation's regions.json."
+  },
+  "stage_2": {
+    "performed": false,
+    "status": "BLOCKED — mechanism unavailable in this session",
+    "reason": "SKILL.md §9 stage 2 dispatches the design-critic subagent (.claude/agents/design-critic.md, tools: Read) with a fresh context and the absolute paths to the rendered PNGs. This session has no in-process subagent dispatch tool — ListAgents reports no reachable peers, and a tool search for a Task-style dispatcher returns nothing. The only independent-context route available is mcp__Claude_Code_Remote__create_session, which provisions a NEW container: it would clone origin/main and could not Read the PNGs, which exist only as uncommitted files in this working tree (the run was explicitly not to be committed or pushed). The critic cannot see the images, so the review cannot be performed.",
+    "what_was_NOT_done": "No independent-context scores exist for this run. Nothing in this file was produced by a reader who had not seen the build reasoning.",
+    "dispatch_payload_prepared": {
+      "note": "Ready to send verbatim once a dispatch mechanism is available. Contains only what the rubric permits the critic to see.",
+      "brief": "RestoreAssist — the job-close system water-damage restoration tradies use to turn field readings into insurer-facing inspection reports. Audience: Australian water-damage restoration tradies (sole traders and small companies); secondary, insurer claims teams and assessor networks. Goal: trial start. CTA: 'Start free'. Brand: ra. Asset: linkedin_post.",
+      "dims": "1200x627",
+      "facts": [
+        "Built for restoration work across Australia and New Zealand",
+        "Built for restoration work across Australia and New Zealand"
+      ],
+      "pngs": [
+        "/home/user/Synthex/.artifacts/design-runs/ra-job-close-system-2026-08-29-01/v1/post.png",
+        "/home/user/Synthex/.artifacts/design-runs/ra-job-close-system-2026-08-29-01/v2/post.png",
+        "/home/user/Synthex/.artifacts/design-runs/ra-job-close-system-2026-08-29-01/v3/post.png"
+      ],
+      "axis_constraint": "ra.ts declares two type families — Inter (display 800 / body 400) and JetBrains Mono (500). With three directions required, typeface class cannot vary; all three boards set display in Inter 800, which is the brand's own declared display face and therefore NOT a slop tell. The axis is varied by role and treatment instead: mono-as-header-chips (v1), mono-as-the-whole-dataset (v2), mono absent (v3). Judge collisions on colour strategy, layout system and cultural reference only."
+    }
+  },
+  "rework": {
+    "passes": 1,
+    "job-card": "Header rule lifted to 2px at 85% opacity against the body rule's 1px at 55%, so the docket structure reads as a bracket rather than as two identical lines; support forced to break after 'including' for two balanced lines instead of a long line over a short one.",
+    "drying-log": "Action column split off with a vertical hairline, turning the dead gutter between the RH values and the CTA into structure; brand tracking widened to +0.12em so it reads as a mark rather than a fifth column heading; the interior rule under the CTA cell removed so the button sits clean.",
+    "sweep": "No change. The pass found nothing worth altering that would not weaken the composition — the riser already stands one 56px gutter clear of the hook's longest line, and the support/CTA baselines already align. Recording 'no change' rather than inventing one."
+  }
+}

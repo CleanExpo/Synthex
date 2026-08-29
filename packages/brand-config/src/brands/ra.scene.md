@@ -17,41 +17,41 @@ lights:
   default:
     ambient:
       intensity: 0.4
-      color: "{ra.design.md:colors.neutral-50}"
+      color: '{ra.design.md:colors.neutral-50}'
     key:
       type: directional
       intensity: 1.2
       position: [3, 5, 4]
-      color: "#FFFFFF"
+      color: '#FFFFFF'
     rim:
       type: directional
       intensity: 0.6
       position: [-3, 2, -2]
-      color: "{ra.design.md:colors.primary}"
+      color: '{ra.design.md:colors.primary}'
 materials:
   evidence-surface:
     type: physical
-    color: "{ra.design.md:colors.neutral-100}"
+    color: '{ra.design.md:colors.neutral-100}'
     roughness: 0.6
     metalness: 0.1
     transmission: 0.0
   signal-particle:
     type: basic
-    color: "{ra.design.md:colors.accent}"
+    color: '{ra.design.md:colors.accent}'
     transparent: true
     opacity: 0.85
   identifier-glass:
     type: physical
-    color: "{ra.design.md:colors.secondary}"
+    color: '{ra.design.md:colors.secondary}'
     roughness: 0.05
     metalness: 0.0
     transmission: 0.92
     thickness: 0.4
 scenes:
   hero-moisture-map:
-    description: "Subtle horizontal field of low-relief geometry that reads as moisture distribution. Camera holds; signal particles drift along signature axis (x)."
+    description: 'Subtle horizontal field of low-relief geometry that reads as moisture distribution. Camera holds; signal particles drift along signature axis (x).'
     camera: default
-    background: "{ra.design.md:colors.primary}"
+    background: '{ra.design.md:colors.primary}'
     elements:
       - type: instanced-mesh
         geometry: plane
@@ -65,9 +65,9 @@ scenes:
           axis: x
           speed: 0.04
   evidence-card:
-    description: "Single NIR identifier rendered as transmissive glass card with the code embossed."
+    description: 'Single NIR identifier rendered as transmissive glass card with the code embossed.'
     camera: evidence
-    background: "{ra.design.md:colors.neutral-50}"
+    background: '{ra.design.md:colors.neutral-50}'
     elements:
       - type: rounded-box
         material: identifier-glass
@@ -90,7 +90,7 @@ performance:
 
 ## Overview
 
-3D is a constrained tool for RestoreAssist. Two scene presets (`hero-moisture-map` and `evidence-card`) cover every legitimate use. Anything else gets pushed back to flat composition. The point of restraint is that when 3D *does* appear, it carries weight — it's a piece of evidence, not decoration.
+3D is a constrained tool for RestoreAssist. Two scene presets (`hero-moisture-map` and `evidence-card`) cover every legitimate use. Anything else gets pushed back to flat composition. The point of restraint is that when 3D _does_ appear, it carries weight — it's a piece of evidence, not decoration.
 
 ## Camera presets
 
@@ -99,7 +99,12 @@ performance:
 
 ## Lighting
 
-Three-point rig. Key light from above-right (sun-equivalent for field work). Rim light tinted with brand primary (`#E55A2B`) bleeds candy orange around silhouettes. Ambient is the cold neutral (`#F5F7F8`) so shadows stay clinical.
+Three-point rig. Key light from above-right (sun-equivalent for field work). Rim light is tinted with the accent, light tan `{ra.design.md:colors.accent}` (`#D4A574`) — the value the dark variant lifts to primary, so the rim reads on the `#050505` backstop where navy would disappear. Ambient is the warm neutral `{ra.design.md:colors.neutral-50}` (`#F5F5F4`), so shadows stay clinical without going cold.
+
+> Corrected 29/08/2026. This paragraph previously specified a `#E55A2B` candy-orange rim and a cold `#F5F7F8` ambient —
+> both from the superseded RA-1985 palette that `ra.ts:1-9` explicitly overrides. The token references elsewhere in
+> this file were already correct; only this prose was stale, so an agent reading the prose rather than the tokens
+> would have built a candy-orange RestoreAssist scene. Never reintroduce a raw hex here without a token beside it.
 
 ## Materials
 

@@ -99,18 +99,26 @@ rather than citing. It is deliberately **not** in `facts_approved`: a canvas
 renders `claim` alone, and this one cannot be made self-sufficient at a size
 that fits a board. Use it in long-form copy where the attribution fits.
 
-### Candidates awaiting founder sign-off
+### Claim states — approved and awaiting sign-off
 
-| Candidate claim                    | VG row | Status               | May print?                                                              |
-| ---------------------------------- | ------ | -------------------- | ----------------------------------------------------------------------- |
-| 24/7 emergency response            | none   | Live-source verified | **Approved** — must stay operationally true                             |
-| AU + NZ coverage                   | none   | Live-source verified | **Approved** — coverage, never "office in X"                            |
-| IICRC-certified contractors        | none   | Live-source verified | **Approved** — subject must remain the contractors                      |
-| IICRC S500:2025 / S520:2025 / FSRT | none   | On site as badges    | Only as the standard a service follows, never as DR's own certification |
-| "$1M+ coverage"                    | none   | Recruitment criteria | **No — misattributes a contractor requirement**                         |
-| "2+ years experience"              | none   | Recruitment criteria | **No — misattributes a contractor requirement**                         |
-| ABN 85 151 794 142                 | none   | NRPG's entity        | **No — wrong entity for a DR surface**                                  |
-| 54% insured-Australians statistic  | none   | YouGov, April 2026   | Long-form only, with source and date visible                            |
+An earlier heading read "Candidates awaiting founder sign-off" while three of
+its rows were already in `facts_approved` and marked **Approved**, which is two
+states at once. The table covers both; the "May print?" column is the authority.
+Approved rows are quoted **verbatim** from `facts_approved.claim`, because a
+shortened paraphrase here is the thing most likely to get lifted onto a canvas
+instead of the approved string.
+
+| Candidate claim                                         | VG row | Status               | May print?                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------- | ------ | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `24/7 emergency restoration response`                   | none   | Live-source verified | **Approved** — must stay operationally true                                                                                                                                                                                                                                                                      |
+| `Restoration services across Australia and New Zealand` | none   | Live-source verified | **Approved** — coverage, never "office in X"                                                                                                                                                                                                                                                                     |
+| `Work carried out by IICRC-certified contractors`       | none   | Live-source verified | **Approved** — subject must remain the contractors                                                                                                                                                                                                                                                               |
+| IICRC S500:2025 / S520:2025                             | none   | On site as badges    | Only as the **standard a service follows**, never as DR's own certification                                                                                                                                                                                                                                      |
+| IICRC FSRT                                              | none   | On site as a badge   | **Different kind of thing — a technician certification, not a standard.** FSRT is Fire and Smoke Damage Restoration Technician: a credential held by a _person_. It may only ever be attributed to a named, verified contractor, never to Disaster Recovery and never phrased as a standard the service follows. |
+| "$1M+ coverage"                                         | none   | Recruitment criteria | **No — misattributes a contractor requirement**                                                                                                                                                                                                                                                                  |
+| "2+ years experience"                                   | none   | Recruitment criteria | **No — misattributes a contractor requirement**                                                                                                                                                                                                                                                                  |
+| ABN 85 151 794 142                                      | none   | NRPG's entity        | **No — wrong entity for a DR surface**                                                                                                                                                                                                                                                                           |
+| 54% insured-Australians statistic                       | none   | YouGov, April 2026   | Long-form only, with source and date visible                                                                                                                                                                                                                                                                     |
 
 ## Anti-references
 

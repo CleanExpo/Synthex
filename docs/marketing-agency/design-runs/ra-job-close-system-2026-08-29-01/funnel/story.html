@@ -1,0 +1,271 @@
+<!doctype html><html lang="en-AU"><head><meta charset="utf-8"><title>RestoreAssist · sweep · funnel/story</title><style>
+/* RestoreAssist · sweep — locked 2026-08-29 from run
+   ra-job-close-system-2026-08-29-01 (v3). Tokens: sweep.tokens.json.
+   Slots: RestoreAssist · sweep · funnel/story 1080 1920 48 RestoreAssist Draw the line.<br>Send the report. Built for restoration work across Australia and New Zealand Start free 
+   Fill  with a data: URI from the grounded pipeline
+   (lib/services/ai/image-generation.ts) or leave it empty to keep the flat wet
+   field. Never a network URL — render-board.mjs aborts non-file: requests.
+   IMAGERY is `none` in synthex-design v1, so the slot stays empty today.
+
+   THE TYPE RAMP IS DERIVED, NOT FIXED. taste/ra.md records that ra.design.md's
+   ramp is anchored to 1920x1080 video and cannot be scaled to a social box —
+   it must be RE-ANCHORED. §11's legibility floor is read as a proportion of
+   canvas width (hook 88/1080 = 8.15%, every other element 44/1080 = 4.07%), so
+   every format below is legible by construction rather than by luck.
+
+   WARM EARTH IS A FIELD COLOUR. taste/ra.md CONSTRAINT: #8A6B4E carries no
+   type at any size (neutral-50 on it measures 4.48:1, navy on it 2.81:1 — both
+   fail). Here it is the line and nothing else. Tan #D4A574 appears only as a
+   CTA fill under navy type (6.16:1). Do not put text on either. */
+@font-face{font-family:'RAInter';src:url('file:///home/user/Synthex/public/fonts/ra/Inter-Regular.woff2') format('woff2');font-weight:400;font-display:block}
+@font-face{font-family:'RAInter';src:url('file:///home/user/Synthex/public/fonts/ra/Inter-ExtraBold.woff2') format('woff2');font-weight:800;font-display:block}
+@font-face{font-family:'RAMono';src:url('file:///home/user/Synthex/public/fonts/ra/JetBrainsMono-Medium.woff2') format('woff2');font-weight:500;font-display:block}
+:root{
+  --primary:#1C2E47; --secondary:#8A6B4E; --accent:#D4A574; --n50:#F5F5F4;
+  --W:1080px; --H:1920px;
+  /* Placeholders. Every one is overwritten by the derivation below before the
+     screenshot is taken; the static values are the 1200x627 locked board's, so
+     the template still renders correctly with scripting disabled. */
+  --hook:98px; --support:49px; --meta:49px; --safe:48px; --safeY:48px;
+  --wet:372px; --dry:327px; --riser:968px; --thick:10px; --tick:55px;
+  --supportInk:var(--primary);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden}
+body{background:var(--n50);color:var(--primary);font-family:'RAInter',system-ui,sans-serif;position:relative;overflow:hidden}
+
+/* the wet field — everything above the stepped line */
+.wet{
+  position:absolute;inset:0;background:var(--primary);overflow:hidden;
+  clip-path:polygon(0 0, var(--W) 0, var(--W) var(--dry), var(--riser) var(--dry), var(--riser) var(--wet), 0 var(--wet));
+}
+.wet img{width:100%;height:100%;object-fit:cover;opacity:.28}
+/* the tape mark itself */
+.line{
+  position:absolute;inset:0;background:var(--secondary);
+  clip-path:polygon(
+    0 var(--wet), var(--riser) var(--wet), var(--riser) var(--dry), var(--W) var(--dry),
+    var(--W) calc(var(--dry) + var(--thick)), calc(var(--riser) + var(--thick)) calc(var(--dry) + var(--thick)),
+    calc(var(--riser) + var(--thick)) calc(var(--wet) + var(--thick)), 0 calc(var(--wet) + var(--thick)));
+}
+.tick{position:absolute;left:var(--riser);top:var(--dry);width:var(--thick);height:var(--tick);background:var(--secondary)}
+
+.top{position:absolute;left:var(--safe);top:var(--safeY);color:var(--n50);max-width:calc(var(--W) - var(--safe) * 2)}
+.eyebrow{font-size:var(--meta);font-weight:500;letter-spacing:.10em;line-height:1}
+.hook{font-size:var(--hook);font-weight:800;line-height:1.04;letter-spacing:-.02em;margin-top:22px}
+.top .eyebrow:empty,.top .hook:empty{display:none}
+
+.bottom{
+  position:absolute;left:var(--safe);right:var(--safe);bottom:var(--safeY);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:40px;
+}
+.bottom:empty{display:none}
+.support{font-size:var(--support);font-weight:400;line-height:1.32;max-width:740px;min-width:0;color:var(--supportInk)}
+.support:empty{display:none}
+.cta{background:var(--accent);color:var(--primary);font-size:var(--support);font-weight:800;line-height:1;border-radius:8px;padding:22px 30px 26px;white-space:nowrap}
+.cta:empty{display:none}
+</style></head><body>
+<div class="wet"></div>
+<div class="line"></div>
+<div class="tick"></div>
+
+<div class="top">
+  <div class="eyebrow">RestoreAssist</div>
+  <h1 class="hook">Draw the line.<br>Send the report.</h1>
+</div>
+
+<div class="bottom">
+  <p class="support">Built for restoration work across Australia and New Zealand</p>
+  <div class="cta">Start free</div>
+</div>
+
+<script>
+/* THE SIGNATURE RULE, EXECUTABLE.
+   PRINCIPLES.md line 3: a signature that assumes one canvas size is not yet a
+   template. The wet line is therefore derived from the box it is drawn in, and
+   it has a stated rule for what it does when that box is much shorter, much
+   wider, or much taller — INCLUDING HIDING ITSELF.
+
+   1. PROPORTIONS. Line at 59.4% of height, step depth 7.2% of height, tape
+      thickness 0.833% of width (10px at 1200), tick = step + thickness so the
+      riser corner always closes. At 1200x627 these land on exactly the locked
+      board's 372 / 45 / 10 / 55 — verified byte-identical by cmp.
+
+   2. THE RISER IS PLACED, THEN CHECKED. Its column is 80.67% of width (968px
+      at 1200, the locked board's own value). It is pushed right whenever that
+      column falls within one gutter (4.67% of width, 56px at 1200) of the hook
+      block's real right edge, measured AFTER the webfont has loaded — so it can
+      never collide with the type at any measure. Running the measurement before
+      fonts.ready would size a fallback face and mis-place it, which is why the
+      whole derivation runs again on document.fonts.ready.
+
+   3. THE LINE YIELDS TO THE TYPE. It is clamped to sit at least one clearance
+      (the floor text size) below the hook block and one above the bottom block.
+      A short box therefore pushes the line down rather than letting it cross
+      the hook — the 1200x400 email header is exactly this case. On a PORTRAIT
+      box the 59.4% proportion is dropped altogether and the dry field is sized
+      to its content, because the locked proportion is a landscape one and
+      carrying it onto a 3:4 or 9:16 canvas strands the tape in empty space.
+
+      An EMPTY dry field is the same failure as a portrait one, and the
+      orientation test alone missed it. The 2400x800 email header carries no
+      support line and no CTA, so it took the locked 59.4% and left 40% of the
+      canvas as a light void holding nothing — which is precisely why the CARSI
+      `ma` board was rejected ("the lower 45% reads as unfinished rather than as
+      intentional negative space; ma needs a weighted element holding the void
+      open, and there was none", taste/carsi.md). The condition that matters is
+      whether the dry field has content, not whether the box is portrait, so the
+      content-sized path now also applies whenever the bottom block is empty:
+      the line drops to one clearance above the safe area and the dry field
+      becomes a base rather than a half-canvas void.
+
+   4. THE STEP FLATTENS. Below a 24px step depth the notch reads as a rendering
+      artefact rather than as a taped mark, so the step is dropped and the line
+      runs straight. 24px is 7.2% of 333px, so this is every box under ~333px
+      tall. (taste/ra.md and the run manifest state this as "below ~400px tall";
+      333px is the exact threshold that the stated reason implies, and the
+      approximation is recorded there rather than silently replaced.) The step
+      also flattens when the hook is so wide that a clear riser would land in
+      the last two gutters of the canvas — a 40px shelf is not a step either.
+
+   5. THE LINE HIDES ITSELF. When the hook block and the bottom block together
+      leave no band where the line can sit clear of both, there is no line: the
+      board falls back to a flat navy field with all type reversed out of it.
+      A tape mark squeezed between two text blocks is not a tape mark. */
+(function () {
+  var W = 1080, H = 1920, SAFE = 48;
+  var el = document.documentElement;
+  var top = document.querySelector('.top');
+  var bot = document.querySelector('.bottom');
+  var wet = document.querySelector('.wet');
+  var line = document.querySelector('.line');
+  var tick = document.querySelector('.tick');
+  var support = document.querySelector('.support');
+  var cta = document.querySelector('.cta');
+
+  function px(n) { return n + 'px'; }
+  function has(n) { return n && n.textContent.trim().length > 0; }
+
+  function layout() {
+    // 1 — the ramp, re-anchored to canvas width (taste/ra.md CONSTRAINT).
+    var hook = Math.round(W * 0.0815);   // 98 at 1200 · 88 at 1080 · §11 floor
+    var floor = Math.round(W * 0.0407);  // 49 at 1200 · 44 at 1080 · §11 floor
+    var gutter = Math.round(W * 0.0467); // 56 at 1200
+    var thick = Math.max(4, Math.round(W * 0.008333)); // 10 at 1200
+    var clear = floor;
+
+    // Story-format vertical safe zone: §11 keeps all text inside the centre
+    // 1080x1610 of a 1080x1920 canvas, i.e. 83.85% of height. Applied to any
+    // box taller than 1.7x its width; every other format uses logo.safeAreaPx.
+    var safeY = H >= W * 1.7 ? Math.round(H * (1 - 0.8385) / 2) : SAFE;
+
+    el.style.setProperty('--hook', px(hook));
+    el.style.setProperty('--support', px(floor));
+    el.style.setProperty('--meta', px(floor));
+    el.style.setProperty('--safe', px(SAFE));
+    el.style.setProperty('--safeY', px(safeY));
+    el.style.setProperty('--thick', px(thick));
+
+    // Metrics that must travel with the ramp rather than staying at their
+    // 1200-wide values. Each factor is the locked board's own ratio, so at
+    // 1200x627 every one of these resolves to the number it replaces.
+    document.querySelector('.hook').style.marginTop = px(Math.round(hook * 0.2245));   // 22
+    support.style.maxWidth = px(Math.round(W * 0.6167));                                // 740
+    bot.style.gap = px(Math.round(W * 0.03333));                                        // 40
+    cta.style.padding =
+      px(Math.round(floor * 0.449)) + ' ' + px(Math.round(floor * 0.6122)) + ' ' +
+      px(Math.round(floor * 0.5306));                                                   // 22 30 26
+    cta.style.borderRadius = px(Math.round(floor * 0.1633));                            // 8
+
+    // With no support line, `space-between` leaves a lone CTA at the START of
+    // the row — it drifted to the bottom-left on the og-image, where the locked
+    // board puts it hard right. A single-item row justifies to the end instead.
+    bot.style.justifyContent = has(support) ? 'space-between' : 'flex-end';
+
+    top.style.top = px(safeY); // reset before measuring
+
+    // 2 — measure the real blocks.
+    var tr = top.getBoundingClientRect();
+    var botLive = has(support) || has(cta);
+    var br = botLive ? bot.getBoundingClientRect() : null;
+
+    var minY = tr.bottom + clear;
+    var maxY = (botLive ? br.top : H - safeY) - clear;
+
+    // 5 — no clear band: the line hides and the board goes flat navy.
+    if (minY > maxY) {
+      wet.style.clipPath = 'none';
+      line.style.display = 'none';
+      tick.style.display = 'none';
+      el.style.setProperty('--supportInk', 'var(--n50)');
+      return { line: 'hidden', hook: hook, floor: floor, safeY: safeY };
+    }
+
+    // 3 — the line yields to the type, and the dry field is sized to its
+    // content on any portrait box. 59.4% of height is the LOCKED LANDSCAPE
+    // proportion; carried literally onto a 1080x1440 or 1080x1920 canvas it
+    // strands the tape in the middle of an empty light field, with the support
+    // and CTA marooned another 400px below it — two competing voids and the
+    // message squeezed between them. Rendered and looked at, that is the same
+    // degeneration PRINCIPLES.md line 3 records. On a portrait box the dry
+    // field therefore becomes a footer sized to what it holds: the tape sits
+    // one clearance above the bottom block, the wet field takes the rest, and
+    // the composition stays the one that was locked — hook top-left in the wet,
+    // tape low, support and CTA in the dry.
+    var lineY = (H > W || !botLive) ? maxY : Math.round(H * 0.594);
+    lineY = Math.round(Math.min(Math.max(lineY, minY), maxY));
+
+    // 4 — the step, and when it flattens.
+    //
+    // The riser is placed at the locked board's own column, 80.67% of width
+    // (968px at 1200), and is then PUSHED RIGHT if that column would fall
+    // within one gutter of the hook block's measured right edge. The locked
+    // board's source comment and the run manifest disagree on this: the comment
+    // says "80.7% of width", the manifest says "one 56px gutter clear of the
+    // hook's longest line". The pixels settle it — the hook ends at 802.4 and
+    // the riser is at 968, so 56px was the CONSTRAINT the column was checked
+    // against, never the placement. Implementing the manifest's wording alone
+    // would have moved the riser to 858 and broken the locked artefact; the
+    // column alone would be the "fixed column" the manifest rules out. Both,
+    // in that order, is the only reading that reproduces the lock AND keeps the
+    // collision guarantee at every other measure.
+    var step = Math.round(H * 0.072);
+    var riser = Math.max(Math.round(W * 0.80667), Math.round(tr.right + gutter));
+    var riserMax = W - gutter * 2;
+    var flat = step < 24 || riser > riserMax;
+    if (flat) { step = 0; riser = W; }
+
+    var dry = lineY - step;
+    el.style.setProperty('--wet', px(lineY));
+    el.style.setProperty('--dry', px(dry));
+    el.style.setProperty('--riser', px(riser));
+    el.style.setProperty('--tick', px(step + thick));
+    tick.style.display = flat ? 'none' : '';
+    line.style.display = '';
+    wet.style.clipPath = '';
+
+    // Support ink follows its ground: light field below the line, navy above.
+    el.style.setProperty(
+      '--supportInk',
+      botLive && br.top >= lineY ? 'var(--primary)' : 'var(--n50)'
+    );
+
+    return { line: lineY, step: step, riser: riser, hook: hook, floor: floor, safeY: safeY, flat: flat };
+  }
+
+  var report = layout();
+  // The first pass measures a fallback face. Re-run once the real face has
+  // landed; render-board.mjs waits on document.fonts.ready plus 300ms, so this
+  // always completes before the screenshot.
+  if (document.fonts) {
+    document.fonts.ready.then(function () {
+      report = layout();
+      window.__sweep = report;
+      console.log('sweep-layout ' + JSON.stringify(report));
+    });
+  } else {
+    window.__sweep = report;
+  }
+})();
+</script>
+</body></html>
