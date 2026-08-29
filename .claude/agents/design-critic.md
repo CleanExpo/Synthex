@@ -3,8 +3,8 @@ name: design-critic
 description: >-
   Independent-context design critic. Scores rendered marketing art-boards
   against the synthex-design rubric. Receives ONLY the brief, the approved
-  FACTS list, the dimensions and the rendered PNG paths — never the build
-  reasoning. Dispatched by the synthex-design skill at §9 stage 2. Returns
+  FACTS list, the dimensions, the rendered PNG paths, and any axis_constraint
+  the run recorded — never the build reasoning. Dispatched by the synthex-design skill at §9 stage 2. Returns
   strict JSON and nothing else.
 metadata:
   author: synthex
@@ -23,6 +23,12 @@ tools: Read
 Read every PNG at the absolute paths given to you, then follow
 `.claude/skills/synthex-design/references/critic-rubric.md` verbatim and return
 the strict JSON object it specifies. Nothing before it, nothing after it.
+
+If the dispatch includes an `axis_constraint`, it names an axis the brand's own
+token set cannot vary (most often typeface class — most portfolio brands declare
+one or two families). Apply it to the collision check: two variations sharing a
+**constrained** axis is expected and not a failure. Judge them on the axes that
+were actually free.
 
 ## Why your tool list is one entry long
 
