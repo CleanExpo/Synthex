@@ -176,8 +176,13 @@ only** (`ANALYTICS_INGEST_PLATFORMS`), and Instagram is **not** among the 35
 active connections — so LinkedIn is the only viable first target today.
 `[VERIFIED]`
 
-**DoD:** `select count(*) from platform_metrics` returns ≥ 1, and the value is
-a real figure from a live platform.
+**DoD:** the **newly published** LinkedIn post has a `platform_posts` row, that
+row has a linked `platform_metrics` row with **at least one non-null metric**,
+and that metric's `recorded_at` is **after** the post's publication timestamp.
+
+A bare `count(*) >= 1` is not the gate: a stale or unrelated row would satisfy
+it, and the whole point of this phase is to prove the _new_ post's metrics
+actually landed.
 
 **This is the founder's call, not an engineering task** — it needs something
 worth publishing and the approval gate walked end to end. Everything below is
@@ -236,12 +241,28 @@ or URL, and the manifest contains it.
 ### Phase 2 — Hypothesis discipline
 
 Extend the run manifest with a `hypotheses[]` block:
-`{id, claim, source_signal, variation, predicted_effect, kill_threshold, window, status}`
-where `status ∈ untested | supported | dead`. A variation may only cite a signal
-if it also names a kill threshold. Dead hypotheses are recorded, never deleted —
-they are the most valuable rows in the system.
+`{id, claim, source_signal, variation, platform_post_id, predicted_effect, kill_threshold, window, status}`
+where `status ∈ untested | supported | dead`. Dead hypotheses are recorded,
+never deleted — they are the most valuable rows in the system.
 
-**DoD:** the run refuses to mark a variation signal-driven without a threshold.
+`platform_post_id` carries `PlatformPost.id` and is **required before a
+hypothesis can leave `untested`**. Without it Phase 3 has no sound join:
+`PlatformMetrics.postId` references `PlatformPost.id`, while `variation` is only
+unique _within_ a run, so two runs each shipping a "v2" would collide and
+metrics could be attributed to the wrong hypothesis. It is null at design time
+and written by the publish step.
+
+**DoD**, all four:
+
+1. `hypotheses[]` is **non-empty** — the finish line requires at least one
+   signal-driven variation, so an empty array must fail rather than pass
+   vacuously.
+2. Every `source_signal` resolves to an item in **this run's** Signal Brief.
+3. Every `variation` names one of **this run's** variations.
+4. Any variation claiming a signal names a `kill_threshold` and a `window`.
+
+Test coverage must include repeated runs for one brand with multiple variations
+— that is the case where a `variation`-only join silently mis-attributes.
 
 ### Phase 3 — Close the loop (blocked)
 
@@ -334,21 +355,21 @@ mechanically, not by good intentions.
 
 ## 8. Risk & assumption register
 
-| #   | Item                                                                                                                                                                                                                                                                      | Tag                                                                             | Mitigation                                                                                                                                           |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | **No outcome data has been proven to exist.** Writers exist (`ingest-post-metrics.ts:227`, `social-webhook-handlers.ts:345`, integrations sync) but the CARSI campaign's `quality-gate.json` carries **30** `peer_data_waiting_for_oauth_or_platform_analytics` warnings. | `[VERIFIED]` warnings; `[INFERENCE]` that the table is empty — prod not queried | Phase 3 is explicitly blocked on this. Verify by querying `platform_metrics` before planning it.                                                     |
-| R2  | Correlation presented as cause. A view count never explains itself.                                                                                                                                                                                                       | `[UNCONFIRMED]` by nature                                                       | Phase 2 hypothesis discipline is the entire mitigation. No signal may be stated as a finding.                                                        |
-| R3  | Scraping costs the publishing capability                                                                                                                                                                                                                                  | `[VERIFIED]` legal precedent                                                    | §7 — do not scrape from the publishing identity.                                                                                                     |
-| R4  | `BrandDNA.persona` and foundation personas have incompatible shapes                                                                                                                                                                                                       | `[VERIFIED]`                                                                    | Phase 0a picks one shape before any consumer is written.                                                                                             |
-| R5  | Two seed scripts disagree on CARSI's voice; last writer wins                                                                                                                                                                                                              | `[VERIFIED]`                                                                    | Phase 0a reconciles them.                                                                                                                            |
-| R6  | `customer-insights-lead` cites "Phase 3.1.2"; no such heading exists (RA's is §3.2)                                                                                                                                                                                       | `[VERIFIED]`                                                                    | Fix the reference, or an agent quoting "verbatim" quotes a summary line instead of the source.                                                       |
-| R7  | Break #2 has regressed before (`SYN-MCP-003`: a provider id was passed where a platform was expected, so no row ever matched)                                                                                                                                             | `[VERIFIED]`                                                                    | Phase 0b ships with a regression test, not just a fix.                                                                                               |
-| R8  | Apify actor availability and pricing not verified                                                                                                                                                                                                                         | `[UNCONFIRMED]`                                                                 | Out of scope until §7 is decided. Note the doc itself records a `402 x402-payment-required` and a missing token — it has never run. `[VERIFIED]`     |
-| R9  | **`gbp_snapshots` writes 282 rows with all metric columns NULL** — a silent-failure bug producing the appearance of telemetry                                                                                                                                             | `[VERIFIED]`                                                                    | Fix before any consumer trusts GBP data. Rows that look like data and contain none are worse than no rows.                                           |
-| R10 | `lib/algorithm/algorithm-context.ts` **hand-duplicates** the markdown knowledge base as a TS constant with no build step linking them                                                                                                                                     | `[VERIFIED]`                                                                    | Drift is silent and undetectable. Either generate the constant from the markdown or add a hash check like `hermes-skill-check`.                      |
-| R11 | `lib/services/pattern-scraper.ts` is a hardcoded `return []` behind two API routes and a dashboard page; its type is literally named `MockContent`                                                                                                                        | `[VERIFIED]`                                                                    | Either wire it or delete it. A dashboard over an empty array reports success while showing nothing.                                                  |
-| R12 | `lib/analytics/trend-predictor.ts` (1,037 lines of real maths) has two stubbed external feeds, and its only live query targets a **legacy Supabase** (`LEGACY_PLATFORM_URL`), not the Prisma DB — a second data lineage                                                   | `[VERIFIED]`                                                                    | Resolve which database is authoritative before trusting any forecast.                                                                                |
-| R13 | Campaign quality gates **passed at 95/100** while every social slot carried `peer_data_waiting_for_oauth_or_platform_analytics` — 30 warnings across two campaigns                                                                                                        | `[VERIFIED]`                                                                    | The gate detected the total absence of outcome data and downgraded it to a warning. Missing outcome data should block a performance claim, not warn. |
+| #   | Item                                                                                                                                                                                                                                                                      | Tag                                                                | Mitigation                                                                                                                                           |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | **No outcome data has been proven to exist.** Writers exist (`ingest-post-metrics.ts:227`, `social-webhook-handlers.ts:345`, integrations sync) but the CARSI campaign's `quality-gate.json` carries **30** `peer_data_waiting_for_oauth_or_platform_analytics` warnings. | `[VERIFIED]` — read-only SELECT against production confirms 0 rows | Phase 3 is blocked on observed data, not on an assumption. Phase −1 is the unblock.                                                                  |
+| R2  | Correlation presented as cause. A view count never explains itself.                                                                                                                                                                                                       | `[UNCONFIRMED]` by nature                                          | Phase 2 hypothesis discipline is the entire mitigation. No signal may be stated as a finding.                                                        |
+| R3  | Scraping costs the publishing capability                                                                                                                                                                                                                                  | `[VERIFIED]` legal precedent                                       | §7 — do not scrape from the publishing identity.                                                                                                     |
+| R4  | `BrandDNA.persona` and foundation personas have incompatible shapes                                                                                                                                                                                                       | `[VERIFIED]`                                                       | Phase 0a picks one shape before any consumer is written.                                                                                             |
+| R5  | Two seed scripts disagree on CARSI's voice; last writer wins                                                                                                                                                                                                              | `[VERIFIED]`                                                       | Phase 0a reconciles them.                                                                                                                            |
+| R6  | `customer-insights-lead` cites "Phase 3.1.2"; no such heading exists (RA's is §3.2)                                                                                                                                                                                       | `[VERIFIED]`                                                       | Fix the reference, or an agent quoting "verbatim" quotes a summary line instead of the source.                                                       |
+| R7  | Break #2 has regressed before (`SYN-MCP-003`: a provider id was passed where a platform was expected, so no row ever matched)                                                                                                                                             | `[VERIFIED]`                                                       | Phase 0b ships with a regression test, not just a fix.                                                                                               |
+| R8  | Apify actor availability and pricing not verified                                                                                                                                                                                                                         | `[UNCONFIRMED]`                                                    | Out of scope until §7 is decided. Note the doc itself records a `402 x402-payment-required` and a missing token — it has never run. `[VERIFIED]`     |
+| R9  | **`gbp_snapshots` writes 282 rows with all metric columns NULL** — a silent-failure bug producing the appearance of telemetry                                                                                                                                             | `[VERIFIED]`                                                       | Fix before any consumer trusts GBP data. Rows that look like data and contain none are worse than no rows.                                           |
+| R10 | `lib/algorithm/algorithm-context.ts` **hand-duplicates** the markdown knowledge base as a TS constant with no build step linking them                                                                                                                                     | `[VERIFIED]`                                                       | Drift is silent and undetectable. Either generate the constant from the markdown or add a hash check like `hermes-skill-check`.                      |
+| R11 | `lib/services/pattern-scraper.ts` is a hardcoded `return []` behind two API routes and a dashboard page; its type is literally named `MockContent`                                                                                                                        | `[VERIFIED]`                                                       | Either wire it or delete it. A dashboard over an empty array reports success while showing nothing.                                                  |
+| R12 | `lib/analytics/trend-predictor.ts` (1,037 lines of real maths) has two stubbed external feeds, and its only live query targets a **legacy Supabase** (`LEGACY_PLATFORM_URL`), not the Prisma DB — a second data lineage                                                   | `[VERIFIED]`                                                       | Resolve which database is authoritative before trusting any forecast.                                                                                |
+| R13 | Campaign quality gates **passed at 95/100** while every social slot carried `peer_data_waiting_for_oauth_or_platform_analytics` — 30 warnings across two campaigns                                                                                                        | `[VERIFIED]`                                                       | The gate detected the total absence of outcome data and downgraded it to a warning. Missing outcome data should block a performance claim, not warn. |
 
 ---
 
@@ -390,7 +411,7 @@ npm run type-check && npm run lint && npm test
 
 Phase 1–2:
 
-```
+```text
 /design instagram_post for CARSI CEC courses | brand: carsi | n: 3
 ```
 
