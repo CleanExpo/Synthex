@@ -1,10 +1,17 @@
 # Direction library
 
 Twelve starting points, or invent at equal distance. The hard rule from §4
-stands: the N chosen directions must differ on **all four axes** — typeface
-class, colour strategy, layout system, cultural reference. Two directions that
-share two axes are the same idea wearing different clothes, and the critic's
+stands: the N chosen directions must differ on **every axis the brand's palette
+permits**, and on **at least three** of the four — typeface class, colour
+strategy, layout system, cultural reference. Two directions that share two
+unconstrained axes are the same idea wearing different clothes, and the critic's
 collision check will fail the run.
+
+Most portfolio brands declare one or two type families, so the typeface axis is
+usually the constrained one. Do not invent a face to satisfy this rule — vary
+the declared family's role and treatment instead, and record `axis_constraint`
+in the manifest so the critic judges collision with the constraint stated. §4
+has the full procedure.
 
 1. **Swiss / International** — strict grid, grotesque type, one accent
 2. **Editorial print** — display serif, columns, pull-quote, paper texture
