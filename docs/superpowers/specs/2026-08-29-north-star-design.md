@@ -298,9 +298,26 @@ campaign data. An earlier draft of this spec wrote the join as
 
 `platform_posts` row → the tagged outbound link it published
 (`utm_source` / `utm_medium` / `utm_campaign` / `utm_id`, generated per post)
-→ landing session (GA4 campaign data) → Stripe Checkout session
-(`client_reference_id` or metadata carrying the same `utm_id`) → the
-conversion.
+→ landing session (GA4 campaign data) → Stripe Checkout session carrying the
+same `utm_id` **in `metadata`** → the conversion.
+
+**`client_reference_id` is not available, and must not be used.**
+`app/api/stripe/checkout/route.ts:169` already sets it to `userId`, and
+`lib/stripe/webhook-handlers.ts:467` reads it _first_ when resolving the user,
+falling back to `metadata.userId` `[VERIFIED — both lines read 29/08/2026]`.
+Putting a `utm_id` there would hand `handleCheckoutCompleted` a campaign id
+where it expects a user id; the `if (!userId || !customerId) return` guard
+would not catch it, because a `utm_id` is a non-empty string. So `metadata` is
+the only slot, and it is additive — the existing `userId` / `planName` keys
+stay.
+
+**The propagation does not exist yet — it is Phase 5 work, not an assumption.**
+That route accepts no campaign parameter today and writes no `utm_id`. The
+chain therefore needs: the `utm_id` carried from the landing page to the
+checkout call, **server-validated** against the issuing `platform_posts` row
+rather than trusted from the client (an unvalidated pass-through lets any
+caller attribute revenue to any post), then written into
+`checkout.sessions.create({ metadata })` and read back off the webhook.
 
 GSC is reserved for organic-search metrics and never appears in this chain.
 Because Phase 4 publishes to LinkedIn first, the tagged link is the only
@@ -370,7 +387,10 @@ PostgreSQL 17.4; NULLS NOT DISTINCT landed in PG 15]`. Prisma cannot yet
 ## 7. Security & cost guardrails (structural)
 
 1. **Tenancy partition (G4):** every second-brain row carries
-   `organizationId`; RLS enforced at the table (verify live — R1); no query
+   `organizationId`; RLS enforced at the table — **required, and not true
+   today**: the live tables carry only a blanket `service_role` policy (R1), so
+   Phase 0.1 adds the org-scoped policy and §10's Phase 0 gate fails until it
+   does; no query
    path that joins across orgs. CCW's partition never pools with Nexus
    brands. This is the L1–L9 carve-out made mechanical.
 2. **Spend gates:** Semrush is CEO-gated with a monthly unit budget and a
@@ -394,16 +414,16 @@ PostgreSQL 17.4; NULLS NOT DISTINCT landed in PG 15]`. Prisma cannot yet
 
 ## 8. Risk & assumption register
 
-| #   | Risk / assumption                                                                               | Tag                                                              | Mitigation                                                                                                                                          |
-| --- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | RLS is enabled on the live KG tables (the archived DDL declares it; live state not yet checked) | `[UNCONFIRMED]`                                                  | Phase 0 DoD includes `pg_policies` check before any multi-org write.                                                                                |
-| R2  | GA4 is organisation-scoped, so brand-level attribution is unavailable                           | `[VERIFIED prisma/schema.prisma:5422-5436]`                      | Phase 2 provisions org-level GA4 and registers it; brand-level GA4 metrics stay `DATA_REQUIRED` until the schema decision in §5 Phase 2.2 is taken. |
-| R3  | Named authors are available and willing                                                         | `[UNCONFIRMED — founder decision]`                               | Open question 1; Phase 3 blocks Phase 4 publishing, not Phase 0–2 engineering.                                                                      |
-| R4  | Content-attributed revenue readable before ~Dec 2026                                            | `[INFERENCE — window arithmetic]`                                | Reported as `window not yet elapsed`, never back-filled optimistically.                                                                             |
-| R5  | The 34-vertical taxonomy fits AU sub-markets the founder targets                                | `[UNCONFIRMED]`                                                  | Taxonomy rows are drafts; foundation-grade profiles supersede. Sector Two entry gate re-validates.                                                  |
-| R6  | Skill files carry broken foundation references (e.g. "Phase 3.1.2" vs §3.2 headings)            | `[VERIFIED intelligence-loop R6/spec:365]`                       | Persona extraction (Phase 1) reads the foundation directly with line anchors, never via skill citations.                                            |
-| R7  | BullMQ worker infra for auto-research is deployable on current hosting                          | `[UNCONFIRMED]`                                                  | Phase 0.4 prefers the vercel.json cron chassis; BullMQ only if cron cadence proves insufficient.                                                    |
-| R8  | The Aug 2026 spam update's "legitimate programmatic survived" holds for our pattern             | `[VERIFIED as reported — SEL/SER]`, generalisation `[INFERENCE]` | Per-sector intent tests + human-signal thresholds in every piece's kill criteria.                                                                   |
+| #   | Risk / assumption                                                                                                                                                                                                                                        | Tag                                                              | Mitigation                                                                                                                                                                                                           |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | RLS is enabled on both live KG tables, but the **only** policies are `service_role_all_cke` / `service_role_all_cke_edge`, `cmd = ALL` with `qual = true` — a blanket grant, not tenant isolation. §7.1's "RLS enforced at the table" is not true today. | `[VERIFIED — live pg_policies query, 29/08/2026]`                | Phase 0.1 adds the org-scoped policy; the §10 Phase 0 gate asserts `relrowsecurity` **and** a policy whose predicate scopes by `organization_id`, so it fails until that lands. No multi-org write before it passes. |
+| R2  | GA4 is organisation-scoped, so brand-level attribution is unavailable                                                                                                                                                                                    | `[VERIFIED prisma/schema.prisma:5422-5436]`                      | Phase 2 provisions org-level GA4 and registers it; brand-level GA4 metrics stay `DATA_REQUIRED` until the schema decision in §5 Phase 2.2 is taken.                                                                  |
+| R3  | Named authors are available and willing                                                                                                                                                                                                                  | `[UNCONFIRMED — founder decision]`                               | Open question 1; Phase 3 blocks Phase 4 publishing, not Phase 0–2 engineering.                                                                                                                                       |
+| R4  | Content-attributed revenue readable before ~Dec 2026                                                                                                                                                                                                     | `[INFERENCE — window arithmetic]`                                | Reported as `window not yet elapsed`, never back-filled optimistically.                                                                                                                                              |
+| R5  | The 34-vertical taxonomy fits AU sub-markets the founder targets                                                                                                                                                                                         | `[UNCONFIRMED]`                                                  | Taxonomy rows are drafts; foundation-grade profiles supersede. Sector Two entry gate re-validates.                                                                                                                   |
+| R6  | Skill files carry broken foundation references (e.g. "Phase 3.1.2" vs §3.2 headings)                                                                                                                                                                     | `[VERIFIED intelligence-loop R6/spec:365]`                       | Persona extraction (Phase 1) reads the foundation directly with line anchors, never via skill citations.                                                                                                             |
+| R7  | BullMQ worker infra for auto-research is deployable on current hosting                                                                                                                                                                                   | `[UNCONFIRMED]`                                                  | Phase 0.4 prefers the vercel.json cron chassis; BullMQ only if cron cadence proves insufficient.                                                                                                                     |
+| R8  | The Aug 2026 spam update's "legitimate programmatic survived" holds for our pattern                                                                                                                                                                      | `[VERIFIED as reported — SEL/SER]`, generalisation `[INFERENCE]` | Per-sector intent tests + human-signal thresholds in every piece's kill criteria.                                                                                                                                    |
 
 ---
 
@@ -437,14 +457,49 @@ npx prisma validate
 npx jest --config config/jest/jest.worktree.cjs tests/unit/knowledge-graph/  # no-key ⇒ DATA_REQUIRED; builder writes against a disposable DB
 npm run type-check && npm run lint && npm test
 
-# (b) live RLS gate — read-only, BLOCKING, exact tables
+# (b) live RLS gate — read-only, BLOCKING, exact tables.
+# A bare SELECT is NOT a gate: psql exits 0 on an empty result set, and
+# ON_ERROR_STOP only catches SQL errors. The check must RAISE.
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
-  SELECT tablename, policyname, cmd
-  FROM pg_policies
-  WHERE schemaname = 'public'
-    AND tablename IN ('client_knowledge_entities','client_knowledge_edges');"
-# Fails the phase unless BOTH tables return their expected policies.
+DO \$\$
+DECLARE bad text;
+BEGIN
+  SELECT string_agg(t, ', ') INTO bad
+  FROM unnest(ARRAY['client_knowledge_entities','client_knowledge_edges']) AS t
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relname = t AND c.relrowsecurity
+  )
+  OR NOT EXISTS (
+    SELECT 1 FROM pg_policies p
+    WHERE p.schemaname = 'public' AND p.tablename = t
+      AND p.qual IS NOT NULL
+      AND p.qual <> 'true'              -- a permissive policy is not isolation
+      AND p.qual ILIKE '%organization_id%'
+  );
+  IF bad IS NOT NULL THEN
+    RAISE EXCEPTION 'RLS gate: no org-scoped policy (or RLS disabled) on %', bad;
+  END IF;
+END \$\$;"
 ```
+
+The gate asserts two things per table, not the existence of rows: RLS is
+enabled (`pg_class.relrowsecurity` — a policy on a table with RLS off is
+inert), and at least one policy exists whose predicate actually scopes by
+`organization_id`. `RAISE EXCEPTION` is what makes it blocking; a `SELECT`
+that returns nothing exits 0.
+
+**This gate fails today, which is the point.** Queried read-only on
+29/08/2026: RLS is enabled on both tables, and the only policies present are
+`service_role_all_cke` and `service_role_all_cke_edge` — both `cmd = ALL`
+with `qual = true` `[VERIFIED — live pg_policies query]`. A blanket
+service-role grant is not tenant isolation, so §7.1's "RLS enforced at the
+table" is **not** true today; adding the org-scoped policy is Phase 0.1 work,
+and this gate is what stops Phase 0 closing without it. An earlier draft of
+this gate listed matching rows, which would have returned those two rows and
+passed — reproducing, inside the fix for it, exactly the defect the gate
+exists to catch.
 
 **`npm run rls:coverage` is not a substitute and must not be cited as one.**
 It reads `prisma/schema.prisma` off disk with `readFileSync` and never opens a
@@ -452,9 +507,9 @@ database connection `[VERIFIED scripts/validate-rls-coverage.js:18,81]`, so it
 cannot see a live policy — and these two tables are not in `schema.prisma`
 until Phase 0.2 lands anyway. The repo's live adversarial RLS job is
 non-blocking and does not assert these tables. Hence the explicit read-only
-`pg_policies` query above, blocking, before any multi-org write. This is the
-gate R1 promises; an earlier draft named it in the risk register but never
-placed it in the verification plan.
+check above, blocking, before any multi-org write. This is the gate R1
+promises; an earlier draft named it in the risk register but never placed it
+in the verification plan.
 
 Phase 1:
 
@@ -486,7 +541,13 @@ measured posts/week; verified-claims coverage (brands/sectors with ≥1
 verified case-study claim — measurable in-repo today); content-attributed
 paid revenue (the Phase 5 key chain: tagged post link → GA4 campaign
 session → Stripe conversion, attributed **and** unattributed cases both
-handled; GSC is not in this chain; CARSI $795 first).
+handled; GSC is not in this chain; CARSI $795 first). This third metric stays
+**unarmed** until the `utm_id` propagation of §5 Phase 5 — server-validated
+into Checkout `metadata`, never `client_reference_id` — is proven end to end
+by a test that follows one `utm_id` from a `platform_posts` row through to the
+webhook, and by a second that shows an untagged conversion recorded as
+unattributed rather than dropped or misattributed. Until both pass, the metric
+reports `DATA_REQUIRED`.
 
 ---
 
