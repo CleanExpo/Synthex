@@ -19,7 +19,7 @@ brand: carsi
 #   vg_ref       the row id in .claude/memory/verification-gates.md, if one exists
 #   expires_on   optional — pricing and coverage claims should carry one
 facts_approved:
-  - claim: 'From $20 per course'
+  - claim: 'From $20 per course (AUD, GST included)'
     source_url: 'https://carsi.com.au/pricing'
     verified_on: 29/08/2026
     vg_ref: VG-60
@@ -27,8 +27,8 @@ facts_approved:
     note: >-
       The site says "From $20", a floor rather than a fixed price. Do not render
       this as "$20 entry" or "$20 a course" — that states more than the source
-      supports. Must appear with the AUD/GST qualifier below.
-  - claim: '$795 a year for one learner to access all published courses for 12 months — coming soon'
+      supports.
+  - claim: '$795 a year (AUD, GST included) for one learner to access all published courses for 12 months — coming soon'
     source_url: 'https://carsi.com.au/pricing'
     verified_on: 29/08/2026
     vg_ref: VG-60
@@ -41,16 +41,18 @@ facts_approved:
       misleading conduct under the ACL, so "coming soon" is part of the claim
       string, not an optional note. Drop that phrase only when the plan is
       actually purchasable, and re-verify the price on the same day.
-      Never render as team or seat pricing. Must appear with the AUD/GST
-      qualifier below.
+      Never render as team or seat pricing.
   - claim: 'Prices in AUD, GST included'
     source_url: 'https://carsi.com.au/pricing'
     verified_on: 29/08/2026
     vg_ref: VG-60
     expires_on: 28/02/2027
     note: >-
-      Not a standalone claim. Australian Consumer Law requires a single total
-      price inclusive of GST; any board carrying a price carries this too.
+      Never rendered on its own — the qualifier is already inlined in both price
+      claims above, which is what a canvas actually prints. This record exists to
+      document WHY: Australian Consumer Law requires a single total price
+      inclusive of GST, so a price without it is non-compliant. Keep it inlined
+      in any price claim added later.
 anti_references: []
 claim_review_owner: founder
 ---
