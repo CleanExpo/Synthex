@@ -10,36 +10,100 @@ brand: carsi
 # Every claim edit would otherwise force a package rebuild.
 #
 # facts_approved entries:
-#   claim        the exact wording that may appear on a canvas
+#   claim        the exact wording that may appear on a canvas. It MUST be
+#                self-sufficient: notes are never rendered, so every material
+#                qualification (who it covers, for how long, whether it can
+#                actually be bought) belongs INSIDE this string, not below it.
 #   source_url   where it is substantiated
 #   verified_on  DD/MM/YYYY
 #   vg_ref       the row id in .claude/memory/verification-gates.md, if one exists
 #   expires_on   optional — pricing and coverage claims should carry one
-facts_approved: []
+facts_approved:
+  - claim: 'From $20 per course'
+    source_url: 'https://carsi.com.au/pricing'
+    verified_on: 29/08/2026
+    vg_ref: VG-60
+    expires_on: 28/02/2027
+    note: >-
+      The site says "From $20", a floor rather than a fixed price. Do not render
+      this as "$20 entry" or "$20 a course" — that states more than the source
+      supports. Must appear with the AUD/GST qualifier below.
+  - claim: '$795 a year for one learner to access all published courses for 12 months — coming soon'
+    source_url: 'https://carsi.com.au/pricing'
+    verified_on: 29/08/2026
+    vg_ref: VG-60
+    expires_on: 28/02/2027
+    note: >-
+      Source wording is "100% access to all published CARSI courses for one
+      learner for 12 months". The plan is labelled "Coming soon" on the pricing
+      page and CANNOT be purchased as of 29/08/2026 — only per-course buying and
+      the free tier are live. Advertising a price for an unavailable product is
+      misleading conduct under the ACL, so "coming soon" is part of the claim
+      string, not an optional note. Drop that phrase only when the plan is
+      actually purchasable, and re-verify the price on the same day.
+      Never render as team or seat pricing. Must appear with the AUD/GST
+      qualifier below.
+  - claim: 'Prices in AUD, GST included'
+    source_url: 'https://carsi.com.au/pricing'
+    verified_on: 29/08/2026
+    vg_ref: VG-60
+    expires_on: 28/02/2027
+    note: >-
+      Not a standalone claim. Australian Consumer Law requires a single total
+      price inclusive of GST; any board carrying a price carries this too.
 anti_references: []
 claim_review_owner: founder
 ---
 
 ## Approved Facts
 
-**Empty.** Until the founder fills this list, every claim the design engine
-wants to make renders as the literal placeholder `[NEEDS APPROVAL: claim]`.
-That is the safe default, not a blocker — a claim-free board is a correct
-pilot result.
+**Pricing only.** VG-60 was copied in on 29/08/2026 by founder instruction.
+Every other claim still renders as the literal placeholder
+`[NEEDS APPROVAL: claim]` — the safe default, not a blocker.
+
+**Pricing must never carry an accreditation descriptor.** The source page
+describes courses as "IICRC CEC Accredited", but VG-02 (IICRC CEC provider
+status) is `[verification needed]`, so that descriptor is not publishable by
+Synthex on any surface. Render the price without it. A board saying
+"IICRC CEC accredited course from $20" is an ACL exposure even though the
+price half is approved.
+
+**Source correction, unresolved in the registry.** VG-60's "verification
+source" column reads `ccwonline.com.au [sic — site URL TBC]` — CCW's domain,
+not CARSI's, and CCW sits outside the Nexus under the L1–L9 carve-out. Its
+status column separately says "CARSI site /pricing". The live page at
+<https://carsi.com.au/pricing> was fetched on 29/08/2026 and carries both
+figures, so that is the source recorded here. **The registry row itself still
+says ccwonline.com.au and has not been corrected — only `foundation-keeper`
+may write to `verification-gates.md`.**
+
+**Only per-course pricing is actually purchasable.** Re-checked 29/08/2026:
+the pricing page labels the $795 yearly membership **"Coming soon"**, alongside
+Teams Starter $299/yr, Teams Growth $799/yr and Full Library $2,499/yr. The only
+live options are per-course buying (from $20) and the free tier. The $795 claim
+therefore carries "— coming soon" **inside the claim string**, because a canvas
+renders `claim` and never renders `note`, and advertising a price for a product
+that cannot be bought is misleading conduct under the ACL. Teams pricing is not
+covered by VG-60 and is not approved in any form.
+
+**This makes VG-60's own wording stale.** The gate reads "$20 entry / $795/yr
+all-access" as at 26/04/2026, with no indication the annual plan is unreleased.
+A future re-verification should capture availability, not just the number —
+`foundation-keeper`'s call, not recorded here.
 
 ### Candidates awaiting founder sign-off
 
 Sourced from `.claude/memory/verification-gates.md`. Only `foundation-keeper`
 may flip a gate, and verbal confirmation does not flip one.
 
-| Candidate claim                               | VG row       | Status                                        | May print?                                                      |
-| --------------------------------------------- | ------------ | --------------------------------------------- | --------------------------------------------------------------- |
-| Pricing — $20 entry / $795-a-year all-access  | VG-60        | `[verified-26/04/2026 · CARSI site /pricing]` | Yes, once copied into `facts_approved` with its source and date |
-| IICRC CEC provider status                     | VG-02        | `[verification needed]`                       | **No — not publishable in any form**                            |
-| IICRC S500 / S520 licensed publication access | VG-04, VG-05 | `[verification needed]`                       | No                                                              |
-| Catalogue depth / active course inventory     | VG-63        | `[verification needed]`                       | No                                                              |
-| Subscriber base figures                       | VG-64        | `[verification needed]`                       | No                                                              |
-| CEC hours per course                          | none         | Internal metric — founder, 29/08/2026         | **No — internal number, never a marketing claim**               |
+| Candidate claim                                        | VG row       | Status                                                                | May print?                                                 |
+| ------------------------------------------------------ | ------------ | --------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Pricing — from $20 per course / $795-a-year all-access | VG-60        | `[verified-26/04/2026]` · re-checked against the live page 29/08/2026 | **Approved** — now in `facts_approved`, expires 28/02/2027 |
+| IICRC CEC provider status                              | VG-02        | `[verification needed]`                                               | **No — not publishable in any form**                       |
+| IICRC S500 / S520 licensed publication access          | VG-04, VG-05 | `[verification needed]`                                               | No                                                         |
+| Catalogue depth / active course inventory              | VG-63        | `[verification needed]`                                               | No                                                         |
+| Subscriber base figures                                | VG-64        | `[verification needed]`                                               | No                                                         |
+| CEC hours per course                                   | none         | Internal metric — founder, 29/08/2026                                 | **No — internal number, never a marketing claim**          |
 
 ## Anti-references
 
