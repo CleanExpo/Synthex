@@ -32,6 +32,7 @@ the one used for the index row below and for the `/lock` promotion paths.
 
 ## Related files
 
+- Cross-brand principles (binding on every brand): `taste/PRINCIPLES.md`
 - Taste logs (append-only lock/reject decisions): `taste/<brand>.md`
 - Locked themes and templates: `templates/<brand>/`
 - Approved claims per brand: `packages/brand-config/src/brands/<brand>.claims.md`

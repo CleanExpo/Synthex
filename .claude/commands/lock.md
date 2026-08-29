@@ -13,12 +13,18 @@ in: $ARGUMENTS
    `docs/marketing-agency/design-runs/templates/<BRAND>/<slug>.html`.
 3. Generate the funnel suite from the same tokens: landing hero, 3 posts,
    1 story, og_image, email header — all DRAFT, same output contract.
+   Render every one and look at it: a signature built for 1080x1440 degenerates
+   at 1200x400. Then confirm the winner still renders byte-identical (`cmp`).
 4. Append the lock decision **and the stated reason** as one line to
    `docs/marketing-agency/design-runs/taste/<BRAND>.md`. Rejections get a line
    too. This is a decision log, not a performance loop.
+   If the reason would have changed a decision on a _different_ brand, append it
+   to `taste/PRINCIPLES.md` as well, citing this run. Promote sparingly.
 5. Promote the record and the winner PNG per §12 tier 2 — the record under
    `docs/marketing-agency/design-runs/<run-id>/`, the PNG under
-   `public/marketing-agency/design-runs/<run-id>/`.
+   `public/marketing-agency/design-runs/<run-id>/`. Prove each target path is
+   **trackable**, not merely writable, before promoting (§12): `git check-ignore`
+   exits 0 for a negation match too, so read the pattern, not the exit code.
 
 **Precondition:** never promote a board still carrying a
 `[NEEDS APPROVAL: …]` claim. Resolve the claim in the brand's `.claims.md`

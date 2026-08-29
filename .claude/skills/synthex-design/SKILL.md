@@ -98,8 +98,16 @@ Read all three, and cite each by path in the run summary:
    list and `anti_references`. Missing or empty ⇒ FACTS is empty, and every
    claim renders `[NEEDS APPROVAL: …]`. That is the safe default, not a blocker.
 
-Then read the taste log `docs/marketing-agency/design-runs/taste/<BRAND>.md` if
-it exists — every past "locked because…" / "rejected because…" line is binding.
+Then read both taste files. Every line in either is binding:
+
+- `docs/marketing-agency/design-runs/taste/PRINCIPLES.md` — cross-brand rules
+  learned from past runs, applying to **every** brand. Read it even for a brand
+  that has never been run.
+- `docs/marketing-agency/design-runs/taste/<BRAND>.md` — this brand's own
+  "locked because…" / "rejected because…" decisions, if it exists.
+
+Where they conflict, the brand's own log wins: it is a judgement about this
+brand specifically, and `PRINCIPLES.md` is a generalisation from others.
 
 **There is no learning store.** No `design_runs` table is applied and no
 outcome rows exist anywhere. All N variations are exploratory. **Do not
@@ -119,10 +127,30 @@ Then: **no variation may be the category default.** Write that line into
 
 ## 4. Choose N maximally distant directions
 
-Hard rule: chosen directions must differ on **all four axes** — typeface class,
-colour strategy, layout system, cultural reference. Commit fully to each; never
-average two directions into a safe middle. Spend each variation's boldness in
-**one** signature element.
+Hard rule: chosen directions must differ on **every axis the brand's palette
+permits**, and on **at least three** of the four — typeface class, colour
+strategy, layout system, cultural reference. Commit fully to each; never average
+two directions into a safe middle. Spend each variation's boldness in **one**
+signature element.
+
+**The typeface axis is usually the constrained one.** Only `synthex` declares
+three families (Space Grotesk · Inter · JetBrains Mono); `carsi` (Lora · Inter)
+and `ra` (Inter · JetBrains Mono) declare two; `dr`, `nrpg` and `unite` declare
+Inter alone. A brand cannot vary typeface class across three directions if it
+has not got three classes, and `brandprint` forbids inventing a face the brand
+has not declared. Where an axis is blocked:
+
+- Vary the constrained axis by _role and treatment_ instead — display-dominant
+  vs numeral-as-graphic vs near-absent is real variation within one family.
+- Record `axis_constraint` in the manifest, naming the axis and why it is
+  blocked (e.g. _"carsi.ts declares only Lora + Inter, so typeface class cannot
+  vary"_).
+- Pass that `axis_constraint` string to the critic at §9 stage 2. Its collision
+  check is evaluated **with the constraint stated**, so it flags genuine
+  sameness rather than the brand's own type palette.
+
+A run that silently ships three directions sharing an axis, with no
+`axis_constraint`, has failed §4. A run that names the constraint has not.
 
 The twelve-direction library is at `references/directions.md`. Ground at least
 one variation in the SUBJECT's own world — the materials, instruments and
@@ -302,9 +330,17 @@ scope boundary at the top):
 - The three AI-default looks: cream + high-contrast serif + terracotta accent ·
   near-black + single acid accent · broadsheet hairlines everywhere.
   Legitimate styles, but defaults, not choices.
-- Inter/Roboto/Arial as display type · purple-to-blue gradients ·
-  glassmorphism · cards nested in cards · icon-tile above every heading ·
-  01/02/03 markers where order carries no meaning.
+- Inter/Roboto/Arial as display type **where the engine is the one choosing** ·
+  purple-to-blue gradients · glassmorphism · cards nested in cards · icon-tile
+  above every heading · 01/02/03 markers where order carries no meaning.
+
+  This ban is aimed at reaching for Inter _because it is the default_. It does
+  **not** override a brand's own `typography.display`: `dr`, `nrpg`, `ra` and
+  `unite` deliberately declare Inter as their display face with verified
+  tokens, and `brandprint`'s law is that brand-config wins. Setting display in
+  the brand's declared family is always correct, Inter included; inventing a
+  face the brand has not declared, to dodge this line, is the actual defect.
+
 - Emoji as decoration · lorem ipsum · centred-everything · more than two type
   families per variation.
 - Third-party logos, characters, celebrity likenesses, competitor trade dress,
@@ -365,10 +401,25 @@ for existing directories on the same date stem and take the next free number. Tw
 runs of the same brief on one day would otherwise land in the same directory, and
 the second would overwrite the first's boards, manifest and critique.
 
-PNGs go under `public/` because `.gitignore:192` is a blanket `*.png` that
-allowlists only `public/**`, `components/**` and `app/**`. A PNG written under
-`docs/` is silently swallowed by git. Never promote a board still carrying a
-`[NEEDS APPROVAL: …]` claim.
+**Check every output path is trackable before writing to it.** `.gitignore`
+swallows two of this skill's own targets, and both failed silently — the write
+succeeds, the file exists on disk, and nothing is committed:
+
+- `*.png` is blanket-ignored, allowlisting only `public/**`, `components/**`
+  and `app/**`. A PNG written under `docs/` disappears. That is why rendered
+  boards go under `public/`.
+- A bare `templates/` pattern matched a directory of that name **at any depth**,
+  including `docs/marketing-agency/design-runs/templates/<brand>/` — the exact
+  path §13 writes locked themes to. Fixed by a narrow negation, but the class
+  recurs whenever someone adds an unanchored directory pattern.
+
+`__tests__/design/lock-paths-not-ignored.test.ts` asserts these paths stay
+trackable and fails CI if one starts being ignored again. If you add a new
+output path, add it to that test. `git check-ignore -v <path>` answers the
+question directly — but read the output, since a matched line beginning `!` is
+a **negation**, meaning the path is _not_ ignored.
+
+Never promote a board still carrying a `[NEEDS APPROVAL: …]` claim.
 
 `manifest.json`:
 
@@ -434,10 +485,32 @@ On `/lock <run-id> <variation>`:
 3. Generate the matching funnel set **from the same tokens**: landing hero,
    3 follow-up posts, 1 story, og_image, email header. One aesthetic decision
    propagating through the whole funnel is the product.
+
+   **Render every one of them and look at them before trusting the template.**
+   A board designed at 1080×1440 does not automatically survive 1200×400: a
+   signature built on a fixed grid degenerates when its box shortens — nine
+   rows of tally marks became a 2px smudge on the email header before the field
+   was made to derive its grid from its own measured box. Whatever the
+   signature is, it needs a rule for what it does when its box is much shorter
+   or much wider, including hiding itself. Then re-render the winner and
+   confirm it is still byte-identical (`cmp`) to the locked board — a fix to
+   the template must not move the thing that was locked.
+
 4. Append one line to `docs/marketing-agency/design-runs/taste/<BRAND>.md`:
    what was locked and the stated reason. Rejections get a line too. This is
    how taste accumulates — a decision log, **not** a performance loop.
-5. Promote the record and winner PNG per §12 tier 2.
+
+   Then ask one question: **would this reason have changed a decision on a
+   different brand?** If yes, append it to
+   `docs/marketing-agency/design-runs/taste/PRINCIPLES.md` as well, naming this
+   run as its source. §2 reads that file for every brand, so a general lesson
+   left only in one brand's log is a lesson the next brand pays for again.
+   Most lines are brand-specific and stay put; promote sparingly.
+
+5. Promote the record and winner PNG per §12 tier 2. **Before promoting, prove
+   each target path is trackable, not merely writable** — see §12. A `/lock`
+   that reports success while git silently ignored everything it wrote is the
+   failure mode this step exists to prevent.
 
 ---
 
