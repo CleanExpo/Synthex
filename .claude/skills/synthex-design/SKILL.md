@@ -299,8 +299,11 @@ fidelity · copy quality · would-a-client-pay.
 
 **Stage 2 — independent-context review.** Dispatch the `design-critic`
 subagent (`.claude/agents/design-critic.md`) with a fresh context containing
-exactly four things: the brief block, the approved FACTS list, the asset
-dimensions, and the absolute paths to the rendered PNGs. It holds `Read` only,
+exactly these, and nothing else: the brief block, the approved FACTS list, the
+asset dimensions, the absolute paths to the rendered PNGs, and — only when §4
+recorded one — the `axis_constraint` string. Without that last one the critic
+fails the collision check on a brand whose type palette cannot vary, which is
+the brand's constraint rather than the run's fault. It holds `Read` only,
 so it cannot reach the boards' source, the run folder, or this skill. It
 returns the strict JSON defined in `references/critic-rubric.md`.
 
@@ -432,6 +435,7 @@ Never promote a board still carrying a `[NEEDS APPROVAL: …]` claim.
   "status": "DRAFT",
   "category_default_avoided": "one line from §3",
   "sources_read": ["packages/brand-config/src/brands/carsi.design.md", "..."],
+  "axis_constraint": "omit unless §4 blocked an axis; names the axis and why",
   "gaps": ["missing-logo:carsi"],
   "variations": [
     {

@@ -26,12 +26,20 @@ feed a release gate; softened scores break it.
 - **Collision check:** any two variations sharing 2+ of the four axes
   (typeface class, colour strategy, layout system, cultural reference) is a
   FAIL — the run promised radically different, not shades of one idea.
+  **Exception:** if the dispatch supplied an `axis_constraint`, the axis it
+  names is excluded from this count. A brand declaring one type family cannot
+  vary typeface class, and failing it for that is scoring the brand, not the
+  work. Judge collisions on the free axes only.
 - **Claim provenance:** every factual claim visible on the canvas must appear
   in the FACTS list. Unlisted claims are a FAIL; quote the claim. A literal
   `[NEEDS APPROVAL: …]` placeholder is correct behaviour, not a failure.
-- **Slop tells:** flag any of — Inter/Roboto/Arial display type, purple
-  gradients, glassmorphism, nested cards, icon-tile-above-heading, decorative
-  emoji, meaningless 01/02/03 markers.
+- **Slop tells:** flag any of — purple gradients, glassmorphism, nested cards,
+  icon-tile-above-heading, decorative emoji, meaningless 01/02/03 markers.
+  Inter/Roboto/Arial as display type is a tell **only when the brand has not
+  declared it**: `dr`, `nrpg`, `ra` and `unite` set Inter as their display face
+  in brand-config, and flagging that would fail every compliant board those
+  brands can produce. If an `axis_constraint` names the typeface axis, treat the
+  display family as given.
 - **Edge safety:** any critical element within ~48px of an edge.
 
 ## For each variation, name the three worst issues

@@ -42,10 +42,15 @@ const LOCK_TARGETS = [
   // §13 step 1-2 — the frozen theme and the reusable template.
   'docs/marketing-agency/design-runs/templates/example-brand/example.tokens.json',
   'docs/marketing-agency/design-runs/templates/example-brand/example.html',
-  // §12 tier 2 — the promoted run record.
-  'docs/marketing-agency/design-runs/example-run-2026-01-01-01/manifest.json',
+  // §12 tier 2 — the promoted run record. Every file the tier-2 block names,
+  // not a sample: a later rule targeting one extension (`*.json`) or one
+  // filename would otherwise swallow a promoted output without failing here.
   'docs/marketing-agency/design-runs/example-run-2026-01-01-01/README.md',
+  'docs/marketing-agency/design-runs/example-run-2026-01-01-01/manifest.json',
+  'docs/marketing-agency/design-runs/example-run-2026-01-01-01/critique.json',
+  'docs/marketing-agency/design-runs/example-run-2026-01-01-01/copy.md',
   'docs/marketing-agency/design-runs/example-run-2026-01-01-01/winner/board.html',
+  'docs/marketing-agency/design-runs/example-run-2026-01-01-01/winner/tokens.json',
   // §12 tier 2 — rendered boards. These are PNGs, so they live under
   // `public/` and depend on the `!public/**/*.png` negation holding.
   'public/marketing-agency/design-runs/example-run-2026-01-01-01/winner.png',
