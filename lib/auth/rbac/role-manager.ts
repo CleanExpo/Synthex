@@ -89,7 +89,16 @@ export class RolePermissionSubsetError extends Error {
   }
 }
 
-async function assertPermissionsWithinActor(
+/**
+ * Assert that `requestedPermissions` are contained by the actor's own grants.
+ *
+ * Used by role DEFINITION (createRole / updateRole) and — since SYN-1112 F6 —
+ * by role ASSIGNMENT at the route boundary, where the coarse four-bucket
+ * issuer rank cannot see that a custom-named role carries authority the actor
+ * does not hold. Fail-closed: any error resolving the actor's permissions
+ * denies.
+ */
+export async function assertPermissionsWithinActor(
   organizationId: string,
   requestedPermissions: string[],
   performedBy: string

@@ -14,7 +14,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { RoleManager } from '@/lib/auth/rbac/role-manager';
+import {
+  RoleManager,
+  RolePermissionSubsetError,
+  assertPermissionsWithinActor,
+} from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
 import {
   resolveIssuerRole,
@@ -275,6 +279,29 @@ export async function POST(
         },
         { status: 403 }
       );
+    }
+
+    // Containment guard (SYN-1112 F6): the issuer-rank check above scores a
+    // role into four coarse buckets, and a custom-NAMED role whose permissions
+    // use the canonical `resource:action` form ranks as viewer — so a
+    // roles:manage holder (viewer for the same reason) passed it and could
+    // seat a role carrying organization:manage. Assignment delegates the
+    // role's permissions, so it must satisfy the same subset invariant that
+    // already governs role definition.
+    try {
+      await assertPermissionsWithinActor(
+        userResult.user.organizationId,
+        role.permissions,
+        userId
+      );
+    } catch (error: unknown) {
+      if (error instanceof RolePermissionSubsetError) {
+        return NextResponse.json(
+          { error: 'Forbidden', message: error.message },
+          { status: 403 }
+        );
+      }
+      throw error;
     }
 
     await RoleManager.grantRole(
