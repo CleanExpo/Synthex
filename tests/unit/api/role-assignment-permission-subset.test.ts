@@ -29,6 +29,8 @@ const mockGetUserId = jest.fn();
 const mockUserFindUnique = jest.fn();
 const mockRoleFindUnique = jest.fn();
 const mockRoleFindFirst = jest.fn();
+const mockRoleUpdate = jest.fn();
+const mockRoleUpdateMany = jest.fn();
 const mockUserRoleFindUnique = jest.fn();
 const mockUserRoleCreate = jest.fn();
 const mockUserRoleUpdate = jest.fn();
@@ -46,7 +48,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 
 const prismaMock = {
   user: { findUnique: mockUserFindUnique },
-  role: { findUnique: mockRoleFindUnique, findFirst: mockRoleFindFirst },
+  role: {
+    findUnique: mockRoleFindUnique,
+    findFirst: mockRoleFindFirst,
+    update: mockRoleUpdate,
+    updateMany: mockRoleUpdateMany,
+  },
   userRole: {
     findUnique: mockUserRoleFindUnique,
     create: mockUserRoleCreate,
@@ -169,6 +176,8 @@ beforeEach(() => {
   mockUserRoleFindUnique.mockResolvedValue(null); // not already assigned
   mockUserRoleCreate.mockResolvedValue({});
   mockUserRoleUpdate.mockResolvedValue({});
+  mockRoleUpdate.mockResolvedValue(opsLeadRole());
+  mockRoleUpdateMany.mockResolvedValue({});
   mockAuditCreate.mockResolvedValue({});
   mockInvalidateUserPermissions.mockResolvedValue(undefined);
   // No durable ownership signal: the actor is not an owner.
@@ -359,9 +368,42 @@ describe('RoleManager.grantRole — containment holds below the route', () => {
   });
 
   /**
-   * Signup bootstrap has no acting user to contain against. Its role was
-   * already contained when defined, so this path must keep working — a
-   * containment guard that fails closed here would break every new member.
+   * Review finding (deepseek/deepseek-v4-pro, P0): "'contained when it was
+   * defined' is not 'contained now' — an attacker with roles:manage could
+   * raise the default role's permissions afterwards, and assignDefaultRole
+   * would then seat the escalated role on every new member."
+   *
+   * That relies on the containment check being a one-time event at creation.
+   * It is not: updateRole re-validates against the acting user on EVERY
+   * permissions change, so the raise is refused before it can reach any
+   * default role. This is the demonstration of that, so the bootstrap path's
+   * safety rests on an executed control rather than on the comment above it.
+   */
+  it('refuses an attacker raising a role permission set after definition', async () => {
+    mockRoleFindUnique.mockResolvedValue({
+      ...opsLeadRole(),
+      name: 'Member',
+      permissions: ['posts:read'],
+      isDefault: true,
+    });
+    seatActorWith(['roles:manage']);
+    const { RoleManager } = await import('@/lib/auth/rbac/role-manager');
+
+    await expect(
+      RoleManager.updateRole(
+        ROLE_ID,
+        { permissions: ['posts:read', 'organization:manage'] },
+        ATTACKER_ID
+      )
+    ).rejects.toThrow('Role permissions cannot exceed your own permissions');
+    expect(mockRoleUpdate).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Signup bootstrap has no acting user to contain against, and by the control
+   * above its role can never have come to exceed whoever last set it. This
+   * path must keep working — a containment guard that failed closed here would
+   * break every new member.
    */
   it('still seats the default role during bootstrap with no actor permissions', async () => {
     mockGetUserPermissions.mockResolvedValue(null);

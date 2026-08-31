@@ -164,9 +164,17 @@ async function logPermissionAudit(
  * erased at compile time, so a `private static` would still be callable as
  * `RoleManager['applyGrant']` from any module. Module scope is enforced by the
  * runtime, so the only way to write a user-role row through this file is
- * grantRole (which contains first) or assignDefaultRole (signup bootstrap,
- * whose role was already contained when it was defined — createRole validates
- * on create, updateRole revalidates when `isDefault` is switched on).
+ * grantRole (which contains first) or assignDefaultRole (signup bootstrap).
+ *
+ * Why the bootstrap path is safe without an actor check — and note this is a
+ * CONTINUOUSLY maintained invariant, not a one-time check at definition:
+ * a role's permission set is contained against the acting user on EVERY
+ * mutation, not just the first. createRole validates `input.permissions`;
+ * updateRole validates whenever `input.permissions` is supplied, and also
+ * validates the existing set when `isDefault` is switched on; system roles
+ * refuse permission edits outright. So a default role can never come to carry
+ * a permission that nobody was authorised to delegate, and seating it on a new
+ * member cannot exceed the authority of whoever last set it.
  *
  * Nothing here is selectable by request data: callers pass a role they looked
  * up themselves, so no caller-controlled field can choose the unchecked path.
