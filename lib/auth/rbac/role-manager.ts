@@ -93,10 +93,9 @@ export class RolePermissionSubsetError extends Error {
  * Assert that `requestedPermissions` are contained by the actor's own grants.
  *
  * Used by role DEFINITION (createRole / updateRole) and — since SYN-1112 F6 —
- * by role ASSIGNMENT at the route boundary, where the coarse four-bucket
- * issuer rank cannot see that a custom-named role carries authority the actor
- * does not hold. Fail-closed: any error resolving the actor's permissions
- * denies.
+ * by role ASSIGNMENT in grantRole, where the coarse four-bucket issuer rank
+ * cannot see that a custom-named role carries authority the actor does not
+ * hold. Fail-closed: any error resolving the actor's permissions denies.
  */
 export async function assertPermissionsWithinActor(
   organizationId: string,
@@ -375,6 +374,35 @@ export class RoleManager {
       throw new Error('Role not found');
     }
 
+    // Containment (SYN-1112 F6): an assignment DELEGATES the role's
+    // permissions, so it must satisfy the same subset invariant that governs
+    // role definition. Enforced here rather than only at the route so no grant
+    // path can bypass it, and BEFORE the expiry-refresh return below so
+    // extending an existing grant cannot escape it either.
+    await assertPermissionsWithinActor(
+      role.organizationId,
+      role.permissions ?? [],
+      performedBy
+    );
+
+    await this.applyGrant(input, performedBy, role);
+  }
+
+  /**
+   * The persistence half of a grant, with no actor check.
+   *
+   * Private on purpose: the only caller that skips containment is
+   * `assignDefaultRole`, whose role was already contained when it was defined
+   * (createRole validates on create, updateRole revalidates when `isDefault`
+   * is switched on). Keeping it private means no request-supplied field can
+   * select this path — a bypass keyed on caller-controlled data would be an
+   * injection vector.
+   */
+  private static async applyGrant(
+    input: UserRoleInput,
+    performedBy: string,
+    role: { id: string; name: string; organizationId: string }
+  ): Promise<void> {
     // Check if already assigned
     const existing = await prisma.userRole.findUnique({
       where: {
@@ -542,12 +570,18 @@ export class RoleManager {
     });
 
     if (defaultRole) {
-      await this.grantRole(
+      // Bootstrap path: there is no acting user to contain against (this runs
+      // for a brand-new member, often as 'system'). The default role's
+      // permission set was already contained when it was defined, so the
+      // containment guard in grantRole would only fail closed against a
+      // legitimate signup. See applyGrant.
+      await this.applyGrant(
         {
           userId,
           roleId: defaultRole.id,
         },
-        performedBy || 'system'
+        performedBy || 'system',
+        defaultRole
       );
     }
   }
