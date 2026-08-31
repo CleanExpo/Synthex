@@ -1,0 +1,8 @@
+{
+  "version": "1.0",
+  "date": "2026-08-21",
+  "status": "not_collected",
+  "blocker": "STRIPE_SECRET_KEY is encrypted in Vercel production environment and inaccessible to autonomous agents without interactive login. Live data collection requires manual unlock via: vercel env pull .env.production.local --environment=production && export STRIPE_SECRET_KEY=$(grep '^STRIPE_SECRET_KEY=' .env.production.local | cut -d= -f2-)",
+  "collection_command": "cd /Users/phill-mac/Synthex && vercel env pull .env.production.local --environment=production && export STRIPE_SECRET_KEY=$(grep '^STRIPE_SECRET_KEY=' .env.production.local | cut -d= -f2-) && npx tsx scripts/churn-mix-analysis.ts --days 30 > docs/billing/churn-mix-live.json",
+  "schema_reference": "See docs/billing/churn-analysis-20260821.md section 7 for expected JSON shape"
+}
