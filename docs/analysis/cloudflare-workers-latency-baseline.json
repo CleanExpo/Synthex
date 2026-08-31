@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "capturedAt": "2026-08-20T22:00:00Z",
+    "targetUrl": "https://synthex.social",
+    "workspace": "/Volumes/Storage Unit/Unite-Group-Agent-Data/live/synthex-worktrees-root/t_84d40025",
+    "note": "Manual capture — curl timing available for homepage: 1.29s"
+  },
+  "infrastructure": {
+    "platform": "Vercel (Next.js 16.2.11)",
+    "hosting": "Production at synthex.social",
+    "cdnProvider": "Cloudflare (configured in deployment/rollout-script.js)",
+    "deploymentScript": "deployment/rollout-script.js",
+    "vercelConfig": "vercel.json",
+    "appConfig": "config/app.config.js"
+  },
+  "results": {
+    "note": "Individual endpoint latencies captured manually via curl — actual baseline metrics require automated script execution",
+    "homepage_latency": {
+      "status": "200 OK",
+      "duration_ms": 1293,
+      "capturedAt": "2026-08-20",
+      "method": "curl -w timed out",
+      "observation": "Homepage takes ~1.3s to respond"
+    },
+    "api_endpoints": {
+      "analytics_api": "Not measured — requires automated endpoint testing",
+      "health_check": "Not measured — requires automated endpoint testing",
+      "task_lifecycle": "Not measured — requires automated endpoint testing"
+    }
+  },
+  "analysis": {
+    "overall_avg_ms": "1293+ (homepage only)",
+    "target_compliant": "✗ NO",
+    "severity": "P1 — Homepage latency exceeds 200ms target by >6x",
+    "outliers_count": "≥1 (homepage)",
+    "outlier_endpoints": ["homepage (/)"]
+  },
+  "findings": {
+    "severity_1_critical": {
+      "issue": "Homepage latency (1.29s) far exceeds <200ms target",
+      "potential_causes": [
+        "Large initial payload size (JS bundles, images)",
+        "Cold start latency on Vercel Edge functions",
+        "Database query on page load (auth/session data)",
+        "External API calls before render completes",
+        "Inefficient asset loading/optimization",
+        "Missing or slow caching strategy"
+      ]
+    },
+    "infrastructure_notes": {
+      "cdn_enabled": true,
+      "cdn_provider": "cloudflare",
+      "cache_headers_configured": true,
+      "verification_needed": "Actual cache hit/miss rates and CDN configuration not verified in this task"
+    }
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Audit homepage bundle size (Next.js bundle analyzer)",
+      "Check database query latency for initial page load",
+      "Measure Cold Start timing vs Warm Start",
+      "Verify CDN cache configuration (Cache-Control headers, origin cache)",
+      "Review asset optimisation (images, fonts, WebP/AVIF conversion)"
+    ],
+    "optimization_roadmap": [
+      "1. Bundle analysis → identify large dependencies",
+      "2. Database query optimization → reduce N+1 queries",
+      "3. Add Vercel Edge middleware → early response headers",
+      "4. Implement ISR/SSR with appropriate revalidate times",
+      "5. Add responsive images with proper srcset",
+      "6. Review font loading strategy (self-hosted is already in place)"
+    ],
+    "monitoring_suggestions": [
+      "Set up automated latency monitoring (Vercel Analytics + custom endpoints)",
+      "Track P50/P90/P95 latency for all critical endpoints",
+      "Monitor Cold Start frequency vs Warm Start",
+      "Track cache hit/miss rates via Cloudflare Analytics",
+      "Alert on latency degradation >20% from baseline"
+    ]
+  },
+  "baseline_creation_note": "This baseline was manually created based on infrastructure investigation and a single homepage curl measurement. Full automated endpoint testing requires a latency capture script to be executed. Recommend creating an automated test suite that runs on a schedule (e.g., weekly) to track latency drift over time and notify on P95 >250ms threshold."
+}
