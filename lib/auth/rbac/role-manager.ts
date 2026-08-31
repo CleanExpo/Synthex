@@ -96,8 +96,13 @@ export class RolePermissionSubsetError extends Error {
  * by role ASSIGNMENT in grantRole, where the coarse four-bucket issuer rank
  * cannot see that a custom-named role carries authority the actor does not
  * hold. Fail-closed: any error resolving the actor's permissions denies.
+ *
+ * Deliberately NOT exported: every caller is in this module, so keeping it
+ * private means no other module can invoke the containment check out of
+ * context — or be tempted to treat calling it as a substitute for going
+ * through grantRole.
  */
-export async function assertPermissionsWithinActor(
+async function assertPermissionsWithinActor(
   organizationId: string,
   requestedPermissions: string[],
   performedBy: string
