@@ -14,7 +14,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { RoleManager } from '@/lib/auth/rbac/role-manager';
+import {
+  RoleManager,
+  RolePermissionSubsetError,
+} from '@/lib/auth/rbac/role-manager';
 import { PermissionEngine } from '@/lib/auth/rbac/permission-engine';
 import {
   resolveIssuerRole,
@@ -35,6 +38,18 @@ const grantRoleSchema = z.object({
 // =============================================================================
 // Helper Functions
 // =============================================================================
+
+/**
+ * Recognise a containment refusal from RoleManager.grantRole. `instanceof` is
+ * the primary test; the name check is the fallback for a duplicated module
+ * instance, where instanceof silently returns false for the right error.
+ */
+function isRolePermissionSubsetError(error: unknown): error is Error {
+  return (
+    error instanceof RolePermissionSubsetError ||
+    (error instanceof Error && error.name === 'RolePermissionSubsetError')
+  );
+}
 
 /**
  * Get user with organizationId, verify roles:manage permission
@@ -277,6 +292,13 @@ export async function POST(
       );
     }
 
+    // Containment (SYN-1112 F6) is enforced inside RoleManager.grantRole, so
+    // every grant path is covered rather than this route alone. The rank check
+    // above cannot see the escalation on its own: it scores a role into four
+    // coarse buckets, and a custom-NAMED role whose permissions use the
+    // canonical `resource:action` form ranks as viewer — so a roles:manage
+    // holder (viewer for the same reason) passed it and could seat a role
+    // carrying organization:manage. The catch below maps the refusal to 403.
     await RoleManager.grantRole(
       {
         userId: targetUserId,
@@ -293,6 +315,17 @@ export async function POST(
     });
   } catch (error: unknown) {
     logger.error('Grant role error:', error);
+
+    // Containment refusal is an authorisation outcome, not a server fault.
+    // Matched by name as well as instanceof: duplicate module instances make
+    // instanceof unreliable, and a miss there would report a refusal as a 500.
+    if (isRolePermissionSubsetError(error)) {
+      return NextResponse.json(
+        { error: 'Forbidden', message: error.message },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(
       {
         error: 'Internal Server Error',

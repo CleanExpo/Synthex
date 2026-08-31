@@ -892,6 +892,7 @@ describe('RBAC System', () => {
         mockRole.findUnique.mockResolvedValue({
           id: TEST_ROLE_ID,
           name: 'Editor',
+          permissions: [],
           organizationId: TEST_ORG_ID,
         });
         mockUserRole.findUnique.mockResolvedValue(null); // not already assigned
@@ -920,6 +921,7 @@ describe('RBAC System', () => {
         mockRole.findUnique.mockResolvedValue({
           id: TEST_ROLE_ID,
           name: 'Editor',
+          permissions: [],
           organizationId: TEST_ORG_ID,
         });
         mockUserRole.findUnique.mockResolvedValue({
@@ -956,6 +958,7 @@ describe('RBAC System', () => {
         mockRole.findUnique.mockResolvedValue({
           id: TEST_ROLE_ID,
           name: 'Editor',
+          permissions: [],
           organizationId: TEST_ORG_ID,
         });
         mockUserRole.findUnique.mockResolvedValue(null);
@@ -977,6 +980,7 @@ describe('RBAC System', () => {
         mockRole.findUnique.mockResolvedValue({
           id: TEST_ROLE_ID,
           name: 'Editor',
+          permissions: [],
           organizationId: TEST_ORG_ID,
         });
         mockUserRole.deleteMany.mockResolvedValue({ count: 1 });
@@ -994,6 +998,7 @@ describe('RBAC System', () => {
         mockRole.findUnique.mockResolvedValue({
           id: TEST_ROLE_ID,
           name: 'Editor',
+          permissions: [],
           organizationId: TEST_ORG_ID,
         });
         mockUserRole.deleteMany.mockResolvedValue({ count: 1 });
