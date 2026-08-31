@@ -130,6 +130,103 @@ async function assertPermissionsWithinActor(
   }
 }
 
+/** Record a permission-audit event. Never throws: auditing must not fail a grant. */
+async function logPermissionAudit(
+  organizationId: string,
+  action: string,
+  performedBy: string,
+  details: Record<string, unknown>
+): Promise<void> {
+  try {
+    await prisma.permissionAudit.create({
+      data: {
+        organizationId,
+        action,
+        performedBy,
+        targetUserId: details.targetUserId as string | undefined,
+        targetRoleId: details.roleId as string | undefined,
+        details: details as object,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to log permission audit', {
+      error,
+      organizationId,
+      action,
+    });
+  }
+}
+
+/**
+ * The persistence half of a grant, with no actor check.
+ *
+ * A MODULE-SCOPED function, not a class member: TypeScript's `private` is
+ * erased at compile time, so a `private static` would still be callable as
+ * `RoleManager['applyGrant']` from any module. Module scope is enforced by the
+ * runtime, so the only way to write a user-role row through this file is
+ * grantRole (which contains first) or assignDefaultRole (signup bootstrap,
+ * whose role was already contained when it was defined — createRole validates
+ * on create, updateRole revalidates when `isDefault` is switched on).
+ *
+ * Nothing here is selectable by request data: callers pass a role they looked
+ * up themselves, so no caller-controlled field can choose the unchecked path.
+ */
+async function applyGrant(
+  input: UserRoleInput,
+  performedBy: string,
+  role: { id: string; name: string; organizationId: string }
+): Promise<void> {
+  // Check if already assigned
+  const existing = await prisma.userRole.findUnique({
+    where: {
+      userId_roleId: {
+        userId: input.userId,
+        roleId: input.roleId,
+      },
+    },
+  });
+
+  if (existing) {
+    // Update expiration if different
+    if (input.expiresAt !== existing.expiresAt) {
+      await prisma.userRole.update({
+        where: { id: existing.id },
+        data: { expiresAt: input.expiresAt },
+      });
+    }
+    return;
+  }
+
+  // Create user role assignment
+  await prisma.userRole.create({
+    data: {
+      userId: input.userId,
+      roleId: input.roleId,
+      grantedBy: performedBy,
+      expiresAt: input.expiresAt,
+    },
+  });
+
+  // Invalidate permission cache
+  await PermissionEngine.invalidateUserPermissions(
+    input.userId,
+    role.organizationId
+  );
+
+  await logPermissionAudit(role.organizationId, 'grant', performedBy, {
+    targetUserId: input.userId,
+    roleId: role.id,
+    roleName: role.name,
+    expiresAt: input.expiresAt,
+  });
+
+  logger.info('Role granted', {
+    userId: input.userId,
+    roleId: role.id,
+    roleName: role.name,
+  });
+}
+
 // ============================================================================
 // ROLE MANAGER
 // ============================================================================
@@ -384,80 +481,21 @@ export class RoleManager {
     // role definition. Enforced here rather than only at the route so no grant
     // path can bypass it, and BEFORE the expiry-refresh return below so
     // extending an existing grant cannot escape it either.
+    // Fail closed on a malformed permission set. Prisma types this column as a
+    // non-nullable String[], so a non-array can only mean a partial select or a
+    // corrupt row — and coercing it to "no permissions" would let the grant
+    // through silently. Refuse instead of guessing.
+    if (!Array.isArray(role.permissions)) {
+      throw new RolePermissionSubsetError();
+    }
+
     await assertPermissionsWithinActor(
       role.organizationId,
-      role.permissions ?? [],
+      role.permissions,
       performedBy
     );
 
-    await this.applyGrant(input, performedBy, role);
-  }
-
-  /**
-   * The persistence half of a grant, with no actor check.
-   *
-   * Private on purpose: the only caller that skips containment is
-   * `assignDefaultRole`, whose role was already contained when it was defined
-   * (createRole validates on create, updateRole revalidates when `isDefault`
-   * is switched on). Keeping it private means no request-supplied field can
-   * select this path — a bypass keyed on caller-controlled data would be an
-   * injection vector.
-   */
-  private static async applyGrant(
-    input: UserRoleInput,
-    performedBy: string,
-    role: { id: string; name: string; organizationId: string }
-  ): Promise<void> {
-    // Check if already assigned
-    const existing = await prisma.userRole.findUnique({
-      where: {
-        userId_roleId: {
-          userId: input.userId,
-          roleId: input.roleId,
-        },
-      },
-    });
-
-    if (existing) {
-      // Update expiration if different
-      if (input.expiresAt !== existing.expiresAt) {
-        await prisma.userRole.update({
-          where: { id: existing.id },
-          data: { expiresAt: input.expiresAt },
-        });
-      }
-      return;
-    }
-
-    // Create user role assignment
-    await prisma.userRole.create({
-      data: {
-        userId: input.userId,
-        roleId: input.roleId,
-        grantedBy: performedBy,
-        expiresAt: input.expiresAt,
-      },
-    });
-
-    // Invalidate permission cache
-    await PermissionEngine.invalidateUserPermissions(
-      input.userId,
-      role.organizationId
-    );
-
-    // Log audit
-    await this.logAudit(role.organizationId, 'grant', performedBy, {
-      targetUserId: input.userId,
-      roleId: role.id,
-      roleName: role.name,
-      expiresAt: input.expiresAt,
-    });
-
-    logger.info('Role granted', {
-      userId: input.userId,
-      roleId: role.id,
-      roleName: role.name,
-    });
+    await applyGrant(input, performedBy, role);
   }
 
   /**
@@ -580,7 +618,7 @@ export class RoleManager {
       // permission set was already contained when it was defined, so the
       // containment guard in grantRole would only fail closed against a
       // legitimate signup. See applyGrant.
-      await this.applyGrant(
+      await applyGrant(
         {
           userId,
           roleId: defaultRole.id,
@@ -600,24 +638,7 @@ export class RoleManager {
     performedBy: string,
     details: Record<string, unknown>
   ): Promise<void> {
-    try {
-      await prisma.permissionAudit.create({
-        data: {
-          organizationId,
-          action,
-          performedBy,
-          targetUserId: details.targetUserId as string | undefined,
-          targetRoleId: details.roleId as string | undefined,
-          details: details as object,
-        },
-      });
-    } catch (error) {
-      logger.error('Failed to log permission audit', {
-        error,
-        organizationId,
-        action,
-      });
-    }
+    await logPermissionAudit(organizationId, action, performedBy, details);
   }
 }
 

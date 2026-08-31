@@ -319,6 +319,46 @@ describe('RoleManager.grantRole — containment holds below the route', () => {
   });
 
   /**
+   * Review finding (qwen3.7-max + qwen3.5-plus + qwen3.8-2.4t, P0): coercing a
+   * malformed permission set to [] would make containment trivially satisfied,
+   * since every actor contains the empty set. Prisma types the column as a
+   * non-nullable String[], so this can only arise from a partial select or a
+   * corrupt row — and the guard must refuse rather than guess.
+   */
+  it('refuses a role whose permission set is not an array', async () => {
+    mockRoleFindUnique.mockResolvedValue({
+      ...opsLeadRole(),
+      permissions: undefined,
+    });
+    seatActorWith(['*']); // even a wildcard actor must not get a silent pass
+    const { RoleManager } = await import('@/lib/auth/rbac/role-manager');
+
+    await expect(
+      RoleManager.grantRole(
+        { userId: 'victim-1', roleId: ROLE_ID },
+        ATTACKER_ID
+      )
+    ).rejects.toThrow('Role permissions cannot exceed your own permissions');
+    expect(mockUserRoleCreate).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Review finding (qwen/qwen3.5-plus + deepseek-v4-flash, P0/P1): a
+   * `private static` applyGrant would still be callable as
+   * `RoleManager['applyGrant']`, because TypeScript's `private` is erased at
+   * compile time. It is now a module-scoped function, so the runtime object
+   * carries no such member and the unchecked write path cannot be reached
+   * from another module at all.
+   */
+  it('exposes no applyGrant member that could skip containment', () => {
+    const Manager = jest.requireActual('@/lib/auth/rbac/role-manager')
+      .RoleManager as Record<string, unknown>;
+
+    expect(Manager.applyGrant).toBeUndefined();
+    expect(Object.getOwnPropertyNames(Manager)).not.toContain('applyGrant');
+  });
+
+  /**
    * Signup bootstrap has no acting user to contain against. Its role was
    * already contained when defined, so this path must keep working — a
    * containment guard that fails closed here would break every new member.
