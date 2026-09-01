@@ -75,18 +75,28 @@ test.describe('Route & API smoke', () => {
           .catch(() => false);
         expect(hasBody).toBeTruthy();
       } catch (e) {
-        // Accept navigation errors for redirects
-        const errStr = String(e);
-        if (
-          errStr.includes('ERR_ABORTED') ||
-          errStr.includes('Timeout') ||
-          errStr.includes('timeout')
-        ) {
-          // Page may have redirected — verify we're somewhere valid
-          expect(page.url()).toBeTruthy();
-        } else {
-          throw e;
-        }
+        // A page that aborts or times out is a FAILED smoke, not a tolerated one.
+        //
+        // This catch used to swallow ERR_ABORTED and timeouts into
+        // `expect(page.url()).toBeTruthy()`. page.url() returns the REQUESTED
+        // url even when no response ever arrived, so that assertion could not
+        // fail - it bypassed every status and body assertion above it, and made
+        // them decorative for the one failure mode they most needed to catch.
+        //
+        // Measured, not assumed: against a server that accepts the connection
+        // and never responds, this test PASSED in 3.1 minutes with the old
+        // catch. Retained as the hang fixture in the verification notes.
+        //
+        // Playwright follows redirects during goto(), so a redirect does not
+        // surface here. What surfaces is a genuine hang or abort.
+        //
+        // An assertion failure from the block above is already precise, so it is
+        // rethrown untouched - otherwise "/ returned 500" would be relabelled as
+        // "did not load", which describes the wrong defect to whoever is paged.
+        if (e && typeof e === 'object' && 'matcherResult' in e) throw e;
+        throw new Error(
+          `${path} did not load: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`
+        );
       }
     }
 
@@ -110,14 +120,23 @@ test.describe('Route & API smoke', () => {
           res.status()
         );
       } catch (e) {
-        // Server may be slow or API unreachable — accept timeout as "server exists but slow"
-        const errStr = String(e);
-        if (errStr.includes('Timeout')) {
-          // Timeout is acceptable — server was reached but slow
-          expect(true).toBeTruthy();
-        } else {
-          throw e;
-        }
+        // A health endpoint that never answers is a production-breaking
+        // condition, not evidence that "the server exists but is slow".
+        //
+        // This used to convert a timeout into `expect(true).toBeTruthy()`, an
+        // assertion with no possible failure. The [200, 503] allow-list above
+        // was therefore never reached on the single failure mode that matters
+        // most - a health check that hangs.
+        //
+        // Measured: against a server that never responds, this test PASSED in
+        // 30.0s with the old catch.
+        //
+        // A status assertion that already failed is rethrown untouched; only a
+        // genuine no-response is relabelled.
+        if (e && typeof e === 'object' && 'matcherResult' in e) throw e;
+        throw new Error(
+          `${api} did not respond: ${e instanceof Error ? e.message.split('\n')[0] : String(e)}`
+        );
       }
     }
   });
