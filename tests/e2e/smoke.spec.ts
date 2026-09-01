@@ -4,6 +4,27 @@ import { test, expect } from '@playwright/test';
 const PAGES = ['/', '/login', '/signup'];
 const APIS = ['/api/health'];
 
+/**
+ * Where a public route is ALLOWED to end up after redirects.
+ *
+ * `page.goto` follows redirects, so asserting only the final status answers
+ * "did SOME page load", not "did THIS page load". A broken router that sends
+ * /login and /signup to the homepage returns 200 with a visible body on every
+ * path, and a status-only smoke reports PASS while none of the requested pages
+ * exist. Reviewer reproduced exactly that with
+ * {requested:'/login', finalUrl:'/', status:200} -> PASS.
+ *
+ * Default: a route must end where it was asked to go. Add an entry ONLY with
+ * evidence that production legitimately redirects, and say what the evidence
+ * was - an empty allowance here is the strict, correct default.
+ */
+const ALLOWED_FINAL_PATHS: Record<string, string[]> = {};
+
+/** Normalise for comparison: strip trailing slashes, keep root as '/'. */
+function normalisePath(p: string): string {
+  return p.replace(/\/+$/, '') || '/';
+}
+
 test.describe('Route & API smoke', () => {
   test('pages render without runtime errors', async ({ page }) => {
     // Known non-fatal patterns for a LOCAL dev server with no third-party
@@ -67,6 +88,22 @@ test.describe('Route & API smoke', () => {
           200
         );
         expect(status, `${path} returned ${status}`).toBeLessThan(400);
+
+        // THE REQUESTED ROUTE MUST BE THE ROUTE THAT LOADED.
+        //
+        // Status plus "a body is visible" is satisfied by ANY healthy page, so
+        // a router that redirects every public path to the homepage passed the
+        // status assertions above while none of the requested pages resolved.
+        // Following a redirect answers "something loaded"; only comparing the
+        // final path answers "this loaded".
+        const finalPath = normalisePath(new URL(page.url()).pathname);
+        const permitted = [path, ...(ALLOWED_FINAL_PATHS[path] ?? [])].map(
+          normalisePath
+        );
+        expect(
+          permitted,
+          `${path} ended at ${finalPath} (allowed: ${permitted.join(', ')})`
+        ).toContain(finalPath);
 
         // Brief check that body exists
         const hasBody = await page
