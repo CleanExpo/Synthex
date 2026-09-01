@@ -18,12 +18,14 @@ const tests = [
     path: '/login',
     acceptStatus: [200],
     distinctFromHome: true,
+    expectTitle: /login/i,
   },
   {
     method: 'GET',
     path: '/pricing',
     acceptStatus: [200],
     distinctFromHome: true,
+    expectTitle: /pilot access|pricing/i,
   },
   { method: 'HEAD', path: '/api/health', acceptStatus: [200] },
 ];
@@ -71,8 +73,25 @@ const ALLOWED_FINAL_PATHS = {};
  *
  * Why not a DOM marker such as a password field: /login is client-rendered and
  * ships no password input in its HTML, so that check would fail against healthy
- * production. Why not the canonical link: /pricing's canonical points at the
- * homepage today, so it does not discriminate. Both were measured, not assumed.
+ * production. Why not the canonical link or og:url: /pricing's canonical AND
+ * og:url both point at the homepage today, and its og:title is IDENTICAL to the
+ * 404 page's. All measured, not assumed.
+ *
+ * "DIFFERS FROM HOME" WAS NOT ENOUGH, and production proves it: the real 404
+ * document is titled "Synthex | Marketing Command Center", which differs from
+ * the homepage title, so a catch-all serving that at /login would have passed a
+ * home-only comparison. Each page therefore also carries a POSITIVE
+ * `expectTitle` pattern.
+ *
+ * These patterns are deliberately loose - they match the ROUTE's subject, not
+ * exact copy - but they are still coupled to wording, and that is a real
+ * maintenance cost accepted on purpose: a release gate must assert what the page
+ * IS, not merely what it is not. Measured on production 2026-09-01:
+ *     /        "Free Marketing Opportunity Map | Synthex"
+ *     /login   "Login | Synthex | SYNTHEX"           matches /login/i
+ *     /pricing "Pilot Access | Synthex | SYNTHEX"    matches /pilot access|pricing/i
+ *     404      "Synthex | Marketing Command Center"  matches NEITHER
+ * If a page is legitimately retitled, update the pattern in the same commit.
  */
 const titleOf = html =>
   (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? '').trim();
@@ -90,9 +109,12 @@ async function runTest(test) {
       signal: controller.signal,
       redirect: 'follow',
     });
-    clearTimeout(timeout);
-    const latency = Date.now() - start;
-
+    // NOTE: the timeout is NOT cleared here. It used to be, which meant the
+    // abort fired only on the headers - and the HTML body read added below then
+    // ran unbounded. A server that returns headers promptly and stalls the body
+    // hung this script past its own 10s limit and consumed the workflow timeout
+    // instead of producing a bounded failure. The controller must still be armed
+    // while the body is read.
     const statusOk = test.acceptStatus.includes(res.status);
 
     // res.url is the FINAL url after any redirects.
@@ -131,9 +153,19 @@ async function runTest(test) {
         } else if (title === homeTitle) {
           identityOk = false;
           identityNote = `served the homepage document (title "${title}")`;
+        } else if (test.expectTitle && !test.expectTitle.test(title)) {
+          // Positive identity. Differing from home is not enough: production's
+          // own 404 document has a title that differs from home too.
+          identityOk = false;
+          identityNote = `wrong document: title "${title}" does not match ${test.expectTitle}`;
         }
       }
     }
+
+    // Only now is every network read complete, so the abort timer can be
+    // released. Clearing it earlier is what let the body read run unbounded.
+    clearTimeout(timeout);
+    const latency = Date.now() - start;
 
     return {
       pass: statusOk && landedRight && identityOk,
