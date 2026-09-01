@@ -6,13 +6,25 @@
 const BASE_URL = process.env.BASE_URL || 'https://synthex.social';
 const TIMEOUT_MS = 10000;
 
+// `isHome` supplies the baseline document; `distinctFromHome` marks a page that
+// must NOT be the homepage. Order matters: '/' is fetched before its dependants.
 const tests = [
   { method: 'GET', path: '/api/health', acceptStatus: [200, 503] },
   { method: 'GET', path: '/api/health/live', acceptStatus: [200] },
   { method: 'GET', path: '/api/health/ready', acceptStatus: [200, 503] },
-  { method: 'GET', path: '/', acceptStatus: [200] },
-  { method: 'GET', path: '/login', acceptStatus: [200] },
-  { method: 'GET', path: '/pricing', acceptStatus: [200] },
+  { method: 'GET', path: '/', acceptStatus: [200], isHome: true },
+  {
+    method: 'GET',
+    path: '/login',
+    acceptStatus: [200],
+    distinctFromHome: true,
+  },
+  {
+    method: 'GET',
+    path: '/pricing',
+    acceptStatus: [200],
+    distinctFromHome: true,
+  },
   { method: 'HEAD', path: '/api/health', acceptStatus: [200] },
 ];
 
@@ -38,6 +50,34 @@ const normalisePath = p => p.replace(/\/+$/, '') || '/';
  * redirects, and say what that evidence was.
  */
 const ALLOWED_FINAL_PATHS = {};
+
+/**
+ * IS THIS ACTUALLY THE REQUESTED PAGE, OR THE HOMEPAGE WEARING ITS URL?
+ *
+ * Status, origin and pathname together still do not identify the RESOURCE. An
+ * internal rewrite or a catch-all fallback can serve homepage HTML at /login
+ * with status 200 and the URL preserved, and every check above passes - so the
+ * required gate certifies a deploy where the advertised pages do not exist.
+ * `redirect: 'manual'` does not help: no redirect occurs.
+ *
+ * The discriminator is the document <title>, compared DIFFERENTIALLY against the
+ * homepage rather than against hardcoded copy. Measured on production
+ * 2026-09-01:
+ *     /        "Free Marketing Opportunity Map | Synthex"
+ *     /login   "Login | Synthex | SYNTHEX"
+ *     /pricing "Pilot Access | Synthex | SYNTHEX"
+ * A marketing rewording keeps this passing; the homepage served at /login does
+ * not.
+ *
+ * Why not a DOM marker such as a password field: /login is client-rendered and
+ * ships no password input in its HTML, so that check would fail against healthy
+ * production. Why not the canonical link: /pricing's canonical points at the
+ * homepage today, so it does not discriminate. Both were measured, not assumed.
+ */
+const titleOf = html =>
+  (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? '').trim();
+
+let homeTitle = null;
 
 async function runTest(test) {
   const url = `${BASE_URL}${test.path}`;
@@ -65,12 +105,43 @@ async function runTest(test) {
       finalUrl.origin === BASE_ORIGIN &&
       permitted.includes(normalisePath(finalUrl.pathname));
 
+    // Identity check for HTML pages only.
+    let identityOk = true;
+    let identityNote = null;
+    if (test.isHome || test.distinctFromHome) {
+      const html = await res.text();
+      const title = titleOf(html);
+
+      if (test.isHome) {
+        homeTitle = title;
+        if (!title) {
+          identityOk = false;
+          identityNote = 'homepage served no <title>; cannot identify pages';
+        }
+      } else {
+        if (!title) {
+          identityOk = false;
+          identityNote = 'no <title> in response';
+        } else if (homeTitle === null) {
+          // Fail closed: without the baseline this check cannot run, and a
+          // check that silently skips is the defect this file keeps finding.
+          identityOk = false;
+          identityNote =
+            'homepage baseline unavailable; cannot verify identity';
+        } else if (title === homeTitle) {
+          identityOk = false;
+          identityNote = `served the homepage document (title "${title}")`;
+        }
+      }
+    }
+
     return {
-      pass: statusOk && landedRight,
+      pass: statusOk && landedRight && identityOk,
       status: res.status,
       latency,
       error: null,
       landedAt: landedRight ? null : `${finalUrl.origin}${finalUrl.pathname}`,
+      identityNote,
     };
   } catch (err) {
     return {
@@ -93,7 +164,11 @@ for (const test of tests) {
   if (result.pass) passed++;
   const icon = result.pass ? '\u2713' : '\u2717';
   const status = result.error ? `ERR: ${result.error}` : String(result.status);
-  const landed = result.landedAt ? `  -> landed at ${result.landedAt}` : '';
+  const landed = result.landedAt
+    ? `  -> landed at ${result.landedAt}`
+    : result.identityNote
+      ? `  -> ${result.identityNote}`
+      : '';
   console.log(
     `${icon}  ${label(test.method, test.path)} ${status.padEnd(5)} (${result.latency}ms)${landed}`
   );
