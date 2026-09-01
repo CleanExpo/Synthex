@@ -12,20 +12,26 @@ const tests = [
   { method: 'GET', path: '/api/health', acceptStatus: [200, 503] },
   { method: 'GET', path: '/api/health/live', acceptStatus: [200] },
   { method: 'GET', path: '/api/health/ready', acceptStatus: [200, 503] },
-  { method: 'GET', path: '/', acceptStatus: [200], isHome: true },
+  {
+    method: 'GET',
+    path: '/',
+    acceptStatus: [200],
+    isHome: true,
+    expectTitle: /^Free Marketing Opportunity Map \| Synthex/i,
+  },
   {
     method: 'GET',
     path: '/login',
     acceptStatus: [200],
     distinctFromHome: true,
-    expectTitle: /login/i,
+    expectTitle: /^Login \| Synthex/i,
   },
   {
     method: 'GET',
     path: '/pricing',
     acceptStatus: [200],
     distinctFromHome: true,
-    expectTitle: /pilot access|pricing/i,
+    expectTitle: /^Pilot Access \| Synthex/i,
   },
   { method: 'HEAD', path: '/api/health', acceptStatus: [200] },
 ];
@@ -83,18 +89,68 @@ const ALLOWED_FINAL_PATHS = {};
  * home-only comparison. Each page therefore also carries a POSITIVE
  * `expectTitle` pattern.
  *
- * These patterns are deliberately loose - they match the ROUTE's subject, not
- * exact copy - but they are still coupled to wording, and that is a real
- * maintenance cost accepted on purpose: a release gate must assert what the page
- * IS, not merely what it is not. Measured on production 2026-09-01:
- *     /        "Free Marketing Opportunity Map | Synthex"
- *     /login   "Login | Synthex | SYNTHEX"           matches /login/i
- *     /pricing "Pilot Access | Synthex | SYNTHEX"    matches /pilot access|pricing/i
- *     404      "Synthex | Marketing Command Center"  matches NEITHER
- * If a page is legitimately retitled, update the pattern in the same commit.
+ * THE PATTERNS ARE ANCHORED THROUGH THE SEPARATOR, and that is the point. They
+ * used to match only the route's SUBJECT (/login/i, /pilot access|pricing/i),
+ * which certified soft-error documents: "Login unavailable | Synthex" contains
+ * "login", so an incident page served at /login passed the required gate. A
+ * subject word proves a page is ABOUT the route; it does not prove the healthy
+ * document rendered. Measured on production 2026-09-02:
+ *     /        "Free Marketing Opportunity Map | Synthex"  ^Free Marketing Opportunity Map \| Synthex
+ *     /login   "Login | Synthex | SYNTHEX"                 ^Login \| Synthex
+ *     /pricing "Pilot Access | Synthex | SYNTHEX"          ^Pilot Access \| Synthex
+ *     404      "Synthex | Marketing Command Center"        matches NONE
+ * The shapes that used to pass and now do not:
+ *     "Login unavailable | Synthex"    fails ^Login \| Synthex
+ *     "Pricing unavailable | Synthex"  fails ^Pilot Access \| Synthex
+ *     "Not Found | Synthex" at /       fails ^Free Marketing Opportunity Map \| Synthex
+ *
+ * The homepage carries its own expectTitle now. It used to be accepted for
+ * having ANY non-empty title, so a soft-404 homepage passed AND then became the
+ * baseline every other page was compared against.
+ *
+ * This is coupled to wording, and that maintenance cost is accepted on purpose:
+ * a release gate must assert what the page IS, not merely what it is not. If a
+ * page is legitimately retitled, update the pattern in the same commit.
+ *
+ * WHY THE EXTRACTION BELOW IS NOT A BARE REGEX OVER THE WHOLE DOCUMENT.
+ *
+ * `html.match(/<title[^>]*>([^<]*)<\/title>/i)` takes the FIRST title-shaped
+ * token anywhere in the byte stream, which an HTML parser does not agree is the
+ * document title. A response body of
+ *     <!-- <title>Login</title> --><title>Not Found | Synthex</title>
+ * yielded "Login" and passed this gate while the real document was the 404.
+ * Commented and scripted markup is inert to a browser, so it must be inert here
+ * too.
+ *
+ * Three narrowings, each closing a measured bypass:
+ *   1. Look only inside <head>. A document title cannot live in <body>, and
+ *      inline SVG icons legitimately carry their own <title> elements there -
+ *      scanning the whole document would both admit spoofs and risk failing
+ *      healthy pages.
+ *   2. Drop comments and script/style/template/noscript blocks before matching,
+ *      because none of them contribute a document title.
+ *   3. Treat two DIFFERENT titles in <head> as ambiguous and fail. Which one a
+ *      parser picks is not something a release gate should be guessing at.
+ *
+ * Deliberately zero-dependency: a real HTML parser (cheerio IS in this repo's
+ * dependencies) cannot be used here. The `verify-production` job that runs this
+ * script does `checkout` + `setup-node` and NO `npm ci`, so `node_modules` does
+ * not exist at that point - an import would crash the required gate on every
+ * deploy. Verified against production 2026-09-02: /, /login, /pricing and the
+ * 404 each return exactly ONE <title>, all inside <head>.
  */
-const titleOf = html =>
-  (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? '').trim();
+const HEAD_OF = /<head[^>]*>([\s\S]*?)<\/head>/i;
+const INERT = /<(script|style|template|noscript)\b[^>]*>[\s\S]*?<\/\1>/gi;
+
+/** Every distinct document title declared in <head>, ignoring inert markup. */
+const titlesOf = html => {
+  const head = html.match(HEAD_OF)?.[1] ?? '';
+  const live = head.replace(/<!--[\s\S]*?-->/g, '').replace(INERT, '');
+  const found = [...live.matchAll(/<title[^>]*>([\s\S]*?)<\/title>/gi)].map(m =>
+    m[1].trim()
+  );
+  return [...new Set(found)];
+};
 
 let homeTitle = null;
 
@@ -132,18 +188,33 @@ async function runTest(test) {
     let identityNote = null;
     if (test.isHome || test.distinctFromHome) {
       const html = await res.text();
-      const title = titleOf(html);
+      const titles = titlesOf(html);
 
-      if (test.isHome) {
-        homeTitle = title;
-        if (!title) {
-          identityOk = false;
-          identityNote = 'homepage served no <title>; cannot identify pages';
-        }
+      if (titles.length === 0) {
+        identityOk = false;
+        identityNote = test.isHome
+          ? 'homepage served no <title> in <head>; cannot identify pages'
+          : 'no <title> in <head>';
+      } else if (titles.length > 1) {
+        identityOk = false;
+        identityNote = `ambiguous document: <head> declares ${titles.length} different titles (${titles
+          .map(t => JSON.stringify(t))
+          .join(', ')})`;
       } else {
-        if (!title) {
+        const title = titles[0];
+
+        // Positive identity, applied to EVERY page including the homepage.
+        // This check used to live only in the non-home branch, so the homepage
+        // was accepted for having any title at all - and a soft-404 homepage
+        // both passed and poisoned the baseline below.
+        if (test.expectTitle && !test.expectTitle.test(title)) {
           identityOk = false;
-          identityNote = 'no <title> in response';
+          identityNote = `wrong document: title ${JSON.stringify(title)} does not match ${test.expectTitle}`;
+        } else if (test.isHome) {
+          // Only a homepage that proved its own identity may serve as the
+          // baseline. A wrong homepage must not become the thing every other
+          // page is measured against.
+          homeTitle = title;
         } else if (homeTitle === null) {
           // Fail closed: without the baseline this check cannot run, and a
           // check that silently skips is the defect this file keeps finding.
@@ -153,11 +224,6 @@ async function runTest(test) {
         } else if (title === homeTitle) {
           identityOk = false;
           identityNote = `served the homepage document (title "${title}")`;
-        } else if (test.expectTitle && !test.expectTitle.test(title)) {
-          // Positive identity. Differing from home is not enough: production's
-          // own 404 document has a title that differs from home too.
-          identityOk = false;
-          identityNote = `wrong document: title "${title}" does not match ${test.expectTitle}`;
         }
       }
     }
