@@ -26,7 +26,7 @@ function normalisePath(p: string): string {
 }
 
 test.describe('Route & API smoke', () => {
-  test('pages render without runtime errors', async ({ page }) => {
+  test('pages render without runtime errors', async ({ page, baseURL }) => {
     // Known non-fatal patterns for a LOCAL dev server with no third-party
     // services configured.
     //
@@ -96,7 +96,19 @@ test.describe('Route & API smoke', () => {
         // status assertions above while none of the requested pages resolved.
         // Following a redirect answers "something loaded"; only comparing the
         // final path answers "this loaded".
-        const finalPath = normalisePath(new URL(page.url()).pathname);
+        // ORIGIN FIRST. Comparing only the pathname accepts a page served by a
+        // DIFFERENT HOST: a 302 to https://evil.example.com/login yields
+        // pathname "/login" and satisfies the allow-list. Reviewer executed the
+        // predicate with that exact input and it returned true.
+        const finalUrl = new URL(page.url());
+        const expectedOrigin = new URL(baseURL ?? 'http://localhost:3002')
+          .origin;
+        expect(
+          finalUrl.origin,
+          `${path} ended at origin ${finalUrl.origin}, expected ${expectedOrigin}`
+        ).toBe(expectedOrigin);
+
+        const finalPath = normalisePath(finalUrl.pathname);
         const permitted = [path, ...(ALLOWED_FINAL_PATHS[path] ?? [])].map(
           normalisePath
         );
