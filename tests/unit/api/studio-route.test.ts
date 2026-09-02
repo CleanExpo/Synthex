@@ -1,10 +1,11 @@
 /**
  * Unit tests for the Client Content Studio board API (SYN-1005 / VS-6).
- * Auth, client-org resolution, access checks, board reads, and approve gate.
+ * Auth, client-org resolution, access checks, board reads, and the approve gate.
  *
  * g9: the `[client]` segment is the organisation slug and the Studio config is
  * derived from the organisation record — there is no hardcoded client registry,
  * so a business that exists in the vault gets a board with no code change.
+ * g2: approving a draft schedules it through the approve→schedule bridge.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -17,7 +18,7 @@ const mockSecureResponse = jest.fn((data: unknown, status = 200) => ({
 const mockHasOrganizationAccess = jest.fn();
 const mockOrganizationFindUnique = jest.fn();
 const mockListStudioDrafts = jest.fn();
-const mockApproveStudioDraft = jest.fn();
+const mockApproveAndSchedule = jest.fn();
 
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
@@ -46,7 +47,11 @@ jest.mock('@/lib/prisma', () => ({
 
 jest.mock('@/lib/marketing-agency/studio/draft-store', () => ({
   listStudioDrafts: (...args: unknown[]) => mockListStudioDrafts(...args),
-  approveStudioDraft: (...args: unknown[]) => mockApproveStudioDraft(...args),
+}));
+
+jest.mock('@/lib/marketing-agency/studio/approve-and-schedule', () => ({
+  approveAndScheduleStudioDraft: (...args: unknown[]) =>
+    mockApproveAndSchedule(...args),
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
@@ -68,6 +73,10 @@ const ORG_SELECT = {
   select: { id: true, name: true, slug: true, website: true, settings: true },
 };
 
+function approveRequest(body: unknown) {
+  return createMockNextRequest({ method: 'POST', url: 'http://x', body });
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockSecureResponse.mockImplementation((data: unknown, status = 200) => ({
@@ -80,6 +89,11 @@ beforeEach(() => {
   });
   mockOrganizationFindUnique.mockResolvedValue(RA_ORG);
   mockHasOrganizationAccess.mockResolvedValue(true);
+  mockApproveAndSchedule.mockResolvedValue({
+    approved: true,
+    scheduled: [],
+    skipped: [],
+  });
 });
 
 describe('GET /api/marketing-agency/studio/[client]', () => {
@@ -162,98 +176,113 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
   });
 });
 
-describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
+describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', () => {
   it('returns 401 when unauthenticated', async () => {
     mockSecurityCheck.mockResolvedValueOnce({
       allowed: false,
       error: 'Auth required',
       context: {},
     });
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      ctx
-    );
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(401);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
   it('returns 400 on an invalid body', async () => {
+    const res = await POST(approveRequest({ nope: true }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when scheduledAt is not an ISO instant', async () => {
     const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { nope: true },
-      }),
+      approveRequest({ draftId: 'd1', scheduledAt: 'tomorrow' }),
       ctx
     );
     expect(res.status).toBe(400);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
   it('returns 404 when the draft is not found / not awaiting approval / wrong org', async () => {
-    mockApproveStudioDraft.mockResolvedValue(0);
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      ctx
-    );
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      scheduled: [],
+      skipped: [],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(404);
   });
 
   it('returns 403 on approve when the user cannot access the client organisation', async () => {
     mockHasOrganizationAccess.mockResolvedValueOnce(false);
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      ctx
-    );
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(403);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
   it('returns 404 on approve when the organisation does not exist', async () => {
     mockOrganizationFindUnique.mockResolvedValueOnce(null);
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      { params: Promise.resolve({ client: 'unknown-client' }) }
-    );
+    const res = await POST(approveRequest({ draftId: 'd1' }), {
+      params: Promise.resolve({ client: 'unknown-client' }),
+    });
     expect(res.status).toBe(404);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
-  it('returns 200 and approves (org-scoped, approvedBy = caller) on success', async () => {
-    mockApproveStudioDraft.mockResolvedValue(1);
+  it('approves through the bridge (org-scoped, approvedBy = caller, client resolved from the org) and returns what was scheduled', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: true,
+      scheduled: [
+        {
+          platform: 'linkedin',
+          postId: 'post-1',
+          scheduledAt: '2026-09-02T14:00:00.000Z',
+          linkUrl: 'https://restoreassist.com.au/?utm_source=linkedin',
+        },
+      ],
+      skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({
+      approved: true,
+      draftId: 'd1',
+      scheduled: [
+        {
+          platform: 'linkedin',
+          postId: 'post-1',
+          scheduledAt: '2026-09-02T14:00:00.000Z',
+          linkUrl: 'https://restoreassist.com.au/?utm_source=linkedin',
+        },
+      ],
+      skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
+    });
+    expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
+    expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
+    expect(mockApproveAndSchedule).toHaveBeenCalledWith({
+      organizationId: 'org-ra',
+      id: 'd1',
+      approvedBy: 'user-1',
+      client: expect.objectContaining({
+        clientSlug: 'restoreassist',
+        funnelUrl: 'https://restoreassist.com.au',
+      }),
+      scheduledAt: undefined,
+    });
+  });
+
+  it('passes a caller-supplied scheduledAt through as a Date', async () => {
     const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
+      approveRequest({
+        draftId: 'd1',
+        scheduledAt: '2026-09-03T09:00:00.000Z',
       }),
       ctx
     );
     expect(res.status).toBe(200);
-    const body = await res.json();
-    expect(body.approved).toBe(true);
-    expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
-    expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
-    expect(mockApproveStudioDraft).toHaveBeenCalledWith({
-      organizationId: 'org-ra',
-      id: 'd1',
-      approvedBy: 'user-1',
-    });
+    expect(mockApproveAndSchedule.mock.calls[0][0].scheduledAt).toEqual(
+      new Date('2026-09-03T09:00:00.000Z')
+    );
   });
 });

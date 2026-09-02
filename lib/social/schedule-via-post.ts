@@ -45,6 +45,13 @@ export interface ScheduleViaPostInput {
   mediaUrls?: string[];
   /** Optional extra metadata merged into the Post.metadata JSON. */
   metadata?: Record<string, unknown>;
+  /**
+   * Organisation to scope the campaign and post to. Omit to use the user's
+   * active organisation. The Studio passes the DRAFT's organisation so an
+   * approval never lands under whichever business the approver last switched
+   * to (g2).
+   */
+  organizationId?: string | null;
 }
 
 export interface ScheduleViaPostResult {
@@ -72,7 +79,10 @@ export async function scheduleViaPost(
   const { userId, platform, content, scheduledTime, mediaUrls, metadata } =
     input;
 
-  const organizationId = await getEffectiveOrganizationId(userId);
+  const organizationId =
+    input.organizationId !== undefined
+      ? input.organizationId
+      : await getEffectiveOrganizationId(userId);
 
   // Get or create the default "Scheduled Posts" campaign, scoped to the active
   // brand — identical to /api/scheduler/posts so both entry points share one

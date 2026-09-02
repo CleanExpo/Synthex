@@ -12,7 +12,7 @@ import type { Prisma } from '@prisma/client';
 /** Minimal slice of the Prisma StudioContentDraft delegate we use (injectable for tests). */
 export type StudioDraftDelegate = Pick<
   typeof prisma.studioContentDraft,
-  'create' | 'findMany' | 'updateMany' | 'upsert'
+  'create' | 'findMany' | 'findFirst' | 'updateMany' | 'upsert'
 >;
 
 const defaultDelegate = (): StudioDraftDelegate => prisma.studioContentDraft;

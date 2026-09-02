@@ -2,7 +2,8 @@
  * Client Content Studio — per-client board API (SYN-1005 / VS-6).
  *
  * GET  /api/marketing-agency/studio/[client]  → org-scoped board grouped by status.
- * POST /api/marketing-agency/studio/[client]  → approve a draft (the human-approval gate).
+ * POST /api/marketing-agency/studio/[client]  → approve a draft (the human-approval
+ *      gate) and schedule it for publishing (g2).
  *
  * Auth + org-scope via APISecurityChecker. The `[client]` segment IS the organisation
  * slug: the organisation record is loaded, the Studio configuration is derived from it
@@ -21,10 +22,8 @@ import {
 import { hasOrganizationAccess } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
-import {
-  listStudioDrafts,
-  approveStudioDraft,
-} from '@/lib/marketing-agency/studio/draft-store';
+import { listStudioDrafts } from '@/lib/marketing-agency/studio/draft-store';
+import { approveAndScheduleStudioDraft } from '@/lib/marketing-agency/studio/approve-and-schedule';
 import { resolveStudioClient } from '@/lib/marketing-agency/studio/clients';
 
 export const runtime = 'nodejs';
@@ -119,7 +118,11 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   }
 }
 
-const approveSchema = z.object({ draftId: z.string().min(1) });
+const approveSchema = z.object({
+  draftId: z.string().min(1),
+  /** ISO instant to publish at. Omit to publish on the cron's next tick. */
+  scheduledAt: z.string().datetime({ offset: true }).optional(),
+});
 
 export async function POST(request: NextRequest, { params }: RouteCtx) {
   const security = await APISecurityChecker.check(
@@ -153,6 +156,7 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
       security.context
     );
   }
+  const studioClient = resolveStudioClient(organization);
   const organizationId = organization.id;
 
   const userId = security.context.userId!;
@@ -166,12 +170,16 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
   }
 
   try {
-    const count = await approveStudioDraft({
+    const result = await approveAndScheduleStudioDraft({
       organizationId,
       id: parsed.data.draftId,
       approvedBy: userId,
+      client: studioClient,
+      scheduledAt: parsed.data.scheduledAt
+        ? new Date(parsed.data.scheduledAt)
+        : undefined,
     });
-    if (count === 0) {
+    if (!result.approved) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Draft not found or not awaiting approval' },
         404,
@@ -179,7 +187,12 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
       );
     }
     return APISecurityChecker.createSecureResponse(
-      { approved: true, draftId: parsed.data.draftId },
+      {
+        approved: true,
+        draftId: parsed.data.draftId,
+        scheduled: result.scheduled,
+        skipped: result.skipped,
+      },
       200,
       security.context
     );
