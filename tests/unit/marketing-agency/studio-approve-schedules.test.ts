@@ -4,13 +4,21 @@
  * /api/cron/publish-scheduled). Before this, approval flipped a status and
  * stopped: "approved" meant "will never publish".
  *
+ * Two rules from independent review (report synthex-3def7c867):
+ *   - a draft carrying externalPublishingAllowed:false is deny-by-default; the
+ *     pack's per-platform externalPublishBlocks must each be discharged
+ *     (approval = this click; credentials = an active platform connection for
+ *     the business; anything else = a recorded clearance) before a Post exists;
+ *   - approval is never consumed when nothing was scheduled: the draft returns
+ *     to awaiting_approval so it can be retried without duplicate Posts.
+ *
  * Everything is injected — no database, no network.
  */
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  default: { studioContentDraft: {} },
-  prisma: { studioContentDraft: {} },
+  default: { studioContentDraft: {}, platformConnection: {} },
+  prisma: { studioContentDraft: {}, platformConnection: {} },
 }));
 jest.mock('@/lib/social', () => ({
   isPlatformSupported: (platform: string) =>
@@ -26,6 +34,8 @@ jest.mock('@/lib/logger', () => ({
 import {
   approveAndScheduleStudioDraft,
   buildStudioFunnelLink,
+  APPROVAL_BLOCKER,
+  CREDENTIALS_BLOCKER,
 } from '@/lib/marketing-agency/studio/approve-and-schedule';
 import type { StudioDraftDelegate } from '@/lib/marketing-agency/studio/draft-store';
 
@@ -47,11 +57,36 @@ function draftRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function harness(opts: { approveCount?: number; draft?: unknown } = {}) {
+/** The exact shape scripts/seed-carsi-authority-studio-drafts.ts writes. */
+const SEEDED_CARSI_METADATA = {
+  authorityCampaignId: 'carsi-restoration-training-authority-2026-06-11',
+  ownedMediaGate: { allowed: true, blockers: [], warnings: [] },
+  externalPublishBlocks: {
+    linkedin: [
+      'platform_credentials_required',
+      'human_or_client_approval_required',
+      'final_asset_rights_check_required',
+    ],
+    facebook: [
+      'platform_credentials_required',
+      'human_or_client_approval_required',
+      'final_asset_rights_check_required',
+    ],
+  },
+  externalPublishingAllowed: false,
+};
+
+function harness(
+  opts: {
+    approveCount?: number;
+    draft?: unknown;
+    credentialsReady?: boolean;
+  } = {}
+) {
   const updateMany = jest
     .fn()
     .mockResolvedValueOnce({ count: opts.approveCount ?? 1 }) // the approval
-    .mockResolvedValue({ count: 1 }); // the metadata record
+    .mockResolvedValue({ count: 1 }); // the record / the revert
   const findFirst = jest
     .fn()
     .mockResolvedValue(opts.draft === undefined ? draftRow() : opts.draft);
@@ -65,24 +100,29 @@ function harness(opts: { approveCount?: number; draft?: unknown } = {}) {
     scheduledAt: NOW.toISOString(),
     status: 'scheduled' as const,
   }));
-  return { delegate, updateMany, findFirst, schedule };
+  const credentialsReady = jest.fn(async () => opts.credentialsReady ?? true);
+  const deps = {
+    delegate,
+    schedule,
+    credentialsReady,
+    now: () => NOW,
+  };
+  return { delegate, updateMany, findFirst, schedule, credentialsReady, deps };
 }
 
 const CLIENT = { clientSlug: 'carsi', funnelUrl: 'https://carsi.au/courses' };
+const INPUT = {
+  organizationId: 'org-carsi',
+  id: 'd1',
+  approvedBy: 'phill',
+  client: CLIENT,
+};
 
 describe('approveAndScheduleStudioDraft', () => {
   it('creates one scheduled Post per schedulable platform, scoped to the DRAFT organisation', async () => {
     const h = harness();
 
-    const result = await approveAndScheduleStudioDraft(
-      {
-        organizationId: 'org-carsi',
-        id: 'd1',
-        approvedBy: 'phill',
-        client: CLIENT,
-      },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
-    );
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
     // The human-approval gate ran first, org-scoped, and only on awaiting_approval.
     expect(h.updateMany.mock.calls[0][0].where).toEqual({
@@ -114,6 +154,7 @@ describe('approveAndScheduleStudioDraft', () => {
 
     expect(result).toEqual({
       approved: true,
+      outcome: 'approved',
       scheduled: [
         {
           platform: 'linkedin',
@@ -131,22 +172,22 @@ describe('approveAndScheduleStudioDraft', () => {
     const h = harness({ approveCount: 0 });
 
     const result = await approveAndScheduleStudioDraft(
-      {
-        organizationId: 'org-other',
-        id: 'd1',
-        approvedBy: 'attacker',
-        client: CLIENT,
-      },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
+      { ...INPUT, organizationId: 'org-other', approvedBy: 'attacker' },
+      h.deps
     );
 
-    expect(result).toEqual({ approved: false, scheduled: [], skipped: [] });
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'not_awaiting_approval',
+      scheduled: [],
+      skipped: [],
+    });
     expect(h.findFirst).not.toHaveBeenCalled();
     expect(h.schedule).not.toHaveBeenCalled();
     expect(h.updateMany).toHaveBeenCalledTimes(1);
   });
 
-  it("refuses to schedule when the pack's owned-media rights gate is false", async () => {
+  it("refuses to schedule when the pack's owned-media rights gate is false, and hands the draft back", async () => {
     const h = harness({
       draft: draftRow({
         metadata: {
@@ -158,23 +199,26 @@ describe('approveAndScheduleStudioDraft', () => {
       }),
     });
 
-    const result = await approveAndScheduleStudioDraft(
-      {
-        organizationId: 'org-carsi',
-        id: 'd1',
-        approvedBy: 'phill',
-        client: CLIENT,
-      },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
-    );
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    expect(result.approved).toBe(true);
     expect(h.schedule).not.toHaveBeenCalled();
-    expect(result.scheduled).toEqual([]);
-    expect(result.skipped).toEqual([
-      { platform: 'linkedin', reason: 'owned_media_gate_blocked' },
-      { platform: 'blog', reason: 'owned_media_gate_blocked' },
-    ]);
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'blocked',
+      scheduled: [],
+      skipped: [
+        { platform: 'linkedin', reason: 'owned_media_gate_blocked' },
+        { platform: 'blog', reason: 'owned_media_gate_blocked' },
+      ],
+    });
+    // Approval is not consumed: the draft is returned to awaiting_approval.
+    const revert = h.updateMany.mock.calls[1][0];
+    expect(revert.where).toEqual({
+      id: 'd1',
+      organizationId: 'org-carsi',
+      status: 'approved',
+    });
+    expect(revert.data.status).toBe('awaiting_approval');
   });
 
   it('attaches the rendered video as media and keeps the funnel link in the text where a card cannot carry it', async () => {
@@ -186,15 +230,7 @@ describe('approveAndScheduleStudioDraft', () => {
       }),
     });
 
-    await approveAndScheduleStudioDraft(
-      {
-        organizationId: 'org-carsi',
-        id: 'd1',
-        approvedBy: 'phill',
-        client: CLIENT,
-      },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
-    );
+    await approveAndScheduleStudioDraft(INPUT, h.deps);
 
     const input = h.schedule.mock.calls[0][0];
     expect(input.mediaUrls).toEqual(['https://cdn.example/carsi-d1.mp4']);
@@ -209,25 +245,25 @@ describe('approveAndScheduleStudioDraft', () => {
   it('records the approval and the schedule on the draft', async () => {
     const h = harness();
 
-    await approveAndScheduleStudioDraft(
-      {
-        organizationId: 'org-carsi',
-        id: 'd1',
-        approvedBy: 'phill',
-        client: CLIENT,
-      },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
-    );
+    await approveAndScheduleStudioDraft(INPUT, h.deps);
 
     expect(h.updateMany).toHaveBeenCalledTimes(2);
     const record = h.updateMany.mock.calls[1][0];
     expect(record.where).toEqual({ id: 'd1', organizationId: 'org-carsi' });
+    expect(record.data.status).toBeUndefined(); // stays approved
     expect(record.data.metadata).toMatchObject({
       // Existing metadata is preserved, not overwritten.
       authorityCampaignId: 'carsi-restoration-training-authority-2026-06-11',
       externalPublishingAllowed: true,
       externalPublishApprovedBy: 'phill',
       externalPublishApprovedAt: NOW.toISOString(),
+      externalPublishClearances: {
+        [APPROVAL_BLOCKER]: {
+          clearedBy: 'phill',
+          clearedAt: NOW.toISOString(),
+          via: 'studio_approval',
+        },
+      },
       studioSchedule: {
         scheduled: [{ platform: 'linkedin', postId: 'post-linkedin' }],
         skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
@@ -235,7 +271,7 @@ describe('approveAndScheduleStudioDraft', () => {
     });
   });
 
-  it('reports a scheduler failure on one platform instead of swallowing it', async () => {
+  it('reports a scheduler failure on one platform instead of swallowing it, keeping the approval when another platform scheduled', async () => {
     const h = harness({
       draft: draftRow({ platforms: ['facebook', 'linkedin'], metadata: {} }),
     });
@@ -250,16 +286,10 @@ describe('approveAndScheduleStudioDraft', () => {
       };
     });
 
-    const result = await approveAndScheduleStudioDraft(
-      {
-        organizationId: 'org-carsi',
-        id: 'd1',
-        approvedBy: 'phill',
-        client: CLIENT,
-      },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
-    );
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
+    expect(result.approved).toBe(true);
+    expect(result.outcome).toBe('approved');
     expect(result.scheduled.map(s => s.platform)).toEqual(['linkedin']);
     expect(result.skipped).toEqual([
       {
@@ -277,13 +307,11 @@ describe('approveAndScheduleStudioDraft', () => {
 
     const result = await approveAndScheduleStudioDraft(
       {
-        organizationId: 'org-carsi',
-        id: 'd1',
-        approvedBy: 'phill',
+        ...INPUT,
         client: { clientSlug: 'carsi', funnelUrl: null },
         scheduledAt: later,
       },
-      { delegate: h.delegate, schedule: h.schedule, now: () => NOW }
+      h.deps
     );
 
     const input = h.schedule.mock.calls[0][0];
@@ -293,6 +321,239 @@ describe('approveAndScheduleStudioDraft', () => {
       'Body of the post.\n\nCTA: Save this checklist.'
     );
     expect(result.scheduled[0].linkUrl).toBeNull();
+  });
+});
+
+describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-PUBLISH-BLOCKS-BYPASSED)", () => {
+  it('denies the exact seeded CARSI shape: approval alone does not discharge credentials or rights', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+      credentialsReady: false,
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'blocked',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason:
+            'external_publish_blocked: platform_credentials_required, final_asset_rights_check_required',
+        },
+      ],
+    });
+
+    // Handed back for retry, the denial left in place, the approval recorded.
+    const revert = h.updateMany.mock.calls[1][0];
+    expect(revert.where).toEqual({
+      id: 'd1',
+      organizationId: 'org-carsi',
+      status: 'approved',
+    });
+    expect(revert.data.status).toBe('awaiting_approval');
+    expect(revert.data.metadata.externalPublishingAllowed).toBe(false);
+    expect(revert.data.metadata.externalPublishBlocks).toEqual(
+      SEEDED_CARSI_METADATA.externalPublishBlocks
+    );
+    expect(
+      revert.data.metadata.externalPublishClearances[APPROVAL_BLOCKER]
+    ).toEqual({
+      clearedBy: 'phill',
+      clearedAt: NOW.toISOString(),
+      via: 'studio_approval',
+    });
+    expect(revert.data.metadata.studioSchedule.skipped).toEqual(result.skipped);
+  });
+
+  it('schedules once credentials are live for the business and the rights check is explicitly cleared by the approver', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+      credentialsReady: true,
+    });
+
+    const result = await approveAndScheduleStudioDraft(
+      { ...INPUT, clearances: ['final_asset_rights_check_required'] },
+      h.deps
+    );
+
+    expect(h.credentialsReady).toHaveBeenCalledWith('linkedin');
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(result.approved).toBe(true);
+    expect(result.outcome).toBe('approved');
+
+    const record = h.updateMany.mock.calls[1][0];
+    expect(record.data.status).toBeUndefined();
+    expect(record.data.metadata.externalPublishingAllowed).toBe(true);
+    expect(record.data.metadata.externalPublishClearances).toEqual({
+      [APPROVAL_BLOCKER]: {
+        clearedBy: 'phill',
+        clearedAt: NOW.toISOString(),
+        via: 'studio_approval',
+      },
+      final_asset_rights_check_required: {
+        clearedBy: 'phill',
+        clearedAt: NOW.toISOString(),
+        via: 'studio_approval',
+      },
+    });
+  });
+
+  it('honours a clearance recorded on an earlier attempt', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: {
+          ...SEEDED_CARSI_METADATA,
+          externalPublishClearances: {
+            final_asset_rights_check_required: {
+              clearedBy: 'phill',
+              clearedAt: '2026-09-01T00:00:00.000Z',
+              via: 'studio_approval',
+            },
+          },
+        },
+      }),
+      credentialsReady: true,
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(result.outcome).toBe('approved');
+  });
+
+  it('never flips externalPublishingAllowed to true while a platform is still blocked', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin', 'facebook'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+    });
+    // linkedin has credentials; facebook does not.
+    h.credentialsReady.mockImplementation(
+      async (platform: string) => platform === 'linkedin'
+    );
+
+    const result = await approveAndScheduleStudioDraft(
+      { ...INPUT, clearances: ['final_asset_rights_check_required'] },
+      h.deps
+    );
+
+    expect(result.outcome).toBe('approved');
+    expect(result.scheduled.map(s => s.platform)).toEqual(['linkedin']);
+    expect(result.skipped).toEqual([
+      {
+        platform: 'facebook',
+        reason: `external_publish_blocked: ${CREDENTIALS_BLOCKER}`,
+      },
+    ]);
+    const record = h.updateMany.mock.calls[1][0];
+    expect(record.data.metadata.externalPublishingAllowed).toBe(false);
+  });
+
+  it('denies by default when externalPublishingAllowed is false and no blocker list exists to discharge', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: { externalPublishingAllowed: false },
+      }),
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result.outcome).toBe('blocked');
+    expect(result.skipped).toEqual([
+      { platform: 'linkedin', reason: 'external_publishing_denied' },
+    ]);
+  });
+});
+
+describe('approval is never consumed by a schedule that produced nothing (review P1-APPROVAL-CONSUMED-WITH-ZERO-SCHEDULED-POSTS)', () => {
+  it('returns the draft to awaiting_approval on a total scheduler failure and reports it', async () => {
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    h.schedule.mockRejectedValue(new Error('database unavailable'));
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason: 'schedule_failed: database unavailable',
+        },
+      ],
+    });
+    const revert = h.updateMany.mock.calls[1][0];
+    expect(revert.where).toEqual({
+      id: 'd1',
+      organizationId: 'org-carsi',
+      status: 'approved',
+    });
+    expect(revert.data).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+      approvedAt: null,
+    });
+    expect(revert.data.metadata.studioSchedule).toMatchObject({
+      scheduled: [],
+      skipped: result.skipped,
+    });
+  });
+
+  it('can then be retried, producing exactly one Post and no duplicate', async () => {
+    const first = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    first.schedule.mockRejectedValue(new Error('database unavailable'));
+    const failed = await approveAndScheduleStudioDraft(INPUT, first.deps);
+    expect(failed.outcome).toBe('schedule_failed');
+    expect(first.schedule).toHaveBeenCalledTimes(1);
+
+    // The draft is awaiting_approval again, so the org-scoped claim matches once more.
+    const retry = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: first.updateMany.mock.calls[1][0].data.metadata,
+      }),
+    });
+    const ok = await approveAndScheduleStudioDraft(INPUT, retry.deps);
+
+    expect(ok.outcome).toBe('approved');
+    expect(retry.schedule).toHaveBeenCalledTimes(1);
+    expect(ok.scheduled).toHaveLength(1);
+  });
+
+  it('keeps the approval when no platform is cron-schedulable at all (owned media only)', async () => {
+    const h = harness({
+      draft: draftRow({ platforms: ['blog', 'newsletter'], metadata: {} }),
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result.approved).toBe(true);
+    expect(result.outcome).toBe('approved');
+    expect(result.skipped).toEqual([
+      { platform: 'blog', reason: 'platform_not_schedulable' },
+      { platform: 'newsletter', reason: 'platform_not_schedulable' },
+    ]);
+    expect(h.updateMany.mock.calls[1][0].data.status).toBeUndefined();
   });
 });
 

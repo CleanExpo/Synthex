@@ -122,6 +122,11 @@ const approveSchema = z.object({
   draftId: z.string().min(1),
   /** ISO instant to publish at. Omit to publish on the cron's next tick. */
   scheduledAt: z.string().datetime({ offset: true }).optional(),
+  /**
+   * Campaign-pack blocker ids the approver explicitly discharges with this
+   * approval (e.g. `final_asset_rights_check_required`). Recorded on the draft.
+   */
+  clearances: z.array(z.string().min(1).max(120)).max(10).optional(),
 });
 
 export async function POST(request: NextRequest, { params }: RouteCtx) {
@@ -178,24 +183,54 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
       scheduledAt: parsed.data.scheduledAt
         ? new Date(parsed.data.scheduledAt)
         : undefined,
+      clearances: parsed.data.clearances,
     });
-    if (!result.approved) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Draft not found or not awaiting approval' },
-        404,
-        security.context
-      );
+
+    switch (result.outcome) {
+      case 'not_awaiting_approval':
+        return APISecurityChecker.createSecureResponse(
+          { error: 'Draft not found or not awaiting approval' },
+          404,
+          security.context
+        );
+      case 'blocked':
+        // The draft is back in awaiting_approval; the reasons name what to clear.
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'External publishing is blocked for this draft; it remains awaiting approval',
+            draftId: parsed.data.draftId,
+            outcome: result.outcome,
+            skipped: result.skipped,
+          },
+          409,
+          security.context
+        );
+      case 'schedule_failed':
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'Scheduling failed; the draft remains awaiting approval and can be retried',
+            draftId: parsed.data.draftId,
+            outcome: result.outcome,
+            skipped: result.skipped,
+          },
+          502,
+          security.context
+        );
+      case 'approved':
+        return APISecurityChecker.createSecureResponse(
+          {
+            approved: true,
+            draftId: parsed.data.draftId,
+            outcome: result.outcome,
+            scheduled: result.scheduled,
+            skipped: result.skipped,
+          },
+          200,
+          security.context
+        );
     }
-    return APISecurityChecker.createSecureResponse(
-      {
-        approved: true,
-        draftId: parsed.data.draftId,
-        scheduled: result.scheduled,
-        skipped: result.skipped,
-      },
-      200,
-      security.context
-    );
   } catch (error) {
     logger.error('studio draft approval failed', {
       organizationId,

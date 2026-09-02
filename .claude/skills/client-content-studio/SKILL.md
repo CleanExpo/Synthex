@@ -64,13 +64,14 @@ per-client trigger (daily cron OR ClientEngagementEvent)
 
 ## Real modules (source of truth)
 
-| Concern                      | File                                                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
-| Voice→avatar composition     | `lib/marketing-agency/studio/avatar-video.ts` (`generateAvatarVideo`)                                 |
-| Per-client loop + gate       | `lib/marketing-agency/studio/client-content-loop.ts` (`prepareClientUpdate`, `publishApprovedUpdate`) |
-| Per-client config + registry | `lib/marketing-agency/studio/clients.ts` (`STUDIO_CLIENTS`, `getStudioClient`)                        |
-| HeyGen provider              | `lib/marketing-agency/heygen/client.ts` (see `heygen-avatar` skill)                                   |
-| ElevenLabs TTS (existing)    | `lib/services/ai/voice-generation.ts`                                                                 |
+| Concern                        | File                                                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| Voice→avatar composition       | `lib/marketing-agency/studio/avatar-video.ts` (`generateAvatarVideo`)                                 |
+| Per-client loop + gate         | `lib/marketing-agency/studio/client-content-loop.ts` (`prepareClientUpdate`, `publishApprovedUpdate`) |
+| Per-client config (org-driven) | `lib/marketing-agency/studio/clients.ts` (`resolveStudioClient`, `toClientStudioConfig`)              |
+| Approve → schedule bridge      | `lib/marketing-agency/studio/approve-and-schedule.ts` (`approveAndScheduleStudioDraft`)               |
+| HeyGen provider                | `lib/marketing-agency/heygen/client.ts` (see `heygen-avatar` skill)                                   |
+| ElevenLabs TTS (existing)      | `lib/services/ai/voice-generation.ts`                                                                 |
 
 All orchestration functions are dependency-injected (script gen, avatar gen, persist,
 publish, emit) — keep them that way so the loop stays unit-testable with no network.
@@ -120,16 +121,35 @@ publish, emit) — keep them that way so the loop stays unit-testable with no ne
 
 ## Onboarding a new client
 
-1. Add a `ClientStudioConfig` to `STUDIO_CLIENTS` in `clients.ts` (clientSlug, displayName,
-   avatarId, voiceId, consent, platforms).
-2. Set the client's avatar/voice/consent IDs via env (e.g. `RA_HEYGEN_AVATAR_ID`).
+There is no code registry. The `[client]` route segment is the organisation slug and the
+Studio config is derived from the `Organization` record (`resolveStudioClient`):
+
+1. Make sure the business exists as an organisation (slug = studio client id). It is
+   immediately usable in the Studio; the board reports `videoConfigured: false` until
+   step 2 is done — no placeholder avatar/voice/consent is ever substituted.
+2. Set `Organization.settings.studio` via `PATCH /api/organizations/[orgId]` (merged
+   server-side): `displayName?`, `platforms?`, `funnelUrl?`, and for video `avatarId`,
+   `voiceId`, `consent { subjectName, sourceRef, confirmedAt }`. The legacy env layer
+   for the two original pilots (`RA_*` / `CARSI_*`) needs all five names:
+   `_HEYGEN_AVATAR_ID`, `_ELEVENLABS_VOICE_ID`, `_CONSENT_REF`, `_PRESENTER_NAME`,
+   `_CONSENT_CONFIRMED_AT`; a partial set is "not configured", with the missing names
+   in the board's `warnings`.
 3. Confirm the consent record is real (signed presenter consent), not a placeholder.
 4. Wire the trigger (cron or event) and the dashboard surface (VS-6).
 
+Approval in the Studio schedules a real post (g2): one `Post` per cron-schedulable
+platform, scoped to the business, carrying the UTM-tagged `funnelUrl`. A draft seeded
+from a campaign pack with `externalPublishingAllowed: false` is deny-by-default: each
+platform's `externalPublishBlocks` must be discharged — approval (the click), credentials
+(an active platform connection for the business), anything else (e.g. the final
+asset-rights check) by naming it in the approve request's `clearances`. A blocked or
+failed schedule hands the draft back to `awaiting_approval` (HTTP 409 / 502).
+
 ## Environment
 
-`HEYGEN_API_KEY`, `ELEVENLABS_API_KEY` (Vercel only). Per-client overrides:
-`RA_HEYGEN_AVATAR_ID`, `RA_ELEVENLABS_VOICE_ID`, `RA_CONSENT_REF`, `RA_PRESENTER_NAME`.
+`HEYGEN_API_KEY`, `ELEVENLABS_API_KEY` (Vercel only). Legacy per-client env layer (pilots
+only; new businesses use `settings.studio`): `RA_HEYGEN_AVATAR_ID`, `RA_ELEVENLABS_VOICE_ID`,
+`RA_CONSENT_REF`, `RA_PRESENTER_NAME`, `RA_CONSENT_CONFIRMED_AT` (and the `CARSI_` set).
 
 ## Status
 

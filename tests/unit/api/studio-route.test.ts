@@ -5,7 +5,8 @@
  * g9: the `[client]` segment is the organisation slug and the Studio config is
  * derived from the organisation record — there is no hardcoded client registry,
  * so a business that exists in the vault gets a board with no code change.
- * g2: approving a draft schedules it through the approve→schedule bridge.
+ * g2: approving a draft schedules it through the approve→schedule bridge; a
+ * blocked or failed schedule hands the draft back and answers 409 / 502.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -91,6 +92,7 @@ beforeEach(() => {
   mockHasOrganizationAccess.mockResolvedValue(true);
   mockApproveAndSchedule.mockResolvedValue({
     approved: true,
+    outcome: 'approved',
     scheduled: [],
     skipped: [],
   });
@@ -206,6 +208,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
   it('returns 404 when the draft is not found / not awaiting approval / wrong org', async () => {
     mockApproveAndSchedule.mockResolvedValue({
       approved: false,
+      outcome: 'not_awaiting_approval',
       scheduled: [],
       skipped: [],
     });
@@ -232,6 +235,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
   it('approves through the bridge (org-scoped, approvedBy = caller, client resolved from the org) and returns what was scheduled', async () => {
     mockApproveAndSchedule.mockResolvedValue({
       approved: true,
+      outcome: 'approved',
       scheduled: [
         {
           platform: 'linkedin',
@@ -248,6 +252,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
     expect(body).toEqual({
       approved: true,
       draftId: 'd1',
+      outcome: 'approved',
       scheduled: [
         {
           platform: 'linkedin',
@@ -269,6 +274,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
         funnelUrl: 'https://restoreassist.com.au',
       }),
       scheduledAt: undefined,
+      clearances: undefined,
     });
   });
 
@@ -284,5 +290,57 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
     expect(mockApproveAndSchedule.mock.calls[0][0].scheduledAt).toEqual(
       new Date('2026-09-03T09:00:00.000Z')
     );
+  });
+
+  it('passes explicit clearances through so the approver can discharge a pack blocker on record', async () => {
+    const res = await POST(
+      approveRequest({
+        draftId: 'd1',
+        clearances: ['final_asset_rights_check_required'],
+      }),
+      ctx
+    );
+    expect(res.status).toBe(200);
+    expect(mockApproveAndSchedule.mock.calls[0][0].clearances).toEqual([
+      'final_asset_rights_check_required',
+    ]);
+  });
+
+  it('answers 409 with the reasons when the pack blocks external publishing (the draft is handed back)', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'blocked',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason:
+            'external_publish_blocked: platform_credentials_required, final_asset_rights_check_required',
+        },
+      ],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.outcome).toBe('blocked');
+    expect(body.skipped[0].reason).toMatch(/platform_credentials_required/);
+  });
+
+  it('answers 502 when every platform failed to schedule (the draft is handed back for retry)', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason: 'schedule_failed: database unavailable',
+        },
+      ],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.outcome).toBe('schedule_failed');
   });
 });
