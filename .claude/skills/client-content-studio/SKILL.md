@@ -145,8 +145,10 @@ platform, scoped to the business, carrying the UTM-tagged `funnelUrl`. A draft s
 from a campaign pack with `externalPublishingAllowed: false` is deny-by-default: each
 platform's `externalPublishBlocks` must be discharged — approval (the click), credentials
 (an active platform connection for the business), anything else (e.g. the final
-asset-rights check) by naming it in the approve request's `clearances`. A blocked or
-failed schedule hands the draft back to `awaiting_approval` (HTTP 409 / 502).
+asset-rights check) by naming it in the approve request's `clearances`. The approval
+claim and the schedule run in one database transaction: a blocked or failed schedule
+rolls the claim back, so the draft is still `awaiting_approval` (HTTP 409 / 502) and
+the click can simply be retried.
 
 ## Environment
 

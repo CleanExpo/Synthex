@@ -4,33 +4,44 @@
  * /api/cron/publish-scheduled). Before this, approval flipped a status and
  * stopped: "approved" meant "will never publish".
  *
- * Two rules from independent review (report synthex-3def7c867):
+ * Rules from independent review (reports synthex-3def7c867 … synthex-f59792768):
  *   - a draft carrying externalPublishingAllowed:false is deny-by-default; the
  *     pack's per-platform externalPublishBlocks must each be discharged
  *     (approval = this click; credentials = an active platform connection for
  *     the business; anything else = a recorded clearance) before a Post exists;
- *   - approval is never consumed when nothing was scheduled: the draft returns
- *     to awaiting_approval so it can be retried without duplicate Posts.
+ *   - approval is never consumed when nothing was scheduled: the claim and the
+ *     schedule are ONE transaction, so a blocked or failed schedule rolls the
+ *     claim back and the draft is still awaiting_approval. No compensating
+ *     write exists to fail (round 5).
  *
- * Everything is injected — no database, no network.
+ * Everything is injected — no database, no network. The draft table is an
+ * in-memory row with a staged copy per transaction: writes made inside a
+ * transaction reach the committed row only when the transaction returns
+ * normally, which is exactly how Postgres behaves.
  */
 
-// The default idempotency lookup reads the Post table; a fake two-organisation
-// table lets the org-scoping test run the REAL default query.
+import type { Prisma } from '@prisma/client';
+
+// The default lookups read the Post and PlatformConnection tables through the
+// transaction client; the default runner is prisma.$transaction. A fake
+// two-organisation Post table lets the org-scoping test run the REAL default query.
 const mockPostFindFirst = jest.fn();
-jest.mock('@/lib/prisma', () => ({
-  __esModule: true,
-  default: {
-    studioContentDraft: {},
-    platformConnection: {},
+const mockConnectionFindFirst = jest.fn();
+const mockTransaction = jest.fn();
+const mockGlobalDraftUpdateMany = jest.fn();
+jest.mock('@/lib/prisma', () => {
+  const client = {
+    $transaction: (...args: unknown[]) => mockTransaction(...args),
+    studioContentDraft: {
+      updateMany: (...args: unknown[]) => mockGlobalDraftUpdateMany(...args),
+    },
+    platformConnection: {
+      findFirst: (...args: unknown[]) => mockConnectionFindFirst(...args),
+    },
     post: { findFirst: (...args: unknown[]) => mockPostFindFirst(...args) },
-  },
-  prisma: {
-    studioContentDraft: {},
-    platformConnection: {},
-    post: { findFirst: (...args: unknown[]) => mockPostFindFirst(...args) },
-  },
-}));
+  };
+  return { __esModule: true, default: client, prisma: client };
+});
 jest.mock('@/lib/social', () => ({
   isPlatformSupported: (platform: string) =>
     ['linkedin', 'facebook', 'twitter'].includes(platform),
@@ -42,20 +53,32 @@ jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
+import { logger } from '@/lib/logger';
 import {
   approveAndScheduleStudioDraft,
   buildStudioFunnelLink,
   APPROVAL_BLOCKER,
   CREDENTIALS_BLOCKER,
   InvalidClearanceError,
+  type StudioTransactionRunner,
 } from '@/lib/marketing-agency/studio/approve-and-schedule';
 import type { StudioDraftDelegate } from '@/lib/marketing-agency/studio/draft-store';
 
 const NOW = new Date('2026-09-02T14:00:00.000Z');
 
-function draftRow(overrides: Record<string, unknown> = {}) {
+type Row = Record<string, unknown> & {
+  id: string;
+  organizationId: string;
+  status: string;
+};
+
+function draftRow(overrides: Record<string, unknown> = {}): Row {
   return {
     id: 'd1',
+    organizationId: 'org-carsi',
+    status: 'awaiting_approval',
+    approvedBy: null,
+    approvedAt: null,
     clientSlug: 'carsi',
     topic:
       'On this day: CARSI becomes the first evidence-gated client campaign',
@@ -88,24 +111,84 @@ const SEEDED_CARSI_METADATA = {
   externalPublishingAllowed: false,
 };
 
-function harness(
-  opts: {
-    approveCount?: number;
-    draft?: unknown;
-    credentialsReady?: boolean;
-  } = {}
-) {
-  const updateMany = jest
-    .fn()
-    .mockResolvedValueOnce({ count: opts.approveCount ?? 1 }) // the approval
-    .mockResolvedValue({ count: 1 }); // the record / the revert
-  const findFirst = jest
-    .fn()
-    .mockResolvedValue(opts.draft === undefined ? draftRow() : opts.draft);
+type Write = { where: Record<string, unknown>; data: Record<string, unknown> };
+
+const matches = (row: Row, where: Record<string, unknown>) =>
+  Object.entries(where).every(([key, value]) => row[key] === value);
+
+/**
+ * One draft row in a fake table with real transaction semantics: a transaction
+ * works on a staged copy that replaces the committed row only when the
+ * callback returns; a throw discards the copy. The outside delegate writes
+ * straight to the committed row, as the real global client would.
+ */
+function harness(opts: { row?: Row | null; credentialsReady?: boolean } = {}) {
+  const committed: Row[] = opts.row === null ? [] : [opts.row ?? draftRow()];
+  let staged: Row[] = [];
+  const txWrites: Write[] = [];
+  const outsideWrites: Write[] = [];
+  let rollbacks = 0;
+  let txWriteFails: ((write: Write) => boolean) | null = null;
+
+  const applyUpdate = (rows: Row[], write: Write) => {
+    const hit = rows.filter(row => matches(row, write.where));
+    for (const row of hit) Object.assign(row, write.data);
+    return { count: hit.length };
+  };
+
+  const txDelegate = {
+    updateMany: jest.fn(async (write: Write) => {
+      if (txWriteFails?.(write)) throw new Error('draft record unavailable');
+      txWrites.push(write);
+      return applyUpdate(staged, write);
+    }),
+    findFirst: jest.fn(
+      async ({
+        where,
+        select,
+      }: {
+        where: Record<string, unknown>;
+        select?: Record<string, boolean>;
+      }) => {
+        const row = staged.find(candidate => matches(candidate, where));
+        if (!row) return null;
+        return select
+          ? Object.fromEntries(Object.keys(select).map(key => [key, row[key]]))
+          : { ...row };
+      }
+    ),
+  };
+  const tx = {
+    studioContentDraft: txDelegate,
+    post: { findFirst: (...args: unknown[]) => mockPostFindFirst(...args) },
+    platformConnection: {
+      findFirst: (...args: unknown[]) => mockConnectionFindFirst(...args),
+    },
+  } as unknown as Prisma.TransactionClient;
+
+  const runInTransaction = jest.fn(
+    async (fn: (client: Prisma.TransactionClient) => Promise<unknown>) => {
+      staged = committed.map(row => ({ ...row }));
+      let result: unknown;
+      try {
+        result = await fn(tx);
+      } catch (error) {
+        rollbacks += 1; // the staged copy is discarded
+        throw error;
+      }
+      committed.splice(0, committed.length, ...staged);
+      return result;
+    }
+  );
+
   const delegate = {
-    updateMany,
-    findFirst,
-  } as unknown as StudioDraftDelegate;
+    updateMany: jest.fn(async (write: Write) => {
+      outsideWrites.push(write);
+      return applyUpdate(committed, write);
+    }),
+    findFirst: jest.fn(),
+  };
+
   const schedule = jest.fn(async (input: { platform: string }) => ({
     id: `post-${input.platform}`,
     platform: input.platform,
@@ -115,21 +198,34 @@ function harness(
   const credentialsReady = jest.fn(async () => opts.credentialsReady ?? true);
   // No Post exists yet for any draft + platform unless a test says otherwise.
   const findScheduledStudioPost = jest.fn(async () => null);
+
   const deps = {
-    delegate,
+    runInTransaction: runInTransaction as unknown as StudioTransactionRunner,
+    delegate: delegate as unknown as StudioDraftDelegate,
     schedule,
     credentialsReady,
     findScheduledStudioPost,
     now: () => NOW,
   };
   return {
+    deps,
+    tx,
+    txDelegate,
+    runInTransaction,
     delegate,
-    updateMany,
-    findFirst,
     schedule,
     credentialsReady,
     findScheduledStudioPost,
-    deps,
+    /** Draft-table writes made inside a transaction, committed or not. */
+    txWrites,
+    /** Draft-table writes made outside any transaction. */
+    outsideWrites,
+    /** The committed row, as the next request would read it. */
+    draft: () => committed.find(row => row.id === 'd1') ?? null,
+    rollbacks: () => rollbacks,
+    failTxWrite: (predicate: (write: Write) => boolean) => {
+      txWriteFails = predicate;
+    },
   };
 }
 
@@ -141,22 +237,31 @@ const INPUT = {
   client: CLIENT,
 };
 
+const CLAIM_WHERE = {
+  id: 'd1',
+  organizationId: 'org-carsi',
+  status: 'awaiting_approval',
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe('approveAndScheduleStudioDraft', () => {
   it('creates one scheduled Post per schedulable platform, scoped to the DRAFT organisation', async () => {
     const h = harness();
 
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    // The human-approval gate ran first, org-scoped, and only on awaiting_approval.
-    expect(h.updateMany.mock.calls[0][0].where).toEqual({
-      id: 'd1',
-      organizationId: 'org-carsi',
-      status: 'awaiting_approval',
-    });
+    // The human-approval gate ran first, org-scoped, only on awaiting_approval,
+    // inside the transaction.
+    expect(h.runInTransaction).toHaveBeenCalledTimes(1);
+    expect(h.txWrites[0].where).toEqual(CLAIM_WHERE);
 
     // Exactly one Post: linkedin is schedulable, blog is not.
     expect(h.schedule).toHaveBeenCalledTimes(1);
-    const input = h.schedule.mock.calls[0][0];
+    const [input, client] = h.schedule.mock.calls[0] as unknown[];
+    expect(client).toBe(h.tx); // the Post is created inside the same transaction
     expect(input).toMatchObject({
       userId: 'phill',
       platform: 'linkedin',
@@ -189,10 +294,15 @@ describe('approveAndScheduleStudioDraft', () => {
       ],
       skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
     });
+    expect(h.draft()).toMatchObject({
+      status: 'approved',
+      approvedBy: 'phill',
+    });
+    expect(h.rollbacks()).toBe(0);
   });
 
   it('does nothing when the approval matched no row (wrong org / not awaiting / missing)', async () => {
-    const h = harness({ approveCount: 0 });
+    const h = harness();
 
     const result = await approveAndScheduleStudioDraft(
       { ...INPUT, organizationId: 'org-other', approvedBy: 'attacker' },
@@ -205,14 +315,19 @@ describe('approveAndScheduleStudioDraft', () => {
       scheduled: [],
       skipped: [],
     });
-    expect(h.findFirst).not.toHaveBeenCalled();
+    expect(h.txDelegate.findFirst).not.toHaveBeenCalled();
     expect(h.schedule).not.toHaveBeenCalled();
-    expect(h.updateMany).toHaveBeenCalledTimes(1);
+    expect(h.txWrites).toHaveLength(1); // the claim, which matched nothing
+    expect(h.outsideWrites).toHaveLength(0);
+    expect(h.draft()).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+    });
   });
 
-  it("refuses to schedule when the pack's owned-media rights gate is false, and hands the draft back", async () => {
+  it("refuses to schedule when the pack's owned-media rights gate is false, and the draft stays awaiting approval", async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         metadata: {
           ownedMediaGate: {
             allowed: false,
@@ -234,19 +349,25 @@ describe('approveAndScheduleStudioDraft', () => {
         { platform: 'blog', reason: 'owned_media_gate_blocked' },
       ],
     });
-    // Approval is not consumed: the draft is returned to awaiting_approval.
-    const revert = h.updateMany.mock.calls[1][0];
-    expect(revert.where).toEqual({
-      id: 'd1',
-      organizationId: 'org-carsi',
-      status: 'approved',
+    // Approval is not consumed: the claim rolled back, nothing wrote it back.
+    expect(h.rollbacks()).toBe(1);
+    expect(h.draft()).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+      approvedAt: null,
     });
-    expect(revert.data.status).toBe('awaiting_approval');
+    // The attempt is recorded afterwards, on the still-awaiting row, metadata only.
+    expect(h.outsideWrites).toHaveLength(1);
+    expect(h.outsideWrites[0].where).toEqual(CLAIM_WHERE);
+    expect(h.outsideWrites[0].data.status).toBeUndefined();
+    expect(h.outsideWrites[0].data.metadata).toMatchObject({
+      studioSchedule: { scheduled: [], skipped: result.skipped },
+    });
   });
 
   it('attaches the rendered video as media and keeps the funnel link in the text where a card cannot carry it', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         videoUrl: 'https://cdn.example/carsi-d1.mp4',
         metadata: {},
@@ -255,7 +376,11 @@ describe('approveAndScheduleStudioDraft', () => {
 
     await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    const input = h.schedule.mock.calls[0][0];
+    const input = h.schedule.mock.calls[0][0] as {
+      mediaUrls: string[];
+      metadata: { linkUrl?: string };
+      content: string;
+    };
     expect(input.mediaUrls).toEqual(['https://cdn.example/carsi-d1.mp4']);
     // No authority campaign on this draft → the studio-<client> campaign tag.
     const link =
@@ -265,16 +390,17 @@ describe('approveAndScheduleStudioDraft', () => {
     expect(input.content.endsWith(`\n\n${link}`)).toBe(true);
   });
 
-  it('records the approval and the schedule on the draft', async () => {
+  it('records the approval and the schedule on the draft, inside the transaction', async () => {
     const h = harness();
 
     await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    expect(h.updateMany).toHaveBeenCalledTimes(2);
-    const record = h.updateMany.mock.calls[1][0];
+    expect(h.txWrites).toHaveLength(2);
+    expect(h.outsideWrites).toHaveLength(0);
+    const record = h.txWrites[1];
     expect(record.where).toEqual({ id: 'd1', organizationId: 'org-carsi' });
     expect(record.data.status).toBeUndefined(); // stays approved
-    expect(record.data.metadata).toMatchObject({
+    expect(h.draft()?.metadata).toMatchObject({
       // Existing metadata is preserved, not overwritten.
       authorityCampaignId: 'carsi-restoration-training-authority-2026-06-11',
       externalPublishingAllowed: true,
@@ -294,9 +420,12 @@ describe('approveAndScheduleStudioDraft', () => {
     });
   });
 
-  it('reports a scheduler failure on one platform instead of swallowing it, keeping the approval when another platform scheduled', async () => {
+  it('a scheduler failure on one platform rolls back every platform: nothing is scheduled and the draft is handed back', async () => {
+    // Postgres aborts a transaction at its first failed statement, so a failure
+    // on one platform cannot be swallowed and the loop continued — the Post
+    // already created for the other platform rolls back with the claim.
     const h = harness({
-      draft: draftRow({ platforms: ['facebook', 'linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin', 'facebook'], metadata: {} }),
     });
     h.schedule.mockImplementation(async (input: { platform: string }) => {
       if (input.platform === 'facebook')
@@ -311,20 +440,32 @@ describe('approveAndScheduleStudioDraft', () => {
 
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    expect(result.approved).toBe(true);
-    expect(result.outcome).toBe('approved');
-    expect(result.scheduled.map(s => s.platform)).toEqual(['linkedin']);
-    expect(result.skipped).toEqual([
-      {
-        platform: 'facebook',
-        reason: 'schedule_failed: campaign create failed',
-      },
-    ]);
+    expect(h.schedule).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        { platform: 'linkedin', reason: 'rolled_back' },
+        {
+          platform: 'facebook',
+          reason: 'schedule_failed: campaign create failed',
+        },
+      ],
+    });
+    expect(h.rollbacks()).toBe(1);
+    expect(h.draft()).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+    });
+    expect(h.outsideWrites[0].data.metadata).toMatchObject({
+      studioSchedule: { scheduled: [], skipped: result.skipped },
+    });
   });
 
   it('uses the caller-supplied scheduledAt and omits the link when the business has no funnel', async () => {
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
     const later = new Date('2026-09-03T09:00:00.000Z');
 
@@ -337,7 +478,11 @@ describe('approveAndScheduleStudioDraft', () => {
       h.deps
     );
 
-    const input = h.schedule.mock.calls[0][0];
+    const input = h.schedule.mock.calls[0][0] as {
+      scheduledTime: Date;
+      metadata: { linkUrl?: string };
+      content: string;
+    };
     expect(input.scheduledTime).toEqual(later);
     expect(input.metadata.linkUrl).toBeUndefined();
     expect(input.content).toBe(
@@ -350,7 +495,7 @@ describe('approveAndScheduleStudioDraft', () => {
 describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-PUBLISH-BLOCKS-BYPASSED)", () => {
   it('denies the exact seeded CARSI shape: approval alone does not discharge credentials or rights', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: SEEDED_CARSI_METADATA,
       }),
@@ -373,31 +518,33 @@ describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-
       ],
     });
 
-    // Handed back for retry, the denial left in place, the approval recorded.
-    const revert = h.updateMany.mock.calls[1][0];
-    expect(revert.where).toEqual({
-      id: 'd1',
-      organizationId: 'org-carsi',
-      status: 'approved',
+    // Still awaiting approval, the denial left in place, the approval recorded.
+    expect(h.draft()).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
     });
-    expect(revert.data.status).toBe('awaiting_approval');
-    expect(revert.data.metadata.externalPublishingAllowed).toBe(false);
-    expect(revert.data.metadata.externalPublishBlocks).toEqual(
+    const recorded = h.draft()?.metadata as Record<string, unknown>;
+    expect(recorded.externalPublishingAllowed).toBe(false);
+    expect(recorded.externalPublishBlocks).toEqual(
       SEEDED_CARSI_METADATA.externalPublishBlocks
     );
     expect(
-      revert.data.metadata.externalPublishClearances[APPROVAL_BLOCKER]
+      (recorded.externalPublishClearances as Record<string, unknown>)[
+        APPROVAL_BLOCKER
+      ]
     ).toEqual({
       clearedBy: 'phill',
       clearedAt: NOW.toISOString(),
       via: 'studio_approval',
     });
-    expect(revert.data.metadata.studioSchedule.skipped).toEqual(result.skipped);
+    expect((recorded.studioSchedule as { skipped: unknown }).skipped).toEqual(
+      result.skipped
+    );
   });
 
   it('schedules once credentials are live for the business and the rights check is explicitly cleared by the approver', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: SEEDED_CARSI_METADATA,
       }),
@@ -409,15 +556,16 @@ describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-
       h.deps
     );
 
-    expect(h.credentialsReady).toHaveBeenCalledWith('linkedin');
+    expect(h.credentialsReady.mock.calls[0][0]).toBe('linkedin');
+    expect(h.credentialsReady.mock.calls[0][1]).toBe(h.tx);
     expect(h.schedule).toHaveBeenCalledTimes(1);
     expect(result.approved).toBe(true);
     expect(result.outcome).toBe('approved');
 
-    const record = h.updateMany.mock.calls[1][0];
-    expect(record.data.status).toBeUndefined();
-    expect(record.data.metadata.externalPublishingAllowed).toBe(true);
-    expect(record.data.metadata.externalPublishClearances).toEqual({
+    expect(h.draft()?.status).toBe('approved');
+    const recorded = h.draft()?.metadata as Record<string, unknown>;
+    expect(recorded.externalPublishingAllowed).toBe(true);
+    expect(recorded.externalPublishClearances).toEqual({
       [APPROVAL_BLOCKER]: {
         clearedBy: 'phill',
         clearedAt: NOW.toISOString(),
@@ -433,7 +581,7 @@ describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-
 
   it('honours a clearance recorded on an earlier attempt', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: {
           ...SEEDED_CARSI_METADATA,
@@ -457,7 +605,7 @@ describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-
 
   it('never flips externalPublishingAllowed to true while a platform is still blocked', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin', 'facebook'],
         metadata: SEEDED_CARSI_METADATA,
       }),
@@ -480,13 +628,13 @@ describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-
         reason: `external_publish_blocked: ${CREDENTIALS_BLOCKER}`,
       },
     ]);
-    const record = h.updateMany.mock.calls[1][0];
-    expect(record.data.metadata.externalPublishingAllowed).toBe(false);
+    const recorded = h.draft()?.metadata as Record<string, unknown>;
+    expect(recorded.externalPublishingAllowed).toBe(false);
   });
 
   it('denies by default when externalPublishingAllowed is false and no blocker list exists to discharge', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: { externalPublishingAllowed: false },
       }),
@@ -499,13 +647,14 @@ describe("the campaign pack's external-publish blocks (review P1-CARSI-EXTERNAL-
     expect(result.skipped).toEqual([
       { platform: 'linkedin', reason: 'external_publishing_denied' },
     ]);
+    expect(h.draft()?.status).toBe('awaiting_approval');
   });
 });
 
 describe('approval is never consumed by a schedule that produced nothing (review P1-APPROVAL-CONSUMED-WITH-ZERO-SCHEDULED-POSTS)', () => {
-  it('returns the draft to awaiting_approval on a total scheduler failure and reports it', async () => {
+  it('leaves the draft awaiting approval on a total scheduler failure and reports it', async () => {
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
     h.schedule.mockRejectedValue(new Error('database unavailable'));
 
@@ -522,49 +671,40 @@ describe('approval is never consumed by a schedule that produced nothing (review
         },
       ],
     });
-    const revert = h.updateMany.mock.calls[1][0];
-    expect(revert.where).toEqual({
-      id: 'd1',
-      organizationId: 'org-carsi',
-      status: 'approved',
-    });
-    expect(revert.data).toMatchObject({
+    expect(h.rollbacks()).toBe(1);
+    expect(h.draft()).toMatchObject({
       status: 'awaiting_approval',
       approvedBy: null,
       approvedAt: null,
     });
-    expect(revert.data.metadata.studioSchedule).toMatchObject({
-      scheduled: [],
-      skipped: result.skipped,
+    expect(h.outsideWrites[0].data.metadata).toMatchObject({
+      studioSchedule: { scheduled: [], skipped: result.skipped },
     });
   });
 
-  it('can then be retried, producing exactly one Post and no duplicate', async () => {
-    const first = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+  it('can then be retried on the same row, producing exactly one Post and no duplicate', async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
-    first.schedule.mockRejectedValue(new Error('database unavailable'));
-    const failed = await approveAndScheduleStudioDraft(INPUT, first.deps);
-    expect(failed.outcome).toBe('schedule_failed');
-    expect(first.schedule).toHaveBeenCalledTimes(1);
+    h.schedule.mockRejectedValueOnce(new Error('database unavailable'));
 
-    // The draft is awaiting_approval again, so the org-scoped claim matches once more.
-    const retry = harness({
-      draft: draftRow({
-        platforms: ['linkedin'],
-        metadata: first.updateMany.mock.calls[1][0].data.metadata,
-      }),
-    });
-    const ok = await approveAndScheduleStudioDraft(INPUT, retry.deps);
+    const failed = await approveAndScheduleStudioDraft(INPUT, h.deps);
+    expect(failed.outcome).toBe('schedule_failed');
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+
+    // The draft is awaiting_approval, so the org-scoped claim matches once more.
+    const ok = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
     expect(ok.outcome).toBe('approved');
-    expect(retry.schedule).toHaveBeenCalledTimes(1);
+    expect(h.schedule).toHaveBeenCalledTimes(2);
     expect(ok.scheduled).toHaveLength(1);
+    expect(h.draft()?.status).toBe('approved');
+    expect(h.runInTransaction).toHaveBeenCalledTimes(2);
   });
 
   it('keeps the approval when no platform is cron-schedulable at all (owned media only)', async () => {
     const h = harness({
-      draft: draftRow({ platforms: ['blog', 'newsletter'], metadata: {} }),
+      row: draftRow({ platforms: ['blog', 'newsletter'], metadata: {} }),
     });
 
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
@@ -576,14 +716,15 @@ describe('approval is never consumed by a schedule that produced nothing (review
       { platform: 'blog', reason: 'platform_not_schedulable' },
       { platform: 'newsletter', reason: 'platform_not_schedulable' },
     ]);
-    expect(h.updateMany.mock.calls[1][0].data.status).toBeUndefined();
+    expect(h.txWrites[1].data.status).toBeUndefined();
+    expect(h.draft()?.status).toBe('approved');
   });
 });
 
 describe('review round 2 — P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER', () => {
   it('refuses a request that names the credentials blocker, before any claim is made', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: SEEDED_CARSI_METADATA,
       }),
@@ -603,14 +744,15 @@ describe('review round 2 — P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER', () => {
       )
     ).rejects.toBeInstanceOf(InvalidClearanceError);
 
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.runInTransaction).not.toHaveBeenCalled();
+    expect(h.txWrites).toHaveLength(0);
     expect(h.schedule).not.toHaveBeenCalled();
     expect(h.credentialsReady).not.toHaveBeenCalled();
   });
 
   it('refuses a request that names the approval blocker', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: SEEDED_CARSI_METADATA,
       }),
@@ -622,12 +764,12 @@ describe('review round 2 — P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER', () => {
         h.deps
       )
     ).rejects.toBeInstanceOf(InvalidClearanceError);
-    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.runInTransaction).not.toHaveBeenCalled();
   });
 
   it('never lets a recorded credentials clearance stand in for a live connection', async () => {
     const h = harness({
-      draft: draftRow({
+      row: draftRow({
         platforms: ['linkedin'],
         metadata: {
           ...SEEDED_CARSI_METADATA,
@@ -650,7 +792,7 @@ describe('review round 2 — P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER', () => {
 
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    expect(h.credentialsReady).toHaveBeenCalledWith('linkedin');
+    expect(h.credentialsReady.mock.calls[0][0]).toBe('linkedin');
     expect(h.schedule).not.toHaveBeenCalled();
     expect(result.outcome).toBe('blocked');
     expect(result.skipped).toEqual([
@@ -670,53 +812,44 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
     scheduledAt: string;
   };
 
-  it('an ambiguous post-commit scheduler failure still leaves exactly one Post after a retry', async () => {
-    // Persisted Post state shared across both attempts.
+  it('a Post that survived an earlier attempt is reused on retry, never duplicated', async () => {
+    // Persisted Post state shared across both attempts: a Post written outside
+    // this transaction (a scheduler that ignored the client, an older code
+    // path) survives the rollback and must be found, not duplicated.
     const posts: StoredPost[] = [];
     const findScheduledStudioPost = jest.fn(
       async (draftId: string, platform: string) =>
         posts.find(p => p.draftId === draftId && p.platform === platform) ??
         null
     );
-
-    const first = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
-    first.schedule.mockImplementation(
+    h.schedule.mockImplementationOnce(
       async (input: {
         platform: string;
         metadata?: Record<string, unknown>;
       }) => {
-        // The scheduler commits its Post, then the connection drops.
         posts.push({
           id: 'post-linkedin-1',
           platform: input.platform,
           draftId: String(input.metadata?.studioDraftId),
           scheduledAt: NOW.toISOString(),
         });
-        throw new Error('connection lost after commit');
+        throw new Error('connection lost after the Post was written');
       }
     );
-    const failed = await approveAndScheduleStudioDraft(INPUT, {
-      ...first.deps,
-      findScheduledStudioPost,
-    });
+    const deps = { ...h.deps, findScheduledStudioPost };
+
+    const failed = await approveAndScheduleStudioDraft(INPUT, deps);
     expect(failed.outcome).toBe('schedule_failed');
     expect(posts).toHaveLength(1);
+    expect(h.draft()?.status).toBe('awaiting_approval');
 
-    const retry = harness({
-      draft: draftRow({
-        platforms: ['linkedin'],
-        metadata: first.updateMany.mock.calls[1][0].data.metadata,
-      }),
-    });
-    const ok = await approveAndScheduleStudioDraft(INPUT, {
-      ...retry.deps,
-      findScheduledStudioPost,
-    });
+    const ok = await approveAndScheduleStudioDraft(INPUT, deps);
 
     // The existing Post is found and reused; no second Post is created.
-    expect(retry.schedule).not.toHaveBeenCalled();
+    expect(h.schedule).toHaveBeenCalledTimes(1);
     expect(ok.outcome).toBe('approved');
     expect(ok.scheduled).toEqual([
       {
@@ -731,9 +864,9 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
     expect(posts).toHaveLength(1);
   });
 
-  it('treats a failing idempotency lookup as a schedule failure and hands the draft back (review round 3)', async () => {
+  it('treats a failing idempotency lookup as a schedule failure and leaves the draft awaiting approval (review round 3)', async () => {
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
     const findScheduledStudioPost = jest
       .fn()
@@ -753,13 +886,8 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
         { platform: 'linkedin', reason: 'schedule_failed: lookup unavailable' },
       ],
     });
-    const revert = h.updateMany.mock.calls[1][0];
-    expect(revert.where).toEqual({
-      id: 'd1',
-      organizationId: 'org-carsi',
-      status: 'approved',
-    });
-    expect(revert.data).toMatchObject({
+    expect(h.rollbacks()).toBe(1);
+    expect(h.draft()).toMatchObject({
       status: 'awaiting_approval',
       approvedBy: null,
       approvedAt: null,
@@ -774,7 +902,7 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
       status: 'published',
     }));
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
 
     const result = await approveAndScheduleStudioDraft(INPUT, {
@@ -790,10 +918,10 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
     });
   });
 
-  it('looks for an existing Post before every schedule and stamps a stable idempotency key', async () => {
+  it('looks for an existing Post before every schedule, through the transaction, and stamps a stable idempotency key', async () => {
     const findScheduledStudioPost = jest.fn(async () => null);
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
 
     await approveAndScheduleStudioDraft(INPUT, {
@@ -801,11 +929,16 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
       findScheduledStudioPost,
     });
 
-    expect(findScheduledStudioPost).toHaveBeenCalledWith('d1', 'linkedin');
-    expect(h.schedule).toHaveBeenCalledTimes(1);
-    expect(h.schedule.mock.calls[0][0].metadata.idempotencyKey).toBe(
-      'studio:d1:linkedin'
+    expect(findScheduledStudioPost).toHaveBeenCalledWith(
+      'd1',
+      'linkedin',
+      h.tx
     );
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    const input = h.schedule.mock.calls[0][0] as {
+      metadata: { idempotencyKey: string };
+    };
+    expect(input.metadata.idempotencyKey).toBe('studio:d1:linkedin');
   });
 });
 
@@ -821,7 +954,7 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
 
   it('a terminal FAILED Post is not reused: a fresh Post is scheduled so the founder can retry', async () => {
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
 
     const result = await approveAndScheduleStudioDraft(INPUT, {
@@ -840,7 +973,7 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
     'a %s Post holds the draft back rather than duplicating or claiming success',
     async status => {
       const h = harness({
-        draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+        row: draftRow({ platforms: ['linkedin'], metadata: {} }),
       });
 
       const result = await approveAndScheduleStudioDraft(INPUT, {
@@ -855,9 +988,7 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
         scheduled: [],
         skipped: [{ platform: 'linkedin', reason: `existing_post_${status}` }],
       });
-      expect(h.updateMany.mock.calls[1][0].data.status).toBe(
-        'awaiting_approval'
-      );
+      expect(h.draft()?.status).toBe('awaiting_approval');
     }
   );
 
@@ -865,7 +996,7 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
     'a %s Post is reused and reported with its status',
     async status => {
       const h = harness({
-        draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+        row: draftRow({ platforms: ['linkedin'], metadata: {} }),
       });
 
       const result = await approveAndScheduleStudioDraft(INPUT, {
@@ -885,7 +1016,7 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
 
   it('an unknown Post status holds the draft back (never a duplicate on a status this code does not know)', async () => {
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
 
     const result = await approveAndScheduleStudioDraft(INPUT, {
@@ -900,9 +1031,11 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
     ]);
   });
 
-  it('a rejected draft read after the claim hands the draft back instead of escaping', async () => {
+  it('a rejected draft read after the claim rolls the claim back instead of escaping', async () => {
     const h = harness();
-    h.findFirst.mockRejectedValue(new Error('draft read unavailable'));
+    h.txDelegate.findFirst.mockRejectedValueOnce(
+      new Error('draft read unavailable')
+    );
 
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
@@ -915,21 +1048,19 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
         { platform: '*', reason: 'draft_read_failed: draft read unavailable' },
       ],
     });
-    const revert = h.updateMany.mock.calls[1][0];
-    expect(revert.where).toEqual({
-      id: 'd1',
-      organizationId: 'org-carsi',
-      status: 'approved',
-    });
-    expect(revert.data).toMatchObject({
+    expect(h.rollbacks()).toBe(1);
+    expect(h.draft()).toMatchObject({
       status: 'awaiting_approval',
       approvedBy: null,
       approvedAt: null,
     });
+    // Nothing to record: the draft could not be read, so no metadata to merge.
+    expect(h.outsideWrites).toHaveLength(0);
   });
 
   it('a draft that vanished after the claim is handed back too', async () => {
-    const h = harness({ draft: null });
+    const h = harness();
+    h.txDelegate.findFirst.mockResolvedValueOnce(null);
 
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
@@ -939,7 +1070,7 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
       scheduled: [],
       skipped: [{ platform: '*', reason: 'draft_unreadable_after_approval' }],
     });
-    expect(h.updateMany.mock.calls[1][0].data.status).toBe('awaiting_approval');
+    expect(h.draft()?.status).toBe('awaiting_approval');
   });
 
   it('the default idempotency lookup is scoped to the approving organisation and never reuses another org’s Post', async () => {
@@ -964,29 +1095,38 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
         campaign: { organizationId: 'org-carsi' },
       },
     ];
-    mockPostFindFirst.mockImplementation(async (args: any) => {
-      const w = args.where;
-      const row = table.find(
-        p =>
-          p.platform === w.platform &&
-          p.deletedAt === w.deletedAt &&
-          p.metadata.studioDraftId === w.metadata.equals &&
-          // Without the org clause this would return the other org's Post first.
-          (w.campaign
-            ? p.campaign.organizationId === w.campaign.organizationId
-            : true)
-      );
-      return row
-        ? {
-            id: row.id,
-            platform: row.platform,
-            scheduledAt: row.scheduledAt,
-            status: row.status,
-          }
-        : null;
-    });
+    mockPostFindFirst.mockImplementation(
+      async (args: {
+        where: {
+          platform: string;
+          deletedAt: null;
+          metadata: { equals: string };
+          campaign?: { organizationId: string };
+        };
+      }) => {
+        const w = args.where;
+        const row = table.find(
+          p =>
+            p.platform === w.platform &&
+            p.deletedAt === w.deletedAt &&
+            p.metadata.studioDraftId === w.metadata.equals &&
+            // Without the org clause this would return the other org's Post first.
+            (w.campaign
+              ? p.campaign.organizationId === w.campaign.organizationId
+              : true)
+        );
+        return row
+          ? {
+              id: row.id,
+              platform: row.platform,
+              scheduledAt: row.scheduledAt,
+              status: row.status,
+            }
+          : null;
+      }
+    );
     const h = harness({
-      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
     });
     const { findScheduledStudioPost: _injected, ...depsWithDefaultLookup } =
       h.deps;
@@ -1008,6 +1148,173 @@ describe('review round 4 — reuse is classified by status, every post-claim fai
       postId: 'post-carsi',
       reused: true,
     });
+  });
+});
+
+describe('review round 5 — the claim and the schedule are one transaction (P1-NONTRANSACTIONAL-HAND-BACK-CAN-STILL-CONSUME-APPROVAL)', () => {
+  it("a failed schedule cannot strand the draft as approved even when every later draft write fails (the reviewer's reproduction)", async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    h.schedule.mockRejectedValue(new Error('scheduler unavailable'));
+    // The same database incident that broke the schedule breaks every draft
+    // write that is not the claim itself.
+    h.delegate.updateMany.mockImplementation(async (write: Write) => {
+      if (write.data.status === 'approved') return { count: 1 };
+      throw new Error('compensation unavailable');
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason: 'schedule_failed: scheduler unavailable',
+        },
+      ],
+    });
+    // The claim never persisted, so nothing had to restore the status.
+    expect(h.draft()).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+      approvedAt: null,
+    });
+    expect(h.rollbacks()).toBe(1);
+    expect(logger.warn).toHaveBeenCalledWith(
+      'studio approval attempt could not be recorded',
+      expect.objectContaining({ draftId: 'd1' })
+    );
+  });
+
+  it('no compensating write exists: no write anywhere sets the status back to awaiting_approval', async () => {
+    const h = harness({
+      row: draftRow({
+        platforms: ['linkedin'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+      credentialsReady: false,
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(result.outcome).toBe('blocked');
+    expect(h.runInTransaction).toHaveBeenCalledTimes(1);
+    expect(h.rollbacks()).toBe(1);
+    const writes = [...h.txWrites, ...h.outsideWrites];
+    expect(writes.some(w => w.data.status === 'awaiting_approval')).toBe(false);
+    expect(h.outsideWrites.every(w => w.data.status === undefined)).toBe(true);
+    expect(h.draft()?.status).toBe('awaiting_approval');
+  });
+
+  it('a second approval after a committed one matches nothing: the claim is the only gate', async () => {
+    // Under READ COMMITTED a concurrent second claim waits on the row lock and
+    // then re-evaluates `status = awaiting_approval` against the committed row,
+    // which is what running it after the first call models.
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+
+    const first = await approveAndScheduleStudioDraft(INPUT, h.deps);
+    const second = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(first.outcome).toBe('approved');
+    expect(second.outcome).toBe('not_awaiting_approval');
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(h.draft()).toMatchObject({
+      status: 'approved',
+      approvedBy: 'phill',
+    });
+  });
+
+  it('a failure inside the transaction after Posts were created rejects the call with the claim never persisted', async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    // The final metadata record rejects: not a schedule outcome, a database
+    // failure — the route answers 500, and the draft is untouched.
+    h.failTxWrite(write => write.data.status === undefined);
+
+    await expect(approveAndScheduleStudioDraft(INPUT, h.deps)).rejects.toThrow(
+      'draft record unavailable'
+    );
+
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(h.rollbacks()).toBe(1);
+    expect(h.draft()).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+    });
+    expect(h.outsideWrites).toHaveLength(0);
+  });
+
+  it('a credentials read that rejects after another platform scheduled rolls everything back and never flips externalPublishingAllowed', async () => {
+    const h = harness({
+      row: draftRow({
+        platforms: ['linkedin', 'facebook'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+    });
+    h.credentialsReady.mockImplementation(async (platform: string) => {
+      if (platform === 'facebook') throw new Error('connection read failed');
+      return true;
+    });
+
+    const result = await approveAndScheduleStudioDraft(
+      { ...INPUT, clearances: ['final_asset_rights_check_required'] },
+      h.deps
+    );
+
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        { platform: 'linkedin', reason: 'rolled_back' },
+        {
+          platform: 'facebook',
+          reason: 'schedule_failed: connection read failed',
+        },
+      ],
+    });
+    expect(h.draft()?.status).toBe('awaiting_approval');
+    const recorded = h.draft()?.metadata as Record<string, unknown>;
+    expect(recorded.externalPublishingAllowed).toBe(false);
+    expect(recorded.externalPublishBlocks).toEqual(
+      SEEDED_CARSI_METADATA.externalPublishBlocks
+    );
+    // The approval and the named clearance are still on record for the retry.
+    expect(recorded.externalPublishClearances).toMatchObject({
+      [APPROVAL_BLOCKER]: { clearedBy: 'phill' },
+      final_asset_rights_check_required: { clearedBy: 'phill' },
+    });
+  });
+
+  it('the default runner enters exactly one interactive transaction per approval with an explicit wait and timeout', async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    mockTransaction.mockImplementation(
+      async (fn: (client: Prisma.TransactionClient) => Promise<unknown>) =>
+        h.runInTransaction(fn)
+    );
+
+    const result = await approveAndScheduleStudioDraft(INPUT, {
+      ...h.deps,
+      runInTransaction: undefined,
+    });
+
+    expect(result.outcome).toBe('approved');
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    expect(mockTransaction.mock.calls[0][1]).toEqual({
+      maxWait: 5000,
+      timeout: 15000,
+    });
+    expect(h.draft()?.status).toBe('approved');
   });
 });
 

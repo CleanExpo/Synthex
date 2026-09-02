@@ -62,6 +62,12 @@ export interface ScheduleViaPostResult {
   status: 'scheduled';
 }
 
+/** The slice of a Prisma client this helper writes through. */
+export type ScheduleViaPostClient = Pick<
+  Prisma.TransactionClient,
+  'campaign' | 'post'
+>;
+
 /**
  * Schedule a post through the working `Post` + cron scheduler.
  *
@@ -72,9 +78,15 @@ export interface ScheduleViaPostResult {
  *
  * Throws on failure — callers should surface a real error to the user rather
  * than swallowing it (the whole point of retiring the dead path).
+ *
+ * `client` is the Prisma client to write through. Pass a transaction client to
+ * make the campaign and the Post part of a larger transaction — the Studio
+ * approval does, so a rolled-back approval takes its Posts with it. Defaults
+ * to the global client.
  */
 export async function scheduleViaPost(
-  input: ScheduleViaPostInput
+  input: ScheduleViaPostInput,
+  client: ScheduleViaPostClient = prisma
 ): Promise<ScheduleViaPostResult> {
   const { userId, platform, content, scheduledTime, mediaUrls, metadata } =
     input;
@@ -87,7 +99,7 @@ export async function scheduleViaPost(
   // Get or create the default "Scheduled Posts" campaign, scoped to the active
   // brand — identical to /api/scheduler/posts so both entry points share one
   // campaign and one calendar view.
-  let defaultCampaign = await prisma.campaign.findFirst({
+  let defaultCampaign = await client.campaign.findFirst({
     where: {
       userId,
       name: 'Scheduled Posts',
@@ -97,7 +109,7 @@ export async function scheduleViaPost(
   });
 
   if (!defaultCampaign) {
-    defaultCampaign = await prisma.campaign.create({
+    defaultCampaign = await client.campaign.create({
       data: {
         userId,
         name: 'Scheduled Posts',
@@ -116,7 +128,7 @@ export async function scheduleViaPost(
     ...(mediaUrls && mediaUrls.length > 0 ? { images: mediaUrls } : {}),
   };
 
-  const post = await prisma.post.create({
+  const post = await client.post.create({
     data: {
       content,
       platform: platform.toLowerCase(),

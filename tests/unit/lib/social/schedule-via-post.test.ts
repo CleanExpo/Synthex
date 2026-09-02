@@ -156,4 +156,42 @@ describe('scheduleViaPost — lands in the working Post + cron scheduler', () =>
       mockPrisma.campaign.create.mock.calls[0][0].data.organizationId
     ).toBe('org-carsi');
   });
+
+  it('writes through the client it is handed and never the global one (the Studio approval runs inside a transaction)', async () => {
+    const tx = {
+      campaign: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: 'camp-tx' }),
+      },
+      post: {
+        create: jest.fn().mockResolvedValue({
+          id: 'post-tx',
+          platform: 'linkedin',
+          scheduledAt: when,
+        }),
+      },
+    };
+
+    const result = await scheduleViaPost(
+      {
+        userId: 'user-1',
+        platform: 'linkedin',
+        content: 'c',
+        scheduledTime: when,
+        organizationId: 'org-carsi',
+      },
+      tx as unknown as Parameters<typeof scheduleViaPost>[1]
+    );
+
+    expect(tx.campaign.findFirst).toHaveBeenCalledTimes(1);
+    expect(tx.campaign.create).toHaveBeenCalledTimes(1);
+    expect(tx.post.create).toHaveBeenCalledTimes(1);
+    expect(tx.post.create.mock.calls[0][0].data.campaignId).toBe('camp-tx');
+    expect(result.id).toBe('post-tx');
+    // A rollback of `tx` must take the campaign and the Post with it, which
+    // only holds if nothing here went through the global client.
+    expect(mockPrisma.campaign.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.campaign.create).not.toHaveBeenCalled();
+    expect(mockPrisma.post.create).not.toHaveBeenCalled();
+  });
 });
