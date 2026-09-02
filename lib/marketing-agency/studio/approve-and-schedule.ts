@@ -107,6 +107,8 @@ export interface ApproveAndScheduleDeps {
     id: string;
     platform: string;
     scheduledAt: Date | string | null;
+    /** The Post's current status, so a terminal Post is not reported as scheduled. */
+    status?: string | null;
   } | null>;
   now?: () => Date;
 }
@@ -119,6 +121,8 @@ export interface ScheduledStudioPost {
   linkUrl: string | null;
   /** Present when an already-scheduled Post for this draft + platform was reused. */
   reused?: true;
+  /** The reused Post's status (scheduled | publishing | published | failed | …). */
+  status?: string;
 }
 
 export interface SkippedStudioPlatform {
@@ -216,7 +220,7 @@ export async function approveAndScheduleStudioDraft(
           deletedAt: null,
           metadata: { path: ['studioDraftId'], equals: draftId },
         },
-        select: { id: true, platform: true, scheduledAt: true },
+        select: { id: true, platform: true, scheduledAt: true, status: true },
         orderBy: { createdAt: 'desc' },
       }));
 
@@ -358,26 +362,30 @@ export async function approveAndScheduleStudioDraft(
 
     // Idempotency read: a Post for this draft + platform may already exist —
     // an earlier attempt whose scheduler committed and then reported failure.
-    // Reuse it rather than create a second one.
-    const existing = await findScheduledStudioPost(draft.id, platform);
-    if (existing) {
-      const existingAt =
-        existing.scheduledAt === null
-          ? scheduledAt.toISOString()
-          : typeof existing.scheduledAt === 'string'
-            ? existing.scheduledAt
-            : existing.scheduledAt.toISOString();
-      scheduled.push({
-        platform: existing.platform,
-        postId: existing.id,
-        scheduledAt: existingAt,
-        linkUrl,
-        reused: true,
-      });
-      continue;
-    }
-
+    // Reuse it rather than create a second one. The read sits INSIDE the same
+    // failure boundary as the schedule call (review round 3): a rejected
+    // lookup is a schedule failure that hands the draft back, never an
+    // escaped exception that leaves it approved with no Post.
     try {
+      const existing = await findScheduledStudioPost(draft.id, platform);
+      if (existing) {
+        const existingAt =
+          existing.scheduledAt === null
+            ? scheduledAt.toISOString()
+            : typeof existing.scheduledAt === 'string'
+              ? existing.scheduledAt
+              : existing.scheduledAt.toISOString();
+        scheduled.push({
+          platform: existing.platform,
+          postId: existing.id,
+          scheduledAt: existingAt,
+          linkUrl,
+          reused: true,
+          ...(existing.status ? { status: existing.status } : {}),
+        });
+        continue;
+      }
+
       const post = await schedule({
         userId: approvedBy,
         platform,

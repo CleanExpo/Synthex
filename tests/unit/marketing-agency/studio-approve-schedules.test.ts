@@ -720,6 +720,65 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
     expect(posts).toHaveLength(1);
   });
 
+  it('treats a failing idempotency lookup as a schedule failure and hands the draft back (review round 3)', async () => {
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    const findScheduledStudioPost = jest
+      .fn()
+      .mockRejectedValue(new Error('lookup unavailable'));
+
+    const result = await approveAndScheduleStudioDraft(INPUT, {
+      ...h.deps,
+      findScheduledStudioPost,
+    });
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        { platform: 'linkedin', reason: 'schedule_failed: lookup unavailable' },
+      ],
+    });
+    const revert = h.updateMany.mock.calls[1][0];
+    expect(revert.where).toEqual({
+      id: 'd1',
+      organizationId: 'org-carsi',
+      status: 'approved',
+    });
+    expect(revert.data).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+      approvedAt: null,
+    });
+  });
+
+  it('reports the status of a reused Post so a terminal one is not mislabelled as scheduled', async () => {
+    const findScheduledStudioPost = jest.fn(async () => ({
+      id: 'post-linkedin-old',
+      platform: 'linkedin',
+      scheduledAt: '2026-09-01T00:00:00.000Z',
+      status: 'failed',
+    }));
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, {
+      ...h.deps,
+      findScheduledStudioPost,
+    });
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result.scheduled[0]).toMatchObject({
+      postId: 'post-linkedin-old',
+      reused: true,
+      status: 'failed',
+    });
+  });
+
   it('looks for an existing Post before every schedule and stamps a stable idempotency key', async () => {
     const findScheduledStudioPost = jest.fn(async () => null);
     const h = harness({
