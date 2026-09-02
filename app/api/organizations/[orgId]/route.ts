@@ -40,24 +40,81 @@ const organizationSettingsSchema = z
         });
       }
     }
-    // The Studio reads `settings.studio` with this exact schema and ignores
-    // the whole object on any error, so an invalid write must fail HERE, at
-    // the moment it is typed, not silently at the next board read.
+    // `settings.studio` is validated AFTER the merge with the stored object
+    // (see the PATCH handler): the Studio reads the merged object with
+    // `studioSettingsSchema` and ignores all of it on any error, so it is the
+    // merged result that must be valid, not the fragment.
     if (settings.studio !== undefined && settings.studio !== null) {
-      const studio = studioSettingsSchema.safeParse(settings.studio);
-      if (!studio.success) {
+      if (
+        typeof settings.studio !== 'object' ||
+        Array.isArray(settings.studio)
+      ) {
         context.addIssue({
           code: 'custom',
           path: ['studio'],
-          message: `Studio settings are invalid: ${studio.error.issues
-            .map(
-              issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`
-            )
-            .join('; ')}`,
+          message: 'Studio settings must be an object (or null to clear them).',
         });
       }
     }
   });
+
+/**
+ * Merge semantics for `settings` on PATCH, in one place so the next key does
+ * not invent a third rule:
+ *   - top level: shallow merge, client keys replace stored keys;
+ *   - `provisioning`: reserved, server-owned, never client-writable;
+ *   - `studio`: merged ONE level deep (avatar, voice and likeness consent
+ *     travel together, and a PATCH of `{ studio: { funnelUrl } }` must not
+ *     erase the consent); a key sent as `null` is REMOVED; `studio: null`
+ *     clears the whole object; the merged result is validated with the
+ *     Studio's own schema and the write is refused on any error;
+ *   - `studio.consent`: `recordedBy` / `recordedAt` are stamped from the
+ *     authenticated caller and the server clock, never taken from the client.
+ */
+function mergeStudioSettings(
+  existing: unknown,
+  fragment: unknown,
+  recordedBy: string,
+  now: Date
+):
+  | { ok: true; studio: Record<string, unknown> | null }
+  | { ok: false; error: string } {
+  if (fragment === null) return { ok: true, studio: null };
+  const base =
+    existing && typeof existing === 'object' && !Array.isArray(existing)
+      ? { ...(existing as Record<string, unknown>) }
+      : {};
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(
+    fragment as Record<string, unknown>
+  )) {
+    if (value === null) delete merged[key];
+    else merged[key] = value;
+  }
+  const clientConsent = (fragment as Record<string, unknown>).consent;
+  if (clientConsent && typeof clientConsent === 'object') {
+    const {
+      recordedBy: _by,
+      recordedAt: _at,
+      ...consent
+    } = clientConsent as Record<string, unknown>;
+    merged.consent = {
+      ...consent,
+      recordedBy,
+      recordedAt: now.toISOString(),
+    };
+  }
+  const parsed = studioSettingsSchema.safeParse(merged);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: `Studio settings are invalid after merge: ${parsed.error.issues
+        .map(issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+        .join('; ')}`,
+    };
+  }
+  return { ok: true, studio: parsed.data as Record<string, unknown> };
+}
 
 const updateOrganizationSchema = z.object({
   name: z.string().min(1).optional(),
@@ -344,20 +401,21 @@ export async function PATCH(
     if (updateData.settings !== undefined) {
       const { provisioning: _clientSupplied, ...clientSettings } =
         updateData.settings as Record<string, unknown>;
-      // `settings.studio` merges one level deeper: it carries the avatar, the
-      // voice and the likeness-consent record together, and a PATCH that
-      // sends only `{ studio: { funnelUrl } }` must not erase the consent.
-      const existingStudio = existingSettings.studio;
+      // `settings.studio`: see mergeStudioSettings for the rules.
       const clientStudio = clientSettings.studio;
-      const studio =
-        existingStudio &&
-        typeof existingStudio === 'object' &&
-        !Array.isArray(existingStudio) &&
-        clientStudio &&
-        typeof clientStudio === 'object' &&
-        !Array.isArray(clientStudio)
-          ? { ...existingStudio, ...clientStudio }
-          : clientStudio;
+      let studio: Record<string, unknown> | null | undefined;
+      if (clientStudio !== undefined) {
+        const merge = mergeStudioSettings(
+          existingSettings.studio,
+          clientStudio,
+          userId,
+          new Date()
+        );
+        if (!merge.ok) {
+          return ResponseOptimizer.createErrorResponse(merge.error, 400);
+        }
+        studio = merge.studio;
+      }
       const mergedSettings = {
         ...existingSettings,
         ...clientSettings,

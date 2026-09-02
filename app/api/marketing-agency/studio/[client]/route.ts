@@ -19,11 +19,10 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import {
-  hasOrganizationAccess,
-  hasDirectOrganizationAccess,
-} from '@/lib/multi-business';
+import { hasOrganizationAccess } from '@/lib/multi-business';
+import { hasDirectOrganizationAccess } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { trackError } from '@/lib/observability/error-tracker';
 import prisma from '@/lib/prisma';
 import { listStudioDrafts } from '@/lib/marketing-agency/studio/draft-store';
 import {
@@ -77,6 +76,11 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
       security.context
     );
   }
+  // The board may be read from the parent workspace; approving needs direct
+  // membership. Tell the client which of the two it holds, computed by the
+  // same function the POST gates on, so a button is never shown that the
+  // POST will refuse.
+  const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
 
   try {
     const drafts = (await listStudioDrafts({
@@ -104,6 +108,7 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
         videoConfigured: studioClient.video !== null,
         configSource: studioClient.configSource,
         warnings: studioClient.warnings,
+        canApprove,
         board,
         total: drafts.length,
       },
@@ -179,8 +184,14 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
   const userId = security.context.userId!;
   const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
   if (!canApprove) {
+    // Distinguishable from the board's 403: this caller may be able to READ
+    // the board (parent workspace) and still not speak for the organisation.
     return APISecurityChecker.createSecureResponse(
-      { error: 'Forbidden' },
+      {
+        error:
+          'Approval requires membership of this organisation (its own member or an active business owner), not of its parent workspace',
+        organizationId,
+      },
       403,
       security.context
     );
@@ -205,19 +216,37 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
           404,
           security.context
         );
-      case 'blocked':
-        // The draft is back in awaiting_approval; the reasons name what to clear.
+      case 'blocked': {
+        // The draft is back in awaiting_approval; the reasons name what to
+        // clear. When the organisation's publish-safety state is the block,
+        // the response names the organisation and the action that opens it —
+        // a fail-closed gate whose message does not say which row opens it
+        // reads as a bug.
+        const orgGated = result.skipped.some(entry =>
+          entry.reason.startsWith('org_publish_gate')
+        );
         return APISecurityChecker.createSecureResponse(
           {
             error:
               'External publishing is blocked for this draft; it remains awaiting approval',
             draftId: parsed.data.draftId,
+            organizationId,
             outcome: result.outcome,
             skipped: result.skipped,
+            ...(orgGated
+              ? {
+                  remedy: {
+                    action: 'POST /api/calendar/live-mode-activate',
+                    body: { tier: 1, confirmed: true, organizationId },
+                    note: 'The organisation must be calendarMode live and not paused before a Studio post can be scheduled.',
+                  },
+                }
+              : {}),
           },
           409,
           security.context
         );
+      }
       case 'schedule_failed':
         return APISecurityChecker.createSecureResponse(
           {
@@ -253,7 +282,20 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
     }
     logger.error('studio draft approval failed', {
       organizationId,
+      draftId: parsed.data.draftId,
       error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    // The bridge tracks failures inside its own boundaries; anything that
+    // escapes to here (a rejected claim, a rejected final record) must reach
+    // the error backend too, with the draft named so one can be reproduced.
+    trackError(error, {
+      operation: 'studio/approve-and-schedule',
+      metadata: {
+        organizationId,
+        clientSlug: client,
+        draftId: parsed.data.draftId,
+        stage: 'route',
+      },
     });
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to approve draft' },

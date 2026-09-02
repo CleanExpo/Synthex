@@ -254,6 +254,32 @@ describe("Post cron → a Studio post respects the organisation's publish-safety
     expect(resolveOrgAutoPublishGate).toHaveBeenCalledWith('org-carsi');
   });
 
+  it('expires, never publishes, a Studio post more than 48 h past its scheduledAt — pausing is a stop, not a queue', async () => {
+    const createPost = jest.fn();
+    mockCreatePlatformService.mockReturnValue({ createPost });
+    (resolveOrgAutoPublishGate as jest.Mock).mockResolvedValue({
+      allowed: true,
+      calendarMode: 'live',
+      autoPublishPaused: false,
+    });
+    const stale = duePost({ source: 'studio', studioDraftId: 'd1' });
+    stale.scheduledAt = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+    mockPrisma.post.findMany.mockResolvedValue([stale]);
+
+    const res = await GET(cronRequest());
+    const body = await res.json();
+
+    expect(createPost).not.toHaveBeenCalled();
+    expect(body.expired).toBe(1);
+    expect(body.published).toBe(0);
+    expect(mockPrisma.post.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'p1' },
+        data: expect.objectContaining({ status: 'expired' }),
+      })
+    );
+  });
+
   it('a human-scheduled post (no source) still passes through unchanged', async () => {
     const createPost = jest.fn().mockResolvedValue({
       success: true,

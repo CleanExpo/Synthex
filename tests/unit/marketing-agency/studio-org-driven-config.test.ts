@@ -66,6 +66,8 @@ describe('resolveStudioClient — org-driven, no registry', () => {
               subjectName: 'A. Presenter',
               sourceRef: 'consent/ccw-2026-08-01.pdf',
               confirmedAt: '2026-08-01T00:00:00.000Z',
+              avatarId: 'avatar_real_123',
+              voiceId: 'voice_real_456',
             },
           },
         },
@@ -84,8 +86,71 @@ describe('resolveStudioClient — org-driven, no registry', () => {
         subjectName: 'A. Presenter',
         sourceRef: 'consent/ccw-2026-08-01.pdf',
         confirmedAt: '2026-08-01T00:00:00.000Z',
+        avatarId: 'avatar_real_123',
+        voiceId: 'voice_real_456',
       },
     });
+  });
+
+  it('refuses to render when the consent does not name the configured avatar and voice', async () => {
+    // A consent recorded for one presenter never authorises a render of
+    // another: a later partial write of avatarId alone is refused here, the
+    // only place that survives every write path.
+    const client = resolveStudioClient(
+      org({
+        settings: {
+          studio: {
+            avatarId: 'avatar_other_person',
+            voiceId: 'voice_real_456',
+            consent: {
+              subjectName: 'A. Presenter',
+              sourceRef: 'consent/ccw-2026-08-01.pdf',
+              confirmedAt: '2026-08-01T00:00:00.000Z',
+              avatarId: 'avatar_real_123',
+              voiceId: 'voice_real_456',
+            },
+          },
+        },
+      }),
+      EMPTY_ENV
+    );
+
+    expect(client.video).toBeNull();
+    expect(client.configSource).toBe('none');
+    expect(client.warnings.join(' ')).toMatch(/consent does not name/);
+  });
+
+  it('refuses a consent that names no avatar at all', () => {
+    const client = resolveStudioClient(
+      org({
+        settings: {
+          studio: {
+            avatarId: 'avatar_real_123',
+            voiceId: 'voice_real_456',
+            consent: {
+              subjectName: 'A. Presenter',
+              sourceRef: 'consent/ccw-2026-08-01.pdf',
+              confirmedAt: '2026-08-01T00:00:00.000Z',
+            },
+          },
+        },
+      }),
+      EMPTY_ENV
+    );
+    expect(client.video).toBeNull();
+  });
+
+  it('rejects a settings funnel whose scheme is not http(s) with the same predicate as the website fallback', () => {
+    const client = resolveStudioClient(
+      org({
+        website: 'https://ccwonline.com.au',
+        settings: { studio: { funnelUrl: 'javascript:alert(1)' } },
+      }),
+      EMPTY_ENV
+    );
+    // The whole studio object is invalid and ignored; the website still serves.
+    expect(client.funnelUrl).toBe('https://ccwonline.com.au');
+    expect(client.warnings.join(' ')).toMatch(/settings\.studio.*funnelUrl/);
   });
 
   it('records a warning instead of silently ignoring an invalid settings.studio', () => {
@@ -160,6 +225,9 @@ describe('resolveStudioClient — org-driven, no registry', () => {
         subjectName: 'CARSI Presenter',
         sourceRef: 'consent/carsi.pdf',
         confirmedAt: '2026-06-11T00:00:00.000Z',
+        // One presenter per prefix: the consent names that avatar and voice.
+        avatarId: 'avatar_carsi',
+        voiceId: 'voice_carsi',
       },
     });
     expect(client.funnelUrl).toBeNull();
@@ -191,6 +259,8 @@ describe('resolveStudioClient — org-driven, no registry', () => {
               subjectName: 'P',
               sourceRef: 'r',
               confirmedAt: '2026-08-01T00:00:00.000Z',
+              avatarId: 'avatar_from_settings',
+              voiceId: 'voice_from_settings',
             },
           },
         },
@@ -228,6 +298,8 @@ describe('toClientStudioConfig — the video pipeline refuses an unconfigured bu
               subjectName: 's',
               sourceRef: 'r',
               confirmedAt: '2026-08-01T00:00:00.000Z',
+              avatarId: 'a',
+              voiceId: 'v',
             },
           },
         },
@@ -244,6 +316,8 @@ describe('toClientStudioConfig — the video pipeline refuses an unconfigured bu
         subjectName: 's',
         sourceRef: 'r',
         confirmedAt: '2026-08-01T00:00:00.000Z',
+        avatarId: 'a',
+        voiceId: 'v',
       },
       platforms: DEFAULT_STUDIO_PLATFORMS,
     });

@@ -1638,12 +1638,121 @@ describe('engineering bench, round 1 — bounds the reviewers asked for', () => 
 
     await approveAndScheduleStudioDraft(INPUT, h.deps);
 
-    expect(h.tx.$executeRawUnsafe).toHaveBeenCalledTimes(1);
+    expect(h.tx.$executeRawUnsafe).toHaveBeenCalledTimes(2);
     expect(h.tx.$executeRawUnsafe.mock.calls[0][0]).toBe(
       'SET LOCAL statement_timeout = 5000'
     );
-    expect(h.tx.$executeRawUnsafe.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(h.tx.$executeRawUnsafe.mock.calls[1][0]).toBe(
+      'SET LOCAL lock_timeout = 1000'
+    );
+    expect(h.tx.$executeRawUnsafe.mock.invocationCallOrder[1]).toBeLessThan(
       h.txDelegate.updateMany.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('the loser of a concurrent approval that hits lock_timeout on the claim gets not_awaiting_approval, not a 500', async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    h.txDelegate.updateMany.mockRejectedValueOnce(
+      Object.assign(new Error('canceling statement due to lock timeout'), {
+        meta: { code: '55P03' },
+      })
+    );
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'not_awaiting_approval',
+      scheduled: [],
+      skipped: [],
+    });
+    expect(h.rollbacks()).toBe(1);
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(h.attempts).toHaveLength(0);
+  });
+
+  it('a caller shed at maxWait (no pooled connection) gets a retryable schedule_failed with the draft untouched, not a 500', async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    h.runInTransaction.mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          'Timed out fetching a new connection from the connection pool'
+        ),
+        { code: 'P2024' }
+      )
+    );
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(result.outcome).toBe('schedule_failed');
+    expect(result.skipped).toEqual([
+      {
+        platform: '*',
+        reason: expect.stringMatching(/^transaction_unavailable: /),
+      },
+    ]);
+    expect(h.draft()?.status).toBe('awaiting_approval');
+    expect(mockTrackError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        metadata: expect.objectContaining({ stage: 'transaction_start' }),
+      })
+    );
+  });
+
+  it('the default attempt record is one parameterised UPDATE that merges its key on the still-awaiting row (the raw SQL has an oracle)', async () => {
+    const h = harness({
+      row: draftRow({
+        platforms: ['linkedin'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+      credentialsReady: false,
+    });
+    mockExecuteRaw.mockResolvedValue(1);
+    const { recordAttempt: _injected, ...depsWithDefault } = h.deps;
+
+    const result = await approveAndScheduleStudioDraft(INPUT, depsWithDefault);
+
+    expect(result.outcome).toBe('blocked');
+    expect(mockExecuteRaw).toHaveBeenCalledTimes(1);
+    const [strings, ...values] = mockExecuteRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    const sql = Array.from(strings).join('?');
+    expect(sql).toMatch(/UPDATE studio_content_drafts/);
+    expect(sql).toMatch(/COALESCE\(metadata, '\{\}'::jsonb\) \|\| \?::jsonb/);
+    expect(sql).toMatch(/organization_id = \?/);
+    expect(sql).toMatch(/status = 'awaiting_approval'/);
+    expect(values).toHaveLength(3);
+    expect(values[1]).toBe('d1');
+    expect(values[2]).toBe('org-carsi');
+    const patch = JSON.parse(values[0] as string) as Record<string, unknown>;
+    expect(Object.keys(patch)).toEqual(['studioScheduleAttempt']);
+    expect(patch.studioScheduleAttempt).toMatchObject({
+      outcome: 'blocked',
+      attemptedBy: 'phill',
+      clearancesRequested: [],
+    });
+  });
+
+  it('a default attempt record that matches no awaiting row is logged, not lost silently', async () => {
+    const h = harness({
+      row: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    h.schedule.mockRejectedValue(new Error('scheduler unavailable'));
+    mockExecuteRaw.mockResolvedValue(0);
+    const { recordAttempt: _injected, ...depsWithDefault } = h.deps;
+
+    await approveAndScheduleStudioDraft(INPUT, depsWithDefault);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      'studio approval attempt record matched no awaiting draft',
+      expect.objectContaining({ draftId: 'd1', outcome: 'schedule_failed' })
     );
   });
 

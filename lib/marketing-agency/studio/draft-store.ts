@@ -64,37 +64,38 @@ export async function saveStudioDraft(
     });
   }
 
-  const existing = await delegate.findFirst({
-    where: {
-      organizationId: input.organizationId,
-      clientSlug: input.clientSlug,
-      dedupeKey: input.dedupeKey,
-    },
+  // The status predicate lives IN the write, never in a read before it: a
+  // guard evaluated in a previous statement can be overtaken by an approval
+  // that commits between the two. One conditional update; on zero rows the
+  // draft is either new (create) or has left awaiting_approval (the unique
+  // index turns that into P2002, and the row is returned untouched).
+  const key = {
+    organizationId: input.organizationId,
+    clientSlug: input.clientSlug,
+    dedupeKey: input.dedupeKey,
+  };
+  const updated = await delegate.updateMany({
+    where: { ...key, status: 'awaiting_approval' },
+    data,
   });
-  if (existing && existing.status !== 'awaiting_approval') {
+  if (updated.count > 0) {
+    return delegate.findFirst({ where: key });
+  }
+  try {
+    return await delegate.create({
+      data: { ...data, status: 'awaiting_approval' },
+    });
+  } catch (error) {
+    if ((error as { code?: string })?.code !== 'P2002') throw error;
+    const existing = await delegate.findFirst({ where: key });
     logger.warn('studio draft not overwritten: it has left awaiting_approval', {
       organizationId: input.organizationId,
       clientSlug: input.clientSlug,
       dedupeKey: input.dedupeKey,
-      status: existing.status,
+      status: existing?.status,
     });
     return existing;
   }
-
-  return delegate.upsert({
-    where: {
-      organizationId_clientSlug_dedupeKey: {
-        organizationId: input.organizationId,
-        clientSlug: input.clientSlug,
-        dedupeKey: input.dedupeKey,
-      },
-    },
-    create: {
-      ...data,
-      status: 'awaiting_approval',
-    },
-    update: data,
-  });
 }
 
 export interface ListStudioDraftsInput {

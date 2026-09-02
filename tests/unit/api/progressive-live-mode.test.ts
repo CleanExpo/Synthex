@@ -51,11 +51,14 @@ const mockGetUserId = getUserIdFromRequestOrCookies as jest.Mock;
 // routes in this file do not import this module, so the mock is inert for them.)
 
 const mockGetEffectiveOrganizationId = jest.fn();
+const mockHasDirectOrganizationAccess = jest.fn();
 
 jest.mock('@/lib/multi-business/business-scope', () => ({
   __esModule: true,
   getEffectiveOrganizationId: (...args: unknown[]) =>
     mockGetEffectiveOrganizationId(...args),
+  hasDirectOrganizationAccess: (...args: unknown[]) =>
+    mockHasDirectOrganizationAccess(...args),
 }));
 
 // ── Prisma mock ───────────────────────────────────────────────────────────────
@@ -323,6 +326,59 @@ describe('POST /api/calendar/live-mode-activate', () => {
         data: expect.objectContaining({ liveModeT: 1, calendarMode: 'live' }),
       })
     );
+  });
+
+  it('activates a NAMED organisation the caller belongs to directly (a client org whose operators sit in the parent workspace)', async () => {
+    mockGetUserId.mockResolvedValue('user-1');
+    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-parent' });
+    mockHasDirectOrganizationAccess.mockResolvedValue(true);
+    mockOrgFindUnique.mockResolvedValue({
+      liveModeT: 0,
+      calendarMode: 'shadow',
+    });
+    mockOrgUpdate.mockResolvedValue({
+      liveModeT: 1,
+      calendarMode: 'live',
+      liveModeActivatedAt: new Date(),
+    });
+
+    const { POST } =
+      await import('@/app/api/calendar/live-mode-activate/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/calendar/live-mode-activate',
+      body: { tier: 1, confirmed: true, organizationId: 'org-carsi' },
+    });
+    const res = await POST(req as any);
+
+    expect(res.status).toBe(200);
+    expect(mockHasDirectOrganizationAccess).toHaveBeenCalledWith(
+      'user-1',
+      'org-carsi'
+    );
+    expect(mockOrgUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: 'org-carsi' } })
+    );
+    expect((await res.json()).organizationId).toBe('org-carsi');
+  });
+
+  it('refuses (403) a named organisation the caller does not belong to directly, and never touches it', async () => {
+    mockGetUserId.mockResolvedValue('user-1');
+    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-parent' });
+    mockHasDirectOrganizationAccess.mockResolvedValue(false);
+
+    const { POST } =
+      await import('@/app/api/calendar/live-mode-activate/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/calendar/live-mode-activate',
+      body: { tier: 1, confirmed: true, organizationId: 'org-other' },
+    });
+    const res = await POST(req as any);
+
+    expect(res.status).toBe(403);
+    expect(mockOrgFindUnique).not.toHaveBeenCalled();
+    expect(mockOrgUpdate).not.toHaveBeenCalled();
   });
 
   it('is idempotent — returns current state when already tier 1', async () => {

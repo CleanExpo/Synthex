@@ -30,10 +30,21 @@ export interface StudioOrganizationRecord {
   settings?: unknown;
 }
 
+/**
+ * The likeness consent as the Studio stores it: the HeyGen record plus the
+ * avatar and voice it was given for, and who recorded it.
+ */
+export type StudioConsent = HeyGenConsentMetadata & {
+  avatarId?: string;
+  voiceId?: string;
+  recordedBy?: string;
+  recordedAt?: string;
+};
+
 export interface StudioVideoConfig {
   avatarId: string;
   voiceId: string;
-  consent: HeyGenConsentMetadata;
+  consent: StudioConsent;
   dimension?: { width: number; height: number };
 }
 
@@ -67,37 +78,62 @@ export const STUDIO_ENV_PREFIXES: Record<string, string> = {
   carsi: 'CARSI',
 };
 
-const consentSchema = z.object({
-  subjectName: z.string().min(1),
-  sourceRef: z.string().min(1),
-  confirmedAt: z.string().min(1),
-});
+/**
+ * A likeness consent names the avatar and the voice it was given FOR. The
+ * video pipeline runs only when they match the configured ones, so a later
+ * partial write of `avatarId` alone can never render a different person under
+ * someone else's consent. `recordedBy` / `recordedAt` are stamped by the
+ * organisation PATCH route from the authenticated caller, never client-supplied.
+ */
+const consentSchema = z
+  .object({
+    subjectName: z.string().min(1),
+    sourceRef: z.string().min(1),
+    confirmedAt: z.string().min(1),
+    avatarId: z.string().min(1).optional(),
+    voiceId: z.string().min(1).optional(),
+    recordedBy: z.string().min(1).optional(),
+    recordedAt: z.string().min(1).optional(),
+  })
+  .strict();
 
 /** The nine platforms lib/social supports; the bound the approval loop runs to. */
 export const MAX_STUDIO_PLATFORMS = 9;
 
 /**
+ * The ONE predicate for a funnel link, whichever path it arrives by: an
+ * absolute http(s) URL. `settings.studio.funnelUrl` (validated on write and on
+ * read) and the `Organization.website` fallback both run it, so the write
+ * path, the read path and the fallback cannot disagree.
+ */
+export const funnelUrlSchema = z.url({ protocol: /^https?$/ });
+
+/**
  * Shape of `Organization.settings.studio`. Exported so the organisation PATCH
  * route validates a write with the same schema the Studio reads with.
  */
-export const studioSettingsSchema = z.object({
-  displayName: z.string().min(1).optional(),
-  platforms: z
-    .array(z.string().min(1))
-    .min(1)
-    .max(MAX_STUDIO_PLATFORMS)
-    .optional(),
-  funnelUrl: z.string().url().optional(),
-  avatarId: z.string().min(1).optional(),
-  voiceId: z.string().min(1).optional(),
-  consent: consentSchema.optional(),
-  dimension: z
-    .object({
-      width: z.number().int().positive(),
-      height: z.number().int().positive(),
-    })
-    .optional(),
-});
+export const studioSettingsSchema = z
+  .object({
+    displayName: z.string().min(1).optional(),
+    platforms: z
+      .array(z.string().min(1))
+      .min(1)
+      .max(MAX_STUDIO_PLATFORMS)
+      .optional(),
+    funnelUrl: funnelUrlSchema.optional(),
+    avatarId: z.string().min(1).optional(),
+    voiceId: z.string().min(1).optional(),
+    consent: consentSchema.optional(),
+    dimension: z
+      .object({
+        width: z.number().int().positive(),
+        height: z.number().int().positive(),
+      })
+      .optional(),
+  })
+  // Strict, so a misspelt key (`funnelURL`) is a 400 at the PATCH rather than
+  // a value silently dropped at the next read.
+  .strict();
 
 /** Shape of `Organization.settings.studio`. */
 export type StudioSettings = z.infer<typeof studioSettingsSchema>;
@@ -147,6 +183,14 @@ function videoFromSettings(
   if (!avatarId && !voiceId && !consent) return null;
 
   if (avatarId && voiceId && consent) {
+    // The consent must name THIS avatar and THIS voice. A consent recorded
+    // for one presenter never authorises a render of another.
+    if (consent.avatarId !== avatarId || consent.voiceId !== voiceId) {
+      warnings.push(
+        `settings.studio consent does not name the configured avatar and voice (consent names ${consent.avatarId ?? 'no avatar'} / ${consent.voiceId ?? 'no voice'}; configured ${avatarId} / ${voiceId}) — video is off until the consent names them`
+      );
+      return null;
+    }
     return { avatarId, voiceId, consent, ...(dimension ? { dimension } : {}) };
   }
 
@@ -189,10 +233,12 @@ function videoFromEnv(
     return null;
   }
   if (avatarId && voiceId && sourceRef && subjectName && confirmedAt) {
+    // The env layer configures one presenter per prefix, so the consent is
+    // for exactly that avatar and voice by construction.
     return {
       avatarId,
       voiceId,
-      consent: { subjectName, sourceRef, confirmedAt },
+      consent: { subjectName, sourceRef, confirmedAt, avatarId, voiceId },
     };
   }
 
@@ -218,13 +264,7 @@ function funnelFromWebsite(
 ): string | null {
   if (!website) return null;
   const value = website.trim();
-  let parsed: URL | null = null;
-  try {
-    parsed = new URL(value);
-  } catch {
-    parsed = null;
-  }
-  if (parsed && (parsed.protocol === 'http:' || parsed.protocol === 'https:')) {
+  if (funnelUrlSchema.safeParse(value).success) {
     return value;
   }
   warnings.push(

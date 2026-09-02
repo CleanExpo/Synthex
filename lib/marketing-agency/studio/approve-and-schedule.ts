@@ -150,18 +150,25 @@ export const LINK_CARD_PLATFORMS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * The interactive transaction's bounds: wait up to 2 s for a pooled connection
- * (the pool holds three), then the handful of queries inside has 15 s in total
- * and each statement 5 s on the server (`APPROVAL_STATEMENT_TIMEOUT_MS`, set
- * with `SET LOCAL` as the transaction's first statement, so Postgres can
- * interrupt a runaway query — the client timer cannot). No external call runs
- * inside it.
+ * The interactive transaction's bounds. `maxWait` is deliberately short: with a
+ * pool of three (lib/prisma.ts) shared with the publish cron, a caller that
+ * cannot get a connection within 2 s is shed — it gets `schedule_failed`
+ * (`transaction_unavailable`, retryable, nothing claimed) rather than queueing
+ * behind the winner. The `pg` pool's own `connectionTimeoutMillis` (10 s) is
+ * the outer bound; this one fires first. Inside, the handful of queries has
+ * 15 s in total, each statement 5 s on the server
+ * (`APPROVAL_STATEMENT_TIMEOUT_MS`, `SET LOCAL` as the first statement, so
+ * Postgres can interrupt a runaway query — the client timer cannot), and a
+ * wait on another approval's row lock gives up after 1 s
+ * (`APPROVAL_LOCK_TIMEOUT_MS`) and answers `not_awaiting_approval`, since the
+ * winner holds the claim. No external call runs inside it.
  */
 export const APPROVAL_TRANSACTION_OPTIONS = {
   maxWait: 2000,
   timeout: 15000,
 } as const;
 export const APPROVAL_STATEMENT_TIMEOUT_MS = 5000;
+export const APPROVAL_LOCK_TIMEOUT_MS = 1000;
 
 export class InvalidClearanceError extends Error {
   readonly blockers: string[];
@@ -370,6 +377,37 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+type DriverError = {
+  code?: string;
+  meta?: { code?: string };
+  message?: string;
+};
+
+/** Postgres `55P03` — the claim waited `lock_timeout` on another approval's row lock. */
+function isLockTimeout(error: unknown): boolean {
+  const driver = error as DriverError;
+  return (
+    driver?.meta?.code === '55P03' ||
+    /55P03|lock timeout/i.test(driver?.message ?? '')
+  );
+}
+
+/**
+ * Prisma could not START the transaction: no pooled connection within
+ * `maxWait` (P2024) or the transaction API timed out (P2028). Nothing was
+ * claimed, so the outcome is a retryable `schedule_failed`, not a 500.
+ */
+function isTransactionUnavailable(error: unknown): boolean {
+  const driver = error as DriverError;
+  return (
+    driver?.code === 'P2024' ||
+    driver?.code === 'P2028' ||
+    /Timed out fetching a new connection|Unable to start a transaction/i.test(
+      driver?.message ?? ''
+    )
+  );
+}
+
 function toIso(value: Date | string | null, fallback: Date): string {
   if (value === null) return fallback.toISOString();
   return typeof value === 'string' ? value : value.toISOString();
@@ -392,12 +430,22 @@ async function defaultRecordAttempt(
   attempt: StudioScheduleAttempt
 ): Promise<void> {
   const patch = JSON.stringify({ studioScheduleAttempt: attempt });
-  await prisma.$executeRaw`UPDATE studio_content_drafts
+  const matched = await prisma.$executeRaw`UPDATE studio_content_drafts
     SET metadata = COALESCE(metadata, '{}'::jsonb) || ${patch}::jsonb,
         updated_at = now()
     WHERE id = ${target.id}
       AND organization_id = ${target.organizationId}
       AND status = 'awaiting_approval'`;
+  if (matched === 0) {
+    // Either a concurrent approval has since claimed the draft (fine) or the
+    // statement no longer matches the schema — a wrong predicate returns 0
+    // and throws nothing, so say so rather than lose every record silently.
+    logger.warn('studio approval attempt record matched no awaiting draft', {
+      organizationId: target.organizationId,
+      draftId: target.id,
+      outcome: attempt.outcome,
+    });
+  }
 }
 
 function handBack(
@@ -468,12 +516,42 @@ export async function approveAndScheduleStudioDraft(
       await tx.$executeRawUnsafe(
         `SET LOCAL statement_timeout = ${APPROVAL_STATEMENT_TIMEOUT_MS}`
       );
+      // A second approver waiting on the winner's row lock would otherwise
+      // hold a pooled connection for the whole statement budget for an
+      // answer that is already decided.
+      await tx.$executeRawUnsafe(
+        `SET LOCAL lock_timeout = ${APPROVAL_LOCK_TIMEOUT_MS}`
+      );
 
       // The human-approval gate, org-scoped, only from awaiting_approval.
-      const count = await approveStudioDraft(
-        { organizationId, id, approvedBy },
-        tx.studioContentDraft
-      );
+      let count: number;
+      try {
+        count = await approveStudioDraft(
+          { organizationId, id, approvedBy },
+          tx.studioContentDraft
+        );
+      } catch (error) {
+        if (!isLockTimeout(error)) throw error;
+        // Another approval holds the claim: from this caller's side the draft
+        // is not available to approve. Roll back (the transaction is aborted
+        // after the failed statement) and answer as the loser normally would.
+        logger.info(
+          'studio approval claim lost the row lock to a concurrent approval',
+          {
+            organizationId,
+            draftId: id,
+          }
+        );
+        throw new RollbackSignal(
+          {
+            approved: false,
+            outcome: 'not_awaiting_approval',
+            scheduled: [],
+            skipped: [],
+          },
+          null
+        );
+      }
       if (count === 0) {
         return {
           approved: false,
@@ -810,10 +888,32 @@ export async function approveAndScheduleStudioDraft(
       return { approved: true, outcome: 'approved', scheduled, skipped };
     });
   } catch (error) {
-    // Anything but the signal is a real failure: the claim rolled back with
-    // it, the draft is untouched, and the route answers 500.
-    if (!(error instanceof RollbackSignal)) throw error;
-    signal = error;
+    if (error instanceof RollbackSignal) {
+      signal = error;
+    } else if (isTransactionUnavailable(error)) {
+      // No connection within `maxWait`: the transaction never started, so
+      // nothing was claimed. Shed this caller with a retryable outcome and
+      // the draft untouched — not a 500.
+      logger.warn('studio approval could not start a transaction', {
+        organizationId,
+        draftId: id,
+        error: errorMessage(error),
+      });
+      trackError(error, {
+        operation: 'studio/approve-and-schedule',
+        metadata: { organizationId, draftId: id, stage: 'transaction_start' },
+      });
+      return handBack('schedule_failed', [
+        {
+          platform: '*',
+          reason: `transaction_unavailable: ${errorMessage(error)}`,
+        },
+      ]);
+    } else {
+      // Anything else is a real failure: the claim rolled back with it, the
+      // draft is untouched, and the route answers 500.
+      throw error;
+    }
   }
 
   // The transaction rolled back: the draft is `awaiting_approval` and no Post
@@ -830,6 +930,10 @@ export async function approveAndScheduleStudioDraft(
         draftId: id,
         outcome: signal.result.outcome,
         error: errorMessage(error),
+      });
+      trackError(error, {
+        operation: 'studio/approve-and-schedule',
+        metadata: { organizationId, draftId: id, stage: 'attempt_record' },
       });
     }
   }

@@ -36,6 +36,8 @@ jest.mock('@/lib/security/api-security-checker', () => ({
 jest.mock('@/lib/multi-business', () => ({
   hasOrganizationAccess: (...args: unknown[]) =>
     mockHasOrganizationAccess(...args),
+}));
+jest.mock('@/lib/multi-business/business-scope', () => ({
   hasDirectOrganizationAccess: (...args: unknown[]) =>
     mockHasDirectOrganizationAccess(...args),
 }));
@@ -74,6 +76,10 @@ jest.mock('@/lib/marketing-agency/studio/approve-and-schedule', () => ({
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
+const mockTrackError = jest.fn();
+jest.mock('@/lib/observability/error-tracker', () => ({
+  trackError: (...args: unknown[]) => mockTrackError(...args),
+}));
 
 import { GET, POST } from '@/app/api/marketing-agency/studio/[client]/route';
 import { InvalidClearanceError } from '@/lib/marketing-agency/studio/approve-and-schedule';
@@ -260,6 +266,52 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
     mockListStudioDrafts.mockResolvedValue([]);
     const get = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
     expect(get.status).toBe(200);
+    // The board tells the client which of the two it holds, computed by the
+    // same function the POST gates on.
+    expect((await get.json()).canApprove).toBe(false);
+  });
+
+  it('names the organisation and the remedy when the organisation publish-safety state blocks the approval', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'blocked',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason: 'org_publish_gate: calendar_mode_shadow',
+        },
+      ],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.organizationId).toBe('org-ra');
+    expect(body.remedy).toEqual(
+      expect.objectContaining({
+        action: 'POST /api/calendar/live-mode-activate',
+        body: { tier: 1, confirmed: true, organizationId: 'org-ra' },
+      })
+    );
+  });
+
+  it('reaches the error backend with the draft named when the bridge rejects (500)', async () => {
+    mockApproveAndSchedule.mockRejectedValueOnce(
+      new Error('draft record unavailable')
+    );
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(500);
+    expect(mockTrackError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'studio/approve-and-schedule',
+        metadata: expect.objectContaining({
+          organizationId: 'org-ra',
+          draftId: 'd1',
+          stage: 'route',
+        }),
+      })
+    );
   });
 
   it('returns 404 on approve when the organisation does not exist', async () => {

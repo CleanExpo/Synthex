@@ -49,38 +49,59 @@ describe('saveStudioDraft', () => {
     expect(data.videoProvider).toBe('heygen');
   });
 
-  it('upserts by org + client + dedupe key without resetting approval status', async () => {
-    const { delegate, create, upsert } = mockDelegate();
-    await saveStudioDraft(
-      {
-        organizationId: 'org-A',
-        clientSlug: 'carsi',
-        topic: 'Did you know: CECs',
-        script: 'body',
-        platforms: ['linkedin'],
-        dedupeKey: 'campaign:did-you-know-cecs',
-      },
-      delegate
-    );
+  const KEY = {
+    organizationId: 'org-A',
+    clientSlug: 'carsi',
+    dedupeKey: 'campaign:did-you-know-cecs',
+  };
+  const SAVE = {
+    organizationId: 'org-A',
+    clientSlug: 'carsi',
+    topic: 'Did you know: CECs',
+    script: 'body',
+    platforms: ['linkedin'],
+    dedupeKey: 'campaign:did-you-know-cecs',
+  };
 
+  it('re-saves by dedupe key with the status predicate IN the write, never in a read before it', async () => {
+    // A guard evaluated in a previous statement can be overtaken by an
+    // approval committing between the two; the conditional update cannot.
+    const { delegate, create, updateMany, findFirst } = mockDelegate();
+    updateMany.mockResolvedValue({ count: 1 });
+    const stored = { id: 'd1', status: 'awaiting_approval', script: 'body' };
+    findFirst.mockResolvedValue(stored);
+
+    const result = await saveStudioDraft(SAVE, delegate);
+
+    expect(updateMany).toHaveBeenCalledTimes(1);
+    const args = updateMany.mock.calls[0][0];
+    expect(args.where).toEqual({ ...KEY, status: 'awaiting_approval' });
+    expect(args.data.status).toBeUndefined();
+    expect(args.data.dedupeKey).toBe('campaign:did-you-know-cecs');
     expect(create).not.toHaveBeenCalled();
-    const args = upsert.mock.calls[0][0];
-    expect(args.where).toEqual({
-      organizationId_clientSlug_dedupeKey: {
-        organizationId: 'org-A',
-        clientSlug: 'carsi',
-        dedupeKey: 'campaign:did-you-know-cecs',
-      },
-    });
-    expect(args.create.status).toBe('awaiting_approval');
-    expect(args.update.status).toBeUndefined();
-    expect(args.update.dedupeKey).toBe('campaign:did-you-know-cecs');
+    expect(result).toBe(stored);
   });
 
-  it('never overwrites a draft that has left awaiting_approval: a re-seed returns the approved row untouched', async () => {
+  it('creates the draft in awaiting_approval when the dedupe key is new', async () => {
+    const { delegate, create, updateMany } = mockDelegate();
+    updateMany.mockResolvedValue({ count: 0 });
+    create.mockResolvedValue({ id: 'd-new', status: 'awaiting_approval' });
+
+    const result = await saveStudioDraft(SAVE, delegate);
+
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(create.mock.calls[0][0].data.status).toBe('awaiting_approval');
+    expect(result).toEqual({ id: 'd-new', status: 'awaiting_approval' });
+  });
+
+  it('never overwrites a draft that has left awaiting_approval: the unique index turns the re-seed into a no-op that returns the approved row', async () => {
     // The approved row carries the script a human approved, the approval
     // record and the scheduled Posts. A regenerated version is a new draft.
-    const { delegate, upsert, findFirst } = mockDelegate();
+    const { delegate, create, updateMany, findFirst } = mockDelegate();
+    updateMany.mockResolvedValue({ count: 0 }); // not awaiting → no row matched
+    create.mockRejectedValue(
+      Object.assign(new Error('unique'), { code: 'P2002' })
+    );
     const approved = {
       id: 'd1',
       status: 'approved',
@@ -91,26 +112,20 @@ describe('saveStudioDraft', () => {
 
     const result = await saveStudioDraft(
       {
-        organizationId: 'org-A',
-        clientSlug: 'carsi',
-        topic: 'Did you know: CECs',
+        ...SAVE,
         script: 'a regenerated body nobody approved',
-        platforms: ['linkedin'],
-        dedupeKey: 'campaign:did-you-know-cecs',
         metadata: { externalPublishingAllowed: false },
       },
       delegate
     );
 
-    expect(upsert).not.toHaveBeenCalled();
     expect(result).toBe(approved);
-    expect(findFirst).toHaveBeenCalledWith({
-      where: {
-        organizationId: 'org-A',
-        clientSlug: 'carsi',
-        dedupeKey: 'campaign:did-you-know-cecs',
-      },
-    });
+    expect(findFirst).toHaveBeenCalledWith({ where: KEY });
+    // Any other create failure is a real failure and propagates.
+    create.mockRejectedValue(new Error('connection lost'));
+    await expect(saveStudioDraft(SAVE, delegate)).rejects.toThrow(
+      'connection lost'
+    );
   });
 });
 
