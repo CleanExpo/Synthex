@@ -15,10 +15,21 @@
  * Everything is injected — no database, no network.
  */
 
+// The default idempotency lookup reads the Post table; a fake two-organisation
+// table lets the org-scoping test run the REAL default query.
+const mockPostFindFirst = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  default: { studioContentDraft: {}, platformConnection: {} },
-  prisma: { studioContentDraft: {}, platformConnection: {} },
+  default: {
+    studioContentDraft: {},
+    platformConnection: {},
+    post: { findFirst: (...args: unknown[]) => mockPostFindFirst(...args) },
+  },
+  prisma: {
+    studioContentDraft: {},
+    platformConnection: {},
+    post: { findFirst: (...args: unknown[]) => mockPostFindFirst(...args) },
+  },
 }));
 jest.mock('@/lib/social', () => ({
   isPlatformSupported: (platform: string) =>
@@ -760,7 +771,7 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
       id: 'post-linkedin-old',
       platform: 'linkedin',
       scheduledAt: '2026-09-01T00:00:00.000Z',
-      status: 'failed',
+      status: 'published',
     }));
     const h = harness({
       draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
@@ -775,7 +786,7 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
     expect(result.scheduled[0]).toMatchObject({
       postId: 'post-linkedin-old',
       reused: true,
-      status: 'failed',
+      status: 'published',
     });
   });
 
@@ -795,6 +806,208 @@ describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
     expect(h.schedule.mock.calls[0][0].metadata.idempotencyKey).toBe(
       'studio:d1:linkedin'
     );
+  });
+});
+
+describe('review round 4 — reuse is classified by status, every post-claim failure hands back, lookup is org-scoped', () => {
+  function existingPost(status: string) {
+    return jest.fn(async () => ({
+      id: `post-${status}`,
+      platform: 'linkedin',
+      scheduledAt: '2026-09-01T00:00:00.000Z',
+      status,
+    }));
+  }
+
+  it('a terminal FAILED Post is not reused: a fresh Post is scheduled so the founder can retry', async () => {
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, {
+      ...h.deps,
+      findScheduledStudioPost: existingPost('failed'),
+    });
+
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(result.outcome).toBe('approved');
+    expect(result.scheduled).toHaveLength(1);
+    expect(result.scheduled[0].postId).toBe('post-linkedin');
+    expect(result.scheduled[0]).not.toHaveProperty('reused');
+  });
+
+  it.each(['pending_approval', 'draft'])(
+    'a %s Post holds the draft back rather than duplicating or claiming success',
+    async status => {
+      const h = harness({
+        draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      });
+
+      const result = await approveAndScheduleStudioDraft(INPUT, {
+        ...h.deps,
+        findScheduledStudioPost: existingPost(status),
+      });
+
+      expect(h.schedule).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        approved: false,
+        outcome: 'blocked',
+        scheduled: [],
+        skipped: [{ platform: 'linkedin', reason: `existing_post_${status}` }],
+      });
+      expect(h.updateMany.mock.calls[1][0].data.status).toBe(
+        'awaiting_approval'
+      );
+    }
+  );
+
+  it.each(['scheduled', 'publishing', 'published'])(
+    'a %s Post is reused and reported with its status',
+    async status => {
+      const h = harness({
+        draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+      });
+
+      const result = await approveAndScheduleStudioDraft(INPUT, {
+        ...h.deps,
+        findScheduledStudioPost: existingPost(status),
+      });
+
+      expect(h.schedule).not.toHaveBeenCalled();
+      expect(result.outcome).toBe('approved');
+      expect(result.scheduled[0]).toMatchObject({
+        postId: `post-${status}`,
+        reused: true,
+        status,
+      });
+    }
+  );
+
+  it('an unknown Post status holds the draft back (never a duplicate on a status this code does not know)', async () => {
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, {
+      ...h.deps,
+      findScheduledStudioPost: existingPost('archived'),
+    });
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result.outcome).toBe('blocked');
+    expect(result.skipped).toEqual([
+      { platform: 'linkedin', reason: 'existing_post_archived' },
+    ]);
+  });
+
+  it('a rejected draft read after the claim hands the draft back instead of escaping', async () => {
+    const h = harness();
+    h.findFirst.mockRejectedValue(new Error('draft read unavailable'));
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        { platform: '*', reason: 'draft_read_failed: draft read unavailable' },
+      ],
+    });
+    const revert = h.updateMany.mock.calls[1][0];
+    expect(revert.where).toEqual({
+      id: 'd1',
+      organizationId: 'org-carsi',
+      status: 'approved',
+    });
+    expect(revert.data).toMatchObject({
+      status: 'awaiting_approval',
+      approvedBy: null,
+      approvedAt: null,
+    });
+  });
+
+  it('a draft that vanished after the claim is handed back too', async () => {
+    const h = harness({ draft: null });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(result).toEqual({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [{ platform: '*', reason: 'draft_unreadable_after_approval' }],
+    });
+    expect(h.updateMany.mock.calls[1][0].data.status).toBe('awaiting_approval');
+  });
+
+  it('the default idempotency lookup is scoped to the approving organisation and never reuses another org’s Post', async () => {
+    // Two organisations, each with a Post carrying the same studioDraftId + platform.
+    const table = [
+      {
+        id: 'post-other-org',
+        platform: 'linkedin',
+        scheduledAt: new Date('2026-09-01T00:00:00.000Z'),
+        status: 'scheduled',
+        deletedAt: null,
+        metadata: { studioDraftId: 'd1' },
+        campaign: { organizationId: 'org-other' },
+      },
+      {
+        id: 'post-carsi',
+        platform: 'linkedin',
+        scheduledAt: new Date('2026-09-01T00:00:00.000Z'),
+        status: 'scheduled',
+        deletedAt: null,
+        metadata: { studioDraftId: 'd1' },
+        campaign: { organizationId: 'org-carsi' },
+      },
+    ];
+    mockPostFindFirst.mockImplementation(async (args: any) => {
+      const w = args.where;
+      const row = table.find(
+        p =>
+          p.platform === w.platform &&
+          p.deletedAt === w.deletedAt &&
+          p.metadata.studioDraftId === w.metadata.equals &&
+          // Without the org clause this would return the other org's Post first.
+          (w.campaign
+            ? p.campaign.organizationId === w.campaign.organizationId
+            : true)
+      );
+      return row
+        ? {
+            id: row.id,
+            platform: row.platform,
+            scheduledAt: row.scheduledAt,
+            status: row.status,
+          }
+        : null;
+    });
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    const { findScheduledStudioPost: _injected, ...depsWithDefaultLookup } =
+      h.deps;
+
+    const result = await approveAndScheduleStudioDraft(
+      INPUT,
+      depsWithDefaultLookup
+    );
+
+    expect(mockPostFindFirst).toHaveBeenCalledTimes(1);
+    expect(mockPostFindFirst.mock.calls[0][0].where).toMatchObject({
+      platform: 'linkedin',
+      deletedAt: null,
+      campaign: { organizationId: 'org-carsi' },
+      metadata: { path: ['studioDraftId'], equals: 'd1' },
+    });
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result.scheduled[0]).toMatchObject({
+      postId: 'post-carsi',
+      reused: true,
+    });
   });
 });
 

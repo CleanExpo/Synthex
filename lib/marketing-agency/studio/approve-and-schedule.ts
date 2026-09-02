@@ -10,27 +10,33 @@
  *
  * The campaign pack's own publish rule — "do not publish externally until
  * credentials, approval, and rights checks are recorded" — is deny-by-default
- * (independent review of 3def7c867, P1-CARSI-EXTERNAL-PUBLISH-BLOCKS-BYPASSED).
- * A draft carrying `externalPublishingAllowed: false` publishes to a platform
- * only when every blocker the pack lists for it in `externalPublishBlocks` is
- * discharged:
+ * (review round 1). A draft carrying `externalPublishingAllowed: false` publishes
+ * to a platform only when every blocker the pack lists for it in
+ * `externalPublishBlocks` is discharged:
  *
  *   human_or_client_approval_required  → this call (recorded with who/when)
  *   platform_credentials_required      → an ACTIVE platform connection for the
  *                                        business under the approver — the same
- *                                        row the cron publishes with
+ *                                        row the cron publishes with; never a
+ *                                        recorded clearance (round 2)
  *   anything else                      → a recorded clearance in
  *                                        `externalPublishClearances`, written
  *                                        when the approver names it explicitly
  *
  * `externalPublishingAllowed` becomes true only once nothing remains blocked.
  *
- * Approval is never consumed by a schedule that produced nothing (review
- * P1-APPROVAL-CONSUMED-WITH-ZERO-SCHEDULED-POSTS): when a cron-eligible
- * platform existed and no Post was created — blocked or failed — the draft is
- * returned to `awaiting_approval`, the attempt and the approval record are
- * written to its metadata, and the outcome says why, so it can be retried
- * without a duplicate Post.
+ * Approval is never consumed by a schedule that produced nothing (rounds 1, 3
+ * and 4): once the atomic claim has flipped the draft to `approved`, EVERY
+ * failure path — the draft read, the blocker checks, the idempotency lookup,
+ * the schedule call — hands the draft back to `awaiting_approval` with the
+ * attempt recorded, so it can be retried without a duplicate Post.
+ *
+ * Idempotency (rounds 2 and 4): before scheduling a platform the bridge looks
+ * for a Post already carrying this draft + platform, scoped to the approving
+ * organisation, and classifies it by status — `scheduled` / `publishing` /
+ * `published` are reused, `failed` is terminal (the cron never retries it) so a
+ * fresh Post is scheduled, and anything else holds the draft back rather than
+ * risk a duplicate. Every created Post carries `metadata.idempotencyKey`.
  *
  * Every dependency is injectable so this is unit-testable without a database.
  */
@@ -53,14 +59,29 @@ export const APPROVAL_BLOCKER = 'human_or_client_approval_required';
 /** The pack blocker an active platform connection for the business discharges. */
 export const CREDENTIALS_BLOCKER = 'platform_credentials_required';
 /**
- * Blocker ids a caller may NOT discharge by naming them (review round 2,
- * P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER): the approval is the click itself,
- * and credentials come only from a live platform connection.
+ * Blocker ids a caller may NOT discharge by naming them (review round 2): the
+ * approval is the click itself, and credentials come only from a live
+ * platform connection.
  */
 export const RESERVED_CLEARANCES: ReadonlySet<string> = new Set([
   APPROVAL_BLOCKER,
   CREDENTIALS_BLOCKER,
 ]);
+
+/**
+ * An existing Post in one of these statuses satisfies the schedule attempt: it
+ * is on its way (the cron drains `scheduled`, claims `publishing`) or done.
+ */
+export const REUSABLE_POST_STATUSES: ReadonlySet<string> = new Set([
+  'scheduled',
+  'publishing',
+  'published',
+]);
+/**
+ * A Post in one of these statuses is terminal — the cron only fetches
+ * `scheduled`, so it will never publish. A fresh Post is scheduled instead.
+ */
+export const TERMINAL_POST_STATUSES: ReadonlySet<string> = new Set(['failed']);
 
 export class InvalidClearanceError extends Error {
   readonly blockers: string[];
@@ -83,9 +104,17 @@ export interface ApproveAndScheduleInput {
   /**
    * Pack blocker ids the approver explicitly discharges with this approval
    * (e.g. `final_asset_rights_check_required`). Recorded on the draft with who
-   * and when; never implied.
+   * and when; never implied. The reserved ids are refused.
    */
   clearances?: string[];
+}
+
+export interface ExistingStudioPost {
+  id: string;
+  platform: string;
+  scheduledAt: Date | string | null;
+  /** The Post's current status; absent means "treat as scheduled". */
+  status?: string | null;
 }
 
 export interface ApproveAndScheduleDeps {
@@ -95,21 +124,15 @@ export interface ApproveAndScheduleDeps {
   /** Does the business have an ACTIVE connection for this platform under the approver? */
   credentialsReady?: (platform: string) => Promise<boolean>;
   /**
-   * The Post already scheduled for this draft + platform, if one exists — the
-   * idempotency read before every schedule (review round 2,
-   * P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY). Default: the Post table, matched on
-   * metadata.studioDraftId + platform, not soft-deleted.
+   * The Post already carrying this draft + platform for the approving
+   * organisation, if any — the idempotency read before every schedule.
+   * Default: the Post table, matched on metadata.studioDraftId + platform,
+   * scoped through the campaign's organisation, not soft-deleted, newest first.
    */
   findScheduledStudioPost?: (
     draftId: string,
     platform: string
-  ) => Promise<{
-    id: string;
-    platform: string;
-    scheduledAt: Date | string | null;
-    /** The Post's current status, so a terminal Post is not reported as scheduled. */
-    status?: string | null;
-  } | null>;
+  ) => Promise<ExistingStudioPost | null>;
   now?: () => Date;
 }
 
@@ -119,9 +142,9 @@ export interface ScheduledStudioPost {
   scheduledAt: string;
   /** The UTM-tagged funnel link attached to this post, or null (no funnel). */
   linkUrl: string | null;
-  /** Present when an already-scheduled Post for this draft + platform was reused. */
+  /** Present when an existing Post for this draft + platform was reused. */
   reused?: true;
-  /** The reused Post's status (scheduled | publishing | published | failed | …). */
+  /** The reused Post's status (scheduled | publishing | published). */
   status?: string;
 }
 
@@ -137,7 +160,7 @@ export type ApproveOutcome =
   | 'not_awaiting_approval'
   /** every eligible platform was blocked; the draft is back in `awaiting_approval` */
   | 'blocked'
-  /** every eligible platform failed to schedule; the draft is back in `awaiting_approval` */
+  /** every eligible platform failed, or a read failed; the draft is back in `awaiting_approval` */
   | 'schedule_failed';
 
 export interface ApproveAndScheduleResult {
@@ -192,6 +215,15 @@ function asStringArray(
     : null;
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function toIso(value: Date | string | null, fallback: Date): string {
+  if (value === null) return fallback.toISOString();
+  return typeof value === 'string' ? value : value.toISOString();
+}
+
 export async function approveAndScheduleStudioDraft(
   input: ApproveAndScheduleInput,
   deps: ApproveAndScheduleDeps = {}
@@ -218,6 +250,9 @@ export async function approveAndScheduleStudioDraft(
         where: {
           platform,
           deletedAt: null,
+          // Org-scoped through the campaign: a Post from another organisation
+          // carrying the same draft id is never reused or exposed (round 4).
+          campaign: { organizationId },
           metadata: { path: ['studioDraftId'], equals: draftId },
         },
         select: { id: true, platform: true, scheduledAt: true, status: true },
@@ -245,29 +280,66 @@ export async function approveAndScheduleStudioDraft(
     };
   }
 
-  const draft = await delegate.findFirst({
-    where: { id, organizationId },
-    select: {
-      id: true,
-      clientSlug: true,
-      topic: true,
-      script: true,
-      platforms: true,
-      videoUrl: true,
-      metadata: true,
-    },
-  });
+  // From here the draft is `approved`. Nothing below may leave it there
+  // without a Post: every failure hands it back.
+  const handBack = async (
+    outcome: 'blocked' | 'schedule_failed',
+    skipped: SkippedStudioPlatform[],
+    metadata?: Prisma.InputJsonObject
+  ): Promise<ApproveAndScheduleResult> => {
+    await delegate.updateMany({
+      where: { id, organizationId, status: 'approved' },
+      data: {
+        status: 'awaiting_approval',
+        approvedBy: null,
+        approvedAt: null,
+        ...(metadata ? { metadata } : {}),
+      },
+    });
+    return { approved: false, outcome, scheduled: [], skipped };
+  };
+
+  type DraftRow = {
+    id: string;
+    clientSlug: string;
+    topic: string;
+    script: string;
+    platforms: Prisma.JsonValue;
+    videoUrl: string | null;
+    metadata: Prisma.JsonValue;
+  } | null;
+  let draft: DraftRow;
+  try {
+    draft = await delegate.findFirst({
+      where: { id, organizationId },
+      select: {
+        id: true,
+        clientSlug: true,
+        topic: true,
+        script: true,
+        platforms: true,
+        videoUrl: true,
+        metadata: true,
+      },
+    });
+  } catch (error) {
+    logger.error('studio draft read failed after approval', {
+      organizationId,
+      draftId: id,
+      error: errorMessage(error),
+    });
+    return handBack('schedule_failed', [
+      { platform: '*', reason: `draft_read_failed: ${errorMessage(error)}` },
+    ]);
+  }
   if (!draft) {
     logger.error('studio draft vanished between approval and scheduling', {
       organizationId,
       draftId: id,
     });
-    return {
-      approved: true,
-      outcome: 'approved',
-      scheduled: [],
-      skipped: [{ platform: '*', reason: 'draft_unreadable_after_approval' }],
-    };
+    return handBack('schedule_failed', [
+      { platform: '*', reason: 'draft_unreadable_after_approval' },
+    ]);
   }
 
   const metadata = asJsonObject(draft.metadata);
@@ -305,46 +377,7 @@ export async function approveAndScheduleStudioDraft(
   let eligible = 0;
   let failed = 0;
 
-  for (const platform of platforms) {
-    const schedulable = isSchedulable(platform);
-    if (rightsBlocked) {
-      if (schedulable) eligible += 1;
-      skipped.push({ platform, reason: 'owned_media_gate_blocked' });
-      continue;
-    }
-    if (!schedulable) {
-      skipped.push({ platform, reason: 'platform_not_schedulable' });
-      continue;
-    }
-    eligible += 1;
-
-    if (externalDenied) {
-      const blocks = asStringArray(externalBlocks[platform]);
-      if (blocks === null) {
-        // Denied with no blocker list to discharge: deny by default.
-        skipped.push({ platform, reason: 'external_publishing_denied' });
-        continue;
-      }
-      const remaining: string[] = [];
-      for (const blocker of blocks) {
-        // Credentials come only from a live connection — a recorded clearance,
-        // whoever wrote it, never stands in for one.
-        if (blocker === CREDENTIALS_BLOCKER) {
-          if (!(await credentialsReady(platform))) remaining.push(blocker);
-          continue;
-        }
-        if (blocker in clearances) continue;
-        remaining.push(blocker);
-      }
-      if (remaining.length > 0) {
-        skipped.push({
-          platform,
-          reason: `external_publish_blocked: ${remaining.join(', ')}`,
-        });
-        continue;
-      }
-    }
-
+  const scheduleOnePlatform = async (platform: string): Promise<void> => {
     const linkUrl = buildStudioFunnelLink(input.client.funnelUrl, {
       platform,
       clientSlug: draft.clientSlug,
@@ -360,30 +393,31 @@ export async function approveAndScheduleStudioDraft(
         ? `${draft.script}\n\n${linkUrl}`
         : draft.script;
 
-    // Idempotency read: a Post for this draft + platform may already exist —
-    // an earlier attempt whose scheduler committed and then reported failure.
-    // Reuse it rather than create a second one. The read sits INSIDE the same
-    // failure boundary as the schedule call (review round 3): a rejected
-    // lookup is a schedule failure that hands the draft back, never an
-    // escaped exception that leaves it approved with no Post.
     try {
+      // Idempotency read, inside the same failure boundary as the schedule
+      // call: a rejected lookup is a schedule failure that hands the draft
+      // back, never an escape that leaves it approved with no Post.
       const existing = await findScheduledStudioPost(draft.id, platform);
       if (existing) {
-        const existingAt =
-          existing.scheduledAt === null
-            ? scheduledAt.toISOString()
-            : typeof existing.scheduledAt === 'string'
-              ? existing.scheduledAt
-              : existing.scheduledAt.toISOString();
-        scheduled.push({
-          platform: existing.platform,
-          postId: existing.id,
-          scheduledAt: existingAt,
-          linkUrl,
-          reused: true,
-          ...(existing.status ? { status: existing.status } : {}),
-        });
-        continue;
+        const status = existing.status ?? 'scheduled';
+        if (REUSABLE_POST_STATUSES.has(status)) {
+          scheduled.push({
+            platform: existing.platform,
+            postId: existing.id,
+            scheduledAt: toIso(existing.scheduledAt, scheduledAt),
+            linkUrl,
+            reused: true,
+            ...(existing.status ? { status } : {}),
+          });
+          return;
+        }
+        if (!TERMINAL_POST_STATUSES.has(status)) {
+          // pending_approval, draft, or a status this code does not know:
+          // neither a success nor safe to duplicate — hold the draft back.
+          skipped.push({ platform, reason: `existing_post_${status}` });
+          return;
+        }
+        // Terminal (failed): the cron will never retry it; schedule afresh.
       }
 
       const post = await schedule({
@@ -410,7 +444,7 @@ export async function approveAndScheduleStudioDraft(
         linkUrl,
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = errorMessage(error);
       logger.error('studio approval scheduled nothing for a platform', {
         organizationId,
         draftId: draft.id,
@@ -420,6 +454,67 @@ export async function approveAndScheduleStudioDraft(
       failed += 1;
       skipped.push({ platform, reason: `schedule_failed: ${message}` });
     }
+  };
+
+  try {
+    for (const platform of platforms) {
+      const schedulable = isSchedulable(platform);
+      if (rightsBlocked) {
+        if (schedulable) eligible += 1;
+        skipped.push({ platform, reason: 'owned_media_gate_blocked' });
+        continue;
+      }
+      if (!schedulable) {
+        skipped.push({ platform, reason: 'platform_not_schedulable' });
+        continue;
+      }
+      eligible += 1;
+
+      if (externalDenied) {
+        const blocks = asStringArray(externalBlocks[platform]);
+        if (blocks === null) {
+          // Denied with no blocker list to discharge: deny by default.
+          skipped.push({ platform, reason: 'external_publishing_denied' });
+          continue;
+        }
+        const remaining: string[] = [];
+        for (const blocker of blocks) {
+          // Credentials come only from a live connection — a recorded
+          // clearance, whoever wrote it, never stands in for one.
+          if (blocker === CREDENTIALS_BLOCKER) {
+            if (!(await credentialsReady(platform))) remaining.push(blocker);
+            continue;
+          }
+          if (blocker in clearances) continue;
+          remaining.push(blocker);
+        }
+        if (remaining.length > 0) {
+          skipped.push({
+            platform,
+            reason: `external_publish_blocked: ${remaining.join(', ')}`,
+          });
+          continue;
+        }
+      }
+
+      await scheduleOnePlatform(platform);
+    }
+  } catch (error) {
+    // Anything that escaped the per-platform boundary (a rejected credential
+    // lookup, for instance) must not leave the draft approved with no Post.
+    const message = errorMessage(error);
+    logger.error('studio approval failed before scheduling completed', {
+      organizationId,
+      draftId: draft.id,
+      error: message,
+    });
+    if (scheduled.length === 0) {
+      return handBack('schedule_failed', [
+        ...skipped,
+        { platform: '*', reason: `unexpected_failure: ${message}` },
+      ]);
+    }
+    skipped.push({ platform: '*', reason: `unexpected_failure: ${message}` });
   }
 
   const studioSchedule = {
@@ -439,21 +534,11 @@ export async function approveAndScheduleStudioDraft(
   // so the approval can be retried once the block clears or the scheduler
   // recovers. The approval stays on record in the clearances.
   if (eligible > 0 && scheduled.length === 0) {
-    const outcome: ApproveOutcome = failed > 0 ? 'schedule_failed' : 'blocked';
-    await delegate.updateMany({
-      where: { id, organizationId, status: 'approved' },
-      data: {
-        status: 'awaiting_approval',
-        approvedBy: null,
-        approvedAt: null,
-        metadata: {
-          ...metadata,
-          externalPublishClearances: clearances,
-          studioSchedule,
-        },
-      },
+    return handBack(failed > 0 ? 'schedule_failed' : 'blocked', skipped, {
+      ...metadata,
+      externalPublishClearances: clearances,
+      studioSchedule,
     });
-    return { approved: false, outcome, scheduled: [], skipped };
   }
 
   const externalBlockRemains = skipped.some(entry =>
