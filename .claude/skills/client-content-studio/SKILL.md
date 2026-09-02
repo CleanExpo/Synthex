@@ -83,7 +83,10 @@ publish, emit) — keep them that way so the loop stays unit-testable with no ne
    otherwise. Do not add a bypass. Clients are paying; tone and accuracy are gated by a human.
 2. **NEVER render a HeyGen avatar without a consent record.** `createAvatarVideo` throws
    `HeyGenConsentError` on missing consent — keep it.
-3. **NEVER publish an unrendered draft.** `publishApprovedUpdate` requires `video.videoUrl`.
+3. **NEVER publish an unrendered avatar draft.** `publishApprovedUpdate` (the avatar-video
+   pipeline) requires `video.videoUrl`. The intended exception is the approve → schedule
+   bridge: a media-free draft (text + funnel link as a LinkedIn ARTICLE card) is scheduled
+   without a video by design; a draft WITH a `videoUrl` attaches it as media.
 4. **NEVER fabricate client metrics.** Views/engagement/reach in client reporting are real
    (from `ClientEngagementEvent` / platform APIs) or marked `DATA_REQUIRED`. No invented numbers.
 5. **NEVER hard-code provider keys.** Read from env (Vercel only). No key → providers hard-block
@@ -154,7 +157,7 @@ only; new businesses use `settings.studio`): `RA_HEYGEN_AVATAR_ID`, `RA_ELEVENLA
 ## Status
 
 - ✅ VS-1..VS-5 (provider clients, composition, per-client loop, approval gate, publish+measure) — PR #322, fully unit-tested.
-- ⏳ VS-6 — per-client dashboard surface (needs a `StudioDraft` persistence model + migration — CEO-gated schema change).
+- ✅ VS-6 — `StudioContentDraft` model, `/api/marketing-agency/studio/[client]` (board + approve → schedule) and the dashboard page exist. The page still sends only `draftId` and hides 409/502 reasons; surfacing them and sending `clearances` is open.
 - 🟡 Live render verifies on the preview deploy once `HEYGEN_API_KEY` is set.
 
 ## Quality gates

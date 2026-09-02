@@ -36,6 +36,7 @@ import {
   buildStudioFunnelLink,
   APPROVAL_BLOCKER,
   CREDENTIALS_BLOCKER,
+  InvalidClearanceError,
 } from '@/lib/marketing-agency/studio/approve-and-schedule';
 import type { StudioDraftDelegate } from '@/lib/marketing-agency/studio/draft-store';
 
@@ -101,13 +102,24 @@ function harness(
     status: 'scheduled' as const,
   }));
   const credentialsReady = jest.fn(async () => opts.credentialsReady ?? true);
+  // No Post exists yet for any draft + platform unless a test says otherwise.
+  const findScheduledStudioPost = jest.fn(async () => null);
   const deps = {
     delegate,
     schedule,
     credentialsReady,
+    findScheduledStudioPost,
     now: () => NOW,
   };
-  return { delegate, updateMany, findFirst, schedule, credentialsReady, deps };
+  return {
+    delegate,
+    updateMany,
+    findFirst,
+    schedule,
+    credentialsReady,
+    findScheduledStudioPost,
+    deps,
+  };
 }
 
 const CLIENT = { clientSlug: 'carsi', funnelUrl: 'https://carsi.au/courses' };
@@ -554,6 +566,176 @@ describe('approval is never consumed by a schedule that produced nothing (review
       { platform: 'newsletter', reason: 'platform_not_schedulable' },
     ]);
     expect(h.updateMany.mock.calls[1][0].data.status).toBeUndefined();
+  });
+});
+
+describe('review round 2 — P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER', () => {
+  it('refuses a request that names the credentials blocker, before any claim is made', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+      credentialsReady: false,
+    });
+
+    await expect(
+      approveAndScheduleStudioDraft(
+        {
+          ...INPUT,
+          clearances: [
+            CREDENTIALS_BLOCKER,
+            'final_asset_rights_check_required',
+          ],
+        },
+        h.deps
+      )
+    ).rejects.toBeInstanceOf(InvalidClearanceError);
+
+    expect(h.updateMany).not.toHaveBeenCalled();
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(h.credentialsReady).not.toHaveBeenCalled();
+  });
+
+  it('refuses a request that names the approval blocker', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: SEEDED_CARSI_METADATA,
+      }),
+    });
+
+    await expect(
+      approveAndScheduleStudioDraft(
+        { ...INPUT, clearances: [APPROVAL_BLOCKER] },
+        h.deps
+      )
+    ).rejects.toBeInstanceOf(InvalidClearanceError);
+    expect(h.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('never lets a recorded credentials clearance stand in for a live connection', async () => {
+    const h = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: {
+          ...SEEDED_CARSI_METADATA,
+          externalPublishClearances: {
+            [CREDENTIALS_BLOCKER]: {
+              clearedBy: 'someone',
+              clearedAt: '2026-09-01T00:00:00.000Z',
+              via: 'unknown',
+            },
+            final_asset_rights_check_required: {
+              clearedBy: 'phill',
+              clearedAt: '2026-09-01T00:00:00.000Z',
+              via: 'studio_approval',
+            },
+          },
+        },
+      }),
+      credentialsReady: false,
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(h.credentialsReady).toHaveBeenCalledWith('linkedin');
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result.outcome).toBe('blocked');
+    expect(result.skipped).toEqual([
+      {
+        platform: 'linkedin',
+        reason: `external_publish_blocked: ${CREDENTIALS_BLOCKER}`,
+      },
+    ]);
+  });
+});
+
+describe('review round 2 — P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY', () => {
+  type StoredPost = {
+    id: string;
+    platform: string;
+    draftId: string;
+    scheduledAt: string;
+  };
+
+  it('an ambiguous post-commit scheduler failure still leaves exactly one Post after a retry', async () => {
+    // Persisted Post state shared across both attempts.
+    const posts: StoredPost[] = [];
+    const findScheduledStudioPost = jest.fn(
+      async (draftId: string, platform: string) =>
+        posts.find(p => p.draftId === draftId && p.platform === platform) ??
+        null
+    );
+
+    const first = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+    first.schedule.mockImplementation(
+      async (input: {
+        platform: string;
+        metadata?: Record<string, unknown>;
+      }) => {
+        // The scheduler commits its Post, then the connection drops.
+        posts.push({
+          id: 'post-linkedin-1',
+          platform: input.platform,
+          draftId: String(input.metadata?.studioDraftId),
+          scheduledAt: NOW.toISOString(),
+        });
+        throw new Error('connection lost after commit');
+      }
+    );
+    const failed = await approveAndScheduleStudioDraft(INPUT, {
+      ...first.deps,
+      findScheduledStudioPost,
+    });
+    expect(failed.outcome).toBe('schedule_failed');
+    expect(posts).toHaveLength(1);
+
+    const retry = harness({
+      draft: draftRow({
+        platforms: ['linkedin'],
+        metadata: first.updateMany.mock.calls[1][0].data.metadata,
+      }),
+    });
+    const ok = await approveAndScheduleStudioDraft(INPUT, {
+      ...retry.deps,
+      findScheduledStudioPost,
+    });
+
+    // The existing Post is found and reused; no second Post is created.
+    expect(retry.schedule).not.toHaveBeenCalled();
+    expect(ok.outcome).toBe('approved');
+    expect(ok.scheduled).toEqual([
+      {
+        platform: 'linkedin',
+        postId: 'post-linkedin-1',
+        scheduledAt: NOW.toISOString(),
+        linkUrl:
+          'https://carsi.au/courses?utm_source=linkedin&utm_medium=social&utm_campaign=studio-carsi&utm_content=d1',
+        reused: true,
+      },
+    ]);
+    expect(posts).toHaveLength(1);
+  });
+
+  it('looks for an existing Post before every schedule and stamps a stable idempotency key', async () => {
+    const findScheduledStudioPost = jest.fn(async () => null);
+    const h = harness({
+      draft: draftRow({ platforms: ['linkedin'], metadata: {} }),
+    });
+
+    await approveAndScheduleStudioDraft(INPUT, {
+      ...h.deps,
+      findScheduledStudioPost,
+    });
+
+    expect(findScheduledStudioPost).toHaveBeenCalledWith('d1', 'linkedin');
+    expect(h.schedule).toHaveBeenCalledTimes(1);
+    expect(h.schedule.mock.calls[0][0].metadata.idempotencyKey).toBe(
+      'studio:d1:linkedin'
+    );
   });
 });
 

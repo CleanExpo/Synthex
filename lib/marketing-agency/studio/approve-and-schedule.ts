@@ -52,6 +52,26 @@ import type { ResolvedStudioClient } from './clients';
 export const APPROVAL_BLOCKER = 'human_or_client_approval_required';
 /** The pack blocker an active platform connection for the business discharges. */
 export const CREDENTIALS_BLOCKER = 'platform_credentials_required';
+/**
+ * Blocker ids a caller may NOT discharge by naming them (review round 2,
+ * P1-CALLER-CAN-CLEAR-CREDENTIALS-BLOCKER): the approval is the click itself,
+ * and credentials come only from a live platform connection.
+ */
+export const RESERVED_CLEARANCES: ReadonlySet<string> = new Set([
+  APPROVAL_BLOCKER,
+  CREDENTIALS_BLOCKER,
+]);
+
+export class InvalidClearanceError extends Error {
+  readonly blockers: string[];
+  constructor(blockers: string[]) {
+    super(
+      `These blockers cannot be discharged by naming them: ${blockers.join(', ')}`
+    );
+    this.name = 'InvalidClearanceError';
+    this.blockers = blockers;
+  }
+}
 
 export interface ApproveAndScheduleInput {
   organizationId: string;
@@ -74,6 +94,20 @@ export interface ApproveAndScheduleDeps {
   isSchedulable?: (platform: string) => boolean;
   /** Does the business have an ACTIVE connection for this platform under the approver? */
   credentialsReady?: (platform: string) => Promise<boolean>;
+  /**
+   * The Post already scheduled for this draft + platform, if one exists — the
+   * idempotency read before every schedule (review round 2,
+   * P1-SCHEDULE-RETRY-LACKS-IDEMPOTENCY). Default: the Post table, matched on
+   * metadata.studioDraftId + platform, not soft-deleted.
+   */
+  findScheduledStudioPost?: (
+    draftId: string,
+    platform: string
+  ) => Promise<{
+    id: string;
+    platform: string;
+    scheduledAt: Date | string | null;
+  } | null>;
   now?: () => Date;
 }
 
@@ -83,6 +117,8 @@ export interface ScheduledStudioPost {
   scheduledAt: string;
   /** The UTM-tagged funnel link attached to this post, or null (no funnel). */
   linkUrl: string | null;
+  /** Present when an already-scheduled Post for this draft + platform was reused. */
+  reused?: true;
 }
 
 export interface SkippedStudioPlatform {
@@ -171,6 +207,25 @@ export async function approveAndScheduleStudioDraft(
       });
       return connection !== null;
     });
+  const findScheduledStudioPost =
+    deps.findScheduledStudioPost ??
+    (async (draftId: string, platform: string) =>
+      prisma.post.findFirst({
+        where: {
+          platform,
+          deletedAt: null,
+          metadata: { path: ['studioDraftId'], equals: draftId },
+        },
+        select: { id: true, platform: true, scheduledAt: true },
+        orderBy: { createdAt: 'desc' },
+      }));
+
+  // A caller may not discharge the reserved blockers by naming them. Refuse
+  // before anything is claimed.
+  const reserved = (input.clearances ?? []).filter(blocker =>
+    RESERVED_CLEARANCES.has(blocker)
+  );
+  if (reserved.length > 0) throw new InvalidClearanceError(reserved);
 
   // The human-approval gate, org-scoped, only from awaiting_approval.
   const count = await approveStudioDraft(
@@ -268,13 +323,13 @@ export async function approveAndScheduleStudioDraft(
       }
       const remaining: string[] = [];
       for (const blocker of blocks) {
-        if (blocker in clearances) continue;
-        if (
-          blocker === CREDENTIALS_BLOCKER &&
-          (await credentialsReady(platform))
-        ) {
+        // Credentials come only from a live connection — a recorded clearance,
+        // whoever wrote it, never stands in for one.
+        if (blocker === CREDENTIALS_BLOCKER) {
+          if (!(await credentialsReady(platform))) remaining.push(blocker);
           continue;
         }
+        if (blocker in clearances) continue;
         remaining.push(blocker);
       }
       if (remaining.length > 0) {
@@ -301,6 +356,27 @@ export async function approveAndScheduleStudioDraft(
         ? `${draft.script}\n\n${linkUrl}`
         : draft.script;
 
+    // Idempotency read: a Post for this draft + platform may already exist —
+    // an earlier attempt whose scheduler committed and then reported failure.
+    // Reuse it rather than create a second one.
+    const existing = await findScheduledStudioPost(draft.id, platform);
+    if (existing) {
+      const existingAt =
+        existing.scheduledAt === null
+          ? scheduledAt.toISOString()
+          : typeof existing.scheduledAt === 'string'
+            ? existing.scheduledAt
+            : existing.scheduledAt.toISOString();
+      scheduled.push({
+        platform: existing.platform,
+        postId: existing.id,
+        scheduledAt: existingAt,
+        linkUrl,
+        reused: true,
+      });
+      continue;
+    }
+
     try {
       const post = await schedule({
         userId: approvedBy,
@@ -312,6 +388,7 @@ export async function approveAndScheduleStudioDraft(
         metadata: {
           source: 'studio',
           studioDraftId: draft.id,
+          idempotencyKey: `studio:${draft.id}:${platform}`,
           clientSlug: draft.clientSlug,
           topic: draft.topic,
           ...(authorityCampaignId ? { authorityCampaignId } : {}),

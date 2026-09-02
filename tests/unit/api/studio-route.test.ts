@@ -53,6 +53,13 @@ jest.mock('@/lib/marketing-agency/studio/draft-store', () => ({
 jest.mock('@/lib/marketing-agency/studio/approve-and-schedule', () => ({
   approveAndScheduleStudioDraft: (...args: unknown[]) =>
     mockApproveAndSchedule(...args),
+  APPROVAL_BLOCKER: 'human_or_client_approval_required',
+  CREDENTIALS_BLOCKER: 'platform_credentials_required',
+  RESERVED_CLEARANCES: new Set([
+    'human_or_client_approval_required',
+    'platform_credentials_required',
+  ]),
+  InvalidClearanceError: class InvalidClearanceError extends Error {},
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
@@ -304,6 +311,30 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
     expect(mockApproveAndSchedule.mock.calls[0][0].clearances).toEqual([
       'final_asset_rights_check_required',
     ]);
+  });
+
+  it('returns 400 when clearances name a reserved blocker (credentials must come from a live connection)', async () => {
+    const res = await POST(
+      approveRequest({
+        draftId: 'd1',
+        clearances: ['platform_credentials_required'],
+      }),
+      ctx
+    );
+    expect(res.status).toBe(400);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when clearances name the approval blocker (the click is the approval)', async () => {
+    const res = await POST(
+      approveRequest({
+        draftId: 'd1',
+        clearances: ['human_or_client_approval_required'],
+      }),
+      ctx
+    );
+    expect(res.status).toBe(400);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
   it('answers 409 with the reasons when the pack blocks external publishing (the draft is handed back)', async () => {

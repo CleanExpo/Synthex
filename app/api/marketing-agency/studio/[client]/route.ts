@@ -23,7 +23,11 @@ import { hasOrganizationAccess } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { listStudioDrafts } from '@/lib/marketing-agency/studio/draft-store';
-import { approveAndScheduleStudioDraft } from '@/lib/marketing-agency/studio/approve-and-schedule';
+import {
+  approveAndScheduleStudioDraft,
+  InvalidClearanceError,
+  RESERVED_CLEARANCES,
+} from '@/lib/marketing-agency/studio/approve-and-schedule';
 import { resolveStudioClient } from '@/lib/marketing-agency/studio/clients';
 
 export const runtime = 'nodejs';
@@ -126,7 +130,14 @@ const approveSchema = z.object({
    * Campaign-pack blocker ids the approver explicitly discharges with this
    * approval (e.g. `final_asset_rights_check_required`). Recorded on the draft.
    */
-  clearances: z.array(z.string().min(1).max(120)).max(10).optional(),
+  clearances: z
+    .array(z.string().min(1).max(120))
+    .max(10)
+    .optional()
+    .refine(
+      list => !list?.some(blocker => RESERVED_CLEARANCES.has(blocker)),
+      'The approval and credentials blockers cannot be discharged by naming them'
+    ),
 });
 
 export async function POST(request: NextRequest, { params }: RouteCtx) {
@@ -232,6 +243,13 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
         );
     }
   } catch (error) {
+    if (error instanceof InvalidClearanceError) {
+      return APISecurityChecker.createSecureResponse(
+        { error: error.message, blockers: error.blockers },
+        400,
+        security.context
+      );
+    }
     logger.error('studio draft approval failed', {
       organizationId,
       error: error instanceof Error ? error.message : 'Unknown error',

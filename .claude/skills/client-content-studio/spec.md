@@ -8,9 +8,9 @@ Every per-client avatar+voice artefact this connector produces is foundation-che
 
 - `.claude/memory/ceo-foundation.md` — Aid Rule (Q3.1.1) on RestoreAssist, consent records, cross-client boundary (Phase 3.4), no fabricated client metrics
 - `.claude/memory/verification-gates.md`
-- Per-client config from `lib/marketing-agency/studio/clients.ts` (`STUDIO_CLIENTS`, `getStudioClient` — clientSlug, avatarId, voiceId, consent, platforms)
+- Per-client config derived from the `Organization` record by `lib/marketing-agency/studio/clients.ts` (`resolveStudioClient` — `settings.studio` → legacy env layer → `video: null`; never a placeholder)
 - Per-client trigger input (daily cron OR `ClientEngagementEvent`)
-- Env-only provider keys (`HEYGEN_API_KEY`, `ELEVENLABS_API_KEY`) and per-client overrides (`RA_HEYGEN_AVATAR_ID`, `RA_ELEVENLABS_VOICE_ID`, `RA_CONSENT_REF`, `RA_PRESENTER_NAME`)
+- Env-only provider keys (`HEYGEN_API_KEY`, `ELEVENLABS_API_KEY`) and the legacy per-client env layer for the two pilots (`RA_HEYGEN_AVATAR_ID`, `RA_ELEVENLABS_VOICE_ID`, `RA_CONSENT_REF`, `RA_PRESENTER_NAME`, `RA_CONSENT_CONFIRMED_AT`; all five required, and the `CARSI_` set)
 
 ## Acceptance criteria
 
