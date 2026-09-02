@@ -298,12 +298,18 @@ export async function getEffectiveQueryFilter(
  *
  * @param userId - The user ID
  * @param organizationId - The organization ID to check access for
+ * @param options.includeParentWorkspace - default true. Pass false for an
+ *   action that must be taken by someone who belongs to the target
+ *   organisation itself (its member, owner, or direct user) — a member of the
+ *   parent workspace who holds no role in the child is then refused.
  * @returns True if user has access
  */
 export async function hasOrganizationAccess(
   userId: string,
-  organizationId: string
+  organizationId: string,
+  options: { includeParentWorkspace?: boolean } = {}
 ): Promise<boolean> {
+  const includeParentWorkspace = options.includeParentWorkspace ?? true;
   try {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -361,7 +367,7 @@ export async function hasOrganizationAccess(
     }
 
     // Master admin: member of the target's parent workspace org.
-    if (target.parentOrgId) {
+    if (includeParentWorkspace && target.parentOrgId) {
       const parentMembership = await prisma.organization.findFirst({
         where: { id: target.parentOrgId, users: { some: { id: userId } } },
         select: { id: true },
@@ -380,6 +386,22 @@ export async function hasOrganizationAccess(
     });
     return false;
   }
+}
+
+/**
+ * Access to the target organisation ITSELF — direct member, active
+ * multi-business owner, or user of the org — never through membership of a
+ * parent workspace. The check for an action that publishes on the
+ * organisation's behalf (a Studio approval): being able to see a child brand
+ * from the parent is not the same as being allowed to speak for it.
+ */
+export async function hasDirectOrganizationAccess(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  return hasOrganizationAccess(userId, organizationId, {
+    includeParentWorkspace: false,
+  });
 }
 
 /**

@@ -23,7 +23,31 @@
  *                                        `externalPublishClearances`, written
  *                                        when the approver names it explicitly
  *
- * `externalPublishingAllowed` becomes true only once nothing remains blocked.
+ * Decisions the engineering bench forced into the open (engineering.md beside
+ * the spec):
+ *
+ *   - ALL OR NOTHING. An approval commits only when EVERY cron-eligible platform
+ *     got a Post (created or reused). One blocked platform rolls the whole
+ *     attempt back and the draft stays `awaiting_approval`, so a retry is always
+ *     the full set and no platform is ever stranded behind a committed claim.
+ *     A draft with no eligible platform at all (owned media only) commits as
+ *     `approved` with nothing scheduled — and nothing cleared.
+ *   - `externalPublishingAllowed` flips to true ONLY on a commit where an
+ *     eligible platform was scheduled. It is a positive fact, never the absence
+ *     of a reason string, so a channel the Studio cannot schedule (blog,
+ *     newsletter) can never discharge the pack's blockers by being skipped.
+ *   - The organisation's publish-safety state applies to Studio posts exactly as
+ *     it does to autopilot posts: `calendarMode` must be `live` and auto-publish
+ *     must not be paused (lib/publish/safetyChecks.ts). A shadow-mode or paused
+ *     org gets `blocked` here, and the cron enforces the same gate at publish
+ *     time for a flag flipped after the approval.
+ *   - The funnel link travels in the post TEXT unless the platform renders
+ *     `linkUrl` as a card (LinkedIn, Facebook, Reddit, Pinterest) and the post
+ *     has no media. A recorded link the adapter would drop is never claimed.
+ *   - A rolled-back attempt persists NOTHING but its own record
+ *     (`metadata.studioScheduleAttempt`), merged at the database into the keys
+ *     it owns. Clearances the approver named are recorded only when the
+ *     approval commits; a retry names them again.
  *
  * The claim and the schedule are ONE database transaction (review round 5).
  * Rounds 1 to 5 each found a new path by which a claim that had already
@@ -33,13 +57,14 @@
  * is a second best-effort write and cannot carry the invariant "every
  * post-claim failure hands the draft back". So the claim, the draft read, the
  * lookups, the Post creation and the final record all run inside
- * `prisma.$transaction(async tx => …)`:
+ * `prisma.$transaction(async tx => …)`, with a server-side statement timeout
+ * set first so the budget is enforced by Postgres, not by a client timer:
  *
- *   - blocked, or nothing scheduled → the transaction is rolled back on
- *     purpose (a private signal is thrown) and the attempt is recorded
- *     afterwards, best effort, outside the transaction. Losing that record
- *     changes nothing: the draft is `awaiting_approval` because the claim
- *     never persisted, not because something wrote it back;
+ *   - blocked, or not every eligible platform scheduled → the transaction is
+ *     rolled back on purpose (a private signal is thrown) and the attempt is
+ *     recorded afterwards, best effort, outside the transaction. Losing that
+ *     record changes nothing: the draft is `awaiting_approval` because the
+ *     claim never persisted, not because something wrote it back;
  *   - any thrown failure → rolled back; the error propagates and the route
  *     answers 500 with the draft untouched;
  *   - all-or-nothing on errors: Postgres aborts a transaction at its first
@@ -68,14 +93,19 @@
 import type { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { trackError } from '@/lib/observability/error-tracker';
 import { isPlatformSupported } from '@/lib/social';
 import {
   scheduleViaPost,
   type ScheduleViaPostInput,
   type ScheduleViaPostResult,
 } from '@/lib/social/schedule-via-post';
+import {
+  resolveOrgAutoPublishGate,
+  type OrgAutoPublishGate,
+} from '@/lib/publish/safetyChecks';
 import { buildUtmUrl } from '@/lib/utm/build-utm-url';
-import { approveStudioDraft, type StudioDraftDelegate } from './draft-store';
+import { approveStudioDraft } from './draft-store';
 import type { ResolvedStudioClient } from './clients';
 
 /** The pack blocker the Studio approval itself discharges. */
@@ -108,14 +138,30 @@ export const REUSABLE_POST_STATUSES: ReadonlySet<string> = new Set([
 export const TERMINAL_POST_STATUSES: ReadonlySet<string> = new Set(['failed']);
 
 /**
- * The interactive transaction's bounds: wait up to 5 s for a pooled connection
- * (the pool holds three), then the handful of queries inside has 15 s. No
- * external call runs inside it.
+ * Platforms whose adapter renders `content.linkUrl` as a link card
+ * (lib/social/{linkedin,facebook,reddit,pinterest}-service.ts read it; the
+ * other adapters ignore the field). Everywhere else the link goes in the text.
+ */
+export const LINK_CARD_PLATFORMS: ReadonlySet<string> = new Set([
+  'linkedin',
+  'facebook',
+  'reddit',
+  'pinterest',
+]);
+
+/**
+ * The interactive transaction's bounds: wait up to 2 s for a pooled connection
+ * (the pool holds three), then the handful of queries inside has 15 s in total
+ * and each statement 5 s on the server (`APPROVAL_STATEMENT_TIMEOUT_MS`, set
+ * with `SET LOCAL` as the transaction's first statement, so Postgres can
+ * interrupt a runaway query — the client timer cannot). No external call runs
+ * inside it.
  */
 export const APPROVAL_TRANSACTION_OPTIONS = {
-  maxWait: 5000,
+  maxWait: 2000,
   timeout: 15000,
 } as const;
+export const APPROVAL_STATEMENT_TIMEOUT_MS = 5000;
 
 export class InvalidClearanceError extends Error {
   readonly blockers: string[];
@@ -138,7 +184,8 @@ export interface ApproveAndScheduleInput {
   /**
    * Pack blocker ids the approver explicitly discharges with this approval
    * (e.g. `final_asset_rights_check_required`). Recorded on the draft with who
-   * and when; never implied. The reserved ids are refused.
+   * and when — only when the approval commits; never implied. The reserved
+   * ids are refused.
    */
   clearances?: string[];
 }
@@ -156,14 +203,28 @@ export type StudioTransactionRunner = <T>(
   fn: (tx: Prisma.TransactionClient) => Promise<T>
 ) => Promise<T>;
 
+/** The rolled-back attempt, as recorded on the draft under `studioScheduleAttempt`. */
+export interface StudioScheduleAttempt {
+  attemptedAt: string;
+  attemptedBy: string;
+  outcome: 'blocked' | 'schedule_failed';
+  /** Blocker ids the approver named on this attempt (not recorded as cleared). */
+  clearancesRequested: string[];
+  skipped: SkippedStudioPlatform[];
+}
+
 export interface ApproveAndScheduleDeps {
   /** Default: `prisma.$transaction(fn, APPROVAL_TRANSACTION_OPTIONS)`. */
   runInTransaction?: StudioTransactionRunner;
   /**
-   * The draft delegate used OUTSIDE the transaction, only to record a
-   * rolled-back attempt (best effort). Default: `prisma.studioContentDraft`.
+   * Records a rolled-back attempt on the still-awaiting draft, OUTSIDE the
+   * transaction, merging ONLY `metadata.studioScheduleAttempt` at the database
+   * (`metadata || …`) so a concurrent writer's keys survive. Best effort.
    */
-  delegate?: StudioDraftDelegate;
+  recordAttempt?: (
+    target: { organizationId: string; id: string },
+    attempt: StudioScheduleAttempt
+  ) => Promise<void>;
   /** Creates the Post through the transaction client it is handed. */
   schedule?: (
     input: ScheduleViaPostInput,
@@ -175,6 +236,14 @@ export interface ApproveAndScheduleDeps {
     platform: string,
     tx: Prisma.TransactionClient
   ) => Promise<boolean>;
+  /**
+   * The organisation's publish-safety state (calendar mode + pause flag), read
+   * through the transaction. Default: `resolveOrgAutoPublishGate`.
+   */
+  publishGate?: (
+    organizationId: string,
+    tx: Prisma.TransactionClient
+  ) => Promise<OrgAutoPublishGate>;
   /**
    * The Post already carrying this draft + platform for the approving
    * organisation, if any — the idempotency read before every schedule.
@@ -193,7 +262,11 @@ export interface ScheduledStudioPost {
   platform: string;
   postId: string;
   scheduledAt: string;
-  /** The UTM-tagged funnel link attached to this post, or null (no funnel). */
+  /**
+   * The UTM-tagged funnel link this post carries — as a card on a
+   * `LINK_CARD_PLATFORMS` platform without media, otherwise in the text — or
+   * null when the business has no usable funnel.
+   */
   linkUrl: string | null;
   /** Present when an existing Post for this draft + platform was reused. */
   reused?: true;
@@ -207,11 +280,11 @@ export interface SkippedStudioPlatform {
 }
 
 export type ApproveOutcome =
-  /** the draft is in `approved`; at least one Post exists, or no platform was cron-eligible */
+  /** the draft is in `approved`; every eligible platform has a Post, or no platform was cron-eligible */
   | 'approved'
   /** no row matched: missing, wrong org, or not awaiting approval — nothing happened */
   | 'not_awaiting_approval'
-  /** every eligible platform was blocked; the claim rolled back, the draft is still `awaiting_approval` */
+  /** at least one eligible platform was blocked; the claim rolled back, the draft is still `awaiting_approval` */
   | 'blocked'
   /** a read, lookup or schedule failed; the claim rolled back, the draft is still `awaiting_approval` */
   | 'schedule_failed';
@@ -234,7 +307,7 @@ type ClearanceRecord = { clearedBy: string; clearedAt: string; via: string };
 class RollbackSignal extends Error {
   constructor(
     readonly result: ApproveAndScheduleResult,
-    readonly attempt: Prisma.InputJsonObject | null
+    readonly attempt: StudioScheduleAttempt | null
   ) {
     super(`studio approval rolled back: ${result.outcome}`);
     this.name = 'RollbackSignal';
@@ -262,6 +335,16 @@ export function buildStudioFunnelLink(
     campaign: tag.campaign ?? `studio-${tag.clientSlug}`,
     content: tag.draftId,
   });
+}
+
+/** The reason an organisation's publish-safety state blocks a Studio post, or null. */
+export function publishGateBlockReason(
+  gate: OrgAutoPublishGate
+): string | null {
+  if (gate.allowed) return null;
+  return gate.calendarMode !== 'live'
+    ? `org_publish_gate: calendar_mode_${gate.calendarMode}`
+    : 'org_publish_gate: auto_publish_paused';
 }
 
 function asJsonObject(
@@ -298,6 +381,25 @@ function defaultRunInTransaction<T>(
   return prisma.$transaction(fn, APPROVAL_TRANSACTION_OPTIONS);
 }
 
+/**
+ * Merge the attempt record into the draft's metadata AT THE DATABASE, touching
+ * only its own key, on the row that is still awaiting approval. A whole-column
+ * write from an application-side snapshot would overwrite anything a
+ * concurrent writer (the content loop, a re-seed) added since the read.
+ */
+async function defaultRecordAttempt(
+  target: { organizationId: string; id: string },
+  attempt: StudioScheduleAttempt
+): Promise<void> {
+  const patch = JSON.stringify({ studioScheduleAttempt: attempt });
+  await prisma.$executeRaw`UPDATE studio_content_drafts
+    SET metadata = COALESCE(metadata, '{}'::jsonb) || ${patch}::jsonb,
+        updated_at = now()
+    WHERE id = ${target.id}
+      AND organization_id = ${target.organizationId}
+      AND status = 'awaiting_approval'`;
+}
+
 function handBack(
   outcome: 'blocked' | 'schedule_failed',
   skipped: SkippedStudioPlatform[]
@@ -310,15 +412,22 @@ export async function approveAndScheduleStudioDraft(
   deps: ApproveAndScheduleDeps = {}
 ): Promise<ApproveAndScheduleResult> {
   const runInTransaction = deps.runInTransaction ?? defaultRunInTransaction;
-  const delegate = deps.delegate ?? prisma.studioContentDraft;
+  const recordAttempt = deps.recordAttempt ?? defaultRecordAttempt;
   const schedule = deps.schedule ?? scheduleViaPost;
   const isSchedulable = deps.isSchedulable ?? isPlatformSupported;
+  const publishGate =
+    deps.publishGate ??
+    ((orgId: string, tx: Prisma.TransactionClient) =>
+      resolveOrgAutoPublishGate(orgId, tx));
   const now = deps.now ?? (() => new Date());
   const { organizationId, id, approvedBy } = input;
   const credentialsReady =
     deps.credentialsReady ??
     (async (platform: string, tx: Prisma.TransactionClient) => {
       // The row the cron resolves for a due post: approver + platform + org.
+      // A legacy connection with no organisation does not publish an
+      // org-scoped post either (the cron's unscoped fallback applies only to
+      // posts that carry no organisation), so it does not discharge the blocker.
       const connection = await tx.platformConnection.findFirst({
         where: { userId: approvedBy, platform, isActive: true, organizationId },
         select: { id: true },
@@ -343,7 +452,8 @@ export async function approveAndScheduleStudioDraft(
 
   // A caller may not discharge the reserved blockers by naming them. Refuse
   // before anything is claimed.
-  const reserved = (input.clearances ?? []).filter(blocker =>
+  const clearancesRequested = input.clearances ?? [];
+  const reserved = clearancesRequested.filter(blocker =>
     RESERVED_CLEARANCES.has(blocker)
   );
   if (reserved.length > 0) throw new InvalidClearanceError(reserved);
@@ -351,6 +461,14 @@ export async function approveAndScheduleStudioDraft(
   let signal: RollbackSignal;
   try {
     return await runInTransaction(async tx => {
+      // The per-statement budget, enforced by the server for this transaction
+      // only. First, so every statement below is covered. `SET` takes no bound
+      // parameter, so the statement is built from a compile-time constant and
+      // nothing else.
+      await tx.$executeRawUnsafe(
+        `SET LOCAL statement_timeout = ${APPROVAL_STATEMENT_TIMEOUT_MS}`
+      );
+
       // The human-approval gate, org-scoped, only from awaiting_approval.
       const count = await approveStudioDraft(
         { organizationId, id, approvedBy },
@@ -397,6 +515,10 @@ export async function approveAndScheduleStudioDraft(
           draftId: id,
           error: errorMessage(error),
         });
+        trackError(error, {
+          operation: 'studio/approve-and-schedule',
+          metadata: { organizationId, draftId: id, stage: 'draft_read' },
+        });
         throw new RollbackSignal(
           handBack('schedule_failed', [
             {
@@ -421,9 +543,15 @@ export async function approveAndScheduleStudioDraft(
       }
 
       const metadata = asJsonObject(draft.metadata);
-      const platforms = (
-        Array.isArray(draft.platforms) ? draft.platforms : []
-      ).filter((platform): platform is string => typeof platform === 'string');
+      // Deduplicated: a repeated entry in settings.studio.platforms is one
+      // platform, not a second Post and a second round trip.
+      const platforms = Array.from(
+        new Set(
+          (Array.isArray(draft.platforms) ? draft.platforms : []).filter(
+            (platform): platform is string => typeof platform === 'string'
+          )
+        )
+      );
       const scheduledAt = input.scheduledAt ?? now();
       const approvedAt = now().toISOString();
       const scheduled: ScheduledStudioPost[] = [];
@@ -439,7 +567,8 @@ export async function approveAndScheduleStudioDraft(
           : undefined;
 
       // What the pack wants "recorded": the approval itself, plus any blocker
-      // the approver names explicitly. Earlier attempts' clearances are kept.
+      // the approver names explicitly. Earlier committed clearances are kept.
+      // Written only when this approval commits.
       const clearance: ClearanceRecord = {
         clearedBy: approvedBy,
         clearedAt: approvedAt,
@@ -449,26 +578,31 @@ export async function approveAndScheduleStudioDraft(
         ...asJsonObject(metadata.externalPublishClearances),
         [APPROVAL_BLOCKER]: clearance,
       };
-      for (const blocker of input.clearances ?? []) {
+      for (const blocker of clearancesRequested) {
         clearances[blocker] = clearance;
       }
 
-      // The attempt as the board will show it once the claim has rolled back:
-      // the approval and clearances on record, nothing scheduled, the reasons.
       const attemptRecord = (
+        outcome: 'blocked' | 'schedule_failed',
         reasons: SkippedStudioPlatform[]
-      ): Prisma.InputJsonObject => ({
-        ...metadata,
-        externalPublishClearances: clearances,
-        studioSchedule: {
-          attemptedAt: approvedAt,
-          scheduled: [],
-          skipped: reasons.map(entry => ({
-            platform: entry.platform,
-            reason: entry.reason,
-          })),
-        },
+      ): StudioScheduleAttempt => ({
+        attemptedAt: approvedAt,
+        attemptedBy: approvedBy,
+        outcome,
+        clearancesRequested,
+        skipped: reasons.map(entry => ({
+          platform: entry.platform,
+          reason: entry.reason,
+        })),
       });
+
+      // Posts that exist at the moment of a rollback, as the caller should
+      // read them: created ones are gone, reused ones are untouched.
+      const rolledBack = (): SkippedStudioPlatform[] =>
+        scheduled.map(post => ({
+          platform: post.platform,
+          reason: post.reused ? 'existing_post_kept' : 'rolled_back',
+        }));
 
       let eligible = 0;
 
@@ -480,11 +614,13 @@ export async function approveAndScheduleStudioDraft(
           campaign: authorityCampaignId,
         });
         const mediaUrls = draft.videoUrl ? [draft.videoUrl] : [];
-        // LinkedIn attaches a link as an ARTICLE card only when the post has no
-        // media and drops it otherwise, so a media post carries the link in its
-        // text rather than losing it.
+        // The link rides as a card only where the adapter renders one AND the
+        // post has no media (LinkedIn drops the card behind media). Everywhere
+        // else it goes in the text, so a recorded link is a delivered link.
+        const asCard =
+          LINK_CARD_PLATFORMS.has(platform) && mediaUrls.length === 0;
         const content =
-          linkUrl && mediaUrls.length > 0 && !draft.script.includes(linkUrl)
+          linkUrl && !asCard && !draft.script.includes(linkUrl)
             ? `${draft.script}\n\n${linkUrl}`
             : draft.script;
 
@@ -528,7 +664,7 @@ export async function approveAndScheduleStudioDraft(
               clientSlug: draft.clientSlug,
               topic: draft.topic,
               ...(authorityCampaignId ? { authorityCampaignId } : {}),
-              ...(linkUrl ? { linkUrl } : {}),
+              ...(linkUrl && asCard ? { linkUrl } : {}),
             },
           },
           tx
@@ -543,19 +679,28 @@ export async function approveAndScheduleStudioDraft(
 
       let current: string | null = null;
       try {
+        // The organisation's publish-safety state gates every platform alike:
+        // a shadow-mode or paused org does not get a Post from the Studio.
+        const orgGate = publishGateBlockReason(
+          await publishGate(organizationId, tx)
+        );
+
         for (const platform of platforms) {
           current = platform;
           const schedulable = isSchedulable(platform);
-          if (rightsBlocked) {
-            if (schedulable) eligible += 1;
-            skipped.push({ platform, reason: 'owned_media_gate_blocked' });
-            continue;
-          }
           if (!schedulable) {
             skipped.push({ platform, reason: 'platform_not_schedulable' });
             continue;
           }
           eligible += 1;
+          if (rightsBlocked) {
+            skipped.push({ platform, reason: 'owned_media_gate_blocked' });
+            continue;
+          }
+          if (orgGate) {
+            skipped.push({ platform, reason: orgGate });
+            continue;
+          }
 
           if (externalDenied) {
             const blocks = asStringArray(externalBlocks[platform]);
@@ -597,45 +742,52 @@ export async function approveAndScheduleStudioDraft(
           platform: current,
           error: message,
         });
+        trackError(error, {
+          operation: 'studio/approve-and-schedule',
+          metadata: {
+            organizationId,
+            draftId: draft.id,
+            platform: current,
+            stage: 'schedule',
+          },
+        });
         const reasons: SkippedStudioPlatform[] = [
           ...skipped,
-          ...scheduled.map(post => ({
-            platform: post.platform,
-            reason: post.reused ? 'existing_post_kept' : 'rolled_back',
-          })),
+          ...rolledBack(),
           { platform: current ?? '*', reason: `schedule_failed: ${message}` },
         ];
         throw new RollbackSignal(
           handBack('schedule_failed', reasons),
-          attemptRecord(reasons)
+          attemptRecord('schedule_failed', reasons)
         );
       }
 
-      // A cron-eligible platform existed and none got a Post: roll the claim
-      // back so the approval can be retried once the block clears. The
-      // approval stays on record in the clearances.
-      if (eligible > 0 && scheduled.length === 0) {
+      // ALL OR NOTHING: an eligible platform without a Post rolls the claim
+      // back, so the retry is the whole set once the block clears. The board
+      // shows why from the attempt record.
+      if (scheduled.length < eligible) {
+        const reasons = [...skipped, ...rolledBack()];
+        logger.warn('studio approval blocked', {
+          organizationId,
+          draftId: draft.id,
+          reasons: Array.from(new Set(skipped.map(entry => entry.reason))),
+        });
         throw new RollbackSignal(
-          handBack('blocked', skipped),
-          attemptRecord(skipped)
+          handBack('blocked', reasons),
+          attemptRecord('blocked', reasons)
         );
       }
-
-      const externalBlockRemains = skipped.some(entry =>
-        entry.reason.startsWith('external_publish')
-      );
 
       // Record what happened on the draft — the pack's publish rule wants the
       // approval and the outcome written down, and the board shows both. This
-      // commits with the claim and the Posts, or not at all.
+      // commits with the claim and the Posts, or not at all. The publish flag
+      // flips on the positive fact that every eligible platform was scheduled.
       await tx.studioContentDraft.updateMany({
         where: { id, organizationId },
         data: {
           metadata: {
             ...metadata,
-            ...(rightsBlocked || externalBlockRemains
-              ? {}
-              : { externalPublishingAllowed: true }),
+            ...(eligible > 0 ? { externalPublishingAllowed: true } : {}),
             externalPublishApprovedBy: approvedBy,
             externalPublishApprovedAt: approvedAt,
             externalPublishClearances: clearances,
@@ -668,13 +820,10 @@ export async function approveAndScheduleStudioDraft(
   // from this attempt exists — nothing had to be written to make that true.
   // Record the attempt so the board can show why, on the still-awaiting row
   // only (a concurrent approval that has since claimed it keeps its own
-  // record). Best effort: losing this changes nothing.
+  // record), merging only this key. Best effort: losing this changes nothing.
   if (signal.attempt) {
     try {
-      await delegate.updateMany({
-        where: { id, organizationId, status: 'awaiting_approval' },
-        data: { metadata: signal.attempt },
-      });
+      await recordAttempt({ organizationId, id }, signal.attempt);
     } catch (error) {
       logger.warn('studio approval attempt could not be recorded', {
         organizationId,

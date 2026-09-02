@@ -146,9 +146,12 @@ from a campaign pack with `externalPublishingAllowed: false` is deny-by-default:
 platform's `externalPublishBlocks` must be discharged — approval (the click), credentials
 (an active platform connection for the business), anything else (e.g. the final
 asset-rights check) by naming it in the approve request's `clearances`. The approval
-claim and the schedule run in one database transaction: a blocked or failed schedule
-rolls the claim back, so the draft is still `awaiting_approval` (HTTP 409 / 502) and
-the click can simply be retried.
+claim and the schedule run in one database transaction and are all-or-nothing across
+the draft's cron-eligible platforms: a blocked or failed platform rolls the claim
+back, so the draft is still `awaiting_approval` (HTTP 409 / 502) and the click can
+simply be retried once the block clears. The organisation must be `calendarMode: live`
+and not paused (the same publish-safety state autopilot obeys), and the approver must
+belong to the organisation itself, not only to its parent workspace.
 
 ## Environment
 

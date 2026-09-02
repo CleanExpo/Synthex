@@ -73,9 +73,20 @@ const consentSchema = z.object({
   confirmedAt: z.string().min(1),
 });
 
-const studioSettingsSchema = z.object({
+/** The nine platforms lib/social supports; the bound the approval loop runs to. */
+export const MAX_STUDIO_PLATFORMS = 9;
+
+/**
+ * Shape of `Organization.settings.studio`. Exported so the organisation PATCH
+ * route validates a write with the same schema the Studio reads with.
+ */
+export const studioSettingsSchema = z.object({
   displayName: z.string().min(1).optional(),
-  platforms: z.array(z.string().min(1)).min(1).optional(),
+  platforms: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(MAX_STUDIO_PLATFORMS)
+    .optional(),
   funnelUrl: z.string().url().optional(),
   avatarId: z.string().min(1).optional(),
   voiceId: z.string().min(1).optional(),
@@ -195,6 +206,34 @@ function videoFromEnv(
 }
 
 /**
+ * `Organization.website` is free text nothing ever required to be a URL. It
+ * becomes a funnel link only when it is an absolute http(s) URL — the shape
+ * `buildUtmUrl` parses — otherwise the post carries no link and the board says
+ * why. A bare domain typed into a profile form must never make every approval
+ * fail with "Invalid URL".
+ */
+function funnelFromWebsite(
+  website: string | null | undefined,
+  warnings: string[]
+): string | null {
+  if (!website) return null;
+  const value = website.trim();
+  let parsed: URL | null = null;
+  try {
+    parsed = new URL(value);
+  } catch {
+    parsed = null;
+  }
+  if (parsed && (parsed.protocol === 'http:' || parsed.protocol === 'https:')) {
+    return value;
+  }
+  warnings.push(
+    `organisation website is not an absolute http(s) URL (${value}) — no funnel link is attached; set settings.studio.funnelUrl`
+  );
+  return null;
+}
+
+/**
  * Derive the Studio client for an organisation. Pure: no Prisma, no network.
  * `env` is injectable so the legacy layer is testable without touching
  * `process.env`.
@@ -220,7 +259,7 @@ export function resolveStudioClient(
     clientSlug: org.slug,
     displayName: studio?.displayName ?? org.name,
     platforms: studio?.platforms ?? [...DEFAULT_STUDIO_PLATFORMS],
-    funnelUrl: studio?.funnelUrl ?? org.website ?? null,
+    funnelUrl: studio?.funnelUrl ?? funnelFromWebsite(org.website, warnings),
     video,
     configSource,
     warnings,

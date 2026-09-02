@@ -12,6 +12,14 @@ Every per-client avatar+voice artefact this connector produces is foundation-che
 - Per-client trigger input (daily cron OR `ClientEngagementEvent`)
 - Env-only provider keys (`HEYGEN_API_KEY`, `ELEVENLABS_API_KEY`) and the legacy per-client env layer for the two pilots (`RA_HEYGEN_AVATAR_ID`, `RA_ELEVENLABS_VOICE_ID`, `RA_CONSENT_REF`, `RA_PRESENTER_NAME`, `RA_CONSENT_CONFIRMED_AT`; all five required, and the `CARSI_` set)
 
+## Decisions (engineering bench, 2026-09-03)
+
+- `organizationId` is the tenancy key; `clientSlug` is a display key copied from `Organization.slug` and may diverge after a rename. Every Studio read and write is scoped by `organizationId`.
+- A Studio approval publishes on the organisation's behalf, so the approver must belong to that organisation itself (member, owner, or user); membership of the parent workspace alone does not approve.
+- A Studio post is gated by the organisation's publish-safety state exactly like an autopilot post: `calendarMode` must be `live` and auto-publish must not be paused, checked at approval and again by the cron at publish time. A pilot publishes nothing until its organisation is set to `live`.
+- Approval is all-or-nothing across a draft's cron-eligible platforms: every one gets a Post or the claim rolls back. `externalPublishingAllowed` flips only on that commit. A rolled-back attempt persists nothing but its own record (`metadata.studioScheduleAttempt`); clearances the approver named are recorded only on commit.
+- The funnel link travels in the post text unless the platform renders `linkUrl` as a card (LinkedIn, Facebook, Reddit, Pinterest) and the post has no media.
+
 ## Acceptance criteria
 
 - [ ] SKILL.md carries the Foundation & Gate Wiring section.

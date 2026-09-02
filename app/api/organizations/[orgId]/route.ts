@@ -23,20 +23,39 @@ import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ClientLabelPolicySchema } from '@/lib/intentscape/client-label-pipeline';
+import { studioSettingsSchema } from '@/lib/marketing-agency/studio/clients';
 
 const organizationSettingsSchema = z
   .record(z.string(), z.unknown())
   .superRefine((settings, context) => {
-    if (settings.autoLabelPipeline === undefined) return;
-    const result = ClientLabelPolicySchema.safeParse(
-      settings.autoLabelPipeline
-    );
-    if (!result.success) {
-      context.addIssue({
-        code: 'custom',
-        path: ['autoLabelPipeline'],
-        message: 'Auto Label Pipeline policy is invalid.',
-      });
+    if (settings.autoLabelPipeline !== undefined) {
+      const result = ClientLabelPolicySchema.safeParse(
+        settings.autoLabelPipeline
+      );
+      if (!result.success) {
+        context.addIssue({
+          code: 'custom',
+          path: ['autoLabelPipeline'],
+          message: 'Auto Label Pipeline policy is invalid.',
+        });
+      }
+    }
+    // The Studio reads `settings.studio` with this exact schema and ignores
+    // the whole object on any error, so an invalid write must fail HERE, at
+    // the moment it is typed, not silently at the next board read.
+    if (settings.studio !== undefined && settings.studio !== null) {
+      const studio = studioSettingsSchema.safeParse(settings.studio);
+      if (!studio.success) {
+        context.addIssue({
+          code: 'custom',
+          path: ['studio'],
+          message: `Studio settings are invalid: ${studio.error.issues
+            .map(
+              issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`
+            )
+            .join('; ')}`,
+        });
+      }
     }
   });
 
@@ -325,7 +344,25 @@ export async function PATCH(
     if (updateData.settings !== undefined) {
       const { provisioning: _clientSupplied, ...clientSettings } =
         updateData.settings as Record<string, unknown>;
-      const mergedSettings = { ...existingSettings, ...clientSettings };
+      // `settings.studio` merges one level deeper: it carries the avatar, the
+      // voice and the likeness-consent record together, and a PATCH that
+      // sends only `{ studio: { funnelUrl } }` must not erase the consent.
+      const existingStudio = existingSettings.studio;
+      const clientStudio = clientSettings.studio;
+      const studio =
+        existingStudio &&
+        typeof existingStudio === 'object' &&
+        !Array.isArray(existingStudio) &&
+        clientStudio &&
+        typeof clientStudio === 'object' &&
+        !Array.isArray(clientStudio)
+          ? { ...existingStudio, ...clientStudio }
+          : clientStudio;
+      const mergedSettings = {
+        ...existingSettings,
+        ...clientSettings,
+        ...(clientStudio !== undefined ? { studio } : {}),
+      };
       updateData.settings = isProvisioned
         ? { ...mergedSettings, provisioning: existingSettings.provisioning }
         : mergedSettings;

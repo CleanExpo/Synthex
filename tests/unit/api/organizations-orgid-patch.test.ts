@@ -291,3 +291,48 @@ describe('PATCH /api/organizations/[orgId] — slug guard for provisioned orgs (
     expect(data.slug).toBe('fresh-slug');
   });
 });
+
+describe('PATCH /api/organizations/[orgId] — settings.studio is validated where it is written and merged one level deep', () => {
+  const STUDIO = {
+    avatarId: 'avatar_real_123',
+    voiceId: 'voice_real_456',
+    consent: {
+      subjectName: 'A. Presenter',
+      sourceRef: 'consent/acme-2026-08-01.pdf',
+      confirmedAt: '2026-08-01T00:00:00.000Z',
+    },
+  };
+
+  it('rejects (400) an invalid studio blob at the moment it is typed, instead of storing it for the board to ignore', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { ...STUDIO, funnelUrl: 'restoreassist.com.au' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('a partial studio PATCH keeps the avatar, voice and consent already recorded', async () => {
+    setupOrg({ admins: [USER_ID], studio: STUDIO });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { funnelUrl: 'https://acme.example/quote' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    const settings = mockTxOrgUpdate.mock.calls[0][0].data.settings;
+    expect(settings.studio).toEqual({
+      ...STUDIO,
+      funnelUrl: 'https://acme.example/quote',
+    });
+    expect(settings.admins).toEqual([USER_ID]);
+  });
+});

@@ -19,14 +19,16 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { hasOrganizationAccess } from '@/lib/multi-business';
+import {
+  hasOrganizationAccess,
+  hasDirectOrganizationAccess,
+} from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { listStudioDrafts } from '@/lib/marketing-agency/studio/draft-store';
 import {
   approveAndScheduleStudioDraft,
   InvalidClearanceError,
-  RESERVED_CLEARANCES,
 } from '@/lib/marketing-agency/studio/approve-and-schedule';
 import { resolveStudioClient } from '@/lib/marketing-agency/studio/clients';
 
@@ -128,16 +130,12 @@ const approveSchema = z.object({
   scheduledAt: z.string().datetime({ offset: true }).optional(),
   /**
    * Campaign-pack blocker ids the approver explicitly discharges with this
-   * approval (e.g. `final_asset_rights_check_required`). Recorded on the draft.
+   * approval (e.g. `final_asset_rights_check_required`). Recorded on the draft
+   * when the approval commits. The reserved ids are refused by the service
+   * (`InvalidClearanceError` → 400 with `blockers`), the one place that owns
+   * the rule, so the response names them rather than a generic body error.
    */
-  clearances: z
-    .array(z.string().min(1).max(120))
-    .max(10)
-    .optional()
-    .refine(
-      list => !list?.some(blocker => RESERVED_CLEARANCES.has(blocker)),
-      'The approval and credentials blockers cannot be discharged by naming them'
-    ),
+  clearances: z.array(z.string().min(1).max(120)).max(10).optional(),
 });
 
 export async function POST(request: NextRequest, { params }: RouteCtx) {
@@ -175,9 +173,12 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
   const studioClient = resolveStudioClient(organization);
   const organizationId = organization.id;
 
+  // Approving publishes on the organisation's behalf: the approver must belong
+  // to THIS organisation (member, owner, or user), not merely to its parent
+  // workspace. Reading the board (GET) keeps the wider check.
   const userId = security.context.userId!;
-  const canAccessClient = await hasOrganizationAccess(userId, organizationId);
-  if (!canAccessClient) {
+  const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
+  if (!canApprove) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Forbidden' },
       403,

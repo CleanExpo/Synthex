@@ -7,6 +7,7 @@
  */
 
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
 
 /** Minimal slice of the Prisma StudioContentDraft delegate we use (injectable for tests). */
@@ -30,6 +31,13 @@ export interface SaveStudioDraftInput {
   metadata?: Prisma.InputJsonObject;
 }
 
+/**
+ * Save (or re-save, by dedupe key) a draft. A draft that has LEFT
+ * `awaiting_approval` is never overwritten: its script is what a human
+ * approved and its metadata carries the approval record and the scheduled
+ * Posts, so a regenerated version is a new draft, not an edit. The existing
+ * row is returned untouched and the skip is logged.
+ */
 export async function saveStudioDraft(
   input: SaveStudioDraftInput,
   delegate: StudioDraftDelegate = defaultDelegate()
@@ -54,6 +62,23 @@ export async function saveStudioDraft(
         status: 'awaiting_approval',
       },
     });
+  }
+
+  const existing = await delegate.findFirst({
+    where: {
+      organizationId: input.organizationId,
+      clientSlug: input.clientSlug,
+      dedupeKey: input.dedupeKey,
+    },
+  });
+  if (existing && existing.status !== 'awaiting_approval') {
+    logger.warn('studio draft not overwritten: it has left awaiting_approval', {
+      organizationId: input.organizationId,
+      clientSlug: input.clientSlug,
+      dedupeKey: input.dedupeKey,
+      status: existing.status,
+    });
+    return existing;
   }
 
   return delegate.upsert({

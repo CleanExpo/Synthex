@@ -74,7 +74,15 @@ export interface OrgAutoPublishGate {
  * safety state must not go live.
  */
 export async function resolveOrgAutoPublishGate(
-  organizationId: string | null
+  organizationId: string | null,
+  /**
+   * The client to read through. The Studio approval passes its transaction
+   * client so the read shares the approval's connection; defaults to the
+   * global client.
+   */
+  client: {
+    organization: { findUnique: typeof prisma.organization.findUnique };
+  } = prisma
 ): Promise<OrgAutoPublishGate> {
   if (!organizationId) {
     return {
@@ -85,7 +93,7 @@ export async function resolveOrgAutoPublishGate(
     };
   }
 
-  const org = await prisma.organization.findUnique({
+  const org = await client.organization.findUnique({
     where: { id: organizationId },
     select: { calendarMode: true, autoPublishPaused: true },
   });

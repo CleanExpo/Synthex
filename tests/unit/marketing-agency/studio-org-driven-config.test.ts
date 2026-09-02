@@ -103,6 +103,43 @@ describe('resolveStudioClient — org-driven, no registry', () => {
     expect(client.warnings.join(' ')).toMatch(/settings\.studio/);
   });
 
+  it('does not turn a bare-domain website into a funnel link: no link, and the board says why', () => {
+    // A website typed into a profile form is free text; only an absolute
+    // http(s) URL can be tagged and published. Before this, every approval for
+    // such a business failed with "Invalid URL" and told the operator to retry.
+    const client = resolveStudioClient(
+      org({ website: 'www.ccwonline.com.au' }),
+      EMPTY_ENV
+    );
+
+    expect(client.funnelUrl).toBeNull();
+    expect(client.warnings).toEqual([
+      expect.stringMatching(/website is not an absolute http\(s\) URL/),
+    ]);
+  });
+
+  it('refuses a non-http scheme as a funnel link too', () => {
+    const client = resolveStudioClient(
+      org({ website: 'javascript:alert(1)' }),
+      EMPTY_ENV
+    );
+    expect(client.funnelUrl).toBeNull();
+    expect(client.warnings).toHaveLength(1);
+  });
+
+  it('bounds settings.studio.platforms to the nine supported platforms', () => {
+    const client = resolveStudioClient(
+      org({
+        settings: {
+          studio: { platforms: Array.from({ length: 10 }, () => 'linkedin') },
+        },
+      }),
+      EMPTY_ENV
+    );
+    expect(client.platforms).toEqual(DEFAULT_STUDIO_PLATFORMS);
+    expect(client.warnings.join(' ')).toMatch(/settings\.studio.*platforms/);
+  });
+
   it('honours the legacy env layer for the two original businesses when it is complete', () => {
     const client = resolveStudioClient(
       org({ id: 'org-carsi', name: 'CARSI', slug: 'carsi', website: null }),

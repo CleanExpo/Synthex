@@ -104,6 +104,7 @@ jest.mock('@/components/marketing/PostAttributionFooter', () => ({
 }));
 
 import { GET } from '@/app/api/cron/publish-scheduled/route';
+import { resolveOrgAutoPublishGate } from '@/lib/publish/safetyChecks';
 import { dispatchToPlatform } from '@/lib/publish/publishQueue';
 import { publishToLinkedIn } from '@/lib/publish/platformAdapters/linkedin';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
@@ -219,6 +220,56 @@ describe('Post cron → LinkedInService.createPost carries the funnel link', () 
     await GET(cronRequest());
 
     expect(createPost.mock.calls[0][0]).not.toHaveProperty('linkUrl');
+  });
+});
+
+describe("Post cron → a Studio post respects the organisation's publish-safety state like an autopilot post", () => {
+  it('leaves a Studio post scheduled (deferred) when the org is in shadow mode or paused, so the kill switch reaches it', async () => {
+    const createPost = jest.fn();
+    mockCreatePlatformService.mockReturnValue({ createPost });
+    (resolveOrgAutoPublishGate as jest.Mock).mockResolvedValueOnce({
+      allowed: false,
+      reason: "Organisation calendar mode is 'shadow'",
+      calendarMode: 'shadow',
+      autoPublishPaused: false,
+    });
+    mockPrisma.post.findMany.mockResolvedValue([
+      duePost({ source: 'studio', studioDraftId: 'd1', linkUrl: LINK }),
+    ]);
+
+    const res = await GET(cronRequest());
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.published).toBe(0);
+    expect(createPost).not.toHaveBeenCalled();
+    // Not claimed either (the atomic scheduled → publishing flip never ran):
+    // the post stays 'scheduled' for a later tick.
+    expect(
+      mockPrisma.post.updateMany.mock.calls.some(
+        ([args]: [{ data?: { status?: string } }]) =>
+          args?.data?.status === 'publishing'
+      )
+    ).toBe(false);
+    expect(resolveOrgAutoPublishGate).toHaveBeenCalledWith('org-carsi');
+  });
+
+  it('a human-scheduled post (no source) still passes through unchanged', async () => {
+    const createPost = jest.fn().mockResolvedValue({
+      success: true,
+      postId: 'urn:li:share:4',
+    });
+    mockCreatePlatformService.mockReturnValue({ createPost });
+    (resolveOrgAutoPublishGate as jest.Mock).mockResolvedValue({
+      allowed: false,
+      calendarMode: 'shadow',
+      autoPublishPaused: false,
+    });
+    mockPrisma.post.findMany.mockResolvedValue([duePost()]);
+
+    await GET(cronRequest());
+
+    expect(createPost).toHaveBeenCalledTimes(1);
   });
 });
 

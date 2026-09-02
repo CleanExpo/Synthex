@@ -17,6 +17,7 @@ const mockSecureResponse = jest.fn((data: unknown, status = 200) => ({
   json: async () => data,
 }));
 const mockHasOrganizationAccess = jest.fn();
+const mockHasDirectOrganizationAccess = jest.fn();
 const mockOrganizationFindUnique = jest.fn();
 const mockListStudioDrafts = jest.fn();
 const mockApproveAndSchedule = jest.fn();
@@ -35,6 +36,8 @@ jest.mock('@/lib/security/api-security-checker', () => ({
 jest.mock('@/lib/multi-business', () => ({
   hasOrganizationAccess: (...args: unknown[]) =>
     mockHasOrganizationAccess(...args),
+  hasDirectOrganizationAccess: (...args: unknown[]) =>
+    mockHasDirectOrganizationAccess(...args),
 }));
 
 jest.mock('@/lib/prisma', () => ({
@@ -59,12 +62,21 @@ jest.mock('@/lib/marketing-agency/studio/approve-and-schedule', () => ({
     'human_or_client_approval_required',
     'platform_credentials_required',
   ]),
-  InvalidClearanceError: class InvalidClearanceError extends Error {},
+  InvalidClearanceError: class InvalidClearanceError extends Error {
+    blockers: string[];
+    constructor(blockers: string[]) {
+      super(
+        `These blockers cannot be discharged by naming them: ${blockers.join(', ')}`
+      );
+      this.blockers = blockers;
+    }
+  },
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
 
 import { GET, POST } from '@/app/api/marketing-agency/studio/[client]/route';
+import { InvalidClearanceError } from '@/lib/marketing-agency/studio/approve-and-schedule';
 
 const ctx = { params: Promise.resolve({ client: 'restoreassist' }) };
 
@@ -97,6 +109,7 @@ beforeEach(() => {
   });
   mockOrganizationFindUnique.mockResolvedValue(RA_ORG);
   mockHasOrganizationAccess.mockResolvedValue(true);
+  mockHasDirectOrganizationAccess.mockResolvedValue(true);
   mockApproveAndSchedule.mockResolvedValue({
     approved: true,
     outcome: 'approved',
@@ -223,11 +236,30 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
     expect(res.status).toBe(404);
   });
 
-  it('returns 403 on approve when the user cannot access the client organisation', async () => {
-    mockHasOrganizationAccess.mockResolvedValueOnce(false);
+  it('returns 403 on approve when the user does not belong to the client organisation', async () => {
+    mockHasDirectOrganizationAccess.mockResolvedValueOnce(false);
     const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(403);
     expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+  });
+
+  it('refuses (403) an approver who only belongs to the parent workspace, while the board (GET) still serves them', async () => {
+    // Seeing a child brand from the parent workspace is not the same as being
+    // allowed to publish on its behalf.
+    mockHasOrganizationAccess.mockResolvedValue(true);
+    mockHasDirectOrganizationAccess.mockResolvedValue(false);
+
+    const post = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(post.status).toBe(403);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+    expect(mockHasDirectOrganizationAccess).toHaveBeenCalledWith(
+      'user-1',
+      'org-ra'
+    );
+
+    mockListStudioDrafts.mockResolvedValue([]);
+    const get = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
+    expect(get.status).toBe(200);
   });
 
   it('returns 404 on approve when the organisation does not exist', async () => {
@@ -271,7 +303,10 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
       skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
     });
     expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
-    expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
+    expect(mockHasDirectOrganizationAccess).toHaveBeenCalledWith(
+      'user-1',
+      'org-ra'
+    );
     expect(mockApproveAndSchedule).toHaveBeenCalledWith({
       organizationId: 'org-ra',
       id: 'd1',
@@ -313,7 +348,12 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
     ]);
   });
 
-  it('returns 400 when clearances name a reserved blocker (credentials must come from a live connection)', async () => {
+  it('returns 400 naming the blockers when clearances name a reserved blocker (credentials must come from a live connection)', async () => {
+    // The service owns the rule and refuses before any claim; the route turns
+    // its typed error into the 400 a client can act on.
+    mockApproveAndSchedule.mockRejectedValueOnce(
+      new InvalidClearanceError(['platform_credentials_required'])
+    );
     const res = await POST(
       approveRequest({
         draftId: 'd1',
@@ -322,10 +362,15 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
       ctx
     );
     expect(res.status).toBe(400);
-    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+    const body = await res.json();
+    expect(body.blockers).toEqual(['platform_credentials_required']);
+    expect(body.error).toMatch(/cannot be discharged/);
   });
 
-  it('returns 400 when clearances name the approval blocker (the click is the approval)', async () => {
+  it('returns 400 naming the blocker when clearances name the approval blocker (the click is the approval)', async () => {
+    mockApproveAndSchedule.mockRejectedValueOnce(
+      new InvalidClearanceError(['human_or_client_approval_required'])
+    );
     const res = await POST(
       approveRequest({
         draftId: 'd1',
@@ -334,7 +379,9 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
       ctx
     );
     expect(res.status).toBe(400);
-    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+    expect((await res.json()).blockers).toEqual([
+      'human_or_client_approval_required',
+    ]);
   });
 
   it('answers 409 with the reasons when the pack blocks external publishing (the draft is handed back)', async () => {

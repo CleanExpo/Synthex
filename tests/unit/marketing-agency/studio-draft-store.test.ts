@@ -9,18 +9,24 @@ import {
   type StudioDraftDelegate,
 } from '@/lib/marketing-agency/studio/draft-store';
 
+jest.mock('@/lib/logger', () => ({
+  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
+
 function mockDelegate() {
   const create = jest.fn().mockResolvedValue({ id: 'd1' });
   const upsert = jest.fn().mockResolvedValue({ id: 'd1' });
+  const findFirst = jest.fn().mockResolvedValue(null);
   const findMany = jest.fn().mockResolvedValue([]);
   const updateMany = jest.fn().mockResolvedValue({ count: 1 });
   const delegate = {
     create,
     upsert,
+    findFirst,
     findMany,
     updateMany,
   } as unknown as StudioDraftDelegate;
-  return { delegate, create, upsert, findMany, updateMany };
+  return { delegate, create, upsert, findFirst, findMany, updateMany };
 }
 
 describe('saveStudioDraft', () => {
@@ -69,6 +75,42 @@ describe('saveStudioDraft', () => {
     expect(args.create.status).toBe('awaiting_approval');
     expect(args.update.status).toBeUndefined();
     expect(args.update.dedupeKey).toBe('campaign:did-you-know-cecs');
+  });
+
+  it('never overwrites a draft that has left awaiting_approval: a re-seed returns the approved row untouched', async () => {
+    // The approved row carries the script a human approved, the approval
+    // record and the scheduled Posts. A regenerated version is a new draft.
+    const { delegate, upsert, findFirst } = mockDelegate();
+    const approved = {
+      id: 'd1',
+      status: 'approved',
+      script: 'the approved body',
+      metadata: { studioSchedule: { scheduled: [{ postId: 'p1' }] } },
+    };
+    findFirst.mockResolvedValue(approved);
+
+    const result = await saveStudioDraft(
+      {
+        organizationId: 'org-A',
+        clientSlug: 'carsi',
+        topic: 'Did you know: CECs',
+        script: 'a regenerated body nobody approved',
+        platforms: ['linkedin'],
+        dedupeKey: 'campaign:did-you-know-cecs',
+        metadata: { externalPublishingAllowed: false },
+      },
+      delegate
+    );
+
+    expect(upsert).not.toHaveBeenCalled();
+    expect(result).toBe(approved);
+    expect(findFirst).toHaveBeenCalledWith({
+      where: {
+        organizationId: 'org-A',
+        clientSlug: 'carsi',
+        dedupeKey: 'campaign:did-you-know-cecs',
+      },
+    });
   });
 });
 
