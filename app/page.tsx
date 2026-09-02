@@ -16,6 +16,7 @@ import {
   WorkflowTimeline,
 } from '@/components/landing/premium';
 import { HomeStructuredData } from '@/components/seo/StructuredData';
+import { RouteIdentity } from '@/components/system/RouteIdentity';
 import { generateMetadata as buildPageMetadata } from '@/lib/seo/metadata';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -35,6 +36,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default function SynthexHomePage() {
   return (
     <>
+      <RouteIdentity route="/" />
       <HomeStructuredData />
       <SiteShell>
         <PageAmbient />
