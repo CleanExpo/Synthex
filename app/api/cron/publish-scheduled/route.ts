@@ -594,9 +594,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         ? (metadata.images as string[])
         : [];
 
+      // Funnel link (g3): written by the Studio approve→schedule bridge as
+      // metadata.linkUrl, UTM-tagged. The LinkedIn service turns linkUrl into
+      // an ARTICLE card on a media-free post; a media post already carries the
+      // link in its text because the UGC API cannot mix a card with media.
+      const postLinkUrl =
+        typeof metadata.linkUrl === 'string' && metadata.linkUrl.length > 0
+          ? metadata.linkUrl
+          : undefined;
+
       const postResult = await service.createPost({
         text: post.content,
         ...(postMediaUrls.length > 0 ? { mediaUrls: postMediaUrls } : {}),
+        ...(postLinkUrl ? { linkUrl: postLinkUrl } : {}),
       });
 
       if (postResult.success) {

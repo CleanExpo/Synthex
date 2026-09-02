@@ -144,7 +144,7 @@ async function notifyOrgUsers(
  * caller of this function is `processPublishQueue` processing a
  * `PublishQueueItem` in `pending`/`failed-retry` state — never a
  * backfill of previously-published posts. */
-async function dispatchToPlatform(
+export async function dispatchToPlatform(
   platform: string,
   accessToken: string,
   profileId: string,
@@ -172,6 +172,8 @@ async function dispatchToPlatform(
    *   twitter OAuth 2.0).
    * - `expiresAt` / `metadata`: Twitter OAuth 2.0 publish context.
    * - `connectionId`: PlatformConnection id for OAuth 2.0 refresh-lock persistence.
+   * - `articleUrl` / `articleTitle` (g3): the funnel link a LinkedIn share
+   *   carries as an ARTICLE card. Read from the calendar slot's `linkUrl`.
    */
   media?: {
     type?: 'REELS';
@@ -182,6 +184,8 @@ async function dispatchToPlatform(
     expiresAt?: Date | null;
     metadata?: unknown;
     connectionId?: string;
+    articleUrl?: string;
+    articleTitle?: string;
   }
 ): Promise<{
   success: boolean;
@@ -240,6 +244,14 @@ async function dispatchToPlatform(
         accessToken,
         authorUrn,
         text: finalBody,
+        ...(media?.articleUrl
+          ? {
+              articleUrl: media.articleUrl,
+              ...(media.articleTitle
+                ? { articleTitle: media.articleTitle }
+                : {}),
+            }
+          : {}),
       });
     }
 
@@ -510,6 +522,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       url?: string;
       video?: { url?: string; thumbnail?: string };
       youtube?: { title?: string; description?: string; tags?: string[] };
+      articleUrl?: string;
     } = {};
 
     if (isSocialCutSlot(item.slotId)) {
@@ -549,6 +562,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         url: slot?.mediaUrl,
         video: slot?.video,
         youtube: slot?.youtube,
+        articleUrl: slot?.linkUrl,
       };
     }
 

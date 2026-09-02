@@ -96,6 +96,12 @@ export interface CalendarSlot {
    */
   mediaUrl?: string;
   /**
+   * Funnel link the post carries — g3. Forwarded to the LinkedIn adapter as an
+   * ARTICLE card (`articleUrl`). Additive: undefined for every existing JSONB
+   * calendar record, in which case no link is attached.
+   */
+  linkUrl?: string;
+  /**
    * Rendered video for a nexus-viral social cut — SYN-1075 WS4a. Carries the
    * public storage URL (and optional thumbnail) of the physical short so the
    * YouTube / TikTok publish adapters have media to upload. Additive and fully
