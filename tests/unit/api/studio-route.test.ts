@@ -1,6 +1,10 @@
 /**
  * Unit tests for the Client Content Studio board API (SYN-1005 / VS-6).
  * Auth, client-org resolution, access checks, board reads, and approve gate.
+ *
+ * g9: the `[client]` segment is the organisation slug and the Studio config is
+ * derived from the organisation record — there is no hardcoded client registry,
+ * so a business that exists in the vault gets a board with no code change.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -14,7 +18,6 @@ const mockHasOrganizationAccess = jest.fn();
 const mockOrganizationFindUnique = jest.fn();
 const mockListStudioDrafts = jest.fn();
 const mockApproveStudioDraft = jest.fn();
-const mockGetStudioClient = jest.fn();
 
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
@@ -46,15 +49,24 @@ jest.mock('@/lib/marketing-agency/studio/draft-store', () => ({
   approveStudioDraft: (...args: unknown[]) => mockApproveStudioDraft(...args),
 }));
 
-jest.mock('@/lib/marketing-agency/studio/clients', () => ({
-  getStudioClient: (...args: unknown[]) => mockGetStudioClient(...args),
-}));
-
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
 
 import { GET, POST } from '@/app/api/marketing-agency/studio/[client]/route';
 
 const ctx = { params: Promise.resolve({ client: 'restoreassist' }) };
+
+const RA_ORG = {
+  id: 'org-ra',
+  name: 'RestoreAssist',
+  slug: 'restoreassist',
+  website: 'https://restoreassist.com.au',
+  settings: null,
+};
+
+const ORG_SELECT = {
+  where: { slug: 'restoreassist' },
+  select: { id: true, name: true, slug: true, website: true, settings: true },
+};
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -66,12 +78,8 @@ beforeEach(() => {
     allowed: true,
     context: { userId: 'user-1' },
   });
-  mockOrganizationFindUnique.mockResolvedValue({ id: 'org-ra' });
+  mockOrganizationFindUnique.mockResolvedValue(RA_ORG);
   mockHasOrganizationAccess.mockResolvedValue(true);
-  mockGetStudioClient.mockReturnValue({
-    clientSlug: 'restoreassist',
-    displayName: 'RestoreAssist',
-  });
 });
 
 describe('GET /api/marketing-agency/studio/[client]', () => {
@@ -105,13 +113,30 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
     expect(mockListStudioDrafts).not.toHaveBeenCalled();
   });
 
-  it('returns 404 for unknown studio clients', async () => {
-    mockGetStudioClient.mockReturnValueOnce(undefined);
-    const res = await GET(createMockNextRequest({ url: 'http://x' }), {
-      params: Promise.resolve({ client: 'unknown-client' }),
+  it('serves a business that exists in the vault but was never in the old hardcoded registry (g9)', async () => {
+    mockOrganizationFindUnique.mockResolvedValueOnce({
+      id: 'org-ccw',
+      name: 'Carpet Cleaners Warehouse',
+      slug: 'ccw',
+      website: 'https://ccwonline.com.au',
+      settings: null,
     });
-    expect(res.status).toBe(404);
-    expect(mockListStudioDrafts).not.toHaveBeenCalled();
+    mockListStudioDrafts.mockResolvedValue([]);
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), {
+      params: Promise.resolve({ client: 'ccw' }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.displayName).toBe('Carpet Cleaners Warehouse');
+    expect(body.organizationId).toBe('org-ccw');
+    expect(body.funnelUrl).toBe('https://ccwonline.com.au');
+    // Unconfigured video is reported, not papered over with a placeholder.
+    expect(body.videoConfigured).toBe(false);
+    expect(JSON.stringify(body)).not.toMatch(/PLACEHOLDER/);
+    expect(mockListStudioDrafts).toHaveBeenCalledWith({
+      organizationId: 'org-ccw',
+      clientSlug: 'ccw',
+    });
   });
 
   it('returns 200 with an org-scoped board grouped by status', async () => {
@@ -127,10 +152,7 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
     expect(body.board.awaiting_approval).toHaveLength(2);
     expect(body.board.approved).toHaveLength(1);
     expect(body.total).toBe(3);
-    expect(mockOrganizationFindUnique).toHaveBeenCalledWith({
-      where: { slug: 'restoreassist' },
-      select: { id: true },
-    });
+    expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
     expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
     // client-org-scoped read
     expect(mockListStudioDrafts).toHaveBeenCalledWith({
@@ -199,8 +221,8 @@ describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
     expect(mockApproveStudioDraft).not.toHaveBeenCalled();
   });
 
-  it('returns 404 on approve for unknown studio clients', async () => {
-    mockGetStudioClient.mockReturnValueOnce(undefined);
+  it('returns 404 on approve when the organisation does not exist', async () => {
+    mockOrganizationFindUnique.mockResolvedValueOnce(null);
     const res = await POST(
       createMockNextRequest({
         method: 'POST',
@@ -226,10 +248,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.approved).toBe(true);
-    expect(mockOrganizationFindUnique).toHaveBeenCalledWith({
-      where: { slug: 'restoreassist' },
-      select: { id: true },
-    });
+    expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
     expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
     expect(mockApproveStudioDraft).toHaveBeenCalledWith({
       organizationId: 'org-ra',

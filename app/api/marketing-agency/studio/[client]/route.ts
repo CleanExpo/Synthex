@@ -4,8 +4,10 @@
  * GET  /api/marketing-agency/studio/[client]  → org-scoped board grouped by status.
  * POST /api/marketing-agency/studio/[client]  → approve a draft (the human-approval gate).
  *
- * Auth + org-scope via APISecurityChecker. Client URLs resolve to the client's organisation
- * slug, then access is checked before any organisation-scoped reads/writes.
+ * Auth + org-scope via APISecurityChecker. The `[client]` segment IS the organisation
+ * slug: the organisation record is loaded, the Studio configuration is derived from it
+ * (g9 — no hardcoded client registry), then access is checked before any
+ * organisation-scoped reads/writes.
  *
  * @module app/api/marketing-agency/studio/[client]/route
  */
@@ -23,19 +25,17 @@ import {
   listStudioDrafts,
   approveStudioDraft,
 } from '@/lib/marketing-agency/studio/draft-store';
-import { getStudioClient } from '@/lib/marketing-agency/studio/clients';
+import { resolveStudioClient } from '@/lib/marketing-agency/studio/clients';
 
 export const runtime = 'nodejs';
 
 type RouteCtx = { params: Promise<{ client: string }> };
 
-async function resolveClientOrganizationId(clientSlug: string) {
-  const organization = await prisma.organization.findUnique({
+async function loadStudioOrganization(clientSlug: string) {
+  return prisma.organization.findUnique({
     where: { slug: clientSlug },
-    select: { id: true },
+    select: { id: true, name: true, slug: true, website: true, settings: true },
   });
-
-  return organization?.id ?? null;
 }
 
 export async function GET(request: NextRequest, { params }: RouteCtx) {
@@ -52,26 +52,18 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   }
 
   const { client } = await params;
-  const studioClient = getStudioClient(client);
-  if (!studioClient) {
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Unknown studio client' },
-      404,
-      security.context
-    );
-  }
-
-  const userId = security.context.userId!;
-  const organizationId = await resolveClientOrganizationId(
-    studioClient.clientSlug
-  );
-  if (!organizationId) {
+  const organization = await loadStudioOrganization(client);
+  if (!organization) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Studio client organisation not found' },
       404,
       security.context
     );
   }
+  const studioClient = resolveStudioClient(organization);
+  const organizationId = organization.id;
+
+  const userId = security.context.userId!;
   const canAccessClient = await hasOrganizationAccess(userId, organizationId);
   if (!canAccessClient) {
     return APISecurityChecker.createSecureResponse(
@@ -102,6 +94,11 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
         clientSlug: client,
         displayName: studioClient.displayName,
         organizationId,
+        platforms: studioClient.platforms,
+        funnelUrl: studioClient.funnelUrl,
+        videoConfigured: studioClient.video !== null,
+        configSource: studioClient.configSource,
+        warnings: studioClient.warnings,
         board,
         total: drafts.length,
       },
@@ -148,23 +145,17 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
   }
 
   const { client } = await params;
-  if (!getStudioClient(client)) {
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Unknown studio client' },
-      404,
-      security.context
-    );
-  }
-
-  const userId = security.context.userId!;
-  const organizationId = await resolveClientOrganizationId(client);
-  if (!organizationId) {
+  const organization = await loadStudioOrganization(client);
+  if (!organization) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Studio client organisation not found' },
       404,
       security.context
     );
   }
+  const organizationId = organization.id;
+
+  const userId = security.context.userId!;
   const canAccessClient = await hasOrganizationAccess(userId, organizationId);
   if (!canAccessClient) {
     return APISecurityChecker.createSecureResponse(
