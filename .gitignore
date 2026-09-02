@@ -266,3 +266,8 @@ jest-worktree.json
 .artifacts/
 
 .env*
+
+# Done-harness contract state. Machine-local: contracts key on
+# "<branch>@<absolute worktree git dir>", so these files carry local filesystem
+# paths and mean nothing in another checkout. This origin is PUBLIC.
+.claude/done/
