@@ -205,10 +205,33 @@ function selfTest() {
 }
 
 // --------------------------------------------------------------- build check
+//
+// A missing artefact is reported, not thrown. `readFileSync` on an absent file used to
+// exit with a raw ENOENT stack trace naming one path, which in CI is indistinguishable
+// from the checker itself being broken and says nothing about which page is unaccounted
+// for. Absent output still FAILS - a check that cannot see its subject must never pass -
+// but it now says so in the same shape as every other failure.
+function readDocument(file) {
+  try {
+    return readFileSync(DIR + file, 'utf8');
+  } catch (err) {
+    if (err.code === 'ENOENT') return null;
+    throw err;
+  }
+}
+
 function checkBuild() {
   let bad = 0;
   for (const [file, route] of Object.entries(WANT)) {
-    const why = checkDocument(readFileSync(DIR + file, 'utf8'), route);
+    const html = readDocument(file);
+    if (html === null) {
+      console.error(
+        `FAIL ${file}: no prerendered document at ${DIR}${file} - run \`npm run build\` first`
+      );
+      bad++;
+      continue;
+    }
+    const why = checkDocument(html, route);
     if (why) {
       console.error(`FAIL ${file}: ${why}`);
       bad++;
@@ -220,7 +243,13 @@ function checkBuild() {
   }
   // Negative case. A 404 that carried a marker would mean the gate could be
   // satisfied by the very document it exists to reject.
-  if (markersIn(readFileSync(DIR + '_not-found.html', 'utf8')).length > 0) {
+  const notFound = readDocument('_not-found.html');
+  if (notFound === null) {
+    console.error(
+      `FAIL _not-found.html: no prerendered document at ${DIR}_not-found.html - the negative case cannot be checked`
+    );
+    bad++;
+  } else if (markersIn(notFound).length > 0) {
     console.error(
       'FAIL _not-found.html carries a rendered route identity marker.'
     );

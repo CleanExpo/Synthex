@@ -101,6 +101,13 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
 
+      # The route identity markers only exist in built output, so this is the only
+      # place they can be asserted. Without this step the checker is a file nothing
+      # runs, and the marker could be deleted or mis-emitted with every gate green -
+      # which is what an independent review of 0af85f389 found.
+      - name: Assert route identity markers in the build output
+        run: node scripts/check-route-identity-markers.mjs
+
   auth-coverage:
     name: Auth Coverage Ratchet
     runs-on: ubuntu-latest
