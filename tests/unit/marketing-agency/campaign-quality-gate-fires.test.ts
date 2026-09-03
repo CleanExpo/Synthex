@@ -325,19 +325,10 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
     expect(result.status).toBe('blocked');
   });
 
-  it('fires when the asset policy is not publish-safe — the stock-image guard', () => {
-    const draft = goodDraft();
-    draft.mediaPlan.assetSourcePolicy =
-      'stock_library' as CampaignQualityDraftInput['mediaPlan']['assetSourcePolicy'];
-
-    const result = run({ draft });
-
-    expect(result.blockers).toEqual([
-      'slot-01:draft_asset_policy_not_publish_safe',
-    ]);
-    expect(result.allowed).toBe(false);
-    expect(result.status).toBe('blocked');
-  });
+  // The asset-policy case was REMOVED, not moved. It used
+  // `'stock_library' as ...` to manufacture a value the type forbids, and so
+  // proved only that an unreachable branch executes when you lie to the
+  // compiler. See the known-defect section below for what replaced it.
 
   it('fires when there are too few media review checks', () => {
     const draft = goodDraft();
@@ -425,6 +416,53 @@ describe('campaign quality gate — known defect: the humanness floor cannot fir
     // And therefore the gate's humanness blocker is absent even on this input.
     const result = run({ draft: slopDraft() });
     expect(result.blockers).not.toContain('slot-01:draft_humanness_below_60');
+  });
+});
+
+/**
+ * KNOWN DEFECT LOCK #2 — `draft_asset_policy_not_publish_safe` cannot fire either.
+ *
+ * `CampaignMediaPlan.assetSourcePolicy` is declared as the SINGLETON literal type
+ * `'owned_licensed_original_only'` (campaign-quality-gate.ts:25). The guard at
+ * line 173 tests `!== 'owned_licensed_original_only'`, which is statically always
+ * false for any well-typed input.
+ *
+ * It is dead at RUNTIME too, not merely in the type system. The gate has exactly
+ * one call site — `full-campaign-generator.ts:672` — and every draft reaching it
+ * is built in-code with that literal hardcoded (six-plus assignments, all
+ * identical). No untyped JSON boundary feeds this field, so nothing can carry a
+ * different value.
+ *
+ * The removed test asserted this guard "fires" by casting `'stock_library'` past
+ * the compiler. That proves an unreachable branch executes when you lie to the
+ * type system — it does not prove a valid input can trip the guard, and round-4
+ * independent review was right to call it a false claim of a firing guard.
+ *
+ * WHY THIS ONE MATTERS MORE THAN THE HUMANNESS FLOOR: this is nominally the guard
+ * for the founder-mandated real-images-only rule — visuals must come from owned
+ * material, never stock or model imagination. That rule is enforced elsewhere
+ * (the service layer and its CI guard); it is NOT enforced here, despite this
+ * check appearing to do so. A reader auditing the campaign gate would reasonably
+ * conclude asset provenance is checked at generation time. It is not.
+ *
+ * The fix is a product decision, not an agent retune: either widen the contract to
+ * model candidate/unsafe policies, or validate at a real untyped boundary. Filed
+ * in BACKLOG.md as founder-owned. THIS TEST FAILS if the type is ever widened,
+ * which is the signal to convert it into a real firing case.
+ */
+describe('campaign quality gate — known defect: the asset-policy guard cannot fire', () => {
+  it('accepts the only value its type permits, so the guard is unreachable', () => {
+    const draft = goodDraft();
+
+    // The sole permitted value — no cast, because no other value is expressible.
+    expect(draft.mediaPlan.assetSourcePolicy).toBe(
+      'owned_licensed_original_only'
+    );
+
+    const result = run({ draft });
+    expect(result.blockers).not.toContain(
+      'slot-01:draft_asset_policy_not_publish_safe'
+    );
   });
 });
 
