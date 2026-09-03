@@ -27,6 +27,7 @@ import {
   type CampaignQualityDraftInput,
 } from '@/lib/marketing-agency/campaign-quality-gate';
 import type { CampaignEvidenceManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
+import { scoreHumanness } from '@/lib/quality/humanness-scorer';
 
 const CHECKED_AT = '2026-09-03T00:00:00.000Z';
 
@@ -69,7 +70,11 @@ function goodManifest(): CampaignEvidenceManifest {
       },
     ],
     platformOutputs: [],
-    approval: { status: 'pending' } as CampaignEvidenceManifest['approval'],
+    // No `as` cast. A cast here would let an invalid manifest masquerade as the
+    // "clean campaign" control: `status` accepts 'pending_review', not 'pending',
+    // and the gate does not read `approval` — so a wrong value would never surface
+    // at runtime and the control would silently be testing an invalid fixture.
+    approval: { status: 'pending_review' },
   };
 }
 
@@ -112,6 +117,19 @@ function goodDraft(): CampaignQualityDraftInput {
       testMethod: 'Compare against trailing six-post median',
     },
   };
+}
+
+/** The worst copy this suite produces: dense marketing slop. */
+function slopDraft(): CampaignQualityDraftInput {
+  const draft = goodDraft();
+  draft.title = 'Unlock the power of seamless restoration synergy';
+  draft.body = [
+    "In today's fast-paced world, it is important to note that leveraging cutting-edge solutions is a game changer.",
+    'Delve into the robust, seamless tapestry of innovative synergy that empowers stakeholders to unlock unparalleled value.',
+    'Moreover, this holistic paradigm revolutionises the landscape and elevates the customer journey to new heights.',
+  ].join(' ');
+  draft.cta = 'Embark on your transformative journey today.';
+  return draft;
 }
 
 function run(
@@ -308,28 +326,53 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
     expect(result.status).toBe('blocked');
   });
 
-  it('fires when slop-laden copy drags humanness below the floor', () => {
-    const draft = goodDraft();
-    draft.title = 'Unlock the power of seamless restoration synergy';
-    draft.body = [
-      "In today's fast-paced world, it is important to note that leveraging cutting-edge solutions is a game changer.",
-      'Delve into the robust, seamless tapestry of innovative synergy that empowers stakeholders to unlock unparalleled value.',
-      'Moreover, this holistic paradigm revolutionises the landscape and elevates the customer journey to new heights.',
-    ].join(' ');
-    draft.cta = 'Embark on your transformative journey today.';
+  it('fires on slop density when the copy is marketing sludge', () => {
+    const draft = slopDraft();
 
     const result = run({ draft });
 
+    // The EXACT blocker, not a union. An earlier version of this test asserted
+    // "humanness OR slop density" and called it an honest hedge; independent
+    // review showed the hedge concealed that only one of the two ever fires.
+    expect(result.blockers).toContain('slot-01:draft_slop_density_too_high');
     expect(result.allowed).toBe(false);
-    // Either the humanness floor or the slop-density check must catch this.
-    // Asserting the union rather than one exact string keeps the test honest if
-    // the scorer is retuned, while still proving copy quality is enforced.
-    const caught = result.blockers.some(
-      b =>
-        b === 'slot-01:draft_humanness_below_60' ||
-        b === 'slot-01:draft_slop_density_too_high'
+    expect(result.status).toBe('blocked');
+  });
+});
+
+/**
+ * KNOWN DEFECT LOCK — `draft_humanness_below_60` is unreachable in production.
+ *
+ * `scoreHumanness` computes `score = 100 - min(40, slopPenalty)`, so the score
+ * FLOORS AT 60; the three bonuses only add, and the no-fingerprint branch clamps
+ * to `min(85, max(0, score))`, which is also 60 at worst. `passes = score >=
+ * threshold` with `MIN_HUMANNESS_SCORE = 60` is therefore ALWAYS true, and
+ * `campaign-quality-gate.ts` can never push `draft_humanness_below_60`.
+ *
+ * Measured, not reasoned — a probe over six inputs including maximum-slop text:
+ *   maximum slop, short  score=60 passes=true
+ *   maximum slop, long   score=60 passes=true
+ *   MIN SCORE OBSERVED = 60 | ANY passes=false ? false
+ *
+ * This test LOCKS that defect rather than hiding it. The threshold is a product
+ * judgement about what counts as unacceptable copy, so an agent must not quietly
+ * retune it — it is filed in BACKLOG.md for the founder. When the scorer or the
+ * threshold is fixed, THIS TEST WILL FAIL, which is the signal to convert it into
+ * a real firing case for the humanness floor.
+ */
+describe('campaign quality gate — known defect: the humanness floor cannot fire', () => {
+  it('scores maximum-slop copy at exactly the floor, so humanness never blocks', () => {
+    const worst = scoreHumanness(
+      [slopDraft().title, slopDraft().body, slopDraft().cta].join('\n\n'),
+      60
     );
-    expect(caught).toBe(true);
+
+    expect(worst.score).toBeGreaterThanOrEqual(60);
+    expect(worst.passes).toBe(true);
+
+    // And therefore the gate's humanness blocker is absent even on this input.
+    const result = run({ draft: slopDraft() });
+    expect(result.blockers).not.toContain('slot-01:draft_humanness_below_60');
   });
 });
 
