@@ -38,13 +38,23 @@
  * blocker is recorded below as unreachable, so it is no longer a mutant target.
  * This paragraph is the correction — the earlier count of five is wrong.)
  *
- * NO SUFFICIENCY CLAIM. Four mutants dying is four mutants. Nothing here proves the
+ * A selective mutant is not enough when a blocker is a COMPOSITE. Round 4's review
+ * found that `quality_sources_missing_checked_locator_or_type` fires on
+ * `checkedAt && sourceType && locator`, and only the `checkedAt` conjunct had a
+ * case — so a `sourceHasLocator() => true` mutant SURVIVED all 17 tests. The
+ * blocker fired throughout, for a reason no case had pinned. There is now one case
+ * per conjunct, and all three conjunct mutants die, each killing exactly one test.
+ * The rule that generalises: a composite guard needs a case per conjunct, because
+ * a passing exact-set assertion proves the blocker fired, never which term made it.
+ *
+ * NO SUFFICIENCY CLAIM. Seven mutants dying is seven mutants. Nothing here proves the
  * gate checks the RIGHT things; mutating existing rules cannot surface a missing one.
  *
  * Independent review found the coupling defect twice, in two different cases, after
  * I claimed to have fixed it once, and found a cast papering over a type error twice
  * more. If you add a case here: dump its exact blocker set and check it is length 1,
- * and never reach for `as` to build a fixture. Reasoning about both is what failed.
+ * never reach for `as` to build a fixture, and if the blocker is a composite, write
+ * a case per conjunct and mutate each one. Reasoning about all three is what failed.
  */
 
 import {
@@ -227,6 +237,50 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
   it('fires when a source has no checkedAt timestamp', () => {
     const manifest = goodManifest();
     delete manifest.sources[2].checkedAt;
+
+    const result = run({ manifest });
+
+    expect(result.blockers).toEqual([
+      'quality_sources_missing_checked_locator_or_type',
+    ]);
+    expect(result.allowed).toBe(false);
+    expect(result.status).toBe('blocked');
+  });
+
+  // The three cases above and below exist because
+  // `quality_sources_missing_checked_locator_or_type` is a COMPOSITE:
+  // `isChecked` is `checkedAt && sourceType && sourceHasLocator(source)`. Round 4's
+  // review found that only the `checkedAt` conjunct was ever exercised, so a
+  // `sourceHasLocator() => true` mutant survived all 17 cases — the blocker fired,
+  // but for a reason no case had pinned. A composite guard needs one case per
+  // conjunct or the untested conjuncts are dead weight the suite cannot see.
+  // src-regulator (index 2) is the isolating subject: it is neither the official
+  // platform source (index 0) nor the internal policy source (index 1), so
+  // damaging it trips no companion blocker.
+
+  it('fires when a source has no locator — neither url nor path', () => {
+    const manifest = goodManifest();
+    // src-regulator carries `url` and no `path`, so deleting `url` leaves it with
+    // no locator at all. Deleting `url` from a source that also had `path` would
+    // NOT trip this, which is the point of the conjunct.
+    delete manifest.sources[2].url;
+
+    const result = run({ manifest });
+
+    expect(result.blockers).toEqual([
+      'quality_sources_missing_checked_locator_or_type',
+    ]);
+    expect(result.allowed).toBe(false);
+    expect(result.status).toBe('blocked');
+  });
+
+  it('fires when a source has no sourceType', () => {
+    const manifest = goodManifest();
+    // Index 2 only. Deleting sourceType from index 0 or 1 would ALSO trip
+    // quality_official_platform_sources_missing or
+    // quality_internal_policy_source_missing as a companion, and the exact-set
+    // assertion would then be proving two checks at once.
+    delete manifest.sources[2].sourceType;
 
     const result = run({ manifest });
 
