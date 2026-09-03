@@ -62,7 +62,13 @@ export const maxDuration = 300; // 5 minutes — enough to drain a 50-post batch
 interface PostResult {
   id: string;
   platform: string;
-  status: 'published' | 'failed' | 'retrying' | 'blocked' | 'deferred';
+  status:
+    | 'published'
+    | 'failed'
+    | 'retrying'
+    | 'blocked'
+    | 'deferred'
+    | 'expired';
   error?: string;
 }
 
@@ -72,6 +78,12 @@ interface PostResult {
  * produces plain JSON-compatible objects/arrays.
  */
 // Return type must be `any` so callers can pass it to Prisma's InputJsonValue without further casting
+/**
+ * A Studio post older than this past its scheduledAt is expired rather than
+ * published (spec.md, Decisions: pausing is a stop, not a queue).
+ */
+export const STUDIO_POST_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+
 function jsonSafe(obj: Record<string, unknown>): any {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -153,6 +165,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   let retried = 0;
   let blocked = 0;
   let deferred = 0;
+  let expired = 0;
   const results: PostResult[] = [];
   // Collect Unite-Group pushes and settle them before returning. On Vercel
   // serverless the instance can freeze the moment the response returns, so a
@@ -208,13 +221,18 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // auto-publish is paused, the post must NOT go live. Leave it 'scheduled'
       // (unclaimed) so a later run publishes it once the org flips to
       // live/unpaused. Human-scheduled posts (metadata.source !== 'autopilot')
-      // are the user's own gate and pass through unchanged.
+      // are the user's own gate and pass through unchanged — EXCEPT Studio
+      // posts (source 'studio'): an AI-written script on an AI-rendered avatar
+      // approved with one click is gated like autopilot, so the org kill
+      // switch reaches it, including a flag flipped after the approval.
       const preMetadata = (post.metadata as Record<string, unknown>) || {};
       // Machine-authored. Used twice: for the publish-safety gate immediately
       // below, and again at the authority manifest, where it decides whether a
-      // human scheduler may be asserted at all.
+      // human scheduler may be asserted at all (a Studio post keeps its human
+      // approver as the scheduler there).
       const isAutopilot = preMetadata.source === 'autopilot';
-      if (isAutopilot) {
+      const orgGated = isAutopilot || preMetadata.source === 'studio';
+      if (orgGated) {
         const gate = await resolveOrgAutoPublishGate(
           post.campaign.organizationId
         );
@@ -234,6 +252,45 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           });
           continue;
         }
+      }
+
+      // Pausing is a stop, not a queue. A Studio post the gate held (or one
+      // simply left behind) must not publish dated client marketing whenever
+      // the organisation returns to live: past STUDIO_POST_MAX_AGE_MS it is
+      // marked expired, recorded, and never sent.
+      if (
+        preMetadata.source === 'studio' &&
+        post.scheduledAt &&
+        now.getTime() - post.scheduledAt.getTime() > STUDIO_POST_MAX_AGE_MS
+      ) {
+        const platform = (
+          post.platform || post.campaign.platform
+        ).toLowerCase();
+        const reason = `Studio post expired: scheduled ${post.scheduledAt.toISOString()}, more than ${STUDIO_POST_MAX_AGE_MS / 3_600_000} h ago`;
+        const priorHistory =
+          (preMetadata.history as Record<string, unknown>[]) || [];
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            status: 'expired',
+            metadata: jsonSafe({
+              ...preMetadata,
+              history: [
+                ...priorHistory,
+                { event: 'expired_unpublished', at: now.toISOString(), reason },
+              ],
+            }),
+          },
+        });
+        logger.warn(`[publish-scheduled] Post ${post.id}: ${reason}`);
+        expired++;
+        results.push({
+          id: post.id,
+          platform,
+          status: 'expired',
+          error: reason,
+        });
+        continue;
       }
 
       // ATOMIC PUBLISH-CLAIM — eliminates the double-post window.
@@ -594,9 +651,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         ? (metadata.images as string[])
         : [];
 
+      // Funnel link (g3): written by the Studio approve→schedule bridge as
+      // metadata.linkUrl, UTM-tagged. The LinkedIn service turns linkUrl into
+      // an ARTICLE card on a media-free post; a media post already carries the
+      // link in its text because the UGC API cannot mix a card with media.
+      const postLinkUrl =
+        typeof metadata.linkUrl === 'string' && metadata.linkUrl.length > 0
+          ? metadata.linkUrl
+          : undefined;
+
       const postResult = await service.createPost({
         text: post.content,
         ...(postMediaUrls.length > 0 ? { mediaUrls: postMediaUrls } : {}),
+        ...(postLinkUrl ? { linkUrl: postLinkUrl } : {}),
       });
 
       if (postResult.success) {
@@ -896,6 +963,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     retried,
     blocked,
     deferred,
+    expired,
     durationMs,
     results,
   });

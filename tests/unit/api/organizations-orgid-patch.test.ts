@@ -291,3 +291,139 @@ describe('PATCH /api/organizations/[orgId] — slug guard for provisioned orgs (
     expect(data.slug).toBe('fresh-slug');
   });
 });
+
+describe('PATCH /api/organizations/[orgId] — settings.studio is validated where it is written and merged one level deep', () => {
+  const STUDIO = {
+    avatarId: 'avatar_real_123',
+    voiceId: 'voice_real_456',
+    consent: {
+      subjectName: 'A. Presenter',
+      sourceRef: 'consent/acme-2026-08-01.pdf',
+      confirmedAt: '2026-08-01T00:00:00.000Z',
+    },
+  };
+
+  it('rejects (400) an invalid studio blob at the moment it is typed, instead of storing it for the board to ignore', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { ...STUDIO, funnelUrl: 'restoreassist.com.au' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('a partial studio PATCH keeps the avatar, voice and consent already recorded', async () => {
+    setupOrg({ admins: [USER_ID], studio: STUDIO });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { funnelUrl: 'https://acme.example/quote' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    const settings = mockTxOrgUpdate.mock.calls[0][0].data.settings;
+    expect(settings.studio).toEqual({
+      ...STUDIO,
+      funnelUrl: 'https://acme.example/quote',
+    });
+    expect(settings.admins).toEqual([USER_ID]);
+  });
+
+  it('stamps who recorded a likeness consent and when, from the caller and the clock, never from the client', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: {
+          studio: {
+            ...STUDIO,
+            consent: {
+              ...STUDIO.consent,
+              avatarId: STUDIO.avatarId,
+              voiceId: STUDIO.voiceId,
+              recordedBy: 'forged-user',
+              recordedAt: '1999-01-01T00:00:00.000Z',
+            },
+          },
+        },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    const consent = mockTxOrgUpdate.mock.calls[0][0].data.settings.studio
+      .consent as Record<string, string>;
+    expect(consent.recordedBy).toBe(USER_ID);
+    expect(consent.recordedAt).not.toBe('1999-01-01T00:00:00.000Z');
+    expect(new Date(consent.recordedAt).getTime()).toBeGreaterThan(
+      Date.now() - 60_000
+    );
+    expect(consent.avatarId).toBe(STUDIO.avatarId);
+  });
+
+  it('an explicit null removes a nested studio key (a funnel can be cleared through the endpoint that set it)', async () => {
+    setupOrg({
+      admins: [USER_ID],
+      studio: { ...STUDIO, funnelUrl: 'https://acme.example/old' },
+    });
+
+    const res = await PATCH(
+      patchRequest({ settings: { studio: { funnelUrl: null } } }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    const studio = mockTxOrgUpdate.mock.calls[0][0].data.settings.studio;
+    expect(studio.funnelUrl).toBeUndefined();
+    expect(studio.avatarId).toBe(STUDIO.avatarId);
+  });
+
+  it('validates the MERGED studio object, so a stored invalid blob cannot survive a valid fragment', async () => {
+    // The stored object is already broken (platforms is not an array); a
+    // fragment that is fine on its own must not be accepted on top of it.
+    setupOrg({ admins: [USER_ID], studio: { platforms: 'linkedin' } });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { funnelUrl: 'https://acme.example/quote' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(400);
+    expect(mockTransaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects (400) a misspelt studio key instead of storing it for the reader to drop', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { funnelURL: 'https://acme.example/quote' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects (400) a funnel whose scheme is not http(s), the same predicate the Studio reads with', async () => {
+    setupOrg({ admins: [USER_ID] });
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { funnelUrl: 'javascript:alert(1)' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(400);
+  });
+});

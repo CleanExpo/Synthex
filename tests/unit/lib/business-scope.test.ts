@@ -32,6 +32,7 @@ jest.mock('@/lib/logger', () => ({
 
 import {
   hasOrganizationAccess,
+  hasDirectOrganizationAccess,
   resolveCampaignOrganizationId,
   getEffectiveOrganizationId,
   OrgAccessError,
@@ -125,6 +126,63 @@ describe('business-scope — org access (SYN-847)', () => {
       });
       mockPrisma.organization.findUnique.mockResolvedValue(null);
       expect(await hasOrganizationAccess('u', 'missing-org')).toBe(false);
+    });
+  });
+
+  describe('hasDirectOrganizationAccess — acting on the organisation itself', () => {
+    it('refuses a member of the parent workspace who holds nothing in the child', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        isMultiBusinessOwner: false,
+        organizationId: 'parent-org',
+      });
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        parentOrgId: 'parent-org',
+        users: [],
+      });
+      mockPrisma.organization.findFirst.mockResolvedValue({ id: 'parent-org' });
+
+      // The wide check grants; the direct check refuses and never consults
+      // the parent workspace at all.
+      expect(await hasOrganizationAccess('admin', 'child-org')).toBe(true);
+      mockPrisma.organization.findFirst.mockClear();
+      expect(await hasDirectOrganizationAccess('admin', 'child-org')).toBe(
+        false
+      );
+      expect(mockPrisma.organization.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('still grants a direct member, an active owner, and a user of the child org', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({
+        isMultiBusinessOwner: false,
+        organizationId: 'child-org',
+      });
+      expect(await hasDirectOrganizationAccess('member', 'child-org')).toBe(
+        true
+      );
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        isMultiBusinessOwner: true,
+        organizationId: null,
+      });
+      mockPrisma.businessOwnership.findUnique.mockResolvedValue({
+        isActive: true,
+      });
+      expect(await hasDirectOrganizationAccess('owner', 'child-org')).toBe(
+        true
+      );
+
+      mockPrisma.user.findUnique.mockResolvedValue({
+        isMultiBusinessOwner: false,
+        organizationId: 'other-org',
+      });
+      mockPrisma.businessOwnership.findUnique.mockResolvedValue(null);
+      mockPrisma.organization.findUnique.mockResolvedValue({
+        parentOrgId: 'parent-org',
+        users: [{ id: 'user-of-child' }],
+      });
+      expect(
+        await hasDirectOrganizationAccess('user-of-child', 'child-org')
+      ).toBe(true);
     });
   });
 

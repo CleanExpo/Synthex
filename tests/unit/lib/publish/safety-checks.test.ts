@@ -25,7 +25,10 @@ jest.mock('@/lib/prisma', () => ({
 // Pin the cold-start threshold so the test is deterministic.
 jest.mock('@/lib/calendar/digestReader', () => ({ MIN_DIGESTS_REQUIRED: 3 }));
 
-import { runSafetyChecks } from '@/lib/publish/safetyChecks';
+import {
+  runSafetyChecks,
+  resolveOrgAutoPublishGate,
+} from '@/lib/publish/safetyChecks';
 import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 const INPUT = {
@@ -177,5 +180,46 @@ describe('runSafetyChecks — publish guard', () => {
     expect(res.pass).toBe(false);
     expect(res.failedGate).toBe('campaign_authority_blocked');
     expect(mockPrisma.platformConnection.findFirst).not.toHaveBeenCalled();
+  });
+});
+
+describe('resolveOrgAutoPublishGate — reads through the client it is handed', () => {
+  it('uses the handed client (a Studio approval passes its transaction) and never the global one', async () => {
+    const tx = {
+      organization: {
+        findUnique: jest
+          .fn()
+          .mockResolvedValue({
+            calendarMode: 'shadow',
+            autoPublishPaused: false,
+          }),
+      },
+    };
+
+    const gate = await resolveOrgAutoPublishGate(
+      'org-x',
+      tx as unknown as Parameters<typeof resolveOrgAutoPublishGate>[1]
+    );
+
+    expect(gate.allowed).toBe(false);
+    expect(gate.calendarMode).toBe('shadow');
+    expect(tx.organization.findUnique).toHaveBeenCalledWith({
+      where: { id: 'org-x' },
+      select: { calendarMode: true, autoPublishPaused: true },
+    });
+    expect(mockPrisma.organization.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('defaults to the global client when none is handed', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      calendarMode: 'live',
+      autoPublishPaused: true,
+    });
+
+    const gate = await resolveOrgAutoPublishGate('org-x');
+
+    expect(gate.allowed).toBe(false);
+    expect(gate.autoPublishPaused).toBe(true);
+    expect(mockPrisma.organization.findUnique).toHaveBeenCalledTimes(1);
   });
 });

@@ -2,10 +2,13 @@
  * Client Content Studio — per-client board API (SYN-1005 / VS-6).
  *
  * GET  /api/marketing-agency/studio/[client]  → org-scoped board grouped by status.
- * POST /api/marketing-agency/studio/[client]  → approve a draft (the human-approval gate).
+ * POST /api/marketing-agency/studio/[client]  → approve a draft (the human-approval
+ *      gate) and schedule it for publishing (g2).
  *
- * Auth + org-scope via APISecurityChecker. Client URLs resolve to the client's organisation
- * slug, then access is checked before any organisation-scoped reads/writes.
+ * Auth + org-scope via APISecurityChecker. The `[client]` segment IS the organisation
+ * slug: the organisation record is loaded, the Studio configuration is derived from it
+ * (g9 — no hardcoded client registry), then access is checked before any
+ * organisation-scoped reads/writes.
  *
  * @module app/api/marketing-agency/studio/[client]/route
  */
@@ -17,25 +20,26 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { hasOrganizationAccess } from '@/lib/multi-business';
+import { hasDirectOrganizationAccess } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { trackError } from '@/lib/observability/error-tracker';
 import prisma from '@/lib/prisma';
+import { listStudioDrafts } from '@/lib/marketing-agency/studio/draft-store';
 import {
-  listStudioDrafts,
-  approveStudioDraft,
-} from '@/lib/marketing-agency/studio/draft-store';
-import { getStudioClient } from '@/lib/marketing-agency/studio/clients';
+  approveAndScheduleStudioDraft,
+  InvalidClearanceError,
+} from '@/lib/marketing-agency/studio/approve-and-schedule';
+import { resolveStudioClient } from '@/lib/marketing-agency/studio/clients';
 
 export const runtime = 'nodejs';
 
 type RouteCtx = { params: Promise<{ client: string }> };
 
-async function resolveClientOrganizationId(clientSlug: string) {
-  const organization = await prisma.organization.findUnique({
+async function loadStudioOrganization(clientSlug: string) {
+  return prisma.organization.findUnique({
     where: { slug: clientSlug },
-    select: { id: true },
+    select: { id: true, name: true, slug: true, website: true, settings: true },
   });
-
-  return organization?.id ?? null;
 }
 
 export async function GET(request: NextRequest, { params }: RouteCtx) {
@@ -52,26 +56,18 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   }
 
   const { client } = await params;
-  const studioClient = getStudioClient(client);
-  if (!studioClient) {
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Unknown studio client' },
-      404,
-      security.context
-    );
-  }
-
-  const userId = security.context.userId!;
-  const organizationId = await resolveClientOrganizationId(
-    studioClient.clientSlug
-  );
-  if (!organizationId) {
+  const organization = await loadStudioOrganization(client);
+  if (!organization) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Studio client organisation not found' },
       404,
       security.context
     );
   }
+  const studioClient = resolveStudioClient(organization);
+  const organizationId = organization.id;
+
+  const userId = security.context.userId!;
   const canAccessClient = await hasOrganizationAccess(userId, organizationId);
   if (!canAccessClient) {
     return APISecurityChecker.createSecureResponse(
@@ -80,6 +76,11 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
       security.context
     );
   }
+  // The board may be read from the parent workspace; approving needs direct
+  // membership. Tell the client which of the two it holds, computed by the
+  // same function the POST gates on, so a button is never shown that the
+  // POST will refuse.
+  const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
 
   try {
     const drafts = (await listStudioDrafts({
@@ -102,6 +103,12 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
         clientSlug: client,
         displayName: studioClient.displayName,
         organizationId,
+        platforms: studioClient.platforms,
+        funnelUrl: studioClient.funnelUrl,
+        videoConfigured: studioClient.video !== null,
+        configSource: studioClient.configSource,
+        warnings: studioClient.warnings,
+        canApprove,
         board,
         total: drafts.length,
       },
@@ -122,7 +129,19 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   }
 }
 
-const approveSchema = z.object({ draftId: z.string().min(1) });
+const approveSchema = z.object({
+  draftId: z.string().min(1),
+  /** ISO instant to publish at. Omit to publish on the cron's next tick. */
+  scheduledAt: z.string().datetime({ offset: true }).optional(),
+  /**
+   * Campaign-pack blocker ids the approver explicitly discharges with this
+   * approval (e.g. `final_asset_rights_check_required`). Recorded on the draft
+   * when the approval commits. The reserved ids are refused by the service
+   * (`InvalidClearanceError` → 400 with `blockers`), the one place that owns
+   * the rule, so the response names them rather than a generic body error.
+   */
+  clearances: z.array(z.string().min(1).max(120)).max(10).optional(),
+});
 
 export async function POST(request: NextRequest, { params }: RouteCtx) {
   const security = await APISecurityChecker.check(
@@ -148,54 +167,135 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
   }
 
   const { client } = await params;
-  if (!getStudioClient(client)) {
-    return APISecurityChecker.createSecureResponse(
-      { error: 'Unknown studio client' },
-      404,
-      security.context
-    );
-  }
-
-  const userId = security.context.userId!;
-  const organizationId = await resolveClientOrganizationId(client);
-  if (!organizationId) {
+  const organization = await loadStudioOrganization(client);
+  if (!organization) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Studio client organisation not found' },
       404,
       security.context
     );
   }
-  const canAccessClient = await hasOrganizationAccess(userId, organizationId);
-  if (!canAccessClient) {
+  const studioClient = resolveStudioClient(organization);
+  const organizationId = organization.id;
+
+  // Approving publishes on the organisation's behalf: the approver must belong
+  // to THIS organisation (member, owner, or user), not merely to its parent
+  // workspace. Reading the board (GET) keeps the wider check.
+  const userId = security.context.userId!;
+  const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
+  if (!canApprove) {
+    // Distinguishable from the board's 403: this caller may be able to READ
+    // the board (parent workspace) and still not speak for the organisation.
     return APISecurityChecker.createSecureResponse(
-      { error: 'Forbidden' },
+      {
+        error:
+          'Approval requires membership of this organisation (its own member or an active business owner), not of its parent workspace',
+        organizationId,
+      },
       403,
       security.context
     );
   }
 
   try {
-    const count = await approveStudioDraft({
+    const result = await approveAndScheduleStudioDraft({
       organizationId,
       id: parsed.data.draftId,
       approvedBy: userId,
+      client: studioClient,
+      scheduledAt: parsed.data.scheduledAt
+        ? new Date(parsed.data.scheduledAt)
+        : undefined,
+      clearances: parsed.data.clearances,
     });
-    if (count === 0) {
+
+    switch (result.outcome) {
+      case 'not_awaiting_approval':
+        return APISecurityChecker.createSecureResponse(
+          { error: 'Draft not found or not awaiting approval' },
+          404,
+          security.context
+        );
+      case 'blocked': {
+        // The draft is back in awaiting_approval; the reasons name what to
+        // clear. When the organisation's publish-safety state is the block,
+        // the response names the organisation and the action that opens it —
+        // a fail-closed gate whose message does not say which row opens it
+        // reads as a bug.
+        const orgGated = result.skipped.some(entry =>
+          entry.reason.startsWith('org_publish_gate')
+        );
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'External publishing is blocked for this draft; it remains awaiting approval',
+            draftId: parsed.data.draftId,
+            organizationId,
+            outcome: result.outcome,
+            skipped: result.skipped,
+            ...(orgGated
+              ? {
+                  remedy: {
+                    action: 'POST /api/calendar/live-mode-activate',
+                    body: { tier: 1, confirmed: true, organizationId },
+                    note: 'The organisation must be calendarMode live and not paused before a Studio post can be scheduled.',
+                  },
+                }
+              : {}),
+          },
+          409,
+          security.context
+        );
+      }
+      case 'schedule_failed':
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'Scheduling failed; the draft remains awaiting approval and can be retried',
+            draftId: parsed.data.draftId,
+            outcome: result.outcome,
+            skipped: result.skipped,
+          },
+          502,
+          security.context
+        );
+      case 'approved':
+        return APISecurityChecker.createSecureResponse(
+          {
+            approved: true,
+            draftId: parsed.data.draftId,
+            outcome: result.outcome,
+            scheduled: result.scheduled,
+            skipped: result.skipped,
+          },
+          200,
+          security.context
+        );
+    }
+  } catch (error) {
+    if (error instanceof InvalidClearanceError) {
       return APISecurityChecker.createSecureResponse(
-        { error: 'Draft not found or not awaiting approval' },
-        404,
+        { error: error.message, blockers: error.blockers },
+        400,
         security.context
       );
     }
-    return APISecurityChecker.createSecureResponse(
-      { approved: true, draftId: parsed.data.draftId },
-      200,
-      security.context
-    );
-  } catch (error) {
     logger.error('studio draft approval failed', {
       organizationId,
+      draftId: parsed.data.draftId,
       error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    // The bridge tracks failures inside its own boundaries; anything that
+    // escapes to here (a rejected claim, a rejected final record) must reach
+    // the error backend too, with the draft named so one can be reproduced.
+    trackError(error, {
+      operation: 'studio/approve-and-schedule',
+      metadata: {
+        organizationId,
+        clientSlug: client,
+        draftId: parsed.data.draftId,
+        stage: 'route',
+      },
     });
     return APISecurityChecker.createSecureResponse(
       { error: 'Failed to approve draft' },

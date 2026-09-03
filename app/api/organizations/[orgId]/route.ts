@@ -23,22 +23,98 @@ import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { ClientLabelPolicySchema } from '@/lib/intentscape/client-label-pipeline';
+import { studioSettingsSchema } from '@/lib/marketing-agency/studio/clients';
 
 const organizationSettingsSchema = z
   .record(z.string(), z.unknown())
   .superRefine((settings, context) => {
-    if (settings.autoLabelPipeline === undefined) return;
-    const result = ClientLabelPolicySchema.safeParse(
-      settings.autoLabelPipeline
-    );
-    if (!result.success) {
-      context.addIssue({
-        code: 'custom',
-        path: ['autoLabelPipeline'],
-        message: 'Auto Label Pipeline policy is invalid.',
-      });
+    if (settings.autoLabelPipeline !== undefined) {
+      const result = ClientLabelPolicySchema.safeParse(
+        settings.autoLabelPipeline
+      );
+      if (!result.success) {
+        context.addIssue({
+          code: 'custom',
+          path: ['autoLabelPipeline'],
+          message: 'Auto Label Pipeline policy is invalid.',
+        });
+      }
+    }
+    // `settings.studio` is validated AFTER the merge with the stored object
+    // (see the PATCH handler): the Studio reads the merged object with
+    // `studioSettingsSchema` and ignores all of it on any error, so it is the
+    // merged result that must be valid, not the fragment.
+    if (settings.studio !== undefined && settings.studio !== null) {
+      if (
+        typeof settings.studio !== 'object' ||
+        Array.isArray(settings.studio)
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['studio'],
+          message: 'Studio settings must be an object (or null to clear them).',
+        });
+      }
     }
   });
+
+/**
+ * Merge semantics for `settings` on PATCH, in one place so the next key does
+ * not invent a third rule:
+ *   - top level: shallow merge, client keys replace stored keys;
+ *   - `provisioning`: reserved, server-owned, never client-writable;
+ *   - `studio`: merged ONE level deep (avatar, voice and likeness consent
+ *     travel together, and a PATCH of `{ studio: { funnelUrl } }` must not
+ *     erase the consent); a key sent as `null` is REMOVED; `studio: null`
+ *     clears the whole object; the merged result is validated with the
+ *     Studio's own schema and the write is refused on any error;
+ *   - `studio.consent`: `recordedBy` / `recordedAt` are stamped from the
+ *     authenticated caller and the server clock, never taken from the client.
+ */
+function mergeStudioSettings(
+  existing: unknown,
+  fragment: unknown,
+  recordedBy: string,
+  now: Date
+):
+  | { ok: true; studio: Record<string, unknown> | null }
+  | { ok: false; error: string } {
+  if (fragment === null) return { ok: true, studio: null };
+  const base =
+    existing && typeof existing === 'object' && !Array.isArray(existing)
+      ? { ...(existing as Record<string, unknown>) }
+      : {};
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(
+    fragment as Record<string, unknown>
+  )) {
+    if (value === null) delete merged[key];
+    else merged[key] = value;
+  }
+  const clientConsent = (fragment as Record<string, unknown>).consent;
+  if (clientConsent && typeof clientConsent === 'object') {
+    const {
+      recordedBy: _by,
+      recordedAt: _at,
+      ...consent
+    } = clientConsent as Record<string, unknown>;
+    merged.consent = {
+      ...consent,
+      recordedBy,
+      recordedAt: now.toISOString(),
+    };
+  }
+  const parsed = studioSettingsSchema.safeParse(merged);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: `Studio settings are invalid after merge: ${parsed.error.issues
+        .map(issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+        .join('; ')}`,
+    };
+  }
+  return { ok: true, studio: parsed.data as Record<string, unknown> };
+}
 
 const updateOrganizationSchema = z.object({
   name: z.string().min(1).optional(),
@@ -325,7 +401,26 @@ export async function PATCH(
     if (updateData.settings !== undefined) {
       const { provisioning: _clientSupplied, ...clientSettings } =
         updateData.settings as Record<string, unknown>;
-      const mergedSettings = { ...existingSettings, ...clientSettings };
+      // `settings.studio`: see mergeStudioSettings for the rules.
+      const clientStudio = clientSettings.studio;
+      let studio: Record<string, unknown> | null | undefined;
+      if (clientStudio !== undefined) {
+        const merge = mergeStudioSettings(
+          existingSettings.studio,
+          clientStudio,
+          userId,
+          new Date()
+        );
+        if (!merge.ok) {
+          return ResponseOptimizer.createErrorResponse(merge.error, 400);
+        }
+        studio = merge.studio;
+      }
+      const mergedSettings = {
+        ...existingSettings,
+        ...clientSettings,
+        ...(clientStudio !== undefined ? { studio } : {}),
+      };
       updateData.settings = isProvisioned
         ? { ...mergedSettings, provisioning: existingSettings.provisioning }
         : mergedSettings;

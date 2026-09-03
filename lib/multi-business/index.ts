@@ -73,5 +73,6 @@ export {
   getEffectiveOrganizationId,
   getEffectiveQueryFilter,
   hasOrganizationAccess,
+  hasDirectOrganizationAccess,
   getAccessibleOrganizationIds,
 } from './business-scope';

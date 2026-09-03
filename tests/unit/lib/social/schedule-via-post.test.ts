@@ -104,7 +104,11 @@ describe('scheduleViaPost — lands in the working Post + cron scheduler', () =>
     });
 
     expect(mockPrisma.campaign.findFirst).toHaveBeenCalledWith({
-      where: { userId: 'user-1', name: 'Scheduled Posts', organizationId: 'org-1' },
+      where: {
+        userId: 'user-1',
+        name: 'Scheduled Posts',
+        organizationId: 'org-1',
+      },
       select: { id: true },
     });
     expect(mockPrisma.campaign.create).not.toHaveBeenCalled();
@@ -124,5 +128,70 @@ describe('scheduleViaPost — lands in the working Post + cron scheduler', () =>
     expect(mockPrisma.campaign.create).toHaveBeenCalledTimes(1);
     const createArg = mockPrisma.post.create.mock.calls[0][0];
     expect(createArg.data.campaignId).toBe('camp-new');
+  });
+
+  it('scopes to an explicit organizationId without consulting the active org (Studio approval, g2)', async () => {
+    mockPrisma.campaign.findFirst.mockResolvedValue(null);
+    mockPrisma.campaign.create.mockResolvedValue({ id: 'camp-carsi' });
+
+    await scheduleViaPost({
+      userId: 'user-1',
+      platform: 'linkedin',
+      content: 'c',
+      scheduledTime: when,
+      organizationId: 'org-carsi',
+    });
+
+    // The approver's active org must never capture another business's post.
+    expect(mockGetEffectiveOrganizationId).not.toHaveBeenCalled();
+    expect(mockPrisma.campaign.findFirst).toHaveBeenCalledWith({
+      where: {
+        userId: 'user-1',
+        name: 'Scheduled Posts',
+        organizationId: 'org-carsi',
+      },
+      select: { id: true },
+    });
+    expect(
+      mockPrisma.campaign.create.mock.calls[0][0].data.organizationId
+    ).toBe('org-carsi');
+  });
+
+  it('writes through the client it is handed and never the global one (the Studio approval runs inside a transaction)', async () => {
+    const tx = {
+      campaign: {
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({ id: 'camp-tx' }),
+      },
+      post: {
+        create: jest.fn().mockResolvedValue({
+          id: 'post-tx',
+          platform: 'linkedin',
+          scheduledAt: when,
+        }),
+      },
+    };
+
+    const result = await scheduleViaPost(
+      {
+        userId: 'user-1',
+        platform: 'linkedin',
+        content: 'c',
+        scheduledTime: when,
+        organizationId: 'org-carsi',
+      },
+      tx as unknown as Parameters<typeof scheduleViaPost>[1]
+    );
+
+    expect(tx.campaign.findFirst).toHaveBeenCalledTimes(1);
+    expect(tx.campaign.create).toHaveBeenCalledTimes(1);
+    expect(tx.post.create).toHaveBeenCalledTimes(1);
+    expect(tx.post.create.mock.calls[0][0].data.campaignId).toBe('camp-tx');
+    expect(result.id).toBe('post-tx');
+    // A rollback of `tx` must take the campaign and the Post with it, which
+    // only holds if nothing here went through the global client.
+    expect(mockPrisma.campaign.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.campaign.create).not.toHaveBeenCalled();
+    expect(mockPrisma.post.create).not.toHaveBeenCalled();
   });
 });

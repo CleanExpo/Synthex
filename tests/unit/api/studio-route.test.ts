@@ -1,6 +1,12 @@
 /**
  * Unit tests for the Client Content Studio board API (SYN-1005 / VS-6).
- * Auth, client-org resolution, access checks, board reads, and approve gate.
+ * Auth, client-org resolution, access checks, board reads, and the approve gate.
+ *
+ * g9: the `[client]` segment is the organisation slug and the Studio config is
+ * derived from the organisation record — there is no hardcoded client registry,
+ * so a business that exists in the vault gets a board with no code change.
+ * g2: approving a draft schedules it through the approve→schedule bridge; a
+ * blocked or failed schedule hands the draft back and answers 409 / 502.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -11,10 +17,10 @@ const mockSecureResponse = jest.fn((data: unknown, status = 200) => ({
   json: async () => data,
 }));
 const mockHasOrganizationAccess = jest.fn();
+const mockHasDirectOrganizationAccess = jest.fn();
 const mockOrganizationFindUnique = jest.fn();
 const mockListStudioDrafts = jest.fn();
-const mockApproveStudioDraft = jest.fn();
-const mockGetStudioClient = jest.fn();
+const mockApproveAndSchedule = jest.fn();
 
 jest.mock('@/lib/security/api-security-checker', () => ({
   APISecurityChecker: {
@@ -31,6 +37,10 @@ jest.mock('@/lib/multi-business', () => ({
   hasOrganizationAccess: (...args: unknown[]) =>
     mockHasOrganizationAccess(...args),
 }));
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  hasDirectOrganizationAccess: (...args: unknown[]) =>
+    mockHasDirectOrganizationAccess(...args),
+}));
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -43,18 +53,55 @@ jest.mock('@/lib/prisma', () => ({
 
 jest.mock('@/lib/marketing-agency/studio/draft-store', () => ({
   listStudioDrafts: (...args: unknown[]) => mockListStudioDrafts(...args),
-  approveStudioDraft: (...args: unknown[]) => mockApproveStudioDraft(...args),
 }));
 
-jest.mock('@/lib/marketing-agency/studio/clients', () => ({
-  getStudioClient: (...args: unknown[]) => mockGetStudioClient(...args),
+jest.mock('@/lib/marketing-agency/studio/approve-and-schedule', () => ({
+  approveAndScheduleStudioDraft: (...args: unknown[]) =>
+    mockApproveAndSchedule(...args),
+  APPROVAL_BLOCKER: 'human_or_client_approval_required',
+  CREDENTIALS_BLOCKER: 'platform_credentials_required',
+  RESERVED_CLEARANCES: new Set([
+    'human_or_client_approval_required',
+    'platform_credentials_required',
+  ]),
+  InvalidClearanceError: class InvalidClearanceError extends Error {
+    blockers: string[];
+    constructor(blockers: string[]) {
+      super(
+        `These blockers cannot be discharged by naming them: ${blockers.join(', ')}`
+      );
+      this.blockers = blockers;
+    }
+  },
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
+const mockTrackError = jest.fn();
+jest.mock('@/lib/observability/error-tracker', () => ({
+  trackError: (...args: unknown[]) => mockTrackError(...args),
+}));
 
 import { GET, POST } from '@/app/api/marketing-agency/studio/[client]/route';
+import { InvalidClearanceError } from '@/lib/marketing-agency/studio/approve-and-schedule';
 
 const ctx = { params: Promise.resolve({ client: 'restoreassist' }) };
+
+const RA_ORG = {
+  id: 'org-ra',
+  name: 'RestoreAssist',
+  slug: 'restoreassist',
+  website: 'https://restoreassist.com.au',
+  settings: null,
+};
+
+const ORG_SELECT = {
+  where: { slug: 'restoreassist' },
+  select: { id: true, name: true, slug: true, website: true, settings: true },
+};
+
+function approveRequest(body: unknown) {
+  return createMockNextRequest({ method: 'POST', url: 'http://x', body });
+}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -66,11 +113,14 @@ beforeEach(() => {
     allowed: true,
     context: { userId: 'user-1' },
   });
-  mockOrganizationFindUnique.mockResolvedValue({ id: 'org-ra' });
+  mockOrganizationFindUnique.mockResolvedValue(RA_ORG);
   mockHasOrganizationAccess.mockResolvedValue(true);
-  mockGetStudioClient.mockReturnValue({
-    clientSlug: 'restoreassist',
-    displayName: 'RestoreAssist',
+  mockHasDirectOrganizationAccess.mockResolvedValue(true);
+  mockApproveAndSchedule.mockResolvedValue({
+    approved: true,
+    outcome: 'approved',
+    scheduled: [],
+    skipped: [],
   });
 });
 
@@ -105,13 +155,30 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
     expect(mockListStudioDrafts).not.toHaveBeenCalled();
   });
 
-  it('returns 404 for unknown studio clients', async () => {
-    mockGetStudioClient.mockReturnValueOnce(undefined);
-    const res = await GET(createMockNextRequest({ url: 'http://x' }), {
-      params: Promise.resolve({ client: 'unknown-client' }),
+  it('serves a business that exists in the vault but was never in the old hardcoded registry (g9)', async () => {
+    mockOrganizationFindUnique.mockResolvedValueOnce({
+      id: 'org-ccw',
+      name: 'Carpet Cleaners Warehouse',
+      slug: 'ccw',
+      website: 'https://ccwonline.com.au',
+      settings: null,
     });
-    expect(res.status).toBe(404);
-    expect(mockListStudioDrafts).not.toHaveBeenCalled();
+    mockListStudioDrafts.mockResolvedValue([]);
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), {
+      params: Promise.resolve({ client: 'ccw' }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.displayName).toBe('Carpet Cleaners Warehouse');
+    expect(body.organizationId).toBe('org-ccw');
+    expect(body.funnelUrl).toBe('https://ccwonline.com.au');
+    // Unconfigured video is reported, not papered over with a placeholder.
+    expect(body.videoConfigured).toBe(false);
+    expect(JSON.stringify(body)).not.toMatch(/PLACEHOLDER/);
+    expect(mockListStudioDrafts).toHaveBeenCalledWith({
+      organizationId: 'org-ccw',
+      clientSlug: 'ccw',
+    });
   });
 
   it('returns 200 with an org-scoped board grouped by status', async () => {
@@ -127,10 +194,7 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
     expect(body.board.awaiting_approval).toHaveLength(2);
     expect(body.board.approved).toHaveLength(1);
     expect(body.total).toBe(3);
-    expect(mockOrganizationFindUnique).toHaveBeenCalledWith({
-      where: { slug: 'restoreassist' },
-      select: { id: true },
-    });
+    expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
     expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
     // client-org-scoped read
     expect(mockListStudioDrafts).toHaveBeenCalledWith({
@@ -140,101 +204,273 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
   });
 });
 
-describe('POST /api/marketing-agency/studio/[client] (approve)', () => {
+describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', () => {
   it('returns 401 when unauthenticated', async () => {
     mockSecurityCheck.mockResolvedValueOnce({
       allowed: false,
       error: 'Auth required',
       context: {},
     });
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      ctx
-    );
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(401);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
   it('returns 400 on an invalid body', async () => {
+    const res = await POST(approveRequest({ nope: true }), ctx);
+    expect(res.status).toBe(400);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when scheduledAt is not an ISO instant', async () => {
     const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { nope: true },
-      }),
+      approveRequest({ draftId: 'd1', scheduledAt: 'tomorrow' }),
       ctx
     );
     expect(res.status).toBe(400);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
   it('returns 404 when the draft is not found / not awaiting approval / wrong org', async () => {
-    mockApproveStudioDraft.mockResolvedValue(0);
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      ctx
-    );
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'not_awaiting_approval',
+      scheduled: [],
+      skipped: [],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(404);
   });
 
-  it('returns 403 on approve when the user cannot access the client organisation', async () => {
-    mockHasOrganizationAccess.mockResolvedValueOnce(false);
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      ctx
-    );
+  it('returns 403 on approve when the user does not belong to the client organisation', async () => {
+    mockHasDirectOrganizationAccess.mockResolvedValueOnce(false);
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
     expect(res.status).toBe(403);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
   });
 
-  it('returns 404 on approve for unknown studio clients', async () => {
-    mockGetStudioClient.mockReturnValueOnce(undefined);
-    const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
-      }),
-      { params: Promise.resolve({ client: 'unknown-client' }) }
+  it('refuses (403) an approver who only belongs to the parent workspace, while the board (GET) still serves them', async () => {
+    // Seeing a child brand from the parent workspace is not the same as being
+    // allowed to publish on its behalf.
+    mockHasOrganizationAccess.mockResolvedValue(true);
+    mockHasDirectOrganizationAccess.mockResolvedValue(false);
+
+    const post = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(post.status).toBe(403);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+    expect(mockHasDirectOrganizationAccess).toHaveBeenCalledWith(
+      'user-1',
+      'org-ra'
     );
-    expect(res.status).toBe(404);
-    expect(mockApproveStudioDraft).not.toHaveBeenCalled();
+
+    mockListStudioDrafts.mockResolvedValue([]);
+    const get = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
+    expect(get.status).toBe(200);
+    // The board tells the client which of the two it holds, computed by the
+    // same function the POST gates on.
+    expect((await get.json()).canApprove).toBe(false);
   });
 
-  it('returns 200 and approves (org-scoped, approvedBy = caller) on success', async () => {
-    mockApproveStudioDraft.mockResolvedValue(1);
+  it('names the organisation and the remedy when the organisation publish-safety state blocks the approval', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'blocked',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason: 'org_publish_gate: calendar_mode_shadow',
+        },
+      ],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.organizationId).toBe('org-ra');
+    expect(body.remedy).toEqual(
+      expect.objectContaining({
+        action: 'POST /api/calendar/live-mode-activate',
+        body: { tier: 1, confirmed: true, organizationId: 'org-ra' },
+      })
+    );
+  });
+
+  it('reaches the error backend with the draft named when the bridge rejects (500)', async () => {
+    mockApproveAndSchedule.mockRejectedValueOnce(
+      new Error('draft record unavailable')
+    );
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(500);
+    expect(mockTrackError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        operation: 'studio/approve-and-schedule',
+        metadata: expect.objectContaining({
+          organizationId: 'org-ra',
+          draftId: 'd1',
+          stage: 'route',
+        }),
+      })
+    );
+  });
+
+  it('returns 404 on approve when the organisation does not exist', async () => {
+    mockOrganizationFindUnique.mockResolvedValueOnce(null);
+    const res = await POST(approveRequest({ draftId: 'd1' }), {
+      params: Promise.resolve({ client: 'unknown-client' }),
+    });
+    expect(res.status).toBe(404);
+    expect(mockApproveAndSchedule).not.toHaveBeenCalled();
+  });
+
+  it('approves through the bridge (org-scoped, approvedBy = caller, client resolved from the org) and returns what was scheduled', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: true,
+      outcome: 'approved',
+      scheduled: [
+        {
+          platform: 'linkedin',
+          postId: 'post-1',
+          scheduledAt: '2026-09-02T14:00:00.000Z',
+          linkUrl: 'https://restoreassist.com.au/?utm_source=linkedin',
+        },
+      ],
+      skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
+    });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({
+      approved: true,
+      draftId: 'd1',
+      outcome: 'approved',
+      scheduled: [
+        {
+          platform: 'linkedin',
+          postId: 'post-1',
+          scheduledAt: '2026-09-02T14:00:00.000Z',
+          linkUrl: 'https://restoreassist.com.au/?utm_source=linkedin',
+        },
+      ],
+      skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
+    });
+    expect(mockOrganizationFindUnique).toHaveBeenCalledWith(ORG_SELECT);
+    expect(mockHasDirectOrganizationAccess).toHaveBeenCalledWith(
+      'user-1',
+      'org-ra'
+    );
+    expect(mockApproveAndSchedule).toHaveBeenCalledWith({
+      organizationId: 'org-ra',
+      id: 'd1',
+      approvedBy: 'user-1',
+      client: expect.objectContaining({
+        clientSlug: 'restoreassist',
+        funnelUrl: 'https://restoreassist.com.au',
+      }),
+      scheduledAt: undefined,
+      clearances: undefined,
+    });
+  });
+
+  it('passes a caller-supplied scheduledAt through as a Date', async () => {
     const res = await POST(
-      createMockNextRequest({
-        method: 'POST',
-        url: 'http://x',
-        body: { draftId: 'd1' },
+      approveRequest({
+        draftId: 'd1',
+        scheduledAt: '2026-09-03T09:00:00.000Z',
       }),
       ctx
     );
     expect(res.status).toBe(200);
+    expect(mockApproveAndSchedule.mock.calls[0][0].scheduledAt).toEqual(
+      new Date('2026-09-03T09:00:00.000Z')
+    );
+  });
+
+  it('passes explicit clearances through so the approver can discharge a pack blocker on record', async () => {
+    const res = await POST(
+      approveRequest({
+        draftId: 'd1',
+        clearances: ['final_asset_rights_check_required'],
+      }),
+      ctx
+    );
+    expect(res.status).toBe(200);
+    expect(mockApproveAndSchedule.mock.calls[0][0].clearances).toEqual([
+      'final_asset_rights_check_required',
+    ]);
+  });
+
+  it('returns 400 naming the blockers when clearances name a reserved blocker (credentials must come from a live connection)', async () => {
+    // The service owns the rule and refuses before any claim; the route turns
+    // its typed error into the 400 a client can act on.
+    mockApproveAndSchedule.mockRejectedValueOnce(
+      new InvalidClearanceError(['platform_credentials_required'])
+    );
+    const res = await POST(
+      approveRequest({
+        draftId: 'd1',
+        clearances: ['platform_credentials_required'],
+      }),
+      ctx
+    );
+    expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.approved).toBe(true);
-    expect(mockOrganizationFindUnique).toHaveBeenCalledWith({
-      where: { slug: 'restoreassist' },
-      select: { id: true },
+    expect(body.blockers).toEqual(['platform_credentials_required']);
+    expect(body.error).toMatch(/cannot be discharged/);
+  });
+
+  it('returns 400 naming the blocker when clearances name the approval blocker (the click is the approval)', async () => {
+    mockApproveAndSchedule.mockRejectedValueOnce(
+      new InvalidClearanceError(['human_or_client_approval_required'])
+    );
+    const res = await POST(
+      approveRequest({
+        draftId: 'd1',
+        clearances: ['human_or_client_approval_required'],
+      }),
+      ctx
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).blockers).toEqual([
+      'human_or_client_approval_required',
+    ]);
+  });
+
+  it('answers 409 with the reasons when the pack blocks external publishing (the draft is handed back)', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'blocked',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason:
+            'external_publish_blocked: platform_credentials_required, final_asset_rights_check_required',
+        },
+      ],
     });
-    expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-ra');
-    expect(mockApproveStudioDraft).toHaveBeenCalledWith({
-      organizationId: 'org-ra',
-      id: 'd1',
-      approvedBy: 'user-1',
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(409);
+    const body = await res.json();
+    expect(body.outcome).toBe('blocked');
+    expect(body.skipped[0].reason).toMatch(/platform_credentials_required/);
+  });
+
+  it('answers 502 when every platform failed to schedule (the draft is handed back for retry)', async () => {
+    mockApproveAndSchedule.mockResolvedValue({
+      approved: false,
+      outcome: 'schedule_failed',
+      scheduled: [],
+      skipped: [
+        {
+          platform: 'linkedin',
+          reason: 'schedule_failed: database unavailable',
+        },
+      ],
     });
+    const res = await POST(approveRequest({ draftId: 'd1' }), ctx);
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.outcome).toBe('schedule_failed');
   });
 });

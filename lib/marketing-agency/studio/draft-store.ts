@@ -7,12 +7,13 @@
  */
 
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 import type { Prisma } from '@prisma/client';
 
 /** Minimal slice of the Prisma StudioContentDraft delegate we use (injectable for tests). */
 export type StudioDraftDelegate = Pick<
   typeof prisma.studioContentDraft,
-  'create' | 'findMany' | 'updateMany' | 'upsert'
+  'create' | 'findMany' | 'findFirst' | 'updateMany' | 'upsert'
 >;
 
 const defaultDelegate = (): StudioDraftDelegate => prisma.studioContentDraft;
@@ -30,6 +31,13 @@ export interface SaveStudioDraftInput {
   metadata?: Prisma.InputJsonObject;
 }
 
+/**
+ * Save (or re-save, by dedupe key) a draft. A draft that has LEFT
+ * `awaiting_approval` is never overwritten: its script is what a human
+ * approved and its metadata carries the approval record and the scheduled
+ * Posts, so a regenerated version is a new draft, not an edit. The existing
+ * row is returned untouched and the skip is logged.
+ */
 export async function saveStudioDraft(
   input: SaveStudioDraftInput,
   delegate: StudioDraftDelegate = defaultDelegate()
@@ -56,20 +64,38 @@ export async function saveStudioDraft(
     });
   }
 
-  return delegate.upsert({
-    where: {
-      organizationId_clientSlug_dedupeKey: {
-        organizationId: input.organizationId,
-        clientSlug: input.clientSlug,
-        dedupeKey: input.dedupeKey,
-      },
-    },
-    create: {
-      ...data,
-      status: 'awaiting_approval',
-    },
-    update: data,
+  // The status predicate lives IN the write, never in a read before it: a
+  // guard evaluated in a previous statement can be overtaken by an approval
+  // that commits between the two. One conditional update; on zero rows the
+  // draft is either new (create) or has left awaiting_approval (the unique
+  // index turns that into P2002, and the row is returned untouched).
+  const key = {
+    organizationId: input.organizationId,
+    clientSlug: input.clientSlug,
+    dedupeKey: input.dedupeKey,
+  };
+  const updated = await delegate.updateMany({
+    where: { ...key, status: 'awaiting_approval' },
+    data,
   });
+  if (updated.count > 0) {
+    return delegate.findFirst({ where: key });
+  }
+  try {
+    return await delegate.create({
+      data: { ...data, status: 'awaiting_approval' },
+    });
+  } catch (error) {
+    if ((error as { code?: string })?.code !== 'P2002') throw error;
+    const existing = await delegate.findFirst({ where: key });
+    logger.warn('studio draft not overwritten: it has left awaiting_approval', {
+      organizationId: input.organizationId,
+      clientSlug: input.clientSlug,
+      dedupeKey: input.dedupeKey,
+      status: existing?.status,
+    });
+    return existing;
+  }
 }
 
 export interface ListStudioDraftsInput {

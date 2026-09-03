@@ -1,7 +1,7 @@
 /**
  * POST /api/calendar/live-mode-activate
  *
- * Activates Tier-1 live mode for the authenticated org.
+ * Activates Tier-1 live mode for an organisation.
  * Tier 1: autonomous posting for the single best content category
  * in the highest-performing time slot only.
  *
@@ -13,12 +13,21 @@
  * Can only advance tier (never regress via this route — use /api/calendar/pause
  * or /api/calendar/mode to switch back to shadow).
  *
- * @task SYN-552
+ * Target organisation: the caller's own organisation by default. A caller may
+ * name another organisation (`organizationId`) they belong to directly —
+ * member, active owner, or user of it; never through the parent workspace —
+ * because the Studio approval gates on THAT organisation's publish-safety
+ * state (lib/publish/safetyChecks.ts), and a client organisation whose only
+ * operators sit in the parent workspace would otherwise have no reachable way
+ * to be made live.
+ *
+ * @task SYN-552, SYN-1144
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { hasDirectOrganizationAccess } from '@/lib/multi-business/business-scope';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
@@ -27,6 +36,12 @@ const ActivateSchema = z.object({
   tier: z.literal(1),
   /** Client's explicit confirmation of the activation ceremony. */
   confirmed: z.literal(true),
+  /**
+   * The organisation to activate. Omit for the caller's own organisation.
+   * Another organisation is accepted only when the caller belongs to it
+   * directly (see the module comment).
+   */
+  organizationId: z.string().min(1).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -55,7 +70,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { organizationId } = user;
+  const organizationId = parsed.data.organizationId ?? user.organizationId;
+  if (organizationId !== user.organizationId) {
+    const belongs = await hasDirectOrganizationAccess(userId, organizationId);
+    if (!belongs) {
+      return NextResponse.json(
+        { error: 'Forbidden: you do not belong to that organisation' },
+        { status: 403 }
+      );
+    }
+  }
 
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
@@ -69,10 +93,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Idempotent — if already at tier 1+, just return current state
-  if (org.liveModeT >= 1) {
+  // Idempotent only when BOTH halves are live. The tier can stay at 1 while
+  // PUT /api/calendar/mode has put the calendar back in shadow, and the Studio
+  // gate reads calendarMode — answering "Already in live mode" in that mixed
+  // state would be a false success that leaves every approval blocked. In the
+  // mixed state, re-open the calendar and keep the tier.
+  if (org.liveModeT >= 1 && org.calendarMode === 'live') {
     return NextResponse.json({
       success: true,
+      organizationId,
       liveModeT: org.liveModeT,
       calendarMode: org.calendarMode,
       message: 'Already in live mode',
@@ -82,19 +111,21 @@ export async function POST(request: NextRequest) {
   const updated = await prisma.organization.update({
     where: { id: organizationId },
     data: {
-      liveModeT: 1,
+      liveModeT: Math.max(org.liveModeT, 1),
       calendarMode: 'live',
-      liveModeActivatedAt: new Date(),
+      ...(org.liveModeT < 1 ? { liveModeActivatedAt: new Date() } : {}),
     },
     select: { liveModeT: true, calendarMode: true, liveModeActivatedAt: true },
   });
 
   logger.info('POST /api/calendar/live-mode-activate: Tier 1 activated', {
     organizationId,
+    activatedBy: userId,
   });
 
   return NextResponse.json({
     success: true,
+    organizationId,
     liveModeT: updated.liveModeT,
     calendarMode: updated.calendarMode,
     liveModeActivatedAt: updated.liveModeActivatedAt,
