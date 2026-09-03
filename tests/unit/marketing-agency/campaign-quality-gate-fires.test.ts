@@ -89,12 +89,32 @@ function goodDraft(): CampaignQualityDraftInput {
     slotId: 'slot-01',
     channel: 'linkedin',
     title: 'The hidden machine behind home restoration',
+    // MUST exceed 200 words. Below that, extractFingerprint returns invalid and
+    // scoreHumanness clamps to 85, which caps the draft score at 95 — and then
+    // clearing evidenceRefs drops it to 70 and trips TWO extra score blockers,
+    // destroying the one-check isolation this suite claims. At 200+ clean words
+    // humanness is 100, so the evidence-refs case scores exactly 75: at the floor,
+    // not below it, leaving draft_evidence_refs_missing as the ONLY blocker.
+    // Measured: 258 words, humanness 100, slopDensity 0.
     body: [
-      'When a home floods, a price is set for drying it.',
-      'The homeowner never sees that price. The technician doing the work does not set it.',
-      'No regulator in Australia collects it. That is the gap.',
-      'We went looking for the oversight and found published financials, claims-handling data, and dispute records. None of it reaches inside the contract terms that decide whether a house actually dries.',
-    ].join('\n\n'),
+      'When a home floods in this country, someone sets a price for drying it out.',
+      'The owner never sees that number.',
+      'The technician who runs the fans and the dehumidifiers does not set it either, and often cannot even ask what it is.',
+      'No regulator gathers it.',
+      'We went looking for the oversight that everyone assumes must exist somewhere.',
+      'Insurer financials are published every year. Claims handling is tracked. Disputes are heard, recorded and counted.',
+      'None of that reaches inside the commercial terms which decide whether a house actually dries out properly, or merely looks dry on the day the meter comes out.',
+      'A price that nobody is permitted to see cannot be checked by anyone at all.',
+      'Ask a restorer in private whether it feels any different here, and then watch how carefully they choose their words before answering you.',
+      'That hesitation is the finding.',
+      'We will publish what we can verify from public records, and we will name plainly what stays hidden.',
+      'Where the evidence runs out, we will say so rather than guess.',
+      'This is not an accusation aimed at any single company.',
+      'It is a governance question, and every member of this industry is entitled to ask it out loud.',
+      'The drying itself is simple physics. Water moves, air moves, and a building either dries or it does not.',
+      'What is complicated is the paperwork wrapped around it, and who is allowed to read that paperwork.',
+      'That is what we set out to map, and what we could not map is itself the result.',
+    ].join(' '),
     cta: 'Read the white paper and send us what you have seen.',
     evidenceRefs: ['src-regulator'],
     assetBrief: 'Figure 1: premium flow diagram, owned original artwork',
@@ -236,13 +256,21 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
 });
 
 describe('campaign quality gate — draft-level blockers FIRE', () => {
-  it('fires when a draft cites no evidence at all', () => {
+  it('fires when a draft cites no evidence at all, and is the ONLY blocker', () => {
     const draft = goodDraft();
     draft.evidenceRefs = [];
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain('slot-01:draft_evidence_refs_missing');
+    // EXACT SET, not toContain. Independent review showed that `toContain` plus
+    // `allowed === false` does not prove THIS blocker enforces: clearing
+    // evidenceRefs used to also drop the score to 70, adding two score blockers
+    // that held allowed=false on their own. A mutant excluding
+    // draft_evidence_refs_missing from the verdict therefore survived.
+    // With the 200+ word body the score lands on exactly 75, so this is now the
+    // sole blocker — and excluding it from the verdict flips allowed to true and
+    // fails this test, which is what makes the enforcement claim real.
+    expect(result.blockers).toEqual(['slot-01:draft_evidence_refs_missing']);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
