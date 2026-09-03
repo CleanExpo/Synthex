@@ -93,8 +93,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Idempotent — if already at tier 1+, just return current state
-  if (org.liveModeT >= 1) {
+  // Idempotent only when BOTH halves are live. The tier can stay at 1 while
+  // PUT /api/calendar/mode has put the calendar back in shadow, and the Studio
+  // gate reads calendarMode — answering "Already in live mode" in that mixed
+  // state would be a false success that leaves every approval blocked. In the
+  // mixed state, re-open the calendar and keep the tier.
+  if (org.liveModeT >= 1 && org.calendarMode === 'live') {
     return NextResponse.json({
       success: true,
       organizationId,
@@ -107,9 +111,9 @@ export async function POST(request: NextRequest) {
   const updated = await prisma.organization.update({
     where: { id: organizationId },
     data: {
-      liveModeT: 1,
+      liveModeT: Math.max(org.liveModeT, 1),
       calendarMode: 'live',
-      liveModeActivatedAt: new Date(),
+      ...(org.liveModeT < 1 ? { liveModeActivatedAt: new Date() } : {}),
     },
     select: { liveModeT: true, calendarMode: true, liveModeActivatedAt: true },
   });

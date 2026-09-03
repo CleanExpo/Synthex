@@ -381,6 +381,47 @@ describe('POST /api/calendar/live-mode-activate', () => {
     expect(mockOrgUpdate).not.toHaveBeenCalled();
   });
 
+  it('re-opens a calendar that was put back in shadow while the tier stayed at 1 (no false "already live")', async () => {
+    // PUT /api/calendar/mode can set calendarMode back to shadow without
+    // lowering liveModeT. The Studio gate reads calendarMode, so answering
+    // "Already in live mode" here would leave every approval blocked.
+    mockGetUserId.mockResolvedValue('user-1');
+    mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
+    mockOrgFindUnique.mockResolvedValue({
+      liveModeT: 1,
+      calendarMode: 'shadow',
+    });
+    mockOrgUpdate.mockResolvedValue({
+      liveModeT: 1,
+      calendarMode: 'live',
+      liveModeActivatedAt: new Date('2026-08-01T00:00:00.000Z'),
+    });
+
+    const { POST } =
+      await import('@/app/api/calendar/live-mode-activate/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/calendar/live-mode-activate',
+      body: { tier: 1, confirmed: true },
+    });
+    const res = await POST(req as any);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.calendarMode).toBe('live');
+    expect(body.message).toBeUndefined();
+    expect(mockOrgUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'org-1' },
+        data: expect.objectContaining({ calendarMode: 'live', liveModeT: 1 }),
+      })
+    );
+    // The tier was already 1: the activation timestamp is not rewritten.
+    expect(mockOrgUpdate.mock.calls[0][0].data).not.toHaveProperty(
+      'liveModeActivatedAt'
+    );
+  });
+
   it('is idempotent — returns current state when already tier 1', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     mockUserFindUnique.mockResolvedValue({ organizationId: 'org-1' });
