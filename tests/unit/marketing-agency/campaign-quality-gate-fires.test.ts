@@ -14,12 +14,28 @@
  * 1. `goodInput()` must PASS. Without it, a suite of blocked fixtures is
  *    satisfied by a gate hardwired to `blocked`, which would be a control that
  *    cannot distinguish anything.
- * 2. Every bad fixture is `goodInput()` with EXACTLY ONE mutation. If a fixture
- *    broke five things at once, a block would not prove which check fired, and
- *    a later regression in four of them would stay invisible.
- * 3. Each case asserts the SPECIFIC blocker string, not merely `status ===
- *    'blocked'`. Asserting only the status lets any unrelated blocker satisfy
- *    the test — the gate would look alive while the check under test was dead.
+ * 2. Every bad fixture must produce EXACTLY ONE blocker. Not "one mutation" —
+ *    that was the original claim and it was false twice. One assignment can trip
+ *    several checks at once: clearing `evidenceRefs` also dropped the score below
+ *    75, and slicing `sources` also orphaned a reference the draft still cited.
+ * 3. Each case therefore asserts the EXACT SET (`toEqual([one])`), never
+ *    `toContain`. This is the load-bearing rule, and it is not stylistic.
+ *    `toContain` + `allowed === false` proves only that SOME blocker enforced the
+ *    verdict, not the named one — a companion blocker holds `allowed=false` on its
+ *    own, so the check under test can be dead while the case still passes.
+ *
+ * HOW THAT IS PROVEN, not asserted
+ * --------------------------------
+ * The selective mutant: keep a blocker in the reported array, exclude it from the
+ * status/allowed computation. If a case truly isolates its check, that mutant must
+ * fail exactly that case. Verified across five blockers — `quality_sources_below_3`,
+ * `draft_evidence_refs_missing`, `quality_internal_policy_source_missing`,
+ * `draft_peer_metrics_missing`, `draft_asset_policy_not_publish_safe` — each killing
+ * exactly one test (`1 failed, 16 passed`). Two of those previously survived 17/17.
+ *
+ * Independent review found the coupling defect twice, in two different cases, after
+ * I claimed to have fixed it once. If you add a case here, dump its exact blocker
+ * set and check it is length 1 before trusting it. Reasoning about it is what failed.
  */
 
 import {
@@ -178,17 +194,25 @@ describe('campaign quality gate — the good fixture passes (control for the con
 });
 
 describe('campaign quality gate — manifest-level blockers FIRE', () => {
-  it('fires when there are fewer than three sources', () => {
+  it('fires when there are fewer than three sources, and is the ONLY blocker', () => {
     const manifest = goodManifest();
+    // Keep src-platform + src-policy: dropping either would also trip
+    // quality_official_platform_sources_missing or
+    // quality_internal_policy_source_missing as a companion.
     manifest.sources = manifest.sources.slice(0, 2);
-    // Keep the claim's evidence ref resolvable so only the count differs.
-    manifest.claims[0].evidenceRefs = ['src-platform'];
+    // BOTH referrers must be repointed at a surviving source, not just the claim.
+    // Round 3 review caught exactly this: an earlier version repointed the claim
+    // and left goodDraft() still citing the dropped src-regulator, so
+    // draft_evidence_ref_unknown rode along and held the verdict up on its own.
+    manifest.claims[0].evidenceRefs = ['src-policy'];
+    const draft = goodDraft();
+    draft.evidenceRefs = ['src-policy'];
 
-    const result = run({ manifest });
+    const result = run({ manifest, draft });
 
-    expect(result.status).toBe('blocked');
+    expect(result.blockers).toEqual(['quality_sources_below_3']);
     expect(result.allowed).toBe(false);
-    expect(result.blockers).toContain('quality_sources_below_3');
+    expect(result.status).toBe('blocked');
   });
 
   it('fires when a source has no checkedAt timestamp', () => {
@@ -197,9 +221,9 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
 
     const result = run({ manifest });
 
-    expect(result.blockers).toContain(
-      'quality_sources_missing_checked_locator_or_type'
-    );
+    expect(result.blockers).toEqual([
+      'quality_sources_missing_checked_locator_or_type',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -210,9 +234,9 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
 
     const result = run({ manifest });
 
-    expect(result.blockers).toContain(
-      'quality_official_platform_sources_missing'
-    );
+    expect(result.blockers).toEqual([
+      'quality_official_platform_sources_missing',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -223,7 +247,7 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
 
     const result = run({ manifest });
 
-    expect(result.blockers).toContain('quality_internal_policy_source_missing');
+    expect(result.blockers).toEqual(['quality_internal_policy_source_missing']);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -234,9 +258,9 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
 
     const result = run({ manifest });
 
-    expect(result.blockers).toContain(
-      'quality_claim_evidence_missing:claim-breaches'
-    );
+    expect(result.blockers).toEqual([
+      'quality_claim_evidence_missing:claim-breaches',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -247,9 +271,9 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
 
     const result = run({ manifest });
 
-    expect(result.blockers).toContain(
-      'quality_claim_evidence_ref_unknown:claim-breaches:src-does-not-exist'
-    );
+    expect(result.blockers).toEqual([
+      'quality_claim_evidence_ref_unknown:claim-breaches:src-does-not-exist',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -281,9 +305,9 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain(
-      'slot-01:draft_evidence_ref_unknown:src-ghost'
-    );
+    expect(result.blockers).toEqual([
+      'slot-01:draft_evidence_ref_unknown:src-ghost',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -294,9 +318,9 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain(
-      'slot-01:draft_media_type_expected_feed_image'
-    );
+    expect(result.blockers).toEqual([
+      'slot-01:draft_media_type_expected_feed_image',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -308,9 +332,9 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain(
-      'slot-01:draft_asset_policy_not_publish_safe'
-    );
+    expect(result.blockers).toEqual([
+      'slot-01:draft_asset_policy_not_publish_safe',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -321,9 +345,9 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain(
-      'slot-01:draft_media_review_checks_insufficient'
-    );
+    expect(result.blockers).toEqual([
+      'slot-01:draft_media_review_checks_insufficient',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -336,9 +360,9 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain(
-      'slot-01:draft_video_ai_disclosure_missing'
-    );
+    expect(result.blockers).toEqual([
+      'slot-01:draft_video_ai_disclosure_missing',
+    ]);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -349,7 +373,7 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
 
     const result = run({ draft });
 
-    expect(result.blockers).toContain('slot-01:draft_peer_metrics_missing');
+    expect(result.blockers).toEqual(['slot-01:draft_peer_metrics_missing']);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
@@ -362,7 +386,7 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
     // The EXACT blocker, not a union. An earlier version of this test asserted
     // "humanness OR slop density" and called it an honest hedge; independent
     // review showed the hedge concealed that only one of the two ever fires.
-    expect(result.blockers).toContain('slot-01:draft_slop_density_too_high');
+    expect(result.blockers).toEqual(['slot-01:draft_slop_density_too_high']);
     expect(result.allowed).toBe(false);
     expect(result.status).toBe('blocked');
   });
