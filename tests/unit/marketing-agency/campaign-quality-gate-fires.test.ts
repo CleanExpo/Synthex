@@ -28,14 +28,23 @@
  * --------------------------------
  * The selective mutant: keep a blocker in the reported array, exclude it from the
  * status/allowed computation. If a case truly isolates its check, that mutant must
- * fail exactly that case. Verified across five blockers — `quality_sources_below_3`,
- * `draft_evidence_refs_missing`, `quality_internal_policy_source_missing`,
- * `draft_peer_metrics_missing`, `draft_asset_policy_not_publish_safe` — each killing
- * exactly one test (`1 failed, 16 passed`). Two of those previously survived 17/17.
+ * fail exactly that case. Verified across four live blockers —
+ * `quality_sources_below_3`, `draft_evidence_refs_missing`,
+ * `quality_internal_policy_source_missing`, `draft_peer_metrics_missing` — each
+ * killing exactly one test. Two of those previously survived 17/17.
+ *
+ * (A fifth, `draft_asset_policy_not_publish_safe`, was in that set until round 4
+ * showed its case was reachable only via a type cast. Its case is gone and the
+ * blocker is recorded below as unreachable, so it is no longer a mutant target.
+ * This paragraph is the correction — the earlier count of five is wrong.)
+ *
+ * NO SUFFICIENCY CLAIM. Four mutants dying is four mutants. Nothing here proves the
+ * gate checks the RIGHT things; mutating existing rules cannot surface a missing one.
  *
  * Independent review found the coupling defect twice, in two different cases, after
- * I claimed to have fixed it once. If you add a case here, dump its exact blocker
- * set and check it is length 1 before trusting it. Reasoning about it is what failed.
+ * I claimed to have fixed it once, and found a cast papering over a type error twice
+ * more. If you add a case here: dump its exact blocker set and check it is length 1,
+ * and never reach for `as` to build a fixture. Reasoning about both is what failed.
  */
 
 import {
