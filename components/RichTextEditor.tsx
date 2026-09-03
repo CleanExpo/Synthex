@@ -1,11 +1,9 @@
 'use client';
 
-import {
-  useEditor,
-  EditorContent,
-  BubbleMenu,
-  FloatingMenu,
-} from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+// tiptap v3 moved the menu components out of the package root into ./menus.
+// FloatingMenu was imported here but never rendered, so it is not re-imported.
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import {
   Bold,
@@ -291,11 +289,16 @@ export function RichTextEditor({
       >
         <EditorContent editor={editor} />
 
-        {/* Bubble Menu */}
+        {/*
+          Bubble Menu.
+          tiptap v3 replaced tippy.js with Floating UI. The old `tippyOptions={{ duration: 100 }}`
+          was a tippy fade duration; Floating UI's `options` prop is positioning only
+          (placement / offset / flip / shift / arrow / size), so there is no equivalent and the
+          prop is dropped rather than mapped to something that would not mean the same thing.
+        */}
         {editor && editable && (
           <BubbleMenu
             editor={editor}
-            tippyOptions={{ duration: 100 }}
             className="bg-white/[0.02] backdrop-blur-xl border border-white/[0.08] p-1 flex items-center gap-1 rounded-lg shadow-xl"
           >
             <ToolbarButton
