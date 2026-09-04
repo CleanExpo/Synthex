@@ -628,6 +628,32 @@ describe('campaign quality gate — composite conjunct: the evidence exemption',
     // failing case: the claim would then be blocked for having no refs.
     expect(run({ manifest }).blockers).toEqual([]);
   });
+
+  // Round 6 P2: `evidenceRefs` is OPTIONAL on CampaignManifestClaim
+  // (campaign-authority-manifest.ts:27), and the gate spells the check
+  // `!claim.evidenceRefs?.length` — which is true for BOTH `[]` and an omitted
+  // field. Every fixture supplied `[]`, so the omitted branch was unpinned.
+  //
+  // MEASURED, not assumed: rewriting the check as `evidenceRefs?.length === 0`
+  // — which still catches `[]` but lets `undefined` through, because
+  // `undefined === 0` is false — survived the whole suite 22/22 before this
+  // case existed. With this case it dies here.
+  it('blocks a claim that OMITS evidenceRefs, not only one with an empty array', () => {
+    const manifest = goodManifest();
+    manifest.claims = [
+      ...manifest.claims,
+      {
+        id: 'claim-omitted',
+        statement: 'Drying certificates are issued at the end of a job.',
+        status: 'verified',
+        // evidenceRefs deliberately absent — this is the point of the case.
+      },
+    ];
+
+    expect(run({ manifest }).blockers).toEqual([
+      'quality_claim_evidence_missing:claim-omitted',
+    ]);
+  });
 });
 
 describe('campaign quality gate — composite conjunct: peer plan is social-only', () => {
@@ -643,6 +669,26 @@ describe('campaign quality gate — composite conjunct: peer plan is social-only
     // so no companion score blocker muddies the set.
     expect(run({ draft }).blockers).toEqual([]);
   });
+
+  // Round 6 P2: the case above damages only `comparableMetrics`, so it pins one
+  // of the FOUR checks the exemption covers. Move any of the other three out of
+  // the `channelNeedsPeerPlan` branch and it would not notice — the fixture
+  // leaves them valid. This case damages all four at once, so the exemption has
+  // to hold for every one of them.
+  //
+  // Only `comparableMetrics` feeds the score (gate line ~258); the other three
+  // are blocker-only, so this fixture still scores 80 and stays isolated.
+  it('exempts every peer check for a non-social channel, not just the metrics one', () => {
+    const draft = goodDraft();
+    draft.channel = 'blog';
+    draft.mediaPlan.mediaType = 'source_card';
+    draft.peerBenchmark.comparableMetrics = [];
+    draft.peerBenchmark.benchmarkSource = '';
+    draft.peerBenchmark.testMethod = '';
+    draft.peerBenchmark.status = 'not_applicable';
+
+    expect(run({ draft }).blockers).toEqual([]);
+  });
 });
 
 describe('campaign quality gate — the aggregate verdict reflects the blockers', () => {
@@ -654,6 +700,13 @@ describe('campaign quality gate — the aggregate verdict reflects the blockers'
 
     expect(result.status).toBe('blocked');
     expect(result.allowed).toBe(false);
-    expect(result.blockers.length).toBeGreaterThan(0);
+    // EXACT SET, per rule 3 in the header — this was `length > 0`, which is the
+    // same defect rule 3 names: it proves SOME blocker reached the verdict, not
+    // that THIS fixture's check is the one that did. If the claim-evidence check
+    // died and any companion blocker fired, a length assertion would not notice.
+    // Measured at this commit: this fixture trips exactly one blocker.
+    expect(result.blockers).toEqual([
+      'quality_claim_evidence_missing:claim-breaches',
+    ]);
   });
 });
