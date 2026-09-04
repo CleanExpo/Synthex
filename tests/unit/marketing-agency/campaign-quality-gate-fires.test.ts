@@ -60,6 +60,7 @@
 
 import {
   evaluateCampaignQualityGate,
+  MIN_HUMANNESS_SCORE,
   type CampaignQualityDraftInput,
 } from '@/lib/marketing-agency/campaign-quality-gate';
 import type { CampaignEvidenceManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
@@ -456,30 +457,64 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
  * threshold` with `MIN_HUMANNESS_SCORE = 60` is therefore ALWAYS true, and
  * `campaign-quality-gate.ts` can never push `draft_humanness_below_60`.
  *
- * Measured, not reasoned — a probe over six inputs including maximum-slop text:
- *   maximum slop, short  score=60 passes=true
- *   maximum slop, long   score=60 passes=true
+ * Measured, not reasoned — a probe over six inputs, re-run at this commit:
+ *   maximum slop, short    score=60  passes=true  slopDensity=21.9
+ *   maximum slop, long     score=90  passes=true  slopDensity=21.9
+ *   pure filler            score=80  passes=true  slopDensity=33.3
+ *   empty                  score=85  passes=true  slopDensity=0.0
+ *   single word            score=85  passes=true  slopDensity=100.0
+ *   slop + padding         score=100 passes=true  slopDensity=48.6
  *   MIN SCORE OBSERVED = 60 | ANY passes=false ? false
+ *
+ * Note the last row: text at slop density 48.6 scores 100, because the length
+ * bonuses outrun the capped penalty. The floor is not a near-miss.
  *
  * This test LOCKS that defect rather than hiding it. The threshold is a product
  * judgement about what counts as unacceptable copy, so an agent must not quietly
- * retune it — it is filed in BACKLOG.md for the founder. When the scorer or the
- * threshold is fixed, THIS TEST WILL FAIL, which is the signal to convert it into
- * a real firing case for the humanness floor.
+ * retune it — it is filed in BACKLOG.md for the founder.
+ *
+ * HOW THIS ALARM FIRES — stated precisely, because the previous version of this
+ * header made a claim that was FALSE and round 6's independent review proved it.
+ * That version called `scoreHumanness(..., 60)` with a LITERAL and asserted
+ * `not.toContain('…_below_60')`. Raising `MIN_HUMANNESS_SCORE` to 61 left it
+ * green: the literal kept `passes` true, and the gate emitted `…_below_61`, which
+ * the hardcoded `not.toContain` does not look for. The alarm asserted against its
+ * own copy of the number it was supposed to be watching, so it watched nothing.
+ *
+ * The two changes that make it live:
+ *   1. `MIN_HUMANNESS_SCORE` is now IMPORTED from the gate module. Passing it
+ *      explicitly also matters — `scoreHumanness` has its own `threshold = 60`
+ *      default (humanness-scorer.ts:83), so omitting the argument would restore
+ *      the same dead shape by a different route.
+ *   2. The gate-level assertion matches `/draft_humanness_below_\d+$/` instead of
+ *      one spelled-out blocker, so it cannot be evaded by the number changing.
+ *
+ * Watched RED by mutation at this commit — `MIN_HUMANNESS_SCORE` 60 → 61 fails
+ * this test by name, on all three assertions.
+ *
+ * Deliberately still GREEN if the threshold is LOOSENED (60 → 59): the floor
+ * still clears it, the defect still stands, and there is nothing to convert.
+ * The alarm is for the defect being FIXED, not for the constant being touched.
  */
 describe('campaign quality gate — known defect: the humanness floor cannot fire', () => {
   it('scores maximum-slop copy at exactly the floor, so humanness never blocks', () => {
     const worst = scoreHumanness(
       [slopDraft().title, slopDraft().body, slopDraft().cta].join('\n\n'),
-      60
+      MIN_HUMANNESS_SCORE
     );
 
-    expect(worst.score).toBeGreaterThanOrEqual(60);
+    // The defect in one line: the worst copy this suite can produce does not
+    // score below the threshold, so `passes` cannot be false.
+    expect(worst.score).toBeGreaterThanOrEqual(MIN_HUMANNESS_SCORE);
     expect(worst.passes).toBe(true);
 
-    // And therefore the gate's humanness blocker is absent even on this input.
+    // And therefore NO humanness blocker at any threshold value is present, even
+    // on this input. Matched by shape, not by a copied name.
     const result = run({ draft: slopDraft() });
-    expect(result.blockers).not.toContain('slot-01:draft_humanness_below_60');
+    const humannessBlockers = result.blockers.filter(blocker =>
+      /draft_humanness_below_\d+$/.test(blocker)
+    );
+    expect(humannessBlockers).toEqual([]);
   });
 });
 
@@ -531,6 +566,12 @@ describe('campaign quality gate — known defect: the humanness floor cannot fir
  * with TS2344, restoring it returns exit 0. The two assertions below are kept as
  * the RUNTIME half only: they record that the sole permitted value trips no
  * blocker.
+ *
+ * The blocker assertion is an EXACT SET, not `not.toContain`. A `not.toContain`
+ * on a spelled-out blocker name is satisfied by that name never existing — so it
+ * survives a rename, and it survives the guard being deleted outright. Round 6
+ * found the same shape one lock above this one, where it was load-bearing. Here
+ * it never was, but the shape is not worth keeping in the file.
  */
 describe('campaign quality gate — known defect: the asset-policy guard cannot fire', () => {
   it('accepts the only value its type permits, so the guard is unreachable', () => {
@@ -541,10 +582,10 @@ describe('campaign quality gate — known defect: the asset-policy guard cannot 
       'owned_licensed_original_only'
     );
 
+    // Exact set: this input trips NOTHING. Strictly stronger than asserting the
+    // absence of one named blocker, and it cannot go vacuous under a rename.
     const result = run({ draft });
-    expect(result.blockers).not.toContain(
-      'slot-01:draft_asset_policy_not_publish_safe'
-    );
+    expect(result.blockers).toEqual([]);
   });
 });
 

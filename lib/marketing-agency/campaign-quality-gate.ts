@@ -131,7 +131,14 @@ const MEDIA_CHANNELS = new Set([
 ]);
 
 const MIN_DRAFT_SCORE = 75;
-const MIN_HUMANNESS_SCORE = 60;
+/**
+ * Exported so the known-defect lock in
+ * `tests/unit/marketing-agency/campaign-quality-gate-fires.test.ts` can observe
+ * the REAL threshold rather than a copy of it. A copied `60` is what made the
+ * previous lock dead: raising this constant left the alarm green because the
+ * alarm was asserting against its own duplicate. Behaviour is unchanged.
+ */
+export const MIN_HUMANNESS_SCORE = 60;
 const MIN_SOURCES = 3;
 
 function sourceHasLocator(source: CampaignManifestSource): boolean {
