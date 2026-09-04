@@ -506,3 +506,56 @@ describe('the headline count matches the body — round 3 regression', () => {
     expect(occurrences).toBe(2);
   });
 });
+describe('an UNKNOWN draft check must group like a known one — round 4 regression', () => {
+  /**
+   * The catalogue is deliberately not exhaustive, so a newly added gate check
+   * arrives here untranslated. Attribution must not depend on recognition: when
+   * it did, one new check across two drafts rendered as two separate problems
+   * with no affected-draft list, recreating the raw-occurrence overcount that the
+   * grouped verdict exists to prevent.
+   */
+  it('groups one uncatalogued check across two drafts as a single problem', () => {
+    const pack = cleanPack();
+    pack.qualityGate = {
+      ...pack.qualityGate,
+      allowed: false,
+      blockers: [
+        'camp-01-linkedin:draft_new_safety_check',
+        'camp-02-facebook:draft_new_safety_check',
+      ],
+    };
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
+    expect(doc).toContain('Affects 2 drafts');
+    expect(doc).toContain('[untranslated code]');
+    expect(doc).toContain('01-linkedin');
+    expect(doc).toContain('02-facebook');
+  });
+
+  it('attributes an uncatalogued draft code to its slot', () => {
+    const explained = explainGateCode(
+      'camp-01-linkedin:draft_new_safety_check'
+    );
+
+    expect(explained.slot).toBe('camp-01-linkedin');
+    expect(explained.recognised).toBe(false);
+    expect(explained.meaning).toBe('draft_new_safety_check');
+    expect(explained.raw).toBe('camp-01-linkedin:draft_new_safety_check');
+  });
+
+  it('still does not mis-split a gate-level code that carries a parameter', () => {
+    const explained = explainGateCode('quality_claim_evidence_missing:claim-7');
+
+    expect(explained.slot).toBeUndefined();
+    expect(explained.recognised).toBe(true);
+  });
+
+  it('leaves a colon-free unknown code unattributed rather than inventing a slot', () => {
+    const explained = explainGateCode('totally_unknown_code');
+
+    expect(explained.slot).toBeUndefined();
+    expect(explained.recognised).toBe(false);
+  });
+});

@@ -350,6 +350,22 @@ export function explainGateCode(code: string): ExplainedCode {
     return { raw: code, recognised: true, ...gateLevel };
   }
 
+  // The slot is split off STRUCTURALLY, never conditionally on the catalogue.
+  //
+  // This used to happen only when DRAFT_CODES already recognised the suffix, and
+  // that coupled two decisions that must stay independent. Catalogue
+  // non-exhaustiveness is deliberate — a new gate check is meant to surface as
+  // untranslated rather than fail a build. But when attribution depended on
+  // recognition, a NEW draft check arrived slot-prefixed, went unsplit, and its
+  // per-slot raw strings differed, so grouping saw one problem on fifteen drafts
+  // as fifteen separate problems. That is precisely the founder-facing overcount
+  // the grouped verdict exists to prevent, reintroduced by the very extensibility
+  // the catalogue is designed for.
+  //
+  // Gate-level codes are matched whole-string above, so a parameter-bearing code
+  // such as quality_claim_evidence_missing:claim-7 has already returned and
+  // cannot be mis-split here. Every draft code reaches this renderer prefixed by
+  // evaluateCampaignQualityGate, so a remaining colon is a slot boundary.
   const separator = code.indexOf(':');
   if (separator > 0) {
     const slot = code.slice(0, separator);
@@ -358,6 +374,15 @@ export function explainGateCode(code: string): ExplainedCode {
     if (draftLevel) {
       return { raw: code, slot, recognised: true, ...draftLevel };
     }
+    // Unknown suffix: keep the attribution and group on the code, not the raw
+    // string, so one unknown check across many drafts reads as one problem.
+    return {
+      raw: code,
+      slot,
+      meaning: rest,
+      action: UNTRANSLATED_ACTION,
+      recognised: false,
+    };
   }
 
   const unprefixed = matchIn(DRAFT_CODES, code);
@@ -523,7 +548,7 @@ function renderCodeAppendix(pack: PublishingHandoffPack): string {
   ];
   const body =
     lines.length > 0 ? lines.map(line => `- ${line}`).join('\n') : '- none';
-  return `## Codes\n\nEvery code above, exactly as the gate emitted it. Nothing in this document is filtered out of this list.\n\n${body}\n`;
+  return `## Codes\n\nEvery code above, one line each, nothing filtered out. Values are shown in the same display form used throughout: newlines and tabs escaped, empty and whitespace-only values named. The unaltered bytes are in the campaign pack this document was rendered from.\n\n${body}\n`;
 }
 
 export function renderPublishingHandoff(
