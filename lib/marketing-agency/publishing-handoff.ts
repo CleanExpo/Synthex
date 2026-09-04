@@ -357,6 +357,22 @@ function forDisplay(value: string): string {
         /[\u0000-\u001f\u007f]/g,
         ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
       )
+      // Characters that OCCUPY NO SPACE. `trim` does not remove them and they
+      // are not C0, so before this they reached the page and rendered as
+      // nothing: a code of one ZERO WIDTH SPACE became an empty-looking span,
+      // and `claim<ZWSP>7` was pixel-identical to `claim7` while being a
+      // DIFFERENT claim id. Both defeat the rule this module exists for — the
+      // founder must be able to READ what was reported, and two different
+      // values must never look like one. Escaped for the same reason as NUL.
+      //
+      // Scoped to format characters, line/paragraph separators and variation
+      // selectors. Combining marks are deliberately NOT included: they are how
+      // ordinary accented text is written, and escaping them would corrupt
+      // legitimate values to defend against a case that does not exist.
+      .replace(
+        /[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F]/gu,
+        ch => '\\u' + (ch.codePointAt(0) ?? 0).toString(16).padStart(4, '0')
+      )
   );
 }
 

@@ -878,6 +878,14 @@ describe('round 8 — EVERY structured emitter is bound, not just one', () => {
           status: 'verified',
           evidenceRefs: [],
         },
+        {
+          // Fires quality_claim_evidence_ref_unknown, so this ONE fixture
+          // exercises all four emitters that carry values structurally.
+          id: 'claim:ref:9',
+          statement: 'A claim citing a source that is not in the manifest.',
+          status: 'verified',
+          evidenceRefs: ['src:unknown:1'],
+        },
       ],
       platformOutputs: [],
       approval: { status: 'pending_review' },
@@ -966,15 +974,26 @@ describe('round 8 — EVERY structured emitter is bound, not just one', () => {
   });
 
   /**
-   * The future-proof half. Enumerating four codes protects the four that exist;
-   * this protects the SHAPE for any emitter added later, without asserting that
-   * the catalogue covers every code — which this suite deliberately refuses to
-   * do, because that would go red whenever someone correctly adds a new check.
+   * A shape check over the emitters THIS FIXTURE FIRES. Nothing more.
    *
-   * A value joined into the code is what every one of these regressions looks
-   * like, and a separator in `code` is the observable trace of it.
+   * It was first written claiming to be "future-proof" and to protect any
+   * emitter added later. That was wrong and round 9 said so: it inspects only
+   * the issues a fixture actually produces, so an emitter no fixture fires is
+   * not covered — and re-flattening one of those left it green. It also cannot
+   * see a value joined with `_` rather than `:`, which is exactly how
+   * `draft_media_type_expected` joins, so only the explicit assertion above
+   * catches that one.
+   *
+   * What it genuinely adds: a second, cheaper way to catch `:`-joining across
+   * every emitter the fixture fires, without asserting that the catalogue covers
+   * every code — an assertion this suite deliberately refuses to make, because
+   * it would go red whenever someone correctly adds a new check. Coverage for a
+   * NEW emitter comes from adding it to the fixture, not from this loop
+   * noticing on its own. The four assertions below are what keep that honest:
+   * if a fixture change stops firing one, this test says so instead of quietly
+   * covering less.
    */
-  it('never lets a gate emitter join a value into the code itself', () => {
+  it('never lets a fired gate emitter join a value into the code itself', () => {
     const gate = realGate();
     const every = [
       ...gate.blockerIssues,
@@ -985,12 +1004,59 @@ describe('round 8 — EVERY structured emitter is bound, not just one', () => {
       ]),
     ];
 
-    // The control: this fixture must actually produce issues, or the loop below
-    // is vacuous and passes on an empty list.
+    // Non-vacuity control: the fixture must actually produce issues, or the loop
+    // below passes over an empty list and proves nothing.
     expect(every.length).toBeGreaterThan(0);
+
+    // And the emitters this claims to cover must genuinely be among them, or the
+    // loop is green for the wrong reason.
+    const codes = every.map(i => i.code);
+    expect(codes).toContain('quality_claim_evidence_missing');
+    expect(codes).toContain('quality_claim_evidence_ref_unknown');
+    expect(codes).toContain('draft_evidence_ref_unknown');
+    expect(codes).toContain('draft_media_type_expected');
 
     for (const issue of every) {
       expect(issue.code).not.toContain(':');
     }
+  });
+});
+
+describe('round 9 — a value that occupies no space is still readable', () => {
+  /**
+   * ROUND 9 P1. `trim` does not strip zero-width and format characters and they
+   * are not C0, so they passed through the display sanitiser and rendered as
+   * nothing. A code of one ZERO WIDTH SPACE became an empty-looking span, and
+   * `claim<ZWSP>7` was pixel-identical to `claim7` while being a DIFFERENT id.
+   * The never-drop rule is about what a founder can READ, so an invisible value
+   * fails it exactly as a dropped one does.
+   */
+  const ZWSP = String.fromCharCode(0x200b);
+  const SOFT_HYPHEN = String.fromCharCode(0x00ad);
+
+  it('escapes a zero-width space so the code cannot render as nothing', () => {
+    expect(inlineCode(ZWSP)).toBe(TICK + '\\u200b' + TICK);
+  });
+
+  it('escapes a soft hyphen', () => {
+    expect(inlineCode(SOFT_HYPHEN)).toBe(TICK + '\\u00ad' + TICK);
+  });
+
+  it('keeps two values that differ only by a zero-width character distinct', () => {
+    expect(inlineCode('claim' + ZWSP + '7')).not.toBe(inlineCode('claim7'));
+  });
+
+  it('leaves ordinary accented text alone', () => {
+    // The control. Escaping combining marks would corrupt legitimate values to
+    // defend against a case that does not exist, so the fix must be scoped.
+    expect(inlineCode('caf\u00e9')).toBe(TICK + 'caf\u00e9' + TICK);
+  });
+
+  it('keeps an invisible code visible in the rendered document', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], { blockers: [{ code: ZWSP, params: [] }] })
+    );
+
+    expect(doc).toContain('\\u200b');
   });
 });
