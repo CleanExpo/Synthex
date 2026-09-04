@@ -37,6 +37,7 @@ import {
 } from '../../../lib/marketing-agency/publishing-handoff';
 import {
   evaluateCampaignQualityGate,
+  type CampaignQualityDraftInput,
   type CampaignQualityIssue,
 } from '../../../lib/marketing-agency/campaign-quality-gate';
 import type { CampaignEvidenceManifest } from '../../../lib/marketing-agency/campaign-authority-manifest';
@@ -827,5 +828,169 @@ describe('round 7 — a malformed issue degrades, it never throws', () => {
 
     expect(doc).toContain('quality_claim_evidence_missing');
     expect(doc).toContain('[untranslated code]');
+  });
+});
+
+describe('round 8 — EVERY structured emitter is bound, not just one', () => {
+  /**
+   * ROUND 8 P1. The round-7 control bound `quality_claim_evidence_ref_unknown`
+   * and passed `drafts: []`, so three of the four emitters that carry values
+   * structurally were never exercised. Re-flattening any of them left the whole
+   * 51-test suite green while the founder document quietly downgraded a known
+   * issue to untranslated. The P1 was a quarter closed.
+   *
+   * Each emitter below is now bound by its own assertion through the REAL gate.
+   */
+  function manifestExercisingBothClaimCodes(): CampaignEvidenceManifest {
+    return {
+      manifestId: 'producer-to-renderer-all',
+      topic: 'Every structured emitter survives the trip',
+      audience: 'Australian restoration contractors',
+      businessGoal: 'Bind the producer contract for all four codes',
+      sources: [
+        {
+          id: 'src-platform',
+          label: 'LinkedIn official posting policy',
+          url: 'https://www.linkedin.com/legal/professional-community-policies',
+          sourceType: 'official_platform_documentation',
+          checkedAt: '2026-06-01T00:00:00.000Z',
+        },
+        {
+          id: 'src-policy',
+          label: 'Internal publication policy',
+          path: 'docs/marketing/synthex-rules-v1.md',
+          sourceType: 'internal_policy',
+          checkedAt: '2026-06-01T00:00:00.000Z',
+        },
+        {
+          id: 'src-regulator',
+          label: 'Code Governance Committee annual report',
+          url: 'https://insurancecode.org.au/',
+          sourceType: 'regulator_publication',
+          checkedAt: '2026-06-01T00:00:00.000Z',
+        },
+      ],
+      claims: [
+        {
+          // Fires quality_claim_evidence_missing with a colon-bearing id.
+          id: 'claim:missing:7',
+          statement: 'A claim with no evidence behind it.',
+          status: 'verified',
+          evidenceRefs: [],
+        },
+      ],
+      platformOutputs: [],
+      approval: { status: 'pending_review' },
+    };
+  }
+
+  /**
+   * Fires draft_evidence_ref_unknown (colon-bearing ref) and
+   * draft_media_type_expected (linkedin expects feed_image, not carousel).
+   * Other blockers fire too and are harmless: each assertion below names the
+   * exact sentence it is looking for.
+   */
+  function draftExercisingDraftCodes(): CampaignQualityDraftInput {
+    return {
+      slotId: 'slot:01:linkedin',
+      channel: 'linkedin',
+      title: 'A draft that trips the draft-level emitters',
+      body: 'Short body. The score blockers it also trips are irrelevant here.',
+      cta: 'Read more.',
+      evidenceRefs: ['ref:with:colons'],
+      assetBrief: 'Owned original artwork',
+      mediaPlan: {
+        mediaType: 'carousel',
+        format: '1200x627 PNG',
+        visualRequirement: 'Owned diagram',
+        assetSourcePolicy: 'owned_licensed_original_only',
+        aiDisclosureRequired: false,
+        reviewChecks: [
+          'rights_cleared',
+          'no_identifiable_persons',
+          'claims_match_sources',
+        ],
+      },
+      peerBenchmark: {
+        status: 'data_required_until_credentials',
+        comparableMetrics: ['impressions'],
+        benchmarkSource: 'LinkedIn native analytics',
+        testMethod: 'Trailing six-post median',
+      },
+    };
+  }
+
+  function realGate() {
+    return evaluateCampaignQualityGate({
+      evidenceManifest: manifestExercisingBothClaimCodes(),
+      drafts: [draftExercisingDraftCodes()],
+    });
+  }
+
+  function renderAll(): string {
+    return renderPublishingHandoff({
+      qualityGate: realGate(),
+      ownedMediaGate: { allowed: true },
+      externalPublishBlocks: {},
+    });
+  }
+
+  it('binds quality_claim_evidence_missing through the real gate', () => {
+    expect(renderAll()).toContain(
+      'Claim ' +
+        TICK +
+        'claim:missing:7' +
+        TICK +
+        ' is made with no evidence behind it.'
+    );
+  });
+
+  it('binds draft_evidence_ref_unknown through the real gate', () => {
+    expect(renderAll()).toContain(
+      'This draft cites evidence ' +
+        TICK +
+        'ref:with:colons' +
+        TICK +
+        ', which is not in the manifest.'
+    );
+  });
+
+  it('binds draft_media_type_expected through the real gate', () => {
+    expect(renderAll()).toContain(
+      'The media plan is the wrong type for this channel — it should be ' +
+        TICK +
+        'feed_image' +
+        TICK +
+        '.'
+    );
+  });
+
+  /**
+   * The future-proof half. Enumerating four codes protects the four that exist;
+   * this protects the SHAPE for any emitter added later, without asserting that
+   * the catalogue covers every code — which this suite deliberately refuses to
+   * do, because that would go red whenever someone correctly adds a new check.
+   *
+   * A value joined into the code is what every one of these regressions looks
+   * like, and a separator in `code` is the observable trace of it.
+   */
+  it('never lets a gate emitter join a value into the code itself', () => {
+    const gate = realGate();
+    const every = [
+      ...gate.blockerIssues,
+      ...gate.warningIssues,
+      ...gate.draftResults.flatMap(r => [
+        ...r.blockerIssues,
+        ...r.warningIssues,
+      ]),
+    ];
+
+    // The control: this fixture must actually produce issues, or the loop below
+    // is vacuous and passes on an empty list.
+    expect(every.length).toBeGreaterThan(0);
+
+    for (const issue of every) {
+      expect(issue.code).not.toContain(':');
+    }
   });
 });
