@@ -27,6 +27,41 @@ export interface CampaignMediaPlan {
   reviewChecks: string[];
 }
 
+/**
+ * COMPILE-TIME CONTRACT LOCK — `draft_asset_policy_not_publish_safe` is DEAD.
+ *
+ * The guard below tests `assetSourcePolicy !== 'owned_licensed_original_only'`,
+ * which is statically always false while the field is the singleton literal type
+ * declared above. The check cannot fire for any well-typed input, so the campaign
+ * gate does NOT enforce the founder's real-images-only rule despite appearing to.
+ * That rule is enforced in the image service layer and its CI guard, not here.
+ * Filed as founder-owned in BACKLOG.md (item 0a).
+ *
+ * This alias is that defect's alarm. Widen `assetSourcePolicy` to admit any second
+ * value and `PolicyIsSingleton` resolves `false`, which does not satisfy
+ * `extends true`, so `npm run type-check` FAILS here (TS2344) — the signal to turn
+ * the dead guard into a real firing case and give it a test.
+ *
+ * It lives in this file, not in the test suite, because a type-level assertion is
+ * unfalsifiable under `tests/`: tsconfig.json excludes test files from `tsc`, and
+ * `isolatedModules: true` makes ts-jest transpile without type-checking. A lock
+ * placed there could never fail. Round 5's review caught exactly that class of
+ * dead alarm; do not move this back.
+ */
+type IsExactly<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false;
+
+type Assert<T extends true> = T;
+
+type PolicyIsSingleton = IsExactly<
+  CampaignMediaPlan['assetSourcePolicy'],
+  'owned_licensed_original_only'
+>;
+
+export type AssetSourcePolicyContractLock = Assert<PolicyIsSingleton>;
+
 export interface CampaignPeerBenchmarkPlan {
   status: CampaignPeerDataStatus;
   comparableMetrics: string[];
@@ -96,7 +131,14 @@ const MEDIA_CHANNELS = new Set([
 ]);
 
 const MIN_DRAFT_SCORE = 75;
-const MIN_HUMANNESS_SCORE = 60;
+/**
+ * Exported so the known-defect lock in
+ * `tests/unit/marketing-agency/campaign-quality-gate-fires.test.ts` can observe
+ * the REAL threshold rather than a copy of it. A copied `60` is what made the
+ * previous lock dead: raising this constant left the alarm green because the
+ * alarm was asserting against its own duplicate. Behaviour is unchanged.
+ */
+export const MIN_HUMANNESS_SCORE = 60;
 const MIN_SOURCES = 3;
 
 function sourceHasLocator(source: CampaignManifestSource): boolean {
@@ -104,11 +146,13 @@ function sourceHasLocator(source: CampaignManifestSource): boolean {
 }
 
 function sourceIds(sources: CampaignManifestSource[]): Set<string> {
-  return new Set(sources.map((source) => source.id));
+  return new Set(sources.map(source => source.id));
 }
 
 function isChecked(source: CampaignManifestSource): boolean {
-  return Boolean(source.checkedAt && source.sourceType && sourceHasLocator(source));
+  return Boolean(
+    source.checkedAt && source.sourceType && sourceHasLocator(source)
+  );
 }
 
 function expectedMediaType(channel: string): CampaignMediaType {
@@ -137,7 +181,7 @@ function channelNeedsPeerPlan(channel: string): boolean {
 
 function scoreDraft(
   draft: CampaignQualityDraftInput,
-  availableSourceIds: Set<string>,
+  availableSourceIds: Set<string>
 ): CampaignQualityDraftResult {
   const blockers: string[] = [];
   const warnings: string[] = [];
@@ -154,7 +198,7 @@ function scoreDraft(
 
   const humanness = scoreHumanness(
     [draft.title, draft.body, draft.cta].join('\n\n'),
-    MIN_HUMANNESS_SCORE,
+    MIN_HUMANNESS_SCORE
   );
   if (!humanness.passes) {
     blockers.push(`draft_humanness_below_${MIN_HUMANNESS_SCORE}`);
@@ -208,12 +252,12 @@ function scoreDraft(
     Math.min(
       100,
       Math.round(
-        (humanness.score * 0.35) +
+        humanness.score * 0.35 +
           (draft.evidenceRefs.length > 0 ? 25 : 0) +
           (draft.mediaPlan.reviewChecks.length >= 3 ? 20 : 0) +
-          (draft.peerBenchmark.comparableMetrics.length > 0 ? 20 : 0),
-      ),
-    ),
+          (draft.peerBenchmark.comparableMetrics.length > 0 ? 20 : 0)
+      )
+    )
   );
 
   if (score < MIN_DRAFT_SCORE) {
@@ -246,10 +290,10 @@ export function evaluateCampaignQualityGate(input: {
   const ids = sourceIds(sources);
   const checkedSources = sources.filter(isChecked).length;
   const officialPlatformSources = sources.filter(
-    (source) => source.sourceType === 'official_platform_documentation',
+    source => source.sourceType === 'official_platform_documentation'
   ).length;
   const internalPolicySources = sources.filter(
-    (source) => source.sourceType === 'internal_policy',
+    source => source.sourceType === 'internal_policy'
   ).length;
 
   if (sources.length < MIN_SOURCES) {
@@ -271,22 +315,28 @@ export function evaluateCampaignQualityGate(input: {
     }
     for (const evidenceRef of claim.evidenceRefs ?? []) {
       if (!ids.has(evidenceRef)) {
-        blockers.push(`quality_claim_evidence_ref_unknown:${claim.id}:${evidenceRef}`);
+        blockers.push(
+          `quality_claim_evidence_ref_unknown:${claim.id}:${evidenceRef}`
+        );
       }
     }
   }
 
-  const draftResults = input.drafts.map((draft) => scoreDraft(draft, ids));
+  const draftResults = input.drafts.map(draft => scoreDraft(draft, ids));
   for (const result of draftResults) {
-    blockers.push(...result.blockers.map((blocker) => `${result.slotId}:${blocker}`));
-    warnings.push(...result.warnings.map((warning) => `${result.slotId}:${warning}`));
+    blockers.push(
+      ...result.blockers.map(blocker => `${result.slotId}:${blocker}`)
+    );
+    warnings.push(
+      ...result.warnings.map(warning => `${result.slotId}:${warning}`)
+    );
   }
 
   const overallScore =
     draftResults.length > 0
       ? Math.round(
           draftResults.reduce((sum, result) => sum + result.score, 0) /
-            draftResults.length,
+            draftResults.length
         )
       : 0;
 
