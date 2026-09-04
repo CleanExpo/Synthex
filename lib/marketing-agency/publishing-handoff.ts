@@ -44,6 +44,19 @@
  * value containing a blank line cannot stay inside an inline code span at all, so
  * left raw it would break the fence and inject real markup.
  *
+ * KNOWN LIMITS, recorded rather than carried silently
+ * ---------------------------------------------------
+ *   - Display escaping is NOT injective. A real newline and the two literal
+ *     characters backslash-n render identically, as do whitespace-only values of
+ *     equal length. Every occurrence still reaches the page and is still counted;
+ *     what is lost is the ability to tell two such values apart by eye. The raw
+ *     bytes remain in the pack the document was rendered from.
+ *   - A slot id containing a colon loses its draft attribution, because the first
+ *     colon is taken as the slot/code boundary. No generated slot id has this
+ *     shape — they are hyphenated slugs — but the interface accepts any string, so
+ *     a future producer could trip it. Such a code is still rendered in full and
+ *     marked untranslated; only the "Affects" attribution is missed.
+ *
  * This matters because the catalogue is a list of names, and a list of names
  * always loses to a name that was added later. A gate check added tomorrow with
  * no entry here must still reach the founder — looking wrong is recoverable,
@@ -311,7 +324,10 @@ export function inlineCode(value: string): string {
   return `${fence}${pad}${shown}${pad}${fence}`;
 }
 
-function matchIn(catalogue: CatalogueEntry[], code: string) {
+function matchIn(
+  catalogue: CatalogueEntry[],
+  code: string
+): { meaning: string; action: string } | null {
   for (const entry of catalogue) {
     const found = entry.pattern.exec(code);
     if (found) {
@@ -427,7 +443,11 @@ function groupCodes(codes: string[]): GroupedIssue[] {
       ? (shortened.get(item.slot) ?? item.slot)
       : undefined;
     if (existing) {
-      if (shortSlot) existing.slots.push(shortSlot);
+      // Every raw occurrence is retained, but a slot is NAMED once: two emissions
+      // of the same code from one slot are one affected draft, not two.
+      if (shortSlot && !existing.slots.includes(shortSlot)) {
+        existing.slots.push(shortSlot);
+      }
       existing.raws.push(item.raw);
     } else {
       groups.set(key, {
@@ -514,9 +534,14 @@ export function renderPublishingHandoff(
   const gate = pack.qualityGate;
   const summary = gate.sourceSummary;
 
+  // Count DISTINCT problems, the same way the body groups them. Counting raw
+  // occurrences here said "BLOCKED — 15 issues" above a single entry reading
+  // "Affects 15 drafts", which contradicts the one question this document exists
+  // to answer. The verdict and the section must be derived from one grouping.
+  const distinctProblems = groupCodes(gate.blockers).length;
   const verdict = gate.allowed
     ? 'PASS — nothing in the quality gate is holding this campaign.'
-    : `BLOCKED — ${gate.blockers.length} issue${gate.blockers.length === 1 ? '' : 's'} must be cleared first.`;
+    : `BLOCKED — ${distinctProblems} issue${distinctProblems === 1 ? '' : 's'} must be cleared first.`;
 
   return `# ${prefix}Publishing Handoff
 

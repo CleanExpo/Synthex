@@ -447,3 +447,62 @@ describe('values that defeat fencing alone', () => {
     expect(inlineCode(long)).toContain(long);
   });
 });
+
+describe('the headline count matches the body — round 3 regression', () => {
+  it('counts distinct problems, not raw blocker occurrences', () => {
+    // The real Unite Group shape: one problem reported once per slot. Counting
+    // raw occurrences produced "BLOCKED — 2 issues" above a single entry.
+    const pack = cleanPack();
+    pack.qualityGate = {
+      ...pack.qualityGate,
+      allowed: false,
+      blockers: [
+        'camp-03-linkedin:draft_slop_density_too_high',
+        'camp-04-facebook:draft_slop_density_too_high',
+      ],
+    };
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
+    expect(doc).toContain('Affects 2 drafts');
+  });
+
+  it('still counts two genuinely different problems as two', () => {
+    const pack = cleanPack();
+    pack.qualityGate = {
+      ...pack.qualityGate,
+      allowed: false,
+      blockers: [
+        'camp-03-linkedin:draft_slop_density_too_high',
+        'camp-04-facebook:draft_peer_metrics_missing',
+      ],
+    };
+
+    expect(renderPublishingHandoff(pack)).toContain(
+      'BLOCKED — 2 issues must be cleared first.'
+    );
+  });
+
+  it('names an affected draft once even if its slot reports the code twice', () => {
+    const pack = cleanPack();
+    pack.qualityGate = {
+      ...pack.qualityGate,
+      allowed: false,
+      blockers: [
+        'camp-03-linkedin:draft_slop_density_too_high',
+        'camp-03-linkedin:draft_slop_density_too_high',
+      ],
+    };
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).toContain('Affects 1 draft:');
+    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
+    // Both raw occurrences still reach the appendix.
+    const appendix = doc.split('## Codes')[1];
+    const occurrences =
+      appendix.split('camp-03-linkedin:draft_slop_density_too_high').length - 1;
+    expect(occurrences).toBe(2);
+  });
+});
