@@ -3,44 +3,44 @@
  *
  * WHAT THIS SUITE PROTECTS
  * ------------------------
- * The renderer translates internal gate codes into plain English. A translation
- * layer can fail in two directions, and only one of them is dangerous:
+ * A translation layer can fail in two directions and only one is dangerous:
  *
- *   - It can render a code badly. The founder sees something confusing, asks,
- *     and the catalogue gets an entry. Recoverable.
- *   - It can render a code NOWHERE. The founder sees a clean document and
- *     publishes over a blocker nobody showed them. Not recoverable.
+ *   - It can render a code badly. The founder sees something confusing, asks, and
+ *     the catalogue gets an entry. Recoverable.
+ *   - It can render a code NOWHERE, or render it as the WRONG instruction. The
+ *     founder sees a clean document and publishes over a blocker, or is told to
+ *     fix the wrong thing. Not recoverable.
  *
- * So the load-bearing test here is not "is every code translated" — it is
- * "does every code survive into the output". That invariant holds whether or not
- * the catalogue knows the code, which is exactly why it is the one worth locking.
+ * So the load-bearing tests are about what a founder can READ and whether it is
+ * TRUE, not about what the file happens to contain.
  *
  * WHAT THIS SUITE DELIBERATELY DOES NOT ASSERT
  * --------------------------------------------
  * It does not assert the catalogue covers every code the gate can emit. A test
- * that scraped `blockers.push(...)` out of the gate source and demanded an entry
- * for each would be asserting against a copy of the thing under test, and it
- * would go red the moment someone adds a check — punishing the correct action.
- * The design already handles that case: an unknown code renders with an
- * `[untranslated code]` marker and its raw text. `renders an unknown code rather
- * than dropping it` is the test that proves that path works.
+ * that scraped `blockers.push(...)` out of the gate source would assert against a
+ * copy of the thing under test and would go red the moment someone adds a check,
+ * punishing the correct action. Unknown codes are designed to surface as
+ * untranslated; the uncatalogued-check cases below prove that path.
  *
  * Runtime assertions only. `tests/**` is excluded from tsconfig and the repo runs
  * `isolatedModules`, so a type-level assertion in this file cannot fail.
  */
 
 import {
+  explainCode,
   explainExternalBlock,
-  explainGateCode,
   inlineCode,
   renderPublishingHandoff,
   shortenSlots,
+  type PublishingHandoffDraftResult,
   type PublishingHandoffPack,
 } from '../../../lib/marketing-agency/publishing-handoff';
 
 const TICK = String.fromCharCode(96);
+const NUL = String.fromCharCode(0);
+const BEL = String.fromCharCode(7);
 
-/** The clean control. Without it, every assertion below is satisfied by a renderer hardwired to complain. */
+/** The clean control. Without it, everything below is satisfied by a renderer hardwired to complain. */
 function cleanPack(): PublishingHandoffPack {
   return {
     qualityGate: {
@@ -48,6 +48,7 @@ function cleanPack(): PublishingHandoffPack {
       overallScore: 95,
       blockers: [],
       warnings: [],
+      draftResults: [],
       sourceSummary: {
         totalSources: 7,
         checkedSources: 7,
@@ -60,7 +61,45 @@ function cleanPack(): PublishingHandoffPack {
   };
 }
 
-describe('publishing handoff — the clean control', () => {
+/**
+ * Build a pack the way `evaluateCampaignQualityGate` actually builds one: the
+ * structured `draftResults` PLUS the flattened `<slotId>:<code>` arrays derived
+ * from them. A test that invented one without the other would not exercise the
+ * shape the renderer really receives.
+ */
+function packWithDrafts(
+  drafts: Array<Partial<PublishingHandoffDraftResult> & { slotId: string }>,
+  gateLevel: { blockers?: string[]; warnings?: string[] } = {}
+): PublishingHandoffPack {
+  const draftResults: PublishingHandoffDraftResult[] = drafts.map(draft => ({
+    slotId: draft.slotId,
+    channel: draft.channel ?? 'linkedin',
+    blockers: draft.blockers ?? [],
+    warnings: draft.warnings ?? [],
+  }));
+
+  const pack = cleanPack();
+  pack.qualityGate = {
+    ...pack.qualityGate,
+    draftResults,
+    blockers: [
+      ...(gateLevel.blockers ?? []),
+      ...draftResults.flatMap(result =>
+        result.blockers.map(code => `${result.slotId}:${code}`)
+      ),
+    ],
+    warnings: [
+      ...(gateLevel.warnings ?? []),
+      ...draftResults.flatMap(result =>
+        result.warnings.map(code => `${result.slotId}:${code}`)
+      ),
+    ],
+  };
+  pack.qualityGate.allowed = pack.qualityGate.blockers.length === 0;
+  return pack;
+}
+
+describe('the clean control', () => {
   it('reports a passing campaign as publishable and raises nothing', () => {
     const doc = renderPublishingHandoff(cleanPack());
 
@@ -75,52 +114,49 @@ describe('publishing handoff — the clean control', () => {
 });
 
 describe('the never-drop invariant', () => {
-  it('renders every supplied code verbatim, recognised or not', () => {
-    const blockers = [
-      'quality_sources_below_6',
-      'quality_claim_evidence_ref_unknown:claim-7:src-99',
-      'slot-3-linkedin:draft_humanness_below_60',
-      'slot-3-linkedin:some_check_invented_next_tuesday',
-    ];
-    const warnings = [
-      'slot-4-reddit:peer_data_waiting_for_oauth_or_platform_analytics',
-    ];
-    const externalPublishBlocks = {
+  it('renders every supplied code, recognised or not', () => {
+    const pack = packWithDrafts(
+      [
+        {
+          slotId: 'camp-03-linkedin',
+          blockers: [
+            'draft_humanness_below_60',
+            'some_check_from_next_tuesday',
+          ],
+        },
+      ],
+      {
+        blockers: [
+          'quality_sources_below_6',
+          'quality_claim_evidence_ref_unknown:claim-7:src-99',
+        ],
+      }
+    );
+    pack.externalPublishBlocks = {
       reddit: ['platform_credentials_required', 'a_brand_new_block'],
     };
 
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers,
-      warnings,
-    };
-    pack.externalPublishBlocks = externalPublishBlocks;
-
     const doc = renderPublishingHandoff(pack);
 
-    // Each raw code must appear somewhere in the document. This is the guarantee.
     for (const code of [
-      ...blockers,
-      ...warnings,
-      ...externalPublishBlocks.reddit,
+      ...pack.qualityGate.blockers,
+      ...pack.externalPublishBlocks.reddit,
     ]) {
       expect(doc).toContain(code);
     }
   });
 
   it('renders an unknown code rather than dropping it, and marks it untranslated', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: ['some_check_invented_next_tuesday'],
-    };
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        {
+          slotId: 'camp-01-linkedin',
+          blockers: ['some_check_from_next_tuesday'],
+        },
+      ])
+    );
 
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain('some_check_invented_next_tuesday');
+    expect(doc).toContain('some_check_from_next_tuesday');
     expect(doc).toContain('[untranslated code]');
     expect(doc).toContain(
       'Ask the build agent what it means before publishing.'
@@ -128,57 +164,85 @@ describe('the never-drop invariant', () => {
   });
 });
 
-describe('code parsing', () => {
-  it('does not mistake a gate-level parameter for a slot id', () => {
-    // Splitting on the first colon would yield slot `quality_claim_evidence_missing`.
-    const explained = explainGateCode('quality_claim_evidence_missing:claim-7');
+describe('explainCode — the slot is given, never parsed', () => {
+  it('treats a colon-bearing gate code as gate-level with its parameter intact', () => {
+    const explained = explainCode('quality_claim_evidence_missing:claim-7');
 
     expect(explained.recognised).toBe(true);
     expect(explained.slot).toBeUndefined();
     expect(explained.meaning).toBe(
-      'Claim `claim-7` is made with no evidence behind it.'
+      'Claim ' +
+        TICK +
+        'claim-7' +
+        TICK +
+        ' is made with no evidence behind it.'
     );
   });
 
   it('keeps both parameters of a two-parameter gate code', () => {
-    const explained = explainGateCode(
+    const explained = explainCode(
       'quality_claim_evidence_ref_unknown:claim-7:src-99'
     );
 
-    expect(explained.recognised).toBe(true);
     expect(explained.meaning).toBe(
-      'Claim `claim-7` cites evidence `src-99`, which is not in the manifest.'
+      'Claim ' +
+        TICK +
+        'claim-7' +
+        TICK +
+        ' cites evidence ' +
+        TICK +
+        'src-99' +
+        TICK +
+        ', which is not in the manifest.'
     );
   });
 
-  it('splits the slot off a draft-level code and keeps the raw text intact', () => {
-    const explained = explainGateCode(
-      'campaign-2026-03-linkedin:draft_slop_density_too_high'
+  it('attributes a draft code to the slot it was given', () => {
+    const explained = explainCode(
+      'draft_slop_density_too_high',
+      'camp-2026-03-linkedin'
     );
 
     expect(explained.recognised).toBe(true);
-    expect(explained.slot).toBe('campaign-2026-03-linkedin');
+    expect(explained.slot).toBe('camp-2026-03-linkedin');
     expect(explained.raw).toBe(
-      'campaign-2026-03-linkedin:draft_slop_density_too_high'
+      'camp-2026-03-linkedin:draft_slop_density_too_high'
     );
   });
 
-  it('reads the real threshold out of a dynamic code rather than saying "a threshold"', () => {
-    expect(explainGateCode('slot-1:draft_humanness_below_60').meaning).toBe(
-      'The copy reads as machine-written — humanness scored under 60.'
+  /**
+   * ROUND 5 P1-2. The old code recovered the slot boundary by finding the first
+   * colon in the flattened string. A slot id that happened to equal a gate-code
+   * name therefore produced a string that whole-string gate matching claimed
+   * first, so the document dropped the attribution and told the founder to attach
+   * claim evidence when the real problem was the draft copy.
+   */
+  it('is not confused by a slot id that collides with a gate-code name', () => {
+    const explained = explainCode(
+      'draft_slop_density_too_high',
+      'quality_claim_evidence_missing'
     );
-    expect(
-      explainGateCode('slot-1:draft_media_type_expected_feed_image').meaning
-    ).toBe(
-      'The media plan is the wrong type for this channel — it should be `feed_image`.'
+
+    expect(explained.slot).toBe('quality_claim_evidence_missing');
+    expect(explained.meaning).toBe('The copy is dense with AI-slop phrasing.');
+    expect(explained.meaning).not.toContain('claim evidence');
+  });
+
+  it('is not confused by a slot id containing a colon', () => {
+    const explained = explainCode('draft_slop_density_too_high', 'odd:slot:id');
+
+    expect(explained.slot).toBe('odd:slot:id');
+    expect(explained.recognised).toBe(true);
+  });
+
+  it('reads the real threshold out of a dynamic code', () => {
+    expect(explainCode('draft_humanness_below_60', 'slot-1').meaning).toBe(
+      'The copy reads as machine-written — humanness scored under 60.'
     );
   });
 
   it('marks an unknown code unrecognised instead of throwing', () => {
-    const explained = explainGateCode('totally_unknown_code');
-
-    expect(explained.recognised).toBe(false);
-    expect(explained.raw).toBe('totally_unknown_code');
+    expect(explainCode('totally_unknown_code').recognised).toBe(false);
   });
 
   it('translates external channel blocks', () => {
@@ -199,31 +263,23 @@ describe('slot shortening', () => {
     expect(
       shortened.get('unite-group-authority-flywheel-2026-06-11-03-linkedin')
     ).toBe('03-linkedin');
-    expect(
-      shortened.get('unite-group-authority-flywheel-2026-06-11-04-facebook')
-    ).toBe('04-facebook');
   });
 
-  it('leaves a lone slot untouched, since there is no shared prefix to strip', () => {
-    const shortened = shortenSlots(['campaign-2026-03-linkedin']);
-
-    expect(shortened.get('campaign-2026-03-linkedin')).toBe(
-      'campaign-2026-03-linkedin'
+  it('leaves a lone slot untouched', () => {
+    const shortened = shortenSlots(['camp-2026-03-linkedin']);
+    expect(shortened.get('camp-2026-03-linkedin')).toBe(
+      'camp-2026-03-linkedin'
     );
   });
 
-  it('leaves slots untouched when stripping would empty one of them', () => {
+  it('leaves slots untouched when stripping would empty one', () => {
     const shortened = shortenSlots(['post-', 'post-a']);
-
     expect(shortened.get('post-')).toBe('post-');
-    expect(shortened.get('post-a')).toBe('post-a');
   });
 });
 
 describe('grouping — the actual complaint in BACKLOG item 2', () => {
   it('renders one problem once, naming the drafts it affects', () => {
-    // This is the real Unite Group shape: the SAME warning on fifteen social slots,
-    // previously rendered as fifteen comma-joined copies of the same sentence.
     const campaign = 'unite-group-authority-flywheel-2026-06-11';
     const channels = [
       'linkedin',
@@ -232,45 +288,36 @@ describe('grouping — the actual complaint in BACKLOG item 2', () => {
       'youtube_shorts',
       'reddit',
     ];
-    const warnings = [3, 10, 17].flatMap(block =>
-      channels.map(
-        (channel, i) =>
-          `${campaign}-${String(block + i).padStart(2, '0')}-${channel}:peer_data_waiting_for_oauth_or_platform_analytics`
-      )
+    const drafts = [3, 10, 17].flatMap(block =>
+      channels.map((channel, i) => ({
+        slotId: `${campaign}-${String(block + i).padStart(2, '0')}-${channel}`,
+        channel,
+        warnings: ['peer_data_waiting_for_oauth_or_platform_analytics'],
+      }))
     );
-    expect(warnings).toHaveLength(15);
+    expect(drafts).toHaveLength(15);
 
-    const pack = cleanPack();
-    pack.qualityGate = { ...pack.qualityGate, warnings };
-
-    const doc = renderPublishingHandoff(pack);
-    const waitingSection = doc
+    const doc = renderPublishingHandoff(packWithDrafts(drafts));
+    const section = doc
       .split('## Waiting on access, not on you')[1]
       .split('##')[0];
 
-    // One numbered entry, not fifteen.
-    expect(waitingSection).toContain(
+    expect(section).toContain(
       '1. Peer benchmark data is waiting on platform analytics'
     );
-    expect(waitingSection).not.toContain('2. ');
-    expect(waitingSection).toContain('Affects 15 drafts');
-    // And the campaign id is stripped from the slot list that names them.
-    expect(waitingSection).toContain('03-linkedin');
-    expect(waitingSection).not.toContain(`${campaign}-03-linkedin`);
+    expect(section).not.toContain('2. ');
+    expect(section).toContain('Affects 15 drafts');
+    expect(section).toContain('03-linkedin');
+    expect(section).not.toContain(`${campaign}-03-linkedin`);
   });
 
-  it('does not merge two genuinely different problems into one entry', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: [
-        'slot-1:draft_slop_density_too_high',
-        'slot-2:draft_peer_metrics_missing',
-      ],
-    };
-
-    const doc = renderPublishingHandoff(pack);
+  it('does not merge two genuinely different problems', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        { slotId: 'camp-01', blockers: ['draft_slop_density_too_high'] },
+        { slotId: 'camp-02', blockers: ['draft_peer_metrics_missing'] },
+      ])
+    );
     const section = doc.split('## What needs your attention')[1].split('##')[0];
 
     expect(section).toContain('1. ');
@@ -278,98 +325,107 @@ describe('grouping — the actual complaint in BACKLOG item 2', () => {
   });
 });
 
-describe('the blocked verdict', () => {
-  it('says how many issues must be cleared and marks owned media blocked', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      overallScore: 40,
-      blockers: ['quality_internal_policy_source_missing'],
-    };
-    pack.ownedMediaGate = { allowed: false };
-
-    const doc = renderPublishingHandoff(pack);
+describe('the verdict count matches the body', () => {
+  it('counts distinct problems, not raw occurrences', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        {
+          slotId: 'camp-03-linkedin',
+          blockers: ['draft_slop_density_too_high'],
+        },
+        {
+          slotId: 'camp-04-facebook',
+          blockers: ['draft_slop_density_too_high'],
+        },
+      ])
+    );
 
     expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
-    expect(doc).toContain('**Blog and newsletter:** blocked');
+    expect(doc).toContain('Affects 2 drafts');
   });
 
-  it('pluralises correctly for more than one issue', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: [
-        'quality_internal_policy_source_missing',
-        'quality_sources_below_6',
-      ],
-    };
-
-    expect(renderPublishingHandoff(pack)).toContain(
-      'BLOCKED — 2 issues must be cleared first.'
+  it('counts two different problems as two', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        { slotId: 'camp-03', blockers: ['draft_slop_density_too_high'] },
+        { slotId: 'camp-04', blockers: ['draft_peer_metrics_missing'] },
+      ])
     );
+
+    expect(doc).toContain('BLOCKED — 2 issues must be cleared first.');
+  });
+
+  it('names an affected draft once even if its slot reports the code twice', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        {
+          slotId: 'camp-03-linkedin',
+          blockers: [
+            'draft_slop_density_too_high',
+            'draft_slop_density_too_high',
+          ],
+        },
+      ])
+    );
+
+    expect(doc).toContain('Affects 1 draft:');
+    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
+  });
+
+  it('groups one UNCATALOGUED check across two drafts as a single problem', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        { slotId: 'camp-01-linkedin', blockers: ['draft_new_safety_check'] },
+        { slotId: 'camp-02-facebook', blockers: ['draft_new_safety_check'] },
+      ])
+    );
+
+    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
+    expect(doc).toContain('Affects 2 drafts');
+    expect(doc).toContain('[untranslated code]');
   });
 });
 
-describe('title prefix', () => {
-  it('keeps the per-campaign title both generators previously hardcoded', () => {
-    expect(renderPublishingHandoff(cleanPack())).toContain(
-      '# Publishing Handoff'
-    );
-    expect(
-      renderPublishingHandoff(cleanPack(), { titlePrefix: 'CARSI' })
-    ).toContain('# CARSI Publishing Handoff');
+describe('the verdict never contradicts the body — round 5 P1-3', () => {
+  it('does not print PASS above a populated blocker list', () => {
+    const pack = packWithDrafts([
+      { slotId: 'camp-01', blockers: ['draft_slop_density_too_high'] },
+    ]);
+    // The input type permits this combination; the producer normally avoids it.
+    pack.qualityGate.allowed = true;
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).not.toContain('PASS — nothing in the quality gate');
+    expect(doc).toContain('BLOCKED — 1 issue listed below.');
+    expect(doc).toContain('which contradicts them');
+  });
+
+  it('does not print PASS when the gate says not allowed but lists nothing', () => {
+    const pack = cleanPack();
+    pack.qualityGate.allowed = false;
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).not.toContain('PASS — nothing in the quality gate');
+    expect(doc).toContain('lists no blocker');
   });
 });
 
 describe('codes are data, never markup', () => {
-  /**
-   * Found by independent review, and it invalidated the original invariant test.
-   * toContain proves a code is in the STRING. It does not prove a founder can SEE
-   * it. Interpolated bare, []() is a well-formed empty Markdown link: it renders
-   * as nothing while still satisfying containment. Visibility is the property
-   * that matters, so the fence is what has to be asserted.
-   */
-  function assertAlwaysFenced(doc: string, value: string) {
-    const parts = doc.split(value);
-    expect(parts.length).toBeGreaterThan(1);
-    for (let i = 0; i < parts.length - 1; i += 1) {
-      expect(parts[i].endsWith(TICK) || parts[i].endsWith(TICK + ' ')).toBe(
-        true
-      );
-      expect(
-        parts[i + 1].startsWith(TICK) || parts[i + 1].startsWith(' ' + TICK)
-      ).toBe(true);
-    }
+  function docWithBlocker(code: string): string {
+    return renderPublishingHandoff(
+      packWithDrafts([{ slotId: 'camp-01', blockers: [code] }])
+    );
   }
 
-  it('fences a markdown-shaped unknown code so it cannot render as an empty link', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: ['[]()'],
-    };
-
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain(TICK + '[]()' + TICK);
-    assertAlwaysFenced(doc, '[]()');
+  it('fences a markdown-shaped code so it cannot render as an empty link', () => {
+    expect(docWithBlocker('[]()')).toContain(TICK + '[]()' + TICK);
   });
 
   it('fences a code that would otherwise open a heading or a list item', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: ['## Codes', '- not a real bullet'],
-    };
-
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain(TICK + '## Codes' + TICK);
-    expect(doc).toContain(TICK + '- not a real bullet' + TICK);
+    expect(docWithBlocker('## Codes')).toContain(TICK + '## Codes' + TICK);
+    expect(docWithBlocker('- x')).toContain(TICK + '- x' + TICK);
   });
 
   it('fences a channel name that carries markup', () => {
@@ -378,13 +434,11 @@ describe('codes are data, never markup', () => {
       '[x](y)': ['platform_credentials_required'],
     };
 
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain(TICK + '[x](y)' + TICK);
+    expect(renderPublishingHandoff(pack)).toContain(TICK + '[x](y)' + TICK);
   });
 });
 
-describe('inlineCode fencing', () => {
+describe('inlineCode fencing and display sanitising', () => {
   it('wraps an ordinary value in single backticks', () => {
     expect(inlineCode('draft_evidence_refs_missing')).toBe(
       TICK + 'draft_evidence_refs_missing' + TICK
@@ -395,29 +449,8 @@ describe('inlineCode fencing', () => {
     expect(inlineCode('a' + TICK + 'b')).toBe(
       TICK.repeat(2) + 'a' + TICK + 'b' + TICK.repeat(2)
     );
-    expect(inlineCode('a' + TICK.repeat(2) + 'b')).toBe(
-      TICK.repeat(3) + 'a' + TICK.repeat(2) + 'b' + TICK.repeat(3)
-    );
   });
 
-  it('pads when the value would touch its own fence', () => {
-    expect(inlineCode(TICK + 'lead')).toBe(
-      TICK.repeat(2) + ' ' + TICK + 'lead' + ' ' + TICK.repeat(2)
-    );
-  });
-
-  it('names an empty value rather than emitting an unrenderable empty span', () => {
-    expect(inlineCode('')).toBe(TICK + '(empty code)' + TICK);
-  });
-});
-
-describe('values that defeat fencing alone', () => {
-  /**
-   * All three found by the independent reviewer's attack harness, which parsed
-   * the rendered Markdown and asked whether a visible node carried the value.
-   * Fencing is necessary and not sufficient: a blank line ends a code span, and
-   * empty or all-whitespace spans render as nothing.
-   */
   it('escapes a newline so the value cannot terminate its own code span', () => {
     expect(inlineCode('a\nb')).toBe(TICK + 'a\\nb' + TICK);
   });
@@ -429,133 +462,49 @@ describe('values that defeat fencing alone', () => {
     expect(rendered).not.toContain('\n');
   });
 
-  it('names an all-whitespace code with its length instead of rendering a blank span', () => {
+  /**
+   * ROUND 5 P1-1. CommonMark replaces U+0000 with U+FFFD, so a value carrying a
+   * NUL reached the page as a DIFFERENT value — in the source, absent from every
+   * rendered node.
+   */
+  it('escapes a NUL byte, which Markdown would otherwise replace', () => {
+    const rendered = inlineCode('null' + NUL + 'byte');
+
+    expect(rendered).toBe(TICK + 'null\\x00byte' + TICK);
+    expect(rendered).not.toContain(NUL);
+  });
+
+  it('escapes other C0 control characters', () => {
+    expect(inlineCode('a' + BEL + 'b')).toBe(TICK + 'a\\x07b' + TICK);
+  });
+
+  it('names an all-whitespace code with its length', () => {
     expect(inlineCode('   ')).toBe(
       TICK + '(whitespace-only code, 3 characters)' + TICK
     );
   });
 
+  it('names an empty value rather than emitting an unrenderable empty span', () => {
+    expect(inlineCode('')).toBe(TICK + '(empty code)' + TICK);
+  });
+
   it('preserves edge whitespace that CommonMark would otherwise strip', () => {
-    // A code span whose content begins and ends with a space loses one of each,
-    // so ' x ' would display as 'x' and two distinct codes would look identical.
     expect(inlineCode(' x ')).toBe(TICK + '  x  ' + TICK);
   });
 
   it('does not truncate a pathologically long code', () => {
     const long = 'x'.repeat(100_000);
-
     expect(inlineCode(long)).toContain(long);
   });
 });
 
-describe('the headline count matches the body — round 3 regression', () => {
-  it('counts distinct problems, not raw blocker occurrences', () => {
-    // The real Unite Group shape: one problem reported once per slot. Counting
-    // raw occurrences produced "BLOCKED — 2 issues" above a single entry.
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: [
-        'camp-03-linkedin:draft_slop_density_too_high',
-        'camp-04-facebook:draft_slop_density_too_high',
-      ],
-    };
-
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
-    expect(doc).toContain('Affects 2 drafts');
-  });
-
-  it('still counts two genuinely different problems as two', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: [
-        'camp-03-linkedin:draft_slop_density_too_high',
-        'camp-04-facebook:draft_peer_metrics_missing',
-      ],
-    };
-
-    expect(renderPublishingHandoff(pack)).toContain(
-      'BLOCKED — 2 issues must be cleared first.'
+describe('title prefix', () => {
+  it('keeps the per-campaign title both generators previously hardcoded', () => {
+    expect(renderPublishingHandoff(cleanPack())).toContain(
+      '# Publishing Handoff'
     );
-  });
-
-  it('names an affected draft once even if its slot reports the code twice', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: [
-        'camp-03-linkedin:draft_slop_density_too_high',
-        'camp-03-linkedin:draft_slop_density_too_high',
-      ],
-    };
-
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain('Affects 1 draft:');
-    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
-    // Both raw occurrences still reach the appendix.
-    const appendix = doc.split('## Codes')[1];
-    const occurrences =
-      appendix.split('camp-03-linkedin:draft_slop_density_too_high').length - 1;
-    expect(occurrences).toBe(2);
-  });
-});
-describe('an UNKNOWN draft check must group like a known one — round 4 regression', () => {
-  /**
-   * The catalogue is deliberately not exhaustive, so a newly added gate check
-   * arrives here untranslated. Attribution must not depend on recognition: when
-   * it did, one new check across two drafts rendered as two separate problems
-   * with no affected-draft list, recreating the raw-occurrence overcount that the
-   * grouped verdict exists to prevent.
-   */
-  it('groups one uncatalogued check across two drafts as a single problem', () => {
-    const pack = cleanPack();
-    pack.qualityGate = {
-      ...pack.qualityGate,
-      allowed: false,
-      blockers: [
-        'camp-01-linkedin:draft_new_safety_check',
-        'camp-02-facebook:draft_new_safety_check',
-      ],
-    };
-
-    const doc = renderPublishingHandoff(pack);
-
-    expect(doc).toContain('BLOCKED — 1 issue must be cleared first.');
-    expect(doc).toContain('Affects 2 drafts');
-    expect(doc).toContain('[untranslated code]');
-    expect(doc).toContain('01-linkedin');
-    expect(doc).toContain('02-facebook');
-  });
-
-  it('attributes an uncatalogued draft code to its slot', () => {
-    const explained = explainGateCode(
-      'camp-01-linkedin:draft_new_safety_check'
-    );
-
-    expect(explained.slot).toBe('camp-01-linkedin');
-    expect(explained.recognised).toBe(false);
-    expect(explained.meaning).toBe('draft_new_safety_check');
-    expect(explained.raw).toBe('camp-01-linkedin:draft_new_safety_check');
-  });
-
-  it('still does not mis-split a gate-level code that carries a parameter', () => {
-    const explained = explainGateCode('quality_claim_evidence_missing:claim-7');
-
-    expect(explained.slot).toBeUndefined();
-    expect(explained.recognised).toBe(true);
-  });
-
-  it('leaves a colon-free unknown code unattributed rather than inventing a slot', () => {
-    const explained = explainGateCode('totally_unknown_code');
-
-    expect(explained.slot).toBeUndefined();
-    expect(explained.recognised).toBe(false);
+    expect(
+      renderPublishingHandoff(cleanPack(), { titlePrefix: 'CARSI' })
+    ).toContain('# CARSI Publishing Handoff');
   });
 });

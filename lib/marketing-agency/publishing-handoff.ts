@@ -64,12 +64,25 @@
  */
 
 /** The shape this renderer needs. Structural, so the pack type stays in its own module. */
+export interface PublishingHandoffDraftResult {
+  slotId: string;
+  channel: string;
+  blockers: string[];
+  warnings: string[];
+}
+
 export interface PublishingHandoffPack {
   qualityGate: {
     allowed: boolean;
     overallScore: number;
     blockers: string[];
     warnings: string[];
+    /**
+     * The STRUCTURED per-draft results. This is the field the document is built
+     * from; `blockers` and `warnings` above are the gate's flattened view and are
+     * used only for the raw appendix.
+     */
+    draftResults: PublishingHandoffDraftResult[];
     sourceSummary: {
       totalSources: number;
       checkedSources: number;
@@ -298,10 +311,19 @@ function forDisplay(value: string): string {
   if (value.trim().length === 0) {
     return `(whitespace-only code, ${value.length} characters)`;
   }
-  return value
-    .replace(/\r\n/g, '\\n')
-    .replace(/[\r\n]/g, '\\n')
-    .replace(/\t/g, '\\t');
+  return (
+    value
+      .replace(/\r\n/g, '\\n')
+      .replace(/[\r\n]/g, '\\n')
+      .replace(/\t/g, '\\t')
+      // Any REMAINING C0 control, NUL included. CommonMark replaces NUL with
+      // U+FFFD, so a value carrying one reaches the page as a different value —
+      // present in the source, absent from every rendered node.
+      .replace(
+        /[\u0000-\u001f\u007f]/g,
+        ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
+      )
+  );
 }
 
 export function inlineCode(value: string): string {
@@ -344,58 +366,78 @@ const UNTRANSLATED_ACTION =
  * Translate one gate code. Never throws and never returns null — an unknown code
  * comes back with `recognised: false` and its raw text preserved.
  */
-export function explainGateCode(code: string): ExplainedCode {
-  const gateLevel = matchIn(GATE_CODES, code);
-  if (gateLevel) {
-    return { raw: code, recognised: true, ...gateLevel };
+/**
+ * Explain one code.
+ *
+ * WHY THIS TAKES A SLOT INSTEAD OF PARSING ONE OUT
+ * ------------------------------------------------
+ * It used to receive the gate's flattened `<slotId>:<code>` string and recover
+ * the boundary by finding the first colon. That is guesswork, because `slotId` is
+ * an unconstrained `string`. A draft whose slot id happened to equal a gate-code
+ * name produced `quality_claim_evidence_missing:draft_slop_density_too_high`,
+ * which whole-string gate matching claimed first — so the document dropped the
+ * draft attribution and told the founder to attach claim evidence when the actual
+ * problem was the copy. A confidently wrong instruction at the approval point is
+ * worse than an unreadable one.
+ *
+ * Four consecutive review rounds each fixed one consequence of that flattening
+ * and left the ambiguity itself in place. The renderer now takes the slot as a
+ * separate argument, sourced from `draftResults` where the gate never joined them
+ * in the first place, so there is nothing left to parse and no boundary to guess.
+ *
+ * A code with a slot is draft-level; a code without one is gate-level. The two
+ * catalogues are never consulted for the same value.
+ */
+export function explainCode(code: string, slot?: string): ExplainedCode {
+  const raw = slot === undefined ? code : `${slot}:${code}`;
+  const matched = matchIn(slot === undefined ? GATE_CODES : DRAFT_CODES, code);
+  if (matched) {
+    return { raw, slot, recognised: true, ...matched };
   }
-
-  // The slot is split off STRUCTURALLY, never conditionally on the catalogue.
-  //
-  // This used to happen only when DRAFT_CODES already recognised the suffix, and
-  // that coupled two decisions that must stay independent. Catalogue
-  // non-exhaustiveness is deliberate — a new gate check is meant to surface as
-  // untranslated rather than fail a build. But when attribution depended on
-  // recognition, a NEW draft check arrived slot-prefixed, went unsplit, and its
-  // per-slot raw strings differed, so grouping saw one problem on fifteen drafts
-  // as fifteen separate problems. That is precisely the founder-facing overcount
-  // the grouped verdict exists to prevent, reintroduced by the very extensibility
-  // the catalogue is designed for.
-  //
-  // Gate-level codes are matched whole-string above, so a parameter-bearing code
-  // such as quality_claim_evidence_missing:claim-7 has already returned and
-  // cannot be mis-split here. Every draft code reaches this renderer prefixed by
-  // evaluateCampaignQualityGate, so a remaining colon is a slot boundary.
-  const separator = code.indexOf(':');
-  if (separator > 0) {
-    const slot = code.slice(0, separator);
-    const rest = code.slice(separator + 1);
-    const draftLevel = matchIn(DRAFT_CODES, rest);
-    if (draftLevel) {
-      return { raw: code, slot, recognised: true, ...draftLevel };
-    }
-    // Unknown suffix: keep the attribution and group on the code, not the raw
-    // string, so one unknown check across many drafts reads as one problem.
-    return {
-      raw: code,
-      slot,
-      meaning: rest,
-      action: UNTRANSLATED_ACTION,
-      recognised: false,
-    };
-  }
-
-  const unprefixed = matchIn(DRAFT_CODES, code);
-  if (unprefixed) {
-    return { raw: code, recognised: true, ...unprefixed };
-  }
-
   return {
-    raw: code,
+    raw,
+    slot,
     meaning: code,
     action: UNTRANSLATED_ACTION,
     recognised: false,
   };
+}
+
+/** One reported problem, before explanation, with its origin still intact. */
+interface StructuredIssue {
+  code: string;
+  slot?: string;
+}
+
+/**
+ * Split the gate's report into draft-level and gate-level issues WITHOUT parsing.
+ *
+ * Draft issues come from `draftResults`, where slot and code are already separate
+ * fields. The flattened `blockers` / `warnings` arrays are then reduced by exactly
+ * those entries — matched whole-string and removed one occurrence at a time — and
+ * whatever remains is genuinely gate-level. No colon is ever interpreted.
+ */
+function partitionIssues(
+  flattened: string[],
+  draftResults: PublishingHandoffDraftResult[],
+  pick: (result: PublishingHandoffDraftResult) => string[]
+): StructuredIssue[] {
+  const remaining = [...flattened];
+  const issues: StructuredIssue[] = [];
+
+  for (const result of draftResults) {
+    for (const code of pick(result)) {
+      issues.push({ code, slot: result.slotId });
+      const at = remaining.indexOf(`${result.slotId}:${code}`);
+      if (at >= 0) remaining.splice(at, 1);
+    }
+  }
+
+  for (const code of remaining) {
+    issues.push({ code });
+  }
+
+  return issues;
 }
 
 export function explainExternalBlock(code: string): ExplainedCode {
@@ -452,8 +494,8 @@ interface GroupedIssue {
 }
 
 /** Group by meaning so one problem across fifteen drafts reads as one problem. */
-function groupCodes(codes: string[]): GroupedIssue[] {
-  const explained = codes.map(explainGateCode);
+function groupIssues(issues: StructuredIssue[]): GroupedIssue[] {
+  const explained = issues.map(issue => explainCode(issue.code, issue.slot));
   const shortened = shortenSlots(
     explained
       .map(item => item.slot)
@@ -499,13 +541,13 @@ function renderIssue(issue: GroupedIssue, index: number): string {
 
 function renderSection(
   title: string,
-  codes: string[],
+  issues: StructuredIssue[],
   emptyLine: string
 ): string {
-  if (codes.length === 0) {
+  if (issues.length === 0) {
     return `## ${title}\n\n${emptyLine}\n`;
   }
-  const grouped = groupCodes(codes);
+  const grouped = groupIssues(issues);
   const body = grouped
     .map((issue, i) => renderIssue(issue, i + 1))
     .join('\n\n');
@@ -559,14 +601,42 @@ export function renderPublishingHandoff(
   const gate = pack.qualityGate;
   const summary = gate.sourceSummary;
 
+  // Everything below is derived from the STRUCTURED per-draft results, so the
+  // verdict, the section and the affected-draft counts cannot disagree: they are
+  // three views of one list.
+  const blockerIssues = partitionIssues(
+    gate.blockers,
+    gate.draftResults,
+    result => result.blockers
+  );
+  const warningIssues = partitionIssues(
+    gate.warnings,
+    gate.draftResults,
+    result => result.warnings
+  );
+
   // Count DISTINCT problems, the same way the body groups them. Counting raw
   // occurrences here said "BLOCKED — 15 issues" above a single entry reading
   // "Affects 15 drafts", which contradicts the one question this document exists
-  // to answer. The verdict and the section must be derived from one grouping.
-  const distinctProblems = groupCodes(gate.blockers).length;
-  const verdict = gate.allowed
-    ? 'PASS — nothing in the quality gate is holding this campaign.'
-    : `BLOCKED — ${distinctProblems} issue${distinctProblems === 1 ? '' : 's'} must be cleared first.`;
+  // to answer.
+  const problems = groupIssues(blockerIssues);
+  const distinctProblems = problems.length;
+  const plural = distinctProblems === 1 ? '' : 's';
+
+  // `allowed` is NOT trusted on its own. The input type permits `allowed: true`
+  // alongside a populated blocker list, and a document that prints PASS above
+  // listed blockers can get a campaign published over one. Where the two
+  // disagree, the blockers win and the disagreement is stated rather than hidden.
+  let verdict: string;
+  if (distinctProblems > 0) {
+    verdict = gate.allowed
+      ? `BLOCKED — ${distinctProblems} issue${plural} listed below. The gate also reports this campaign as allowed, which contradicts them. Treat it as blocked and ask why the two disagree.`
+      : `BLOCKED — ${distinctProblems} issue${plural} must be cleared first.`;
+  } else {
+    verdict = gate.allowed
+      ? 'PASS — nothing in the quality gate is holding this campaign.'
+      : 'BLOCKED — the gate reports this campaign as not allowed but lists no blocker. Treat it as blocked and ask why.';
+  }
 
   return `# ${prefix}Publishing Handoff
 
@@ -578,8 +648,8 @@ export function renderPublishingHandoff(
 - **Score:** ${gate.overallScore}/100
 - **Sources:** ${summary.checkedSources} of ${summary.totalSources} checked · ${summary.officialPlatformSources} official platform · ${summary.internalPolicySources} internal policy
 
-${renderSection('What needs your attention', gate.blockers, 'Nothing. The quality gate found no blockers.')}
-${renderSection('Waiting on access, not on you', gate.warnings, 'Nothing waiting.')}
+${renderSection('What needs your attention', blockerIssues, 'Nothing. The quality gate found no blockers.')}
+${renderSection('Waiting on access, not on you', warningIssues, 'Nothing waiting.')}
 ${renderExternal(pack.externalPublishBlocks)}
 ## Publish rule
 
