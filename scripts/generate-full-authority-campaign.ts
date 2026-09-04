@@ -5,13 +5,14 @@ import {
   type AuthorityCampaignPack,
   generateFullAuthorityCampaign,
 } from '../lib/marketing-agency/full-campaign-generator';
+import { renderPublishingHandoff } from '../lib/marketing-agency/publishing-handoff';
 
 const generatedAt = '2026-06-11T10:15:00+10:00';
 const campaignId = 'unite-group-authority-flywheel-2026-06-11';
 const docsRoot = path.resolve(
   process.cwd(),
   'docs/marketing-agency/full-authority-campaigns',
-  campaignId,
+  campaignId
 );
 const publicRoot = path.resolve(process.cwd(), 'public/campaigns');
 const publicFile = path.join(publicRoot, `${campaignId}.html`);
@@ -126,7 +127,7 @@ function json(value: unknown) {
 
 function sourceList(pack: AuthorityCampaignPack) {
   return pack.evidenceManifest.sources
-    .map((source) => {
+    .map(source => {
       const target = source.url ?? source.path ?? 'source path pending';
       return `- ${source.id}: ${source.label} (${target})`;
     })
@@ -181,7 +182,7 @@ ${sourceList(pack)}
 
 function renderDrafts(pack: AuthorityCampaignPack) {
   const sections = pack.drafts.map(
-    (draft) => `## ${draft.channel} - ${draft.title}
+    draft => `## ${draft.channel} - ${draft.title}
 
 Slot: ${draft.slotId}
 
@@ -196,7 +197,7 @@ Asset brief: ${draft.assetBrief}
 Media format: ${draft.mediaPlan.format}
 
 Media review checks:
-${draft.mediaPlan.reviewChecks.map((check) => `- ${check}`).join('\n')}
+${draft.mediaPlan.reviewChecks.map(check => `- ${check}`).join('\n')}
 
 Peer test: ${draft.peerBenchmark.testMethod}
 
@@ -205,7 +206,7 @@ Peer metrics: ${draft.peerBenchmark.comparableMetrics.join(', ')}
 Peer data status: ${draft.peerBenchmark.status}
 
 Publish instruction: ${draft.publishInstruction}
-`,
+`
   );
 
   return `# Platform Drafts
@@ -213,36 +214,6 @@ Publish instruction: ${draft.publishInstruction}
 These are ready-to-review campaign drafts. Blog/newsletter can publish as owned media. External channels stay gated.
 
 ${sections.join('\n')}
-`;
-}
-
-function renderPublishingHandoff(pack: AuthorityCampaignPack) {
-  return `# Publishing Handoff
-
-## Quality Gate
-
-- Status: ${pack.qualityGate.allowed ? 'pass' : 'blocked'}
-- Overall score: ${pack.qualityGate.overallScore}/100
-- Sources checked: ${pack.qualityGate.sourceSummary.checkedSources}/${pack.qualityGate.sourceSummary.totalSources}
-- Official platform sources: ${pack.qualityGate.sourceSummary.officialPlatformSources}
-- Internal policy sources: ${pack.qualityGate.sourceSummary.internalPolicySources}
-- Blockers: ${pack.qualityGate.blockers.length ? pack.qualityGate.blockers.join(', ') : 'none'}
-- Warnings: ${pack.qualityGate.warnings.length ? pack.qualityGate.warnings.join(', ') : 'none'}
-
-## Owned Media
-
-- Blog: ${pack.ownedMediaGate.allowed ? 'ready' : 'blocked'}
-- Newsletter: ${pack.ownedMediaGate.allowed ? 'ready' : 'blocked'}
-
-## External Social Blocks
-
-${Object.entries(pack.externalPublishBlocks)
-  .map(([channel, blocks]) => `### ${channel}\n\n${blocks.map((block) => `- ${block}`).join('\n')}`)
-  .join('\n\n')}
-
-## Publish Rule
-
-No external platform post is marked as live unless there is a platform receipt, URL, or API response stored back into the campaign pack.
 `;
 }
 
@@ -257,10 +228,10 @@ function escapeHtml(value: string) {
 
 function renderPublicHtml(pack: AuthorityCampaignPack) {
   const ownedDrafts = pack.drafts.filter(
-    (draft) => draft.channel === 'blog' || draft.channel === 'newsletter',
+    draft => draft.channel === 'blog' || draft.channel === 'newsletter'
   );
   const socialDrafts = pack.drafts.filter(
-    (draft) => draft.channel !== 'blog' && draft.channel !== 'newsletter',
+    draft => draft.channel !== 'blog' && draft.channel !== 'newsletter'
   );
 
   return `<!doctype html>
@@ -324,7 +295,8 @@ function renderPublicHtml(pack: AuthorityCampaignPack) {
       ${ownedDrafts
         .slice(0, 4)
         .map(
-          (draft) => `<article class="card"><h3>${escapeHtml(draft.title)}</h3><p>${escapeHtml(draft.body).replace(/\n/g, '<br />')}</p><p><strong>CTA:</strong> ${escapeHtml(draft.cta)}</p></article>`,
+          draft =>
+            `<article class="card"><h3>${escapeHtml(draft.title)}</h3><p>${escapeHtml(draft.body).replace(/\n/g, '<br />')}</p><p><strong>CTA:</strong> ${escapeHtml(draft.cta)}</p></article>`
         )
         .join('\n')}
     </section>
@@ -335,7 +307,10 @@ function renderPublicHtml(pack: AuthorityCampaignPack) {
       <ul>
         ${socialDrafts
           .slice(0, 8)
-          .map((draft) => `<li><strong>${escapeHtml(draft.channel)}:</strong> ${escapeHtml(draft.title)}</li>`)
+          .map(
+            draft =>
+              `<li><strong>${escapeHtml(draft.channel)}:</strong> ${escapeHtml(draft.title)}</li>`
+          )
           .join('\n')}
       </ul>
     </section>
@@ -344,7 +319,10 @@ function renderPublicHtml(pack: AuthorityCampaignPack) {
       <h2>Source register</h2>
       <ul>
         ${pack.evidenceManifest.sources
-          .map((source) => `<li>${escapeHtml(source.label)} - ${escapeHtml(source.url ?? source.path ?? source.id)}</li>`)
+          .map(
+            source =>
+              `<li>${escapeHtml(source.label)} - ${escapeHtml(source.url ?? source.path ?? source.id)}</li>`
+          )
           .join('\n')}
       </ul>
     </section>
@@ -356,15 +334,28 @@ function renderPublicHtml(pack: AuthorityCampaignPack) {
 
 writeFile(path.join(docsRoot, 'README.md'), renderReadme(pack));
 writeFile(path.join(docsRoot, 'campaign-pack.json'), json(pack));
-writeFile(path.join(docsRoot, 'evidence-manifest.json'), json(pack.evidenceManifest));
+writeFile(
+  path.join(docsRoot, 'evidence-manifest.json'),
+  json(pack.evidenceManifest)
+);
 writeFile(path.join(docsRoot, 'quality-gate.json'), json(pack.qualityGate));
 writeFile(path.join(docsRoot, 'platform-drafts.md'), renderDrafts(pack));
-writeFile(path.join(docsRoot, 'source-register.md'), renderSourceRegister(pack));
-writeFile(path.join(docsRoot, 'publishing-handoff.md'), renderPublishingHandoff(pack));
+writeFile(
+  path.join(docsRoot, 'source-register.md'),
+  renderSourceRegister(pack)
+);
+writeFile(
+  path.join(docsRoot, 'publishing-handoff.md'),
+  renderPublishingHandoff(pack)
+);
 writeFile(publicFile, renderPublicHtml(pack));
 
 console.info(`Generated ${pack.campaignId}`);
 console.info(`Docs: ${docsRoot}`);
 console.info(`Public: ${publicFile}`);
-console.info(`Owned media gate: ${pack.ownedMediaGate.allowed ? 'pass' : 'blocked'}`);
-console.info(`Quality gate: ${pack.qualityGate.allowed ? 'pass' : 'blocked'} (${pack.qualityGate.overallScore}/100)`);
+console.info(
+  `Owned media gate: ${pack.ownedMediaGate.allowed ? 'pass' : 'blocked'}`
+);
+console.info(
+  `Quality gate: ${pack.qualityGate.allowed ? 'pass' : 'blocked'} (${pack.qualityGate.overallScore}/100)`
+);
