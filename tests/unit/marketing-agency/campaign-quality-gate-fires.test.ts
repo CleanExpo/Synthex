@@ -48,8 +48,10 @@
  * The rule that generalises: a composite guard needs a case per conjunct, because
  * a passing exact-set assertion proves the blocker fired, never which term made it.
  *
- * NO SUFFICIENCY CLAIM. Nine mutants dying is nine mutants. Nothing here proves the
+ * NO SUFFICIENCY CLAIM. Twelve mutants dying is twelve mutants. Nothing here proves the
  * gate checks the RIGHT things; mutating existing rules cannot surface a missing one.
+ * (Count re-measured at each commit rather than carried forward — it has gone stale
+ * once already, which is why it is stated as a number and not as "all of them".)
  *
  * Independent review found the coupling defect twice, in two different cases, after
  * I claimed to have fixed it once, and found a cast papering over a type error twice
@@ -330,6 +332,32 @@ describe('campaign quality gate — manifest-level blockers FIRE', () => {
     expect(result.status).toBe('blocked');
   });
 
+  // Round 6 P2. The case above supplies `[]`; this one OMITS the field. They are
+  // not the same input. `evidenceRefs` is optional on CampaignManifestClaim
+  // (campaign-authority-manifest.ts:27) and the gate spells the check
+  // `!claim.evidenceRefs?.length`, which is true for both — so one case appeared
+  // to cover both branches and did not.
+  //
+  // MEASURED, not assumed: rewriting the check as `evidenceRefs?.length === 0`
+  // — still catching `[]`, letting `undefined` through, since `undefined === 0`
+  // is false — survived the whole suite before this case existed, and dies here.
+  it('fires when a claim OMITS evidenceRefs, not only when it is empty', () => {
+    const manifest = goodManifest();
+    manifest.claims = [
+      ...manifest.claims,
+      {
+        id: 'claim-omitted',
+        statement: 'Drying certificates are issued at the end of a job.',
+        status: 'verified',
+        // evidenceRefs deliberately absent — this is the point of the case.
+      },
+    ];
+
+    expect(run({ manifest }).blockers).toEqual([
+      'quality_claim_evidence_missing:claim-omitted',
+    ]);
+  });
+
   it('fires when a claim cites a source that does not exist', () => {
     const manifest = goodManifest();
     manifest.claims[0].evidenceRefs = ['src-does-not-exist'];
@@ -490,7 +518,11 @@ describe('campaign quality gate — draft-level blockers FIRE', () => {
  *      one spelled-out blocker, so it cannot be evaded by the number changing.
  *
  * Watched RED by mutation at this commit — `MIN_HUMANNESS_SCORE` 60 → 61 fails
- * this test by name, on all three assertions.
+ * this test BY NAME. Observed failure: `toBeGreaterThanOrEqual`, expected >= 61,
+ * received 60. Jest short-circuits at the first failing assertion, so that is
+ * the one and only assertion observed failing; the other two are reasoned to
+ * fail as well and were NOT watched doing so. Stated this way deliberately —
+ * "fails on all three" would be a claim about output nobody has seen.
  *
  * Deliberately still GREEN if the threshold is LOOSENED (60 → 59): the floor
  * still clears it, the defect still stands, and there is nothing to convert.
@@ -595,9 +627,8 @@ describe('campaign quality gate — known defect: the asset-policy guard cannot 
  * Round 5's review found two more multi-term conditions whose non-firing branch
  * was untested. Both mutants below SURVIVED all 19 earlier cases — MEASURED in
  * both directions, not relayed: the 19-case suite from the previous commit runs
- * 19/19 green unmutated, and 19/19 green under each of these two mutants, while
- * at this commit each kills exactly one distinct case. The reason is that every
- * fixture sat on the firing side of the condition:
+ * 19/19 green unmutated, and 19/19 green under each of these two mutants. The
+ * reason is that every fixture sat on the firing side of the condition:
  *
  *   quality_claim_evidence_missing is `requiresEvidence !== false && no refs`,
  *   and every claim omitted `requiresEvidence`, so deleting the exemption
@@ -606,9 +637,16 @@ describe('campaign quality gate — known defect: the asset-policy guard cannot 
  *   the peer-plan block is gated by `channelNeedsPeerPlan(channel)`, and every
  *   draft was `linkedin` (social), so `=> true` was indistinguishable.
  *
- * These two cases assert the EXEMPT path yields an empty blocker set, which is
+ * The cases below assert the EXEMPT path yields an empty blocker set, which is
  * what makes the mutants die. An exact-set assertion on a FIRING case proves the
  * blocker fired, never which conjunct fired it — the lesson of round 5.
+ *
+ * KILL COUNTS, re-measured at this commit — NOT "one each", which was true when
+ * this header was written and is no longer:
+ *   `requiresEvidence !== false` removed   kills 1 (the exemption case)
+ *   `channelNeedsPeerPlan => true`         kills 2 (BOTH blog cases below)
+ * The second went from one to two when round 6 added the four-field peer case.
+ * A kill count is a measurement with a shelf life; re-run it, do not inherit it.
  */
 describe('campaign quality gate — composite conjunct: the evidence exemption', () => {
   it('honours requiresEvidence=false, so an exempt claim with no refs blocks nothing', () => {
@@ -627,32 +665,6 @@ describe('campaign quality gate — composite conjunct: the evidence exemption',
     // Dropping the `requiresEvidence !== false` conjunct makes THIS the only
     // failing case: the claim would then be blocked for having no refs.
     expect(run({ manifest }).blockers).toEqual([]);
-  });
-
-  // Round 6 P2: `evidenceRefs` is OPTIONAL on CampaignManifestClaim
-  // (campaign-authority-manifest.ts:27), and the gate spells the check
-  // `!claim.evidenceRefs?.length` — which is true for BOTH `[]` and an omitted
-  // field. Every fixture supplied `[]`, so the omitted branch was unpinned.
-  //
-  // MEASURED, not assumed: rewriting the check as `evidenceRefs?.length === 0`
-  // — which still catches `[]` but lets `undefined` through, because
-  // `undefined === 0` is false — survived the whole suite 22/22 before this
-  // case existed. With this case it dies here.
-  it('blocks a claim that OMITS evidenceRefs, not only one with an empty array', () => {
-    const manifest = goodManifest();
-    manifest.claims = [
-      ...manifest.claims,
-      {
-        id: 'claim-omitted',
-        statement: 'Drying certificates are issued at the end of a job.',
-        status: 'verified',
-        // evidenceRefs deliberately absent — this is the point of the case.
-      },
-    ];
-
-    expect(run({ manifest }).blockers).toEqual([
-      'quality_claim_evidence_missing:claim-omitted',
-    ]);
   });
 });
 
