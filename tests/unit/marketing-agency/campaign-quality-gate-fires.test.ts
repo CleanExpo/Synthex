@@ -555,8 +555,13 @@ describe('campaign quality gate — known defect: the humanness floor cannot fir
  *
  * `CampaignMediaPlan.assetSourcePolicy` is declared as the SINGLETON literal type
  * `'owned_licensed_original_only'` (campaign-quality-gate.ts:25). The guard at
- * line 173 tests `!== 'owned_licensed_original_only'`, which is statically always
+ * line 217 tests `!== 'owned_licensed_original_only'`, which is statically always
  * false for any well-typed input.
+ *
+ * (That said `173` until round 7. The same stale number lived in TWO places — here
+ * and in BACKLOG item 0a — and round 6 corrected only the BACKLOG copy, so the
+ * false one survived in the file it describes. A fact worth stating twice is worth
+ * a grep before you call it fixed.)
  *
  * It is dead at RUNTIME too, not merely in the type system. The gate has exactly
  * one call site — `full-campaign-generator.ts:672` — and every draft reaching it
