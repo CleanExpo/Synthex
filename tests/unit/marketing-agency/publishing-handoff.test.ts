@@ -35,7 +35,11 @@ import {
   type PublishingHandoffDraftResult,
   type PublishingHandoffPack,
 } from '../../../lib/marketing-agency/publishing-handoff';
-import type { CampaignQualityIssue } from '../../../lib/marketing-agency/campaign-quality-gate';
+import {
+  evaluateCampaignQualityGate,
+  type CampaignQualityIssue,
+} from '../../../lib/marketing-agency/campaign-quality-gate';
+import type { CampaignEvidenceManifest } from '../../../lib/marketing-agency/campaign-authority-manifest';
 
 const TICK = String.fromCharCode(96);
 const NUL = String.fromCharCode(0);
@@ -668,5 +672,160 @@ describe('round 6 — no value is recovered from a code string', () => {
     );
 
     expect(doc).toContain('Affects 1 draft');
+  });
+});
+
+describe('round 7 — the REAL gate feeds the REAL renderer', () => {
+  /**
+   * ROUND 7 P1-2. Every other test in this file hand-builds the pack, so all of
+   * them agree with my belief about the producer rather than with the producer.
+   * Codex mutated the claim emitter to put `claim.id` and `evidenceRef` back
+   * inside the code with `params` empty; the published flattened string stayed
+   * BYTE-IDENTICAL and 67/67 tests still passed.
+   *
+   * That is not a gap a better string assertion can close. The joined form is
+   * deliberately byte-stable, so no assertion on it can ever see the regression —
+   * only running the real gate into the real renderer can, because the difference
+   * lives entirely in the structured field.
+   *
+   * The values carry colons on purpose: that is the exact input the round-6 fix
+   * exists to handle, and the one a re-flattening emitter gets wrong.
+   */
+  function manifestWithColonBearingClaim(): CampaignEvidenceManifest {
+    return {
+      manifestId: 'producer-to-renderer',
+      topic: 'Structured issues survive the trip to the founder',
+      audience: 'Australian restoration contractors',
+      businessGoal: 'Prove the producer contract end to end',
+      sources: [
+        {
+          id: 'src-platform',
+          label: 'LinkedIn official posting policy',
+          url: 'https://www.linkedin.com/legal/professional-community-policies',
+          sourceType: 'official_platform_documentation',
+          checkedAt: '2026-06-01T00:00:00.000Z',
+        },
+        {
+          id: 'src-policy',
+          label: 'Internal publication policy',
+          path: 'docs/marketing/synthex-rules-v1.md',
+          sourceType: 'internal_policy',
+          checkedAt: '2026-06-01T00:00:00.000Z',
+        },
+        {
+          id: 'src-regulator',
+          label: 'Code Governance Committee annual report',
+          url: 'https://insurancecode.org.au/',
+          sourceType: 'regulator_publication',
+          checkedAt: '2026-06-01T00:00:00.000Z',
+        },
+      ],
+      claims: [
+        {
+          // Both values carry colons. A renderer that recovers them by splitting
+          // the joined code reports the wrong claim and the wrong evidence.
+          id: 'claim:7',
+          statement: 'A claim whose id contains the separator.',
+          status: 'verified',
+          evidenceRefs: ['src:99:x'],
+        },
+      ],
+      platformOutputs: [],
+      approval: { status: 'pending_review' },
+    };
+  }
+
+  function renderFromRealGate(): string {
+    const gate = evaluateCampaignQualityGate({
+      evidenceManifest: manifestWithColonBearingClaim(),
+      drafts: [],
+    });
+    return renderPublishingHandoff({
+      qualityGate: gate,
+      ownedMediaGate: { allowed: true },
+      externalPublishBlocks: {},
+    });
+  }
+
+  it('carries a colon-bearing claim id and evidence ref from gate to document', () => {
+    const doc = renderFromRealGate();
+
+    expect(doc).toContain(
+      'Claim ' +
+        TICK +
+        'claim:7' +
+        TICK +
+        ' cites evidence ' +
+        TICK +
+        'src:99:x' +
+        TICK +
+        ', which is not in the manifest.'
+    );
+  });
+
+  it('never truncates either value at the separator', () => {
+    const doc = renderFromRealGate();
+
+    // What the pre-round-6 renderer produced, and what an emitter that
+    // re-flattens the values would make it produce again.
+    expect(doc).not.toContain('Claim ' + TICK + 'claim' + TICK);
+    expect(doc).not.toContain('cites evidence ' + TICK + '7:src:99:x' + TICK);
+  });
+
+  it('still accounts for the code in the appendix, from the real gate', () => {
+    const doc = renderFromRealGate();
+
+    expect(doc).toContain(
+      'quality_claim_evidence_ref_unknown:claim:7:src:99:x'
+    );
+  });
+});
+
+describe('round 7 — a malformed issue degrades, it never throws', () => {
+  /**
+   * ROUND 7 P1-1. `meaning` indexed `params` with no check while
+   * `CampaignQualityIssue` permits any `string[]` and `explainCode` defaults
+   * `params` to `[]`. A type-valid call therefore threw inside `inlineCode`, so a
+   * single malformed producer issue took the entire founder document down — the
+   * exact opposite of the never-drop rule.
+   */
+  it('renders a recognised code supplied with no params instead of throwing', () => {
+    const explained = explainCode('quality_claim_evidence_missing');
+
+    expect(explained.recognised).toBe(false);
+    expect(explained.meaning).toBe('quality_claim_evidence_missing');
+  });
+
+  it('renders a code supplied with too few params instead of throwing', () => {
+    const explained = explainCode('quality_claim_evidence_ref_unknown', [
+      'claim-7',
+    ]);
+
+    expect(explained.recognised).toBe(false);
+    expect(explained.meaning).toBe(
+      'quality_claim_evidence_ref_unknown:claim-7'
+    );
+  });
+
+  it('still translates the same code when the params ARE supplied', () => {
+    // The control. Without it, the two assertions above are satisfied by a
+    // catalogue that simply stopped translating anything.
+    const explained = explainCode('quality_claim_evidence_ref_unknown', [
+      'claim-7',
+      'src-99',
+    ]);
+
+    expect(explained.recognised).toBe(true);
+  });
+
+  it('keeps a malformed issue visible in the rendered document', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], {
+        blockers: [{ code: 'quality_claim_evidence_missing', params: [] }],
+      })
+    );
+
+    expect(doc).toContain('quality_claim_evidence_missing');
+    expect(doc).toContain('[untranslated code]');
   });
 });

@@ -121,6 +121,25 @@ interface CatalogueEntry {
    * from the code text is the guess this module no longer makes.
    */
   pattern: RegExp;
+  /**
+   * How many `params` this entry's `meaning` reads. Omitted means none.
+   *
+   * WHY THIS IS DECLARED RATHER THAN ASSUMED: `meaning` used to index `params`
+   * with no check, while `CampaignQualityIssue` permits any `string[]` and
+   * `explainCode` defaults `params` to `[]`. A type-valid
+   * `explainCode('quality_claim_evidence_missing')` therefore threw inside
+   * `inlineCode`, and one malformed producer issue took the WHOLE document down
+   * — the opposite of the never-drop rule, which exists precisely so that a code
+   * nobody anticipated still reaches the founder.
+   *
+   * A mismatch is fail-safe by construction: the entry is skipped and the code
+   * renders raw and marked untranslated. Visibly wrong beats invisible, and both
+   * beat a stack trace where a publishing decision should be.
+   *
+   * An entry that forgets to declare a count therefore reads as zero, so a code
+   * carrying values falls to the same visible path rather than throwing.
+   */
+  paramCount?: number;
   meaning: (captures: string[], params: string[]) => string;
   action: string;
 }
@@ -157,12 +176,14 @@ const GATE_CODES: CatalogueEntry[] = [
   },
   {
     pattern: /^quality_claim_evidence_missing$/,
+    paramCount: 1,
     meaning: (_c, p) =>
       `Claim ${inlineCode(p[0])} is made with no evidence behind it.`,
     action: 'Attach evidence to the claim, or remove the claim.',
   },
   {
     pattern: /^quality_claim_evidence_ref_unknown$/,
+    paramCount: 2,
     meaning: (_c, p) =>
       `Claim ${inlineCode(p[0])} cites evidence ${inlineCode(p[1])}, which is not in the manifest.`,
     action: 'Add the missing source, or correct the reference.',
@@ -183,6 +204,7 @@ const DRAFT_CODES: CatalogueEntry[] = [
   },
   {
     pattern: /^draft_evidence_ref_unknown$/,
+    paramCount: 1,
     meaning: (_c, p) =>
       `This draft cites evidence ${inlineCode(p[0])}, which is not in the manifest.`,
     action: 'Add the missing source, or correct the reference.',
@@ -205,6 +227,7 @@ const DRAFT_CODES: CatalogueEntry[] = [
   },
   {
     pattern: /^draft_media_type_expected$/,
+    paramCount: 1,
     meaning: (_c, p) =>
       `The media plan is the wrong type for this channel — it should be ${inlineCode(p[0])}.`,
     action: 'Correct the media type on the draft.',
@@ -364,13 +387,18 @@ function matchIn(
 ): { meaning: string; action: string } | null {
   for (const entry of catalogue) {
     const found = entry.pattern.exec(code);
-    if (found) {
-      const [, ...captures] = found;
-      return {
-        meaning: entry.meaning(captures, params),
-        action: entry.action,
-      };
-    }
+    if (!found) continue;
+    // Arity is checked BEFORE `meaning` runs, because `meaning` indexes `params`
+    // directly and an absent value would throw rather than render. The count must
+    // match exactly: too few and the sentence loses a value it needs, too many and
+    // the producer is sending something this entry was never written to explain.
+    // Either way the honest output is the raw code, visibly marked.
+    if (params.length !== (entry.paramCount ?? 0)) return null;
+    const [, ...captures] = found;
+    return {
+      meaning: entry.meaning(captures, params),
+      action: entry.action,
+    };
   }
   return null;
 }
