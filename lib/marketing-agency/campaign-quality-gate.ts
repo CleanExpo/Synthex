@@ -94,6 +94,45 @@ export interface CampaignQualityDraftResult {
   peerDataStatus: CampaignPeerDataStatus;
   blockers: string[];
   warnings: string[];
+  /** The same findings as `blockers`/`warnings`, with values kept structural. */
+  blockerIssues: CampaignQualityIssue[];
+  warningIssues: CampaignQualityIssue[];
+}
+
+/**
+ * One quality finding, with the check and the values it found kept APART.
+ *
+ * WHY: the flattened `blockers`/`warnings` strings below join a code to its
+ * values with a colon, and anything that joins must be split again by whoever
+ * needs the parts. Splitting is a guess: `claim.id` and `evidenceRef` are
+ * unconstrained strings, so a claim id of `claim:7` made
+ * `quality_claim_evidence_ref_unknown:claim:7:src-99` parse as claim `claim`
+ * citing evidence `7:src-99` — a wrong instruction rendered to the founder.
+ *
+ * Consumers that need the parts read `params`. The joined strings remain for
+ * consumers that only ever matched on them, and are DERIVED from these issues
+ * by `joinIssue` so the two views cannot drift apart.
+ */
+export interface CampaignQualityIssue {
+  /** The check that fired. Never carries a value. */
+  code: string;
+  /** What the check found, in the order the code's catalogue entry expects. */
+  params: string[];
+}
+
+/**
+ * Codes whose historical joined form uses `_` rather than `:`. Recorded here,
+ * in one place, because the joined strings are a published output: they are
+ * written to `quality-gate.json` and asserted on by existing tests, so the
+ * derivation has to reproduce them byte for byte.
+ */
+const UNDERSCORE_JOINED = new Set(['draft_media_type_expected']);
+
+/** The flattened form of an issue. The single source for every joined string. */
+export function joinIssue(issue: CampaignQualityIssue): string {
+  if (!issue.params.length) return issue.code;
+  const separator = UNDERSCORE_JOINED.has(issue.code) ? '_' : ':';
+  return `${issue.code}${separator}${issue.params.join(':')}`;
 }
 
 export interface CampaignQualityGateResult {
@@ -103,6 +142,9 @@ export interface CampaignQualityGateResult {
   overallScore: number;
   blockers: string[];
   warnings: string[];
+  /** Gate-level findings only; per-draft findings live on `draftResults`. */
+  blockerIssues: CampaignQualityIssue[];
+  warningIssues: CampaignQualityIssue[];
   sourceSummary: {
     totalSources: number;
     checkedSources: number;
@@ -183,16 +225,22 @@ function scoreDraft(
   draft: CampaignQualityDraftInput,
   availableSourceIds: Set<string>
 ): CampaignQualityDraftResult {
-  const blockers: string[] = [];
-  const warnings: string[] = [];
+  const blockerIssues: CampaignQualityIssue[] = [];
+  const warningIssues: CampaignQualityIssue[] = [];
+  const blocker = (code: string, ...params: string[]) => {
+    blockerIssues.push({ code, params });
+  };
+  const warning = (code: string, ...params: string[]) => {
+    warningIssues.push({ code, params });
+  };
 
   if (!draft.evidenceRefs.length) {
-    blockers.push('draft_evidence_refs_missing');
+    blocker('draft_evidence_refs_missing');
   }
 
   for (const evidenceRef of draft.evidenceRefs) {
     if (!availableSourceIds.has(evidenceRef)) {
-      blockers.push(`draft_evidence_ref_unknown:${evidenceRef}`);
+      blocker('draft_evidence_ref_unknown', evidenceRef);
     }
   }
 
@@ -201,50 +249,50 @@ function scoreDraft(
     MIN_HUMANNESS_SCORE
   );
   if (!humanness.passes) {
-    blockers.push(`draft_humanness_below_${MIN_HUMANNESS_SCORE}`);
+    blocker(`draft_humanness_below_${MIN_HUMANNESS_SCORE}`);
   }
   if (humanness.slopScan.slopDensity >= 3) {
-    blockers.push('draft_slop_density_too_high');
+    blocker('draft_slop_density_too_high');
   }
 
   const expected = expectedMediaType(draft.channel);
   if (MEDIA_CHANNELS.has(draft.channel) && !draft.mediaPlan) {
-    blockers.push('draft_media_plan_missing');
+    blocker('draft_media_plan_missing');
   } else {
     if (draft.mediaPlan.mediaType !== expected) {
-      blockers.push(`draft_media_type_expected_${expected}`);
+      blocker('draft_media_type_expected', expected);
     }
     if (draft.mediaPlan.assetSourcePolicy !== 'owned_licensed_original_only') {
-      blockers.push('draft_asset_policy_not_publish_safe');
+      blocker('draft_asset_policy_not_publish_safe');
     }
     if (draft.mediaPlan.reviewChecks.length < 3) {
-      blockers.push('draft_media_review_checks_insufficient');
+      blocker('draft_media_review_checks_insufficient');
     }
     if (
       draft.channel === 'youtube_shorts' &&
       draft.mediaPlan.aiDisclosureRequired !== true
     ) {
-      blockers.push('draft_video_ai_disclosure_missing');
+      blocker('draft_video_ai_disclosure_missing');
     }
   }
 
   if (channelNeedsPeerPlan(draft.channel)) {
     if (!draft.peerBenchmark.comparableMetrics.length) {
-      blockers.push('draft_peer_metrics_missing');
+      blocker('draft_peer_metrics_missing');
     }
     if (!draft.peerBenchmark.benchmarkSource) {
-      blockers.push('draft_peer_benchmark_source_missing');
+      blocker('draft_peer_benchmark_source_missing');
     }
     if (!draft.peerBenchmark.testMethod) {
-      blockers.push('draft_peer_test_method_missing');
+      blocker('draft_peer_test_method_missing');
     }
     if (draft.peerBenchmark.status === 'not_applicable') {
-      blockers.push('draft_peer_plan_not_applicable');
+      blocker('draft_peer_plan_not_applicable');
     }
   }
 
   if (draft.peerBenchmark.status === 'data_required_until_credentials') {
-    warnings.push('peer_data_waiting_for_oauth_or_platform_analytics');
+    warning('peer_data_waiting_for_oauth_or_platform_analytics');
   }
 
   const score = Math.max(
@@ -261,13 +309,13 @@ function scoreDraft(
   );
 
   if (score < MIN_DRAFT_SCORE) {
-    blockers.push(`draft_quality_score_below_${MIN_DRAFT_SCORE}`);
+    blocker(`draft_quality_score_below_${MIN_DRAFT_SCORE}`);
   }
 
   return {
     slotId: draft.slotId,
     channel: draft.channel,
-    status: blockers.length ? 'blocked' : 'pass',
+    status: blockerIssues.length ? 'blocked' : 'pass',
     score,
     humannessScore: humanness.score,
     humannessGrade: humanness.grade,
@@ -275,8 +323,10 @@ function scoreDraft(
     evidenceRefCount: draft.evidenceRefs.length,
     mediaType: draft.mediaPlan.mediaType,
     peerDataStatus: draft.peerBenchmark.status,
-    blockers,
-    warnings,
+    blockers: blockerIssues.map(joinIssue),
+    warnings: warningIssues.map(joinIssue),
+    blockerIssues,
+    warningIssues,
   };
 }
 
@@ -284,8 +334,17 @@ export function evaluateCampaignQualityGate(input: {
   evidenceManifest: CampaignEvidenceManifest;
   drafts: CampaignQualityDraftInput[];
 }): CampaignQualityGateResult {
+  // Gate-level findings are collected structurally; the flattened arrays are
+  // appended in the same order so the published joined strings are unchanged.
   const blockers: string[] = [];
   const warnings: string[] = [];
+  const blockerIssues: CampaignQualityIssue[] = [];
+  const warningIssues: CampaignQualityIssue[] = [];
+  const blocker = (code: string, ...params: string[]) => {
+    const issue = { code, params };
+    blockerIssues.push(issue);
+    blockers.push(joinIssue(issue));
+  };
   const sources = input.evidenceManifest.sources;
   const ids = sourceIds(sources);
   const checkedSources = sources.filter(isChecked).length;
@@ -297,27 +356,25 @@ export function evaluateCampaignQualityGate(input: {
   ).length;
 
   if (sources.length < MIN_SOURCES) {
-    blockers.push(`quality_sources_below_${MIN_SOURCES}`);
+    blocker(`quality_sources_below_${MIN_SOURCES}`);
   }
   if (checkedSources !== sources.length) {
-    blockers.push('quality_sources_missing_checked_locator_or_type');
+    blocker('quality_sources_missing_checked_locator_or_type');
   }
   if (officialPlatformSources === 0) {
-    blockers.push('quality_official_platform_sources_missing');
+    blocker('quality_official_platform_sources_missing');
   }
   if (internalPolicySources === 0) {
-    blockers.push('quality_internal_policy_source_missing');
+    blocker('quality_internal_policy_source_missing');
   }
 
   for (const claim of input.evidenceManifest.claims) {
     if (claim.requiresEvidence !== false && !claim.evidenceRefs?.length) {
-      blockers.push(`quality_claim_evidence_missing:${claim.id}`);
+      blocker('quality_claim_evidence_missing', claim.id);
     }
     for (const evidenceRef of claim.evidenceRefs ?? []) {
       if (!ids.has(evidenceRef)) {
-        blockers.push(
-          `quality_claim_evidence_ref_unknown:${claim.id}:${evidenceRef}`
-        );
+        blocker('quality_claim_evidence_ref_unknown', claim.id, evidenceRef);
       }
     }
   }
@@ -341,7 +398,7 @@ export function evaluateCampaignQualityGate(input: {
       : 0;
 
   if (overallScore < MIN_DRAFT_SCORE) {
-    blockers.push(`quality_overall_score_below_${MIN_DRAFT_SCORE}`);
+    blocker(`quality_overall_score_below_${MIN_DRAFT_SCORE}`);
   }
 
   return {
@@ -351,6 +408,8 @@ export function evaluateCampaignQualityGate(input: {
     overallScore,
     blockers,
     warnings,
+    blockerIssues,
+    warningIssues,
     sourceSummary: {
       totalSources: sources.length,
       checkedSources,

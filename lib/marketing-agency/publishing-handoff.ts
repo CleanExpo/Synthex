@@ -51,11 +51,11 @@
  *     equal length. Every occurrence still reaches the page and is still counted;
  *     what is lost is the ability to tell two such values apart by eye. The raw
  *     bytes remain in the pack the document was rendered from.
- *   - A slot id containing a colon loses its draft attribution, because the first
- *     colon is taken as the slot/code boundary. No generated slot id has this
- *     shape — they are hyphenated slugs — but the interface accepts any string, so
- *     a future producer could trip it. Such a code is still rendered in full and
- *     marked untranslated; only the "Affects" attribution is missed.
+ *   - Nothing here is recovered by parsing. Slot, code and every parameter
+ *     arrive as separate fields from the gate, so a colon inside a slot id, a
+ *     claim id or an evidence ref carries no meaning and cannot mis-attribute
+ *     anything. The joined strings the gate also publishes are a view of those
+ *     fields, never the source this renderer reads.
  *
  * This matters because the catalogue is a list of names, and a list of names
  * always loses to a name that was added later. A gate check added tomorrow with
@@ -63,25 +63,31 @@
  * going missing is not.
  */
 
-/** The shape this renderer needs. Structural, so the pack type stays in its own module. */
+import { joinIssue, type CampaignQualityIssue } from './campaign-quality-gate';
+
+/**
+ * The shape this renderer needs.
+ *
+ * It takes the STRUCTURED issues and not the gate's flattened strings. The
+ * flattened arrays are deliberately absent from this interface: a renderer that
+ * cannot see them cannot drift from them, which is how the body and the `## Codes`
+ * appendix came to disagree in round 6. `joinIssue` is imported rather than
+ * re-implemented so there is exactly one rule for how an issue reads when flat.
+ */
 export interface PublishingHandoffDraftResult {
   slotId: string;
   channel: string;
-  blockers: string[];
-  warnings: string[];
+  blockerIssues: CampaignQualityIssue[];
+  warningIssues: CampaignQualityIssue[];
 }
 
 export interface PublishingHandoffPack {
   qualityGate: {
     allowed: boolean;
     overallScore: number;
-    blockers: string[];
-    warnings: string[];
-    /**
-     * The STRUCTURED per-draft results. This is the field the document is built
-     * from; `blockers` and `warnings` above are the gate's flattened view and are
-     * used only for the raw appendix.
-     */
+    /** Gate-level findings only. Per-draft findings live on `draftResults`. */
+    blockerIssues: CampaignQualityIssue[];
+    warningIssues: CampaignQualityIssue[];
     draftResults: PublishingHandoffDraftResult[];
     sourceSummary: {
       totalSources: number;
@@ -108,9 +114,14 @@ export interface ExplainedCode {
 }
 
 interface CatalogueEntry {
+  /**
+   * Matched against the CODE alone. Captures are limited to digits, which are
+   * part of a check's name (`..._below_75`) rather than a value it found. Any
+   * value the check found arrives in `params` instead, because recovering one
+   * from the code text is the guess this module no longer makes.
+   */
   pattern: RegExp;
-  /** Captures come from `pattern`, so dynamic suffixes stay specific. */
-  meaning: (captures: string[]) => string;
+  meaning: (captures: string[], params: string[]) => string;
   action: string;
 }
 
@@ -145,15 +156,15 @@ const GATE_CODES: CatalogueEntry[] = [
     action: 'Cite the internal policy this campaign operates under.',
   },
   {
-    pattern: /^quality_claim_evidence_missing:(.+)$/,
-    meaning: c =>
-      `Claim ${inlineCode(c[0])} is made with no evidence behind it.`,
+    pattern: /^quality_claim_evidence_missing$/,
+    meaning: (_c, p) =>
+      `Claim ${inlineCode(p[0])} is made with no evidence behind it.`,
     action: 'Attach evidence to the claim, or remove the claim.',
   },
   {
-    pattern: /^quality_claim_evidence_ref_unknown:([^:]+):(.+)$/,
-    meaning: c =>
-      `Claim ${inlineCode(c[0])} cites evidence ${inlineCode(c[1])}, which is not in the manifest.`,
+    pattern: /^quality_claim_evidence_ref_unknown$/,
+    meaning: (_c, p) =>
+      `Claim ${inlineCode(p[0])} cites evidence ${inlineCode(p[1])}, which is not in the manifest.`,
     action: 'Add the missing source, or correct the reference.',
   },
   {
@@ -171,9 +182,9 @@ const DRAFT_CODES: CatalogueEntry[] = [
     action: 'Attach at least one source to the draft.',
   },
   {
-    pattern: /^draft_evidence_ref_unknown:(.+)$/,
-    meaning: c =>
-      `This draft cites evidence ${inlineCode(c[0])}, which is not in the manifest.`,
+    pattern: /^draft_evidence_ref_unknown$/,
+    meaning: (_c, p) =>
+      `This draft cites evidence ${inlineCode(p[0])}, which is not in the manifest.`,
     action: 'Add the missing source, or correct the reference.',
   },
   {
@@ -193,9 +204,9 @@ const DRAFT_CODES: CatalogueEntry[] = [
     action: 'Add a media plan, or drop the draft from the campaign.',
   },
   {
-    pattern: /^draft_media_type_expected_(.+)$/,
-    meaning: c =>
-      `The media plan is the wrong type for this channel — it should be ${inlineCode(c[0])}.`,
+    pattern: /^draft_media_type_expected$/,
+    meaning: (_c, p) =>
+      `The media plan is the wrong type for this channel — it should be ${inlineCode(p[0])}.`,
     action: 'Correct the media type on the draft.',
   },
   {
@@ -348,12 +359,17 @@ export function inlineCode(value: string): string {
 
 function matchIn(
   catalogue: CatalogueEntry[],
-  code: string
+  code: string,
+  params: string[]
 ): { meaning: string; action: string } | null {
   for (const entry of catalogue) {
     const found = entry.pattern.exec(code);
     if (found) {
-      return { meaning: entry.meaning(found.slice(1)), action: entry.action };
+      const [, ...captures] = found;
+      return {
+        meaning: entry.meaning(captures, params),
+        action: entry.action,
+      };
     }
   }
   return null;
@@ -388,16 +404,26 @@ const UNTRANSLATED_ACTION =
  * A code with a slot is draft-level; a code without one is gate-level. The two
  * catalogues are never consulted for the same value.
  */
-export function explainCode(code: string, slot?: string): ExplainedCode {
-  const raw = slot === undefined ? code : `${slot}:${code}`;
-  const matched = matchIn(slot === undefined ? GATE_CODES : DRAFT_CODES, code);
+export function explainCode(
+  code: string,
+  params: string[] = [],
+  slot?: string
+): ExplainedCode {
+  // The flat form is produced by the gate's own join rule, never re-parsed.
+  const flat = joinIssue({ code, params });
+  const raw = slot === undefined ? flat : `${slot}:${flat}`;
+  const matched = matchIn(
+    slot === undefined ? GATE_CODES : DRAFT_CODES,
+    code,
+    params
+  );
   if (matched) {
     return { raw, slot, recognised: true, ...matched };
   }
   return {
     raw,
     slot,
-    meaning: code,
+    meaning: flat,
     action: UNTRANSLATED_ACTION,
     recognised: false,
   };
@@ -406,42 +432,48 @@ export function explainCode(code: string, slot?: string): ExplainedCode {
 /** One reported problem, before explanation, with its origin still intact. */
 interface StructuredIssue {
   code: string;
+  params: string[];
   slot?: string;
 }
 
 /**
- * Split the gate's report into draft-level and gate-level issues WITHOUT parsing.
+ * Collect every reported problem into ONE list, drafts first then gate-level.
  *
- * Draft issues come from `draftResults`, where slot and code are already separate
- * fields. The flattened `blockers` / `warnings` arrays are then reduced by exactly
- * those entries — matched whole-string and removed one occurrence at a time — and
- * whatever remains is genuinely gate-level. No colon is ever interpreted.
+ * There is nothing to partition any more. Draft issues carry their slot because
+ * they came from the draft that reported them, and gate issues have no slot
+ * because the gate has no draft. The previous version reconstructed this split by
+ * removing `<slot>:<code>` strings from the flattened array, which meant the body
+ * and the `## Codes` appendix read different sources and could disagree — an
+ * issue present structurally but absent from the flattened array rendered its
+ * English meaning with its raw code nowhere on the page. Both now read this list.
  */
-function partitionIssues(
-  flattened: string[],
+function collectIssues(
+  gateIssues: CampaignQualityIssue[],
   draftResults: PublishingHandoffDraftResult[],
-  pick: (result: PublishingHandoffDraftResult) => string[]
+  pick: (result: PublishingHandoffDraftResult) => CampaignQualityIssue[]
 ): StructuredIssue[] {
-  const remaining = [...flattened];
   const issues: StructuredIssue[] = [];
 
   for (const result of draftResults) {
-    for (const code of pick(result)) {
-      issues.push({ code, slot: result.slotId });
-      const at = remaining.indexOf(`${result.slotId}:${code}`);
-      if (at >= 0) remaining.splice(at, 1);
+    for (const issue of pick(result)) {
+      issues.push({
+        code: issue.code,
+        params: issue.params,
+        slot: result.slotId,
+      });
     }
   }
 
-  for (const code of remaining) {
-    issues.push({ code });
+  for (const issue of gateIssues) {
+    issues.push({ code: issue.code, params: issue.params });
   }
 
   return issues;
 }
 
 export function explainExternalBlock(code: string): ExplainedCode {
-  const known = matchIn(EXTERNAL_BLOCK_CODES, code);
+  // External block codes are whole-string literals and take no parameters.
+  const known = matchIn(EXTERNAL_BLOCK_CODES, code, []);
   if (known) {
     return { raw: code, recognised: true, ...known };
   }
@@ -495,24 +527,29 @@ interface GroupedIssue {
 
 /** Group by meaning so one problem across fifteen drafts reads as one problem. */
 function groupIssues(issues: StructuredIssue[]): GroupedIssue[] {
-  const explained = issues.map(issue => explainCode(issue.code, issue.slot));
+  const explained = issues.map(issue =>
+    explainCode(issue.code, issue.params, issue.slot)
+  );
+  // `!== undefined`, never truthiness: '' is a slot the gate reported, and
+  // dropping it made the affected-draft count disagree with the input.
   const shortened = shortenSlots(
     explained
       .map(item => item.slot)
-      .filter((slot): slot is string => Boolean(slot))
+      .filter((slot): slot is string => slot !== undefined)
   );
 
   const groups = new Map<string, GroupedIssue>();
   for (const item of explained) {
     const key = `${item.recognised}::${item.meaning}::${item.action}`;
     const existing = groups.get(key);
-    const shortSlot = item.slot
-      ? (shortened.get(item.slot) ?? item.slot)
-      : undefined;
+    const shortSlot =
+      item.slot !== undefined
+        ? (shortened.get(item.slot) ?? item.slot)
+        : undefined;
     if (existing) {
       // Every raw occurrence is retained, but a slot is NAMED once: two emissions
       // of the same code from one slot are one affected draft, not two.
-      if (shortSlot && !existing.slots.includes(shortSlot)) {
+      if (shortSlot !== undefined && !existing.slots.includes(shortSlot)) {
         existing.slots.push(shortSlot);
       }
       existing.raws.push(item.raw);
@@ -521,7 +558,7 @@ function groupIssues(issues: StructuredIssue[]): GroupedIssue[] {
         meaning: item.meaning,
         action: item.action,
         recognised: item.recognised,
-        slots: shortSlot ? [shortSlot] : [],
+        slots: shortSlot !== undefined ? [shortSlot] : [],
         raws: [item.raw],
       });
     }
@@ -574,18 +611,33 @@ function renderExternal(blocks: Record<string, string[]>): string {
   return `## External channels — what each still needs\n\n${rendered}\n`;
 }
 
+/** The flat text of one collected issue, by the gate's own join rule. */
+function rawOf(issue: StructuredIssue): string {
+  const flat = joinIssue({ code: issue.code, params: issue.params });
+  return issue.slot === undefined ? flat : `${issue.slot}:${flat}`;
+}
+
 /**
  * The complete raw input, repeated verbatim. This is what makes the
  * never-drop-a-code rule checkable from the document rather than trusted.
+ *
+ * It is handed the SAME lists the body rendered. Reading its own source — the
+ * gate's flattened arrays — is what let round 6 find a blocker whose meaning was
+ * printed in the body while its code appeared nowhere and this section said
+ * `none`. An appendix that can disagree with the body proves nothing.
  */
-function renderCodeAppendix(pack: PublishingHandoffPack): string {
+function renderCodeAppendix(
+  pack: PublishingHandoffPack,
+  blockerIssues: StructuredIssue[],
+  warningIssues: StructuredIssue[]
+): string {
   const external = Object.entries(pack.externalPublishBlocks).flatMap(
     ([channel, codes]) =>
       codes.map(code => `${inlineCode(channel)}: ${inlineCode(code)}`)
   );
   const lines = [
-    ...pack.qualityGate.blockers.map(code => `blocker: ${inlineCode(code)}`),
-    ...pack.qualityGate.warnings.map(code => `warning: ${inlineCode(code)}`),
+    ...blockerIssues.map(issue => `blocker: ${inlineCode(rawOf(issue))}`),
+    ...warningIssues.map(issue => `warning: ${inlineCode(rawOf(issue))}`),
     ...external.map(entry => `external: ${entry}`),
   ];
   const body =
@@ -604,15 +656,15 @@ export function renderPublishingHandoff(
   // Everything below is derived from the STRUCTURED per-draft results, so the
   // verdict, the section and the affected-draft counts cannot disagree: they are
   // three views of one list.
-  const blockerIssues = partitionIssues(
-    gate.blockers,
+  const blockerIssues = collectIssues(
+    gate.blockerIssues,
     gate.draftResults,
-    result => result.blockers
+    result => result.blockerIssues
   );
-  const warningIssues = partitionIssues(
-    gate.warnings,
+  const warningIssues = collectIssues(
+    gate.warningIssues,
     gate.draftResults,
-    result => result.warnings
+    result => result.warningIssues
   );
 
   // Count DISTINCT problems, the same way the body groups them. Counting raw
@@ -655,5 +707,5 @@ ${renderExternal(pack.externalPublishBlocks)}
 
 No external platform post is marked as live unless there is a platform receipt, URL, or API response stored back into the campaign pack.
 
-${renderCodeAppendix(pack)}`;
+${renderCodeAppendix(pack, blockerIssues, warningIssues)}`;
 }

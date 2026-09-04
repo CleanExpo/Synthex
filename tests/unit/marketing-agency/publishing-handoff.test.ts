@@ -35,10 +35,22 @@ import {
   type PublishingHandoffDraftResult,
   type PublishingHandoffPack,
 } from '../../../lib/marketing-agency/publishing-handoff';
+import type { CampaignQualityIssue } from '../../../lib/marketing-agency/campaign-quality-gate';
 
 const TICK = String.fromCharCode(96);
 const NUL = String.fromCharCode(0);
 const BEL = String.fromCharCode(7);
+
+/**
+ * A code as a test writes one. A bare string is a code that carries no value;
+ * anything with a value must be written out, so a test cannot accidentally
+ * assert on a parameter the gate never actually passed separately.
+ */
+type IssueSpec = string | CampaignQualityIssue;
+
+function toIssue(spec: IssueSpec): CampaignQualityIssue {
+  return typeof spec === 'string' ? { code: spec, params: [] } : spec;
+}
 
 /** The clean control. Without it, everything below is satisfied by a renderer hardwired to complain. */
 function cleanPack(): PublishingHandoffPack {
@@ -46,8 +58,8 @@ function cleanPack(): PublishingHandoffPack {
     qualityGate: {
       allowed: true,
       overallScore: 95,
-      blockers: [],
-      warnings: [],
+      blockerIssues: [],
+      warningIssues: [],
       draftResults: [],
       sourceSummary: {
         totalSources: 7,
@@ -63,39 +75,37 @@ function cleanPack(): PublishingHandoffPack {
 
 /**
  * Build a pack the way `evaluateCampaignQualityGate` actually builds one: the
- * structured `draftResults` PLUS the flattened `<slotId>:<code>` arrays derived
- * from them. A test that invented one without the other would not exercise the
- * shape the renderer really receives.
+ * gate's own findings, plus each draft's findings on the draft that reported
+ * them. Nothing is flattened, because the renderer no longer reads a flattened
+ * array — and a fixture that supplied one would be testing a shape the renderer
+ * cannot see.
  */
 function packWithDrafts(
-  drafts: Array<Partial<PublishingHandoffDraftResult> & { slotId: string }>,
-  gateLevel: { blockers?: string[]; warnings?: string[] } = {}
+  drafts: Array<{
+    slotId: string;
+    channel?: string;
+    blockers?: IssueSpec[];
+    warnings?: IssueSpec[];
+  }>,
+  gateLevel: { blockers?: IssueSpec[]; warnings?: IssueSpec[] } = {}
 ): PublishingHandoffPack {
   const draftResults: PublishingHandoffDraftResult[] = drafts.map(draft => ({
     slotId: draft.slotId,
     channel: draft.channel ?? 'linkedin',
-    blockers: draft.blockers ?? [],
-    warnings: draft.warnings ?? [],
+    blockerIssues: (draft.blockers ?? []).map(toIssue),
+    warningIssues: (draft.warnings ?? []).map(toIssue),
   }));
 
   const pack = cleanPack();
   pack.qualityGate = {
     ...pack.qualityGate,
     draftResults,
-    blockers: [
-      ...(gateLevel.blockers ?? []),
-      ...draftResults.flatMap(result =>
-        result.blockers.map(code => `${result.slotId}:${code}`)
-      ),
-    ],
-    warnings: [
-      ...(gateLevel.warnings ?? []),
-      ...draftResults.flatMap(result =>
-        result.warnings.map(code => `${result.slotId}:${code}`)
-      ),
-    ],
+    blockerIssues: (gateLevel.blockers ?? []).map(toIssue),
+    warningIssues: (gateLevel.warnings ?? []).map(toIssue),
   };
-  pack.qualityGate.allowed = pack.qualityGate.blockers.length === 0;
+  pack.qualityGate.allowed =
+    pack.qualityGate.blockerIssues.length === 0 &&
+    draftResults.every(result => result.blockerIssues.length === 0);
   return pack;
 }
 
@@ -128,7 +138,10 @@ describe('the never-drop invariant', () => {
       {
         blockers: [
           'quality_sources_below_6',
-          'quality_claim_evidence_ref_unknown:claim-7:src-99',
+          {
+            code: 'quality_claim_evidence_ref_unknown',
+            params: ['claim-7', 'src-99'],
+          },
         ],
       }
     );
@@ -138,9 +151,15 @@ describe('the never-drop invariant', () => {
 
     const doc = renderPublishingHandoff(pack);
 
+    // Named explicitly rather than read back off the pack: an assertion that
+    // loops over the same field the renderer read cannot notice a dropped code.
     for (const code of [
-      ...pack.qualityGate.blockers,
-      ...pack.externalPublishBlocks.reddit,
+      'quality_sources_below_6',
+      'quality_claim_evidence_ref_unknown:claim-7:src-99',
+      'draft_humanness_below_60',
+      'some_check_from_next_tuesday',
+      'platform_credentials_required',
+      'a_brand_new_block',
     ]) {
       expect(doc).toContain(code);
     }
@@ -166,7 +185,9 @@ describe('the never-drop invariant', () => {
 
 describe('explainCode — the slot is given, never parsed', () => {
   it('treats a colon-bearing gate code as gate-level with its parameter intact', () => {
-    const explained = explainCode('quality_claim_evidence_missing:claim-7');
+    const explained = explainCode('quality_claim_evidence_missing', [
+      'claim-7',
+    ]);
 
     expect(explained.recognised).toBe(true);
     expect(explained.slot).toBeUndefined();
@@ -180,9 +201,10 @@ describe('explainCode — the slot is given, never parsed', () => {
   });
 
   it('keeps both parameters of a two-parameter gate code', () => {
-    const explained = explainCode(
-      'quality_claim_evidence_ref_unknown:claim-7:src-99'
-    );
+    const explained = explainCode('quality_claim_evidence_ref_unknown', [
+      'claim-7',
+      'src-99',
+    ]);
 
     expect(explained.meaning).toBe(
       'Claim ' +
@@ -200,6 +222,7 @@ describe('explainCode — the slot is given, never parsed', () => {
   it('attributes a draft code to the slot it was given', () => {
     const explained = explainCode(
       'draft_slop_density_too_high',
+      [],
       'camp-2026-03-linkedin'
     );
 
@@ -220,6 +243,7 @@ describe('explainCode — the slot is given, never parsed', () => {
   it('is not confused by a slot id that collides with a gate-code name', () => {
     const explained = explainCode(
       'draft_slop_density_too_high',
+      [],
       'quality_claim_evidence_missing'
     );
 
@@ -229,14 +253,18 @@ describe('explainCode — the slot is given, never parsed', () => {
   });
 
   it('is not confused by a slot id containing a colon', () => {
-    const explained = explainCode('draft_slop_density_too_high', 'odd:slot:id');
+    const explained = explainCode(
+      'draft_slop_density_too_high',
+      [],
+      'odd:slot:id'
+    );
 
     expect(explained.slot).toBe('odd:slot:id');
     expect(explained.recognised).toBe(true);
   });
 
   it('reads the real threshold out of a dynamic code', () => {
-    expect(explainCode('draft_humanness_below_60', 'slot-1').meaning).toBe(
+    expect(explainCode('draft_humanness_below_60', [], 'slot-1').meaning).toBe(
       'The copy reads as machine-written — humanness scored under 60.'
     );
   });
@@ -506,5 +534,139 @@ describe('title prefix', () => {
     expect(
       renderPublishingHandoff(cleanPack(), { titlePrefix: 'CARSI' })
     ).toContain('# CARSI Publishing Handoff');
+  });
+});
+
+describe('restored — assertions the draftResults rewrite dropped', () => {
+  /**
+   * The rewrite at f4f29c5bb replaced this suite rather than extending it, and
+   * three assertions went with it. They are restored by name so the coverage
+   * that was silently lost is visible again.
+   */
+  it('pads when the value would touch its own fence', () => {
+    // Longest backtick run inside is one, so the fence is two. Without the pad
+    // the value's own leading backtick would run into the fence.
+    expect(inlineCode(TICK + 'boom')).toBe(
+      TICK + TICK + ' ' + TICK + 'boom' + ' ' + TICK + TICK
+    );
+  });
+
+  it('marks owned media blocked', () => {
+    const pack = cleanPack();
+    pack.ownedMediaGate = { allowed: false };
+
+    expect(renderPublishingHandoff(pack)).toContain(
+      '**Blog and newsletter:** blocked'
+    );
+  });
+
+  it('leaves a colon-free unknown code unattributed', () => {
+    const explained = explainCode('totally_unknown_code');
+
+    expect(explained.slot).toBeUndefined();
+    expect(explained.recognised).toBe(false);
+  });
+});
+
+describe('round 6 — no value is recovered from a code string', () => {
+  /**
+   * ROUND 6 P1-1. The renderer used to split the joined code on its colons to
+   * recover the claim id and the evidence ref. Both are unconstrained strings,
+   * so a claim id of `claim:7` rendered as claim `claim` citing evidence
+   * `7:src-99` — a confidently wrong instruction at the approval point. The
+   * parameters now arrive as separate fields and there is nothing to split.
+   */
+  it('keeps a colon-bearing claim id and evidence ref whole', () => {
+    const explained = explainCode('quality_claim_evidence_ref_unknown', [
+      'claim:7',
+      'src:99:x',
+    ]);
+
+    expect(explained.meaning).toBe(
+      'Claim ' +
+        TICK +
+        'claim:7' +
+        TICK +
+        ' cites evidence ' +
+        TICK +
+        'src:99:x' +
+        TICK +
+        ', which is not in the manifest.'
+    );
+    expect(explained.meaning).not.toContain('cites evidence ' + TICK + '7:');
+  });
+
+  it('renders a colon-bearing parameter into the document, fenced and whole', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], {
+        blockers: [
+          {
+            code: 'quality_claim_evidence_ref_unknown',
+            params: ['claim:7', 'src:99:x'],
+          },
+        ],
+      })
+    );
+
+    expect(doc).toContain(TICK + 'claim:7' + TICK);
+    expect(doc).toContain(TICK + 'src:99:x' + TICK);
+    // And the appendix still carries the flat form, byte for byte.
+    expect(doc).toContain(
+      'quality_claim_evidence_ref_unknown:claim:7:src:99:x'
+    );
+  });
+
+  it('escapes a newline inside a parameter rather than letting it break the span', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], {
+        blockers: [
+          {
+            code: 'quality_claim_evidence_missing',
+            params: ['claim\n\n## Injected'],
+          },
+        ],
+      })
+    );
+
+    expect(doc).not.toContain('\n## Injected');
+    expect(doc).toContain('Injected');
+  });
+
+  /**
+   * ROUND 6 P1-2. `draftResults` became authoritative for the body while the
+   * appendix still enumerated the flattened arrays, so a blocker present in one
+   * and absent from the other rendered its English meaning with its raw code
+   * nowhere on the page and `Codes` reading `none`.
+   */
+  it('shows every draft blocker in the Codes appendix, not just in the body', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        {
+          slotId: 'camp-01-linkedin',
+          blockers: ['draft_slop_density_too_high'],
+        },
+      ])
+    );
+
+    expect(doc).toContain('The copy is dense with AI-slop phrasing.');
+    expect(doc).toContain(
+      'blocker: ' + TICK + 'camp-01-linkedin:draft_slop_density_too_high' + TICK
+    );
+    expect(doc).not.toContain('- none');
+  });
+
+  /**
+   * ROUND 6 P1-3. Grouping tested the slot for truthiness, so a draft whose
+   * slotId is the empty string was dropped from the affected list and the count
+   * disagreed with the structured input it came from.
+   */
+  it('counts a draft whose slotId is the empty string', () => {
+    const doc = renderPublishingHandoff(
+      packWithDrafts([
+        { slotId: '', blockers: ['draft_slop_density_too_high'] },
+      ])
+    );
+
+    expect(doc).toContain('Affects 1 draft');
   });
 });
