@@ -18,12 +18,31 @@
  *
  * THE LOAD-BEARING RULE — translation is an ENHANCEMENT, never a FILTER
  * --------------------------------------------------------------------
- * Every code handed to this renderer appears in its output, whether or not the
- * catalogue below recognises it. An unrecognised code is rendered with its raw
- * text and marked as untranslated; it is never dropped, never summarised away,
- * and never silently collapsed into a neighbour. The `## Codes` appendix repeats
- * the complete raw input verbatim, so the invariant is visible in the document
- * itself and not merely asserted here.
+ * Every code handed to this renderer is VISIBLY ACCOUNTED FOR in the rendered
+ * document, whether or not the catalogue below recognises it. An unrecognised
+ * code is rendered with its raw text and marked as untranslated; it is never
+ * dropped, never summarised away, and never silently collapsed into a neighbour.
+ * The `## Codes` appendix repeats the complete input, so the invariant is
+ * checkable from the document itself and not merely asserted here.
+ *
+ * "Visibly accounted for" is deliberate, and it is stricter than byte-verbatim in
+ * the case that matters and weaker in a case that cannot exist:
+ *
+ *   - STRICTER: the test is what a founder can READ, not what the file contains.
+ *     A code of `[]()` interpolated bare is present in the source and renders as
+ *     an empty link — invisible. Containment was the original test and it passed
+ *     on exactly that document. Every value is therefore emitted as an inline
+ *     code span, so code data can never act as document markup.
+ *   - WEAKER, unavoidably: an EMPTY code has no visible rendering. There is no
+ *     document in which the empty string is legible, so byte-verbatim output is
+ *     unachievable for it rather than merely unimplemented. It is named as
+ *     `(empty code)`; an all-whitespace code is named with its length. Naming the
+ *     degenerate case keeps the founder informed that something was reported,
+ *     which is the entire purpose. Silence would not.
+ *
+ * Newlines are escaped to a visible two-character sequence for the same reason: a
+ * value containing a blank line cannot stay inside an inline code span at all, so
+ * left raw it would break the fence and inject real markup.
  *
  * This matters because the catalogue is a list of names, and a list of names
  * always loses to a name that was added later. A gate check added tomorrow with
@@ -242,15 +261,54 @@ const EXTERNAL_BLOCK_CODES: CatalogueEntry[] = [
  * Fencing follows CommonMark: one more backtick than the longest run inside the
  * value, padded with spaces when the value would otherwise touch a fence.
  */
+/**
+ * Reduce a value to something that is guaranteed to stay visible inside a
+ * Markdown inline code span.
+ *
+ * Two shapes defeat fencing alone, both found by the independent reviewer's
+ * attack harness:
+ *
+ *   - A value containing a BLANK LINE cannot live in an inline code span at all.
+ *     The span terminates at the paragraph break, so `a\n\n## Injected` escapes
+ *     the fence and the remainder is parsed as a real heading. Escaping newlines
+ *     to a visible two-character sequence removes the vector and keeps the value
+ *     legible on one line.
+ *   - A value that is EMPTY or ALL WHITESPACE renders as a blank span: present in
+ *     the source, invisible on the page. It is named instead, with its length, so
+ *     the founder can still see that something was reported.
+ *
+ * The value is never truncated. Losing data is the failure this whole module
+ * exists to prevent, so a pathologically long code is rendered in full.
+ */
+function forDisplay(value: string): string {
+  if (value.length === 0) return '(empty code)';
+  if (value.trim().length === 0) {
+    return `(whitespace-only code, ${value.length} characters)`;
+  }
+  return value
+    .replace(/\r\n/g, '\\n')
+    .replace(/[\r\n]/g, '\\n')
+    .replace(/\t/g, '\\t');
+}
+
 export function inlineCode(value: string): string {
-  if (value.length === 0) return '`(empty)`';
-  const longestRun = (value.match(/`+/g) ?? []).reduce(
+  const shown = forDisplay(value);
+  const longestRun = (shown.match(/`+/g) ?? []).reduce(
     (max, run) => Math.max(max, run.length),
     0
   );
   const fence = '`'.repeat(longestRun + 1);
-  const pad = value.startsWith('`') || value.endsWith('`') ? ' ' : '';
-  return `${fence}${pad}${value}${pad}${fence}`;
+  // CommonMark strips ONE leading and ONE trailing space from a code span when
+  // both are present. Padding both ends whenever the value would touch a fence,
+  // or already carries edge whitespace, means the stripped result is the value
+  // itself — so a code of ' x ' does not silently display as 'x'.
+  const touchesFence =
+    shown.startsWith('`') ||
+    shown.endsWith('`') ||
+    shown.startsWith(' ') ||
+    shown.endsWith(' ');
+  const pad = touchesFence ? ' ' : '';
+  return `${fence}${pad}${shown}${pad}${fence}`;
 }
 
 function matchIn(catalogue: CatalogueEntry[], code: string) {

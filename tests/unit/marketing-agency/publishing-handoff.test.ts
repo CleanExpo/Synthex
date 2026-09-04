@@ -407,6 +407,43 @@ describe('inlineCode fencing', () => {
   });
 
   it('names an empty value rather than emitting an unrenderable empty span', () => {
-    expect(inlineCode('')).toBe(TICK + '(empty)' + TICK);
+    expect(inlineCode('')).toBe(TICK + '(empty code)' + TICK);
+  });
+});
+
+describe('values that defeat fencing alone', () => {
+  /**
+   * All three found by the independent reviewer's attack harness, which parsed
+   * the rendered Markdown and asked whether a visible node carried the value.
+   * Fencing is necessary and not sufficient: a blank line ends a code span, and
+   * empty or all-whitespace spans render as nothing.
+   */
+  it('escapes a newline so the value cannot terminate its own code span', () => {
+    expect(inlineCode('a\nb')).toBe(TICK + 'a\\nb' + TICK);
+  });
+
+  it('escapes a blank line, which would otherwise inject real markup', () => {
+    const rendered = inlineCode('a\n\n## Injected');
+
+    expect(rendered).toBe(TICK + 'a\\n\\n## Injected' + TICK);
+    expect(rendered).not.toContain('\n');
+  });
+
+  it('names an all-whitespace code with its length instead of rendering a blank span', () => {
+    expect(inlineCode('   ')).toBe(
+      TICK + '(whitespace-only code, 3 characters)' + TICK
+    );
+  });
+
+  it('preserves edge whitespace that CommonMark would otherwise strip', () => {
+    // A code span whose content begins and ends with a space loses one of each,
+    // so ' x ' would display as 'x' and two distinct codes would look identical.
+    expect(inlineCode(' x ')).toBe(TICK + '  x  ' + TICK);
+  });
+
+  it('does not truncate a pathologically long code', () => {
+    const long = 'x'.repeat(100_000);
+
+    expect(inlineCode(long)).toContain(long);
   });
 });
