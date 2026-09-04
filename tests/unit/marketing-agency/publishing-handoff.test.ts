@@ -32,10 +32,13 @@
 import {
   explainExternalBlock,
   explainGateCode,
+  inlineCode,
   renderPublishingHandoff,
   shortenSlots,
   type PublishingHandoffPack,
 } from '../../../lib/marketing-agency/publishing-handoff';
+
+const TICK = String.fromCharCode(96);
 
 /** The clean control. Without it, every assertion below is satisfied by a renderer hardwired to complain. */
 function cleanPack(): PublishingHandoffPack {
@@ -133,7 +136,7 @@ describe('code parsing', () => {
     expect(explained.recognised).toBe(true);
     expect(explained.slot).toBeUndefined();
     expect(explained.meaning).toBe(
-      'Claim "claim-7" is made with no evidence behind it.'
+      'Claim `claim-7` is made with no evidence behind it.'
     );
   });
 
@@ -144,7 +147,7 @@ describe('code parsing', () => {
 
     expect(explained.recognised).toBe(true);
     expect(explained.meaning).toBe(
-      'Claim "claim-7" cites evidence "src-99", which is not in the manifest.'
+      'Claim `claim-7` cites evidence `src-99`, which is not in the manifest.'
     );
   });
 
@@ -167,7 +170,7 @@ describe('code parsing', () => {
     expect(
       explainGateCode('slot-1:draft_media_type_expected_feed_image').meaning
     ).toBe(
-      'The media plan is the wrong type for this channel — it should be feed_image.'
+      'The media plan is the wrong type for this channel — it should be `feed_image`.'
     );
   });
 
@@ -317,5 +320,93 @@ describe('title prefix', () => {
     expect(
       renderPublishingHandoff(cleanPack(), { titlePrefix: 'CARSI' })
     ).toContain('# CARSI Publishing Handoff');
+  });
+});
+
+describe('codes are data, never markup', () => {
+  /**
+   * Found by independent review, and it invalidated the original invariant test.
+   * toContain proves a code is in the STRING. It does not prove a founder can SEE
+   * it. Interpolated bare, []() is a well-formed empty Markdown link: it renders
+   * as nothing while still satisfying containment. Visibility is the property
+   * that matters, so the fence is what has to be asserted.
+   */
+  function assertAlwaysFenced(doc: string, value: string) {
+    const parts = doc.split(value);
+    expect(parts.length).toBeGreaterThan(1);
+    for (let i = 0; i < parts.length - 1; i += 1) {
+      expect(parts[i].endsWith(TICK) || parts[i].endsWith(TICK + ' ')).toBe(
+        true
+      );
+      expect(
+        parts[i + 1].startsWith(TICK) || parts[i + 1].startsWith(' ' + TICK)
+      ).toBe(true);
+    }
+  }
+
+  it('fences a markdown-shaped unknown code so it cannot render as an empty link', () => {
+    const pack = cleanPack();
+    pack.qualityGate = {
+      ...pack.qualityGate,
+      allowed: false,
+      blockers: ['[]()'],
+    };
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).toContain(TICK + '[]()' + TICK);
+    assertAlwaysFenced(doc, '[]()');
+  });
+
+  it('fences a code that would otherwise open a heading or a list item', () => {
+    const pack = cleanPack();
+    pack.qualityGate = {
+      ...pack.qualityGate,
+      allowed: false,
+      blockers: ['## Codes', '- not a real bullet'],
+    };
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).toContain(TICK + '## Codes' + TICK);
+    expect(doc).toContain(TICK + '- not a real bullet' + TICK);
+  });
+
+  it('fences a channel name that carries markup', () => {
+    const pack = cleanPack();
+    pack.externalPublishBlocks = {
+      '[x](y)': ['platform_credentials_required'],
+    };
+
+    const doc = renderPublishingHandoff(pack);
+
+    expect(doc).toContain(TICK + '[x](y)' + TICK);
+  });
+});
+
+describe('inlineCode fencing', () => {
+  it('wraps an ordinary value in single backticks', () => {
+    expect(inlineCode('draft_evidence_refs_missing')).toBe(
+      TICK + 'draft_evidence_refs_missing' + TICK
+    );
+  });
+
+  it('lengthens the fence so a value containing backticks cannot break out', () => {
+    expect(inlineCode('a' + TICK + 'b')).toBe(
+      TICK.repeat(2) + 'a' + TICK + 'b' + TICK.repeat(2)
+    );
+    expect(inlineCode('a' + TICK.repeat(2) + 'b')).toBe(
+      TICK.repeat(3) + 'a' + TICK.repeat(2) + 'b' + TICK.repeat(3)
+    );
+  });
+
+  it('pads when the value would touch its own fence', () => {
+    expect(inlineCode(TICK + 'lead')).toBe(
+      TICK.repeat(2) + ' ' + TICK + 'lead' + ' ' + TICK.repeat(2)
+    );
+  });
+
+  it('names an empty value rather than emitting an unrenderable empty span', () => {
+    expect(inlineCode('')).toBe(TICK + '(empty)' + TICK);
   });
 });

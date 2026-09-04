@@ -101,13 +101,14 @@ const GATE_CODES: CatalogueEntry[] = [
   },
   {
     pattern: /^quality_claim_evidence_missing:(.+)$/,
-    meaning: c => `Claim "${c[0]}" is made with no evidence behind it.`,
+    meaning: c =>
+      `Claim ${inlineCode(c[0])} is made with no evidence behind it.`,
     action: 'Attach evidence to the claim, or remove the claim.',
   },
   {
     pattern: /^quality_claim_evidence_ref_unknown:([^:]+):(.+)$/,
     meaning: c =>
-      `Claim "${c[0]}" cites evidence "${c[1]}", which is not in the manifest.`,
+      `Claim ${inlineCode(c[0])} cites evidence ${inlineCode(c[1])}, which is not in the manifest.`,
     action: 'Add the missing source, or correct the reference.',
   },
   {
@@ -127,7 +128,7 @@ const DRAFT_CODES: CatalogueEntry[] = [
   {
     pattern: /^draft_evidence_ref_unknown:(.+)$/,
     meaning: c =>
-      `This draft cites evidence "${c[0]}", which is not in the manifest.`,
+      `This draft cites evidence ${inlineCode(c[0])}, which is not in the manifest.`,
     action: 'Add the missing source, or correct the reference.',
   },
   {
@@ -149,7 +150,7 @@ const DRAFT_CODES: CatalogueEntry[] = [
   {
     pattern: /^draft_media_type_expected_(.+)$/,
     meaning: c =>
-      `The media plan is the wrong type for this channel — it should be ${c[0]}.`,
+      `The media plan is the wrong type for this channel — it should be ${inlineCode(c[0])}.`,
     action: 'Correct the media type on the draft.',
   },
   {
@@ -228,6 +229,29 @@ const EXTERNAL_BLOCK_CODES: CatalogueEntry[] = [
     action: 'Check the target subreddit’s rules and disclose the affiliation.',
   },
 ];
+
+/**
+ * Render a value as a Markdown inline code span so it survives to the reader.
+ *
+ * WHY: string containment is the wrong altitude for the never-drop invariant.
+ * A code is only genuinely present if a founder can SEE it, and Markdown decides
+ * that, not the raw file. Interpolated bare, a code of []() renders as an empty
+ * link and disappears from the page while still satisfying a toContain assertion.
+ * Codes are data, and data must never be able to act as markup.
+ *
+ * Fencing follows CommonMark: one more backtick than the longest run inside the
+ * value, padded with spaces when the value would otherwise touch a fence.
+ */
+export function inlineCode(value: string): string {
+  if (value.length === 0) return '`(empty)`';
+  const longestRun = (value.match(/`+/g) ?? []).reduce(
+    (max, run) => Math.max(max, run.length),
+    0
+  );
+  const fence = '`'.repeat(longestRun + 1);
+  const pad = value.startsWith('`') || value.endsWith('`') ? ' ' : '';
+  return `${fence}${pad}${value}${pad}${fence}`;
+}
 
 function matchIn(catalogue: CatalogueEntry[], code: string) {
   for (const entry of catalogue) {
@@ -364,9 +388,10 @@ function renderIssue(issue: GroupedIssue, index: number): string {
   const flag = issue.recognised ? '' : ' **[untranslated code]**';
   const affected =
     issue.slots.length > 0
-      ? `\n   Affects ${issue.slots.length} draft${issue.slots.length === 1 ? '' : 's'}: ${issue.slots.join(', ')}`
+      ? `\n   Affects ${issue.slots.length} draft${issue.slots.length === 1 ? '' : 's'}: ${issue.slots.map(inlineCode).join(', ')}`
       : '';
-  return `${index}. ${issue.meaning}${flag}\n   What to do: ${issue.action}${affected}`;
+  const shown = issue.recognised ? issue.meaning : inlineCode(issue.meaning);
+  return `${index}. ${shown}${flag}\n   What to do: ${issue.action}${affected}`;
 }
 
 function renderSection(
@@ -395,10 +420,10 @@ function renderExternal(blocks: Record<string, string[]>): string {
         .map(explainExternalBlock)
         .map(
           item =>
-            `- ${item.meaning}${item.recognised ? '' : ' **[untranslated code]**'} — ${item.action}`
+            `- ${item.recognised ? item.meaning : inlineCode(item.meaning)}${item.recognised ? '' : ' **[untranslated code]**'} — ${item.action}`
         )
         .join('\n');
-      return `### ${channel}\n\n${lines}`;
+      return `### ${inlineCode(channel)}\n\n${lines}`;
     })
     .join('\n\n');
   return `## External channels — what each still needs\n\n${rendered}\n`;
@@ -410,12 +435,13 @@ function renderExternal(blocks: Record<string, string[]>): string {
  */
 function renderCodeAppendix(pack: PublishingHandoffPack): string {
   const external = Object.entries(pack.externalPublishBlocks).flatMap(
-    ([channel, codes]) => codes.map(code => `${channel}: ${code}`)
+    ([channel, codes]) =>
+      codes.map(code => `${inlineCode(channel)}: ${inlineCode(code)}`)
   );
   const lines = [
-    ...pack.qualityGate.blockers.map(code => `blocker: ${code}`),
-    ...pack.qualityGate.warnings.map(code => `warning: ${code}`),
-    ...external.map(code => `external: ${code}`),
+    ...pack.qualityGate.blockers.map(code => `blocker: ${inlineCode(code)}`),
+    ...pack.qualityGate.warnings.map(code => `warning: ${inlineCode(code)}`),
+    ...external.map(entry => `external: ${entry}`),
   ];
   const body =
     lines.length > 0 ? lines.map(line => `- ${line}`).join('\n') : '- none';
