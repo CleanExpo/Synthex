@@ -11,7 +11,8 @@
  *
  * DESIGN — why the fixtures are shaped this way
  * --------------------------------------------
- * 1. `goodInput()` must PASS. Without it, a suite of blocked fixtures is
+ * 1. The clean control — `goodManifest()` + `goodDraft()`, there is no
+ *    `goodInput()` — must PASS. Without it, a suite of blocked fixtures is
  *    satisfied by a gate hardwired to `blocked`, which would be a control that
  *    cannot distinguish anything.
  * 2. Every bad fixture must produce EXACTLY ONE blocker. Not "one mutation" —
@@ -47,7 +48,7 @@
  * The rule that generalises: a composite guard needs a case per conjunct, because
  * a passing exact-set assertion proves the blocker fired, never which term made it.
  *
- * NO SUFFICIENCY CLAIM. Seven mutants dying is seven mutants. Nothing here proves the
+ * NO SUFFICIENCY CLAIM. Nine mutants dying is nine mutants. Nothing here proves the
  * gate checks the RIGHT things; mutating existing rules cannot surface a missing one.
  *
  * Independent review found the coupling defect twice, in two different cases, after
@@ -510,8 +511,26 @@ describe('campaign quality gate — known defect: the humanness floor cannot fir
  *
  * The fix is a product decision, not an agent retune: either widen the contract to
  * model candidate/unsafe policies, or validate at a real untyped boundary. Filed
- * in BACKLOG.md as founder-owned. THIS TEST FAILS if the type is ever widened,
- * which is the signal to convert it into a real firing case.
+ * in BACKLOG.md as founder-owned.
+ *
+ * WHERE THE ALARM ACTUALLY LIVES — and why it is not in this file.
+ * This header used to claim, of the case below, that it fails if the type is ever
+ * widened. That was FALSE, and round 5's independent review proved it: widening
+ * the field to `'owned_licensed_original_only' | 'stock_library'` left every test
+ * passing, because TypeScript types are erased before Jest runs and both
+ * assertions below observe only the value `goodDraft()` supplies. The alarm
+ * guarding a dead check was itself dead.
+ *
+ * No type-level control can work HERE either: tsconfig.json excludes test files
+ * from `tsc`, and `isolatedModules: true` puts ts-jest in transpile-only mode, so
+ * a type error in this file is reported by no gate at all. Both were measured.
+ *
+ * The real lock is therefore `AssetSourcePolicyContractLock` in
+ * campaign-quality-gate.ts, next to the declaration it guards, enforced by
+ * `npm run type-check` — proven by mutation: widening the field fails type-check
+ * with TS2344, restoring it returns exit 0. The two assertions below are kept as
+ * the RUNTIME half only: they record that the sole permitted value trips no
+ * blocker.
  */
 describe('campaign quality gate — known defect: the asset-policy guard cannot fire', () => {
   it('accepts the only value its type permits, so the guard is unreachable', () => {
@@ -526,6 +545,62 @@ describe('campaign quality gate — known defect: the asset-policy guard cannot 
     expect(result.blockers).not.toContain(
       'slot-01:draft_asset_policy_not_publish_safe'
     );
+  });
+});
+
+/**
+ * COMPOSITE CONJUNCTS — the EXEMPTION half, which no case pinned before round 5.
+ *
+ * Round 5's review found two more multi-term conditions whose non-firing branch
+ * was untested. Both mutants below SURVIVED all 19 earlier cases — MEASURED in
+ * both directions, not relayed: the 19-case suite from the previous commit runs
+ * 19/19 green unmutated, and 19/19 green under each of these two mutants, while
+ * at this commit each kills exactly one distinct case. The reason is that every
+ * fixture sat on the firing side of the condition:
+ *
+ *   quality_claim_evidence_missing is `requiresEvidence !== false && no refs`,
+ *   and every claim omitted `requiresEvidence`, so deleting the exemption
+ *   changed nothing observable.
+ *
+ *   the peer-plan block is gated by `channelNeedsPeerPlan(channel)`, and every
+ *   draft was `linkedin` (social), so `=> true` was indistinguishable.
+ *
+ * These two cases assert the EXEMPT path yields an empty blocker set, which is
+ * what makes the mutants die. An exact-set assertion on a FIRING case proves the
+ * blocker fired, never which conjunct fired it — the lesson of round 5.
+ */
+describe('campaign quality gate — composite conjunct: the evidence exemption', () => {
+  it('honours requiresEvidence=false, so an exempt claim with no refs blocks nothing', () => {
+    const manifest = goodManifest();
+    manifest.claims = [
+      ...manifest.claims,
+      {
+        id: 'claim-exempt',
+        statement: 'Restoration work is carried out in Australian homes.',
+        status: 'verified',
+        requiresEvidence: false,
+        evidenceRefs: [],
+      },
+    ];
+
+    // Dropping the `requiresEvidence !== false` conjunct makes THIS the only
+    // failing case: the claim would then be blocked for having no refs.
+    expect(run({ manifest }).blockers).toEqual([]);
+  });
+});
+
+describe('campaign quality gate — composite conjunct: peer plan is social-only', () => {
+  it('exempts a non-social channel, so a blog draft with no peer metrics blocks nothing', () => {
+    const draft = goodDraft();
+    draft.channel = 'blog';
+    // expectedMediaType('blog') — otherwise the media-type check fires instead
+    // and this fixture stops isolating anything.
+    draft.mediaPlan.mediaType = 'source_card';
+    draft.peerBenchmark.comparableMetrics = [];
+
+    // Score stays above the floor without the peer 20: 35 + 25 + 20 + 0 = 80,
+    // so no companion score blocker muddies the set.
+    expect(run({ draft }).blockers).toEqual([]);
   });
 });
 
