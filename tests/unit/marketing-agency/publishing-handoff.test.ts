@@ -1292,6 +1292,12 @@ describe('round 13 - escaping is a complete partition, not a longer list', () =>
    * sentinel - absent from the output, and now colliding with an ordinary space.
    * Absence was the wrong property. The scan below asserts the escape DECODES BACK
    * to the code point, which rules out absence, substitution and collision at once.
+   *
+   * Round 13 review then found the scan skipping all 2,048 surrogate code points
+   * on the stated grounds that they are "not scalar values". That was simply
+   * wrong: `String.fromCodePoint` accepts them, a JavaScript string can carry a
+   * lone one, and the renderer already handled them because Cs is part of `C`.
+   * The scan now walks them too, so a mutant narrowing `C` to Cc|Cf|Co|Cn dies.
    */
   const at = (point: number) => String.fromCodePoint(point);
 
@@ -1348,7 +1354,6 @@ describe('round 13 - escaping is a complete partition, not a longer list', () =>
     const survivors: string[] = [];
 
     for (let point = 0; point <= 0x10ffff; point += 1) {
-      if (point >= 0xd800 && point <= 0xdfff) continue; // not scalar values
       if (point === 0x20) continue; // the one space a founder must still read
       const ch = String.fromCodePoint(point);
       if (!outsideGraphic.test(ch)) continue;
@@ -1383,4 +1388,45 @@ describe('round 13 - escaping is a complete partition, not a longer list', () =>
   it('every code point outside the graphic categories decodes back to itself', () => {
     expect(scan(inlineCode)).toEqual([]);
   }, 120000);
+});
+
+describe('round 14 - a lone surrogate is a value too', () => {
+  /**
+   * Round-13 review found the scan excluding surrogates, which left the widest
+   * part of the partition untested. The renderer was right; its control was not.
+   *
+   * The stake is not theoretical. Left unescaped, a lone surrogate does not
+   * survive UTF-8 encoding - it becomes U+FFFD. Two different claim ids and a
+   * genuine U+FFFD would arrive at the founder as the same bytes, which is the
+   * exact failure this module exists to prevent, one layer below the glyph.
+   */
+  const at = (point: number) => String.fromCodePoint(point);
+  const HIGH = 0xd800;
+  const LOW = 0xdc00;
+
+  it('escapes a lone high surrogate', () => {
+    expect(inlineCode(at(HIGH))).toBe(TICK + BACKSLASH + 'ud800' + TICK);
+  });
+
+  it('escapes a lone low surrogate', () => {
+    expect(inlineCode(at(LOW))).toBe(TICK + BACKSLASH + 'udc00' + TICK);
+  });
+
+  it('keeps two lone surrogates and a real U+FFFD distinct through UTF-8', () => {
+    // Unescaped, all three of these encode to the same three bytes. The escape is
+    // what survives the trip to a file, a database column or an HTTP response.
+    const rendered = [at(HIGH), at(HIGH + 1), at(0xfffd)].map(value =>
+      Buffer.from(inlineCode(value)).toString()
+    );
+
+    expect(new Set(rendered).size).toBe(3);
+  });
+
+  it('leaves a WELL-FORMED surrogate pair alone', () => {
+    // The control. A pair is an ordinary supplementary character - U+1F600 is a
+    // symbol, not a control - and escaping it would corrupt legitimate values.
+    const emoji = at(0x1f600);
+
+    expect(inlineCode(emoji)).toBe(TICK + emoji + TICK);
+  });
 });
