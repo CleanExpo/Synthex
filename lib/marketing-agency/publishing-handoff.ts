@@ -53,18 +53,22 @@
  *     corpus finds no collision, and its positive control finds hundreds in a
  *     deliberately non-injective function, so the null result is a real one.
  *
- *     VISUAL DISTINCTNESS. Every code point Unicode designates as rendering to
- *     nothing, and every space separator that is not U+0020, is escaped - checked
- *     exhaustively across the whole code space, not by sample. This is the
- *     WEAKER claim of the two and it is bounded by the font: a glyph two fonts
- *     draw identically is not something source code can decide. U+2800 BRAILLE
- *     PATTERN BLANK is the known exception, left unescaped deliberately because
- *     escaping it would corrupt legitimate braille to defend a case no producer
- *     emits.
+ *     VISUAL DISTINCTNESS. Everything outside the graphic categories is escaped -
+ *     all of `C`, all of `Z` except U+0020, plus the default-ignorable characters
+ *     that do carry a graphic category. That is a complete partition of the code
+ *     space, not a list of the offenders found so far, and it is checked over
+ *     every code point rather than on samples.
  *
- *     It was NOT injective until round 11, and not visually safe until round 12,
- *     each time because the class was a hand-written list of the offenders known
- *     so far. It is a Unicode property now.
+ *     This is the WEAKER of the two claims and it is bounded by the font: whether
+ *     two glyphs draw alike is not something source code can decide. U+2800
+ *     BRAILLE PATTERN BLANK is a known unescaped blank, left alone deliberately
+ *     because escaping it would corrupt legitimate braille to defend a case no
+ *     producer emits. Homoglyphs are out of scope by the same reasoning - the rule
+ *     is about invisibility, not confusability.
+ *
+ *     Rounds 10 to 13 each found this failing on one more character the previous
+ *     list had missed. The lesson is in the shape of the fix, not its members: a
+ *     denylist of what breaks fails open forever.
  *   - Nothing here is recovered by parsing. Slot, code and every parameter
  *     arrive as separate fields from the gate, so a colon inside a slot id, a
  *     claim id or an evidence ref carries no meaning and cannot mis-attribute
@@ -373,43 +377,40 @@ function forDisplay(value: string): string {
     .replace(/\r/g, '\\r')
     .replace(/\n/g, '\\n')
     .replace(/\t/g, '\\t')
-    // Any REMAINING C0 control, NUL included. CommonMark replaces NUL with
-    // U+FFFD, so a value carrying one reaches the page as a different value -
-    // present in the source, absent from every rendered node.
-    .replace(
-      /[\u0000-\u001f\u007f]/g,
-      ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
-    )
-    // Anything that RENDERS AS NOTHING, or renders as an ordinary space while not
-    // being one. Both defeat the rule this module exists for: the founder must be
-    // able to READ what was reported, and two different values must never look
-    // like one.
+    // EVERYTHING that is not a visible graphic character, in one rule.
     //
-    // This is a PROPERTY, not a hand-written list, and that is the point. Rounds
-    // 10, 11 and 12 of independent review each found this same rule failing one
-    // layer higher than the last - first a literal backslash, then CR/LF and the
-    // degenerate sentinels, then U+034F COMBINING GRAPHEME JOINER and the Hangul
-    // fillers, which are neither format characters nor separators. Enumerating
-    // the offenders by hand loses that race every round. `Default_Ignorable_Code_Point`
-    // is Unicode's own name for "renders as nothing", so a code point nobody here
-    // thought of is covered by definition rather than by luck.
+    // Rounds 10 to 13 of independent review each found this same guarantee failing
+    // on a member the previous version had not thought of: a literal backslash,
+    // then CR/LF and the degenerate sentinels, then U+034F and the Hangul fillers,
+    // then the C1 controls and the line/paragraph separators. Every one of those
+    // fixes was a longer hand-written list, and a list of what breaks fails open
+    // forever - the next reviewer only has to find one more member.
     //
-    // Ordinary combining marks are NOT in that property - U+0301 COMBINING ACUTE
-    // is not default-ignorable - so accented text still renders as itself. That is
-    // asserted, not assumed.
+    // So this is not a list. Every code point has exactly one General_Category,
+    // and `C` (control, format, surrogate, private-use, unassigned) together with
+    // `Z` (every separator) is precisely the complement of the graphic categories
+    // a founder can actually read. `Default_Ignorable_Code_Point` is added on top
+    // because a few characters that DO have a graphic category - U+034F is a mark,
+    // the Hangul fillers are letters - are still specified to render as nothing.
+    // That property is a fallback-display rule, not a definition of invisibility,
+    // which is why it is a supplement here and not the whole rule.
     //
-    // U+0020 is the one member of Zs that must survive: it is the space the
-    // founder actually reads between words.
-    .replace(
-      /[\p{Default_Ignorable_Code_Point}\p{Cf}\p{Zl}\p{Zp}\p{Zs}]/gu,
-      ch => {
-        if (ch === ' ') return ch;
-        const point = ch.codePointAt(0) ?? 0;
-        return point > 0xffff
-          ? '\\u{' + point.toString(16).padStart(5, '0') + '}'
-          : '\\u' + point.toString(16).padStart(4, '0');
+    // What survives: letters, marks, numbers, punctuation and symbols. Ordinary
+    // accented text renders as itself, and that is asserted with a control rather
+    // than assumed. U+0020 is the single exception carved out below, because it is
+    // the space the founder reads between words.
+    .replace(/[\p{C}\p{Z}\p{Default_Ignorable_Code_Point}]/gu, ch => {
+      if (ch === ' ') return ch;
+      const point = ch.codePointAt(0) ?? 0;
+      // C0 and DEL keep the shorter form they have always had, so an existing
+      // value carrying a BEL still reads as it did.
+      if (point < 0x20 || point === 0x7f) {
+        return '\\x' + point.toString(16).padStart(2, '0');
       }
-    );
+      return point > 0xffff
+        ? '\\u{' + point.toString(16).padStart(5, '0') + '}'
+        : '\\u' + point.toString(16).padStart(4, '0');
+    });
 
   // The degenerate cases come AFTER escaping, so each is built from the escaped
   // form rather than the raw value. Both begin with a single backslash, which no

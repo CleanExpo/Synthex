@@ -1267,38 +1267,120 @@ describe('round 12 - nothing that renders as nothing survives, checked exhaustiv
     expect(inlineCode(composed)).toBe(TICK + composed + TICK);
   });
 
-  it('leaves no code point that renders as nothing unescaped, across all of Unicode', () => {
-    /**
-     * The oracle is Unicode's own properties rather than the class the source
-     * writes, so a member the source forgets is a failure here. It cannot catch
-     * the case where the PROPERTY is the wrong concept - only a rendering engine
-     * decides that, which is how round 11 found U+034F - so this is the weaker
-     * of the two guarantees and is described that way in the module header.
-     */
-    const invisible = /[\p{Default_Ignorable_Code_Point}\p{Cf}\p{Zl}\p{Zp}]/u;
-    const spaceLike = /\p{Zs}/u;
+  it('leaves U+2800 BRAILLE PATTERN BLANK alone, the documented exception', () => {
+    // Not a control - it does not exercise the scan. It pins a deliberate ruling:
+    // U+2800 draws blank in most fonts but is a legitimate graphic character, and
+    // escaping it would corrupt real braille to defend a case no producer emits.
+    const braille = at(0x2800);
+
+    expect(inlineCode(braille)).toContain(braille);
+  });
+});
+
+describe('round 13 - escaping is a complete partition, not a longer list', () => {
+  /**
+   * Round-12 review returned FAIL with two P1s, and both were the same lesson.
+   *
+   * The C1 controls U+0080-U+009F are neither default-ignorable nor separators,
+   * so the previous class missed them; the reviewer proved U+0085 renders
+   * identically to nothing across four fonts with CoreText bitmap hashes.
+   *
+   * The second was worse and was in this file: the previous scan asserted only
+   * that the RAW character was absent from the output. Deleting the line or
+   * paragraph separator from the source class left the scan green, because the
+   * unescaped separator was then stripped by `trim` and replaced by the one-space
+   * sentinel - absent from the output, and now colliding with an ordinary space.
+   * Absence was the wrong property. The scan below asserts the escape DECODES BACK
+   * to the code point, which rules out absence, substitution and collision at once.
+   */
+  const at = (point: number) => String.fromCodePoint(point);
+
+  const INVISIBLE_CONTROLS: Array<[string, number]> = [
+    ['U+0080 PAD', 0x0080],
+    ['U+0085 NEL', 0x0085],
+    ['U+009F APC', 0x009f],
+  ];
+
+  it.each(INVISIBLE_CONTROLS)('escapes the C1 control %s', (_name, point) => {
+    expect(inlineCode('claim' + at(point) + '7')).not.toBe(
+      inlineCode('claim7')
+    );
+    expect(inlineCode(at(point))).toBe(
+      TICK + BACKSLASH + 'u00' + point.toString(16) + TICK
+    );
+  });
+
+  const SEPARATORS: Array<[string, number]> = [
+    ['U+2028 LINE SEPARATOR', 0x2028],
+    ['U+2029 PARAGRAPH SEPARATOR', 0x2029],
+  ];
+
+  it.each(SEPARATORS)(
+    'renders %s as its escape, never as the space sentinel',
+    (_name, point) => {
+      // The exact mutant that survived round 12: unescaped, these are stripped by
+      // `trim` and come back as the one-space sentinel, colliding with U+0020.
+      expect(inlineCode(at(point))).toBe(
+        TICK + BACKSLASH + 'u' + point.toString(16) + TICK
+      );
+      expect(inlineCode(at(point))).not.toBe(inlineCode(' '));
+    }
+  );
+
+  it('escapes private-use and unassigned code points', () => {
+    expect(inlineCode(at(0xe000))).toBe(TICK + BACKSLASH + 'ue000' + TICK);
+    expect(inlineCode(at(0x0378))).toBe(TICK + BACKSLASH + 'u0378' + TICK);
+  });
+
+  /**
+   * The scan, shared by the real renderer and by a deliberately broken one.
+   * Returns the code points whose rendering does NOT decode back to themselves.
+   */
+  const scan = (render: (value: string) => string, limit = 8) => {
+    const outsideGraphic = /[\p{C}\p{Z}\p{Default_Ignorable_Code_Point}]/u;
+    // Tab, line feed and carriage return keep their readable two-character forms
+    // rather than a hex escape, so the oracle has to accept those as well. Both
+    // this and the six-digit brace form below were found by the scan failing on
+    // its own first run - the oracle was wrong, not the source.
+    const named: Record<string, number> = { t: 0x09, n: 0x0a, r: 0x0d };
+    const escaped =
+      /^`+ ?\\(?:([tnr])|x([0-9a-f]{2})|u([0-9a-f]{4})|u\{([0-9a-f]{5,6})\}) ?`+$/;
     const survivors: string[] = [];
 
     for (let point = 0; point <= 0x10ffff; point += 1) {
       if (point >= 0xd800 && point <= 0xdfff) continue; // not scalar values
       if (point === 0x20) continue; // the one space a founder must still read
       const ch = String.fromCodePoint(point);
-      if (!invisible.test(ch) && !spaceLike.test(ch)) continue;
-      if (inlineCode(ch).includes(ch))
-        survivors.push('U+' + point.toString(16));
+      if (!outsideGraphic.test(ch)) continue;
+      const found = escaped.exec(render(ch));
+      let decoded = Number.NaN;
+      if (found) {
+        decoded = found[1]
+          ? named[found[1]]
+          : parseInt(found[2] ?? found[3] ?? found[4], 16);
+      }
+      if (decoded !== point) {
+        if (survivors.length < limit) survivors.push('U+' + point.toString(16));
+      }
     }
+    return survivors;
+  };
 
-    expect(survivors).toEqual([]);
+  it('the scan can fail - a renderer that escapes nothing is caught', () => {
+    // Without this, a scan that silently matched everything would look identical
+    // to a clean result. It exercises the same loop, not a different assertion.
+    expect(scan(value => TICK + value + TICK).length).toBeGreaterThan(0);
   });
 
-  it('the scan can fail, proven on a value the source deliberately does not escape', () => {
-    // Positive control. U+2800 BRAILLE PATTERN BLANK draws as blank in most fonts
-    // but is NOT default-ignorable and IS a legitimate character, so the source
-    // leaves it alone on purpose. If the scan above were incapable of detecting a
-    // survivor, this would fail too - and it is the documented exception, so it
-    // must survive.
-    const braille = at(0x2800);
-
-    expect(inlineCode(braille)).toContain(braille);
+  it('the scan can fail - a renderer that substitutes a sentinel is caught', () => {
+    // The round-12 defect exactly: the raw character is gone, and the value has
+    // silently become something that collides with an ordinary space.
+    expect(
+      scan(() => TICK + BACKSLASH + '(1 spaces)' + TICK).length
+    ).toBeGreaterThan(0);
   });
+
+  it('every code point outside the graphic categories decodes back to itself', () => {
+    expect(scan(inlineCode)).toEqual([]);
+  }, 120000);
 });
