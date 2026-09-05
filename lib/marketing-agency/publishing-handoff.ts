@@ -46,14 +46,25 @@
  *
  * KNOWN LIMITS, recorded rather than carried silently
  * ---------------------------------------------------
- *   - Display escaping IS injective, and that is load-bearing rather than
- *     incidental: two different values must never reach the founder looking like
- *     one. It was NOT injective until round 11, when an independent reviewer
- *     rendered two distinct claim ids as two identical appendix lines. Four
- *     collision classes are closed - a literal backslash forging an escape, CR
- *     and LF and CRLF collapsing into one sequence, the degenerate-value
- *     sentinels being forgeable by an input of their own text, and whitespace
- *     that occupies space without being a space. The argument is in `forDisplay`.
+ *   - Two guarantees, stated separately because they are proven differently.
+ *
+ *     BYTE INJECTIVITY. Distinct values always render to distinct strings. This
+ *     is decidable and it is checked: a brute-force probe over the adversarial
+ *     corpus finds no collision, and its positive control finds hundreds in a
+ *     deliberately non-injective function, so the null result is a real one.
+ *
+ *     VISUAL DISTINCTNESS. Every code point Unicode designates as rendering to
+ *     nothing, and every space separator that is not U+0020, is escaped - checked
+ *     exhaustively across the whole code space, not by sample. This is the
+ *     WEAKER claim of the two and it is bounded by the font: a glyph two fonts
+ *     draw identically is not something source code can decide. U+2800 BRAILLE
+ *     PATTERN BLANK is the known exception, left unescaped deliberately because
+ *     escaping it would corrupt legitimate braille to defend a case no producer
+ *     emits.
+ *
+ *     It was NOT injective until round 11, and not visually safe until round 12,
+ *     each time because the class was a hand-written list of the offenders known
+ *     so far. It is a Unicode property now.
  *   - Nothing here is recovered by parsing. Slot, code and every parameter
  *     arrive as separate fields from the gate, so a colon inside a slot id, a
  *     claim id or an evidence ref carries no meaning and cannot mis-attribute
@@ -369,32 +380,30 @@ function forDisplay(value: string): string {
       /[\u0000-\u001f\u007f]/g,
       ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
     )
-    // Characters that OCCUPY NO SPACE, plus the ones that occupy space without
-    // being a space. `trim` does not remove the first group and they are not C0,
-    // so before this they reached the page and rendered as nothing: a code of one
-    // ZERO WIDTH SPACE became an empty-looking span, and `claim<ZWSP>7` was
-    // pixel-identical to `claim7` while being a DIFFERENT claim id. Both defeat
-    // the rule this module exists for - the founder must be able to READ what was
-    // reported, and two different values must never look like one.
+    // Anything that RENDERS AS NOTHING, or renders as an ordinary space while not
+    // being one. Both defeat the rule this module exists for: the founder must be
+    // able to READ what was reported, and two different values must never look
+    // like one.
     //
-    // Combining marks are deliberately NOT included: they are how ordinary
-    // accented text is written, and escaping them would corrupt legitimate values
-    // to defend against a case that does not exist.
+    // This is a PROPERTY, not a hand-written list, and that is the point. Rounds
+    // 10, 11 and 12 of independent review each found this same rule failing one
+    // layer higher than the last - first a literal backslash, then CR/LF and the
+    // degenerate sentinels, then U+034F COMBINING GRAPHEME JOINER and the Hangul
+    // fillers, which are neither format characters nor separators. Enumerating
+    // the offenders by hand loses that race every round. `Default_Ignorable_Code_Point`
+    // is Unicode's own name for "renders as nothing", so a code point nobody here
+    // thought of is covered by definition rather than by luck.
     //
-    // The range runs past U+FE0F to the SUPPLEMENTARY variation selectors
-    // U+E0100-U+E01EF, which fall outside both the BMP range and Cf. A
-    // supplementary code point is written in brace form, because `\uE0100` is not
-    // an escape for U+E0100 - it is one for U+E010 followed by a zero, and a
-    // founder must be able to read back what was actually reported.
+    // Ordinary combining marks are NOT in that property - U+0301 COMBINING ACUTE
+    // is not default-ignorable - so accented text still renders as itself. That is
+    // asserted, not assumed.
     //
-    // The trailing members are the space separators OTHER than U+0020. Those do
-    // occupy space, so they are not invisible, but they are indistinguishable
-    // from an ordinary space by eye, which is the same defect wearing a different
-    // hat. Escaping them is also what lets the whitespace sentinel below name a
-    // value exactly rather than by length alone.
+    // U+0020 is the one member of Zs that must survive: it is the space the
+    // founder actually reads between words.
     .replace(
-      /[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F\u{E0100}-\u{E01EF}\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/gu,
+      /[\p{Default_Ignorable_Code_Point}\p{Cf}\p{Zl}\p{Zp}\p{Zs}]/gu,
       ch => {
+        if (ch === ' ') return ch;
         const point = ch.codePointAt(0) ?? 0;
         return point > 0xffff
           ? '\\u{' + point.toString(16).padStart(5, '0') + '}'

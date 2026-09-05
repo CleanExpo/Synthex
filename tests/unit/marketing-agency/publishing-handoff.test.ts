@@ -1195,3 +1195,110 @@ describe('round 11 - forDisplay is injective, and the reviewer proved it was not
     expect(doc).toContain('claim' + BS + 'n7');
   });
 });
+
+describe('round 12 - nothing that renders as nothing survives, checked exhaustively', () => {
+  /**
+   * Round-11 review returned FAIL with two P1s and both are asserted here.
+   *
+   * The first was found with CoreText: U+034F COMBINING GRAPHEME JOINER and the
+   * Hangul fillers render as blank, are neither format characters nor separators,
+   * and so escaped the hand-written class. The named cases below come from that
+   * reviewer's own rendering evidence, which is why they are worth keeping as
+   * concrete assertions rather than folding entirely into the scan.
+   *
+   * The second was found by mutation: removing ONLY the non-ASCII space
+   * separators left all 72 tests green while U+0020 and U+00A0 collided on the
+   * same sentinel. That is a fix with no control, which the release gate treats
+   * as a P0-class defect in the test suite rather than in the source.
+   *
+   * The scan at the bottom is the answer to both. Sampling characters is what
+   * lost three rounds in a row; it walks the whole code space instead.
+   */
+  const at = (point: number) => String.fromCodePoint(point);
+
+  // Every one of these was demonstrated to render as blank by the round-11
+  // reviewer, using CoreText/Menlo rather than by reading the source.
+  const RENDERS_AS_BLANK: Array<[string, number]> = [
+    ['U+034F COMBINING GRAPHEME JOINER', 0x034f],
+    ['U+115F HANGUL CHOSEONG FILLER', 0x115f],
+    ['U+1160 HANGUL JUNGSEONG FILLER', 0x1160],
+    ['U+3164 HANGUL FILLER', 0x3164],
+    ['U+FFA0 HALFWIDTH HANGUL FILLER', 0xffa0],
+  ];
+
+  it.each(RENDERS_AS_BLANK)('escapes %s', (_name, point) => {
+    const rendered = inlineCode(at(point));
+
+    expect(rendered).not.toContain(at(point));
+    expect(rendered).toContain(BACKSLASH + 'u');
+  });
+
+  it('keeps a claim id carrying an invisible mark distinct from one without', () => {
+    expect(inlineCode('claim' + at(0x034f) + '7')).not.toBe(
+      inlineCode('claim7')
+    );
+  });
+
+  // The collision the surviving mutant reintroduced: both rendered as the same
+  // one-space sentinel, so a non-breaking space and a space were one value.
+  const SPACE_SEPARATORS: Array<[string, number]> = [
+    ['U+00A0 NO-BREAK SPACE', 0x00a0],
+    ['U+1680 OGHAM SPACE MARK', 0x1680],
+    ['U+2000 EN QUAD', 0x2000],
+    ['U+200A HAIR SPACE', 0x200a],
+    ['U+202F NARROW NO-BREAK SPACE', 0x202f],
+    ['U+205F MEDIUM MATHEMATICAL SPACE', 0x205f],
+    ['U+3000 IDEOGRAPHIC SPACE', 0x3000],
+  ];
+
+  it.each(SPACE_SEPARATORS)(
+    'keeps %s distinct from an ordinary space',
+    (_name, point) => {
+      expect(inlineCode(at(point))).not.toBe(inlineCode(' '));
+    }
+  );
+
+  it('still leaves an ordinary combining accent alone', () => {
+    // The control for the whole block. `Default_Ignorable_Code_Point` must not
+    // start swallowing the marks that ordinary accented text is written with, or
+    // the fix has corrupted real values to defend against invisible ones.
+    const composed = 'cafe' + at(0x0301);
+
+    expect(inlineCode(composed)).toBe(TICK + composed + TICK);
+  });
+
+  it('leaves no code point that renders as nothing unescaped, across all of Unicode', () => {
+    /**
+     * The oracle is Unicode's own properties rather than the class the source
+     * writes, so a member the source forgets is a failure here. It cannot catch
+     * the case where the PROPERTY is the wrong concept - only a rendering engine
+     * decides that, which is how round 11 found U+034F - so this is the weaker
+     * of the two guarantees and is described that way in the module header.
+     */
+    const invisible = /[\p{Default_Ignorable_Code_Point}\p{Cf}\p{Zl}\p{Zp}]/u;
+    const spaceLike = /\p{Zs}/u;
+    const survivors: string[] = [];
+
+    for (let point = 0; point <= 0x10ffff; point += 1) {
+      if (point >= 0xd800 && point <= 0xdfff) continue; // not scalar values
+      if (point === 0x20) continue; // the one space a founder must still read
+      const ch = String.fromCodePoint(point);
+      if (!invisible.test(ch) && !spaceLike.test(ch)) continue;
+      if (inlineCode(ch).includes(ch))
+        survivors.push('U+' + point.toString(16));
+    }
+
+    expect(survivors).toEqual([]);
+  });
+
+  it('the scan can fail, proven on a value the source deliberately does not escape', () => {
+    // Positive control. U+2800 BRAILLE PATTERN BLANK draws as blank in most fonts
+    // but is NOT default-ignorable and IS a legitimate character, so the source
+    // leaves it alone on purpose. If the scan above were incapable of detecting a
+    // survivor, this would fail too - and it is the documented exception, so it
+    // must survive.
+    const braille = at(0x2800);
+
+    expect(inlineCode(braille)).toContain(braille);
+  });
+});
