@@ -46,11 +46,37 @@
  *
  * KNOWN LIMITS, recorded rather than carried silently
  * ---------------------------------------------------
- *   - Display escaping is NOT injective. A real newline and the two literal
- *     characters backslash-n render identically, as do whitespace-only values of
- *     equal length. Every occurrence still reaches the page and is still counted;
- *     what is lost is the ability to tell two such values apart by eye. The raw
- *     bytes remain in the pack the document was rendered from.
+ *   - Two guarantees, stated separately because they are proven differently.
+ *
+ *     BYTE INJECTIVITY. Distinct values always render to distinct strings. This
+ *     is decidable and it is checked: a brute-force probe over the adversarial
+ *     corpus finds no collision, and its positive control finds hundreds in a
+ *     deliberately non-injective function, so the null result is a real one.
+ *
+ *     VISUAL DISTINCTNESS. Everything outside the graphic categories is escaped -
+ *     all of `C`, all of `Z` except U+0020, plus the default-ignorable characters
+ *     that do carry a graphic category. That is a complete partition of the code
+ *     space, not a list of the offenders found so far, and it is checked over
+ *     every code point rather than on samples.
+ *
+ *     WHAT THAT DOES NOT COVER, stated plainly because the earlier version of this
+ *     comment claimed more than it could deliver. A character with a GRAPHIC
+ *     category can still draw no pixels, and whether it does is a property of the
+ *     font, not of Unicode - so no rule written here can decide it. Two are known:
+ *     U+2800 BRAILLE PATTERN BLANK, and U+FFFC OBJECT REPLACEMENT CHARACTER, which
+ *     an independent reviewer found by rendering 159,345 graphic code points in
+ *     four fonts and hashing the bitmaps - it draws nothing in three of them. There
+ *     will be others in other fonts. That is a bound on the guarantee, not a list
+ *     to go on extending; adding those two here would only make this a denylist
+ *     again, and the next reviewer with a fifth font would find a third. Filed as
+ *     BACKLOG row 26 rather than patched. Homoglyphs are out of scope for the same
+ *     reason - the rule is about invisibility, not confusability.
+ *
+ *     Rounds 10 to 14 each found the earlier version of this rule failing on one
+ *     more character the previous list had missed. The lesson is in the shape of
+ *     the fix, not its members: a denylist of what breaks fails open forever, and
+ *     a guarantee that cannot be decided where the guard looks must be narrowed
+ *     rather than chased.
  *   - Nothing here is recovered by parsing. Slot, code and every parameter
  *     arrive as separate fields from the gate, so a colon inside a slot id, a
  *     claim id or an evidence ref carries no meaning and cannot mis-attribute
@@ -341,39 +367,69 @@ const EXTERNAL_BLOCK_CODES: CatalogueEntry[] = [
  * exists to prevent, so a pathologically long code is rendered in full.
  */
 function forDisplay(value: string): string {
-  if (value.length === 0) return '(empty code)';
-  if (value.trim().length === 0) {
-    return `(whitespace-only code, ${value.length} characters)`;
-  }
-  return (
-    value
-      .replace(/\r\n/g, '\\n')
-      .replace(/[\r\n]/g, '\\n')
-      .replace(/\t/g, '\\t')
-      // Any REMAINING C0 control, NUL included. CommonMark replaces NUL with
-      // U+FFFD, so a value carrying one reaches the page as a different value —
-      // present in the source, absent from every rendered node.
-      .replace(
-        /[\u0000-\u001f\u007f]/g,
-        ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
-      )
-      // Characters that OCCUPY NO SPACE. `trim` does not remove them and they
-      // are not C0, so before this they reached the page and rendered as
-      // nothing: a code of one ZERO WIDTH SPACE became an empty-looking span,
-      // and `claim<ZWSP>7` was pixel-identical to `claim7` while being a
-      // DIFFERENT claim id. Both defeat the rule this module exists for — the
-      // founder must be able to READ what was reported, and two different
-      // values must never look like one. Escaped for the same reason as NUL.
-      //
-      // Scoped to format characters, line/paragraph separators and variation
-      // selectors. Combining marks are deliberately NOT included: they are how
-      // ordinary accented text is written, and escaping them would corrupt
-      // legitimate values to defend against a case that does not exist.
-      .replace(
-        /[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F]/gu,
-        ch => '\\u' + (ch.codePointAt(0) ?? 0).toString(16).padStart(4, '0')
-      )
-  );
+  const shown = value
+    // FIRST, before every other escape, or the escapes escape each other. A
+    // value carrying the six literal characters `\u200b` used to render
+    // identically to one carrying a genuine ZERO WIDTH SPACE, so two different
+    // codes shared display text and a translated group.
+    //
+    // It is also what makes the two sentinels at the bottom unforgeable. Every
+    // literal backslash becomes two, and no escape emitted below is a backslash
+    // followed by an opening bracket, so an escaped value can never begin with
+    // the single `\(` that a sentinel begins with.
+    .replace(/\\/g, '\\\\')
+    // CR, LF and CRLF are THREE different values that used to collapse into one
+    // escape. The round-10 reviewer rendered `claim<CR>7` and `claim<LF>7` into
+    // one document and got two identical appendix lines. Escaped separately,
+    // CRLF falls out as the pair `\r\n`, distinct from either alone.
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\t/g, '\\t')
+    // EVERYTHING that is not a visible graphic character, in one rule.
+    //
+    // Rounds 10 to 13 of independent review each found this same guarantee failing
+    // on a member the previous version had not thought of: a literal backslash,
+    // then CR/LF and the degenerate sentinels, then U+034F and the Hangul fillers,
+    // then the C1 controls and the line/paragraph separators. Every one of those
+    // fixes was a longer hand-written list, and a list of what breaks fails open
+    // forever - the next reviewer only has to find one more member.
+    //
+    // So this is not a list. Every code point has exactly one General_Category,
+    // and `C` (control, format, surrogate, private-use, unassigned) together with
+    // `Z` (every separator) is precisely the complement of the graphic categories
+    // a founder can actually read. `Default_Ignorable_Code_Point` is added on top
+    // because a few characters that DO have a graphic category - U+034F is a mark,
+    // the Hangul fillers are letters - are still specified to render as nothing.
+    // That property is a fallback-display rule, not a definition of invisibility,
+    // which is why it is a supplement here and not the whole rule.
+    //
+    // What survives: letters, marks, numbers, punctuation and symbols. Ordinary
+    // accented text renders as itself, and that is asserted with a control rather
+    // than assumed. U+0020 is the single exception carved out below, because it is
+    // the space the founder reads between words.
+    .replace(/[\p{C}\p{Z}\p{Default_Ignorable_Code_Point}]/gu, ch => {
+      if (ch === ' ') return ch;
+      const point = ch.codePointAt(0) ?? 0;
+      // C0 and DEL keep the shorter form they have always had, so an existing
+      // value carrying a BEL still reads as it did.
+      if (point < 0x20 || point === 0x7f) {
+        return '\\x' + point.toString(16).padStart(2, '0');
+      }
+      return point > 0xffff
+        ? '\\u{' + point.toString(16).padStart(5, '0') + '}'
+        : '\\u' + point.toString(16).padStart(4, '0');
+    });
+
+  // The degenerate cases come AFTER escaping, so each is built from the escaped
+  // form rather than the raw value. Both begin with a single backslash, which no
+  // escaped value can, so an input of a sentinel's own text renders as something
+  // else and the sentinel cannot be forged.
+  if (value.length === 0) return '\\(empty code)';
+  // Every whitespace character except U+0020 is escaped above, so whatever
+  // survives `trim` here is a run of plain spaces and its length names it
+  // exactly. Previously any two whitespace-only values of equal length collided.
+  if (shown.trim().length === 0) return `\\(${shown.length} spaces)`;
+  return shown;
 }
 
 export function inlineCode(value: string): string {
@@ -410,6 +466,13 @@ function matchIn(
     // the producer is sending something this entry was never written to explain.
     // Either way the honest output is the raw code, visibly marked.
     if (params.length !== (entry.paramCount ?? 0)) return null;
+    // Length is not presence. `new Array(1)` has length 1 and no element 0, so a
+    // length comparison alone let a hole reach `meaning`, which indexes `params`
+    // directly and threw. Indexed, not `.some`/`.every`, because those SKIP holes
+    // in a sparse array and would report the absent value as fine.
+    for (let index = 0; index < params.length; index += 1) {
+      if (typeof params[index] !== 'string') return null;
+    }
     const [, ...captures] = found;
     return {
       meaning: entry.meaning(captures, params),

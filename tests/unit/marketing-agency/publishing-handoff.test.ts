@@ -45,6 +45,7 @@ import type { CampaignEvidenceManifest } from '../../../lib/marketing-agency/cam
 const TICK = String.fromCharCode(96);
 const NUL = String.fromCharCode(0);
 const BEL = String.fromCharCode(7);
+const BACKSLASH = String.fromCharCode(92);
 
 /**
  * A code as a test writes one. A bare string is a code that carries no value;
@@ -512,13 +513,11 @@ describe('inlineCode fencing and display sanitising', () => {
   });
 
   it('names an all-whitespace code with its length', () => {
-    expect(inlineCode('   ')).toBe(
-      TICK + '(whitespace-only code, 3 characters)' + TICK
-    );
+    expect(inlineCode('   ')).toBe(TICK + BACKSLASH + '(3 spaces)' + TICK);
   });
 
   it('names an empty value rather than emitting an unrenderable empty span', () => {
-    expect(inlineCode('')).toBe(TICK + '(empty code)' + TICK);
+    expect(inlineCode('')).toBe(TICK + BACKSLASH + '(empty code)' + TICK);
   });
 
   it('preserves edge whitespace that CommonMark would otherwise strip', () => {
@@ -1058,5 +1057,376 @@ describe('round 9 — a value that occupies no space is still readable', () => {
     );
 
     expect(doc).toContain('\\u200b');
+  });
+});
+
+describe('round 10 P2 — an escape cannot be forged and no escape class stops short', () => {
+  /**
+   * Three residuals from the round-10 independent review, filed as BACKLOG rows
+   * 23-25 by #944 and fixed here. Each is written as the collision it produces,
+   * because the rule this module enforces is that two different values must never
+   * look like one — a rule an escape function breaks by being non-injective.
+   *
+   * No invisible character is typed into this file. Every real one is built with
+   * `String.fromCodePoint` and every expected escape is written as its literal
+   * text, so the file itself stays readable and greppable.
+   */
+  const ZWSP = String.fromCodePoint(0x200b);
+  const VS17 = String.fromCodePoint(0xe0100);
+
+  it('escapes a literal backslash, so escape text cannot forge an escape', () => {
+    expect(inlineCode('claim\\u200b7')).toBe(TICK + 'claim\\\\u200b7' + TICK);
+  });
+
+  it('keeps a genuine zero-width space distinct from its literal escape text', () => {
+    // The collision itself. Before the fix both rendered as the same seven characters.
+    expect(inlineCode('claim' + ZWSP + '7')).not.toBe(
+      inlineCode('claim\\u200b7')
+    );
+  });
+
+  it('degrades a sparse params array instead of throwing', () => {
+    // Length matches `paramCount`, but index 0 is a hole, so `meaning` indexed an
+    // absent value and threw where a publishing decision belongs.
+    const sparse = new Array<string>(1);
+
+    expect(() =>
+      explainCode('quality_claim_evidence_missing', sparse)
+    ).not.toThrow();
+    expect(
+      explainCode('quality_claim_evidence_missing', sparse).recognised
+    ).toBe(false);
+  });
+
+  it('escapes a supplementary variation selector', () => {
+    expect(inlineCode(VS17)).toBe(TICK + '\\u{e0100}' + TICK);
+  });
+
+  it('leaves no unescaped supplementary variation selector in the document', () => {
+    // Raw string inequality is NOT the property. Two values already differ as
+    // bytes while the selector is present; what the founder needs is that the
+    // difference is VISIBLE, so the assertion is on the escape reaching the page
+    // and the raw character not surviving into it.
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], { blockers: [{ code: VS17, params: [] }] })
+    );
+
+    expect(doc).toContain('\\u{e0100}');
+    expect(doc).not.toContain(VS17);
+  });
+
+  it('still leaves ordinary accented text alone', () => {
+    // The control, repeated for this block: a widened escape class must not
+    // start corrupting legitimate values.
+    expect(inlineCode('café')).toBe(TICK + 'café' + TICK);
+  });
+});
+
+describe('round 11 - forDisplay is injective, and the reviewer proved it was not', () => {
+  /**
+   * Round-10 independent review returned FAIL on the injectivity claim. Closing
+   * the literal-backslash forgery was necessary and not sufficient: the reviewer
+   * ran Node probes against the transpiled module and produced a document
+   * containing two DISTINCT claim ids rendered as two identical appendix lines.
+   *
+   * Three surviving collision classes, each asserted below:
+   *   - CR, LF and CRLF all collapsed to the single escape for a line feed.
+   *   - The empty sentinel was forgeable by an input of exactly its own text.
+   *   - Whitespace-only values of equal length rendered identically regardless of
+   *     which whitespace they were made of.
+   *
+   * A sentinel now opens with ONE backslash. Escaping doubles every literal
+   * backslash, so no input can produce a single one - that is what makes the
+   * sentinels unforgeable rather than merely unlikely.
+   */
+  const CR = String.fromCharCode(13);
+  const LF = String.fromCharCode(10);
+  const TAB_CHAR = String.fromCharCode(9);
+  const BS = String.fromCharCode(92);
+
+  it('keeps carriage return, line feed and CRLF distinct', () => {
+    const cr = inlineCode('claim' + CR + '7');
+    const lf = inlineCode('claim' + LF + '7');
+    const crlf = inlineCode('claim' + CR + LF + '7');
+
+    expect(new Set([cr, lf, crlf]).size).toBe(3);
+  });
+
+  it('escapes carriage return as its own sequence, not as a line feed', () => {
+    expect(inlineCode('a' + CR + 'b')).toBe(TICK + 'a' + BS + 'rb' + TICK);
+  });
+
+  it('renders an empty code so no literal input can forge it', () => {
+    expect(inlineCode('')).not.toBe(inlineCode('(empty code)'));
+  });
+
+  it('renders a whitespace-only code so no literal input can forge it', () => {
+    expect(inlineCode('   ')).not.toBe(
+      inlineCode('(whitespace-only code, 3 characters)')
+    );
+  });
+
+  it('keeps whitespace-only values of equal length distinct by composition', () => {
+    const spaces = inlineCode('   ');
+    const tabs = inlineCode(TAB_CHAR + TAB_CHAR + TAB_CHAR);
+
+    expect(spaces).not.toBe(tabs);
+  });
+
+  it('renders two distinct claim ids as two distinct appendix lines', () => {
+    // The reviewer's own reproduction, as a regression. Before the fix this
+    // document carried one translated issue and two identical appendix entries.
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], {
+        blockers: [
+          {
+            code: 'quality_claim_evidence_missing',
+            params: ['claim' + CR + '7'],
+          },
+          {
+            code: 'quality_claim_evidence_missing',
+            params: ['claim' + LF + '7'],
+          },
+        ],
+      })
+    );
+
+    expect(doc).toContain('claim' + BS + 'r7');
+    expect(doc).toContain('claim' + BS + 'n7');
+  });
+});
+
+describe('round 12 - nothing that renders as nothing survives, checked exhaustively', () => {
+  /**
+   * Round-11 review returned FAIL with two P1s and both are asserted here.
+   *
+   * The first was found with CoreText: U+034F COMBINING GRAPHEME JOINER and the
+   * Hangul fillers render as blank, are neither format characters nor separators,
+   * and so escaped the hand-written class. The named cases below come from that
+   * reviewer's own rendering evidence, which is why they are worth keeping as
+   * concrete assertions rather than folding entirely into the scan.
+   *
+   * The second was found by mutation: removing ONLY the non-ASCII space
+   * separators left all 72 tests green while U+0020 and U+00A0 collided on the
+   * same sentinel. That is a fix with no control, which the release gate treats
+   * as a P0-class defect in the test suite rather than in the source.
+   *
+   * The scan at the bottom is the answer to both. Sampling characters is what
+   * lost three rounds in a row; it walks the whole code space instead.
+   */
+  const at = (point: number) => String.fromCodePoint(point);
+
+  // Every one of these was demonstrated to render as blank by the round-11
+  // reviewer, using CoreText/Menlo rather than by reading the source.
+  const RENDERS_AS_BLANK: Array<[string, number]> = [
+    ['U+034F COMBINING GRAPHEME JOINER', 0x034f],
+    ['U+115F HANGUL CHOSEONG FILLER', 0x115f],
+    ['U+1160 HANGUL JUNGSEONG FILLER', 0x1160],
+    ['U+3164 HANGUL FILLER', 0x3164],
+    ['U+FFA0 HALFWIDTH HANGUL FILLER', 0xffa0],
+  ];
+
+  it.each(RENDERS_AS_BLANK)('escapes %s', (_name, point) => {
+    const rendered = inlineCode(at(point));
+
+    expect(rendered).not.toContain(at(point));
+    expect(rendered).toContain(BACKSLASH + 'u');
+  });
+
+  it('keeps a claim id carrying an invisible mark distinct from one without', () => {
+    expect(inlineCode('claim' + at(0x034f) + '7')).not.toBe(
+      inlineCode('claim7')
+    );
+  });
+
+  // The collision the surviving mutant reintroduced: both rendered as the same
+  // one-space sentinel, so a non-breaking space and a space were one value.
+  const SPACE_SEPARATORS: Array<[string, number]> = [
+    ['U+00A0 NO-BREAK SPACE', 0x00a0],
+    ['U+1680 OGHAM SPACE MARK', 0x1680],
+    ['U+2000 EN QUAD', 0x2000],
+    ['U+200A HAIR SPACE', 0x200a],
+    ['U+202F NARROW NO-BREAK SPACE', 0x202f],
+    ['U+205F MEDIUM MATHEMATICAL SPACE', 0x205f],
+    ['U+3000 IDEOGRAPHIC SPACE', 0x3000],
+  ];
+
+  it.each(SPACE_SEPARATORS)(
+    'keeps %s distinct from an ordinary space',
+    (_name, point) => {
+      expect(inlineCode(at(point))).not.toBe(inlineCode(' '));
+    }
+  );
+
+  it('still leaves an ordinary combining accent alone', () => {
+    // The control for the whole block. `Default_Ignorable_Code_Point` must not
+    // start swallowing the marks that ordinary accented text is written with, or
+    // the fix has corrupted real values to defend against invisible ones.
+    const composed = 'cafe' + at(0x0301);
+
+    expect(inlineCode(composed)).toBe(TICK + composed + TICK);
+  });
+
+  it('leaves U+2800 BRAILLE PATTERN BLANK alone, the documented exception', () => {
+    // Not a control - it does not exercise the scan. It pins a deliberate ruling:
+    // U+2800 draws blank in most fonts but is a legitimate graphic character, and
+    // escaping it would corrupt real braille to defend a case no producer emits.
+    const braille = at(0x2800);
+
+    expect(inlineCode(braille)).toContain(braille);
+  });
+});
+
+describe('round 13 - escaping is a complete partition, not a longer list', () => {
+  /**
+   * Round-12 review returned FAIL with two P1s, and both were the same lesson.
+   *
+   * The C1 controls U+0080-U+009F are neither default-ignorable nor separators,
+   * so the previous class missed them; the reviewer proved U+0085 renders
+   * identically to nothing across four fonts with CoreText bitmap hashes.
+   *
+   * The second was worse and was in this file: the previous scan asserted only
+   * that the RAW character was absent from the output. Deleting the line or
+   * paragraph separator from the source class left the scan green, because the
+   * unescaped separator was then stripped by `trim` and replaced by the one-space
+   * sentinel - absent from the output, and now colliding with an ordinary space.
+   * Absence was the wrong property. The scan below asserts the escape DECODES BACK
+   * to the code point, which rules out absence, substitution and collision at once.
+   *
+   * Round 13 review then found the scan skipping all 2,048 surrogate code points
+   * on the stated grounds that they are "not scalar values". That was simply
+   * wrong: `String.fromCodePoint` accepts them, a JavaScript string can carry a
+   * lone one, and the renderer already handled them because Cs is part of `C`.
+   * The scan now walks them too, so a mutant narrowing `C` to Cc|Cf|Co|Cn dies.
+   */
+  const at = (point: number) => String.fromCodePoint(point);
+
+  const INVISIBLE_CONTROLS: Array<[string, number]> = [
+    ['U+0080 PAD', 0x0080],
+    ['U+0085 NEL', 0x0085],
+    ['U+009F APC', 0x009f],
+  ];
+
+  it.each(INVISIBLE_CONTROLS)('escapes the C1 control %s', (_name, point) => {
+    expect(inlineCode('claim' + at(point) + '7')).not.toBe(
+      inlineCode('claim7')
+    );
+    expect(inlineCode(at(point))).toBe(
+      TICK + BACKSLASH + 'u00' + point.toString(16) + TICK
+    );
+  });
+
+  const SEPARATORS: Array<[string, number]> = [
+    ['U+2028 LINE SEPARATOR', 0x2028],
+    ['U+2029 PARAGRAPH SEPARATOR', 0x2029],
+  ];
+
+  it.each(SEPARATORS)(
+    'renders %s as its escape, never as the space sentinel',
+    (_name, point) => {
+      // The exact mutant that survived round 12: unescaped, these are stripped by
+      // `trim` and come back as the one-space sentinel, colliding with U+0020.
+      expect(inlineCode(at(point))).toBe(
+        TICK + BACKSLASH + 'u' + point.toString(16) + TICK
+      );
+      expect(inlineCode(at(point))).not.toBe(inlineCode(' '));
+    }
+  );
+
+  it('escapes private-use and unassigned code points', () => {
+    expect(inlineCode(at(0xe000))).toBe(TICK + BACKSLASH + 'ue000' + TICK);
+    expect(inlineCode(at(0x0378))).toBe(TICK + BACKSLASH + 'u0378' + TICK);
+  });
+
+  /**
+   * The scan, shared by the real renderer and by a deliberately broken one.
+   * Returns the code points whose rendering does NOT decode back to themselves.
+   */
+  const scan = (render: (value: string) => string, limit = 8) => {
+    const outsideGraphic = /[\p{C}\p{Z}\p{Default_Ignorable_Code_Point}]/u;
+    // Tab, line feed and carriage return keep their readable two-character forms
+    // rather than a hex escape, so the oracle has to accept those as well. Both
+    // this and the six-digit brace form below were found by the scan failing on
+    // its own first run - the oracle was wrong, not the source.
+    const named: Record<string, number> = { t: 0x09, n: 0x0a, r: 0x0d };
+    const escaped =
+      /^`+ ?\\(?:([tnr])|x([0-9a-f]{2})|u([0-9a-f]{4})|u\{([0-9a-f]{5,6})\}) ?`+$/;
+    const survivors: string[] = [];
+
+    for (let point = 0; point <= 0x10ffff; point += 1) {
+      if (point === 0x20) continue; // the one space a founder must still read
+      const ch = String.fromCodePoint(point);
+      if (!outsideGraphic.test(ch)) continue;
+      const found = escaped.exec(render(ch));
+      let decoded = Number.NaN;
+      if (found) {
+        decoded = found[1]
+          ? named[found[1]]
+          : parseInt(found[2] ?? found[3] ?? found[4], 16);
+      }
+      if (decoded !== point) {
+        if (survivors.length < limit) survivors.push('U+' + point.toString(16));
+      }
+    }
+    return survivors;
+  };
+
+  it('the scan can fail - a renderer that escapes nothing is caught', () => {
+    // Without this, a scan that silently matched everything would look identical
+    // to a clean result. It exercises the same loop, not a different assertion.
+    expect(scan(value => TICK + value + TICK).length).toBeGreaterThan(0);
+  });
+
+  it('the scan can fail - a renderer that substitutes a sentinel is caught', () => {
+    // The round-12 defect exactly: the raw character is gone, and the value has
+    // silently become something that collides with an ordinary space.
+    expect(
+      scan(() => TICK + BACKSLASH + '(1 spaces)' + TICK).length
+    ).toBeGreaterThan(0);
+  });
+
+  it('every code point outside the graphic categories decodes back to itself', () => {
+    expect(scan(inlineCode)).toEqual([]);
+  }, 120000);
+});
+
+describe('round 14 - a lone surrogate is a value too', () => {
+  /**
+   * Round-13 review found the scan excluding surrogates, which left the widest
+   * part of the partition untested. The renderer was right; its control was not.
+   *
+   * The stake is not theoretical. Left unescaped, a lone surrogate does not
+   * survive UTF-8 encoding - it becomes U+FFFD. Two different claim ids and a
+   * genuine U+FFFD would arrive at the founder as the same bytes, which is the
+   * exact failure this module exists to prevent, one layer below the glyph.
+   */
+  const at = (point: number) => String.fromCodePoint(point);
+  const HIGH = 0xd800;
+  const LOW = 0xdc00;
+
+  it('escapes a lone high surrogate', () => {
+    expect(inlineCode(at(HIGH))).toBe(TICK + BACKSLASH + 'ud800' + TICK);
+  });
+
+  it('escapes a lone low surrogate', () => {
+    expect(inlineCode(at(LOW))).toBe(TICK + BACKSLASH + 'udc00' + TICK);
+  });
+
+  it('keeps two lone surrogates and a real U+FFFD distinct through UTF-8', () => {
+    // Unescaped, all three of these encode to the same three bytes. The escape is
+    // what survives the trip to a file, a database column or an HTTP response.
+    const rendered = [at(HIGH), at(HIGH + 1), at(0xfffd)].map(value =>
+      Buffer.from(inlineCode(value)).toString()
+    );
+
+    expect(new Set(rendered).size).toBe(3);
+  });
+
+  it('leaves a WELL-FORMED surrogate pair alone', () => {
+    // The control. A pair is an ordinary supplementary character - U+1F600 is a
+    // symbol, not a control - and escaping it would corrupt legitimate values.
+    const emoji = at(0x1f600);
+
+    expect(inlineCode(emoji)).toBe(TICK + emoji + TICK);
   });
 });
