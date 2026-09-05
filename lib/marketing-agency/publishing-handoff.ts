@@ -59,16 +59,24 @@
  *     space, not a list of the offenders found so far, and it is checked over
  *     every code point rather than on samples.
  *
- *     This is the WEAKER of the two claims and it is bounded by the font: whether
- *     two glyphs draw alike is not something source code can decide. U+2800
- *     BRAILLE PATTERN BLANK is a known unescaped blank, left alone deliberately
- *     because escaping it would corrupt legitimate braille to defend a case no
- *     producer emits. Homoglyphs are out of scope by the same reasoning - the rule
- *     is about invisibility, not confusability.
+ *     WHAT THAT DOES NOT COVER, stated plainly because the earlier version of this
+ *     comment claimed more than it could deliver. A character with a GRAPHIC
+ *     category can still draw no pixels, and whether it does is a property of the
+ *     font, not of Unicode - so no rule written here can decide it. Two are known:
+ *     U+2800 BRAILLE PATTERN BLANK, and U+FFFC OBJECT REPLACEMENT CHARACTER, which
+ *     an independent reviewer found by rendering 159,345 graphic code points in
+ *     four fonts and hashing the bitmaps - it draws nothing in three of them. There
+ *     will be others in other fonts. That is a bound on the guarantee, not a list
+ *     to go on extending; adding those two here would only make this a denylist
+ *     again, and the next reviewer with a fifth font would find a third. Filed as
+ *     BACKLOG row 26 rather than patched. Homoglyphs are out of scope for the same
+ *     reason - the rule is about invisibility, not confusability.
  *
- *     Rounds 10 to 13 each found this failing on one more character the previous
- *     list had missed. The lesson is in the shape of the fix, not its members: a
- *     denylist of what breaks fails open forever.
+ *     Rounds 10 to 14 each found the earlier version of this rule failing on one
+ *     more character the previous list had missed. The lesson is in the shape of
+ *     the fix, not its members: a denylist of what breaks fails open forever, and
+ *     a guarantee that cannot be decided where the guard looks must be narrowed
+ *     rather than chased.
  *   - Nothing here is recovered by parsing. Slot, code and every parameter
  *     arrive as separate fields from the gate, so a colon inside a slot id, a
  *     claim id or an evidence ref carries no meaning and cannot mis-attribute
