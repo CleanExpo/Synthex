@@ -5,6 +5,7 @@ import {
   type AuthorityCampaignPack,
   generateFullAuthorityCampaign,
 } from '../lib/marketing-agency/full-campaign-generator';
+import { renderPublishingHandoff } from '../lib/marketing-agency/publishing-handoff';
 
 const generatedAt = '2026-06-11T11:30:00+10:00';
 const campaignId = 'carsi-restoration-training-authority-2026-06-11';
@@ -529,39 +530,6 @@ ${sections.join('\n')}
 `;
 }
 
-function renderPublishingHandoff(pack: AuthorityCampaignPack) {
-  return `# CARSI Publishing Handoff
-
-## Quality Gate
-
-- Status: ${pack.qualityGate.allowed ? 'pass' : 'blocked'}
-- Overall score: ${pack.qualityGate.overallScore}/100
-- Sources checked: ${pack.qualityGate.sourceSummary.checkedSources}/${pack.qualityGate.sourceSummary.totalSources}
-- Official platform sources: ${pack.qualityGate.sourceSummary.officialPlatformSources}
-- Internal policy sources: ${pack.qualityGate.sourceSummary.internalPolicySources}
-- Blockers: ${pack.qualityGate.blockers.length ? pack.qualityGate.blockers.join(', ') : 'none'}
-- Warnings: ${pack.qualityGate.warnings.length ? pack.qualityGate.warnings.join(', ') : 'none'}
-
-## Owned Media
-
-- Blog: ${pack.ownedMediaGate.allowed ? 'ready' : 'blocked'}
-- Newsletter: ${pack.ownedMediaGate.allowed ? 'ready' : 'blocked'}
-
-## External Social Blocks
-
-${Object.entries(pack.externalPublishBlocks)
-  .map(
-    ([channel, blocks]) =>
-      `### ${channel}\n\n${blocks.map(block => `- ${block}`).join('\n')}`
-  )
-  .join('\n\n')}
-
-## Publish Rule
-
-No external platform post is marked as live unless there is a platform receipt, URL, or API response stored back into the campaign pack.
-`;
-}
-
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -692,7 +660,7 @@ writeFile(
 );
 writeFile(
   path.join(docsRoot, 'publishing-handoff.md'),
-  renderPublishingHandoff(pack)
+  renderPublishingHandoff(pack, { titlePrefix: 'CARSI' })
 );
 writeFile(publicFile, renderPublicHtml(pack));
 
