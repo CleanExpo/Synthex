@@ -46,11 +46,14 @@
  *
  * KNOWN LIMITS, recorded rather than carried silently
  * ---------------------------------------------------
- *   - Display escaping is NOT injective. A real newline and the two literal
- *     characters backslash-n render identically, as do whitespace-only values of
- *     equal length. Every occurrence still reaches the page and is still counted;
- *     what is lost is the ability to tell two such values apart by eye. The raw
- *     bytes remain in the pack the document was rendered from.
+ *   - Display escaping IS injective, and that is load-bearing rather than
+ *     incidental: two different values must never reach the founder looking like
+ *     one. It was NOT injective until round 11, when an independent reviewer
+ *     rendered two distinct claim ids as two identical appendix lines. Four
+ *     collision classes are closed - a literal backslash forging an escape, CR
+ *     and LF and CRLF collapsing into one sequence, the degenerate-value
+ *     sentinels being forgeable by an input of their own text, and whitespace
+ *     that occupies space without being a space. The argument is in `forDisplay`.
  *   - Nothing here is recovered by parsing. Slot, code and every parameter
  *     arrive as separate fields from the gate, so a colon inside a slot id, a
  *     claim id or an evidence ref carries no meaning and cannot mis-attribute
@@ -341,54 +344,74 @@ const EXTERNAL_BLOCK_CODES: CatalogueEntry[] = [
  * exists to prevent, so a pathologically long code is rendered in full.
  */
 function forDisplay(value: string): string {
-  if (value.length === 0) return '(empty code)';
-  if (value.trim().length === 0) {
-    return `(whitespace-only code, ${value.length} characters)`;
-  }
-  return (
-    value
-      // FIRST, before every other escape, or the escapes escape each other. A
-      // value carrying the six literal characters `\u200b` used to render
-      // identically to one carrying a genuine ZERO WIDTH SPACE, so two different
-      // codes shared display text and a translated group. `forDisplay` has to be
-      // injective for the rule below to hold at all.
-      .replace(/\\/g, '\\\\')
-      .replace(/\r\n/g, '\\n')
-      .replace(/[\r\n]/g, '\\n')
-      .replace(/\t/g, '\\t')
-      // Any REMAINING C0 control, NUL included. CommonMark replaces NUL with
-      // U+FFFD, so a value carrying one reaches the page as a different value —
-      // present in the source, absent from every rendered node.
-      .replace(
-        /[\u0000-\u001f\u007f]/g,
-        ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
-      )
-      // Characters that OCCUPY NO SPACE. `trim` does not remove them and they
-      // are not C0, so before this they reached the page and rendered as
-      // nothing: a code of one ZERO WIDTH SPACE became an empty-looking span,
-      // and `claim<ZWSP>7` was pixel-identical to `claim7` while being a
-      // DIFFERENT claim id. Both defeat the rule this module exists for — the
-      // founder must be able to READ what was reported, and two different
-      // values must never look like one. Escaped for the same reason as NUL.
-      //
-      // Scoped to format characters, line/paragraph separators and variation
-      // selectors. Combining marks are deliberately NOT included: they are how
-      // ordinary accented text is written, and escaping them would corrupt
-      // legitimate values to defend against a case that does not exist.
-      //
-      // The range runs past U+FE0F to the SUPPLEMENTARY variation selectors
-      // U+E0100-U+E01EF, which fall outside both the BMP range and `\p{Cf}` and
-      // so used to pass through untouched. A supplementary code point is written
-      // in brace form: `\\uE0100` is not an escape for U+E0100, it is an escape
-      // for U+E010 followed by `0`, and a founder must be able to read back what
-      // was actually reported.
-      .replace(/[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/gu, ch => {
+  const shown = value
+    // FIRST, before every other escape, or the escapes escape each other. A
+    // value carrying the six literal characters `\u200b` used to render
+    // identically to one carrying a genuine ZERO WIDTH SPACE, so two different
+    // codes shared display text and a translated group.
+    //
+    // It is also what makes the two sentinels at the bottom unforgeable. Every
+    // literal backslash becomes two, and no escape emitted below is a backslash
+    // followed by an opening bracket, so an escaped value can never begin with
+    // the single `\(` that a sentinel begins with.
+    .replace(/\\/g, '\\\\')
+    // CR, LF and CRLF are THREE different values that used to collapse into one
+    // escape. The round-10 reviewer rendered `claim<CR>7` and `claim<LF>7` into
+    // one document and got two identical appendix lines. Escaped separately,
+    // CRLF falls out as the pair `\r\n`, distinct from either alone.
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\t/g, '\\t')
+    // Any REMAINING C0 control, NUL included. CommonMark replaces NUL with
+    // U+FFFD, so a value carrying one reaches the page as a different value -
+    // present in the source, absent from every rendered node.
+    .replace(
+      /[\u0000-\u001f\u007f]/g,
+      ch => '\\x' + ch.charCodeAt(0).toString(16).padStart(2, '0')
+    )
+    // Characters that OCCUPY NO SPACE, plus the ones that occupy space without
+    // being a space. `trim` does not remove the first group and they are not C0,
+    // so before this they reached the page and rendered as nothing: a code of one
+    // ZERO WIDTH SPACE became an empty-looking span, and `claim<ZWSP>7` was
+    // pixel-identical to `claim7` while being a DIFFERENT claim id. Both defeat
+    // the rule this module exists for - the founder must be able to READ what was
+    // reported, and two different values must never look like one.
+    //
+    // Combining marks are deliberately NOT included: they are how ordinary
+    // accented text is written, and escaping them would corrupt legitimate values
+    // to defend against a case that does not exist.
+    //
+    // The range runs past U+FE0F to the SUPPLEMENTARY variation selectors
+    // U+E0100-U+E01EF, which fall outside both the BMP range and Cf. A
+    // supplementary code point is written in brace form, because `\uE0100` is not
+    // an escape for U+E0100 - it is one for U+E010 followed by a zero, and a
+    // founder must be able to read back what was actually reported.
+    //
+    // The trailing members are the space separators OTHER than U+0020. Those do
+    // occupy space, so they are not invisible, but they are indistinguishable
+    // from an ordinary space by eye, which is the same defect wearing a different
+    // hat. Escaping them is also what lets the whitespace sentinel below name a
+    // value exactly rather than by length alone.
+    .replace(
+      /[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F\u{E0100}-\u{E01EF}\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000]/gu,
+      ch => {
         const point = ch.codePointAt(0) ?? 0;
         return point > 0xffff
           ? '\\u{' + point.toString(16).padStart(5, '0') + '}'
           : '\\u' + point.toString(16).padStart(4, '0');
-      })
-  );
+      }
+    );
+
+  // The degenerate cases come AFTER escaping, so each is built from the escaped
+  // form rather than the raw value. Both begin with a single backslash, which no
+  // escaped value can, so an input of a sentinel's own text renders as something
+  // else and the sentinel cannot be forged.
+  if (value.length === 0) return '\\(empty code)';
+  // Every whitespace character except U+0020 is escaped above, so whatever
+  // survives `trim` here is a run of plain spaces and its length names it
+  // exactly. Previously any two whitespace-only values of equal length collided.
+  if (shown.trim().length === 0) return `\\(${shown.length} spaces)`;
+  return shown;
 }
 
 export function inlineCode(value: string): string {

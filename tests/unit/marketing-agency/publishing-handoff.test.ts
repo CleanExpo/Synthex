@@ -45,6 +45,7 @@ import type { CampaignEvidenceManifest } from '../../../lib/marketing-agency/cam
 const TICK = String.fromCharCode(96);
 const NUL = String.fromCharCode(0);
 const BEL = String.fromCharCode(7);
+const BACKSLASH = String.fromCharCode(92);
 
 /**
  * A code as a test writes one. A bare string is a code that carries no value;
@@ -512,13 +513,11 @@ describe('inlineCode fencing and display sanitising', () => {
   });
 
   it('names an all-whitespace code with its length', () => {
-    expect(inlineCode('   ')).toBe(
-      TICK + '(whitespace-only code, 3 characters)' + TICK
-    );
+    expect(inlineCode('   ')).toBe(TICK + BACKSLASH + '(3 spaces)' + TICK);
   });
 
   it('names an empty value rather than emitting an unrenderable empty span', () => {
-    expect(inlineCode('')).toBe(TICK + '(empty code)' + TICK);
+    expect(inlineCode('')).toBe(TICK + BACKSLASH + '(empty code)' + TICK);
   });
 
   it('preserves edge whitespace that CommonMark would otherwise strip', () => {
@@ -1120,5 +1119,79 @@ describe('round 10 P2 — an escape cannot be forged and no escape class stops s
     // The control, repeated for this block: a widened escape class must not
     // start corrupting legitimate values.
     expect(inlineCode('café')).toBe(TICK + 'café' + TICK);
+  });
+});
+
+describe('round 11 - forDisplay is injective, and the reviewer proved it was not', () => {
+  /**
+   * Round-10 independent review returned FAIL on the injectivity claim. Closing
+   * the literal-backslash forgery was necessary and not sufficient: the reviewer
+   * ran Node probes against the transpiled module and produced a document
+   * containing two DISTINCT claim ids rendered as two identical appendix lines.
+   *
+   * Three surviving collision classes, each asserted below:
+   *   - CR, LF and CRLF all collapsed to the single escape for a line feed.
+   *   - The empty sentinel was forgeable by an input of exactly its own text.
+   *   - Whitespace-only values of equal length rendered identically regardless of
+   *     which whitespace they were made of.
+   *
+   * A sentinel now opens with ONE backslash. Escaping doubles every literal
+   * backslash, so no input can produce a single one - that is what makes the
+   * sentinels unforgeable rather than merely unlikely.
+   */
+  const CR = String.fromCharCode(13);
+  const LF = String.fromCharCode(10);
+  const TAB_CHAR = String.fromCharCode(9);
+  const BS = String.fromCharCode(92);
+
+  it('keeps carriage return, line feed and CRLF distinct', () => {
+    const cr = inlineCode('claim' + CR + '7');
+    const lf = inlineCode('claim' + LF + '7');
+    const crlf = inlineCode('claim' + CR + LF + '7');
+
+    expect(new Set([cr, lf, crlf]).size).toBe(3);
+  });
+
+  it('escapes carriage return as its own sequence, not as a line feed', () => {
+    expect(inlineCode('a' + CR + 'b')).toBe(TICK + 'a' + BS + 'rb' + TICK);
+  });
+
+  it('renders an empty code so no literal input can forge it', () => {
+    expect(inlineCode('')).not.toBe(inlineCode('(empty code)'));
+  });
+
+  it('renders a whitespace-only code so no literal input can forge it', () => {
+    expect(inlineCode('   ')).not.toBe(
+      inlineCode('(whitespace-only code, 3 characters)')
+    );
+  });
+
+  it('keeps whitespace-only values of equal length distinct by composition', () => {
+    const spaces = inlineCode('   ');
+    const tabs = inlineCode(TAB_CHAR + TAB_CHAR + TAB_CHAR);
+
+    expect(spaces).not.toBe(tabs);
+  });
+
+  it('renders two distinct claim ids as two distinct appendix lines', () => {
+    // The reviewer's own reproduction, as a regression. Before the fix this
+    // document carried one translated issue and two identical appendix entries.
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], {
+        blockers: [
+          {
+            code: 'quality_claim_evidence_missing',
+            params: ['claim' + CR + '7'],
+          },
+          {
+            code: 'quality_claim_evidence_missing',
+            params: ['claim' + LF + '7'],
+          },
+        ],
+      })
+    );
+
+    expect(doc).toContain('claim' + BS + 'r7');
+    expect(doc).toContain('claim' + BS + 'n7');
   });
 });
