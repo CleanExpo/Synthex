@@ -1060,3 +1060,65 @@ describe('round 9 — a value that occupies no space is still readable', () => {
     expect(doc).toContain('\\u200b');
   });
 });
+
+describe('round 10 P2 — an escape cannot be forged and no escape class stops short', () => {
+  /**
+   * Three residuals from the round-10 independent review, filed as BACKLOG rows
+   * 23-25 by #944 and fixed here. Each is written as the collision it produces,
+   * because the rule this module enforces is that two different values must never
+   * look like one — a rule an escape function breaks by being non-injective.
+   *
+   * No invisible character is typed into this file. Every real one is built with
+   * `String.fromCodePoint` and every expected escape is written as its literal
+   * text, so the file itself stays readable and greppable.
+   */
+  const ZWSP = String.fromCodePoint(0x200b);
+  const VS17 = String.fromCodePoint(0xe0100);
+
+  it('escapes a literal backslash, so escape text cannot forge an escape', () => {
+    expect(inlineCode('claim\\u200b7')).toBe(TICK + 'claim\\\\u200b7' + TICK);
+  });
+
+  it('keeps a genuine zero-width space distinct from its literal escape text', () => {
+    // The collision itself. Before the fix both rendered as the same seven characters.
+    expect(inlineCode('claim' + ZWSP + '7')).not.toBe(
+      inlineCode('claim\\u200b7')
+    );
+  });
+
+  it('degrades a sparse params array instead of throwing', () => {
+    // Length matches `paramCount`, but index 0 is a hole, so `meaning` indexed an
+    // absent value and threw where a publishing decision belongs.
+    const sparse = new Array<string>(1);
+
+    expect(() =>
+      explainCode('quality_claim_evidence_missing', sparse)
+    ).not.toThrow();
+    expect(
+      explainCode('quality_claim_evidence_missing', sparse).recognised
+    ).toBe(false);
+  });
+
+  it('escapes a supplementary variation selector', () => {
+    expect(inlineCode(VS17)).toBe(TICK + '\\u{e0100}' + TICK);
+  });
+
+  it('leaves no unescaped supplementary variation selector in the document', () => {
+    // Raw string inequality is NOT the property. Two values already differ as
+    // bytes while the selector is present; what the founder needs is that the
+    // difference is VISIBLE, so the assertion is on the escape reaching the page
+    // and the raw character not surviving into it.
+    const doc = renderPublishingHandoff(
+      packWithDrafts([], { blockers: [{ code: VS17, params: [] }] })
+    );
+
+    expect(doc).toContain('\\u{e0100}');
+    expect(doc).not.toContain(VS17);
+  });
+
+  it('still leaves ordinary accented text alone', () => {
+    // The control, repeated for this block: a widened escape class must not
+    // start corrupting legitimate values.
+    expect(inlineCode('café')).toBe(TICK + 'café' + TICK);
+  });
+});

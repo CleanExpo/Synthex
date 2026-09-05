@@ -347,6 +347,12 @@ function forDisplay(value: string): string {
   }
   return (
     value
+      // FIRST, before every other escape, or the escapes escape each other. A
+      // value carrying the six literal characters `\u200b` used to render
+      // identically to one carrying a genuine ZERO WIDTH SPACE, so two different
+      // codes shared display text and a translated group. `forDisplay` has to be
+      // injective for the rule below to hold at all.
+      .replace(/\\/g, '\\\\')
       .replace(/\r\n/g, '\\n')
       .replace(/[\r\n]/g, '\\n')
       .replace(/\t/g, '\\t')
@@ -369,10 +375,19 @@ function forDisplay(value: string): string {
       // selectors. Combining marks are deliberately NOT included: they are how
       // ordinary accented text is written, and escaping them would corrupt
       // legitimate values to defend against a case that does not exist.
-      .replace(
-        /[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F]/gu,
-        ch => '\\u' + (ch.codePointAt(0) ?? 0).toString(16).padStart(4, '0')
-      )
+      //
+      // The range runs past U+FE0F to the SUPPLEMENTARY variation selectors
+      // U+E0100-U+E01EF, which fall outside both the BMP range and `\p{Cf}` and
+      // so used to pass through untouched. A supplementary code point is written
+      // in brace form: `\\uE0100` is not an escape for U+E0100, it is an escape
+      // for U+E010 followed by `0`, and a founder must be able to read back what
+      // was actually reported.
+      .replace(/[\p{Cf}\p{Zl}\p{Zp}\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/gu, ch => {
+        const point = ch.codePointAt(0) ?? 0;
+        return point > 0xffff
+          ? '\\u{' + point.toString(16).padStart(5, '0') + '}'
+          : '\\u' + point.toString(16).padStart(4, '0');
+      })
   );
 }
 
@@ -410,6 +425,13 @@ function matchIn(
     // the producer is sending something this entry was never written to explain.
     // Either way the honest output is the raw code, visibly marked.
     if (params.length !== (entry.paramCount ?? 0)) return null;
+    // Length is not presence. `new Array(1)` has length 1 and no element 0, so a
+    // length comparison alone let a hole reach `meaning`, which indexes `params`
+    // directly and threw. Indexed, not `.some`/`.every`, because those SKIP holes
+    // in a sparse array and would report the absent value as fine.
+    for (let index = 0; index < params.length; index += 1) {
+      if (typeof params[index] !== 'string') return null;
+    }
     const [, ...captures] = found;
     return {
       meaning: entry.meaning(captures, params),
