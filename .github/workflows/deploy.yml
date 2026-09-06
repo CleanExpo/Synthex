@@ -149,6 +149,73 @@ jobs:
           curl -s -X POST "$SLACK_WEBHOOK_URL" -H "Content-Type: application/json" -d "{\"attachments\":[{\"text\":\"Production deployment ${STATUS} for ${{ github.sha }}\",\"color\":\"${COLOR}\"}]}" || true
 
   # -------------------------------------------------------
+  # Post-deploy: production smoke, BOUND TO THE DEPLOYED COMMIT
+  # -------------------------------------------------------
+  # Why this exists: until now nothing verified production after a deploy. The
+  # only post-deploy job was Lighthouse, which is continue-on-error with an
+  # `lhci assert ... || true`, so a deploy that shipped a broken site still
+  # reported success. "Deployed" was never the same claim as "working".
+  #
+  # This job is deliberately NOT continue-on-error. If it cannot prove the
+  # release is live and healthy, the workflow goes red.
+  #
+  # EXPECTED_GIT_SHA is the point. Without it, the smoke would happily pass
+  # against the PREVIOUS release still being served - a green check proving
+  # nothing about the commit that just deployed. Verified both ways before
+  # wiring: with the true SHA the script exits 0 (8/8), and with a wrong SHA it
+  # exits 1 naming the mismatch ("expected buildId deadbee, got 1ae76da").
+  verify-production:
+    name: Verify Production
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # Vercel returns from `deploy` before the production alias necessarily
+      # serves the new build everywhere. Asserting immediately would race that
+      # propagation and make this gate flaky - and a flaky required gate is how
+      # `continue-on-error` gets added back. So wait for the release to actually
+      # appear, with a bounded budget, and fail loudly if it never does.
+      - name: Wait for the production alias to serve this commit
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          short="${EXPECTED_SHA:0:7}"
+          echo "Waiting for /api/health to report buildId ${short}"
+          for attempt in $(seq 1 30); do
+            body=$(curl -fsS --max-time 20 https://synthex.social/api/health || true)
+            got=$(printf '%s' "$body" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{process.stdout.write(String(JSON.parse(s).buildId||""))}catch{process.stdout.write("")}})')
+            if [ "$got" = "$short" ]; then
+              echo "Release ${short} is live after ${attempt} attempt(s)."
+              exit 0
+            fi
+            echo "  attempt ${attempt}: serving '${got:-<unreadable>}', want '${short}'"
+            sleep 10
+          done
+          echo "FAIL: production never served ${short} within the budget."
+          echo "The deploy reported success but the release is not being served."
+          exit 1
+
+      - name: Public production smoke, bound to this release
+        env:
+          EXPECTED_GIT_SHA: ${{ github.sha }}
+          BASE_URL: https://synthex.social
+        run: node scripts/verify-deployment.js
+
+      # Complementary surface: verify-deployment.js covers health probes,
+      # security headers and unauthenticated rejection; this covers the public
+      # pages (/, /login, /pricing) that it does not.
+      - name: Public page smoke
+        env:
+          BASE_URL: https://synthex.social
+        run: node scripts/smoke-test.mjs
+
+  # -------------------------------------------------------
   # Post-deploy: Lighthouse performance test
   # -------------------------------------------------------
   lighthouse:
