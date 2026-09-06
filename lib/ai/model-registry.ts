@@ -36,6 +36,19 @@ export interface ModelConfig {
   supportsTools: boolean;
   supportsStreaming: boolean;
 
+  /**
+   * Explicit tie-break for getLatestModel, higher wins. Optional: models that omit
+   * it sort as 0.
+   *
+   * Exists because releaseDate alone is not a total order. Two models of the same
+   * generation can share a release date, and when they do, picking "the latest" by
+   * date alone leaves the winner decided by array position under a stable sort —
+   * i.e. by accident. Reordering the array, or a JS engine whose sort is not
+   * stable, would silently change which model every caller of getLatestModel gets.
+   * Set this whenever two entries for one provider share a releaseDate.
+   */
+  precedence?: number;
+
   // Status
   isDeprecated: boolean;
   deprecatedDate?: Date;
@@ -108,6 +121,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       name: 'Claude Opus 5',
       releaseDate: new Date('2026-06-24'),
       tier: 'latest',
+      precedence: 20,
       capabilities: [
         'text',
         'vision',
@@ -128,6 +142,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       name: 'Claude Sonnet 5',
       releaseDate: new Date('2026-06-24'),
       tier: 'latest',
+      precedence: 10,
       capabilities: [
         'text',
         'vision',
@@ -542,17 +557,32 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
  * Get the latest model for a provider
  * Returns the most recent non-deprecated model in 'latest' tier
  */
+/**
+ * Total order over candidate models: newest releaseDate first, then explicit
+ * precedence, then id. Never returns 0 for two distinct models, so the winner is
+ * fully determined by the data and not by array position or sort stability.
+ */
+export function byPreference(a: ModelConfig, b: ModelConfig): number {
+  const byDate = b.releaseDate.getTime() - a.releaseDate.getTime();
+  if (byDate !== 0) return byDate;
+
+  const byPrecedence = (b.precedence ?? 0) - (a.precedence ?? 0);
+  if (byPrecedence !== 0) return byPrecedence;
+
+  return a.id.localeCompare(b.id);
+}
+
 export function getLatestModel(provider: AIProvider): ModelConfig {
   const models = LATEST_MODELS[provider];
   const latest = models
     .filter(m => !m.isDeprecated && m.tier === 'latest')
-    .sort((a, b) => b.releaseDate.getTime() - a.releaseDate.getTime())[0];
+    .sort(byPreference)[0];
 
   if (!latest) {
     // Fallback to production tier if no latest available
     const production = models
       .filter(m => !m.isDeprecated && m.tier === 'production')
-      .sort((a, b) => b.releaseDate.getTime() - a.releaseDate.getTime())[0];
+      .sort(byPreference)[0];
 
     if (!production) {
       throw new Error(`No available models for provider: ${provider}`);
