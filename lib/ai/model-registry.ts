@@ -4,7 +4,7 @@
  * Central registry of the latest available models from each LLM provider.
  * This is the source of truth for which models SYNTHEX uses system-wide.
  *
- * Updated: 2026-03-22
+ * Updated: 2026-09-06
  * Critical: This file must be updated whenever new models become available
  */
 
@@ -44,7 +44,7 @@ export interface ModelConfig {
 
 /**
  * OFFICIAL MODEL REGISTRY
- * Last updated: 2026-03-22
+ * Last updated: 2026-09-06
  *
  * ⚠️ CRITICAL: This registry is the system's source of truth
  * Any model NOT in this registry will be rejected by the system
@@ -96,11 +96,17 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
   ],
 
   anthropic: [
+    // Current generation. `releaseDate` here is a DOCUMENTED LOWER BOUND, not an
+    // announced launch date: 2026-06-24 is the cache date of the Anthropic model
+    // table bundled with Claude Code's `claude-api` skill, which already lists both
+    // `claude-opus-5` and `claude-sonnet-5`. The field only drives recency ordering
+    // in getLatestModel(), so a lower bound is correct and honest; do not present
+    // it as a release announcement.
     {
-      id: 'claude-opus-4-6',
+      id: 'claude-opus-5',
       provider: 'anthropic',
-      name: 'Claude Opus 4.6',
-      releaseDate: new Date('2026-03-01'),
+      name: 'Claude Opus 5',
+      releaseDate: new Date('2026-06-24'),
       tier: 'latest',
       capabilities: [
         'text',
@@ -110,7 +116,47 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
         'adaptive-thinking',
       ],
       contextWindow: 1000000,
-      costPer1kTokens: { input: 0.015, output: 0.075 },
+      costPer1kTokens: { input: 0.005, output: 0.025 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'claude-sonnet-5',
+      provider: 'anthropic',
+      name: 'Claude Sonnet 5',
+      releaseDate: new Date('2026-06-24'),
+      tier: 'latest',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'adaptive-thinking',
+      ],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.002, output: 0.01 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'claude-opus-4-6',
+      provider: 'anthropic',
+      name: 'Claude Opus 4.6',
+      releaseDate: new Date('2026-03-01'),
+      tier: 'production',
+      capabilities: [
+        'text',
+        'vision',
+        'tools',
+        'streaming',
+        'adaptive-thinking',
+      ],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.005, output: 0.025 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
@@ -121,7 +167,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       provider: 'anthropic',
       name: 'Claude Sonnet 4.6',
       releaseDate: new Date('2026-03-01'),
-      tier: 'latest',
+      tier: 'production',
       capabilities: [
         'text',
         'vision',
@@ -144,7 +190,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       tier: 'production',
       capabilities: ['text', 'vision', 'tools', 'streaming'],
       contextWindow: 200000,
-      costPer1kTokens: { input: 0.0008, output: 0.004 },
+      costPer1kTokens: { input: 0.001, output: 0.005 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
