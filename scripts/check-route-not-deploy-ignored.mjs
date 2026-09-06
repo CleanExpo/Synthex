@@ -53,7 +53,14 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, copyFileSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  copyFileSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -65,8 +72,14 @@ const vercelignore = join(repoRoot, '.vercelignore');
 
 /** Filenames that make a directory a routable surface in the Next.js App Router. */
 const ROUTE_FILES = new Set([
-  'page.tsx', 'page.ts', 'page.jsx', 'page.js',
-  'route.tsx', 'route.ts', 'route.jsx', 'route.js',
+  'page.tsx',
+  'page.ts',
+  'page.jsx',
+  'page.js',
+  'route.tsx',
+  'route.ts',
+  'route.jsx',
+  'route.js',
 ]);
 
 /** Collect every route-defining file under app/. */
@@ -93,13 +106,24 @@ const appDir = join(repoRoot, 'app');
 try {
   statSync(appDir);
 } catch {
-  console.error('check-route-not-deploy-ignored: no app/ directory found — nothing to check.');
-  process.exit(0);
+  // A guard that cannot find its subject has NOT passed - it failed to run. Exiting 0 here
+  // made the whole check a vacuous pass: pointed at any tree without app/, it reported green
+  // without validating a single route. Found by independent review of a9f76cfd8 and
+  // reproduced with `node scripts/check-route-not-deploy-ignored.mjs <repo-without-app>`,
+  // which exited 0. The routes.length === 0 branch below already refused a vacuous pass;
+  // this branch is now consistent with it.
+  console.error(
+    'check-route-not-deploy-ignored: no app/ directory found at ' + appDir + '.'
+  );
+  console.error('The check could not run, which is a FAILURE, not a pass.');
+  process.exit(1);
 }
 
 const routes = collectRoutes(appDir);
 if (routes.length === 0) {
-  console.error('check-route-not-deploy-ignored: found 0 route files under app/. That is itself suspicious — failing rather than reporting a vacuous pass.');
+  console.error(
+    'check-route-not-deploy-ignored: found 0 route files under app/. That is itself suspicious — failing rather than reporting a vacuous pass.'
+  );
   process.exit(1);
 }
 
@@ -122,12 +146,20 @@ try {
   const out = execFileSync('git', ['-C', sandbox, 'check-ignore', ...routes], {
     encoding: 'utf8',
   });
-  ignored = out.split('\n').map(s => s.trim()).filter(Boolean);
+  ignored = out
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean);
 } catch (err) {
   if (err.status === 1) {
-    ignored = String(err.stdout || '').split('\n').map(s => s.trim()).filter(Boolean);
+    ignored = String(err.stdout || '')
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
   } else {
-    console.error('check-route-not-deploy-ignored: git check-ignore failed to run.');
+    console.error(
+      'check-route-not-deploy-ignored: git check-ignore failed to run.'
+    );
     console.error(err.message);
     process.exit(1);
   }
@@ -135,19 +167,31 @@ try {
 
 if (ignored.length > 0) {
   console.error('');
-  console.error('DEPLOY-IGNORED ROUTES — these files define routes but .vercelignore');
-  console.error('excludes them from the deployment bundle. They will 404 in production');
+  console.error(
+    'DEPLOY-IGNORED ROUTES — these files define routes but .vercelignore'
+  );
+  console.error(
+    'excludes them from the deployment bundle. They will 404 in production'
+  );
   console.error('while every local check passes.');
   console.error('');
   for (const p of ignored) console.error(`  ${p}`);
   console.error('');
   console.error(`${ignored.length} of ${routes.length} route files affected.`);
   console.error('');
-  console.error('Almost always the cause is an UNANCHORED pattern in .vercelignore.');
-  console.error('A bare `docs` matches app/docs/ as well as the top-level docs/.');
-  console.error('Anchor it to the repo root — write `/docs` instead of `docs`.');
+  console.error(
+    'Almost always the cause is an UNANCHORED pattern in .vercelignore.'
+  );
+  console.error(
+    'A bare `docs` matches app/docs/ as well as the top-level docs/.'
+  );
+  console.error(
+    'Anchor it to the repo root — write `/docs` instead of `docs`.'
+  );
   console.error('');
   process.exit(1);
 }
 
-console.log(`check-route-not-deploy-ignored: OK — ${routes.length} route files, none excluded by .vercelignore.`);
+console.log(
+  `check-route-not-deploy-ignored: OK — ${routes.length} route files, none excluded by .vercelignore.`
+);
