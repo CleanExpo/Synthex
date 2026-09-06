@@ -6,6 +6,43 @@
 const BASE_URL = process.env.BASE_URL || 'https://synthex.social';
 const TIMEOUT_MS = 10000;
 
+/**
+ * A page title must match EXACTLY, end to end - not merely start with the
+ * healthy prefix.
+ *
+ * A start-anchored /^Login \| Synthex/i looks strict and is not. It accepts
+ * "Login | Synthex | SERVICE DEGRADED" and "Pilot Access | Synthex | OUTAGE",
+ * because an unanchored tail leaves the whole end of the string unjudged. An
+ * independent review demonstrated this against the real script: planted
+ * degraded titles with status 200 and correct final paths produced 7/7 passed
+ * and exit 0. Soft-404s and redirects were caught; a degraded page that kept
+ * the prefix was not. This runs in the REQUIRED post-deploy job, so that green
+ * was the entire gate - the same false-green class this script exists to close,
+ * surviving one layer further in.
+ *
+ * Production titles, measured live 2026-09-06 (curl of the deployed site):
+ *   /         Free Marketing Opportunity Map | Synthex
+ *   /login    Login | Synthex | SYNTHEX
+ *   /pricing  Pilot Access | Synthex | SYNTHEX
+ *
+ * So the real shape is "<subject> | Synthex" with an OPTIONAL trailing
+ * "| SYNTHEX" from the title template. Both are permitted; a third segment
+ * that is anything else is not. Note that naively end-anchoring to
+ * /^Login \| Synthex$/i would have broken this gate against healthy
+ * production - the suffix is real, and had to be measured rather than assumed.
+ *
+ * Built as a helper rather than three hand-written regexes on purpose: the
+ * defect was a missing anchor, and a hand-anchored pattern per route means the
+ * next route added is one forgotten `$` away from reopening the hole. Here the
+ * anchoring is structural and a new route inherits it.
+ */
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const exactTitle = subject =>
+  new RegExp(
+    `^${escapeRe(subject)}\\s*\\|\\s*Synthex(?:\\s*\\|\\s*SYNTHEX)?$`,
+    'i'
+  );
+
 // `isHome` supplies the baseline document; `distinctFromHome` marks a page that
 // must NOT be the homepage. Order matters: '/' is fetched before its dependants.
 const tests = [
@@ -17,21 +54,21 @@ const tests = [
     path: '/',
     acceptStatus: [200],
     isHome: true,
-    expectTitle: /^Free Marketing Opportunity Map \| Synthex/i,
+    expectTitle: exactTitle('Free Marketing Opportunity Map'),
   },
   {
     method: 'GET',
     path: '/login',
     acceptStatus: [200],
     distinctFromHome: true,
-    expectTitle: /^Login \| Synthex/i,
+    expectTitle: exactTitle('Login'),
   },
   {
     method: 'GET',
     path: '/pricing',
     acceptStatus: [200],
     distinctFromHome: true,
-    expectTitle: /^Pilot Access \| Synthex/i,
+    expectTitle: exactTitle('Pilot Access'),
   },
   { method: 'HEAD', path: '/api/health', acceptStatus: [200] },
 ];
@@ -89,20 +126,41 @@ const ALLOWED_FINAL_PATHS = {};
  * home-only comparison. Each page therefore also carries a POSITIVE
  * `expectTitle` pattern.
  *
- * THE PATTERNS ARE ANCHORED THROUGH THE SEPARATOR, and that is the point. They
- * used to match only the route's SUBJECT (/login/i, /pilot access|pricing/i),
- * which certified soft-error documents: "Login unavailable | Synthex" contains
- * "login", so an incident page served at /login passed the required gate. A
- * subject word proves a page is ABOUT the route; it does not prove the healthy
- * document rendered. Measured on production 2026-09-02:
- *     /        "Free Marketing Opportunity Map | Synthex"  ^Free Marketing Opportunity Map \| Synthex
- *     /login   "Login | Synthex | SYNTHEX"                 ^Login \| Synthex
- *     /pricing "Pilot Access | Synthex | SYNTHEX"          ^Pilot Access \| Synthex
+ * THE PATTERNS ARE ANCHORED AT BOTH ENDS, and that is the point. They went
+ * through two rounds of being not-strict-enough, and both are recorded because
+ * each looked sufficient at the time.
+ *
+ * Round one: they matched only the route's SUBJECT (/login/i,
+ * /pilot access|pricing/i), which certified soft-error documents. "Login
+ * unavailable | Synthex" contains "login", so an incident page served at /login
+ * passed the required gate. A subject word proves a page is ABOUT the route; it
+ * does not prove the healthy document rendered.
+ *
+ * Round two: anchoring the START through the separator (^Login \| Synthex) closed
+ * that and left a subtler hole. An unanchored TAIL leaves the end of the string
+ * unjudged, so a degraded page that KEEPS the healthy prefix and appends its own
+ * segment still matched. An independent review planted
+ * "Login | Synthex | SERVICE DEGRADED" and "Pilot Access | Synthex | OUTAGE"
+ * against this script and got 7/7 passed, exit 0.
+ *
+ * The general lesson, and the reason `exactTitle` above is a helper rather than
+ * three hand-written regexes: an anchored pattern with a free region is not
+ * anchored. Judging the head of a string while leaving the tail unconstrained
+ * moves the unjudged region rather than removing it.
+ *
+ * Measured on production 2026-09-06:
+ *     /        "Free Marketing Opportunity Map | Synthex"  exactTitle('Free Marketing Opportunity Map')
+ *     /login   "Login | Synthex | SYNTHEX"                 exactTitle('Login')
+ *     /pricing "Pilot Access | Synthex | SYNTHEX"          exactTitle('Pilot Access')
  *     404      "Synthex | Marketing Command Center"        matches NONE
  * The shapes that used to pass and now do not:
- *     "Login unavailable | Synthex"    fails ^Login \| Synthex
- *     "Pricing unavailable | Synthex"  fails ^Pilot Access \| Synthex
- *     "Not Found | Synthex" at /       fails ^Free Marketing Opportunity Map \| Synthex
+ *     "Login unavailable | Synthex"           wrong subject
+ *     "Pricing unavailable | Synthex"         wrong subject
+ *     "Not Found | Synthex" at /              wrong subject
+ *     "Login | Synthex | SERVICE DEGRADED"    healthy prefix, tail rejected
+ *     "Pilot Access | Synthex | OUTAGE"       healthy prefix, tail rejected
+ * Every one of these is planted as a shape in smoke-identity-falsification.mjs,
+ * and each was watched failing against a mutant before being trusted.
  *
  * The homepage carries its own expectTitle now. It used to be accepted for
  * having ANY non-empty title, so a soft-404 homepage passed AND then became the

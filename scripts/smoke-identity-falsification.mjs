@@ -137,6 +137,35 @@ const SHAPES = {
     },
   },
 
+  'prefix-preserving-degraded-titles': {
+    expect: 1,
+    why: 'the residual false green a start-anchored /^Login \\| Synthex/i left open. A degraded page that KEEPS the healthy prefix and appends its own third segment matched, so an incident page returned 7/7 and exit 0 from the required gate. The earlier soft-error shape does not cover this: it replaces the subject word ("Login unavailable"), whereas this attack preserves the entire healthy prefix through "| Synthex" and only adds to the tail. Different mechanism, so it needs its own shape - one mutant per hole, or the other shape appears to be doing this work',
+    pages: {
+      '/': doc(HOME_OK),
+      '/login': doc(
+        'Login | Synthex | SERVICE DEGRADED',
+        '<h1>Service degraded</h1>'
+      ),
+      '/pricing': doc(
+        'Pilot Access | Synthex | OUTAGE',
+        '<h1>Service degraded</h1>'
+      ),
+    },
+  },
+
+  'degraded-title-on-homepage': {
+    expect: 1,
+    why: 'the same prefix-preserving attack aimed at the homepage, whose real title has only two segments. Without this, the home pattern could be left unanchored while the two route patterns were fixed, and the suite would still look green',
+    pages: {
+      '/': doc(
+        'Free Marketing Opportunity Map | Synthex | SERVICE DEGRADED',
+        '<h1>Service degraded</h1>'
+      ),
+      '/login': doc(LOGIN_OK),
+      '/pricing': doc(PRICING_OK),
+    },
+  },
+
   'homepage-served-at-login': {
     expect: 1,
     why: 'a catch-all route can serve homepage HTML at /login with status 200 and the URL preserved',
