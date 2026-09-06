@@ -8,12 +8,12 @@ node_modules
 .env.local
 .env*.bak
 .env.vercel-*.bak
-tests
+/tests
 scripts/*
 !scripts/validate-schema.ts
 !scripts/build-with-migrations.sh
 !scripts/check-schema-drift.mjs
-docs
+/docs
 *.md
 .claude
 .claude-session

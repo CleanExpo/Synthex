@@ -23,6 +23,17 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+      # Runs BEFORE `npm ci` on purpose: the check uses only Node builtins and git,
+      # so it needs no install and gives its answer in about a second.
+      #
+      # It MUST run here in CI and NOT in the Vercel build. Vercel applies
+      # .vercelignore when it uploads the repo, so by the time a Vercel build starts,
+      # an excluded route directory is already gone -- the check would look at a tree
+      # the files had been deleted from and report all clear. The defect is only
+      # visible from a full checkout.
+      - name: Assert no route file is excluded from the deployment
+        run: node scripts/check-route-not-deploy-ignored.mjs
+
       - run: npm ci --legacy-peer-deps
       # Fails ONLY on NEW route-safety violations (missing-Zod / missing-ownership /
       # missing-rate-limit) that are not in scripts/security/route-safety-baseline.json.
