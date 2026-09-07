@@ -35,4 +35,8 @@ describe('humanizePublishBlocker', () => {
       /practice mode/
     );
   });
+
+  it('explains an empty post body', () => {
+    expect(humanizePublishBlocker('empty content')).toMatch(/nothing to send/i);
+  });
 });
