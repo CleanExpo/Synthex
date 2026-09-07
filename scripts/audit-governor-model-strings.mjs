@@ -31,7 +31,7 @@
 
 import { readFileSync, writeFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { readdirSync, statSync } from 'node:fs';
-import { join, resolve, relative, extname, sep } from 'node:path';
+import { join, resolve, relative, extname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
