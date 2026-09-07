@@ -171,6 +171,7 @@ export async function GET(request: NextRequest) {
         posts: {
           select: {
             id: true,
+            content: true,
             status: true,
             platform: true,
             scheduledAt: true,
