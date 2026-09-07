@@ -7,7 +7,10 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
-  setupFilesAfterEnv: ['@testing-library/jest-dom'],
+  setupFilesAfterEnv: [
+    '@testing-library/jest-dom',
+    '<rootDir>/tests/rtl.setup.js',
+  ],
 
   // Scope discovery to known test roots only.
   // Prevents `.claude/worktrees/*/tests/` pollution (12+ duplicate suites).

@@ -26,7 +26,10 @@ module.exports = {
     customExportConditions: ['require', 'default'],
   },
   setupFiles: ['<rootDir>/tests/jest.setup.js'],
-  setupFilesAfterEnv: ['@testing-library/jest-dom'],
+  setupFilesAfterEnv: [
+    '@testing-library/jest-dom',
+    '<rootDir>/tests/rtl.setup.js',
+  ],
 
   // Scope discovery to known test roots only.
   // Prevents `.claude/worktrees/*/tests/` from being picked up when running
