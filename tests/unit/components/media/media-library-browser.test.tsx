@@ -146,6 +146,27 @@ describe('MediaLibraryBrowser — empty is not the same as broken', () => {
   });
 });
 
+describe('MediaLibraryBrowser — paging', () => {
+  it('offers Load more when the library has another page', async () => {
+    mockLibrary({
+      assets: [asset({ id: 'a1', prompt: 'First page' })],
+      total: 60,
+      limit: 48,
+      offset: 0,
+      hasMore: true,
+    });
+
+    renderBrowser();
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Load more' })
+      ).toBeInTheDocument()
+    );
+    expect(screen.getByTestId('media-count')).toHaveTextContent('60 files');
+  });
+});
+
 describe('MediaLibraryBrowser — controls', () => {
   it('offers a filter per media kind, including audio', async () => {
     mockLibrary({ assets: [], total: 0, limit: 48, offset: 0, hasMore: false });
