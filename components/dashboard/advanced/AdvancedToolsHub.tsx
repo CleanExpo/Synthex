@@ -359,16 +359,16 @@ export function AdvancedToolsHub() {
           aria-hidden
           className="absolute inset-y-0 right-0 w-1/3 bg-linear-to-l from-orange-500/8 to-transparent pointer-events-none"
         />
-        <DashboardEyebrow>Mission Control</DashboardEyebrow>
+        <DashboardEyebrow>Home</DashboardEyebrow>
         <p className="text-base font-extralight text-white tracking-tight max-w-2xl">
-          Daily work stays on Mission Control. Advanced tools are for depth —
-          SEO audits, autopilot, agency delivery, and creative production.
+          Daily posting stays on Home. These tools are for depth — SEO,
+          autopilot, agency delivery, and creative production.
         </p>
         <Link
           href="/dashboard"
           className="inline-flex mt-4 text-xs text-orange-400/80 hover:text-orange-400 transition-colors"
         >
-          Back to Mission Control
+          Back to Home
         </Link>
       </DashboardPanel>
     </DashboardAtmosphere>
