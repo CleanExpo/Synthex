@@ -124,3 +124,97 @@ describe('estimateCostUsd', () => {
     }
   );
 });
+
+/**
+ * THE CONTROL THAT ACTUALLY CLOSES THE CLASS (SYN-1196, round-2 review finding
+ * P1-AUDIT-REGEX-LITERAL-AND-CONCAT-SMUGGLE).
+ *
+ * The static audit cannot see a model id that is CONSTRUCTED at runtime, and no
+ * source-text guard can — the value does not exist until the program runs. That
+ * is a real limit, and it is why the audit is defence in depth rather than the
+ * boundary.
+ *
+ * The criterion that matters is that no UNREGISTERED model reaches a provider.
+ * resolveModel enforces that at runtime regardless of how the string was built,
+ * so a constructed id is either a model the registry already lists (not a
+ * smuggle) or a refusal. This proves the refusal, and proves it is receipted.
+ */
+describe('runtime registry boundary — constructed ids cannot reach a provider', () => {
+  jest.isolateModules(() => {});
+
+  it('refuses a CONSTRUCTED model id that the registry does not list', async () => {
+    jest.resetModules();
+
+    const create = jest.fn().mockResolvedValue({ id: 'row' });
+    jest.doMock('@/lib/prisma', () => ({
+      prisma: {
+        runnerFlag: {
+          findMany: jest
+            .fn()
+            .mockResolvedValue([
+              { runner: 'content', enabled: true, killSwitch: false },
+            ]),
+        },
+        aPICredential: {
+          findMany: jest.fn().mockResolvedValue([
+            {
+              id: 'c',
+              encryptedKey: 'e',
+              isActive: true,
+              revokedAt: null,
+            },
+          ]),
+        },
+        orgBudgetPolicy: {
+          findUnique: jest.fn().mockResolvedValue({
+            dailyCeilingUsd: 1000,
+            providerDailyCeilingsUsd: null,
+            enforcementMode: 'enforce',
+          }),
+        },
+        pipelineCostLedger: {
+          groupBy: jest.fn().mockResolvedValue([]),
+          create,
+        },
+      },
+    }));
+    jest.doMock('@/lib/encryption/api-key-encryption', () => ({
+      decryptApiKey: jest.fn().mockReturnValue('BRAND-OWN-KEY-PLACEHOLDER'),
+    }));
+    jest.doMock('@/lib/logger', () => ({
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
+    }));
+
+    const { governedCall } = await import('@/lib/ai/governor');
+
+    // Built at runtime, exactly the shape the static audit cannot see.
+    const smuggled = ['claude', 'definitely', 'not', 'registered'].join('-');
+    const execute = jest.fn();
+
+    const result = await governedCall({
+      organizationId: 'org_test_syn1196',
+      brandSlug: 'ra',
+      runner: 'content',
+      provider: 'anthropic',
+      model: { kind: 'registered', modelId: smuggled },
+      pipelineName: 'governor-registry-boundary-test',
+      estimate: { inputTokens: 10, outputTokens: 10 },
+      execute,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.outcome).toBe('refused_model_unavailable');
+    // The provider is never reached, however the string was built.
+    expect(execute).not.toHaveBeenCalled();
+    // And the refusal is receipted, like every other Governor exit.
+    expect(create).toHaveBeenCalledTimes(1);
+    expect(create.mock.calls[0][0].data.outcome).toBe(
+      'refused_model_unavailable'
+    );
+  });
+});

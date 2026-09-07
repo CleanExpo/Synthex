@@ -134,6 +134,24 @@ MUTANTS = [
        "function scanSource(source, fileName = 'input.ts') {\n  source = source\n    .split('\\n')\n    .map(l => (l.includes('//') ? l.slice(0, l.indexOf('//')) : l))\n    .join('\\n');\n  return stringLiteralsOf(source, fileName).filter(entry =>")],
      REGISTRY),
 
+    # --- M11-M12 guard the round-2 finding
+    # P1-AUDIT-REGEX-LITERAL-AND-CONCAT-SMUGGLE and the runtime boundary that
+    # actually closes the class the static audit cannot.
+
+    ("M11 audit stops reading regex literals (a model id in /.../ hides again)",
+     "scripts/audit-governor-model-strings.mjs",
+     [("      ts.isRegularExpressionLiteral(node) ||\n", "")],
+     REGISTRY),
+
+    # THE important one. The static audit can never see a constructed id, so
+    # resolveModel's registry check is the real boundary. Break it and an
+    # unregistered model silently resolves to the latest one.
+    ("M12 resolveModel falls back to latest instead of refusing an unregistered id",
+     "lib/ai/governor/model.ts",
+     [("    const model = getModel(provider, selector.modelId);",
+       "    const model = getModel(provider, selector.modelId) ?? getLatestModel(provider);")],
+     REGISTRY),
+
     ("M7 audit matcher neutered (scanner can no longer detect anything)",
      "scripts/audit-governor-model-strings.mjs",
      [("const MODEL_ID_PATTERNS = [", "const MODEL_ID_PATTERNS = [];\nconst UNUSED_PATTERNS = [")],

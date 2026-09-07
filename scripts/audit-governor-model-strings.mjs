@@ -34,10 +34,35 @@
  *
  * The lesson is the general one: "is this text inside a string literal" is
  * decidable by a parser and only approximable by a scanner, so the guard has to
- * ask the parser. Patching the scanner to understand regex literals would have
- * closed that instance and left the class open — division-versus-regex
- * ambiguity is the next hole. ts.createSourceFile closes the class: comments
- * are not nodes, so they are excluded structurally rather than by stripping.
+ * ask the parser. Comments are not nodes, so they are excluded structurally
+ * rather than by stripping.
+ *
+ * WHAT THIS AUDIT CAN AND CANNOT DECIDE — read before trusting a CLEAN result.
+ *
+ * It reads literal-bearing tokens: string literals, template chunks, and regex
+ * literals. Within that surface it is exact.
+ *
+ * It CANNOT see a model id that is CONSTRUCTED rather than written — 'claude-'
+ * + 'sonnet-5', ['a','b'].join('-'), String.fromCharCode(...), a template with
+ * substitutions. No source-text guard can, because the value does not exist
+ * until the program runs. A second independent review round planted exactly
+ * these and was right to (P1-AUDIT-REGEX-LITERAL-AND-CONCAT-SMUGGLE); the regex
+ * case is now covered, and the constructed case is DOCUMENTED AS OUT OF REACH
+ * and asserted as such in --selftest, rather than left as an unstated hole.
+ *
+ * SO THIS SCRIPT IS NOT THE BOUNDARY, AND MUST NOT BE READ AS ONE. What the
+ * SYN-1196 criterion actually requires is that no unregistered model reaches a
+ * provider, and that is enforced at RUNTIME by resolveModel() in
+ * lib/ai/governor/model.ts: any id absent from the registry is refused with
+ * refused_model_unavailable and the refusal is receipted. A constructed id
+ * therefore either names a model the registry already lists — in which case it
+ * is not a smuggle, it is the model the registry would have chosen — or it is
+ * refused before any provider call. tests/unit/ai/governor/
+ * governor-model-registry.test.ts proves that with a constructed id.
+ *
+ * This audit is config-PR discipline and defence in depth: it keeps the source
+ * readable and keeps model choices visible in review. Treat a CLEAN result as
+ * "nobody wrote a model id down", never as "no unregistered model can run".
  *
  * `--selftest` is the positive control: it plants a known violation in a temp
  * file and fails unless the audit catches it. A scanner that has never been
@@ -102,6 +127,9 @@ function stringLiteralsOf(source, fileName) {
     if (
       ts.isStringLiteral(node) ||
       ts.isNoSubstitutionTemplateLiteral(node) ||
+      // A regex literal carries its own source text, so /some-model-id/.source
+      // yields the id without any string literal appearing. Cheap to cover.
+      ts.isRegularExpressionLiteral(node) ||
       ts.isTemplateHead(node) ||
       ts.isTemplateMiddle(node) ||
       ts.isTemplateTail(node)
@@ -109,7 +137,15 @@ function stringLiteralsOf(source, fileName) {
       const pos = sourceFile.getLineAndCharacterOfPosition(
         node.getStart(sourceFile)
       );
-      found.push({ line: pos.line + 1, value: node.text });
+      // A regex literal's `text` keeps its delimiters and flags, so it arrives
+      // as "/some-model-id/i" and never matches an anchored id pattern. Strip
+      // them. (Caught by the selftest control added for round 2's finding —
+      // adding the node type without this produced 0 findings and would have
+      // shipped as a fix that fixed nothing.)
+      const raw = ts.isRegularExpressionLiteral(node)
+        ? node.text.replace(/^\//, '').replace(/\/[a-z]*$/, '')
+        : node.text;
+      found.push({ line: pos.line + 1, value: raw });
     }
     ts.forEachChild(node, visit);
   };
@@ -196,6 +232,23 @@ function selftest() {
       'const a = `claude-sonnet-5`;\nconst b = `anthropic/claude-opus-4-6${x}`;\n'
     );
 
+    // Regex literals carry their own source text (P1-AUDIT-REGEX-LITERAL-
+    // AND-CONCAT-SMUGGLE, round 2).
+    const regexSource = write(
+      'regex-source.ts',
+      'export const m = /claude-sonnet-5/.source;\n'
+    );
+
+    // --- Documented limit, asserted rather than left unstated -------------
+    // A CONSTRUCTED id is out of reach of any source-text guard. This control
+    // exists so the limit is a checked fact that a future editor cannot
+    // silently forget, not a paragraph in a header. The runtime boundary that
+    // actually covers this case is resolveModel() — see the header.
+    const constructed = write(
+      'constructed.ts',
+      "export const m = 'claude-' + 'sonnet-5';\nexport const n = ['claude', 'sonnet-5'].join('-');\n"
+    );
+
     // --- Negative control: this MUST NOT be caught ------------------------
     // A model named only in a comment is documentation. If the audit flags it,
     // nobody can keep the tree green and the control gets deleted.
@@ -229,6 +282,16 @@ function selftest() {
         name: 'positive: template literals (incl. substituted) are scanned',
         ok: templated.length === 2,
         got: `${templated.length} findings, want 2`,
+      },
+      {
+        name: 'positive: regex literal carrying a model id is detected',
+        ok: regexSource.length === 1,
+        got: `${regexSource.length} findings, want 1`,
+      },
+      {
+        name: 'DOCUMENTED LIMIT: constructed ids are NOT statically detectable (runtime resolveModel is the boundary)',
+        ok: constructed.length === 0,
+        got: `${constructed.length} findings, want 0 by design`,
       },
       {
         name: 'negative: model id in a comment is ignored',
