@@ -79,6 +79,7 @@ import {
   CalendarDays,
 } from '@/components/icons';
 import type { ScheduledPost } from '@/components/calendar/CalendarTypes';
+import { customerPostStatus } from '@/lib/dashboard/post-status';
 
 // Available platforms for scheduling
 const PLATFORMS = [
@@ -107,7 +108,7 @@ function CalendarPageContent() {
   const organizationId = user?.organizationId || '';
 
   // View mode state
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [viewMode, setViewMode] = useState<'week' | 'month' | 'queue'>('week');
   const [showAgencyTools, setShowAgencyTools] = useState(false);
 
   // Team filter state
@@ -162,6 +163,9 @@ function CalendarPageContent() {
     if (searchParams.get('action') === 'schedule') {
       setIsScheduleModalOpen(true);
       setScheduleDate(new Date());
+    }
+    if (searchParams.get('view') === 'queue') {
+      setViewMode('queue');
     }
   }, [searchParams]);
 
@@ -343,6 +347,17 @@ function CalendarPageContent() {
               >
                 <Calendar className="h-4 w-4" />
                 Month
+              </button>
+              <button
+                onClick={() => setViewMode('queue')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'queue'
+                    ? 'bg-orange-500/20 text-orange-400'
+                    : 'text-gray-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <ListTodo className="h-4 w-4" />
+                Queue
               </button>
             </div>
 
@@ -566,7 +581,7 @@ function CalendarPageContent() {
               onPostCreate={handlePostCreate}
               onWeekChange={handleWeekChange}
             />
-          ) : (
+          ) : viewMode === 'month' ? (
             <MonthView
               posts={posts}
               currentDate={currentStartDate}
@@ -575,6 +590,31 @@ function CalendarPageContent() {
               onPostCreate={handlePostCreate}
               onMonthChange={handleMonthChange}
             />
+          ) : (
+            <ul className="space-y-2">
+              {posts.map(p => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => handlePostClick(p)}
+                    className="w-full text-left rounded-xl border border-white/10 bg-gray-900/40 px-4 py-3 hover:bg-white/5"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-white/80 truncate">
+                        {p.title || p.content.slice(0, 90)}
+                      </span>
+                      <span className="shrink-0 text-xs text-orange-300">
+                        {customerPostStatus(p.status)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-white/40">
+                      {p.platforms.join(', ')} ·{' '}
+                      {new Date(p.scheduledFor).toLocaleString('en-AU')}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
