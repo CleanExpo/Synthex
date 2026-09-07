@@ -142,8 +142,15 @@ function stringLiteralsOf(source, fileName) {
       // them. (Caught by the selftest control added for round 2's finding —
       // adding the node type without this produced 0 findings and would have
       // shipped as a fix that fixed nothing.)
+      // A regex body also ESCAPES its own delimiter, so an OpenRouter-style
+      // vendor-prefixed id appears as "anthropic\/claude-x" and never matches
+      // the vendor pattern. Drop the backslash before a non-word character so
+      // the escaped form reads the same as the plain one. (Round-3 review P2.)
       const raw = ts.isRegularExpressionLiteral(node)
-        ? node.text.replace(/^\//, '').replace(/\/[a-z]*$/, '')
+        ? node.text
+            .replace(/^\//, '')
+            .replace(/\/[a-z]*$/, '')
+            .replace(/\\(\W)/g, '$1')
         : node.text;
       found.push({ line: pos.line + 1, value: raw });
     }
@@ -239,6 +246,13 @@ function selftest() {
       'export const m = /claude-sonnet-5/.source;\n'
     );
 
+    // A regex body escapes its own delimiter, so a vendor-prefixed id appears
+    // as "anthropic\\/claude-..." (round-3 review P2).
+    const regexEscaped = write(
+      'regex-escaped.ts',
+      'export const m = /anthropic\\/claude-haiku-4-5/.source;\n'
+    );
+
     // --- Documented limit, asserted rather than left unstated -------------
     // A CONSTRUCTED id is out of reach of any source-text guard. This control
     // exists so the limit is a checked fact that a future editor cannot
@@ -287,6 +301,11 @@ function selftest() {
         name: 'positive: regex literal carrying a model id is detected',
         ok: regexSource.length === 1,
         got: `${regexSource.length} findings, want 1`,
+      },
+      {
+        name: 'positive: escaped vendor-prefixed id inside a regex is detected',
+        ok: regexEscaped.length === 1,
+        got: `${regexEscaped.length} findings, want 1`,
       },
       {
         name: 'DOCUMENTED LIMIT: constructed ids are NOT statically detectable (runtime resolveModel is the boundary)',

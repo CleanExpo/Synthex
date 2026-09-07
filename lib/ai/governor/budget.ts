@@ -90,6 +90,31 @@ export async function checkBudget(
   estimatedCostUsd: number,
   now: Date = new Date()
 ): Promise<BudgetDecision> {
+  // GUARD THE INPUT BEFORE COMPARING IT. Every ceiling test below is of the
+  // form `spend + estimate > ceiling`, and under IEEE semantics that predicate
+  // is FALSE for NaN and for a sufficiently negative estimate — so an
+  // unguarded comparison returns allowed:true on a budget that is already
+  // exhausted. A caller passing NaN or negative token counts could reopen a
+  // spent budget at will. (Independent review, cursor lane, round 3, finding
+  // P1-BUDGET-NEGATIVE-NAN-ESTIMATE-BYPASS: with $5.00 spent against a $1.00
+  // ceiling, estimate 0 refused, estimate -1000 and NaN both allowed.)
+  //
+  // Note this is NOT the disclosed read-then-decide race, and not an ordinary
+  // underestimate: a zero estimate still refuses once spend >= ceiling.
+  if (!Number.isFinite(estimatedCostUsd) || estimatedCostUsd < 0) {
+    logger.error('Governor budget estimate invalid — refusing (fail-closed)', {
+      organizationId,
+      provider,
+      estimatedCostUsd: String(estimatedCostUsd),
+    });
+    return {
+      allowed: false,
+      verdict: 'budget_invalid_estimate',
+      outcome: 'refused_budget_invalid_estimate',
+      detail: { ...EMPTY_DETAIL, estimatedCostUsd: 0 },
+    };
+  }
+
   let policy;
   let spendRows;
 

@@ -39,7 +39,7 @@ jest.mock('@/lib/logger', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
-import { governedCall } from '@/lib/ai/governor';
+import { governedCall, checkBudget } from '@/lib/ai/governor';
 import {
   ALL_PROVIDERS,
   BRAND,
@@ -244,5 +244,128 @@ describe.each(ALL_PROVIDERS)('budget unconfigured — %s', provider => {
     const result = await callFor(provider, execute);
 
     expect(result.ok).toBe(true);
+  });
+});
+
+/**
+ * Regression for P1-BUDGET-NEGATIVE-NAN-ESTIMATE-BYPASS (independent review,
+ * cursor lane, round 3, head fb5c857).
+ *
+ * Every ceiling test is `spend + estimate > ceiling`. Under IEEE semantics that
+ * predicate is FALSE for NaN and for a large negative estimate, so an unguarded
+ * comparison returns allowed:true on a budget that is ALREADY EXHAUSTED — a
+ * fail-OPEN in a module whose entire contract is fail-closed.
+ *
+ * The control below is the reviewer's own demonstration: $5.00 already spent
+ * against a $1.00 ceiling. A zero estimate must refuse (proving the ceiling is
+ * genuinely breached, so this is not the disclosed read-then-decide race and
+ * not an ordinary underestimate), and NaN and negative must refuse too.
+ */
+describe('budget estimate is validated before it is compared', () => {
+  const exhausted = () => {
+    mocks.prisma.orgBudgetPolicy.findUnique.mockResolvedValue({
+      dailyCeilingUsd: 1,
+      providerDailyCeilingsUsd: { anthropic: 1 },
+      enforcementMode: 'enforce',
+    });
+    mocks.prisma.pipelineCostLedger.groupBy.mockResolvedValue([
+      { provider: 'anthropic', _sum: { costUsd: 5.0 } },
+    ]);
+  };
+
+  it('positive control: a ZERO estimate already refuses once the ceiling is spent', async () => {
+    exhausted();
+    const decision = await checkBudget('org_test_syn1196', 'anthropic', 0);
+    expect(decision.allowed).toBe(false);
+    expect(decision.outcome).toBe('refused_budget_exhausted');
+  });
+
+  it.each([
+    ['negative', -1000],
+    ['NaN', Number.NaN],
+    ['-Infinity', Number.NEGATIVE_INFINITY],
+    ['Infinity', Number.POSITIVE_INFINITY],
+  ])(
+    'refuses a %s estimate instead of allowing spend',
+    async (_label, value) => {
+      exhausted();
+      const decision = await checkBudget(
+        'org_test_syn1196',
+        'anthropic',
+        value
+      );
+      expect(decision.allowed).toBe(false);
+      expect(decision.outcome).toBe('refused_budget_invalid_estimate');
+    }
+  );
+
+  it('governedCall refuses NaN token counts from the caller, and receipts it', async () => {
+    exhausted();
+    const execute = jest.fn();
+
+    const result = await governedCall({
+      organizationId: ORG_ID,
+      brandSlug: BRAND,
+      runner: RUNNER,
+      provider: 'anthropic',
+      model: { kind: 'latest' },
+      pipelineName: 'governor-budget-test',
+      estimate: { inputTokens: Number.NaN, outputTokens: 10 },
+      execute,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.outcome).toBe('refused_budget_invalid_estimate');
+    expect(execute).not.toHaveBeenCalled();
+    expect(receiptRow(mocks)!.outcome).toBe('refused_budget_invalid_estimate');
+  });
+
+  it('governedCall refuses NEGATIVE token counts from the caller', async () => {
+    exhausted();
+    const execute = jest.fn();
+
+    const result = await governedCall({
+      organizationId: ORG_ID,
+      brandSlug: BRAND,
+      runner: RUNNER,
+      provider: 'anthropic',
+      model: { kind: 'latest' },
+      pipelineName: 'governor-budget-test',
+      estimate: { inputTokens: -1_000_000, outputTokens: 10 },
+      execute,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.outcome).toBe('refused_budget_invalid_estimate');
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('never writes a NaN cost into the ledger when the PROVIDER returns junk counts', async () => {
+    // A NaN in cost_usd would poison every budget SUM that later reads it.
+    installDefaults(mocks);
+    const execute = jest.fn().mockResolvedValue({
+      data: 'ok',
+      inputTokens: Number.NaN,
+      outputTokens: 50,
+    });
+
+    const result = await governedCall({
+      organizationId: ORG_ID,
+      brandSlug: BRAND,
+      runner: RUNNER,
+      provider: 'anthropic',
+      model: { kind: 'latest' },
+      pipelineName: 'governor-budget-test',
+      estimate: { inputTokens: 10, outputTokens: 10 },
+      execute,
+    });
+
+    expect(result.ok).toBe(true);
+    const row = receiptRow(mocks)!;
+    expect(Number.isFinite(row.costUsd as number)).toBe(true);
+    expect(Number.isFinite(row.inputTokens as number)).toBe(true);
+    expect((row.provenance as Record<string, unknown>).errorClass).toBe(
+      'provider_returned_unusable_token_counts'
+    );
   });
 });

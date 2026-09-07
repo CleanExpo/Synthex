@@ -63,6 +63,13 @@ export type GovernorOutcome =
   | 'refused_budget_exhausted'
   /** No OrgBudgetPolicy row for the brand. No budget means no spending. */
   | 'refused_budget_unconfigured'
+  /**
+   * The cost estimate was not a finite, non-negative number. A NaN or negative
+   * estimate makes `spend + estimate > ceiling` false under IEEE semantics, so
+   * an unguarded comparison would ALLOW spending on an already-exhausted
+   * budget. Refusing on the input is the only fail-closed answer.
+   */
+  | 'refused_budget_invalid_estimate'
   /** Requested model is absent from the registry or deprecated. */
   | 'refused_model_unavailable'
   /** A control-plane read (flag / credential / budget) failed. Unknown ⇒ refuse. */

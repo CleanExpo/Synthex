@@ -152,6 +152,21 @@ MUTANTS = [
        "    const model = getModel(provider, selector.modelId) ?? getLatestModel(provider);")],
      REGISTRY),
 
+    # P1-BUDGET-NEGATIVE-NAN-ESTIMATE-BYPASS (round 3). Two mechanisms, two
+    # mutants: the guard inside checkBudget, and the guard in governedCall.
+
+    ("M13 checkBudget estimate guard removed (NaN/negative reopen a spent budget)",
+     "lib/ai/governor/budget.ts",
+     [("  if (!Number.isFinite(estimatedCostUsd) || estimatedCostUsd < 0) {",
+       "  if (false && (!Number.isFinite(estimatedCostUsd) || estimatedCostUsd < 0)) {")],
+     BUDGET),
+
+    ("M14 governedCall token-count guard removed (caller can pass NaN tokens)",
+     "lib/ai/governor/index.ts",
+     [("function isUsableTokenCount(value: number): boolean {\n  return Number.isFinite(value) && value >= 0;",
+       "function isUsableTokenCount(value: number): boolean {\n  return true || (Number.isFinite(value) && value >= 0);")],
+     BUDGET),
+
     ("M7 audit matcher neutered (scanner can no longer detect anything)",
      "scripts/audit-governor-model-strings.mjs",
      [("const MODEL_ID_PATTERNS = [", "const MODEL_ID_PATTERNS = [];\nconst UNUSED_PATTERNS = [")],

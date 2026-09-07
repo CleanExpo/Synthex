@@ -64,6 +64,17 @@ export { writeReceipt } from './receipts';
  */
 const UNRESOLVED_MODEL = 'unresolved';
 
+/**
+ * A token count is usable only if it is a finite, non-negative number.
+ *
+ * This exists because `spend + estimate > ceiling` is FALSE for NaN and for a
+ * large negative estimate, so an unguarded comparison fails OPEN on exactly the
+ * inputs an attacker or a buggy runner would supply.
+ */
+function isUsableTokenCount(value: number): boolean {
+  return Number.isFinite(value) && value >= 0;
+}
+
 export async function governedCall<T>(
   input: GovernedCallInput<T>
 ): Promise<GovernedCallResult<T>> {
@@ -194,6 +205,33 @@ export async function governedCall<T>(
   }
 
   // --- 4. Budget, priced from the registry ---------------------------------
+  // Token counts arrive from the caller, so they are untrusted input. NaN or a
+  // negative count would produce a NaN/negative cost, and every ceiling test is
+  // `spend + estimate > ceiling` — false under IEEE semantics for both, which
+  // would ALLOW spending on an exhausted budget. checkBudget guards this too;
+  // guarding here as well keeps the refusal specific to the caller's input
+  // rather than surfacing as a generic budget verdict.
+  if (
+    !isUsableTokenCount(estimate.inputTokens) ||
+    !isUsableTokenCount(estimate.outputTokens)
+  ) {
+    return refuse(
+      'refused_budget_invalid_estimate',
+      `non-finite or negative token estimate: in=${String(
+        estimate.inputTokens
+      )} out=${String(estimate.outputTokens)}`,
+      {
+        ...baseProvenance,
+        modelId: model.id,
+        flagVerdict: flag.verdict,
+        keyVerdict: key.verdict,
+        budgetVerdict: 'budget_invalid_estimate',
+        errorClass: 'budget_invalid_estimate',
+      },
+      model.id
+    );
+  }
+
   const estimatedCostUsd = estimateCostUsd(
     model,
     estimate.inputTokens,
@@ -250,6 +288,20 @@ export async function governedCall<T>(
   }
 
   // --- 6. Receipt, with the ACTUAL token counts ----------------------------
+  // The counts come back from the provider call, so they are untrusted too. A
+  // NaN here would write a NaN cost into the ledger, which then poisons every
+  // budget SUM that reads it — a receipt that corrupts the ledger is worse than
+  // one that is merely imprecise. Fall back to 0 and say so in provenance
+  // rather than storing a number nobody can add up.
+  const inputTokens = isUsableTokenCount(result.inputTokens)
+    ? result.inputTokens
+    : 0;
+  const outputTokens = isUsableTokenCount(result.outputTokens)
+    ? result.outputTokens
+    : 0;
+  const tokensWereUsable =
+    inputTokens === result.inputTokens && outputTokens === result.outputTokens;
+
   const outcome: GovernorOutcome = 'completed';
   const receipt = await writeReceipt({
     pipelineName,
@@ -259,11 +311,16 @@ export async function governedCall<T>(
     provider,
     brandSlug,
     runner,
-    inputTokens: result.inputTokens,
-    outputTokens: result.outputTokens,
-    costUsd: estimateCostUsd(model, result.inputTokens, result.outputTokens),
+    inputTokens,
+    outputTokens,
+    costUsd: estimateCostUsd(model, inputTokens, outputTokens),
     outcome,
-    provenance,
+    provenance: tokensWereUsable
+      ? provenance
+      : {
+          ...provenance,
+          errorClass: 'provider_returned_unusable_token_counts',
+        },
   });
 
   return { ok: true, outcome, data: result.data, receipt };
