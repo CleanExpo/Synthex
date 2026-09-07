@@ -510,9 +510,17 @@ describe('no unusable operand can make a ceiling comparison fail open', () => {
  * So each mechanism is now tested on the behaviour ONLY IT produces.
  */
 describe('isolating controls for redundant guards', () => {
-  it('governedCall refuses a NaN estimate BEFORE it reads the budget policy', async () => {
-    // Only the governedCall-level guard can produce this: if it were removed,
-    // checkBudget would still refuse, but the policy read would have happened.
+  it("governedCall's own guard names the CALLER's token counts in the refusal", async () => {
+    // Isolating this one took two attempts, and the failures are worth keeping.
+    //
+    // "The policy is never read" does NOT isolate it: checkBudget's class-level
+    // gate also returns before its own database read, so that assertion passes
+    // with the outer guard removed — the mutant stayed GREEN.
+    //
+    // What ONLY the outer guard produces is the diagnostic: it reports the
+    // caller's actual token counts, so an operator sees which runner passed
+    // rubbish rather than a generic budget verdict. That is its whole reason to
+    // exist alongside the inner gate, so that is what the control asserts.
     installDefaults(mocks);
     const execute = jest.fn();
 
@@ -529,8 +537,11 @@ describe('isolating controls for redundant guards', () => {
 
     expect(result.ok).toBe(false);
     expect(result.outcome).toBe('refused_budget_invalid_estimate');
-    expect(mocks.prisma.orgBudgetPolicy.findUnique).not.toHaveBeenCalled();
-    expect(mocks.prisma.pipelineCostLedger.groupBy).not.toHaveBeenCalled();
+    expect(result.ok === false && result.reason).toContain(
+      'non-finite or negative token estimate'
+    );
+    expect(result.ok === false && result.reason).toContain('in=NaN');
+    expect(result.ok === false && result.reason).toContain('out=10');
     expect(execute).not.toHaveBeenCalled();
   });
 
