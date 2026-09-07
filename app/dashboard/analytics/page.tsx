@@ -344,8 +344,8 @@ export default function AnalyticsPage() {
               No analytics data yet
             </h3>
             <p className="text-xs text-white/35 max-w-xs mx-auto">
-              Connect a social platform and publish some posts to see
-              performance data here.
+              We&apos;ll show numbers after a few published posts. Write one in
+              Content, book it on Calendar, then come back.
             </p>
           </div>
         ) : (
