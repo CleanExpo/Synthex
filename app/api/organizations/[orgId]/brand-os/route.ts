@@ -21,6 +21,10 @@ import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import {
+  isOrganizationAdmin,
+  isOrganizationMember,
+} from '@/lib/auth/org-admin';
 
 const brandOsSchema = z.object({
   method: z.string().optional(),
@@ -36,28 +40,11 @@ const brandOsSchema = z.object({
 type BrandOsInput = z.infer<typeof brandOsSchema>;
 
 // =============================================================================
-// Auth helpers — verify user membership / admin (mirrors organizations/[orgId])
+// Auth helpers — membership + admin (shared with organizations/[orgId])
 // =============================================================================
 
-async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, organizationId: orgId },
-  });
-  return !!user;
-}
-
-async function isOrgAdmin(userId: string, orgId: string): Promise<boolean> {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, organizationId: orgId },
-  });
-  if (!user) return false;
-  const org = await prisma.organization.findUnique({
-    where: { id: orgId },
-    select: { settings: true },
-  });
-  const settings = org?.settings as { admins?: string[] } | null;
-  return settings?.admins?.includes(userId) || false;
-}
+const isOrgMember = isOrganizationMember;
+const isOrgAdmin = isOrganizationAdmin;
 
 /** Assemble a Prisma data object from validated input (only provided fields). */
 function buildData(body: BrandOsInput): Record<string, unknown> {
@@ -91,7 +78,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const isMember = await isOrgMember(userId, orgId);
@@ -131,7 +121,10 @@ export async function POST(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const isAdmin = await isOrgAdmin(userId, orgId);
@@ -152,9 +145,13 @@ export async function POST(
     const rawBody = await request.json().catch(() => null);
     const validation = brandOsSchema.safeParse(rawBody);
     if (!validation.success) {
-      return ResponseOptimizer.createErrorResponse('Invalid request data', 400, {
-        issues: validation.error.flatten(),
-      });
+      return ResponseOptimizer.createErrorResponse(
+        'Invalid request data',
+        400,
+        {
+          issues: validation.error.flatten(),
+        }
+      );
     }
 
     const existing = await prisma.brandOperatingSystem.findUnique({
@@ -192,7 +189,10 @@ export async function POST(
     const cache = getCache();
     await cache.invalidateByTag(`org:${orgId}`);
 
-    logger.info('Brand operating system created', { organizationId: orgId, userId });
+    logger.info('Brand operating system created', {
+      organizationId: orgId,
+      userId,
+    });
     return ResponseOptimizer.createResponse(
       { success: true, brandOperatingSystem: created },
       { cacheType: 'none', status: 201 }
@@ -218,7 +218,10 @@ export async function PATCH(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const isAdmin = await isOrgAdmin(userId, orgId);
@@ -239,9 +242,13 @@ export async function PATCH(
     const rawBody = await request.json().catch(() => null);
     const validation = brandOsSchema.safeParse(rawBody);
     if (!validation.success) {
-      return ResponseOptimizer.createErrorResponse('Invalid request data', 400, {
-        issues: validation.error.flatten(),
-      });
+      return ResponseOptimizer.createErrorResponse(
+        'Invalid request data',
+        400,
+        {
+          issues: validation.error.flatten(),
+        }
+      );
     }
 
     const existing = await prisma.brandOperatingSystem.findUnique({
@@ -266,7 +273,10 @@ export async function PATCH(
           action: 'brand_operating_system_updated',
           resource: 'brand_operating_system',
           resourceId: record.id,
-          details: { organizationId: orgId, updatedFields: Object.keys(updateData) },
+          details: {
+            organizationId: orgId,
+            updatedFields: Object.keys(updateData),
+          },
           severity: 'medium',
           category: 'admin',
           outcome: 'success',
