@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { IntentScapeWorkspace } from '@/components/intentscape/IntentScapeWorkspace';
+import { settle } from '../../helpers/settle';
 import type { IntentScapeWorkspaceSnapshot } from '@/components/intentscape/types';
 
 type FetchMock = jest.Mock<Promise<Partial<Response>>, [string, RequestInit?]>;
@@ -77,9 +78,10 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
+    await settle();
 
     expect(
-      await screen.findByRole('heading', {
+      screen.getByRole('heading', {
         name: /tell synthex what is happening in your own words/i,
       })
     ).toBeInTheDocument();
@@ -122,15 +124,17 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
-    fireEvent.change(await screen.findByLabelText(/what is on your mind/i), {
+    await settle();
+    fireEvent.change(screen.getByLabelText(/what is on your mind/i), {
       target: { value: snapshot.contextField!.originSignal },
     });
     fireEvent.click(
       screen.getByRole('button', { name: /explore this situation/i })
     );
+    await settle();
 
     expect(
-      await screen.findByRole('button', { name: /research three directions/i })
+      screen.getByRole('button', { name: /research three directions/i })
     ).toBeInTheDocument();
     expect(screen.getByText(/starting point only/i)).toBeInTheDocument();
     expect(
@@ -171,8 +175,9 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
+    await settle();
     expect(
-      await screen.findByText(/paste everything you already know once/i)
+      screen.getByText(/paste everything you already know once/i)
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /sort manually/i }));
     fireEvent.change(screen.getByLabelText(/company \+ product urls/i), {
@@ -191,9 +196,8 @@ describe('IntentScapeWorkspace', () => {
       screen.getByRole('button', { name: /add the full batch/i })
     );
 
-    await waitFor(() => {
-      expect(screen.getByText(/business context updated/i)).toBeInTheDocument();
-    });
+    await settle();
+    expect(screen.getByText(/business context updated/i)).toBeInTheDocument();
     const signalCall = fetchMock.mock.calls.find(([url]) =>
       url.endsWith('/signals')
     );
@@ -277,10 +281,9 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
+    await settle();
 
-    expect(
-      await screen.findByText('Audience · time-poor buyers')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Audience · time-poor buyers')).toBeInTheDocument();
     expect(
       screen.getByText(/1 applied · 1 optional suggestions/i)
     ).toBeInTheDocument();
@@ -296,17 +299,16 @@ describe('IntentScapeWorkspace', () => {
     });
     expect(nextStep).toBeEnabled();
     fireEvent.click(nextStep);
-    await waitFor(() => {
-      const expandCall = fetchMock.mock.calls.find(
-        ([url]) => url === '/api/intentscape/workspaces/workspace-1/expand'
-      );
-      expect(expandCall?.[1]).toEqual({
-        method: 'POST',
-        credentials: 'include',
-        headers: {},
-      });
-      expect(expandCall?.[1]?.body).toBeUndefined();
+    await settle();
+    const expandCall = fetchMock.mock.calls.find(
+      ([url]) => url === '/api/intentscape/workspaces/workspace-1/expand'
+    );
+    expect(expandCall?.[1]).toEqual({
+      method: 'POST',
+      credentials: 'include',
+      headers: {},
     });
+    expect(expandCall?.[1]?.body).toBeUndefined();
   });
 
   it('classifies a one-paste context dump without making the user sort it first', async () => {
@@ -333,23 +335,20 @@ describe('IntentScapeWorkspace', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
 
     render(<IntentScapeWorkspace />);
-    fireEvent.change(
-      await screen.findByLabelText(/paste everything you have/i),
-      {
-        target: {
-          value: [
-            'https://example.com',
-            'https://github.com/example/product',
-            'Customers cannot compare the options quickly.',
-          ].join('\n'),
-        },
-      }
-    );
+    await settle();
+    fireEvent.change(screen.getByLabelText(/paste everything you have/i), {
+      target: {
+        value: [
+          'https://example.com',
+          'https://github.com/example/product',
+          'Customers cannot compare the options quickly.',
+        ].join('\n'),
+      },
+    });
     fireEvent.click(screen.getByRole('button', { name: /add everything/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText(/business context updated/i)).toBeInTheDocument();
-    });
+    await settle();
+    expect(screen.getByText(/business context updated/i)).toBeInTheDocument();
     const signalCall = fetchMock.mock.calls.find(([url]) =>
       url.endsWith('/signals')
     );

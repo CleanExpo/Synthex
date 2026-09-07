@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { DraftCommandIntakePanel } from '@/components/command-centre';
 import { buildHermesHandoffReadiness } from '@/lib/unite-command-center';
 import { fetchWithCSRF } from '@/lib/csrf';
+import { settle } from '../../helpers/settle';
 
 jest.mock('@/lib/csrf', () => ({
   fetchWithCSRF: jest.fn(),
@@ -54,9 +55,10 @@ describe('DraftCommandIntakePanel', () => {
 
     expect(screen.getByText('Draft Command Intake')).toBeInTheDocument();
     expect(screen.getByText('Draft only')).toBeInTheDocument();
-    expect(
-      await screen.findByText('Telegram command intake')
-    ).toBeInTheDocument();
+
+    await settle();
+
+    expect(screen.getByText('Telegram command intake')).toBeInTheDocument();
     expect(screen.getByText('WhatsApp command intake')).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /create draft packet/i })
@@ -112,16 +114,18 @@ describe('DraftCommandIntakePanel', () => {
     fireEvent.change(screen.getByLabelText(/evidence refs/i), {
       target: { value: 'wiki:synthex' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /create draft packet/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /create draft packet/i })
+    );
 
-    await waitFor(() => {
-      expect(mockFetchWithCSRF).toHaveBeenCalledWith(
-        '/api/command-centre/intake',
-        expect.objectContaining({ method: 'POST' })
-      );
-    });
+    await settle();
 
-    expect(await screen.findByText('Create a campaign')).toBeInTheDocument();
+    expect(mockFetchWithCSRF).toHaveBeenCalledWith(
+      '/api/command-centre/intake',
+      expect.objectContaining({ method: 'POST' })
+    );
+
+    expect(screen.getByText('Create a campaign')).toBeInTheDocument();
     expect(screen.getByText('client review')).toBeInTheDocument();
     expect(screen.getByText('marketing strategy')).toBeInTheDocument();
   });
@@ -137,8 +141,12 @@ describe('DraftCommandIntakePanel', () => {
     fireEvent.change(screen.getByLabelText(/raw input/i), {
       target: { value: 'Draft this.' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /create draft packet/i }));
+    fireEvent.click(
+      screen.getByRole('button', { name: /create draft packet/i })
+    );
 
-    expect(await screen.findByText('Validation failed')).toBeInTheDocument();
+    await settle();
+
+    expect(screen.getByText('Validation failed')).toBeInTheDocument();
   });
 });

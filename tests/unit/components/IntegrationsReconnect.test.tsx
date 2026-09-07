@@ -22,8 +22,9 @@
  * mock `sonner` so toast() is a no-op under jsdom.
  */
 
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import IntegrationsPage from '@/app/dashboard/integrations/page';
+import { settle } from '../../helpers/settle';
 import { usePlatformIntegrations } from '@/hooks/use-platform-integrations';
 import { useThirdPartyIntegrations } from '@/hooks/use-third-party-integrations';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
@@ -146,9 +147,8 @@ describe('IntegrationsPage — reconnect (key-mismatch) state', () => {
     // The reconnect signal arrives via the /api/auth/connections fetch. The
     // stranded card renders the badge AND the notice heading, so there are two
     // "Reconnect needed" nodes for LinkedIn.
-    await waitFor(() => {
-      expect(screen.getAllByText('Reconnect needed').length).toBeGreaterThan(0);
-    });
+    await settle();
+    expect(screen.getAllByText('Reconnect needed').length).toBeGreaterThan(0);
 
     const linkedinCard = cardForPlatform('LinkedIn');
 
@@ -174,9 +174,8 @@ describe('IntegrationsPage — reconnect (key-mismatch) state', () => {
 
     // Wait until the reconnect signal has been applied (linkedin flips state),
     // so we know the healthy assertion reflects the post-fetch render.
-    await waitFor(() => {
-      expect(screen.getAllByText('Reconnect needed').length).toBeGreaterThan(0);
-    });
+    await settle();
+    expect(screen.getAllByText('Reconnect needed').length).toBeGreaterThan(0);
 
     const twitterCard = cardForPlatform('Twitter / X');
 
