@@ -22,6 +22,7 @@ import {
   Copy,
   Save,
   Clock,
+  Send,
 } from '@/components/icons';
 import type { GeneratedContentData } from './types';
 
@@ -37,6 +38,8 @@ interface GeneratedContentProps {
   onCopy: (content: string) => void;
   onSave: () => void;
   onSchedule: () => void;
+  onPostNow: () => void;
+  onDiscard: () => void;
 }
 
 export function GeneratedContent({
@@ -51,6 +54,8 @@ export function GeneratedContent({
   onCopy,
   onSave,
   onSchedule,
+  onPostNow,
+  onDiscard,
 }: GeneratedContentProps) {
   const getContentToDisplay = () => {
     if (!content) return '';
@@ -64,9 +69,9 @@ export function GeneratedContent({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Generated Content</CardTitle>
+            <CardTitle>Draft</CardTitle>
             <CardDescription className="text-gray-300">
-              AI-generated content based on your settings
+              Edit anything. Nothing is public until you schedule or post.
             </CardDescription>
           </div>
           {content && (
@@ -167,23 +172,14 @@ export function GeneratedContent({
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex space-x-2">
-              <Button
-                onClick={() => onCopy(getContentToDisplay())}
-                variant="outline"
-                className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10"
-              >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy
-              </Button>
+            <div className="flex flex-wrap gap-2">
               <Button
                 onClick={onSave}
                 variant="outline"
                 className="flex-1 bg-white/5 border-white/10 text-white hover:bg-white/10"
               >
                 <Save className="mr-2 h-4 w-4" />
-                Save
+                Save draft
               </Button>
               <Button
                 onClick={onSchedule}
@@ -192,6 +188,30 @@ export function GeneratedContent({
                 <Clock className="mr-2 h-4 w-4" />
                 Schedule
               </Button>
+              <Button
+                onClick={onPostNow}
+                className="flex-1 bg-orange-500 hover:bg-orange-400 text-black"
+              >
+                <Send className="mr-2 h-4 w-4" />
+                Post now
+              </Button>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onCopy(getContentToDisplay())}
+                className="text-xs text-white/40 hover:text-white/70"
+              >
+                <Copy className="inline mr-1 h-3 w-3" />
+                Copy
+              </button>
+              <button
+                type="button"
+                onClick={onDiscard}
+                className="text-xs text-white/40 hover:text-white/70"
+              >
+                Discard
+              </button>
             </div>
           </div>
         ) : (
