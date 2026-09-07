@@ -123,6 +123,7 @@ export default function CampaignConceptStudioPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(formState),
       });
 
@@ -130,6 +131,19 @@ export default function CampaignConceptStudioPage() {
         success?: boolean;
         payload?: CampaignStudioResponse;
       } & ApiErrorResponse;
+
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        setErrorMessage(
+          retryAfter
+            ? `Too many concept requests. Wait ${retryAfter} seconds and try again.`
+            : data.error ||
+                'Too many concept requests. Wait a minute and try again.'
+        );
+        setDetailErrors(null);
+        setStatus('error');
+        return;
+      }
 
       if (!response.ok || data.success === false) {
         const details = data.details ? JSON.stringify(data.details) : undefined;
@@ -178,8 +192,9 @@ export default function CampaignConceptStudioPage() {
             Campaign Concept Studio
           </h1>
           <p className="mt-2 text-sm text-white/65">
-            Generate a concise concept, three headline/body variants, launch
-            checklist, and visual prompts + images in one production-ready pass.
+            Draft a concept, headline variants, checklist, and image prompts.
+            This does not schedule or publish — copy what you want into Content
+            or the calendar.
           </p>
         </div>
         <Link
@@ -398,6 +413,36 @@ export default function CampaignConceptStudioPage() {
                   </div>
                 </div>
 
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Link
+                    href="/dashboard/content"
+                    className="inline-flex items-center rounded-lg border border-white/12 px-3 py-2 text-xs font-semibold text-white/80 hover:border-white/25 hover:text-white"
+                  >
+                    Open Content to draft a post
+                  </Link>
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-lg border border-white/12 px-3 py-2 text-xs font-semibold text-white/80 hover:border-white/25 hover:text-white"
+                    onClick={async () => {
+                      const text = result.copyVariants
+                        .map(
+                          (copy, index) =>
+                            `Variant ${index + 1}\n${copy.headline}\n${copy.body}`
+                        )
+                        .join('\n\n');
+                      try {
+                        await navigator.clipboard.writeText(text);
+                      } catch {
+                        setErrorMessage(
+                          'Could not copy variants. Select the text manually.'
+                        );
+                      }
+                    }}
+                  >
+                    Copy variants
+                  </button>
+                </div>
+
                 <div className="mt-5">
                   <p className="text-sm font-semibold text-white">
                     Headline + body variants
@@ -546,9 +591,9 @@ export default function CampaignConceptStudioPage() {
             <div className="flex items-start gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4" />
               <p>
-                This feature runs OpenAI calls in the server route only. Your
-                browser never stores API secrets and never calls OpenAI
-                directly.
+                Concept Studio drafts ideas only. It does not connect accounts,
+                schedule, or publish. Generation runs on the server — your
+                browser never stores API secrets.
               </p>
             </div>
           </div>
