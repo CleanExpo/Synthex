@@ -34,6 +34,7 @@ describe('DashboardThisWeekHome', () => {
     render(<DashboardThisWeekHome stats={emptyStats} />);
     expect(screen.getByText('No accounts ready')).toBeInTheDocument();
     expect(screen.getByText('Connect an account')).toBeInTheDocument();
+    expect(screen.getByText(/green check/i)).toBeInTheDocument();
     expect(screen.getByText('Write your first post')).toBeInTheDocument();
     expect(screen.getByText('get-started')).toBeInTheDocument();
   });
