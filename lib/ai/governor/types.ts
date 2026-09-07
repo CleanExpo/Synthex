@@ -70,6 +70,13 @@ export type GovernorOutcome =
    * budget. Refusing on the input is the only fail-closed answer.
    */
   | 'refused_budget_invalid_estimate'
+  /**
+   * Some OTHER number reaching a ceiling comparison was not a finite,
+   * non-negative USD amount — a corrupt policy ceiling, or a poisoned ledger
+   * row. Same IEEE fail-open class as refused_budget_invalid_estimate, on a
+   * different operand; the verdict string says which.
+   */
+  | 'refused_budget_untrusted_input'
   /** Requested model is absent from the registry or deprecated. */
   | 'refused_model_unavailable'
   /** A control-plane read (flag / credential / budget) failed. Unknown ⇒ refuse. */

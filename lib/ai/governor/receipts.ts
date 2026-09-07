@@ -31,9 +31,27 @@ export type ReceiptDraft = Omit<GovernorReceipt, 'persisted'>;
  * into an exception — the caller's decision has already been made, and losing
  * the row is strictly less bad than losing the verdict.
  */
+/**
+ * Last line of defence for the ledger's own integrity. A NaN or negative
+ * cost_usd does not just make one row wrong — it poisons every budget SUM that
+ * later reads the table, and checkBudget refuses outright on a poisoned ledger,
+ * so one bad write would halt a brand's AI entirely. Callers are guarded, but
+ * this is the single choke point where every Governor row is written, so the
+ * invariant belongs here too.
+ */
+function ledgerSafe(value: number): number {
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
 export async function writeReceipt(
   draft: ReceiptDraft
 ): Promise<GovernorReceipt> {
+  draft = {
+    ...draft,
+    inputTokens: ledgerSafe(draft.inputTokens),
+    outputTokens: ledgerSafe(draft.outputTokens),
+    costUsd: ledgerSafe(draft.costUsd),
+  };
   // Belt — survives any downstream failure. Mirrors track-cost.ts's
   // 'pipeline_cost' line so existing log consumers keep working, with the
   // Governor's extra dimensions attached.

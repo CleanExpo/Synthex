@@ -167,6 +167,28 @@ MUTANTS = [
        "function isUsableTokenCount(value: number): boolean {\n  return true || (Number.isFinite(value) && value >= 0);")],
      BUDGET),
 
+    # Round-4 findings: the SAME IEEE fail-open class on two more operands.
+    # One mutant per operand, because a single mutant would let any one
+    # surviving guard satisfy the whole table.
+
+    ("M15 org ceiling no longer classified (a NaN ceiling reads as 'no ceiling')",
+     "lib/ai/governor/budget.ts",
+     [("  const orgRead = classifyCeiling(policy.dailyCeilingUsd);",
+       "  const orgRead = ((v: unknown) => (v === null || v === undefined ? { kind: 'absent' as const } : { kind: 'set' as const, value: v as number }))(policy.dailyCeilingUsd);")],
+     BUDGET),
+
+    ("M16 ledger row values no longer gated (a poisoned cost_usd is summed)",
+     "lib/ai/governor/budget.ts",
+     [("    if (asUsableUsd(row._sum?.costUsd ?? 0) === null) {",
+       "    if (false && asUsableUsd(row._sum?.costUsd ?? 0) === null) {")],
+     BUDGET),
+
+    ("M17 receipt no longer clamps, so the Governor can poison its own ledger",
+     "lib/ai/governor/receipts.ts",
+     [("function ledgerSafe(value: number): number {\n  return Number.isFinite(value) && value >= 0 ? value : 0;",
+       "function ledgerSafe(value: number): number {\n  return value;")],
+     BUDGET),
+
     ("M7 audit matcher neutered (scanner can no longer detect anything)",
      "scripts/audit-governor-model-strings.mjs",
      [("const MODEL_ID_PATTERNS = [", "const MODEL_ID_PATTERNS = [];\nconst UNUSED_PATTERNS = [")],
