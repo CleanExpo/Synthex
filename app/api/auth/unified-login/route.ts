@@ -8,10 +8,14 @@ import { z } from 'zod';
 import { signInFlow } from '@/lib/auth/signInFlow';
 import { logger } from '@/lib/logger';
 
+const SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+const REMEMBERED_SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
 const unifiedLoginSchema = z.object({
   method: z.enum(['email', 'oauth']),
   email: z.string().email().optional(),
   password: z.string().optional(),
+  rememberMe: z.boolean().optional(),
   provider: z.enum(['google', 'github']).optional(),
   oauthUser: z
     .object({
@@ -48,7 +52,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { method, email, password, provider, oauthUser } = validation.data;
+    const { method, email, password, provider, oauthUser, rememberMe } =
+      validation.data;
 
     // Process through centralized auth flow
     const result = await signInFlow.authenticate(method, {
@@ -74,7 +79,9 @@ export async function POST(request: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        maxAge: rememberMe
+          ? REMEMBERED_SESSION_MAX_AGE_SECONDS
+          : SESSION_MAX_AGE_SECONDS,
         path: '/',
       });
 
