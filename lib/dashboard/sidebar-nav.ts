@@ -53,6 +53,12 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
       },
       {
         iconKey: 'Image',
+        label: 'Media Library',
+        href: '/dashboard/media',
+        description: 'Pictures and files for posts',
+      },
+      {
+        iconKey: 'Image',
         label: 'AI Images',
         href: '/dashboard/ai-images',
         description: 'Generate on-brand visuals from prompts',
