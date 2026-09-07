@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { DashboardSkeleton } from '@/components/skeletons';
@@ -31,6 +32,10 @@ import { ReleaseTab } from '@/components/publish/ReleaseTab';
 import { BulkScheduleWizard } from '@/components/scheduling';
 import { usePersonas } from '@/hooks/use-personas';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import {
+  humanizeAiError,
+  humanizePublishBlocker,
+} from '@/lib/dashboard/humanize-error';
 
 // Dynamic imports for heavy components (code-split)
 const ContentScoreWidget = dynamic(
@@ -49,6 +54,7 @@ const AIHashtagGenerator = dynamic(
 );
 
 export default function ContentPage() {
+  const router = useRouter();
   // Multi-business context
   const { businesses, activeBusiness, isOwner, switchBusiness } =
     useActiveBusiness();
@@ -423,15 +429,14 @@ export default function ContentPage() {
           errorData.code === 'API_KEY_NOT_CONFIGURED'
         ) {
           toast.error(
-            'Please configure an AI API key in Settings → AI Credentials'
+            'Add an AI key in Settings → AI Credentials so we can draft for you.'
           );
           return;
         }
-        throw new Error(
-          errorData.error ||
-            errorData.message ||
-            `Request failed (${response.status})`
+        toast.error(
+          humanizeAiError(errorData.error || errorData.message, response.status)
         );
+        return;
       }
 
       const data = await response.json();
@@ -457,7 +462,9 @@ export default function ContentPage() {
       }
     } catch (err) {
       console.error('Quick post error:', err);
-      toast.error(err instanceof Error ? err.message : 'Failed to create post');
+      toast.error(
+        humanizeAiError(err instanceof Error ? err.message : undefined)
+      );
     } finally {
       setIsQuickGenerating(false);
     }
@@ -567,16 +574,19 @@ export default function ContentPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          (errorData as { message?: string }).message ||
-            `Failed to schedule (${response.status})`
+          humanizePublishBlocker(
+            (errorData as { message?: string; error?: string }).message ||
+              (errorData as { error?: string }).error,
+            response.status
+          )
         );
       }
 
-      toast.success('Post scheduled! View it in your Schedule page.', {
+      toast.success('Booked. Find it on Calendar.', {
         action: {
-          label: 'View Schedule',
+          label: 'Open Calendar',
           onClick: () => {
-            window.location.href = '/dashboard/schedule';
+            router.push('/dashboard/calendar');
           },
         },
       });
@@ -589,6 +599,7 @@ export default function ContentPage() {
       personaId,
       psychologyScore,
       mediaUrls,
+      router,
     ]
   );
 
@@ -650,11 +661,11 @@ export default function ContentPage() {
       const successCount = results.filter(r => r.success).length;
       if (successCount === results.length) {
         setLastBatchId(options.batchId);
-        toast.success(`Scheduled to ${successCount} platforms!`, {
+        toast.success(`Booked on ${successCount} platforms.`, {
           action: {
-            label: 'View Schedule',
+            label: 'Open Calendar',
             onClick: () => {
-              window.location.href = '/dashboard/schedule';
+              router.push('/dashboard/calendar');
             },
           },
         });
@@ -677,6 +688,7 @@ export default function ContentPage() {
       personaId,
       psychologyScore,
       mediaUrls,
+      router,
     ]
   );
 
@@ -856,7 +868,8 @@ export default function ContentPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-white">Quick Post</span>
               <span className="text-xs text-white/40">
-                Type one line — or leave blank for an on-brand post
+                Type what happened this week. We draft. You edit. Nothing is
+                public until you schedule or post.
               </span>
             </div>
             <textarea
@@ -1057,6 +1070,13 @@ export default function ContentPage() {
               />
             )}
 
+            {generatedContent && (
+              <p className="text-sm text-white/50 border-[0.5px] border-white/8 bg-white/2 rounded-sm px-4 py-3">
+                This is a draft. Nothing is public. Edit the words, add a photo
+                if you have one, then Save, Schedule, or Post now.
+              </p>
+            )}
+
             <GeneratedContent
               content={generatedContent}
               selectedVariation={selectedVariation}
@@ -1195,12 +1215,7 @@ export default function ContentPage() {
                   <Brain className="h-4 w-4 text-orange-400" />
                   Psychology Analysis
                 </h3>
-                <Link
-                  href="/dashboard/psychology"
-                  className="text-xs text-orange-400 hover:text-orange-300"
-                >
-                  Full Analysis →
-                </Link>
+                <span className="text-xs text-white/35">Optional check</span>
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-center">
