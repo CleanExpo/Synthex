@@ -123,6 +123,9 @@ export default function ContentPage() {
 
   // Publish confirmation modal
   const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [publishIntent, setPublishIntent] = useState<'schedule' | 'now'>(
+    'schedule'
+  );
 
   // Multi-platform state
   const [multiPlatformEnabled, setMultiPlatformEnabled] = useState(false);
@@ -537,11 +540,29 @@ export default function ContentPage() {
 
   const handleScheduleClick = useCallback(() => {
     if (!generatedContent) {
-      toast.error('Generate content first before scheduling');
+      toast.error('Write or generate a draft first.');
       return;
     }
+    setPublishIntent('schedule');
     setPublishModalOpen(true);
   }, [generatedContent]);
+
+  const handlePostNowClick = useCallback(() => {
+    if (!generatedContent) {
+      toast.error('Write or generate a draft first.');
+      return;
+    }
+    setPublishIntent('now');
+    setPublishModalOpen(true);
+  }, [generatedContent]);
+
+  const handleDiscardDraft = useCallback(() => {
+    setGeneratedContent(null);
+    setEditedContent('');
+    setEditMode(false);
+    setMediaUrls([]);
+    toast.message('Draft discarded. Nothing was published.');
+  }, []);
 
   const handlePublishConfirm = useCallback(
     async (options: PublishOptions) => {
@@ -1089,6 +1110,8 @@ export default function ContentPage() {
               onCopy={handleCopy}
               onSave={handleSave}
               onSchedule={handleScheduleClick}
+              onPostNow={handlePostNowClick}
+              onDiscard={handleDiscardDraft}
             />
           </div>
 
@@ -1277,6 +1300,7 @@ export default function ContentPage() {
           <PublishConfirmModal
             open={publishModalOpen}
             onOpenChange={setPublishModalOpen}
+            intent={publishIntent}
             content={
               editMode && editedContent
                 ? editedContent
