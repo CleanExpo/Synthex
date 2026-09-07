@@ -31,13 +31,18 @@ import {
   Users,
   Eye,
   Heart,
-  Clock,
 } from '@/components/icons';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useSocialConnections } from '@/hooks/use-social-connections';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import {
+  platformReadyCopy,
+  platformReadyKind,
+} from '@/lib/dashboard/platform-ready';
+import { ShadowLiveToggle } from '@/components/calendar/ShadowLiveToggle';
+import useSWR from 'swr';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -205,8 +210,10 @@ function PlatformCard({
   highlighted,
 }: PlatformCardProps) {
   const Icon = platform.icon;
-  const tokenAlert =
-    status.connected && (status.isExpired || status.needsRefresh);
+  const kind = platformReadyKind(status);
+  const copy = platformReadyCopy(platform.name, kind);
+  const isReady = kind === 'ready';
+  const tokenAlert = kind === 'expired' || kind === 'refresh';
 
   return (
     <div
@@ -268,44 +275,28 @@ function PlatformCard({
             </div>
           </div>
 
-          {/* Status badge */}
-          {status.connected && status.isExpired ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-red-500/[0.08] text-red-400 border-[0.5px] border-red-500/20 shrink-0">
-              <AlertTriangle className="h-2.5 w-2.5" />
-              Expired
-            </span>
-          ) : status.connected && status.needsRefresh ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] bg-orange-500/[0.08] text-orange-400 border-[0.5px] border-orange-500/20 shrink-0">
-              <AlertCircle className="h-2.5 w-2.5" />
-              Refresh
-            </span>
-          ) : (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] border-[0.5px] shrink-0',
-                status.connected
-                  ? 'bg-emerald-500/[0.08] text-emerald-400 border-emerald-500/20'
-                  : 'bg-white/[0.02] text-white/50 border-white/[0.06]'
-              )}
-            >
-              <span
-                className={cn(
-                  'h-1 w-1 rounded-full',
-                  status.connected ? 'bg-emerald-400' : 'bg-white/20'
-                )}
-              />
-              {status.connected ? 'Ready' : 'Not ready'}
-            </span>
-          )}
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-[9px] uppercase tracking-[0.15em] border-[0.5px] shrink-0',
+              isReady
+                ? 'bg-emerald-500/8 text-emerald-400 border-emerald-500/20'
+                : 'bg-white/2 text-white/50 border-white/6'
+            )}
+          >
+            {isReady ? (
+              <CheckCircle className="h-2.5 w-2.5" />
+            ) : (
+              <span className="h-1 w-1 rounded-full bg-white/20" />
+            )}
+            {copy.badge}
+          </span>
         </div>
 
         {/* Token alert banner */}
         {tokenAlert && (
           <div className="mt-2.5 flex items-center justify-between gap-2 px-3 py-2 rounded-sm bg-orange-500/[0.05] border-[0.5px] border-orange-500/15">
             <p className="text-[10px] text-orange-400/80">
-              {status.isExpired
-                ? 'Access token expired — reconnect to continue publishing.'
-                : 'Token will expire soon. Refresh to avoid interruptions.'}
+              {copy.missing} {copy.why}
             </p>
             <button
               onClick={() => onRefresh(platform.id)}
@@ -317,7 +308,11 @@ function PlatformCard({
               ) : (
                 <RefreshCw className="h-3 w-3" />
               )}
-              {refreshing ? 'Refreshing…' : 'Refresh'}
+              {refreshing
+                ? 'Refreshing…'
+                : kind === 'expired'
+                  ? 'Reconnect'
+                  : 'Refresh'}
             </button>
           </div>
         )}
@@ -365,14 +360,16 @@ function PlatformCard({
               )}
             </div>
 
-            {/* Actions */}
+            <p className="text-[11px] text-white/40 leading-relaxed">
+              {copy.why} {copy.next}
+            </p>
             <div className="flex gap-2">
               <Link
                 href="/dashboard/content"
-                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-sm transition-colors bg-orange-500 hover:bg-orange-400 text-[#050505]"
+                className="flex-1 inline-flex items-center justify-center gap-1.5 h-8 px-3 text-xs font-medium rounded-sm transition-colors bg-orange-500 hover:bg-orange-400 text-surface-dark"
               >
                 <Send className="h-3.5 w-3.5" />
-                Create Post
+                Write a post
               </Link>
               <Link
                 href="/dashboard/analytics"
@@ -397,9 +394,29 @@ function PlatformCard({
             </div>
           </>
         ) : (
-          <div className="w-full flex items-center justify-center gap-2 h-8 text-xs font-medium rounded-sm border-[0.5px] border-white/[0.05] bg-white/[0.01] text-white/25 cursor-not-allowed select-none">
-            <Clock className="h-3.5 w-3.5 text-white/20" />
-            Coming Soon
+          <div className="space-y-2">
+            <p className="text-[11px] text-white/45 leading-relaxed">
+              {copy.missing} {copy.why} {copy.next}
+            </p>
+            <button
+              type="button"
+              onClick={() => onConnect(platform.id)}
+              disabled={connecting}
+              className="w-full inline-flex items-center justify-center gap-1.5 h-8 text-xs font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-surface-dark disabled:opacity-50"
+            >
+              {connecting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Link2 className="h-3.5 w-3.5" />
+              )}
+              {connecting ? 'Connecting…' : `Connect ${platform.name}`}
+            </button>
+            <Link
+              href="/dashboard/content"
+              className="block text-center text-[11px] text-white/40 hover:text-white/70"
+            >
+              Write a draft anyway
+            </Link>
           </div>
         )}
       </div>
@@ -430,7 +447,7 @@ function PlatformSummary({
       icon: CheckCircle,
     },
     {
-      label: 'Available',
+      label: 'Not ready',
       value: String(PLATFORMS.length - connectedCount),
       colour: '#6B7280',
       icon: AlertCircle,
@@ -489,6 +506,12 @@ function PlatformsPageContent() {
   const { activeOrganizationId } = useActiveBusiness();
   const { connections, summary, isLoading, connect, disconnect, mutate } =
     useSocialConnections(activeOrganizationId);
+  const { data: calendarWeek, mutate: mutateCalendar } = useSWR<{
+    calendarMode?: 'shadow' | 'live';
+  }>('/api/calendar/current-week', (url: string) =>
+    fetch(url, { credentials: 'include' }).then(r => r.json())
+  );
+  const calendarMode = calendarWeek?.calendarMode ?? 'shadow';
   const searchParams = useSearchParams();
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
@@ -519,12 +542,10 @@ function PlatformsPageContent() {
       setConnectingId(platformId);
       try {
         await connect(platformId);
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : `Failed to connect ${platformId}`;
-        toast.error(message);
+      } catch {
+        toast.error(
+          `${platformId} is not ready yet. Try Connect again, or write a draft in Content.`
+        );
         setConnectingId(null);
       }
     },
@@ -650,6 +671,35 @@ function PlatformsPageContent() {
         }
       />
 
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3">
+        <p className="text-sm text-white/50 leading-relaxed">
+          {calendarMode === 'live'
+            ? 'Live: booked posts go out at the time you picked. Switch back anytime.'
+            : 'Practice: posts stay in Synthex. Live: they go out at the time you picked.'}
+        </p>
+        <ShadowLiveToggle
+          mode={calendarMode}
+          onModeChange={async mode => {
+            const res = await fetch('/api/calendar/mode', {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mode }),
+            });
+            if (!res.ok) {
+              toast.error('Could not change posting mode. Try again.');
+              return;
+            }
+            toast.success(
+              mode === 'live'
+                ? 'Live: posts can go out at the time you picked.'
+                : 'Practice: posts stay in Synthex.'
+            );
+            await mutateCalendar();
+          }}
+        />
+      </div>
+
       {/* Summary data strip */}
       <PlatformSummary
         connectedCount={connectedCount}
@@ -662,11 +712,11 @@ function PlatformsPageContent() {
       {summary?.connected === 0 && !isLoading && (
         <div className="py-12 border-[0.5px] border-dashed border-white/[0.08] rounded-sm text-center">
           <p className="text-sm font-light text-white/40">
-            No platforms connected yet
+            No account is ready yet
           </p>
           <p className="text-xs text-white/50 mt-1">
-            Click &ldquo;Connect&rdquo; on any platform card below to get
-            started.
+            Tap Connect on Instagram or another channel. You can still write
+            drafts in Content.
           </p>
         </div>
       )}
@@ -675,7 +725,7 @@ function PlatformsPageContent() {
       {connectedPlatforms.length > 0 && (
         <div className="space-y-3">
           <span className="text-[9px] uppercase tracking-[0.25em] text-white/50">
-            Connected Platforms
+            Ready
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {connectedPlatforms.map(platform => (
@@ -700,7 +750,7 @@ function PlatformsPageContent() {
       {availablePlatforms.length > 0 && (
         <div className="space-y-3">
           <span className="text-[9px] uppercase tracking-[0.25em] text-white/50">
-            Available Platforms
+            Not ready
           </span>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {availablePlatforms.map(platform => (
