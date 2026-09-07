@@ -294,7 +294,7 @@ function PlatformCard({
                   status.connected ? 'bg-emerald-400' : 'bg-white/20'
                 )}
               />
-              {status.connected ? 'Connected' : 'Not connected'}
+              {status.connected ? 'Ready' : 'Not ready'}
             </span>
           )}
         </div>
@@ -424,7 +424,7 @@ function PlatformSummary({
 }) {
   const items = [
     {
-      label: 'Connected',
+      label: 'Ready',
       value: String(connectedCount),
       colour: '#00FF88',
       icon: CheckCircle,
@@ -626,7 +626,11 @@ function PlatformsPageContent() {
       <PageHeader
         eyebrow="Social Media"
         title="Platforms"
-        description="Manage your connected social media accounts and monitor performance."
+        description={
+          connectedCount === 0
+            ? 'Nothing is ready to post yet. Connect one account — Ready looks like a green check. You can still write drafts without this.'
+            : 'Ready accounts can go live. If one is missing or expired, reconnect it here or posts will stay inside Synthex.'
+        }
         actions={
           <div className="flex gap-2">
             <button
