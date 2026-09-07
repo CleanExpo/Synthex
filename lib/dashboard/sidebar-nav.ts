@@ -168,8 +168,8 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
       {
         iconKey: 'List',
         label: 'Publishing Queue',
-        href: '/dashboard/schedule/queue',
-        description: 'Queued and in-flight publishes',
+        href: '/dashboard/calendar?view=queue',
+        description: 'Same posts as Calendar — list of booked and failed',
       },
       {
         iconKey: 'Bell',
