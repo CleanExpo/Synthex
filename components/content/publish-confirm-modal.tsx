@@ -34,6 +34,7 @@ import {
 } from '@/components/icons';
 import { TimeSlotPicker } from '@/components/scheduling';
 import Link from 'next/link';
+import { humanizePublishBlocker } from '@/lib/dashboard/humanize-error';
 
 // =============================================================================
 // Types
@@ -68,6 +69,8 @@ export interface PublishConfirmModalProps {
     platforms: string[];
     batchId: string;
   }) => Promise<PlatformScheduleResult[]>;
+  /** Schedule later, or send as soon as they confirm. */
+  intent?: 'schedule' | 'now';
 }
 
 // =============================================================================
@@ -134,6 +137,7 @@ export function PublishConfirmModal({
   selectedPlatforms,
   platformAdaptations,
   onMultiConfirm,
+  intent = 'schedule',
 }: PublishConfirmModalProps) {
   const [scheduledDate, setScheduledDate] = useState<Date | null>(
     getDefaultScheduleDate
@@ -181,16 +185,19 @@ export function PublishConfirmModal({
   const connectionLabel =
     connectionsByPlatform[platform.toLowerCase()]?.username;
 
-  // Content preview
-  const preview =
-    content.length > 100 ? content.slice(0, 100) + '...' : content;
+  const emptyBody = content.trim().length === 0;
+  const postNow = intent === 'now';
 
   // Single-platform confirm
   const handleSingleConfirm = useCallback(async () => {
-    if (!scheduledDate) return;
+    if (!postNow && !scheduledDate) return;
+    if (emptyBody) {
+      toast.error(humanizePublishBlocker('empty content'));
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const isoDate = scheduledDate.toISOString();
+      const isoDate = (postNow ? new Date() : scheduledDate!).toISOString();
       await onConfirm({
         scheduledAt: isoDate,
         platform,
@@ -198,20 +205,25 @@ export function PublishConfirmModal({
       onOpenChange(false);
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : 'Failed to schedule post'
+        humanizePublishBlocker(err instanceof Error ? err.message : undefined)
       );
     } finally {
       setIsSubmitting(false);
     }
-  }, [scheduledDate, platform, onConfirm, onOpenChange]);
+  }, [scheduledDate, platform, onConfirm, onOpenChange, emptyBody, postNow]);
 
   // Multi-platform confirm
   const handleMultiConfirm = useCallback(async () => {
-    if (!onMultiConfirm || !selectedPlatforms || !scheduledDate) return;
+    if (!onMultiConfirm || !selectedPlatforms) return;
+    if (!postNow && !scheduledDate) return;
+    if (emptyBody) {
+      toast.error(humanizePublishBlocker('empty content'));
+      return;
+    }
     setIsSubmitting(true);
     setScheduleResults(null);
     try {
-      const isoDate = scheduledDate.toISOString();
+      const isoDate = (postNow ? new Date() : scheduledDate!).toISOString();
       const batchId = `batch-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const results = await onMultiConfirm({
         scheduledAt: isoDate,
@@ -227,12 +239,19 @@ export function PublishConfirmModal({
       }
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : 'Failed to schedule posts'
+        humanizePublishBlocker(err instanceof Error ? err.message : undefined)
       );
     } finally {
       setIsSubmitting(false);
     }
-  }, [scheduledDate, selectedPlatforms, onMultiConfirm, onOpenChange]);
+  }, [
+    scheduledDate,
+    selectedPlatforms,
+    onMultiConfirm,
+    onOpenChange,
+    emptyBody,
+    postNow,
+  ]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -243,21 +262,43 @@ export function PublishConfirmModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-orange-400" />
-            {isMultiPlatform
-              ? `Schedule to ${platforms.length} Platforms`
-              : 'Schedule Post'}
+            {postNow
+              ? isMultiPlatform
+                ? `Post now to ${platforms.length} platforms`
+                : 'Post now'
+              : isMultiPlatform
+                ? `Schedule to ${platforms.length} platforms`
+                : 'Schedule this post'}
           </DialogTitle>
           <DialogDescription>
-            {isMultiPlatform
-              ? 'Review platform accounts and confirm scheduling for all platforms.'
-              : 'Confirm the date, time, and platform account before scheduling.'}
+            Check the exact words, photo, platforms, and time. Nothing goes out
+            until you confirm.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 py-2">
-          {/* Content summary */}
-          <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 space-y-2">
-            <p className="text-xs text-slate-300 leading-relaxed">{preview}</p>
+          <div className="rounded-lg border border-white/6 bg-white/2 p-3 space-y-3">
+            {emptyBody ? (
+              <p className="text-sm text-amber-200/90">
+                {humanizePublishBlocker('empty content')}
+              </p>
+            ) : (
+              <p className="text-sm text-white whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {content}
+              </p>
+            )}
+            {mediaUrls && mediaUrls.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {mediaUrls.map(url => (
+                  <img
+                    key={url}
+                    src={url}
+                    alt=""
+                    className="h-16 w-16 object-cover rounded-sm border border-white/10"
+                  />
+                ))}
+              </div>
+            )}
             <div className="flex items-center gap-2 flex-wrap">
               {platforms.map(p => (
                 <span
@@ -267,29 +308,28 @@ export function PublishConfirmModal({
                   {getPlatformLabel(p)}
                 </span>
               ))}
-              {mediaUrls && mediaUrls.length > 0 && (
-                <span className="text-[10px] text-slate-300">
-                  {mediaUrls.length}{' '}
-                  {mediaUrls.length === 1 ? 'image' : 'images'}
-                </span>
-              )}
               {hashtags && hashtags.length > 0 && (
                 <span className="text-[10px] text-slate-300">
-                  {hashtags.length}{' '}
-                  {hashtags.length === 1 ? 'hashtag' : 'hashtags'}
+                  {hashtags.join(' ')}
                 </span>
               )}
             </div>
           </div>
 
-          {/* Smart Time Slot Picker */}
-          <TimeSlotPicker
-            value={scheduledDate}
-            onChange={setScheduledDate}
-            platform={platform}
-            platforms={isMultiPlatform ? selectedPlatforms : undefined}
-            minDate={new Date()}
-          />
+          {postNow ? (
+            <p className="text-sm text-white/50">
+              Time: as soon as you confirm. If an account is not ready, the post
+              stays in Synthex.
+            </p>
+          ) : (
+            <TimeSlotPicker
+              value={scheduledDate}
+              onChange={setScheduledDate}
+              platform={platform}
+              platforms={isMultiPlatform ? selectedPlatforms : undefined}
+              minDate={new Date()}
+            />
+          )}
 
           {/* Platform account status */}
           <div className="space-y-1.5">
@@ -382,8 +422,9 @@ export function PublishConfirmModal({
                 <div className="flex items-start gap-2">
                   <AlertTriangle className="h-3.5 w-3.5 text-orange-400 flex-shrink-0 mt-0.5" />
                   <span className="text-xs text-orange-300">
-                    No connected {getPlatformLabel(platform)} account. The post
-                    will fail to publish without a connected account.
+                    {getPlatformLabel(platform)} is not ready. Connect it on
+                    Platforms, or confirm anyway — the post stays in Synthex
+                    until that account is ready.
                   </span>
                 </div>
                 <Link
@@ -429,7 +470,9 @@ export function PublishConfirmModal({
               onClick={
                 isMultiPlatform ? handleMultiConfirm : handleSingleConfirm
               }
-              disabled={isSubmitting || !scheduledDate}
+              disabled={
+                isSubmitting || emptyBody || (!postNow && !scheduledDate)
+              }
               className="gradient-primary text-white gap-2"
             >
               {isSubmitting ? (
@@ -438,10 +481,16 @@ export function PublishConfirmModal({
                 <Send className="h-4 w-4" />
               )}
               {isSubmitting
-                ? 'Scheduling...'
-                : isMultiPlatform
-                  ? `Schedule ${platforms.length} Posts`
-                  : 'Schedule'}
+                ? postNow
+                  ? 'Sending…'
+                  : 'Scheduling…'
+                : postNow
+                  ? isMultiPlatform
+                    ? `Post to ${platforms.length} now`
+                    : 'Post now'
+                  : isMultiPlatform
+                    ? `Schedule ${platforms.length} posts`
+                    : 'Schedule'}
             </Button>
           )}
         </DialogFooter>
