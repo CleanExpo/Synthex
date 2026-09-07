@@ -25,6 +25,12 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...a: unknown[]) => mockGetUserId(...a),
 }));
 
+const mockResolveIssuerRole = jest.fn();
+jest.mock('@/lib/auth/rbac/issuer-rank', () => ({
+  ROLE_RANK: { owner: 3, admin: 2, editor: 1, viewer: 0 },
+  resolveIssuerRole: (...a: unknown[]) => mockResolveIssuerRole(...a),
+}));
+
 jest.mock('@/lib/api/response-optimizer', () => {
   const { NextResponse } = require('next/server');
   return {
@@ -124,6 +130,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockGetUserId.mockResolvedValue(USER_ID);
   mockUserFindFirst.mockResolvedValue({ id: USER_ID });
+  mockResolveIssuerRole.mockResolvedValue('viewer');
   mockTxOrgUpdate.mockImplementation(async ({ data }: any) =>
     makeExistingOrg((data.settings as Record<string, unknown>) ?? {})
   );
@@ -425,5 +432,20 @@ describe('PATCH /api/organizations/[orgId] — settings.studio is validated wher
     );
 
     expect(res.status).toBe(400);
+  });
+
+  it('lets an RBAC owner PATCH studio settings without settings.admins', async () => {
+    setupOrg({});
+    mockResolveIssuerRole.mockResolvedValue('owner');
+
+    const res = await PATCH(
+      patchRequest({
+        settings: { studio: { funnelUrl: 'https://acme.example/quote' } },
+      }),
+      paramsArg
+    );
+
+    expect(res.status).toBe(200);
+    expect(mockTransaction).toHaveBeenCalled();
   });
 });
