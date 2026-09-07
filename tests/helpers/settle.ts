@@ -34,6 +34,23 @@
  * of magic number as the timeout it replaces; if one call is ever not enough,
  * that means a real macrotask entered the path under test and is a finding,
  * not a number to raise.
+ *
+ * KNOWN RESIDUAL - tracked as SYN-1195, not merely noted here.
+ *
+ * This converts the 19 call sites in the four suites OBSERVED failing across two
+ * receipt runs of fe05fcad. The identical mechanism remains in 20 other test files,
+ * 67 further call sites, all still resolving on the 1000ms wall-clock default. Those
+ * sites were on that default before this branch and are on it again after, so this is
+ * a strict improvement rather than a complete fix - but the four converted here are
+ * the suites that happened to lose the race, not the set exposed to it. If the release
+ * gate keeps flaking, that is where it comes from.
+ *
+ * A note for whoever closes SYN-1195, because it cost eight runs to learn: a CPU-spin
+ * load rig is NOT a control for this. The pre-fix tree passed 8 of 8 under load average
+ * 133 with ten real jest workers, so a green result from that rig is a null result from
+ * a check never shown capable of failing. Shrink the RTL async window to 1ms instead -
+ * that tests the property (the verdict must not depend on wall-clock time) rather than
+ * hoping to be unlucky.
  */
 import { act } from '@testing-library/react';
 
