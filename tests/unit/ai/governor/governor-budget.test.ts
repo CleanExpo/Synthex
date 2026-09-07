@@ -39,7 +39,7 @@ jest.mock('@/lib/logger', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
-import { governedCall, checkBudget } from '@/lib/ai/governor';
+import { governedCall, checkBudget, writeReceipt } from '@/lib/ai/governor';
 import {
   ALL_PROVIDERS,
   BRAND,
@@ -494,5 +494,83 @@ describe('no unusable operand can make a ceiling comparison fail open', () => {
     expect(Number.isFinite(row.costUsd as number)).toBe(true);
     expect(Number.isFinite(row.inputTokens as number)).toBe(true);
     expect(Number.isFinite(row.outputTokens as number)).toBe(true);
+  });
+});
+
+/**
+ * ISOLATING CONTROLS — each of these covers a mechanism that another guard
+ * would otherwise mask.
+ *
+ * The mutation harness caught this: mutants M14 (governedCall's token guard)
+ * and M17 (writeReceipt's clamp) both went GREEN once the class-level
+ * checkBudget gate existed, because the outer guard already refused. Two
+ * defences for one property means removing either alone changes nothing
+ * observable, and a mutant that changes nothing proves nothing.
+ *
+ * So each mechanism is now tested on the behaviour ONLY IT produces.
+ */
+describe('isolating controls for redundant guards', () => {
+  it('governedCall refuses a NaN estimate BEFORE it reads the budget policy', async () => {
+    // Only the governedCall-level guard can produce this: if it were removed,
+    // checkBudget would still refuse, but the policy read would have happened.
+    installDefaults(mocks);
+    const execute = jest.fn();
+
+    const result = await governedCall({
+      organizationId: ORG_ID,
+      brandSlug: BRAND,
+      runner: RUNNER,
+      provider: 'anthropic',
+      model: { kind: 'latest' },
+      pipelineName: 'governor-budget-test',
+      estimate: { inputTokens: Number.NaN, outputTokens: 10 },
+      execute,
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.outcome).toBe('refused_budget_invalid_estimate');
+    expect(mocks.prisma.orgBudgetPolicy.findUnique).not.toHaveBeenCalled();
+    expect(mocks.prisma.pipelineCostLedger.groupBy).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('writeReceipt clamps an unusable amount even when called DIRECTLY', async () => {
+    // writeReceipt is the choke point for every Governor ledger row, including
+    // callers that do not go through governedCall. Testing it through
+    // governedCall alone lets the caller-side clamp mask it.
+    installDefaults(mocks);
+
+    const receipt = await writeReceipt({
+      pipelineName: 'direct-call',
+      clientId: ORG_ID,
+      runId: 'run-direct',
+      model: 'unresolved',
+      provider: 'anthropic',
+      brandSlug: BRAND,
+      runner: RUNNER,
+      inputTokens: Number.NaN,
+      outputTokens: -5,
+      costUsd: Number.POSITIVE_INFINITY,
+      outcome: 'completed',
+      provenance: {
+        modelSource: 'registry-file',
+        modelId: 'unresolved',
+        modelSelector: 'latest',
+        provider: 'anthropic',
+        runner: RUNNER,
+        brandSlug: BRAND,
+        organizationId: ORG_ID,
+        flagVerdict: 'enabled',
+        keyVerdict: 'byok_present',
+        budgetVerdict: 'within_ceiling',
+        decidedAt: new Date().toISOString(),
+      },
+    });
+
+    const row = receiptRow(mocks)!;
+    expect(row.costUsd).toBe(0);
+    expect(row.inputTokens).toBe(0);
+    expect(row.outputTokens).toBe(0);
+    expect(Number.isFinite(receipt.costUsd)).toBe(true);
   });
 });
