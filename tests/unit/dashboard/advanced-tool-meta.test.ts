@@ -29,6 +29,14 @@ describe('resolveAdvancedTool', () => {
     const ctx = resolveAdvancedTool('/dashboard/content');
     expect(ctx.isAdvanced).toBe(false);
   });
+
+  it('treats the engineering desk as an advanced tool, not Home', () => {
+    const home = resolveAdvancedTool('/dashboard');
+    expect(home.isAdvanced).toBe(false);
+    const desk = resolveAdvancedTool('/dashboard/mission-control');
+    expect(desk.tool?.label).toBe('Mission Control');
+    expect(desk.section?.id).toBe('operations');
+  });
 });
 
 describe('getAdvancedBreadcrumbs', () => {
