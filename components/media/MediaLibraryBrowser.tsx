@@ -12,7 +12,7 @@
  * or the publish path.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Image as ImageIcon,
   Video,
@@ -90,14 +90,20 @@ export function MediaLibraryBrowser() {
   const [kind, setKind] = useState<MediaKind | 'all'>('all');
   const [search, setSearch] = useState('');
   const [favouritesOnly, setFavouritesOnly] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  const { assets, total, isLoading, error, mutate } = useMediaLibrary({
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [kind, search, favouritesOnly]);
+
+  const { assets, total, hasMore, isLoading, error, mutate } = useMediaLibrary({
     type: kind === 'all' ? undefined : kind,
     search: search.trim() || undefined,
     favouritesOnly: favouritesOnly || undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
-    limit: PAGE_SIZE,
+    limit: visibleCount,
+    offset: 0,
   });
 
   const isFiltered = kind !== 'all' || search.trim() !== '' || favouritesOnly;
@@ -217,6 +223,7 @@ export function MediaLibraryBrowser() {
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {assets.map(asset => {
             const src = thumbnailSrc(asset);
+            const openHref = asset.url ?? src;
             return (
               <li
                 key={asset.id}
@@ -227,12 +234,29 @@ export function MediaLibraryBrowser() {
                     // A plain img, not next/image: these are user media on
                     // arbitrary hosts, so the optimiser would need every host
                     // added to remotePatterns before any of them would render.
-                    <img
-                      src={src}
-                      alt={asset.prompt || 'Library image'}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
+                    openHref ? (
+                      <a
+                        href={openHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block h-full w-full"
+                        aria-label={`Open ${asset.prompt || 'library image'}`}
+                      >
+                        <img
+                          src={src}
+                          alt={asset.prompt || 'Library image'}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <img
+                        src={src}
+                        alt={asset.prompt || 'Library image'}
+                        loading="lazy"
+                        className="h-full w-full object-cover"
+                      />
+                    )
                   ) : (
                     <KindIcon
                       kind={asset.type}
@@ -263,6 +287,19 @@ export function MediaLibraryBrowser() {
             );
           })}
         </ul>
+      )}
+
+      {hasMore && !error && (
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setVisibleCount(count => count + PAGE_SIZE)}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Loading more…' : 'Load more'}
+          </Button>
+        </div>
       )}
     </div>
   );
