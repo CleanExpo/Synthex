@@ -35,7 +35,7 @@ export function DashboardNewUserHome() {
         }
         description={
           profile?.description?.trim() ||
-          'Create one post to unlock Mission Control — goals, Linear tickets, and live shipping status.'
+          'Connect an account, write a draft, then schedule it. Nothing goes public until you say so.'
         }
         actions={
           <Link
@@ -121,8 +121,8 @@ export function DashboardNewUserHome() {
               One topic. Drafts for every connected platform.
             </h2>
             <p className="text-sm text-white/40 mt-3 max-w-xl leading-relaxed">
-              After your first publish, this home becomes Mission Control — Goal
-              → Linear → ship status.
+              After your first post, Home still shows this week: connect, write,
+              schedule, and how it did.
             </p>
           </div>
           <Link
