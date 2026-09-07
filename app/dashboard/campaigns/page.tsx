@@ -1,40 +1,28 @@
 'use client';
 
 /**
- * Campaigns dashboard — brand scan → AI campaign generation → asset preview.
- * Scheduling is intentionally disabled (coming soon); generation requires AI API key.
+ * Campaigns — a named set of posts the user still approves and schedules.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { Megaphone, Plus, Loader2, AlertCircle, X } from '@/components/icons';
+import { useBrandProfile } from '@/hooks/use-brand-profile';
+import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { PublishConfirmModal } from '@/components/content';
+import { fetchWithCSRF } from '@/lib/csrf';
+import { humanizeAiError } from '@/lib/dashboard/humanize-error';
+import { customerPostStatus } from '@/lib/dashboard/post-status';
 import {
-  Megaphone,
-  Plus,
-  Loader2,
-  AlertCircle,
-  Sparkles,
-  Layers,
-  Key,
-  Clock,
-  ArrowRight,
-  X,
-} from '@/components/icons';
-import {
-  BrandScanner,
-  type BrandDnaPreview,
-} from '@/components/campaigns/BrandScanner';
-import {
-  CampaignGenerator,
-  type CreatedCampaign,
-} from '@/components/campaigns/CampaignGenerator';
-import {
-  AssetPreview,
-  type CampaignAsset,
-} from '@/components/campaigns/AssetPreview';
-import { useUser } from '@/hooks/use-user';
+  parseCampaignCards,
+  serializeCampaignCards,
+  type CampaignCard,
+} from '@/lib/dashboard/campaign-cards';
+import { toast } from 'sonner';
 
 interface CampaignPostSummary {
   id: string;
+  content?: string | null;
   status: string;
   platform: string;
 }
@@ -43,55 +31,52 @@ interface Campaign {
   id: string;
   name: string;
   platform: string;
-  content?: string | null;
+  content?: unknown;
   status: string;
   createdAt?: string;
   posts?: CampaignPostSummary[];
+  settings?: { startsAt?: string; endsAt?: string };
 }
 
-const STATUS_STYLES: Record<string, string> = {
-  draft: 'text-white/45 border-white/8 bg-white/2',
-  scheduled: 'text-blue-300/90 border-blue-400/20 bg-blue-500/10',
-  active: 'text-emerald-300/90 border-emerald-400/20 bg-emerald-500/10',
-  paused: 'text-amber-300/90 border-amber-400/20 bg-amber-500/10',
-  completed: 'text-purple-300/90 border-purple-400/20 bg-purple-500/10',
-  archived: 'text-white/30 border-white/6 bg-white/1',
-};
-
-function StatusBadge({ status }: { status: string }) {
-  const style = STATUS_STYLES[status] ?? STATUS_STYLES.draft;
-  return (
-    <span
-      className={`inline-flex rounded-sm border-[0.5px] px-2 py-0.5 text-xs font-medium uppercase tracking-[0.14em] ${style}`}
-    >
-      {status}
-    </span>
-  );
-}
+const PLATFORMS = [
+  { id: 'instagram', label: 'Instagram' },
+  { id: 'twitter', label: 'Twitter / X' },
+  { id: 'linkedin', label: 'LinkedIn' },
+  { id: 'facebook', label: 'Facebook' },
+  { id: 'tiktok', label: 'TikTok' },
+  { id: 'threads', label: 'Threads' },
+] as const;
 
 function platformLabel(p: string): string {
-  const map: Record<string, string> = {
-    twitter: 'Twitter / X',
-    linkedin: 'LinkedIn',
-    instagram: 'Instagram',
-    facebook: 'Facebook',
-    tiktok: 'TikTok',
-    threads: 'Threads',
-    multi: 'Multi-platform',
-  };
-  return map[p] ?? p;
+  return PLATFORMS.find(x => x.id === p)?.label ?? p;
 }
 
 export default function CampaignsPage() {
-  const { user } = useUser();
+  const { activeOrganizationId } = useActiveBusiness();
+  const { profile } = useBrandProfile(activeOrganizationId);
+  const hasBrand = Boolean(profile?.name?.trim());
+
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [studioOpen, setStudioOpen] = useState(false);
-  const [seedName, setSeedName] = useState('');
-  const [seedContent, setSeedContent] = useState('');
-  const [previewAssets, setPreviewAssets] = useState<CampaignAsset[]>([]);
-  const [aiKeyConfigured, setAiKeyConfigured] = useState<boolean | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [startsAt, setStartsAt] = useState('');
+  const [endsAt, setEndsAt] = useState('');
+  const [platform, setPlatform] = useState('instagram');
+  const [cardOne, setCardOne] = useState('');
+  const [cardTwo, setCardTwo] = useState('');
+  const [skipTwo, setSkipTwo] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [filling, setFilling] = useState(false);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [edits, setEdits] = useState<Record<string, string>>({});
+  const [skippedKeys, setSkippedKeys] = useState<Record<string, boolean>>({});
+  const [scheduleCard, setScheduleCard] = useState<{
+    text: string;
+    platform: string;
+    campaignId: string;
+  } | null>(null);
 
   const loadCampaigns = useCallback(async () => {
     setLoading(true);
@@ -119,55 +104,115 @@ export default function CampaignsPage() {
     void loadCampaigns();
   }, [loadCampaigns]);
 
-  useEffect(() => {
-    if (!user) return;
-    const extended = user as typeof user & { apiKeyConfigured?: boolean };
-    if (typeof extended.apiKeyConfigured === 'boolean') {
-      setAiKeyConfigured(extended.apiKeyConfigured);
+  const emptyComposer = !name.trim() || !cardOne.trim();
+
+  async function fillCards() {
+    setFilling(true);
+    try {
+      const topic = name.trim() || 'this week for our customers';
+      const res = await fetch('/api/ai/generate-content', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: 'post',
+          platform: platform === 'threads' ? 'twitter' : platform,
+          topic,
+          tone: 'casual',
+          length: 'medium',
+          includeEmojis: false,
+          includeHashtags: true,
+          includeCTA: false,
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          message?: string;
+        };
+        toast.error(humanizeAiError(body.error || body.message, res.status));
+        return;
+      }
+      const data = (await res.json()) as {
+        content?: string;
+        variations?: string[];
+        data?: { content?: string; variations?: string[] };
+      };
+      const primary =
+        data.content || data.data?.content || data.variations?.[0] || '';
+      const second =
+        data.variations?.[1] || data.data?.variations?.[1] || primary;
+      if (!primary.trim()) {
+        toast.error('We could not fill the cards. Try writing them yourself.');
+        return;
+      }
+      setCardOne(primary);
+      setCardTwo(second);
+    } catch (err) {
+      toast.error(
+        humanizeAiError(err instanceof Error ? err.message : undefined)
+      );
+    } finally {
+      setFilling(false);
     }
-  }, [user]);
-
-  const stats = useMemo(() => {
-    const drafts = campaigns.filter(c => c.status === 'draft').length;
-    const active = campaigns.filter(c => c.status === 'active').length;
-    const posts = campaigns.reduce((n, c) => n + (c.posts?.length ?? 0), 0);
-    return { total: campaigns.length, drafts, active, posts };
-  }, [campaigns]);
-
-  function handleScanned(preview: BrandDnaPreview) {
-    setSeedName(preview.businessName);
-    setSeedContent(preview.firstPost);
-    setStudioOpen(true);
   }
 
-  function handleCreated(campaign: CreatedCampaign) {
-    setCampaigns(prev => [
-      {
-        id: campaign.id,
-        name: campaign.name,
-        platform: campaign.platform,
-        content: campaign.content,
-        status: campaign.status,
-      },
-      ...prev,
-    ]);
-    if (campaign.content) {
-      setPreviewAssets([
-        {
-          id: campaign.id,
-          platform: campaign.platform,
-          content: campaign.content,
-          campaignId: campaign.id,
-          topic: campaign.name,
-        },
-      ]);
+  async function createCampaign() {
+    if (emptyComposer) {
+      toast.error('Name the campaign and write at least one post.');
+      return;
     }
-    setAiKeyConfigured(true);
+    setSaving(true);
+    try {
+      const cards: CampaignCard[] = [
+        { key: '1', text: cardOne.trim(), platform },
+      ];
+      if (!skipTwo && cardTwo.trim()) {
+        cards.push({ key: '2', text: cardTwo.trim(), platform });
+      }
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: name.trim(),
+          platform,
+          content: serializeCampaignCards(cards),
+          settings: {
+            ...(startsAt ? { startsAt } : {}),
+            ...(endsAt ? { endsAt } : {}),
+          },
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(
+          body.error ?? `Could not create campaign (${res.status})`
+        );
+      }
+      toast.success('Campaign saved. Schedule each post when you are happy.');
+      setComposerOpen(false);
+      setName('');
+      setCardOne('');
+      setCardTwo('');
+      setSkipTwo(false);
+      setStartsAt('');
+      setEndsAt('');
+      await loadCampaigns();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not save.');
+    } finally {
+      setSaving(false);
+    }
   }
+
+  const selected = useMemo(
+    () => campaigns.find(c => c.id === openId) ?? null,
+    [campaigns, openId]
+  );
 
   return (
     <div className="space-y-8 max-w-5xl">
-      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.25em] text-white/30 mb-1">
@@ -177,134 +222,131 @@ export default function CampaignsPage() {
             Campaigns
           </h1>
           <p className="text-sm text-white/40 mt-1.5 max-w-lg">
-            A campaign is a short run of related posts (a sale, opening, or
-            event). You still approve each post. Create the set here, then
-            schedule from Content or Calendar.
+            A campaign is a named set of posts with dates. You still edit and
+            schedule each one — nothing goes out from this page on its own.
           </p>
         </div>
         <button
           type="button"
-          onClick={() => setStudioOpen(o => !o)}
+          onClick={() => setComposerOpen(o => !o)}
           className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-surface-dark transition-colors shrink-0"
         >
-          {studioOpen ? (
+          {composerOpen ? (
             <>
-              <X className="h-4 w-4" /> Close studio
+              <X className="h-4 w-4" /> Close
             </>
           ) : (
             <>
-              <Plus className="h-4 w-4" /> Draft with AI
+              <Plus className="h-4 w-4" /> New campaign
             </>
           )}
         </button>
       </div>
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Campaigns', value: stats.total, icon: Megaphone },
-          { label: 'Drafts', value: stats.drafts, icon: Layers },
-          { label: 'Active', value: stats.active, icon: Sparkles },
-          { label: 'Linked posts', value: stats.posts, icon: ArrowRight },
-        ].map(({ label, value, icon: Icon }) => (
-          <div
-            key={label}
-            className="flex flex-col gap-2 px-4 py-3 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-[0.22em] text-white/35">
-                {label}
-              </span>
-              <Icon className="h-3.5 w-3.5 text-orange-400/80" />
-            </div>
-            <span className="font-mono text-xl tabular-nums text-white">
-              {value}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* AI key + scheduling notices */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="flex items-start gap-3 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3">
-          <Key className="h-4 w-4 text-orange-400 shrink-0 mt-0.5" />
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-white/75">AI generation</p>
-            <p className="text-[11px] text-white/40 mt-0.5 leading-relaxed">
-              Campaign copy is generated via your connected AI provider.{' '}
-              {aiKeyConfigured === false && (
-                <Link
-                  href="/dashboard/settings?tab=ai-credentials"
-                  className="text-orange-400 hover:text-orange-300"
-                >
-                  Connect API key →
-                </Link>
-              )}
-              {aiKeyConfigured !== false && (
-                <span className="text-white/50">
-                  Use Settings → AI Credentials if generation is blocked.
-                </span>
-              )}
+      {composerOpen && (
+        <div className="space-y-4 border-[0.5px] border-white/8 bg-white/1 rounded-sm p-5">
+          {!hasBrand && (
+            <p className="text-xs text-white/45">
+              We&apos;ll use your setup as it is. Finish Brand DNA in Settings
+              if the voice feels generic.
             </p>
-          </div>
-        </div>
-        <div className="flex items-start gap-3 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 opacity-90">
-          <Clock className="h-4 w-4 text-white/30 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-xs font-medium text-white/55">Your control</p>
-            <p className="text-[11px] text-white/35 mt-0.5">
-              AI can fill the first draft. You edit and schedule each post —
-              nothing goes out from this page on its own.{' '}
-              <Link
-                href="/dashboard/content"
-                className="text-orange-400 hover:text-orange-300"
-              >
-                Open Content →
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Campaign studio */}
-      {studioOpen && (
-        <div className="space-y-5 border-[0.5px] border-orange-500/15 bg-orange-500/2 rounded-sm p-5 sm:p-6">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-orange-400" />
-            <h2 className="text-sm font-medium text-white/85">
-              Campaign studio
-            </h2>
-          </div>
-          <BrandScanner onScanned={handleScanned} />
-          <CampaignGenerator
-            key={`${seedName}-${seedContent}`}
-            initialName={seedName}
-            initialContent={seedContent}
-            onCreated={handleCreated}
-          />
-          {previewAssets.length > 0 && (
-            <section className="space-y-3">
-              <p className="text-xs uppercase tracking-[0.22em] text-white/30">
-                Generated assets
-              </p>
-              <AssetPreview assets={previewAssets} />
-            </section>
           )}
+          <label className="block space-y-1">
+            <span className="text-xs text-white/50">Name</span>
+            <input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="Opening week"
+              className="w-full h-9 px-3 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+            />
+          </label>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block space-y-1">
+              <span className="text-xs text-white/50">Starts (optional)</span>
+              <input
+                type="date"
+                value={startsAt}
+                onChange={e => setStartsAt(e.target.value)}
+                className="w-full h-9 px-3 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs text-white/50">Ends (optional)</span>
+              <input
+                type="date"
+                value={endsAt}
+                onChange={e => setEndsAt(e.target.value)}
+                className="w-full h-9 px-3 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs text-white/50">Platform</span>
+              <select
+                value={platform}
+                onChange={e => setPlatform(e.target.value)}
+                className="w-full h-9 px-3 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+              >
+                {PLATFORMS.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block space-y-1">
+              <span className="text-xs text-white/50">Post 1</span>
+              <textarea
+                value={cardOne}
+                onChange={e => setCardOne(e.target.value)}
+                rows={5}
+                className="w-full px-3 py-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-xs text-white/50">Post 2</span>
+              <textarea
+                value={skipTwo ? '' : cardTwo}
+                onChange={e => setCardTwo(e.target.value)}
+                disabled={skipTwo}
+                rows={5}
+                className="w-full px-3 py-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white disabled:opacity-40"
+              />
+              <button
+                type="button"
+                onClick={() => setSkipTwo(s => !s)}
+                className="text-xs text-white/40 hover:text-white/70"
+              >
+                {skipTwo ? 'Use a second post' : "Don't use post 2"}
+              </button>
+            </label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void fillCards()}
+              disabled={filling}
+              className="h-9 px-3 text-sm rounded-sm border-[0.5px] border-white/10 text-white/70 hover:bg-white/3"
+            >
+              {filling ? 'Filling cards…' : 'Fill cards with AI'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void createCampaign()}
+              disabled={saving || emptyComposer}
+              className="h-9 px-4 text-sm rounded-sm bg-orange-500 hover:bg-orange-400 text-surface-dark disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save campaign'}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Campaign library */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-xs uppercase tracking-[0.22em] text-white/30">
-            Your campaigns
-          </p>
-          {!loading && !error && (
-            <span className="text-xs text-white/35 tabular-nums">
-              {campaigns.length} total
-            </span>
-          )}
-        </div>
+        <p className="text-xs uppercase tracking-[0.22em] text-white/30">
+          Your campaigns
+        </p>
 
         {loading ? (
           <div
@@ -338,66 +380,160 @@ export default function CampaignsPage() {
               No campaigns yet
             </h3>
             <p className="mx-auto mt-1 max-w-sm text-xs text-white/40">
-              A campaign is a named set of posts you still approve. Write two
-              posts in Content, schedule them on Calendar, or draft a name here
-              with optional AI.
+              Name a run of posts, write two cards, then schedule each one. You
+              stay in control.
             </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/dashboard/content"
-                className="inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
-              >
-                Write the first post
-              </Link>
-              <button
-                type="button"
-                onClick={() => setStudioOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-sm border-[0.5px] border-white/10 px-4 py-2 text-sm text-white/60 hover:bg-white/3"
-              >
-                <Plus className="h-4 w-4" /> Draft with AI
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setComposerOpen(true)}
+              className="mt-5 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
+            >
+              <Plus className="h-4 w-4" /> New campaign
+            </button>
           </div>
         ) : (
-          <ul className="space-y-2">
-            {campaigns.map(campaign => (
-              <li
-                key={campaign.id}
-                className="group flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 py-4 border-[0.5px] border-white/6 bg-white/1.5 rounded-sm hover:bg-white/2.5 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h3 className="text-sm font-medium text-white/85 truncate">
-                      {campaign.name}
-                    </h3>
-                    <StatusBadge status={campaign.status} />
-                  </div>
-                  <p className="text-xs text-white/35 uppercase tracking-wide">
-                    {platformLabel(campaign.platform)}
-                    {campaign.posts && campaign.posts.length > 0 && (
-                      <span className="normal-case text-white/30 ml-2">
-                        · {campaign.posts.length} post
-                        {campaign.posts.length === 1 ? '' : 's'}
-                      </span>
-                    )}
-                  </p>
-                  {campaign.content && (
-                    <p className="mt-2 text-xs text-white/45 line-clamp-2 leading-relaxed">
-                      {campaign.content}
-                    </p>
-                  )}
-                </div>
-                <Link
-                  href="/dashboard/content"
-                  className="shrink-0 inline-flex items-center gap-1 text-xs text-white/35 group-hover:text-orange-400/90 transition-colors"
+          <ul className="space-y-3">
+            {campaigns.map(campaign => {
+              const cards = parseCampaignCards(campaign).filter(
+                c => !skippedKeys[`${campaign.id}:${c.key}`] && !c.skipped
+              );
+              const open = openId === campaign.id;
+              return (
+                <li
+                  key={campaign.id}
+                  className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm"
                 >
-                  Content <ArrowRight className="h-3 w-3" />
-                </Link>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(open ? null : campaign.id)}
+                    className="w-full text-left px-4 py-4"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm font-medium text-white/85">
+                        {campaign.name}
+                      </h3>
+                      <span className="text-xs text-white/35">
+                        {platformLabel(campaign.platform)} · {cards.length} post
+                        {cards.length === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  </button>
+                  {open && (
+                    <div className="px-4 pb-4 space-y-3">
+                      {cards.length === 0 ? (
+                        <p className="text-xs text-white/40">
+                          No posts in this campaign yet.
+                        </p>
+                      ) : (
+                        cards.map(card => {
+                          const editKey = `${campaign.id}:${card.key}`;
+                          const text = edits[editKey] ?? card.text;
+                          return (
+                            <div
+                              key={card.key}
+                              className="border-[0.5px] border-white/8 rounded-sm p-3 space-y-2"
+                            >
+                              <div className="flex justify-between gap-2">
+                                <span className="text-xs text-white/40">
+                                  {platformLabel(card.platform)}
+                                  {card.status
+                                    ? ` · ${customerPostStatus(card.status)}`
+                                    : ' · Draft'}
+                                </span>
+                              </div>
+                              <textarea
+                                value={text}
+                                onChange={e =>
+                                  setEdits(prev => ({
+                                    ...prev,
+                                    [editKey]: e.target.value,
+                                  }))
+                                }
+                                rows={4}
+                                className="w-full px-3 py-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+                              />
+                              <div className="flex flex-wrap gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setScheduleCard({
+                                      text,
+                                      platform:
+                                        card.platform === 'multi'
+                                          ? 'instagram'
+                                          : card.platform,
+                                      campaignId: campaign.id,
+                                    })
+                                  }
+                                  className="text-sm text-orange-400 hover:text-orange-300"
+                                >
+                                  Schedule
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setSkippedKeys(prev => ({
+                                      ...prev,
+                                      [editKey]: true,
+                                    }))
+                                  }
+                                  className="text-sm text-white/40 hover:text-white/70"
+                                >
+                                  Don&apos;t use
+                                </button>
+                                <Link
+                                  href="/dashboard/content"
+                                  className="text-sm text-white/40 hover:text-white/70"
+                                >
+                                  Edit in Content
+                                </Link>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
+
+      {selected && <p className="sr-only">Open campaign {selected.name}</p>}
+
+      <PublishConfirmModal
+        open={Boolean(scheduleCard)}
+        onOpenChange={open => {
+          if (!open) setScheduleCard(null);
+        }}
+        content={scheduleCard?.text ?? ''}
+        platform={scheduleCard?.platform ?? 'instagram'}
+        onConfirm={async options => {
+          if (!scheduleCard) return;
+          const response = await fetchWithCSRF('/api/scheduler/posts', {
+            method: 'POST',
+            body: JSON.stringify({
+              content: scheduleCard.text,
+              platform: options.platform,
+              scheduledAt: options.scheduledAt,
+              campaignId: scheduleCard.campaignId,
+            }),
+          });
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+              (errorData as { message?: string; error?: string }).message ||
+                (errorData as { error?: string }).error ||
+                'Could not schedule'
+            );
+          }
+          toast.success('Booked. Find it on Calendar.');
+          setScheduleCard(null);
+          await loadCampaigns();
+        }}
+      />
     </div>
   );
 }
