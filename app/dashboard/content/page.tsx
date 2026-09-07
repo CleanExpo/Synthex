@@ -8,7 +8,7 @@ import { DashboardSkeleton } from '@/components/skeletons';
 import { APIErrorCard } from '@/components/error-states';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import { Brain, Building, ChevronDown, Layers } from '@/components/icons';
+import { Building, ChevronDown } from '@/components/icons';
 import { fetchWithCSRF } from '@/lib/csrf';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { EngagementBadge } from '@/components/content/EngagementBadge';
@@ -26,7 +26,6 @@ import {
   type PublishOptions,
   type PlatformScheduleResult,
 } from '@/components/content';
-import { EngagementPrediction } from '@/components/content/EngagementPrediction';
 import { GenerateVideoCard, VideoGenerationModal } from '@/components/video';
 import { ReleaseTab } from '@/components/publish/ReleaseTab';
 import { BulkScheduleWizard } from '@/components/scheduling';
@@ -94,7 +93,7 @@ export default function ContentPage() {
     topPrinciples: { name: string; strength: number }[];
     predictedEngagement: { level: string };
   } | null>(null);
-  const [engagementPrediction, setEngagementPrediction] = useState<{
+  const [, setEngagementPrediction] = useState<{
     likes: number;
     comments: number;
     shares: number;
@@ -813,35 +812,6 @@ export default function ContentPage() {
     <div className="space-y-6">
       <ContentHeader onViewAnalytics={handleViewAnalytics} />
 
-      {/* Studio view switch — composer vs the nexus-viral release gate (SYN-1094) */}
-      <div
-        role="tablist"
-        aria-label="Studio view"
-        className="inline-flex gap-1 rounded-sm border-[0.5px] border-white/[0.06] bg-white/[0.01] p-1"
-      >
-        {(
-          [
-            { key: 'create', label: 'Create' },
-            { key: 'release', label: 'Review & Release' },
-          ] as const
-        ).map(tab => (
-          <button
-            key={tab.key}
-            type="button"
-            role="tab"
-            aria-selected={studioView === tab.key}
-            onClick={() => setStudioView(tab.key)}
-            className={`rounded-sm px-4 py-1.5 text-sm font-medium transition-colors ${
-              studioView === tab.key
-                ? 'bg-orange-500/20 text-orange-300'
-                : 'text-white/50 hover:text-white'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       {studioView === 'release' ? (
         <ReleaseTab />
       ) : (
@@ -1152,19 +1122,6 @@ export default function ContentPage() {
             </span>
           )}
 
-          {/* Schedule More -- opens BulkScheduleWizard pre-filled with current content */}
-          {generatedContent && (
-            <div className="flex justify-end">
-              <button
-                onClick={() => setBulkWizardOpen(true)}
-                className="flex items-center gap-1.5 text-sm text-orange-400 hover:text-orange-300 transition-colors"
-              >
-                <Layers className="h-4 w-4" />
-                Schedule More Posts
-              </button>
-            </div>
-          )}
-
           <BulkScheduleWizard
             open={bulkWizardOpen}
             onOpenChange={setBulkWizardOpen}
@@ -1230,62 +1187,6 @@ export default function ContentPage() {
               )}
             </>
           )}
-
-          {psychologyScore && generatedContent && (
-            <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-light text-white flex items-center gap-2">
-                  <Brain className="h-4 w-4 text-orange-400" />
-                  Psychology Analysis
-                </h3>
-                <span className="text-xs text-white/35">Optional check</span>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <div
-                    className={`text-2xl font-bold ${
-                      psychologyScore.overallScore >= 70
-                        ? 'text-green-400'
-                        : psychologyScore.overallScore >= 40
-                          ? 'text-yellow-400'
-                          : 'text-red-400'
-                    }`}
-                  >
-                    {psychologyScore.overallScore}
-                  </div>
-                  <div className="text-xs text-white/40">Score</div>
-                </div>
-                <div className="flex-1 flex flex-wrap gap-2">
-                  {psychologyScore.topPrinciples.map(p => (
-                    <span
-                      key={p.name}
-                      className="text-xs bg-orange-500/10 text-orange-300 px-2 py-1 rounded-sm border-[0.5px] border-orange-500/20"
-                    >
-                      {p.name} ({p.strength}%)
-                    </span>
-                  ))}
-                </div>
-                <div
-                  className={`text-xs px-2 py-1 rounded-sm ${
-                    psychologyScore.predictedEngagement.level === 'viral'
-                      ? 'bg-green-500/20 text-green-400'
-                      : psychologyScore.predictedEngagement.level === 'high'
-                        ? 'bg-orange-500/20 text-orange-400'
-                        : psychologyScore.predictedEngagement.level === 'medium'
-                          ? 'bg-yellow-500/20 text-yellow-400'
-                          : 'bg-red-500/20 text-red-400'
-                  }`}
-                >
-                  {psychologyScore.predictedEngagement.level} engagement
-                </div>
-              </div>
-            </div>
-          )}
-
-          <EngagementPrediction
-            prediction={engagementPrediction}
-            isLoading={predictingEngagement}
-          />
 
           {/* Post status tracker (shown after multi-platform schedule) */}
           {lastBatchId && (
