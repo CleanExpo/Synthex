@@ -10,7 +10,8 @@
 import { useState, useCallback, useEffect, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useCalendar, SchedulePostOptions } from '@/hooks/useCalendar';
 import { useUser } from '@/hooks/use-user';
 import { TimeSlotPicker } from '@/components/scheduling';
@@ -101,11 +102,13 @@ interface TeamMember {
 
 function CalendarPageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { user } = useUser();
   const organizationId = user?.organizationId || '';
 
   // View mode state
   const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
+  const [showAgencyTools, setShowAgencyTools] = useState(false);
 
   // Team filter state
   const [selectedUserId, setSelectedUserId] = useState<string>('all');
@@ -314,7 +317,7 @@ function CalendarPageContent() {
       {/* Header */}
       <PageHeader
         title="Content Calendar"
-        description="Schedule and manage your content across all platforms"
+        description="Practice: posts stay in Synthex. Live: they go out at the time you picked. You can switch back."
         actions={
           <div className="flex items-center gap-3">
             {/* View Switcher */}
@@ -383,8 +386,45 @@ function CalendarPageContent() {
         }
       />
 
+      {posts.filter(p => p.status === 'failed').length > 0 && (
+        <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3">
+          <p className="text-sm font-medium text-red-200">Needs you</p>
+          <ul className="mt-2 space-y-1.5">
+            {posts
+              .filter(p => p.status === 'failed')
+              .slice(0, 3)
+              .map(p => (
+                <li
+                  key={p.id}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <span className="text-sm text-white/70 truncate">
+                    {p.title || p.content.slice(0, 80)}
+                  </span>
+                  <button
+                    type="button"
+                    className="shrink-0 text-xs text-orange-400 hover:text-orange-300"
+                    onClick={() => {
+                      setSelectedPost(p);
+                      setIsDetailModalOpen(true);
+                    }}
+                  >
+                    Fix
+                  </button>
+                </li>
+              ))}
+          </ul>
+          <Link
+            href="/dashboard/platforms"
+            className="mt-2 inline-block text-xs text-white/45 hover:text-white/70"
+          >
+            If a channel failed, reconnect it on Platforms
+          </Link>
+        </div>
+      )}
+
       {/* Perpetual-reviewer nudge banner (shown at 30/45/60 shadow posts, suppressed in live mode) */}
-      {readinessData && (
+      {showAgencyTools && readinessData && (
         <PerpeualReviewerNudge
           shadowPostsReviewed={readinessData.shadowPostsReviewed}
           approvalRate={readinessData.approvalRate}
@@ -434,7 +474,7 @@ function CalendarPageContent() {
               <p className="text-2xl font-bold text-white">
                 {stats.publishedPosts}
               </p>
-              <p className="text-sm text-gray-300">Published</p>
+              <p className="text-sm text-gray-300">Posted</p>
             </div>
           </div>
         </div>
@@ -468,11 +508,27 @@ function CalendarPageContent() {
         </div>
       </div>
 
-      {/* AI Weekly Calendar — shadow/live mode + slot review */}
-      <AICalendarSection />
+      <button
+        type="button"
+        onClick={() => setShowAgencyTools(v => !v)}
+        className="self-start text-xs text-white/35 hover:text-white/55"
+      >
+        {showAgencyTools
+          ? 'Hide extra calendar tools'
+          : 'Show practice / live tools'}
+      </button>
 
-      {/* Live-mode readiness card (shadow mode only, disappears once tier 1 activated) */}
-      <LiveModeReadinessCard onActivate={() => setActivationModalOpen(true)} />
+      {showAgencyTools && (
+        <>
+          {/* AI Weekly Calendar — shadow/live mode + slot review */}
+          <AICalendarSection />
+
+          {/* Live-mode readiness card (shadow mode only, disappears once tier 1 activated) */}
+          <LiveModeReadinessCard
+            onActivate={() => setActivationModalOpen(true)}
+          />
+        </>
+      )}
 
       {/* Live-mode activation ceremony modal */}
       <LiveModeActivationModal
@@ -490,13 +546,12 @@ function CalendarPageContent() {
       {posts.length === 0 && !isLoading ? (
         <DashboardEmptyState
           icon={Calendar}
-          title="No posts scheduled"
-          description="Start scheduling your content to see it appear on the calendar."
+          title="Nothing booked"
+          description="Write a post in Content, then schedule it here. Good looks like a time on this week with Scheduled on the card."
           action={{
-            label: 'Schedule Post',
+            label: 'Write a post',
             onClick: () => {
-              setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
-              setIsScheduleModalOpen(true);
+              router.push('/dashboard/content');
             },
           }}
         />
