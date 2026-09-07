@@ -21,6 +21,10 @@ import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import {
+  isOrganizationAdmin,
+  isOrganizationMember,
+} from '@/lib/auth/org-admin';
 
 const clientProfileSchema = z.object({
   budgetTier: z.string().nullable().optional(),
@@ -42,28 +46,11 @@ const clientProfileSchema = z.object({
 type ClientProfileInput = z.infer<typeof clientProfileSchema>;
 
 // =============================================================================
-// Auth helpers — verify user membership / admin (mirrors organizations/[orgId])
+// Auth helpers — membership + admin (shared with organizations/[orgId])
 // =============================================================================
 
-async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, organizationId: orgId },
-  });
-  return !!user;
-}
-
-async function isOrgAdmin(userId: string, orgId: string): Promise<boolean> {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, organizationId: orgId },
-  });
-  if (!user) return false;
-  const org = await prisma.organization.findUnique({
-    where: { id: orgId },
-    select: { settings: true },
-  });
-  const settings = org?.settings as { admins?: string[] } | null;
-  return settings?.admins?.includes(userId) || false;
-}
+const isOrgMember = isOrganizationMember;
+const isOrgAdmin = isOrganizationAdmin;
 
 /** Assemble a Prisma data object from validated input (only provided fields). */
 function buildData(body: ClientProfileInput): Record<string, unknown> {
@@ -88,7 +75,8 @@ function buildData(body: ClientProfileInput): Record<string, unknown> {
     data.antiPatterns = body.antiPatterns as Prisma.InputJsonValue;
   if (body.vocabularyBank !== undefined)
     data.vocabularyBank = body.vocabularyBank as Prisma.InputJsonValue;
-  if (body.goals !== undefined) data.goals = body.goals as Prisma.InputJsonValue;
+  if (body.goals !== undefined)
+    data.goals = body.goals as Prisma.InputJsonValue;
   if (body.channels !== undefined)
     data.channels = body.channels as Prisma.InputJsonValue;
   if (body.constraints !== undefined)
@@ -108,7 +96,10 @@ export async function GET(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const isMember = await isOrgMember(userId, orgId);
@@ -148,7 +139,10 @@ export async function POST(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const isAdmin = await isOrgAdmin(userId, orgId);
@@ -169,9 +163,13 @@ export async function POST(
     const rawBody = await request.json().catch(() => null);
     const validation = clientProfileSchema.safeParse(rawBody);
     if (!validation.success) {
-      return ResponseOptimizer.createErrorResponse('Invalid request data', 400, {
-        issues: validation.error.flatten(),
-      });
+      return ResponseOptimizer.createErrorResponse(
+        'Invalid request data',
+        400,
+        {
+          issues: validation.error.flatten(),
+        }
+      );
     }
 
     const existing = await prisma.clientProfile.findUnique({
@@ -235,7 +233,10 @@ export async function PATCH(
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return ResponseOptimizer.createErrorResponse('Authentication required', 401);
+      return ResponseOptimizer.createErrorResponse(
+        'Authentication required',
+        401
+      );
     }
 
     const isAdmin = await isOrgAdmin(userId, orgId);
@@ -256,16 +257,23 @@ export async function PATCH(
     const rawBody = await request.json().catch(() => null);
     const validation = clientProfileSchema.safeParse(rawBody);
     if (!validation.success) {
-      return ResponseOptimizer.createErrorResponse('Invalid request data', 400, {
-        issues: validation.error.flatten(),
-      });
+      return ResponseOptimizer.createErrorResponse(
+        'Invalid request data',
+        400,
+        {
+          issues: validation.error.flatten(),
+        }
+      );
     }
 
     const existing = await prisma.clientProfile.findUnique({
       where: { organizationId: orgId },
     });
     if (!existing) {
-      return ResponseOptimizer.createErrorResponse('Client profile not found', 404);
+      return ResponseOptimizer.createErrorResponse(
+        'Client profile not found',
+        404
+      );
     }
 
     const updateData = buildData(validation.data);
@@ -280,7 +288,10 @@ export async function PATCH(
           action: 'client_profile_updated',
           resource: 'client_profile',
           resourceId: record.id,
-          details: { organizationId: orgId, updatedFields: Object.keys(updateData) },
+          details: {
+            organizationId: orgId,
+            updatedFields: Object.keys(updateData),
+          },
           severity: 'medium',
           category: 'admin',
           outcome: 'success',
