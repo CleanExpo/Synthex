@@ -42,11 +42,11 @@ const tourSteps: TourStep[] = [
     position: 'right',
   },
   {
-    id: 'personas',
-    title: 'AI Brand Personas',
+    id: 'platforms',
+    title: 'Connect an account',
     content:
-      'Create AI personas that capture your brand voice for consistent content.',
-    target: '[href="/dashboard/personas"]',
+      'Ready looks like a green check. You can still write drafts without this.',
+    target: '[href="/dashboard/platforms"]',
     position: 'right',
   },
   {
@@ -70,56 +70,10 @@ const tourSteps: TourStep[] = [
     position: 'right',
   },
   {
-    id: 'reports',
-    title: 'Generate Reports',
-    content:
-      'Create detailed performance reports for your campaigns and content.',
-    target: '[href="/dashboard/reports"]',
-    position: 'right',
-  },
-  {
-    id: 'experiments',
-    title: 'A/B Testing',
-    content: 'Run experiments to optimize your content for maximum engagement.',
-    target: '[href="/dashboard/experiments"]',
-    position: 'right',
-  },
-  {
     id: 'schedule',
-    title: 'Smart Scheduling',
-    content: 'Schedule your content at optimal times for maximum engagement.',
-    target: '[href="/dashboard/schedule"]',
-    position: 'right',
-  },
-  {
-    id: 'seo',
-    title: 'SEO & GEO Tools',
-    content:
-      'Optimize content for search engines and AI-powered search results.',
-    target: '[href="/dashboard/seo"]',
-    position: 'right',
-  },
-  {
-    id: 'video',
-    title: 'Video Creation',
-    content: 'Generate and edit videos optimized for social media platforms.',
-    target: '[href="/dashboard/video"]',
-    position: 'right',
-  },
-  {
-    id: 'workflows',
-    title: 'AI Workflow Engine',
-    content:
-      'Build multi-step AI workflows that research, write, and publish content automatically. Set it and forget it.',
-    target: '[href="/dashboard/workflows"]',
-    position: 'right',
-  },
-  {
-    id: 'insights',
-    title: 'Performance Insights',
-    content:
-      'AI-powered insights show you exactly what to improve — content gaps, best posting times, and competitor analysis.',
-    target: '[href="/dashboard/insights"]',
+    title: 'Calendar',
+    content: 'Book a time here. Practice stays in Synthex. Live goes out.',
+    target: '[href="/dashboard/calendar"]',
     position: 'right',
   },
   {
