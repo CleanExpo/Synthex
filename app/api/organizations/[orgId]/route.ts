@@ -22,6 +22,10 @@ import { logger } from '@/lib/logger';
 import { ResponseOptimizer } from '@/lib/api/response-optimizer';
 import { getCache } from '@/lib/cache/cache-manager';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import {
+  isOrganizationAdmin,
+  isOrganizationMember,
+} from '@/lib/auth/org-admin';
 import { ClientLabelPolicySchema } from '@/lib/intentscape/client-label-pipeline';
 import { studioSettingsSchema } from '@/lib/marketing-agency/studio/clients';
 
@@ -132,44 +136,8 @@ const updateOrganizationSchema = z.object({
 });
 
 // =============================================================================
-// Auth Helper - Verify user and organization membership
+// Auth helpers — membership + admin (RBAC owner/admin or settings.admins)
 // =============================================================================
-
-/**
- * Check if user is a member of the organization
- */
-async function isOrgMember(userId: string, orgId: string): Promise<boolean> {
-  const user = await prisma.user.findFirst({
-    where: {
-      id: userId,
-      organizationId: orgId,
-    },
-  });
-  return !!user;
-}
-
-/**
- * Check if user is an admin of the organization
- */
-async function isOrgAdmin(userId: string, orgId: string): Promise<boolean> {
-  const user = await prisma.user.findFirst({
-    where: {
-      id: userId,
-      organizationId: orgId,
-    },
-  });
-
-  if (!user) return false;
-
-  // Check organization settings for admin list
-  const org = await prisma.organization.findUnique({
-    where: { id: orgId },
-    select: { settings: true },
-  });
-
-  const settings = org?.settings as { admins?: string[] } | null;
-  return settings?.admins?.includes(userId) || false;
-}
 
 // ============================================================================
 // GET - Get Organization Details
@@ -191,7 +159,7 @@ export async function GET(
     }
 
     // Verify user is a member of the organization
-    const isMember = await isOrgMember(userId, orgId);
+    const isMember = await isOrganizationMember(userId, orgId);
     if (!isMember) {
       return ResponseOptimizer.createErrorResponse(
         'Organization not found or access denied',
@@ -251,6 +219,14 @@ export async function GET(
       );
     }
 
+    const isAdmin = await isOrganizationAdmin(userId, orgId);
+    const settings = (organization.settings ?? {}) as Record<string, unknown>;
+    const {
+      provisioning: _provisioning,
+      admins: _admins,
+      ...publicSettings
+    } = settings;
+
     const response = {
       id: organization.id,
       name: organization.name,
@@ -262,7 +238,8 @@ export async function GET(
       customDomain: organization.customDomain,
       logo: organization.logo,
       primaryColor: organization.primaryColor,
-      settings: organization.settings,
+      settings: isAdmin ? organization.settings : publicSettings,
+      canAdminister: isAdmin,
       limits: {
         maxUsers: organization.maxUsers,
         maxPosts: organization.maxPosts,
@@ -273,13 +250,21 @@ export async function GET(
         campaigns: organization._count.campaigns,
         pendingInvitations: organization._count.teamInvitations,
       },
-      users: organization.users,
-      roles: organization.roles,
-      billing: {
-        stripeCustomerId: organization.stripeCustomerId,
-        billingEmail: organization.billingEmail,
-        billingStatus: organization.billingStatus,
-      },
+      users: isAdmin
+        ? organization.users
+        : organization.users.map(({ email: _email, ...member }) => member),
+      roles: isAdmin
+        ? organization.roles
+        : organization.roles.map(
+            ({ permissions: _permissions, ...role }) => role
+          ),
+      billing: isAdmin
+        ? {
+            stripeCustomerId: organization.stripeCustomerId,
+            billingEmail: organization.billingEmail,
+            billingStatus: organization.billingStatus,
+          }
+        : { billingStatus: organization.billingStatus },
       createdAt: organization.createdAt,
       updatedAt: organization.updatedAt,
     };
@@ -323,10 +308,10 @@ export async function PATCH(
     }
 
     // Verify user is an admin of the organization
-    const isAdmin = await isOrgAdmin(userId, orgId);
+    const isAdmin = await isOrganizationAdmin(userId, orgId);
     if (!isAdmin) {
       // Check if they're at least a member (for better error message)
-      const isMember = await isOrgMember(userId, orgId);
+      const isMember = await isOrganizationMember(userId, orgId);
       if (!isMember) {
         return ResponseOptimizer.createErrorResponse(
           'Organization not found or access denied',
@@ -544,10 +529,10 @@ export async function DELETE(
     }
 
     // Verify user is an admin of the organization
-    const isAdmin = await isOrgAdmin(userId, orgId);
+    const isAdmin = await isOrganizationAdmin(userId, orgId);
     if (!isAdmin) {
       // Check if they're at least a member (for better error message)
-      const isMember = await isOrgMember(userId, orgId);
+      const isMember = await isOrganizationMember(userId, orgId);
       if (!isMember) {
         return ResponseOptimizer.createErrorResponse(
           'Organization not found or access denied',
