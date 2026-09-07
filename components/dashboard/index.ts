@@ -60,3 +60,4 @@ export {
 } from './DashboardAtmosphere';
 export { DashboardQuickRail } from './DashboardQuickRail';
 export { DashboardNewUserHome } from './DashboardNewUserHome';
+export { DashboardThisWeekHome } from './DashboardThisWeekHome';
