@@ -285,7 +285,7 @@ function DashboardSidebar() {
                 Synthex
               </span>
               <span className="text-xs tracking-[0.16em] uppercase text-white/30 truncate">
-                Mission Control
+                Home
               </span>
             </div>
           )}
