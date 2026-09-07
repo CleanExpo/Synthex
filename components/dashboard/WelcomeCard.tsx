@@ -204,7 +204,7 @@ function WelcomeCardImpl({
   if (totalPosts > 0 && scheduledPosts === 0) {
     nextActions.push({
       label: 'Schedule your first post for the optimal time',
-      href: '/dashboard/schedule',
+      href: '/dashboard/calendar',
       icon: Zap,
     });
   }
@@ -393,9 +393,9 @@ function WelcomeCardImpl({
       {/* Footer actions */}
       <div className="border-t-[0.5px] border-white/[0.06] px-6 py-3 flex items-center justify-between">
         <div className="flex gap-4">
-          <Link href="/dashboard/seo">
+          <Link href="/dashboard/analytics">
             <span className="text-xs text-white/50 hover:text-orange-400 transition-colors cursor-pointer">
-              Re-run Analysis
+              How it did
             </span>
           </Link>
           <Link href="/dashboard/settings">
