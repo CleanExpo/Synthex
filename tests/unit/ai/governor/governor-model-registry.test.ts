@@ -47,7 +47,13 @@ describe('model-string audit', () => {
     // nothing: an empty finding list from a broken matcher looks exactly like
     // a clean tree. --selftest plants a known violation and requires a catch.
     const { code, output } = runAudit(['--selftest']);
-    expect(output).toContain('positive control: literal model id is detected');
+    expect(output).toContain('positive: quoted model id detected');
+    // The regex-literal defeat found by the cursor lane at head f8c1257 is a
+    // permanent control now, not a one-off fix.
+    expect(output).toContain(
+      'positive: regex literal does not hide a SAME-LINE hardcode'
+    );
+    expect(output).toContain('negative: model id in a comment is ignored');
     expect(output).not.toContain('FAIL');
     expect(code).toBe(0);
   });

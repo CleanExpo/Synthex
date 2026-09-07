@@ -14,7 +14,7 @@
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     runnerFlag: { findMany: jest.fn() },
-    aPICredential: { findFirst: jest.fn() },
+    aPICredential: { findMany: jest.fn() },
     orgBudgetPolicy: { findUnique: jest.fn() },
     pipelineCostLedger: { groupBy: jest.fn(), create: jest.fn() },
   },

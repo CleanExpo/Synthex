@@ -18,10 +18,26 @@
  *   1 = violations found (each printed with file:line)
  *   2 = the audit could not run (bad scope, unreadable file)
  *
- * Detection works on STRING LITERALS ONLY, after comments are stripped. A
- * comment that names a model is documentation; a string literal that names one
- * is a hardcode. That distinction is the difference between this script being
- * useful and it being noise nobody can keep green.
+ * Detection works on STRING LITERALS ONLY, found by PARSING the file with the
+ * TypeScript compiler. A comment that names a model is documentation; a string
+ * literal that names one is a hardcode, and that distinction is what makes this
+ * script keepable rather than noise nobody can stay green against.
+ *
+ * IT USES A REAL PARSER BECAUSE A HAND-ROLLED ONE WAS DEFEATED. The first
+ * version walked the characters itself, treating any two-slash or slash-star
+ * sequence as the start of a comment. A JavaScript REGEX LITERAL containing
+ * those characters therefore put the scanner into comment state and hid the
+ * rest of the line, so a regex followed by a hardcoded model id on the same
+ * line scanned CLEAN. Template literals containing a dollar sign slipped
+ * through too. (Independent review, cursor lane, finding
+ * P1-AUDIT-COMMENT-STRIP-REGEX-DEFEAT, reproduced by planting exactly that.)
+ *
+ * The lesson is the general one: "is this text inside a string literal" is
+ * decidable by a parser and only approximable by a scanner, so the guard has to
+ * ask the parser. Patching the scanner to understand regex literals would have
+ * closed that instance and left the class open — division-versus-regex
+ * ambiguity is the next hole. ts.createSourceFile closes the class: comments
+ * are not nodes, so they are excluded structurally rather than by stripping.
  *
  * `--selftest` is the positive control: it plants a known violation in a temp
  * file and fails unless the audit catches it. A scanner that has never been
@@ -34,6 +50,7 @@ import { readdirSync, statSync } from 'node:fs';
 import { join, resolve, relative, extname } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 
 const REPO_ROOT = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const SELF = fileURLToPath(import.meta.url);
@@ -63,88 +80,47 @@ const SKIP_DIRS = new Set([
 ]);
 const CODE_EXT = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
 
-/** Remove // line comments and block comments so documentation is not scanned. */
-function stripComments(source) {
-  let out = '';
-  let i = 0;
-  let state = 'code'; // code | line | block | single | double | tick
-  while (i < source.length) {
-    const c = source[i];
-    const next = source[i + 1];
-    if (state === 'code') {
-      if (c === '/' && next === '/') {
-        state = 'line';
-        i += 2;
-        continue;
-      }
-      if (c === '/' && next === '*') {
-        state = 'block';
-        i += 2;
-        continue;
-      }
-      if (c === "'") state = 'single';
-      else if (c === '"') state = 'double';
-      else if (c === '`') state = 'tick';
-      out += c;
-      i += 1;
-      continue;
-    }
-    if (state === 'line') {
-      if (c === '\n') {
-        state = 'code';
-        out += c;
-      }
-      i += 1;
-      continue;
-    }
-    if (state === 'block') {
-      if (c === '*' && next === '/') {
-        state = 'code';
-        i += 2;
-        continue;
-      }
-      // Preserve newlines so reported line numbers stay accurate.
-      if (c === '\n') out += c;
-      i += 1;
-      continue;
-    }
-    // Inside a string literal.
-    out += c;
-    if (c === '\\') {
-      if (next !== undefined) out += next;
-      i += 2;
-      continue;
-    }
+/**
+ * Every string-literal value in the file, with its line number. Comments never
+ * appear: the parser does not make them nodes. Template literals are included
+ * (both the no-substitution form and each literal chunk of a substituted one),
+ * because a model id can be written in backticks just as easily as in quotes.
+ */
+function stringLiteralsOf(source, fileName) {
+  const sourceFile = ts.createSourceFile(
+    fileName,
+    source,
+    ts.ScriptTarget.Latest,
+    false,
+    fileName.endsWith('.tsx') || fileName.endsWith('.jsx')
+      ? ts.ScriptKind.TSX
+      : ts.ScriptKind.TS
+  );
+
+  const found = [];
+  const visit = node => {
     if (
-      (state === 'single' && c === "'") ||
-      (state === 'double' && c === '"') ||
-      (state === 'tick' && c === '`')
+      ts.isStringLiteral(node) ||
+      ts.isNoSubstitutionTemplateLiteral(node) ||
+      ts.isTemplateHead(node) ||
+      ts.isTemplateMiddle(node) ||
+      ts.isTemplateTail(node)
     ) {
-      state = 'code';
+      const pos = sourceFile.getLineAndCharacterOfPosition(
+        node.getStart(sourceFile)
+      );
+      found.push({ line: pos.line + 1, value: node.text });
     }
-    i += 1;
-  }
-  return out;
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(sourceFile, visit);
+  return found;
 }
 
-const STRING_LITERAL = /'([^'\\\n]*)'|"([^"\\\n]*)"|`([^`\\$]*)`/g;
-
-function scanSource(source) {
-  const stripped = stripComments(source);
-  const lines = stripped.split('\n');
-  const findings = [];
-  lines.forEach((line, index) => {
-    STRING_LITERAL.lastIndex = 0;
-    let match;
-    while ((match = STRING_LITERAL.exec(line)) !== null) {
-      const value = match[1] ?? match[2] ?? match[3];
-      if (!value) continue;
-      if (MODEL_ID_PATTERNS.some(p => p.test(value))) {
-        findings.push({ line: index + 1, value });
-      }
-    }
-  });
-  return findings;
+function scanSource(source, fileName = 'input.ts') {
+  return stringLiteralsOf(source, fileName).filter(entry =>
+    MODEL_ID_PATTERNS.some(p => p.test(entry.value))
+  );
 }
 
 function walk(dir, acc = []) {
@@ -174,7 +150,7 @@ function audit(scopePath) {
     // The audit names model-id shapes itself; scanning it would always fail.
     if (resolve(file) === SELF) continue;
     scanned += 1;
-    const hits = scanSource(readFileSync(file, 'utf8'));
+    const hits = scanSource(readFileSync(file, 'utf8'), file);
     for (const hit of hits) {
       findings.push({ file: relative(REPO_ROOT, file), ...hit });
     }
@@ -184,34 +160,80 @@ function audit(scopePath) {
 
 function selftest() {
   const dir = mkdtempSync(join(tmpdir(), 'syn1196-audit-'));
+  const write = (name, body) => {
+    const f = join(dir, name);
+    writeFileSync(f, body);
+    return scanSource(readFileSync(f, 'utf8'), f);
+  };
   try {
-    // Positive control — a real hardcode in a string literal MUST be caught.
-    const planted = join(dir, 'planted.ts');
-    writeFileSync(
-      planted,
+    // --- Positive controls: these MUST be caught -------------------------
+    const quoted = write(
+      'planted.ts',
       "export const m = 'claude-sonnet-5';\nexport const n = 'anthropic/claude-opus-4-6';\n"
     );
-    const positive = scanSource(readFileSync(planted, 'utf8'));
-    // Negative control — a model named only in a COMMENT must NOT be caught,
-    // otherwise the audit is unkeepable and will be disabled by whoever
-    // inherits it.
-    const commented = join(dir, 'commented.ts');
-    writeFileSync(
-      commented,
+
+    // REGRESSION CONTROL for P1-AUDIT-COMMENT-STRIP-REGEX-DEFEAT (cursor
+    // lane, head f8c1257). A regex literal containing slashes used to put the
+    // hand-rolled stripper into comment state, hiding a same-line hardcode.
+    // The exact shape the reviewer planted is kept here verbatim so the class
+    // cannot silently reopen.
+    const regexPoison = write(
+      'regex-poison.ts',
+      "const _re = /https:\\/\\//;\nconst _sneak = 'claude-sonnet-5';\n"
+    );
+    const regexPoisonSameLine = write(
+      'regex-poison-oneline.ts',
+      "const _re = /https:\\/\\//; const _sneak = 'claude-sonnet-5';\n"
+    );
+    const blockPoison = write(
+      'block-poison.ts',
+      "const _re = /a\\/*b/; const _sneak = 'gpt-4-o';\n"
+    );
+    // Template literals, including a substituted one (the old string-literal
+    // regex excluded anything containing a dollar sign).
+    const templated = write(
+      'template.ts',
+      'const a = `claude-sonnet-5`;\nconst b = `anthropic/claude-opus-4-6${x}`;\n'
+    );
+
+    // --- Negative control: this MUST NOT be caught ------------------------
+    // A model named only in a comment is documentation. If the audit flags it,
+    // nobody can keep the tree green and the control gets deleted.
+    const commented = write(
+      'commented.ts',
       '// routes to claude-sonnet-5 by default\n/* gpt-4-o was the old pick */\nexport const x = 1;\n'
     );
-    const negative = scanSource(readFileSync(commented, 'utf8'));
 
     const results = [
       {
-        name: 'positive control: literal model id is detected',
-        ok: positive.length === 2,
-        got: `${positive.length} findings`,
+        name: 'positive: quoted model id detected',
+        ok: quoted.length === 2,
+        got: `${quoted.length} findings, want 2`,
       },
       {
-        name: 'negative control: model id in a comment is ignored',
-        ok: negative.length === 0,
-        got: `${negative.length} findings`,
+        name: 'positive: regex literal does not hide a NEXT-LINE hardcode',
+        ok: regexPoison.length === 1,
+        got: `${regexPoison.length} findings, want 1`,
+      },
+      {
+        name: 'positive: regex literal does not hide a SAME-LINE hardcode',
+        ok: regexPoisonSameLine.length === 1,
+        got: `${regexPoisonSameLine.length} findings, want 1`,
+      },
+      {
+        name: 'positive: slash-star inside a regex does not hide a hardcode',
+        ok: blockPoison.length === 1,
+        got: `${blockPoison.length} findings, want 1`,
+      },
+      {
+        name: 'positive: template literals (incl. substituted) are scanned',
+        ok: templated.length === 2,
+        got: `${templated.length} findings, want 2`,
+      },
+      {
+        name: 'negative: model id in a comment is ignored',
+        ok: commented.length === 0,
+        got: `${commented.length} findings, want 0`,
       },
     ];
     for (const r of results) {

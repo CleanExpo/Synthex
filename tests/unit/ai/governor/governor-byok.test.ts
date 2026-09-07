@@ -17,7 +17,7 @@ import { getLatestModel } from '@/lib/ai/model-registry';
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     runnerFlag: { findMany: jest.fn() },
-    aPICredential: { findFirst: jest.fn() },
+    aPICredential: { findMany: jest.fn() },
     orgBudgetPolicy: { findUnique: jest.fn() },
     pipelineCostLedger: { groupBy: jest.fn(), create: jest.fn() },
   },
@@ -86,7 +86,7 @@ function callFor(provider: (typeof ALL_PROVIDERS)[number], execute: jest.Mock) {
 
 describe.each(ALL_PROVIDERS)('BYOK fail-closed — %s', provider => {
   it('refuses when the brand has no key, and never reaches the provider', async () => {
-    mocks.prisma.aPICredential.findFirst.mockResolvedValue(null);
+    mocks.prisma.aPICredential.findMany.mockResolvedValue([]);
     const execute = jest.fn();
 
     const result = await callFor(provider, execute);
@@ -97,12 +97,14 @@ describe.each(ALL_PROVIDERS)('BYOK fail-closed — %s', provider => {
   });
 
   it('refuses a REVOKED key — distinctly from a missing one — with no fallback', async () => {
-    mocks.prisma.aPICredential.findFirst.mockResolvedValue({
-      id: 'cred_revoked',
-      encryptedKey: 'encrypted-placeholder',
-      isActive: true,
-      revokedAt: new Date('2026-09-01T00:00:00Z'),
-    });
+    mocks.prisma.aPICredential.findMany.mockResolvedValue([
+      {
+        id: 'cred_revoked',
+        encryptedKey: 'encrypted-placeholder',
+        isActive: true,
+        revokedAt: new Date('2026-09-01T00:00:00Z'),
+      },
+    ]);
     const execute = jest.fn();
 
     const result = await callFor(provider, execute);
@@ -123,12 +125,14 @@ describe.each(ALL_PROVIDERS)('BYOK fail-closed — %s', provider => {
   });
 
   it('refuses an inactive key', async () => {
-    mocks.prisma.aPICredential.findFirst.mockResolvedValue({
-      id: 'cred_inactive',
-      encryptedKey: 'encrypted-placeholder',
-      isActive: false,
-      revokedAt: null,
-    });
+    mocks.prisma.aPICredential.findMany.mockResolvedValue([
+      {
+        id: 'cred_inactive',
+        encryptedKey: 'encrypted-placeholder',
+        isActive: false,
+        revokedAt: null,
+      },
+    ]);
     const execute = jest.fn();
 
     const result = await callFor(provider, execute);
@@ -155,17 +159,12 @@ describe.each(ALL_PROVIDERS)('BYOK fail-closed — %s', provider => {
     // The env holds PLATFORM_KEY_SENTINEL for every provider (planted in
     // beforeEach). If any fallback existed, execute would run with it.
     const execute = jest.fn();
-    for (const credential of [
-      null,
-      {
-        id: 'c1',
-        encryptedKey: 'e',
-        isActive: true,
-        revokedAt: new Date(),
-      },
-      { id: 'c2', encryptedKey: 'e', isActive: false, revokedAt: null },
+    for (const credentials of [
+      [],
+      [{ id: 'c1', encryptedKey: 'e', isActive: true, revokedAt: new Date() }],
+      [{ id: 'c2', encryptedKey: 'e', isActive: false, revokedAt: null }],
     ]) {
-      mocks.prisma.aPICredential.findFirst.mockResolvedValue(credential);
+      mocks.prisma.aPICredential.findMany.mockResolvedValue(credentials);
       await callFor(provider, execute);
     }
 
@@ -205,10 +204,113 @@ describe.each(ALL_PROVIDERS)('BYOK fail-closed — %s', provider => {
       .mockResolvedValue({ data: 'ok', inputTokens: 1, outputTokens: 1 });
     await callFor(provider, execute);
 
-    expect(mocks.prisma.aPICredential.findFirst).toHaveBeenCalledWith(
+    expect(mocks.prisma.aPICredential.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { organizationId: ORG_ID, provider },
       })
     );
   });
 });
+
+/**
+ * Regression for P1-BYOK-NEWEST-REVOKED-SHADOWS-ACTIVE (independent review,
+ * cursor lane, head f8c1257).
+ *
+ * APICredential is unique on [userId, provider, organizationId], so ONE
+ * organisation can legitimately hold several credentials for the same provider
+ * — one per user. The original resolver took the newest row and classified it,
+ * so one user revoking their key refused the whole organisation while another
+ * user's active key sat right there.
+ *
+ * Selecting a different key the BRAND OWNS is not a platform fallback, which is
+ * why these tests assert a served call rather than a refusal. The platform
+ * sentinel is still asserted absent, so the fix cannot be mistaken for a
+ * loosening of BYOK.
+ */
+describe.each(ALL_PROVIDERS)(
+  'BYOK multi-credential selection — %s',
+  provider => {
+    it('uses an older ACTIVE key rather than being shadowed by a newer REVOKED one', async () => {
+      mocks.prisma.aPICredential.findMany.mockResolvedValue([
+        {
+          id: 'cred_newer_revoked',
+          encryptedKey: 'revoked-ciphertext',
+          isActive: true,
+          revokedAt: new Date('2026-09-05T00:00:00Z'),
+        },
+        {
+          id: 'cred_older_active',
+          encryptedKey: 'active-ciphertext',
+          isActive: true,
+          revokedAt: null,
+        },
+      ]);
+      const execute = jest
+        .fn()
+        .mockResolvedValue({ data: 'ok', inputTokens: 1, outputTokens: 1 });
+
+      const result = await callFor(provider, execute);
+
+      expect(result.ok).toBe(true);
+      expect(execute).toHaveBeenCalledTimes(1);
+      const ctx = execute.mock.calls[0][0];
+      expect(ctx.apiKey).toBe(BRAND_KEY_SENTINEL);
+      expect(ctx.apiKey).not.toBe(PLATFORM_KEY_SENTINEL);
+    });
+
+    it('still refuses when EVERY key is revoked', async () => {
+      mocks.prisma.aPICredential.findMany.mockResolvedValue([
+        {
+          id: 'r1',
+          encryptedKey: 'e',
+          isActive: true,
+          revokedAt: new Date('2026-09-05T00:00:00Z'),
+        },
+        {
+          id: 'r2',
+          encryptedKey: 'e',
+          isActive: true,
+          revokedAt: new Date('2026-09-01T00:00:00Z'),
+        },
+      ]);
+      const execute = jest.fn();
+
+      const result = await callFor(provider, execute);
+
+      expect(result.ok).toBe(false);
+      expect(result.outcome).toBe('refused_byok_revoked');
+      expect(execute).not.toHaveBeenCalled();
+    });
+
+    it('falls past an undecryptable active key to another the brand owns', async () => {
+      mocks.prisma.aPICredential.findMany.mockResolvedValue([
+        {
+          id: 'cred_corrupt',
+          encryptedKey: 'corrupt-ciphertext',
+          isActive: true,
+          revokedAt: null,
+        },
+        {
+          id: 'cred_good',
+          encryptedKey: 'good-ciphertext',
+          isActive: true,
+          revokedAt: null,
+        },
+      ]);
+      mocks.decryptApiKey.mockImplementation((ciphertext: string) => {
+        if (ciphertext === 'corrupt-ciphertext')
+          throw new Error('bad ciphertext');
+        return BRAND_KEY_SENTINEL;
+      });
+      const execute = jest
+        .fn()
+        .mockResolvedValue({ data: 'ok', inputTokens: 1, outputTokens: 1 });
+
+      const result = await callFor(provider, execute);
+
+      expect(result.ok).toBe(true);
+      expect(execute.mock.calls[0][0].apiKey).toBe(BRAND_KEY_SENTINEL);
+      expect(execute.mock.calls[0][0].apiKey).not.toBe(PLATFORM_KEY_SENTINEL);
+    });
+  }
+);

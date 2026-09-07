@@ -158,6 +158,23 @@ export async function checkBudget(
     providerDailyCeilingUsd: providerCeiling,
   };
 
+  // A row that sets NO ceiling is not a budget, and "no budget means no
+  // spending" has to mean that or it means nothing. An earlier revision
+  // refused only when the ROW was missing, so an OrgBudgetPolicy with
+  // dailyCeilingUsd = null and no provider ceilings authorised unbounded
+  // Governor spend — the exact state this module claims to make impossible.
+  // (Independent review, cursor lane, P2 on budget.ts.) The legacy path fills
+  // that gap with SYNTHEX_DEFAULT_* env ceilings; the Governor deliberately
+  // does not read env for policy, so it refuses instead.
+  if (orgCeiling === null && providerCeiling === null) {
+    return {
+      allowed: false,
+      verdict: 'budget_unconfigured:no_ceiling_set',
+      outcome: 'refused_budget_unconfigured',
+      detail,
+    };
+  }
+
   if (
     providerCeiling !== null &&
     providerSpendUsd + estimatedCostUsd > providerCeiling

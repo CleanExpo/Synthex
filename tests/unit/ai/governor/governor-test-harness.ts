@@ -44,7 +44,7 @@ export const ALL_PROVIDERS: GovernorProvider[] = [...GOVERNOR_PROVIDERS];
 export interface GovernorMocks {
   prisma: {
     runnerFlag: { findMany: jest.Mock };
-    aPICredential: { findFirst: jest.Mock };
+    aPICredential: { findMany: jest.Mock };
     orgBudgetPolicy: { findUnique: jest.Mock };
     pipelineCostLedger: { groupBy: jest.Mock; create: jest.Mock };
   };
@@ -81,7 +81,7 @@ export function generousPolicy() {
  */
 export function installDefaults(mocks: GovernorMocks): void {
   mocks.prisma.runnerFlag.findMany.mockResolvedValue(enabledFlagRows());
-  mocks.prisma.aPICredential.findFirst.mockResolvedValue(activeCredential());
+  mocks.prisma.aPICredential.findMany.mockResolvedValue([activeCredential()]);
   mocks.prisma.orgBudgetPolicy.findUnique.mockResolvedValue(generousPolicy());
   mocks.prisma.pipelineCostLedger.groupBy.mockResolvedValue([]);
   mocks.prisma.pipelineCostLedger.create.mockResolvedValue({ id: 'ledger_1' });

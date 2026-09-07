@@ -18,7 +18,7 @@ import { estimateCostUsd } from '@/lib/ai/governor/model';
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     runnerFlag: { findMany: jest.fn() },
-    aPICredential: { findFirst: jest.fn() },
+    aPICredential: { findMany: jest.fn() },
     orgBudgetPolicy: { findUnique: jest.fn() },
     pipelineCostLedger: { groupBy: jest.fn(), create: jest.fn() },
   },
@@ -206,5 +206,43 @@ describe('budget halt — receipt is written exactly once per governed call', ()
     await callFor('anthropic', execute);
 
     expect(mocks.prisma.pipelineCostLedger.create).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * Regression for the cursor lane's P2 on budget.ts: a policy row that sets NO
+ * ceiling authorised unbounded Governor spend, because only a MISSING row was
+ * refused. "No budget means no spending" has to cover both or it covers
+ * neither.
+ */
+describe.each(ALL_PROVIDERS)('budget unconfigured — %s', provider => {
+  it('refuses a policy row whose ceilings are all null', async () => {
+    mocks.prisma.orgBudgetPolicy.findUnique.mockResolvedValue({
+      dailyCeilingUsd: null,
+      providerDailyCeilingsUsd: null,
+      enforcementMode: 'enforce',
+    });
+    const execute = jest.fn();
+
+    const result = await callFor(provider, execute);
+
+    expect(result.ok).toBe(false);
+    expect(result.outcome).toBe('refused_budget_unconfigured');
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('accepts a row that sets ONLY a per-provider ceiling', async () => {
+    mocks.prisma.orgBudgetPolicy.findUnique.mockResolvedValue({
+      dailyCeilingUsd: null,
+      providerDailyCeilingsUsd: { [provider]: 100 },
+      enforcementMode: 'enforce',
+    });
+    const execute = jest
+      .fn()
+      .mockResolvedValue({ data: 'ok', inputTokens: 1, outputTokens: 1 });
+
+    const result = await callFor(provider, execute);
+
+    expect(result.ok).toBe(true);
   });
 });

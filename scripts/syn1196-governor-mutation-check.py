@@ -24,14 +24,14 @@ REGISTRY = "tests/unit/ai/governor/governor-model-registry.test.ts"
 MUTANTS = [
     ("M1 BYOK falls back to the platform env key when the brand has none",
      "lib/ai/governor/byok.ts",
-     [("""  if (!credential) {
+     [("""  if (rows.length === 0) {
     return {
       ok: false,
       verdict: 'byok_missing',
       outcome: 'refused_byok_missing',
     };
   }""",
-       """  if (!credential) {
+       """  if (rows.length === 0) {
     const platform =
       process.env.ANTHROPIC_API_KEY ??
       process.env.OPENAI_API_KEY ??
@@ -48,15 +48,15 @@ MUTANTS = [
   }""")],
      BYOK),
 
-    ("M2 BYOK revoked-key check removed (missing-key check left intact)",
+    ("M2 BYOK revoked-key classification removed (missing-key path left intact)",
      "lib/ai/governor/byok.ts",
-     [("""  if (credential.revokedAt !== null) {
-    return {
-      ok: false,
-      verdict: 'byok_revoked',
-      outcome: 'refused_byok_revoked',
-    };
-  }""", "  // MUTANT: revoked check deleted")],
+     [("""    if (newest.revokedAt !== null) {
+      return {
+        ok: false,
+        verdict: 'byok_revoked',
+        outcome: 'refused_byok_revoked',
+      };
+    }""", "    // MUTANT: revoked classification deleted")],
      BYOK),
 
     ("M3 budget halt removed (receipt path left intact)",
@@ -104,6 +104,35 @@ MUTANTS = [
       ("  return ALLOWED;",
        "  mutantCache.set(cacheKey, ALLOWED);\n  return ALLOWED;")],
      KILL),
+
+    # --- Mutants M8-M10 guard the three defects the independent review found
+    # at head f8c1257 (cursor lane). Each reintroduces the ORIGINAL bug, so the
+    # fix is proven falsifiable rather than merely asserted.
+
+    # P1-BYOK-NEWEST-REVOKED-SHADOWS-ACTIVE: classify the newest row instead of
+    # preferring a usable one.
+    ("M8 BYOK reverts to newest-wins (a newer revoked key shadows an active one)",
+     "lib/ai/governor/byok.ts",
+     [("  const usable = rows.filter(row => row.revokedAt === null && row.isActive);",
+       "  const usable = rows.slice(0, 1).filter(row => row.revokedAt === null && row.isActive);")],
+     BYOK),
+
+    # P2 budget.ts: only a MISSING row was refused, so a row with null ceilings
+    # authorised unbounded spend.
+    ("M9 budget null-ceiling check removed (a row with no ceiling spends freely)",
+     "lib/ai/governor/budget.ts",
+     [("  if (orgCeiling === null && providerCeiling === null) {",
+       "  if (false && orgCeiling === null && providerCeiling === null) {")],
+     BUDGET),
+
+    # P1-AUDIT-COMMENT-STRIP-REGEX-DEFEAT: reintroduce naive comment stripping
+    # ahead of the parser, which is exactly how a regex literal used to hide a
+    # same-line hardcode.
+    ("M10 audit re-adds naive comment stripping (regex literal hides a hardcode)",
+     "scripts/audit-governor-model-strings.mjs",
+     [("function scanSource(source, fileName = 'input.ts') {\n  return stringLiteralsOf(source, fileName).filter(entry =>",
+       "function scanSource(source, fileName = 'input.ts') {\n  source = source\n    .split('\\n')\n    .map(l => (l.includes('//') ? l.slice(0, l.indexOf('//')) : l))\n    .join('\\n');\n  return stringLiteralsOf(source, fileName).filter(entry =>")],
+     REGISTRY),
 
     ("M7 audit matcher neutered (scanner can no longer detect anything)",
      "scripts/audit-governor-model-strings.mjs",
