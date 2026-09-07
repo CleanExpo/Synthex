@@ -15,6 +15,7 @@ import {
   PLATFORM_COLORS,
   ApprovalStatus,
 } from './CalendarTypes';
+import { customerPostStatus } from '@/lib/dashboard/post-status';
 import {
   Twitter,
   Linkedin,
@@ -234,7 +235,7 @@ export function DraggablePostCard({
         {/* Status Badge */}
         <div className="flex items-center gap-1">
           <StatusIcon className="h-3 w-3" />
-          <span className="text-xs capitalize">{post.status}</span>
+          <span className="text-xs">{customerPostStatus(post.status)}</span>
         </div>
       </div>
 
