@@ -110,10 +110,10 @@ function MessageDisplay() {
             </Link>
             <span className="text-white/50">•</span>
             <Link
-              href="/dashboard/schedule"
+              href="/dashboard/calendar"
               className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
             >
-              Schedule
+              Calendar
             </Link>
             <span className="text-white/50">•</span>
             <Link
