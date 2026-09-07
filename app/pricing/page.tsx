@@ -18,6 +18,7 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
+import { RouteIdentity } from '@/components/system/RouteIdentity';
 
 export const metadata: Metadata = {
   title: 'Pilot Access | Synthex',
@@ -109,6 +110,7 @@ function PricingFAQSchema() {
 export default function PricingPage() {
   return (
     <SiteShell>
+      <RouteIdentity route="/pricing" />
       <PricingFAQSchema />
       <PublicPageFrame>
         <PublicPageHero
