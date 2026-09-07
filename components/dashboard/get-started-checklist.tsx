@@ -132,9 +132,8 @@ export function GetStartedChecklist({ className }: { className?: string }) {
       });
     }
     if (!prev.first_post && status.first_post) {
-      toast.success('First post created! The automation flywheel is ready.', {
-        description:
-          'Synthex can now run autonomous campaigns for your client.',
+      toast.success('First draft created.', {
+        description: 'Open Calendar when you want to book a time.',
         duration: 8000,
         icon: <Sparkles className="h-5 w-5 text-orange-400" />,
       });
@@ -201,7 +200,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         id: 'first_post',
         title: 'Generate Your First Post',
         description:
-          'Create a piece of AI-generated content — this unlocks the full automation flywheel.',
+          'Write a draft in Content. Nothing is public until you schedule it.',
         href: '/dashboard/content',
         icon: Sparkles,
         completed: status.first_post,
