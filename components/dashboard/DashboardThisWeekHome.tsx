@@ -101,8 +101,8 @@ export function DashboardThisWeekHome({ stats }: DashboardThisWeekHomeProps) {
           }
           body={
             connected === 0
-              ? 'Without a connected account, posts stay inside Synthex. Connect one to publish.'
-              : 'You can draft anytime. Ready accounts are the ones that can actually go live.'
+              ? 'No channel is ready. Connect one — Ready looks like a green check. You can still write drafts.'
+              : 'Ready accounts can go live. Review any that expired. Drafting never requires a connection.'
           }
           href="/dashboard/platforms"
           cta={connected === 0 ? 'Connect an account' : 'Review platforms'}
