@@ -83,10 +83,25 @@
  * those routes rather than listed. A marker in `app/dashboard/layout.tsx` cannot forge a
  * signal for `/login`, so the chain is the honest surface, not an allow-list.
  *
- * Known residual, stated rather than hidden: this decides what a component emits UNDER
- * JEST. A forgery gated on `process.env.NODE_ENV !== 'test'` would render here as nothing
- * and in production as a marker. No test-time control can reach that, this one included;
- * it is caught, if at all, by reading the diff.
+ * KNOWN RESIDUAL - tracked as SYN-1194, not merely disclosed here.
+ *
+ * This control decides what an ancestor emits UNDER JEST. The class it cannot reach is a
+ * forgery gated on any predicate that is false under test and true in production;
+ * `process.env.NODE_ENV !== 'test'` is one spelling of that class, not its boundary.
+ *
+ * Adding a source-level guard alongside this one does NOT close it, and that is the part
+ * worth recording. It makes the blind spot the INTERSECTION of the two rather than the
+ * union: an attribute key built with `String.fromCharCode` behind such a gate leaves no
+ * literal for a scan to fold AND no rendered output for this control to query. Residuals
+ * compose. Four guards are catalogued above and each died to the next spelling, so the
+ * answer here is a tracked redesign, not a fifth guard.
+ *
+ * What this control DOES close is the ergonomic failure: a contributor moves the marker
+ * into a layout or an error boundary because it reads more tidily, and silently recreates
+ * the defect the whole gate exists to catch. That is the realistic regression. An
+ * environment-gated forgery is a deliberate construction rather than a mistake, and
+ * deliberate constructions are caught by the independent review every change in this repo
+ * passes before merge - not by a unit test.
  */
 
 // Framework modules only. Mocking an app component that renders above the page -
@@ -300,7 +315,7 @@ const CHAIN = [
   ),
 ].sort();
 
-describe('route identity marker ownership', () => {
+describe('route identity marker ownership, as rendered under jest', () => {
   beforeAll(() => {
     // jsdom ships no matchMedia. next-themes calls it while mounting, and it mounts
     // inside app/layout.tsx via app/providers.tsx - so without this the root layout
@@ -369,7 +384,7 @@ describe('route identity marker ownership', () => {
     expect(ownershipFailures([unmountable])[0]).toContain('undecided');
   });
 
-  it('detects a marker an ancestor emits however the attribute is constructed', () => {
+  it('detects a marker an ancestor renders, however the attribute name is constructed', () => {
     // Negative control for the DETECTION mechanism, shaped like the file that defeated
     // v3: a root layout emitting <html>/<body>, with the marker key assembled at runtime
     // by three different spellings at once. A source scan sees none of them.
