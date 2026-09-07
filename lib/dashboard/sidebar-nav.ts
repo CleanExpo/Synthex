@@ -22,7 +22,7 @@ export interface AdvancedNavSectionDef {
 
 /** Create, schedule, measure — always visible. */
 export const BASIC_NAV_ITEMS: SidebarNavItemDef[] = [
-  { iconKey: 'CommandLine', label: 'Mission Control', href: '/dashboard' },
+  { iconKey: 'CommandLine', label: 'Home', href: '/dashboard' },
   { iconKey: 'FileText', label: 'Content', href: '/dashboard/content' },
   { iconKey: 'Calendar', label: 'Calendar', href: '/dashboard/calendar' },
   { iconKey: 'Megaphone', label: 'Campaigns', href: '/dashboard/campaigns' },
@@ -34,7 +34,7 @@ export const BASIC_NAV_ITEMS: SidebarNavItemDef[] = [
 export const ADVANCED_HUB = {
   href: '/dashboard/advanced',
   label: 'Power Tools',
-  description: 'Browse every advanced capability by workflow',
+  description: 'Agency and engineering tools. Daily posting stays in Home.',
 } as const;
 
 /** Grouped advanced nav — sidebar + hub page share this source of truth. */
@@ -176,6 +176,12 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
         label: 'Activity Log',
         href: '/dashboard/activity',
         description: 'Audit trail across the workspace',
+      },
+      {
+        iconKey: 'CommandLine',
+        label: 'Mission Control',
+        href: '/dashboard/mission-control',
+        description: 'Engineering goals and Linear tickets — not daily posting',
       },
       {
         iconKey: 'Rocket',
