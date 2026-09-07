@@ -177,8 +177,9 @@ export default function CampaignsPage() {
             Campaigns
           </h1>
           <p className="text-sm text-white/40 mt-1.5 max-w-lg">
-            Scan your brand, pick a business, generate AI campaign copy, and
-            save drafts. Scheduling launches soon.
+            A campaign is a short run of related posts (a sale, opening, or
+            event). You still approve each post. Create the set here, then
+            schedule from Content or Calendar.
           </p>
         </div>
         <button
@@ -192,7 +193,7 @@ export default function CampaignsPage() {
             </>
           ) : (
             <>
-              <Plus className="h-4 w-4" /> New campaign
+              <Plus className="h-4 w-4" /> Draft with AI
             </>
           )}
         </button>
@@ -250,10 +251,16 @@ export default function CampaignsPage() {
         <div className="flex items-start gap-3 border-[0.5px] border-white/6 bg-white/1 rounded-sm px-4 py-3 opacity-90">
           <Clock className="h-4 w-4 text-white/30 shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs font-medium text-white/55">Scheduling</p>
+            <p className="text-xs font-medium text-white/55">Your control</p>
             <p className="text-[11px] text-white/35 mt-0.5">
-              Coming soon — campaigns save as drafts; publish from Assets when
-              ready.
+              AI can fill the first draft. You edit and schedule each post —
+              nothing goes out from this page on its own.{' '}
+              <Link
+                href="/dashboard/content"
+                className="text-orange-400 hover:text-orange-300"
+              >
+                Open Content →
+              </Link>
             </p>
           </div>
         </div>
@@ -331,16 +338,25 @@ export default function CampaignsPage() {
               No campaigns yet
             </h3>
             <p className="mx-auto mt-1 max-w-sm text-xs text-white/40">
-              Open the studio to scan your site, choose a brand, and generate
-              your first campaign draft.
+              A campaign is a named set of posts you still approve. Write two
+              posts in Content, schedule them on Calendar, or draft a name here
+              with optional AI.
             </p>
-            <button
-              type="button"
-              onClick={() => setStudioOpen(true)}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
-            >
-              <Plus className="h-4 w-4" /> Start studio
-            </button>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/dashboard/content"
+                className="inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
+              >
+                Write the first post
+              </Link>
+              <button
+                type="button"
+                onClick={() => setStudioOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-sm border-[0.5px] border-white/10 px-4 py-2 text-sm text-white/60 hover:bg-white/3"
+              >
+                <Plus className="h-4 w-4" /> Draft with AI
+              </button>
+            </div>
           </div>
         ) : (
           <ul className="space-y-2">
