@@ -6435,8 +6435,31 @@ model PipelineCostLedger {
   costUsd      Float    @map("cost_usd")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  // --- SYN-1196 Governor AI receipts (additive; every column nullable or
+  // defaulted so existing rows and existing writers are unaffected). The
+  // Governor writes clientId = organizationId so budget-enforcer's existing
+  // SUM over (clientId, createdAt) already counts Governor spend — do NOT add
+  // a second organisation column, it would split that sum.
+  //
+  /// Provider that served (or refused) the call: 'anthropic' | 'openai' |
+  /// 'google' | 'openrouter'. Null on pre-SYN-1196 rows.
+  provider     String?  @map("provider")
+  /// BrandSlug the runner acted for (e.g. 'ra'). Null on pre-SYN-1196 rows.
+  brandSlug    String?  @map("brand_slug")
+  /// Runner that made the call, e.g. 'governor' | 'content' | 'brand-voice'.
+  runner       String?  @map("runner")
+  /// Terminal outcome of the AI action. 'completed' for a served call;
+  /// 'refused_*' for a Governor refusal (which is itself receipted, so a
+  /// refusal is never invisible). Defaulted so historic rows read 'completed'.
+  outcome      String   @default("completed") @map("outcome")
+  /// Where the decision came from — model source, flag/budget/BYOK verdicts,
+  /// registry ids. Shape: see GovernorProvenance in lib/ai/governor/types.ts.
+  provenance   Json?    @map("provenance")
+
   @@index([pipelineName, createdAt(sort: Desc)])
   @@index([clientId, createdAt(sort: Desc)])
+  @@index([provider, createdAt(sort: Desc)])
+  @@index([outcome, createdAt(sort: Desc)])
   @@map("pipeline_cost_ledger")
 }
 
@@ -6460,7 +6483,97 @@ model OrgBudgetPolicy {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
+  /// SYN-1196 — per-provider daily ceilings in USD, keyed by GovernorProvider.
+  /// Shape: { "anthropic": 5.0, "openai": 2.0, "google": 1.0, "openrouter": 3.0 }
+  /// An absent key means no provider-specific ceiling; the org-wide
+  /// dailyCeilingUsd still applies. Read by lib/ai/governor/budget.ts.
+  /// Additive nullable Json — one column, not four, so adding a fifth provider
+  /// is a data change rather than a migration.
+  providerDailyCeilingsUsd Json? @map("provider_daily_ceilings_usd")
+
   @@map("org_budget_policies")
+}
+
+// ============================================================================
+// SYN-1196 — Synthex AI runtime (Governor + Model Scout)
+// Soft refs to Organization.id (no FK) — same additive convention as
+// OrgBudgetPolicy / mcp_api_keys, and it keeps this migration table-local.
+// ============================================================================
+
+/// RunnerFlag — per-organisation, per-brand, per-runner feature flag and
+/// kill-switch. Read by lib/ai/governor on EVERY call (never cached — a
+/// kill-switch that is cached does not stop a runner "immediately").
+///
+/// DEFAULT OFF IS A HARD REQUIREMENT (SYN-1196): `enabled` defaults to false
+/// and a MISSING ROW is also treated as off. There is no configuration under
+/// which a runner turns itself on.
+///
+/// `runner = '*'` is the brand-level row: its killSwitch stops every runner
+/// for that brand in one write. It is checked before the runner-specific row.
+model RunnerFlag {
+  id             String @id @default(cuid())
+  organizationId String @map("organization_id")
+  /// BrandSlug the flag applies to (e.g. 'ra', 'ccw').
+  brandSlug      String @map("brand_slug")
+  /// Runner name, e.g. 'content' | 'brand-voice' | 'publishing', or '*' for
+  /// the brand-level kill-switch row.
+  runner         String
+
+  /// Default OFF. A runner is only permitted when a row exists AND this is true.
+  enabled Boolean @default(false)
+
+  /// Emergency stop. Overrides `enabled` — true refuses every call at once.
+  killSwitch       Boolean   @default(false) @map("kill_switch")
+  killSwitchReason String?   @map("kill_switch_reason")
+  killSwitchAt     DateTime? @map("kill_switch_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, brandSlug, runner])
+  @@index([organizationId, brandSlug])
+  @@map("runner_flags")
+}
+
+/// ModelEvalReceipt — evidence that a model was probed before it was trusted.
+/// Written by the Model Scout runner (Phase 2); the table is created now so
+/// the Governor's provenance can reference an eval by id from day one.
+///
+/// The MODEL REGISTRY ITSELF STAYS A FILE IN GIT (lib/ai/model-registry.ts).
+/// This table stores only observed provider state and eval evidence — the
+/// Scout's output is a config PR that cites a receipt id, and a database row
+/// can never be a pull request.
+model ModelEvalReceipt {
+  id String @id @default(cuid())
+
+  /// Registry model id as it appears in lib/ai/model-registry.ts.
+  modelId  String @map("model_id")
+  /// 'anthropic' | 'openai' | 'google' | 'openrouter'.
+  provider String
+
+  /// Probe outcome: 'ok' | 'error' | 'unavailable' | 'not_probed'.
+  probeStatus String @map("probe_status")
+  /// Raw probe evidence — request shape, response excerpt, error class.
+  probeDetail Json?  @map("probe_detail")
+
+  latencyMs Int?   @map("latency_ms")
+  costUsd   Float? @map("cost_usd")
+
+  /// Scout's recommendation: 'promote' | 'hold' | 'reject'.
+  verdict String
+  /// The config PR this receipt was cited in, once one is opened.
+  configPrUrl String? @map("config_pr_url")
+
+  /// Git SHA of the registry file the probe was taken against, so a receipt
+  /// can never be read as evidence about a different registry revision.
+  registrySha String? @map("registry_sha")
+
+  observedAt DateTime @default(now()) @map("observed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([provider, observedAt(sort: Desc)])
+  @@index([modelId, observedAt(sort: Desc)])
+  @@map("model_eval_receipts")
 }
 
 // ============================================================================
