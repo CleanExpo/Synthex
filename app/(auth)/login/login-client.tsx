@@ -98,12 +98,18 @@ function LoginContent() {
         newProvider: newProvider || 'google',
       });
     } else if (error) {
-      toast.error(decodeURIComponent(error));
+      const decoded = decodeURIComponent(error);
+      toast.error(
+        decoded.length > 120 || /token|code=|secret/i.test(decoded)
+          ? 'Sign-in failed. Please try again.'
+          : decoded
+      );
     }
 
     if (searchParams.get('auth') === 'success') {
       toast.success('Welcome back!');
-      router.push('/onboarding');
+      // Dashboard layout sends incomplete accounts to onboarding.
+      router.push('/dashboard');
     }
   }, [searchParams, router]);
 
@@ -124,6 +130,7 @@ function LoginContent() {
           method: 'email',
           email: formData.email,
           password: formData.password,
+          rememberMe,
         }),
       });
 
