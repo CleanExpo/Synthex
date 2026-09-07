@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import Link from 'next/link';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { useUser } from '@/hooks/use-user';
 import { AlertTriangle, MessageSquare, RefreshCw } from '@/components/icons';
@@ -18,44 +17,8 @@ import {
   formatTimeAgo,
 } from '@/components/dashboard';
 import { AllBusinessesDashboard } from '@/components/business/AllBusinessesDashboard';
-import { DashboardNewUserHome } from '@/components/dashboard/DashboardNewUserHome';
 import { DashboardAtmosphere } from '@/components/dashboard/DashboardAtmosphere';
-import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
-
-// AI Command Centre — available under Mission Control "classic" toggle
-const AICommandCentre = dynamic(
-  () =>
-    import('@/components/command-centre').then(m => ({
-      default: m.AICommandCentre,
-    })),
-  { ssr: false }
-);
-
-const MissionControlHome = dynamic(
-  () =>
-    import('@/components/mission-control').then(m => ({
-      default: m.MissionControlHome,
-    })),
-  { ssr: false }
-);
-
-import { DashboardPerformancePulse } from '@/components/dashboard/DashboardPerformancePulse';
-
-const HealthScoreWidget = dynamic(
-  () =>
-    import('@/components/dashboard/HealthScoreWidget').then(m => ({
-      default: m.HealthScoreWidget,
-    })),
-  { ssr: false }
-);
-
-const VisibilityScoreWidget = dynamic(
-  () =>
-    import('@/components/dashboard/VisibilityScoreWidget').then(m => ({
-      default: m.VisibilityScoreWidget,
-    })),
-  { ssr: false }
-);
+import { DashboardThisWeekHome } from '@/components/dashboard/DashboardThisWeekHome';
 
 const TrialEndModal = dynamic(
   () => import('@/components/trial/TrialEndModal'),
@@ -377,12 +340,6 @@ export default function DashboardPage() {
     );
   }
 
-  const isNewUser =
-    stats !== null &&
-    stats.totalPosts === 0 &&
-    stats.followers === 0 &&
-    stats.scheduledPosts === 0;
-
   return (
     <ErrorBoundary
       fallbackTitle="Dashboard Error"
@@ -403,43 +360,8 @@ export default function DashboardPage() {
           <DashboardAtmosphere className="mx-auto max-w-6xl">
             <AllBusinessesDashboard />
           </DashboardAtmosphere>
-        ) : isNewUser ? (
-          <DashboardNewUserHome />
         ) : (
-          <>
-            <h1 className="sr-only">Mission Control</h1>
-            <WelcomeCard
-              connectedPlatforms={stats?.connectedPlatforms ?? 0}
-              totalPosts={stats?.totalPosts ?? 0}
-              scheduledPosts={stats?.scheduledPosts ?? 0}
-            />
-            <MissionControlHome
-              legacyCommandCentre={<AICommandCentre />}
-              insights={
-                <>
-                  <DashboardPerformancePulse />
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    <HealthScoreWidget />
-                    <VisibilityScoreWidget />
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4 text-xs">
-                    <Link
-                      href="/dashboard/analytics"
-                      className="text-orange-400/80 transition-colors hover:text-orange-400"
-                    >
-                      Analytics
-                    </Link>
-                    <Link
-                      href="/dashboard/marketing-lab"
-                      className="text-white/35 transition-colors hover:text-white/60"
-                    >
-                      Marketing Lab
-                    </Link>
-                  </div>
-                </>
-              }
-            />
-          </>
+          <DashboardThisWeekHome stats={stats} />
         )}
       </div>
 
