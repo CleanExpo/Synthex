@@ -50,6 +50,7 @@ const AICalendarSection = dynamic(
 );
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
+import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -320,7 +321,7 @@ function CalendarPageContent() {
     <div className="flex-1 flex flex-col gap-6 p-6">
       {/* Header */}
       <PageHeader
-        title="Content Calendar"
+        title="Calendar"
         description="Practice: posts stay in Synthex. Live: they go out at the time you picked. You can switch back."
         actions={
           <div className="flex items-center gap-3">
@@ -404,6 +405,10 @@ function CalendarPageContent() {
       {posts.filter(p => p.status === 'failed').length > 0 && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3">
           <p className="text-sm font-medium text-red-200">Needs you</p>
+          <p className="mt-1 text-xs text-red-200/70">
+            A failed post did not go out. Fix it here, or reconnect the channel
+            on Platforms.
+          </p>
           <ul className="mt-2 space-y-1.5">
             {posts
               .filter(p => p.status === 'failed')
@@ -562,9 +567,9 @@ function CalendarPageContent() {
         <DashboardEmptyState
           icon={Calendar}
           title="Nothing booked"
-          description="Write a post in Content, then schedule it here. Good looks like a time on this week with Scheduled on the card."
+          description={FIRST_WEEK_GUIDANCE.calendar.empty}
           action={{
-            label: 'Write a post',
+            label: FIRST_WEEK_GUIDANCE.calendar.nextLabel,
             onClick: () => {
               router.push('/dashboard/content');
             },
