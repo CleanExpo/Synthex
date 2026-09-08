@@ -136,7 +136,6 @@ describe('Google OAuth sign-in callback', () => {
           })
         )
     );
-
     expect(response.headers.get('location')).toContain(
       'error=Invalid+or+expired+state'
     );
@@ -170,6 +169,42 @@ describe('Google OAuth sign-in callback', () => {
     });
     expect(response.headers.get('set-cookie')).toContain('auth-token=synthex-session-token');
   });
+
+  it.each([false, undefined])(
+    'rejects a Google profile without positive email verification (%s)',
+    async verifiedEmail => {
+      global.fetch = jest.fn(async (url: unknown) => {
+        if (String(url).includes('oauth2.googleapis.com/token')) {
+          return {
+            ok: true,
+            json: async () => ({ access_token: 'google-access-token' }),
+          } as Response;
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            id: 'google-user-123',
+            email: 'phill@example.com',
+            verified_email: verifiedEmail,
+          }),
+        } as Response;
+      }) as typeof global.fetch;
+
+      const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+      const response = await GET(
+        createMockNextRequest({
+          url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
+        })
+      );
+
+      expect(response.status).toBeGreaterThanOrEqual(300);
+      expect(response.status).toBeLessThan(400);
+      expect(response.headers.get('set-cookie') || '').not.toContain('auth-token');
+      expect(mockLinkAccount).not.toHaveBeenCalled();
+      expect(mockCreateAccount).not.toHaveBeenCalled();
+      expect(mockAuthenticate).not.toHaveBeenCalled();
+    }
+  );
 
   it('does not issue a session when account persistence fails', async () => {
     mockLinkAccount.mockResolvedValue({

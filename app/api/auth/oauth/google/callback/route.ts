@@ -110,12 +110,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Do not let the centralized OAuth flow turn an unverified provider
+    // response into a verified Synthex identity. This check must happen before
+    // any user/account persistence or session creation.
+    if (googleUser.verified_email !== true) {
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Google account email is not verified'
+      );
+    }
+
     const profile = {
       id: googleUser.id,
       email: googleUser.email,
       name: googleUser.name,
       avatar: googleUser.picture,
-      emailVerified: googleUser.verified_email ?? false,
+      emailVerified: true,
     };
 
     if (pkceState.linkToUserId) {
