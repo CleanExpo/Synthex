@@ -15,6 +15,30 @@ const content = {
 };
 
 describe('GeneratedContent actions', () => {
+  it('tells a stranger what to do when there is no draft', () => {
+    render(
+      <GeneratedContent
+        content={null}
+        selectedVariation={0}
+        onVariationChange={jest.fn()}
+        editMode={false}
+        onEditModeToggle={jest.fn()}
+        editedContent=""
+        onEditedContentChange={jest.fn()}
+        onRefresh={jest.fn()}
+        onCopy={jest.fn()}
+        onSave={jest.fn()}
+        onSchedule={jest.fn()}
+        onPostNow={jest.fn()}
+        onDiscard={jest.fn()}
+      />
+    );
+    expect(screen.getByText('No draft yet')).toBeInTheDocument();
+    expect(
+      screen.getByText(/words you would actually post/i)
+    ).toBeInTheDocument();
+  });
+
   it('offers Save draft, Schedule, Post now, and Discard', async () => {
     const user = userEvent.setup();
     const onSave = jest.fn();
