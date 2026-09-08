@@ -74,7 +74,9 @@ jest.mock('@/lib/auth/invite-gate', () => ({
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  default: { user: { create: (...args: unknown[]) => mockCreateUser(...args) } },
+  default: {
+    user: { create: (...args: unknown[]) => mockCreateUser(...args) },
+  },
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -91,6 +93,7 @@ beforeEach(() => {
     NODE_ENV: 'test',
     GOOGLE_CLIENT_ID: 'google-client-id',
     GOOGLE_CLIENT_SECRET: 'google-client-secret',
+    FIELD_ENCRYPTION_KEY: 'a'.repeat(64),
     NEXT_PUBLIC_APP_URL: 'http://localhost:3008',
   };
   mockRetrievePKCEState.mockResolvedValue({
@@ -167,14 +170,15 @@ describe('Google OAuth sign-in callback', () => {
       redirectUri: 'http://localhost:3008/api/auth/oauth/google/callback',
     });
 
-    const response = await import('@/app/api/auth/oauth/google/callback/route').then(
-      ({ GET }) =>
-        GET(
-          createMockNextRequest({
-            url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-          })
-        )
-    );
+    const response =
+      await import('@/app/api/auth/oauth/google/callback/route').then(
+        ({ GET }) =>
+          GET(
+            createMockNextRequest({
+              url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
+            })
+          )
+      );
     expect(response.status).toBe(307);
     expect(global.fetch).not.toHaveBeenCalled();
     expect(mockAuthenticate).not.toHaveBeenCalled();
@@ -207,6 +211,33 @@ describe('Google OAuth sign-in callback', () => {
     );
   });
 
+  it('persists a new user and Google account in one nested write', async () => {
+    mockFindUserByProviderAccount.mockResolvedValue(null);
+
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(
+      createMockNextRequest({
+        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
+      })
+    );
+
+    expect(response.status).toBe(307);
+    expect(mockCreateUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        accounts: {
+          create: expect.objectContaining({
+            provider: 'google',
+            providerAccountId: 'google-user-123',
+            accessToken: expect.stringMatching(/^enc:v1:/),
+            refreshToken: expect.stringMatching(/^enc:v1:/),
+          }),
+        },
+      }),
+    });
+    expect(mockCreateAccount).not.toHaveBeenCalled();
+    expect(mockAuthenticate).toHaveBeenCalled();
+  });
+
   it.each([false, undefined])(
     'rejects a Google profile without positive email verification (%s)',
     async verifiedEmail => {
@@ -227,7 +258,8 @@ describe('Google OAuth sign-in callback', () => {
         } as Response;
       }) as typeof global.fetch;
 
-      const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+      const { GET } =
+        await import('@/app/api/auth/oauth/google/callback/route');
       const response = await GET(
         createMockNextRequest({
           url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',

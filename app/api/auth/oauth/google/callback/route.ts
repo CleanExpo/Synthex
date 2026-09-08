@@ -16,6 +16,7 @@ import { signInFlow } from '@/lib/auth/signInFlow';
 import { hasInviteEvidence, isInviteOnlyMode } from '@/lib/auth/invite-gate';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
+import { encryptField } from '@/lib/security/field-encryption';
 
 const GOOGLE_CONFIG = {
   tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -51,7 +52,10 @@ export async function GET(request: NextRequest) {
   const effectiveBaseUrl = getOAuthBaseUrl(request);
   if (!effectiveBaseUrl) {
     return NextResponse.json(
-      { error: 'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.' },
+      {
+        error:
+          'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
+      },
       { status: 500 }
     );
   }
@@ -169,9 +173,14 @@ export async function GET(request: NextRequest) {
         );
       }
     } else {
-      const existingByEmail = await accountService.findUserByEmail(profile.email);
+      const existingByEmail = await accountService.findUserByEmail(
+        profile.email
+      );
       if (existingByEmail) {
-        if (existingByEmail.hasPassword || existingByEmail.providers.length > 0) {
+        if (
+          existingByEmail.hasPassword ||
+          existingByEmail.providers.length > 0
+        ) {
           const params = new URLSearchParams({
             error: 'account_exists',
             email: existingByEmail.email,
@@ -209,10 +218,21 @@ export async function GET(request: NextRequest) {
             googleId: profile.id,
             authProvider: 'google',
             emailVerified: profile.emailVerified,
+            accounts: {
+              create: {
+                type: 'oauth',
+                provider: 'google',
+                providerAccountId: profile.id,
+                accessToken: encryptField(tokens.accessToken),
+                refreshToken: encryptField(tokens.refreshToken),
+                expiresAt: tokens.expiresAt || null,
+                tokenType: tokens.tokenType || null,
+                scope: tokens.scope || null,
+                idToken: encryptField(tokens.idToken),
+              },
+            },
           },
         });
-
-        await accountService.createAccount(newUser.id, 'google', profile, tokens);
       }
     }
 
@@ -343,7 +363,10 @@ function redirectWithSession(
   return response;
 }
 
-function redirectWithError(effectiveBaseUrl: string, error: string): NextResponse {
+function redirectWithError(
+  effectiveBaseUrl: string,
+  error: string
+): NextResponse {
   const redirectUrl = new URL('/login', effectiveBaseUrl);
   redirectUrl.searchParams.set('error', error);
   return NextResponse.redirect(redirectUrl);
