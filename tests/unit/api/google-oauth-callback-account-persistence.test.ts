@@ -2,10 +2,13 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 jest.mock('next/server', () => {
   class MockCookies {
-    private readonly store = new Map<string, { value: string }>();
+    private readonly store = new Map<
+      string,
+      { value: string; options?: unknown }
+    >();
 
-    set(name: string, value: string) {
-      this.store.set(name, { value });
+    set(name: string, value: string, options?: unknown) {
+      this.store.set(name, { value, options });
     }
 
     get(name: string) {
@@ -39,7 +42,11 @@ jest.mock('next/server', () => {
   };
 });
 
+const mockGeneratePKCEChallenge = jest.fn();
+const mockGenerateState = jest.fn();
+const mockStorePKCEState = jest.fn();
 const mockRetrievePKCEState = jest.fn();
+const mockGetUserIdFromRequestOrCookies = jest.fn();
 const mockFindUserByProviderAccount = jest.fn();
 const mockFindUserByEmail = jest.fn();
 const mockLinkAccount = jest.fn();
@@ -48,7 +55,16 @@ const mockAuthenticate = jest.fn();
 const mockCreateUser = jest.fn();
 
 jest.mock('@/lib/auth/pkce', () => ({
+  generatePKCEChallenge: (...args: unknown[]) =>
+    mockGeneratePKCEChallenge(...args),
+  generateState: (...args: unknown[]) => mockGenerateState(...args),
+  storePKCEState: (...args: unknown[]) => mockStorePKCEState(...args),
   retrievePKCEState: (...args: unknown[]) => mockRetrievePKCEState(...args),
+}));
+
+jest.mock('@/lib/auth/jwt-utils', () => ({
+  getUserIdFromRequestOrCookies: (...args: unknown[]) =>
+    mockGetUserIdFromRequestOrCookies(...args),
 }));
 
 jest.mock('@/lib/auth/account-service', () => ({
@@ -86,6 +102,18 @@ jest.mock('@/lib/logger', () => ({
 const originalFetch = global.fetch;
 const originalEnv = { ...process.env };
 
+function callbackRequest(state = 'state-1', binding?: string) {
+  const browserBinding = arguments.length >= 2 ? binding : state;
+  const request = createMockNextRequest({
+    url: `http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=${state}`,
+  });
+  request.cookies.get = (name: string) =>
+    name === 'google-oauth-binding' && browserBinding
+      ? { value: browserBinding }
+      : undefined;
+  return request;
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   process.env = {
@@ -96,6 +124,14 @@ beforeEach(() => {
     FIELD_ENCRYPTION_KEY: 'a'.repeat(64),
     NEXT_PUBLIC_APP_URL: 'http://localhost:3008',
   };
+  mockGeneratePKCEChallenge.mockReturnValue({
+    codeVerifier: 'verifier',
+    codeChallenge: 'challenge',
+    codeChallengeMethod: 'S256',
+  });
+  mockGenerateState.mockReturnValue('state-1');
+  mockStorePKCEState.mockResolvedValue(undefined);
+  mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-1');
   mockRetrievePKCEState.mockResolvedValue({
     state: 'state-1',
     codeVerifier: 'verifier',
@@ -161,6 +197,139 @@ afterAll(() => {
   process.env = originalEnv;
 });
 
+describe('Google OAuth browser binding', () => {
+  it('rejects the legacy public linkToUserId parameter', async () => {
+    const { GET } = await import('@/app/api/auth/oauth/google/route');
+    const response = await GET(
+      createMockNextRequest({
+        url: 'http://localhost:3008/api/auth/oauth/google?linkToUserId=attacker',
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(mockGeneratePKCEChallenge).not.toHaveBeenCalled();
+    expect(mockStorePKCEState).not.toHaveBeenCalled();
+  });
+
+  it('sets a short-lived host-only binding cookie for public sign-in', async () => {
+    const { GET } = await import('@/app/api/auth/oauth/google/route');
+    const response = await GET(
+      createMockNextRequest({
+        url: 'http://localhost:3008/api/auth/oauth/google',
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('state-1');
+    expect(response.cookies.get('google-oauth-binding')?.options).toEqual(
+      expect.objectContaining({
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 600,
+        path: '/',
+      })
+    );
+    expect(mockStorePKCEState).toHaveBeenCalledWith(
+      'state-1',
+      'verifier',
+      'google',
+      'http://localhost:3008/api/auth/oauth/google/callback',
+      undefined
+    );
+  });
+
+  it('sets a binding cookie for authenticated account linking', async () => {
+    const { GET } = await import('@/app/api/auth/link/google/route');
+    const response = await GET(
+      createMockNextRequest({
+        url: 'http://localhost:3008/api/auth/link/google',
+      })
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('state-1');
+    expect(mockStorePKCEState).toHaveBeenCalledWith(
+      'state-1',
+      'verifier',
+      'google',
+      'http://localhost:3008/api/auth/oauth/google/callback',
+      'user-1'
+    );
+  });
+});
+
+describe('Google OAuth callback browser binding', () => {
+  it('rejects a missing browser binding before consuming PKCE or calling Google', async () => {
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(callbackRequest('state-1', undefined));
+
+    expect(response.status).toBe(307);
+    expect(mockRetrievePKCEState).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockLinkAccount).not.toHaveBeenCalled();
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('');
+  });
+
+  it('rejects a mismatched browser binding before consuming PKCE or calling Google', async () => {
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(callbackRequest('state-1', 'other-state'));
+
+    expect(response.status).toBe(307);
+    expect(mockRetrievePKCEState).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockLinkAccount).not.toHaveBeenCalled();
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('');
+  });
+
+  it('allows linking when the callback session belongs to the stored user', async () => {
+    mockRetrievePKCEState.mockResolvedValue({
+      state: 'state-1',
+      codeVerifier: 'verifier',
+      provider: 'google',
+      redirectUri: 'http://localhost:3008/api/auth/oauth/google/callback',
+      linkToUserId: 'user-1',
+    });
+
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(callbackRequest());
+
+    expect(response.status).toBe(307);
+    expect(mockGetUserIdFromRequestOrCookies).toHaveBeenCalled();
+    expect(mockLinkAccount).toHaveBeenCalledWith(
+      'user-1',
+      'google',
+      expect.objectContaining({ id: 'google-user-123' }),
+      expect.objectContaining({ accessToken: 'google-access-token' })
+    );
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('');
+  });
+
+  it('rejects linking when the callback session belongs to another user', async () => {
+    mockRetrievePKCEState.mockResolvedValue({
+      state: 'state-1',
+      codeVerifier: 'verifier',
+      provider: 'google',
+      redirectUri: 'http://localhost:3008/api/auth/oauth/google/callback',
+      linkToUserId: 'user-1',
+    });
+    mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-2');
+
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(callbackRequest());
+
+    expect(response.status).toBe(307);
+    expect(mockGetUserIdFromRequestOrCookies).toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockLinkAccount).not.toHaveBeenCalled();
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('');
+  });
+});
+
 describe('Google OAuth sign-in callback', () => {
   it('rejects a PKCE state created for another provider', async () => {
     mockRetrievePKCEState.mockResolvedValue({
@@ -172,12 +341,7 @@ describe('Google OAuth sign-in callback', () => {
 
     const response =
       await import('@/app/api/auth/oauth/google/callback/route').then(
-        ({ GET }) =>
-          GET(
-            createMockNextRequest({
-              url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-            })
-          )
+        ({ GET }) => GET(callbackRequest())
       );
     expect(response.status).toBe(307);
     expect(global.fetch).not.toHaveBeenCalled();
@@ -186,11 +350,7 @@ describe('Google OAuth sign-in callback', () => {
 
   it('persists the Google account before issuing the Synthex session', async () => {
     const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
-    const response = await GET(
-      createMockNextRequest({
-        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-      })
-    );
+    const response = await GET(callbackRequest());
 
     expect(response.status).toBe(307);
     expect(mockLinkAccount).toHaveBeenCalledWith(
@@ -209,17 +369,14 @@ describe('Google OAuth sign-in callback', () => {
     expect(response.cookies.get('auth-token')?.value).toBe(
       'synthex-session-token'
     );
+    expect(response.cookies.get('google-oauth-binding')?.value).toBe('');
   });
 
   it('persists a new user and Google account in one nested write', async () => {
     mockFindUserByProviderAccount.mockResolvedValue(null);
 
     const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
-    const response = await GET(
-      createMockNextRequest({
-        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-      })
-    );
+    const response = await GET(callbackRequest());
 
     expect(response.status).toBe(307);
     expect(mockCreateUser).toHaveBeenCalledWith({
@@ -243,11 +400,7 @@ describe('Google OAuth sign-in callback', () => {
     mockCreateUser.mockRejectedValue(new Error('account write failed'));
 
     const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
-    const response = await GET(
-      createMockNextRequest({
-        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-      })
-    );
+    const response = await GET(callbackRequest());
 
     expect(response.status).toBe(307);
     expect(response.cookies.get('auth-token')).toBeUndefined();
@@ -277,11 +430,7 @@ describe('Google OAuth sign-in callback', () => {
 
       const { GET } =
         await import('@/app/api/auth/oauth/google/callback/route');
-      const response = await GET(
-        createMockNextRequest({
-          url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-        })
-      );
+      const response = await GET(callbackRequest());
 
       expect(response.status).toBeGreaterThanOrEqual(300);
       expect(response.status).toBeLessThan(400);
@@ -298,11 +447,7 @@ describe('Google OAuth sign-in callback', () => {
       error: 'Google account is already linked to another user',
     });
     const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
-    const response = await GET(
-      createMockNextRequest({
-        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-      })
-    );
+    const response = await GET(callbackRequest());
 
     expect(response.status).toBe(307);
     expect(response.cookies.get('auth-token')).toBeUndefined();

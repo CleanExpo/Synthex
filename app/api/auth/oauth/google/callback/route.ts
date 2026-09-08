@@ -14,9 +14,14 @@ import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { retrievePKCEState } from '@/lib/auth/pkce';
 import { signInFlow } from '@/lib/auth/signInFlow';
 import { hasInviteEvidence, isInviteOnlyMode } from '@/lib/auth/invite-gate';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
 import { encryptField } from '@/lib/security/field-encryption';
+import {
+  clearGoogleOAuthBinding,
+  getGoogleOAuthBinding,
+} from '@/lib/auth/google-oauth-binding';
 
 const GOOGLE_CONFIG = {
   tokenUrl: 'https://oauth2.googleapis.com/token',
@@ -51,13 +56,15 @@ function getGoogleClientSecret(): string | undefined {
 export async function GET(request: NextRequest) {
   const effectiveBaseUrl = getOAuthBaseUrl(request);
   if (!effectiveBaseUrl) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error:
           'NEXT_PUBLIC_APP_URL must be configured for OAuth in production.',
       },
       { status: 500 }
     );
+    clearGoogleOAuthBinding(response);
+    return response;
   }
 
   try {
@@ -82,12 +89,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const pkceState = await retrievePKCEState(state.split('|')[0]);
+    const stateKey = state.split('|')[0];
+    if (getGoogleOAuthBinding(request) !== stateKey) {
+      return redirectWithError(
+        effectiveBaseUrl,
+        'Invalid or expired browser state. Please try again.'
+      );
+    }
+
+    const pkceState = await retrievePKCEState(stateKey);
     if (!pkceState || pkceState.provider !== 'google') {
       return redirectWithError(
         effectiveBaseUrl,
         'Invalid or expired state. Please try again.'
       );
+    }
+
+    if (pkceState.linkToUserId) {
+      const currentUserId = await getUserIdFromRequestOrCookies(request);
+      if (currentUserId !== pkceState.linkToUserId) {
+        return redirectWithError(
+          effectiveBaseUrl,
+          'Authenticated Google account linking session is invalid'
+        );
+      }
     }
 
     if (!getGoogleClientId() || !getGoogleClientSecret()) {
@@ -146,9 +171,11 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return NextResponse.redirect(
+      const response = NextResponse.redirect(
         `${effectiveBaseUrl}/dashboard/settings/accounts?linked=google`
       );
+      clearGoogleOAuthBinding(response);
+      return response;
     }
 
     // Persist the provider account before asking the centralized auth flow to
@@ -187,9 +214,11 @@ export async function GET(request: NextRequest) {
             existingProvider: existingByEmail.providers[0] || 'email',
             newProvider: 'google',
           });
-          return NextResponse.redirect(
+          const response = NextResponse.redirect(
             `${effectiveBaseUrl}/login?${params.toString()}`
           );
+          clearGoogleOAuthBinding(response);
+          return response;
         }
 
         const result = await accountService.linkAccount(
@@ -254,9 +283,11 @@ export async function GET(request: NextRequest) {
           existingProvider: authResult.existingProvider,
           newProvider: 'google',
         });
-        return NextResponse.redirect(
+        const response = NextResponse.redirect(
           `${effectiveBaseUrl}/login?${params.toString()}`
         );
+        clearGoogleOAuthBinding(response);
+        return response;
       }
       return redirectWithError(
         effectiveBaseUrl,
@@ -360,6 +391,7 @@ function redirectWithSession(
     maxAge: 7 * 24 * 60 * 60,
     path: '/',
   });
+  clearGoogleOAuthBinding(response);
   return response;
 }
 
@@ -369,7 +401,9 @@ function redirectWithError(
 ): NextResponse {
   const redirectUrl = new URL('/login', effectiveBaseUrl);
   redirectUrl.searchParams.set('error', error);
-  return NextResponse.redirect(redirectUrl);
+  const response = NextResponse.redirect(redirectUrl);
+  clearGoogleOAuthBinding(response);
+  return response;
 }
 
 export const runtime = 'nodejs';
