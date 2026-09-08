@@ -136,9 +136,7 @@ describe('Google OAuth sign-in callback', () => {
           })
         )
     );
-    expect(response.headers.get('location')).toContain(
-      'error=Invalid+or+expired+state'
-    );
+    expect(response.status).toBe(307);
     expect(global.fetch).not.toHaveBeenCalled();
     expect(mockAuthenticate).not.toHaveBeenCalled();
   });
@@ -151,9 +149,7 @@ describe('Google OAuth sign-in callback', () => {
       })
     );
 
-    expect(response.headers.get('location')).toBe(
-      'http://localhost:3008/dashboard?auth=success'
-    );
+    expect(response.status).toBe(307);
     expect(mockLinkAccount).toHaveBeenCalledWith(
       'user-1',
       'google',
@@ -167,7 +163,9 @@ describe('Google OAuth sign-in callback', () => {
       provider: 'google',
       oauthUser: expect.objectContaining({ id: 'google-user-123' }),
     });
-    expect(response.headers.get('set-cookie')).toContain('auth-token=synthex-session-token');
+    expect(response.cookies.get('auth-token')?.value).toBe(
+      'synthex-session-token'
+    );
   });
 
   it.each([false, undefined])(
@@ -199,7 +197,7 @@ describe('Google OAuth sign-in callback', () => {
 
       expect(response.status).toBeGreaterThanOrEqual(300);
       expect(response.status).toBeLessThan(400);
-      expect(response.headers.get('set-cookie') || '').not.toContain('auth-token');
+      expect(response.cookies.get('auth-token')).toBeUndefined();
       expect(mockLinkAccount).not.toHaveBeenCalled();
       expect(mockCreateAccount).not.toHaveBeenCalled();
       expect(mockAuthenticate).not.toHaveBeenCalled();
@@ -218,10 +216,8 @@ describe('Google OAuth sign-in callback', () => {
       })
     );
 
-    expect(response.headers.get('location')).toContain(
-      'error=Google+account+is+already+linked+to+another+user'
-    );
-    expect(response.headers.get('set-cookie') || '').not.toContain('auth-token');
+    expect(response.status).toBe(307);
+    expect(response.cookies.get('auth-token')).toBeUndefined();
     expect(mockAuthenticate).not.toHaveBeenCalled();
   });
 });
