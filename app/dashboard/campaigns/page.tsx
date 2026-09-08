@@ -19,6 +19,7 @@ import {
   type CampaignCard,
 } from '@/lib/dashboard/campaign-cards';
 import { toast } from 'sonner';
+import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 
 interface CampaignPostSummary {
   id: string;
@@ -222,8 +223,8 @@ export default function CampaignsPage() {
             Campaigns
           </h1>
           <p className="text-sm text-white/40 mt-1.5 max-w-lg">
-            A campaign is a named set of posts with dates. You still edit and
-            schedule each one — nothing goes out from this page on its own.
+            {FIRST_WEEK_GUIDANCE.campaigns.what}{' '}
+            {FIRST_WEEK_GUIDANCE.campaigns.why}
           </p>
         </div>
         <button
@@ -380,8 +381,7 @@ export default function CampaignsPage() {
               No campaigns yet
             </h3>
             <p className="mx-auto mt-1 max-w-sm text-xs text-white/40">
-              Name a run of posts, write two cards, then schedule each one. You
-              stay in control.
+              {FIRST_WEEK_GUIDANCE.campaigns.empty}
             </p>
             <button
               type="button"
@@ -421,9 +421,19 @@ export default function CampaignsPage() {
                   {open && (
                     <div className="px-4 pb-4 space-y-3">
                       {cards.length === 0 ? (
-                        <p className="text-xs text-white/40">
-                          No posts in this campaign yet.
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-xs text-white/40">
+                            No posts in this campaign yet.{' '}
+                            {FIRST_WEEK_GUIDANCE.campaigns.empty}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setComposerOpen(true)}
+                            className="text-xs text-orange-400/90 hover:text-orange-400"
+                          >
+                            {FIRST_WEEK_GUIDANCE.campaigns.nextLabel}
+                          </button>
+                        </div>
                       ) : (
                         cards.map(card => {
                           const editKey = `${campaign.id}:${card.key}`;
