@@ -238,6 +238,23 @@ describe('Google OAuth sign-in callback', () => {
     expect(mockAuthenticate).toHaveBeenCalled();
   });
 
+  it('does not issue a session when atomic new-user persistence fails', async () => {
+    mockFindUserByProviderAccount.mockResolvedValue(null);
+    mockCreateUser.mockRejectedValue(new Error('account write failed'));
+
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(
+      createMockNextRequest({
+        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
+      })
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.cookies.get('auth-token')).toBeUndefined();
+    expect(mockCreateAccount).not.toHaveBeenCalled();
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+  });
+
   it.each([false, undefined])(
     'rejects a Google profile without positive email verification (%s)',
     async verifiedEmail => {
