@@ -1,5 +1,44 @@
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
+jest.mock('next/server', () => {
+  class MockCookies {
+    private readonly store = new Map<string, { value: string }>();
+
+    set(name: string, value: string) {
+      this.store.set(name, { value });
+    }
+
+    get(name: string) {
+      return this.store.get(name);
+    }
+  }
+
+  class MockNextResponse {
+    readonly cookies = new MockCookies();
+    readonly headers = new Map<string, string>();
+    readonly status: number;
+
+    constructor(status = 200) {
+      this.status = status;
+    }
+
+    static redirect(url: URL) {
+      const response = new MockNextResponse(307);
+      response.headers.set('location', url.toString());
+      return response;
+    }
+
+    static json(_body: unknown, init: { status?: number } = {}) {
+      return new MockNextResponse(init.status ?? 200);
+    }
+  }
+
+  return {
+    NextRequest: class MockNextRequest {},
+    NextResponse: MockNextResponse,
+  };
+});
+
 const mockRetrievePKCEState = jest.fn();
 const mockFindUserByProviderAccount = jest.fn();
 const mockFindUserByEmail = jest.fn();
