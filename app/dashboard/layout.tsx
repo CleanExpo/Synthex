@@ -18,11 +18,8 @@ import {
   CreditCard,
   Layers,
 } from '@/components/icons';
-import { AIPMFloatingButton } from '@/components/ai-pm';
 import { PauseButton } from '@/components/autonomous/PauseButton';
-import { KeyboardHints } from '@/components/dashboard/keyboard-hints';
 import { AutoBreadcrumbs } from '@/components/dashboard/auto-breadcrumbs';
-import { ProductTour } from '@/components/ProductTour';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -593,17 +590,6 @@ export default function DashboardLayout({
             if (item?.href) router.push(item.href);
           }}
         />
-
-        {/* AI Project Manager */}
-        <AIPMFloatingButton />
-
-        {/* Keyboard Hints */}
-        <KeyboardHints />
-
-        {!isStaticReviewRoute && (
-          /* Product Tour — triggers on first dashboard visit after onboarding */
-          <ProductTour />
-        )}
       </SidebarProvider>
     </ModeProvider>
   );
