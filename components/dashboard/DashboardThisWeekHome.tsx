@@ -8,6 +8,7 @@ import type { DashboardStats } from '@/components/dashboard/types';
 import { DashboardAtmosphere, DashboardPanel } from './DashboardAtmosphere';
 import { useBrandProfile } from '@/hooks/use-brand-profile';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
+import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 
 interface DashboardThisWeekHomeProps {
   stats: DashboardStats | null;
@@ -80,7 +81,7 @@ export function DashboardThisWeekHome({ stats }: DashboardThisWeekHomeProps) {
         }
         description={
           isFirstWeek
-            ? 'Connect an account, write a draft, then schedule it. Nothing goes public until you say so.'
+            ? FIRST_WEEK_GUIDANCE.home.empty
             : 'Write, check what is booked, and see what already went out. You stay in control of every post.'
         }
         actions={
@@ -133,7 +134,7 @@ export function DashboardThisWeekHome({ stats }: DashboardThisWeekHomeProps) {
           title={posted === 0 ? 'No posts yet' : `${posted} posts so far`}
           body={
             posted === 0
-              ? 'Numbers show up after a few published posts. Drafting first is fine.'
+              ? FIRST_WEEK_GUIDANCE.analytics.empty
               : 'See reach and what to try next after posts have gone out.'
           }
           href="/dashboard/analytics"
