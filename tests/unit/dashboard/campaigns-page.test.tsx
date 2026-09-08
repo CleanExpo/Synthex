@@ -30,6 +30,9 @@ describe('CampaignsPage', () => {
     expect(
       screen.getByRole('button', { name: /new campaign/i })
     ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText(/two times on Calendar/i)).toBeInTheDocument()
+    );
   });
 
   it('opens a composer with two post cards', async () => {
