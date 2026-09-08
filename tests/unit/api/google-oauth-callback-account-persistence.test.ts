@@ -1,91 +1,87 @@
-// SYN-1070: the Google OAuth callback route was deleted; stub GET so the
-// suite can be loaded, then skip all tests until the route is restored.
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 const mockRetrievePKCEState = jest.fn();
+const mockFindUserByProviderAccount = jest.fn();
+const mockFindUserByEmail = jest.fn();
+const mockLinkAccount = jest.fn();
+const mockCreateAccount = jest.fn();
+const mockAuthenticate = jest.fn();
+const mockCreateUser = jest.fn();
+
 jest.mock('@/lib/auth/pkce', () => ({
   retrievePKCEState: (...args: unknown[]) => mockRetrievePKCEState(...args),
 }));
 
-jest.mock('@/lib/auth/jwt-utils', () => ({
-  generateToken: () => 'synthex-session-token',
-  isOwnerEmail: () => false,
+jest.mock('@/lib/auth/account-service', () => ({
+  accountService: {
+    findUserByProviderAccount: (...args: unknown[]) =>
+      mockFindUserByProviderAccount(...args),
+    findUserByEmail: (...args: unknown[]) => mockFindUserByEmail(...args),
+    linkAccount: (...args: unknown[]) => mockLinkAccount(...args),
+    createAccount: (...args: unknown[]) => mockCreateAccount(...args),
+  },
 }));
 
-jest.mock('@/lib/security/field-encryption', () => ({
-  encryptField: (value: string | null | undefined) =>
-    value == null ? value : `enc:${value}`,
+jest.mock('@/lib/auth/signInFlow', () => ({
+  signInFlow: {
+    authenticate: (...args: unknown[]) => mockAuthenticate(...args),
+  },
 }));
 
-const mockAccount = {
-  findUnique: jest.fn(),
-  update: jest.fn(),
-  create: jest.fn(),
-};
+jest.mock('@/lib/auth/invite-gate', () => ({
+  isInviteOnlyMode: () => false,
+  hasInviteEvidence: jest.fn(),
+}));
+
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
-  default: { account: mockAccount },
-}));
-
-const mockSupabaseFrom = jest.fn();
-jest.mock('@supabase/supabase-js', () => ({
-  createClient: () => ({
-    from: (...args: unknown[]) => mockSupabaseFrom(...args),
-  }),
+  default: { user: { create: (...args: unknown[]) => mockCreateUser(...args) } },
 }));
 
 jest.mock('@/lib/logger', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 
-// SYN-1070: route deleted — stub so skipped tests still compile
-const GET = jest.fn();
-
 const originalFetch = global.fetch;
 const originalEnv = { ...process.env };
-
-function usersTable() {
-  return {
-    select: jest.fn(() => ({
-      eq: jest.fn(() => ({
-        maybeSingle: jest.fn().mockResolvedValue({
-          data: { id: 'user-1', email: 'phill@example.com' },
-          error: null,
-        }),
-      })),
-    })),
-    update: jest.fn(() => ({
-      eq: jest.fn().mockResolvedValue({ error: null }),
-    })),
-  };
-}
-
-function profilesTable() {
-  return {
-    upsert: jest.fn().mockResolvedValue({ error: null }),
-  };
-}
 
 beforeEach(() => {
   jest.clearAllMocks();
   process.env = {
     ...originalEnv,
+    NODE_ENV: 'test',
     GOOGLE_CLIENT_ID: 'google-client-id',
     GOOGLE_CLIENT_SECRET: 'google-client-secret',
     NEXT_PUBLIC_APP_URL: 'http://localhost:3008',
-    NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
-    SUPABASE_SERVICE_ROLE_KEY: 'service-role',
   };
   mockRetrievePKCEState.mockResolvedValue({
+    state: 'state-1',
     codeVerifier: 'verifier',
+    provider: 'google',
     redirectUri: 'http://localhost:3008/api/auth/oauth/google/callback',
   });
-  mockAccount.findUnique.mockResolvedValue(null);
-  mockAccount.create.mockResolvedValue({ id: 'account-1' });
-  mockSupabaseFrom.mockImplementation((table: string) => {
-    if (table === 'users') return usersTable();
-    if (table === 'profiles') return profilesTable();
-    throw new Error(`Unexpected table ${table}`);
+  mockFindUserByProviderAccount.mockResolvedValue({
+    userId: 'user-1',
+    email: 'phill@example.com',
+  });
+  mockFindUserByEmail.mockResolvedValue(null);
+  mockLinkAccount.mockResolvedValue({ success: true });
+  mockCreateAccount.mockResolvedValue({ id: 'account-1' });
+  mockCreateUser.mockResolvedValue({
+    id: 'user-1',
+    email: 'phill@example.com',
+  });
+  mockAuthenticate.mockResolvedValue({
+    success: true,
+    session: {
+      accessToken: 'synthex-session-token',
+      user: {
+        id: 'user-1',
+        email: 'phill@example.com',
+        name: 'Phill',
+        avatar: 'https://example.com/avatar.png',
+      },
+    },
   });
   global.fetch = jest.fn(async (url: unknown) => {
     const target = String(url);
@@ -100,8 +96,7 @@ beforeEach(() => {
           scope: 'openid email profile',
           id_token: 'google-id-token',
         }),
-        text: async () => '',
-      };
+      } as Response;
     }
     if (target.includes('googleapis.com/oauth2/v2/userinfo')) {
       return {
@@ -113,15 +108,10 @@ beforeEach(() => {
           name: 'Phill',
           picture: 'https://example.com/avatar.png',
         }),
-      };
+      } as Response;
     }
-    return {
-      ok: false,
-      status: 404,
-      json: async () => ({}),
-      text: async () => 'not found',
-    };
-  }) as unknown as typeof global.fetch;
+    return { ok: false, status: 404, json: async () => ({}) } as Response;
+  }) as typeof global.fetch;
 });
 
 afterAll(() => {
@@ -129,44 +119,74 @@ afterAll(() => {
   process.env = originalEnv;
 });
 
-describe.skip('Google OAuth sign-in callback Account persistence (SYN-1070: route deleted)', () => {
-  it('stores encrypted Google OAuth tokens in the Account table before redirecting', async () => {
-    const res = await GET(
-      createMockNextRequest({
-        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
-      })
+describe('Google OAuth sign-in callback', () => {
+  it('rejects a PKCE state created for another provider', async () => {
+    mockRetrievePKCEState.mockResolvedValue({
+      state: 'state-1',
+      codeVerifier: 'verifier',
+      provider: 'github',
+      redirectUri: 'http://localhost:3008/api/auth/oauth/google/callback',
+    });
+
+    const response = await import('@/app/api/auth/oauth/google/callback/route').then(
+      ({ GET }) =>
+        GET(
+          createMockNextRequest({
+            url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
+          })
+        )
     );
 
-    expect(res.status).toBeGreaterThanOrEqual(300);
-    expect(res.status).toBeLessThan(400);
-    expect(mockAccount.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        userId: 'user-1',
-        type: 'oauth',
-        provider: 'google',
-        providerAccountId: 'google-user-123',
-        accessToken: 'enc:google-access-token',
-        refreshToken: 'enc:google-refresh-token',
-        tokenType: 'Bearer',
-        scope: 'openid email profile',
-        idToken: 'enc:google-id-token',
-      }),
-    });
+    expect(response.headers.get('location')).toContain(
+      'error=Invalid+or+expired+state'
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockAuthenticate).not.toHaveBeenCalled();
   });
 
-  it('fails login instead of issuing a session when Account persistence fails', async () => {
-    mockAccount.create.mockRejectedValue(
-      new Error('account table unavailable')
-    );
-
-    const res = await GET(
+  it('persists the Google account before issuing the Synthex session', async () => {
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(
       createMockNextRequest({
         url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
       })
     );
 
-    expect(res.status).toBeGreaterThanOrEqual(300);
-    expect(res.status).toBeLessThan(400);
-    expect(res.headers.get('set-cookie') ?? '').not.toContain('auth-token');
+    expect(response.headers.get('location')).toBe(
+      'http://localhost:3008/dashboard?auth=success'
+    );
+    expect(mockLinkAccount).toHaveBeenCalledWith(
+      'user-1',
+      'google',
+      expect.objectContaining({ id: 'google-user-123' }),
+      expect.objectContaining({
+        accessToken: 'google-access-token',
+        refreshToken: 'google-refresh-token',
+      })
+    );
+    expect(mockAuthenticate).toHaveBeenCalledWith('oauth', {
+      provider: 'google',
+      oauthUser: expect.objectContaining({ id: 'google-user-123' }),
+    });
+    expect(response.headers.get('set-cookie')).toContain('auth-token=synthex-session-token');
+  });
+
+  it('does not issue a session when account persistence fails', async () => {
+    mockLinkAccount.mockResolvedValue({
+      success: false,
+      error: 'Google account is already linked to another user',
+    });
+    const { GET } = await import('@/app/api/auth/oauth/google/callback/route');
+    const response = await GET(
+      createMockNextRequest({
+        url: 'http://localhost:3008/api/auth/oauth/google/callback?code=auth-code&state=state-1',
+      })
+    );
+
+    expect(response.headers.get('location')).toContain(
+      'error=Google+account+is+already+linked+to+another+user'
+    );
+    expect(response.headers.get('set-cookie') || '').not.toContain('auth-token');
+    expect(mockAuthenticate).not.toHaveBeenCalled();
   });
 });
