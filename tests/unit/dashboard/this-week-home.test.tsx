@@ -36,6 +36,12 @@ describe('DashboardThisWeekHome', () => {
     expect(screen.getByText('Connect an account')).toBeInTheDocument();
     expect(screen.getByText(/green check/i)).toBeInTheDocument();
     expect(screen.getByText('Write your first post')).toBeInTheDocument();
+    expect(
+      screen.getByText(/one booked post on Calendar/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/after a few published posts/i)
+    ).toBeInTheDocument();
     expect(screen.getByText('get-started')).toBeInTheDocument();
   });
 
