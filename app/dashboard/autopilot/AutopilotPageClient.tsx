@@ -38,6 +38,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // ─── Fetcher (Synthex standard: credentials: 'include') ─────────────────────
 
@@ -257,9 +258,9 @@ function ConfigPanel({
         {/* Enable / disable toggle */}
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-white/70">Autopilot enabled</p>
+            <p className="text-xs text-white/70">Autopilot on</p>
             <p className="text-[10px] text-white/30 mt-0.5">
-              Automatically generate and schedule content
+              On drafts a week for you to approve. Off means nothing sends.
             </p>
           </div>
           <button
@@ -627,7 +628,8 @@ function RunsTable({ onSelectRun }: { onSelectRun: (runId: string) => void }) {
           <Play className="w-6 h-6 text-white/20 mx-auto mb-3" />
           <p className="text-sm text-white/30 font-light">No runs yet</p>
           <p className="text-xs text-white/20 mt-1">
-            Enable autopilot to start generating content automatically
+            Turn Autopilot on to draft a week. Nothing goes out until you
+            approve.
           </p>
         </div>
       )}
@@ -758,10 +760,15 @@ export function AutopilotPageClient() {
           throw new Error(err.error ?? 'Save failed');
         }
         await mutateConfig();
+        toast.success(
+          patch.enabled === false
+            ? 'Autopilot is off. Nothing will send.'
+            : 'Saved. Autopilot still waits for you to approve each draft.'
+        );
       } catch (e) {
-        // Surface error to user via browser alert — simple and adequate
-        // for an admin-level settings page
-        alert(e instanceof Error ? e.message : 'Failed to save config');
+        toast.error(
+          e instanceof Error ? e.message : 'Could not save Autopilot settings.'
+        );
       } finally {
         setIsSaving(false);
       }
@@ -787,7 +794,8 @@ export function AutopilotPageClient() {
               Autopilot
             </h1>
             <p className="mt-1.5 text-sm text-white/40 leading-relaxed">
-              Autonomous content generation and scheduling
+              Draft a week. You still approve each post. Off means nothing
+              sends.
             </p>
           </div>
 
