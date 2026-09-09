@@ -20,6 +20,15 @@ import {
 } from '@/lib/dashboard/campaign-cards';
 import { toast } from 'sonner';
 import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
+import {
+  clampLaunchWeekCount,
+  emptyLaunchWeekDrafts,
+  fillDraftsFromGeneration,
+  launchWeekReady,
+  LAUNCH_WEEK_DEFAULT,
+  LAUNCH_WEEK_MAX,
+  LAUNCH_WEEK_MIN,
+} from '@/lib/dashboard/launch-week';
 
 interface CampaignPostSummary {
   id: string;
@@ -61,13 +70,12 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [launchWeek, setLaunchWeek] = useState(false);
   const [name, setName] = useState('');
   const [startsAt, setStartsAt] = useState('');
   const [endsAt, setEndsAt] = useState('');
   const [platform, setPlatform] = useState('instagram');
-  const [cardOne, setCardOne] = useState('');
-  const [cardTwo, setCardTwo] = useState('');
-  const [skipTwo, setSkipTwo] = useState(false);
+  const [drafts, setDrafts] = useState<string[]>(['', '']);
   const [saving, setSaving] = useState(false);
   const [filling, setFilling] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -105,7 +113,18 @@ export default function CampaignsPage() {
     void loadCampaigns();
   }, [loadCampaigns]);
 
-  const emptyComposer = !name.trim() || !cardOne.trim();
+  const emptyComposer = launchWeek
+    ? !launchWeekReady(name, drafts)
+    : !name.trim() || !drafts[0]?.trim();
+
+  function openComposer(kind: 'pair' | 'launch') {
+    setLaunchWeek(kind === 'launch');
+    setName(kind === 'launch' ? 'Launch week' : '');
+    setDrafts(
+      kind === 'launch' ? emptyLaunchWeekDrafts(LAUNCH_WEEK_DEFAULT) : ['', '']
+    );
+    setComposerOpen(true);
+  }
 
   async function fillCards() {
     setFilling(true);
@@ -147,8 +166,18 @@ export default function CampaignsPage() {
         toast.error('We could not fill the cards. Try writing them yourself.');
         return;
       }
-      setCardOne(primary);
-      setCardTwo(second);
+      const extras = [
+        second,
+        ...(data.variations ?? data.data?.variations ?? []),
+      ];
+      const next = fillDraftsFromGeneration(drafts.length, primary, extras);
+      setDrafts(next);
+      const filled = next.filter(Boolean).length;
+      if (launchWeek && filled < drafts.length) {
+        toast.message(
+          `Filled ${filled} of ${drafts.length} cards. Write the rest — Save will not send them.`
+        );
+      }
     } catch (err) {
       toast.error(
         humanizeAiError(err instanceof Error ? err.message : undefined)
@@ -160,17 +189,22 @@ export default function CampaignsPage() {
 
   async function createCampaign() {
     if (emptyComposer) {
-      toast.error('Name the campaign and write at least one post.');
+      toast.error(
+        launchWeek
+          ? 'Name the week and write at least three posts. You still schedule each one.'
+          : 'Name the campaign and write at least one post.'
+      );
       return;
     }
     setSaving(true);
     try {
-      const cards: CampaignCard[] = [
-        { key: '1', text: cardOne.trim(), platform },
-      ];
-      if (!skipTwo && cardTwo.trim()) {
-        cards.push({ key: '2', text: cardTwo.trim(), platform });
-      }
+      const cards: CampaignCard[] = drafts
+        .map((text, i) => ({
+          key: String(i + 1),
+          text: text.trim(),
+          platform,
+        }))
+        .filter(c => c.text.length > 0);
       const res = await fetch('/api/campaigns', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -193,10 +227,9 @@ export default function CampaignsPage() {
       }
       toast.success('Campaign saved. Schedule each post when you are happy.');
       setComposerOpen(false);
+      setLaunchWeek(false);
       setName('');
-      setCardOne('');
-      setCardTwo('');
-      setSkipTwo(false);
+      setDrafts(['', '']);
       setStartsAt('');
       setEndsAt('');
       await loadCampaigns();
@@ -227,21 +260,34 @@ export default function CampaignsPage() {
             {FIRST_WEEK_GUIDANCE.campaigns.why}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setComposerOpen(o => !o)}
-          className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-surface-dark transition-colors shrink-0"
-        >
-          {composerOpen ? (
-            <>
-              <X className="h-4 w-4" /> Close
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4" /> New campaign
-            </>
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {!composerOpen && (
+            <button
+              type="button"
+              onClick={() => openComposer('launch')}
+              className="inline-flex items-center h-9 px-4 text-sm font-medium rounded-sm border-[0.5px] border-white/15 text-white/80 hover:bg-white/3"
+            >
+              Launch week
+            </button>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={() =>
+              composerOpen ? setComposerOpen(false) : openComposer('pair')
+            }
+            className="inline-flex items-center gap-1.5 h-9 px-4 text-sm font-medium rounded-sm bg-orange-500 hover:bg-orange-400 text-surface-dark transition-colors"
+          >
+            {composerOpen ? (
+              <>
+                <X className="h-4 w-4" /> Close
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4" /> New campaign
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {composerOpen && (
@@ -295,33 +341,52 @@ export default function CampaignsPage() {
               </select>
             </label>
           </div>
+          {launchWeek && (
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-xs text-white/45">
+                Draft a week. You still edit and schedule each post — nothing
+                goes out from Save.
+              </p>
+              <label className="flex items-center gap-2 text-xs text-white/50">
+                Posts
+                <select
+                  value={drafts.length}
+                  onChange={e => {
+                    const next = clampLaunchWeekCount(Number(e.target.value));
+                    setDrafts(prev =>
+                      Array.from({ length: next }, (_, i) => prev[i] ?? '')
+                    );
+                  }}
+                  className="h-8 px-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+                >
+                  {Array.from(
+                    { length: LAUNCH_WEEK_MAX - LAUNCH_WEEK_MIN + 1 },
+                    (_, i) => LAUNCH_WEEK_MIN + i
+                  ).map(n => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
-            <label className="block space-y-1">
-              <span className="text-xs text-white/50">Post 1</span>
-              <textarea
-                value={cardOne}
-                onChange={e => setCardOne(e.target.value)}
-                rows={5}
-                className="w-full px-3 py-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
-              />
-            </label>
-            <label className="block space-y-1">
-              <span className="text-xs text-white/50">Post 2</span>
-              <textarea
-                value={skipTwo ? '' : cardTwo}
-                onChange={e => setCardTwo(e.target.value)}
-                disabled={skipTwo}
-                rows={5}
-                className="w-full px-3 py-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white disabled:opacity-40"
-              />
-              <button
-                type="button"
-                onClick={() => setSkipTwo(s => !s)}
-                className="text-xs text-white/40 hover:text-white/70"
-              >
-                {skipTwo ? 'Use a second post' : "Don't use post 2"}
-              </button>
-            </label>
+            {drafts.map((text, i) => (
+              <label key={i} className="block space-y-1">
+                <span className="text-xs text-white/50">Post {i + 1}</span>
+                <textarea
+                  value={text}
+                  onChange={e =>
+                    setDrafts(prev =>
+                      prev.map((d, idx) => (idx === i ? e.target.value : d))
+                    )
+                  }
+                  rows={5}
+                  className="w-full px-3 py-2 rounded-sm bg-white/3 border-[0.5px] border-white/10 text-sm text-white"
+                />
+              </label>
+            ))}
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -383,13 +448,22 @@ export default function CampaignsPage() {
             <p className="mx-auto mt-1 max-w-sm text-xs text-white/40">
               {FIRST_WEEK_GUIDANCE.campaigns.empty}
             </p>
-            <button
-              type="button"
-              onClick={() => setComposerOpen(true)}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
-            >
-              <Plus className="h-4 w-4" /> New campaign
-            </button>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => openComposer('launch')}
+                className="inline-flex items-center rounded-sm border-[0.5px] border-white/15 px-4 py-2 text-sm font-medium text-white/80 hover:bg-white/3"
+              >
+                Launch week
+              </button>
+              <button
+                type="button"
+                onClick={() => openComposer('pair')}
+                className="inline-flex items-center gap-1.5 rounded-sm bg-orange-500 px-4 py-2 text-sm font-medium text-surface-dark hover:bg-orange-400"
+              >
+                <Plus className="h-4 w-4" /> New campaign
+              </button>
+            </div>
           </div>
         ) : (
           <ul className="space-y-3">
@@ -428,7 +502,7 @@ export default function CampaignsPage() {
                           </p>
                           <button
                             type="button"
-                            onClick={() => setComposerOpen(true)}
+                            onClick={() => openComposer('pair')}
                             className="text-xs text-orange-400/90 hover:text-orange-400"
                           >
                             {FIRST_WEEK_GUIDANCE.campaigns.nextLabel}
