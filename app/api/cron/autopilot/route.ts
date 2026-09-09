@@ -26,6 +26,7 @@ import type { ContentMix, ContentTheme } from '@/lib/autopilot/types';
 import type { GroundedPostImageMeta } from '@/lib/autopilot/grounded-post-image';
 import { PLATFORM_SPECS, THEME_PROMPTS } from '@/lib/autopilot/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { holdAutopilotForReview } from '@/lib/autopilot/hold-for-review';
 import { serializeError } from '@/lib/observability/serialize-error';
 
 export const runtime = 'nodejs';
@@ -769,8 +770,11 @@ async function generateSlotContent(input: SlotInput): Promise<{
   // blocked (no owned references), failure, or defensively ungrounded — the
   // helper downgrades the post to 'draft' and attaches NO image (never a
   // placeholder/stock/ungrounded URL). Draft/reject posts are not image-gen'd.
-  let postStatus: 'scheduled' | 'draft' =
-    bestDecision === 'schedule' ? 'scheduled' : 'draft';
+  if (holdAutopilotForReview(bestDecision) === 'reject') {
+    return null;
+  }
+  // Phase 7: even a 'schedule' decision is held as a draft for a human.
+  let postStatus: 'scheduled' | 'draft' = 'draft';
   let images: string[] = [];
   let imageMeta: Partial<GroundedPostImageMeta> = {};
 
