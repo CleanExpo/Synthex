@@ -21,6 +21,7 @@ import {
   storePKCEState,
 } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
+import { setGoogleOAuthBinding } from '@/lib/auth/google-oauth-binding';
 
 // Google OAuth configuration
 const GOOGLE_CONFIG = {
@@ -50,6 +51,16 @@ export async function GET(request: NextRequest) {
     const linkToUserId = searchParams.get('linkToUserId'); // For account linking
     const returnTo = searchParams.get('returnTo') || '/dashboard';
 
+    if (linkToUserId) {
+      return NextResponse.json(
+        {
+          error:
+            'Authenticated Google account linking must use /api/auth/link/google',
+        },
+        { status: 400 }
+      );
+    }
+
     // Generate PKCE challenge
     const pkce = generatePKCEChallenge();
 
@@ -76,7 +87,7 @@ export async function GET(request: NextRequest) {
       pkce.codeVerifier,
       'google',
       redirectUri,
-      linkToUserId || undefined
+      undefined
     );
 
     // Encode returnTo into the state value (callback handles state.split('|')[0])
@@ -103,7 +114,9 @@ export async function GET(request: NextRequest) {
 
     // Return authorization URL as JSON (client will handle redirect)
     // This avoids CORS issues when using fetch()
-    return NextResponse.json({ authorizationUrl });
+    const response = NextResponse.json({ authorizationUrl });
+    setGoogleOAuthBinding(response, state);
+    return response;
   } catch (error) {
     logger.error('[Google OAuth] Initiation error:', error);
     return NextResponse.json(
