@@ -193,7 +193,8 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
         iconKey: 'Rocket',
         label: 'Autopilot',
         href: '/dashboard/autopilot',
-        description: 'Hands-off content and publish loops',
+        description:
+          'Draft a week. You still approve. Off means nothing sends.',
       },
       {
         iconKey: 'File',
