@@ -18,6 +18,17 @@ jest.mock('@/components/dashboard/get-started-checklist', () => ({
   GetStartedChecklist: () => <div>get-started</div>,
 }));
 
+jest.mock('swr', () => ({
+  __esModule: true,
+  default: () => ({
+    data: {
+      posts: [
+        { id: 'fail-1', content: 'The reel did not go out', status: 'failed' },
+      ],
+    },
+  }),
+}));
+
 const emptyStats: DashboardStats = {
   totalPosts: 0,
   scheduledPosts: 0,
@@ -60,5 +71,21 @@ describe('DashboardThisWeekHome', () => {
     expect(screen.getByText('3 scheduled')).toBeInTheDocument();
     expect(screen.getByText('8 posts so far')).toBeInTheDocument();
     expect(screen.queryByText('get-started')).not.toBeInTheDocument();
+  });
+
+  it('lists failed posts on Home so approvals are not a new nav item', () => {
+    render(
+      <DashboardThisWeekHome
+        stats={{
+          ...emptyStats,
+          connectedPlatforms: 1,
+          scheduledPosts: 1,
+          totalPosts: 2,
+        }}
+      />
+    );
+    expect(screen.getByText('Needs you')).toBeInTheDocument();
+    expect(screen.getByText(/The reel did not go out/)).toBeInTheDocument();
+    expect(screen.getByText('Fix on Calendar')).toBeInTheDocument();
   });
 });
