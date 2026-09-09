@@ -51,6 +51,7 @@ const AICalendarSection = dynamic(
 import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
+import { pickNeedsYouItems } from '@/lib/dashboard/needs-you';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -158,6 +159,16 @@ function CalendarPageContent() {
     organizationId,
     userId: selectedUserId === 'all' ? undefined : selectedUserId,
   });
+
+  const needsYou = pickNeedsYouItems(
+    posts.map(p => ({
+      id: p.id,
+      title: p.title,
+      content: p.content,
+      status: p.status,
+      approvalStatus: p.approvalStatus,
+    }))
+  );
 
   // Check for action param to auto-open schedule modal
   useEffect(() => {
@@ -402,37 +413,38 @@ function CalendarPageContent() {
         }
       />
 
-      {posts.filter(p => p.status === 'failed').length > 0 && (
+      {needsYou.length > 0 && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3">
           <p className="text-sm font-medium text-red-200">Needs you</p>
           <p className="mt-1 text-xs text-red-200/70">
-            A failed post did not go out. Fix it here, or reconnect the channel
-            on Platforms.
+            Failed posts did not go out. Waiting posts still need your look. Fix
+            here, or reconnect the channel on Platforms.
           </p>
           <ul className="mt-2 space-y-1.5">
-            {posts
-              .filter(p => p.status === 'failed')
-              .slice(0, 3)
-              .map(p => (
+            {needsYou.map(item => {
+              const post = posts.find(p => p.id === item.id);
+              return (
                 <li
-                  key={p.id}
+                  key={item.id}
                   className="flex items-center justify-between gap-3"
                 >
                   <span className="text-sm text-white/70 truncate">
-                    {p.title || p.content.slice(0, 80)}
+                    {item.label}
                   </span>
                   <button
                     type="button"
                     className="shrink-0 text-xs text-orange-400 hover:text-orange-300"
                     onClick={() => {
-                      setSelectedPost(p);
+                      if (!post) return;
+                      setSelectedPost(post);
                       setIsDetailModalOpen(true);
                     }}
                   >
-                    Fix
+                    {item.reason === 'failed' ? 'Fix' : 'Review'}
                   </button>
                 </li>
-              ))}
+              );
+            })}
           </ul>
           <Link
             href="/dashboard/platforms"
