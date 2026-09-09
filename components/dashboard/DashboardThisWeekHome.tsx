@@ -6,9 +6,12 @@ import { GetStartedChecklist } from '@/components/dashboard/get-started-checklis
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
 import type { DashboardStats } from '@/components/dashboard/types';
 import { DashboardAtmosphere, DashboardPanel } from './DashboardAtmosphere';
+import { useMemo } from 'react';
 import { useBrandProfile } from '@/hooks/use-brand-profile';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
+import { pickNeedsYouItems } from '@/lib/dashboard/needs-you';
+import useSWR from 'swr';
 
 interface DashboardThisWeekHomeProps {
   stats: DashboardStats | null;
@@ -68,6 +71,41 @@ export function DashboardThisWeekHome({ stats }: DashboardThisWeekHomeProps) {
   const scheduled = stats?.scheduledPosts ?? 0;
   const posted = stats?.totalPosts ?? 0;
   const isFirstWeek = posted === 0 && scheduled === 0;
+
+  const needsYouKey = useMemo(() => {
+    if (!activeOrganizationId) return null;
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - 14);
+    const end = new Date();
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 14);
+    return `/api/content/calendar?organizationId=${encodeURIComponent(
+      activeOrganizationId
+    )}&startDate=${encodeURIComponent(start.toISOString())}&endDate=${encodeURIComponent(
+      end.toISOString()
+    )}`;
+  }, [activeOrganizationId]);
+
+  const { data: calendarPayload } = useSWR(needsYouKey, async (url: string) => {
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) return { posts: [] as Array<Record<string, unknown>> };
+    const body = (await res.json()) as {
+      calendar?: { posts?: Array<Record<string, unknown>> };
+    };
+    return { posts: body.calendar?.posts ?? [] };
+  });
+
+  const needsYou = pickNeedsYouItems(
+    (calendarPayload?.posts ?? []).map(post => ({
+      id: String(post.id ?? ''),
+      title: typeof post.title === 'string' ? post.title : null,
+      content: typeof post.content === 'string' ? post.content : null,
+      status: typeof post.status === 'string' ? post.status : null,
+      approvalStatus:
+        typeof post.approvalStatus === 'string' ? post.approvalStatus : null,
+    }))
+  );
 
   return (
     <DashboardAtmosphere className="w-full max-w-none space-y-8 pt-2">
@@ -141,6 +179,37 @@ export function DashboardThisWeekHome({ stats }: DashboardThisWeekHomeProps) {
           cta="Open Analytics"
         />
       </div>
+
+      {needsYou.length > 0 && (
+        <div className="rounded-sm border-[0.5px] border-amber-400/25 bg-amber-500/10 px-4 py-3">
+          <p className="text-sm font-medium text-amber-100">Needs you</p>
+          <p className="mt-1 text-xs text-amber-100/70">
+            These did not go out, or they are waiting for you. Fix them on
+            Calendar — nothing new sends from here.
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {needsYou.map(item => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-3"
+              >
+                <span className="text-sm text-white/70 truncate">
+                  {item.label}
+                </span>
+                <span className="shrink-0 text-xs text-white/40">
+                  {item.reason === 'failed' ? 'Failed' : 'Waiting'}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/dashboard/calendar"
+            className="mt-2 inline-block text-xs text-orange-400/90 hover:text-orange-400"
+          >
+            Fix on Calendar
+          </Link>
+        </div>
+      )}
 
       <WelcomeCard
         connectedPlatforms={connected}
