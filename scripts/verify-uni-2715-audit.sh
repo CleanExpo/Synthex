@@ -44,7 +44,10 @@ EXPECT_LOW=1
 # (transformIgnorePatterns) - a separate unit of work on an 8600-test suite.
 # COST OF THIS PIN: GHSA-g8qq-57p8-ggw5 (stored XSS via SVG SMIL) and
 # GHSA-jxwj-j7wr-gfrw (mutation-XSS via literal </textarea/>) remain OPEN in
-# lib/sanitize.ts. Tracked, not forgotten.
+# lib/sanitize.ts. Tracked in SYN-1213 (High), which carries the full ESM
+# diagnosis: the allowlist alone is insufficient because both nested
+# node_modules segments must be listed, and babel still will not transform
+# htmlparser2's ESM dist. Not forgotten.
 
 # esbuild (GHSA-g7r4-m6w7-qqqr, CVSS 2.5, dev-server-on-Windows only) is an
 # UPSTREAM-BLOCKED residual, not an unfinished fix. It sits at
@@ -57,6 +60,7 @@ EXPECT_LOW=1
 # one is reachable without breaking tsup's pin.
 # This exemption is deliberately EXACT: if esbuild ever drops out of the audit
 # (upstream fixed) the check FAILS and tells you to delete the exemption.
+# Tracked: SYN-1214 (upstream watch on tsup widening its esbuild range).
 EXPECT_STRAY="esbuild"
 
 rc=0
