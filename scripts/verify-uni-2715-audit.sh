@@ -4,13 +4,16 @@
 # Exit 0 = as expected. Non-zero = a named, specific failure.
 set -uo pipefail
 
-OUT="${UNI2715_AUDIT_JSON:-}"
-TMP=""
-if [ -z "$OUT" ]; then
-  TMP="$(mktemp)"
-  OUT="$TMP"
-  npm audit --json > "$OUT" 2>/dev/null
-fi
+# This guard performs its OWN measurement and accepts no caller-supplied audit JSON.
+# It previously honoured $UNI2715_AUDIT_JSON, which meant a stale or fabricated file
+# could produce PASS without npm audit ever running against this tree. Found by
+# independent review of 365485ada (P1) and removed rather than narrowed: a check that
+# takes its verdict from its caller is not a check.
+# To exercise this script against a different dependency surface, run it in a tree whose
+# package.json / package-lock.json actually carry that surface - never by handing it a result.
+TMP="$(mktemp)"
+OUT="$TMP"
+npm audit --json > "$OUT" 2>/dev/null
 
 if [ ! -s "$OUT" ]; then
   echo "FAIL: audit output missing or empty at $OUT - measurement did not run" >&2
