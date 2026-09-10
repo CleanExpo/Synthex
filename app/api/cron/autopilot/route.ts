@@ -774,7 +774,22 @@ async function generateSlotContent(input: SlotInput): Promise<{
     return null;
   }
   // Phase 7: even a 'schedule' decision is held as a draft for a human.
-  let postStatus: 'scheduled' | 'draft' = 'draft';
+  //
+  // The hold is expressed through a boolean-typed constant rather than by
+  // assigning 'draft' directly. Assigning the literal narrows postStatus to
+  // 'draft' at this point, which makes the would-be-scheduled comparison below
+  // provably false and fails the build with TS2367 - that is exactly what broke
+  // main from 2026-09-09 and left production serving a pre-break commit. Typing
+  // the constant as boolean rather than `true` keeps the initialiser a union, so
+  // the branch below stays reachable to the type system.
+  //
+  // The branch remains dead at runtime while this is true, as its own comment
+  // already states. Flip this constant, not the type, when auto_approve_threshold
+  // drops below 100 and posts are allowed to schedule themselves.
+  const HOLD_EVERY_POST_FOR_HUMAN_REVIEW: boolean = true;
+  let postStatus: 'scheduled' | 'draft' = HOLD_EVERY_POST_FOR_HUMAN_REVIEW
+    ? 'draft'
+    : 'scheduled';
   let images: string[] = [];
   let imageMeta: Partial<GroundedPostImageMeta> = {};
 
