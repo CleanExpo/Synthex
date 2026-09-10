@@ -26,7 +26,10 @@ import type { ContentMix, ContentTheme } from '@/lib/autopilot/types';
 import type { GroundedPostImageMeta } from '@/lib/autopilot/grounded-post-image';
 import { PLATFORM_SPECS, THEME_PROMPTS } from '@/lib/autopilot/types';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
-import { holdAutopilotForReview } from '@/lib/autopilot/hold-for-review';
+import {
+  autopilotPostStatus,
+  holdAutopilotForReview,
+} from '@/lib/autopilot/hold-for-review';
 import { serializeError } from '@/lib/observability/serialize-error';
 
 export const runtime = 'nodejs';
@@ -774,7 +777,12 @@ async function generateSlotContent(input: SlotInput): Promise<{
     return null;
   }
   // Phase 7: even a 'schedule' decision is held as a draft for a human.
-  let postStatus: 'scheduled' | 'draft' = 'draft';
+  // Derived through autopilotPostStatus rather than assigned the literal
+  // 'draft' here. The literal narrowed the type and made the grounded-image
+  // branch below unreachable to the compiler (TS2367, SYN-1211), which broke
+  // the build. The hold itself is unchanged: while HOLD_FOR_REVIEW is true
+  // this is always 'draft', so no post becomes schedulable by this edit.
+  let postStatus: 'scheduled' | 'draft' = autopilotPostStatus(bestDecision);
   let images: string[] = [];
   let imageMeta: Partial<GroundedPostImageMeta> = {};
 
