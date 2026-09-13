@@ -64,13 +64,67 @@ if (typeof global.Request === 'undefined') {
   };
 }
 
+/**
+ * NextResponse.cookies.set() calls headers.delete + headers.append
+ * (edge-runtime ResponseCookies). A Map only has delete — missing append
+ * turned SYN-1216's alreadyComplete JWT re-issue into a 500 in contract tests.
+ */
+function createTestHeaders(init) {
+  const store = new Map();
+
+  const api = {
+    get(name) {
+      return store.get(String(name).toLowerCase()) ?? null;
+    },
+    set(name, value) {
+      store.set(String(name).toLowerCase(), String(value));
+    },
+    has(name) {
+      return store.has(String(name).toLowerCase());
+    },
+    delete(name) {
+      store.delete(String(name).toLowerCase());
+    },
+    append(name, value) {
+      const key = String(name).toLowerCase();
+      const existing = store.get(key);
+      if (existing == null || existing === '') {
+        store.set(key, String(value));
+      } else {
+        store.set(key, `${existing}, ${value}`);
+      }
+    },
+    forEach(callback) {
+      store.forEach((value, key) => callback(value, key));
+    },
+    entries() {
+      return store.entries();
+    },
+    [Symbol.iterator]() {
+      return store.entries();
+    },
+  };
+
+  if (init) {
+    if (typeof init.forEach === 'function') {
+      init.forEach((value, key) => api.append(key, value));
+    } else {
+      Object.entries(init).forEach(([key, value]) => {
+        if (value != null) api.append(key, String(value));
+      });
+    }
+  }
+
+  return api;
+}
+
 if (typeof global.Response === 'undefined') {
   global.Response = class Response {
     constructor(body, init = {}) {
       this.body = body;
       this.status = init.status || 200;
       this.statusText = init.statusText || '';
-      this.headers = new Map(Object.entries(init.headers || {}));
+      this.headers = createTestHeaders(init.headers);
     }
     json() {
       return Promise.resolve(
@@ -112,6 +166,18 @@ if (typeof global.Headers === 'undefined') {
     }
     has(name) {
       return this._headers.has(name.toLowerCase());
+    }
+    delete(name) {
+      this._headers.delete(name.toLowerCase());
+    }
+    append(name, value) {
+      const key = name.toLowerCase();
+      const existing = this._headers.get(key);
+      if (existing == null || existing === '') {
+        this._headers.set(key, String(value));
+      } else {
+        this._headers.set(key, `${existing}, ${value}`);
+      }
     }
   };
 }

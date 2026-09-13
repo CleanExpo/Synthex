@@ -100,6 +100,8 @@ const GOOGLE_SEO_LIST: PlatformConfig[] = [
 ];
 
 const SESSION_KEY = 'synthex_pipeline_result';
+/** Client cap so Finish setup cannot sit on “Finishing…” if complete hangs. */
+const COMPLETE_TIMEOUT_MS = 15_000;
 
 function ComingSoonBadge() {
   return (
@@ -192,12 +194,18 @@ function ConnectPageInner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(COMPLETE_TIMEOUT_MS),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: unknown;
+      };
       if (!res.ok) {
         throw new Error(
-          json.error || 'Could not finish setup. Please try again.'
+          typeof json.error === 'string'
+            ? json.error
+            : 'Could not finish setup. Please try again.'
         );
       }
 
@@ -214,8 +222,14 @@ function ConnectPageInner() {
 
       router.push('/dashboard');
     } catch (err) {
-      const message =
-        err instanceof Error
+      const aborted =
+        (typeof DOMException !== 'undefined' &&
+          err instanceof DOMException &&
+          err.name === 'AbortError') ||
+        (err instanceof Error && err.name === 'AbortError');
+      const message = aborted
+        ? 'Setup is taking too long. Please try again.'
+        : err instanceof Error
           ? err.message
           : 'Could not finish setup. Please try again.';
       toast.error(message);
