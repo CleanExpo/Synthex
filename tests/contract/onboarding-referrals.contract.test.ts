@@ -378,6 +378,15 @@ describe('Onboarding & Referrals API Contract Tests', () => {
       expect(body.success).toBe(true);
       expect(body.alreadyComplete).toBe(true);
       expect(mockTransaction).not.toHaveBeenCalled();
+      // SYN-1216: alreadyComplete must re-issue the completed JWT or
+      // /dashboard still sees onboardingComplete:false and loops.
+      expect(mockGenerateToken).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user-123',
+          onboardingComplete: true,
+        })
+      );
+      expect(response.cookies.get('auth-token')?.value).toBe('new-jwt-token');
     });
   });
 
