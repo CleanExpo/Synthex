@@ -2,6 +2,8 @@ import { createRequire } from 'module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { LEGACY_PATH_REDIRECTS } from './config/legacy-path-redirects.mjs';
+
 const _require = createRequire(import.meta.url);
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 const skipBuildTypecheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === '1';
@@ -34,6 +36,7 @@ const nextConfig = {
     return [
       { source: '/platform', destination: '/features', permanent: true },
       { source: '/solutions', destination: '/about', permanent: true },
+      ...LEGACY_PATH_REDIRECTS,
     ];
   },
   async headers() {
