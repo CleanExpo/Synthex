@@ -146,6 +146,21 @@ jest.mock('@/lib/vault/onboarding-seeder', () => ({
   seedVaultFromOnboarding: jest.fn().mockResolvedValue(undefined),
 }));
 
+// SYN-1216: alreadyComplete now stamps a completed JWT via
+// stampCompletedOnboardingToken → resolveApiKeyConfigured + generateToken.
+// The suite already mocks generateToken; without this stub the real
+// resolver hits an unmocked prisma.aPICredential path and the route
+// catch returns 500 instead of { success: true, alreadyComplete: true }.
+// Plain function — resetMocks would wipe a jest.fn() implementation.
+jest.mock('@/lib/ai/resolve-api-key-status', () => ({
+  resolveApiKeyConfigured: () => Promise.resolve(true),
+  userHasStoredCredential: () => Promise.resolve(false),
+}));
+
+jest.mock('@/lib/autopilot/launch-pipeline', () => ({
+  runLaunchPipeline: () => Promise.resolve(undefined),
+}));
+
 // =============================================================================
 // APISecurityChecker mock (used by referrals route)
 // =============================================================================
