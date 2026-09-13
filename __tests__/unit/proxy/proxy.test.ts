@@ -134,6 +134,22 @@ describe('SYN-792 — middleware decision logic', () => {
       ).toBe('pass');
     });
 
+    it('does not loop a completed operator from /dashboard back to onboarding (SYN-1216)', () => {
+      const inbound = decide('/dashboard', '', session, {
+        onboardingComplete: false,
+      });
+      expect(inbound).toEqual({ action: 'redirect', target: '/onboarding' });
+
+      const afterFinish = decide('/dashboard', '', session, {
+        onboardingComplete: true,
+      });
+      expect(afterFinish).toEqual({ action: 'pass' });
+      expect(afterFinish).not.toEqual({
+        action: 'redirect',
+        target: '/onboarding',
+      });
+    });
+
     it('lets superadmins through even when onboarding is incomplete', () => {
       expect(
         decide('/dashboard', '', session, {
