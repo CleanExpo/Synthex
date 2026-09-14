@@ -13,6 +13,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import {
   useOptimalTimes,
+  normalizeSlotDay,
   type OptimalTimeSlot,
 } from '@/hooks/use-optimal-times';
 import { useScheduleConflicts } from '@/hooks/use-schedule-conflicts';
@@ -169,7 +170,7 @@ function HourGrid({
     for (const slot of optimalSlots) {
       if (
         slot.platform === platform.toLowerCase() &&
-        slot.day.toLowerCase() === dayName.toLowerCase()
+        normalizeSlotDay(slot.day).toLowerCase() === dayName.toLowerCase()
       ) {
         const existing = map.get(slot.hour) ?? 0;
         if (slot.score > existing) {
