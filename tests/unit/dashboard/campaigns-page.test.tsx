@@ -47,7 +47,8 @@ describe('CampaignsPage', () => {
     expect(screen.getByText(/who it is for/i)).toBeInTheDocument();
     expect(screen.queryByText('Post 1')).not.toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: /save campaign/i })
+      screen.getByRole('button', { name: /create campaign/i })
     ).toBeInTheDocument();
+    expect(screen.getByText(/after-school rush/i)).toBeInTheDocument();
   });
 });
