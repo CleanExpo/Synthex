@@ -51,4 +51,60 @@ describe('CampaignsPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/after-school rush/i)).toBeInTheDocument();
   });
+
+  it('puts the new campaign on the list and shows formatted captions', async () => {
+    const user = userEvent.setup();
+    const created = {
+      id: 'camp-1',
+      name: 'After-school rush',
+      description: 'Get parents in after school pickup',
+      platform: 'instagram',
+      status: 'draft',
+      content: JSON.stringify({
+        cards: [
+          {
+            text: 'Pickup stop. Babycino is on us.\n#AfterSchool',
+            platform: 'instagram',
+          },
+        ],
+      }),
+    };
+    global.fetch = jest.fn(async (input: RequestInfo, init?: RequestInit) => {
+      const url = String(input);
+      if (url.includes('/api/ai/generate-content')) {
+        return {
+          ok: true,
+          json: async () => ({
+            success: true,
+            data: {
+              content: 'Pickup stop. Babycino is on us.',
+              variations: [],
+            },
+          }),
+        };
+      }
+      if (url.includes('/api/campaigns') && init?.method === 'POST') {
+        return { ok: true, json: async () => ({ campaign: created }) };
+      }
+      return { ok: true, json: async () => ({ campaigns: [] }) };
+    }) as jest.Mock;
+
+    render(<CampaignsPage />);
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /new campaign/i })
+      ).toBeInTheDocument()
+    );
+    await user.click(
+      screen.getAllByRole('button', { name: /new campaign/i })[0]
+    );
+    await user.click(screen.getByRole('button', { name: /create campaign/i }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'After-school rush' })
+      ).toBeInTheDocument()
+    );
+    expect(screen.getAllByText(/Pickup stop/i).length).toBeGreaterThan(0);
+    expect(screen.queryByDisplayValue(/Pickup stop/i)).not.toBeInTheDocument();
+  });
 });
