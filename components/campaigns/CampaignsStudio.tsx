@@ -10,9 +10,18 @@ import {
   X,
   Search,
   Copy,
-  Archive,
-  Pause,
+  Trash2,
 } from '@/components/icons';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { useBrandProfile } from '@/hooks/use-brand-profile';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
@@ -131,10 +140,13 @@ export function CampaignsStudio() {
   const [sort, setSort] = useState<'newest' | 'name' | 'progress'>('newest');
   const [showArchived, setShowArchived] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [scheduleCard, setScheduleCard] = useState<{
-    text: string;
-    platform: string;
+  const [checkedIds, setCheckedIds] = useState<Record<string, boolean>>({});
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
+  const [deleting, setDeleting] = useState(false);
+  const [scheduleRun, setScheduleRun] = useState<{
     campaignId: string;
+    posts: Array<{ text: string; platform: string }>;
   } | null>(null);
 
   const loadCampaigns = useCallback(async () => {
@@ -414,37 +426,52 @@ export function CampaignsStudio() {
     }
   }
 
-  async function setStatus(id: string, status: string) {
-    try {
-      await putCampaign({ id, status });
-      toast.success(
-        status === 'archived'
-          ? 'Archived. It stays off the board until you show archives.'
-          : 'Status updated. Posts still need you to schedule them.'
-      );
-      await loadCampaigns();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not update.');
-    }
+  function askDelete(ids: string[]) {
+    const unique = [...new Set(ids.filter(Boolean))];
+    if (unique.length === 0) return;
+    setPendingDeleteIds(unique);
+    setDeleteOpen(true);
   }
 
-  async function removeCampaign(id: string) {
-    if (
-      !window.confirm('Delete this campaign? Booked posts stay on Calendar.')
-    ) {
-      return;
-    }
+  async function confirmDelete() {
+    if (pendingDeleteIds.length === 0) return;
+    setDeleting(true);
+    const failed: string[] = [];
     try {
-      const res = await fetch(`/api/campaigns?id=${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-        credentials: 'include',
+      for (const id of pendingDeleteIds) {
+        const res = await fetch(`/api/campaigns?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        if (!res.ok) failed.push(id);
+      }
+      const removed = pendingDeleteIds.filter(id => !failed.includes(id));
+      setCampaigns(prev => prev.filter(c => !removed.includes(c.id)));
+      setCheckedIds(prev => {
+        const next = { ...prev };
+        for (const id of removed) delete next[id];
+        return next;
       });
-      if (!res.ok) throw new Error('Could not delete');
-      toast.success('Campaign removed.');
-      if (openId === id) setOpenId(null);
-      await loadCampaigns();
+      if (openId && removed.includes(openId)) setOpenId(null);
+      if (failed.length > 0) {
+        toast.error(
+          failed.length === pendingDeleteIds.length
+            ? 'Could not delete those campaigns.'
+            : `Removed ${removed.length}. ${failed.length} could not be deleted.`
+        );
+      } else {
+        toast.success(
+          removed.length === 1
+            ? 'Campaign removed.'
+            : `${removed.length} campaigns removed.`
+        );
+      }
+      setDeleteOpen(false);
+      setPendingDeleteIds([]);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not delete.');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -482,6 +509,32 @@ export function CampaignsStudio() {
     () => visible.find(c => c.id === openId) ?? visible[0] ?? null,
     [visible, openId]
   );
+
+  const checkedList = useMemo(
+    () => visible.filter(c => checkedIds[c.id]).map(c => c.id),
+    [visible, checkedIds]
+  );
+
+  const pendingDeleteNames = pendingDeleteIds
+    .map(id => campaigns.find(c => c.id === id)?.name ?? 'Untitled')
+    .filter(Boolean);
+
+  const selectedCards = useMemo(() => {
+    if (!selected) return [];
+    return parseCampaignCards(selected)
+      .filter(c => !skippedKeys[`${selected.id}:${c.key}`] && !c.skipped)
+      .map(card => ({
+        ...card,
+        text: edits[`${selected.id}:${card.key}`] ?? card.text,
+      }));
+  }, [selected, skippedKeys, edits]);
+
+  const draftCards = selectedCards.filter(card => {
+    const status = (card.status ?? 'draft').toLowerCase();
+    return (
+      status !== 'scheduled' && status !== 'published' && status !== 'posted'
+    );
+  });
 
   useEffect(() => {
     if (selected && selected.id !== openId) {
@@ -868,48 +921,102 @@ export function CampaignsStudio() {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(16rem,22rem)_1fr] gap-4 items-start">
-          <ul className="space-y-2">
-            {visible.map(campaign => {
-              const cards = parseCampaignCards(campaign).filter(
-                c => !skippedKeys[`${campaign.id}:${c.key}`] && !c.skipped
-              );
-              const health = campaignHealth(cards);
-              const open = selected?.id === campaign.id;
-              const preview = cards[0]?.text.replace(/\s+/g, ' ').slice(0, 96);
-              return (
-                <li key={campaign.id}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(campaign.id)}
-                    className={`w-full text-left rounded-xl border p-4 transition-colors ${
-                      open
-                        ? 'border-orange-400/40 bg-orange-500/10'
-                        : 'border-white/10 bg-white/5 hover:bg-white/8'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-xs uppercase tracking-[0.16em] text-white/35">
-                        {platformLabel(campaign.platform)} ·{' '}
-                        {windowLabel(campaign)}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2 px-1">
+              <label className="inline-flex items-center gap-2 text-xs text-white/50">
+                <input
+                  type="checkbox"
+                  checked={
+                    visible.length > 0 && checkedList.length === visible.length
+                  }
+                  onChange={() => {
+                    const allOn = checkedList.length === visible.length;
+                    setCheckedIds(
+                      allOn
+                        ? {}
+                        : Object.fromEntries(visible.map(c => [c.id, true]))
+                    );
+                  }}
+                  className="h-4 w-4 rounded border-white/20 bg-white/5"
+                />
+                {checkedList.length === 0
+                  ? 'Select campaigns'
+                  : `${checkedList.length} selected`}
+              </label>
+              <button
+                type="button"
+                disabled={checkedList.length === 0}
+                onClick={() => askDelete(checkedList)}
+                aria-label={
+                  checkedList.length === 0
+                    ? 'Delete selected campaigns'
+                    : `Delete ${checkedList.length} selected campaigns`
+                }
+                className="inline-flex items-center gap-1 h-8 px-2.5 text-xs rounded-md border border-rose-400/30 text-rose-200 disabled:opacity-40 hover:bg-rose-500/10"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </button>
+            </div>
+            <ul className="space-y-2">
+              {visible.map(campaign => {
+                const cards = parseCampaignCards(campaign).filter(
+                  c => !skippedKeys[`${campaign.id}:${c.key}`] && !c.skipped
+                );
+                const health = campaignHealth(cards);
+                const open = selected?.id === campaign.id;
+                const preview = cards[0]?.text
+                  .replace(/\s+/g, ' ')
+                  .slice(0, 96);
+                return (
+                  <li key={campaign.id} className="flex items-start gap-2">
+                    <label className="mt-4 pl-1 shrink-0">
+                      <span className="sr-only">Select {campaign.name}</span>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(checkedIds[campaign.id])}
+                        onChange={e =>
+                          setCheckedIds(prev => ({
+                            ...prev,
+                            [campaign.id]: e.target.checked,
+                          }))
+                        }
+                        className="h-4 w-4 rounded border-white/20 bg-white/5"
+                      />
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setOpenId(campaign.id)}
+                      className={`flex-1 text-left rounded-xl border p-4 transition-colors ${
+                        open
+                          ? 'border-orange-400/40 bg-orange-500/10'
+                          : 'border-white/10 bg-white/5 hover:bg-white/8'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs uppercase tracking-[0.16em] text-white/35">
+                          {platformLabel(campaign.platform)} ·{' '}
+                          {windowLabel(campaign)}
+                        </p>
+                        <span className="text-xs capitalize text-white/45">
+                          {campaign.status}
+                        </span>
+                      </div>
+                      <h3 className="mt-1 text-lg font-light tracking-tight text-white">
+                        {campaign.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-white/50 line-clamp-2">
+                        {preview || campaign.description || 'No captions yet'}
                       </p>
-                      <span className="text-xs capitalize text-white/45">
-                        {campaign.status}
-                      </span>
-                    </div>
-                    <h3 className="mt-1 text-lg font-light tracking-tight text-white">
-                      {campaign.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-white/50 line-clamp-2">
-                      {preview || campaign.description || 'No captions yet'}
-                    </p>
-                    <p className="mt-2 text-xs text-white/35">
-                      {health.total} posts · {health.bookedPercent}% booked
-                    </p>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+                      <p className="mt-2 text-xs text-white/35">
+                        {health.total} posts · {health.bookedPercent}% booked
+                      </p>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
           {selected && (
             <article className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6 space-y-5 min-h-96">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -929,6 +1036,25 @@ export function CampaignsStudio() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
+                    disabled={draftCards.length === 0}
+                    onClick={() =>
+                      setScheduleRun({
+                        campaignId: selected.id,
+                        posts: draftCards.map(card => ({
+                          text: card.text,
+                          platform:
+                            card.platform === 'multi'
+                              ? 'instagram'
+                              : card.platform,
+                        })),
+                      })
+                    }
+                    className="inline-flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 disabled:opacity-40"
+                  >
+                    Schedule
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => void duplicateCampaign(selected)}
                     className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
                   >
@@ -936,167 +1062,182 @@ export function CampaignsStudio() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => void setStatus(selected.id, 'paused')}
-                    className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
-                  >
-                    <Pause className="h-3.5 w-3.5" /> Pause
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void setStatus(selected.id, 'archived')}
-                    className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
-                  >
-                    <Archive className="h-3.5 w-3.5" /> Archive
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void removeCampaign(selected.id)}
+                    onClick={() => askDelete([selected.id])}
                     className="text-xs text-rose-300/80 hover:text-rose-200"
                   >
                     Delete
                   </button>
                 </div>
               </div>
-              {(() => {
-                const cards = parseCampaignCards(selected).filter(
-                  c => !skippedKeys[`${selected.id}:${c.key}`] && !c.skipped
-                );
-                if (cards.length === 0) {
-                  return (
-                    <p className="text-sm text-white/40">
-                      No posts in this campaign yet.{' '}
-                      {FIRST_WEEK_GUIDANCE.campaigns.empty}
-                    </p>
-                  );
-                }
-                return (
-                  <ol className="space-y-5">
-                    {cards.map((card, index) => {
-                      const editKey = `${selected.id}:${card.key}`;
-                      const text = edits[editKey] ?? card.text;
-                      const editing = editingKey === editKey;
-                      return (
-                        <li
-                          key={card.key}
-                          className="rounded-lg border border-white/10 bg-slate-950/30 p-4 space-y-3"
-                        >
-                          <p className="text-xs text-white/40">
-                            Post {index + 1} · {platformLabel(card.platform)}
-                            {card.status
-                              ? ` · ${customerPostStatus(card.status)}`
-                              : ' · Draft'}
-                          </p>
-                          {editing ? (
-                            <textarea
-                              value={text}
-                              onChange={e =>
-                                setEdits(prev => ({
-                                  ...prev,
-                                  [editKey]: e.target.value,
-                                }))
-                              }
-                              rows={6}
-                              className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm text-white"
-                            />
-                          ) : (
-                            <FormattedCaption text={text} />
+              {selectedCards.length === 0 ? (
+                <p className="text-sm text-white/40">
+                  No posts in this campaign yet.{' '}
+                  {FIRST_WEEK_GUIDANCE.campaigns.empty}
+                </p>
+              ) : (
+                <ol className="space-y-5">
+                  {selectedCards.map((card, index) => {
+                    const editKey = `${selected.id}:${card.key}`;
+                    const text = card.text;
+                    const editing = editingKey === editKey;
+                    return (
+                      <li
+                        key={card.key}
+                        className="rounded-lg border border-white/10 bg-slate-950/30 p-4 space-y-3"
+                      >
+                        <p className="text-xs text-white/40">
+                          Post {index + 1} · {platformLabel(card.platform)}
+                          {card.status
+                            ? ` · ${customerPostStatus(card.status)}`
+                            : ' · Draft'}
+                        </p>
+                        {editing ? (
+                          <textarea
+                            value={text}
+                            onChange={e =>
+                              setEdits(prev => ({
+                                ...prev,
+                                [editKey]: e.target.value,
+                              }))
+                            }
+                            rows={6}
+                            className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm text-white"
+                          />
+                        ) : (
+                          <FormattedCaption text={text} />
+                        )}
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditingKey(editing ? null : editKey)
+                            }
+                            className="text-sm text-white/40 hover:text-white/70"
+                          >
+                            {editing ? 'Done editing' : 'Edit'}
+                          </button>
+                          {editing && (
+                            <button
+                              type="button"
+                              onClick={() => void saveOpenCards(selected)}
+                              className="text-sm text-white/40 hover:text-white/70"
+                            >
+                              Save edits
+                            </button>
                           )}
-                          <div className="flex flex-wrap gap-3">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setScheduleCard({
-                                  text,
-                                  platform:
-                                    card.platform === 'multi'
-                                      ? 'instagram'
-                                      : card.platform,
-                                  campaignId: selected.id,
-                                })
-                              }
-                              className="text-sm text-orange-400 hover:text-orange-300"
-                            >
-                              Schedule
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditingKey(editing ? null : editKey)
-                              }
-                              className="text-sm text-white/40 hover:text-white/70"
-                            >
-                              {editing ? 'Done editing' : 'Edit'}
-                            </button>
-                            {editing && (
-                              <button
-                                type="button"
-                                onClick={() => void saveOpenCards(selected)}
-                                className="text-sm text-white/40 hover:text-white/70"
-                              >
-                                Save edits
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setSkippedKeys(prev => ({
-                                  ...prev,
-                                  [editKey]: true,
-                                }))
-                              }
-                              className="text-sm text-white/40 hover:text-white/70"
-                            >
-                              Don&apos;t use
-                            </button>
-                            <Link
-                              href="/dashboard/content"
-                              className="text-sm text-white/40 hover:text-white/70"
-                            >
-                              Open in Content
-                            </Link>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                );
-              })()}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSkippedKeys(prev => ({
+                                ...prev,
+                                [editKey]: true,
+                              }))
+                            }
+                            className="text-sm text-white/40 hover:text-white/70"
+                          >
+                            Don&apos;t use
+                          </button>
+                          <Link
+                            href="/dashboard/content"
+                            className="text-sm text-white/40 hover:text-white/70"
+                          >
+                            Open in Content
+                          </Link>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
             </article>
           )}
         </div>
       )}
 
       <PublishConfirmModal
-        open={Boolean(scheduleCard)}
+        open={Boolean(scheduleRun)}
         onOpenChange={open => {
-          if (!open) setScheduleCard(null);
+          if (!open) setScheduleRun(null);
         }}
-        content={scheduleCard?.text ?? ''}
-        platform={scheduleCard?.platform ?? 'instagram'}
+        content={
+          scheduleRun
+            ? `${scheduleRun.posts.length} posts in this campaign.\n\n${scheduleRun.posts[0]?.text ?? ''}`
+            : ''
+        }
+        platform={scheduleRun?.posts[0]?.platform ?? 'instagram'}
         onConfirm={async options => {
-          if (!scheduleCard) return;
-          const response = await fetchWithCSRF('/api/scheduler/posts', {
-            method: 'POST',
-            body: JSON.stringify({
-              content: scheduleCard.text,
-              platform: options.platform,
-              scheduledAt: options.scheduledAt,
-              campaignId: scheduleCard.campaignId,
-            }),
-          });
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(
-              (errorData as { message?: string; error?: string }).message ||
-                (errorData as { error?: string }).error ||
-                'Could not schedule'
-            );
+          if (!scheduleRun) return;
+          let booked = 0;
+          let failed = 0;
+          for (const [index, post] of scheduleRun.posts.entries()) {
+            const when = new Date(options.scheduledAt);
+            when.setDate(when.getDate() + index);
+            const response = await fetchWithCSRF('/api/scheduler/posts', {
+              method: 'POST',
+              body: JSON.stringify({
+                content: post.text,
+                platform: post.platform,
+                scheduledAt: when.toISOString(),
+                campaignId: scheduleRun.campaignId,
+              }),
+            });
+            if (response.ok) booked += 1;
+            else failed += 1;
           }
-          toast.success('Booked. Find it on Calendar.');
-          setScheduleCard(null);
+          if (failed > 0 && booked === 0) {
+            throw new Error('Could not schedule those posts.');
+          }
+          toast.success(
+            failed > 0
+              ? `Booked ${booked}. ${failed} did not land — check Calendar.`
+              : `Booked ${booked} posts. Find them on Calendar.`
+          );
+          setScheduleRun(null);
           await loadCampaigns();
         }}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent className="bg-slate-950 border border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white">
+              {pendingDeleteIds.length === 1
+                ? 'Delete this campaign?'
+                : `Delete ${pendingDeleteIds.length} campaigns?`}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-white/55">
+              Booked posts stay on Calendar. This removes the run from Campaigns
+              only.
+              {pendingDeleteNames.length > 0 && (
+                <span className="mt-3 block text-white/75">
+                  {pendingDeleteNames.slice(0, 6).join(', ')}
+                  {pendingDeleteNames.length > 6
+                    ? ` and ${pendingDeleteNames.length - 6} more`
+                    : ''}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={deleting}
+              className="bg-transparent border-white/10 text-white/60 hover:bg-white/5"
+            >
+              Keep them
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={e => {
+                e.preventDefault();
+                void confirmDelete();
+              }}
+              className="bg-rose-600 hover:bg-rose-500 text-white"
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
