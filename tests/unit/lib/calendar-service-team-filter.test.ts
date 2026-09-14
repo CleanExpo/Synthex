@@ -21,6 +21,7 @@ jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
     calendarPost: { findMany: mockFindMany, findUnique: jest.fn() },
+    post: { findMany: jest.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -88,13 +89,17 @@ describe('CalendarService team filter (userId)', () => {
     const service = new CalendarService(ORG);
 
     await service.getCalendarView(start, end);
-    const allKey = mockCacheGet.mock.calls[0][0];
-
     await service.getCalendarView(start, end, 'user_abc');
-    const memberKey = mockCacheGet.mock.calls[1][0];
 
+    const viewKeys = mockCacheGet.mock.calls
+      .map(call => String(call[0]))
+      .filter(key => key.includes(':view:'));
+
+    const allKey = viewKeys.find(key => key.endsWith(':all'));
+    const memberKey = viewKeys.find(key => key.includes('user_abc'));
+
+    expect(allKey).toBeDefined();
+    expect(memberKey).toBeDefined();
     expect(allKey).not.toBe(memberKey);
-    expect(allKey).toContain('all');
-    expect(memberKey).toContain('user_abc');
   });
 });

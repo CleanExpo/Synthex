@@ -574,12 +574,12 @@ function CalendarPageContent() {
         topCategory={readinessData?.topCategory}
       />
 
-      {/* Calendar View */}
-      {posts.length === 0 && !isLoading ? (
+      {/* Calendar View — keep the grid even when this week is empty so they can page to a booked week */}
+      {posts.length === 0 && !isLoading && (
         <DashboardEmptyState
           icon={Calendar}
-          title="Nothing booked"
-          description={FIRST_WEEK_GUIDANCE.calendar.empty}
+          title="Nothing booked this week"
+          description={`${FIRST_WEEK_GUIDANCE.calendar.empty} If you already booked another week, use the arrows.`}
           action={{
             label: FIRST_WEEK_GUIDANCE.calendar.nextLabel,
             onClick: () => {
@@ -587,54 +587,53 @@ function CalendarPageContent() {
             },
           }}
         />
-      ) : (
-        <div className="flex-1 min-h-[600px]">
-          {viewMode === 'week' ? (
-            <WeekView
-              posts={posts}
-              currentDate={currentStartDate}
-              onPostClick={handlePostClick}
-              onPostReschedule={handlePostReschedule}
-              onPostCreate={handlePostCreate}
-              onWeekChange={handleWeekChange}
-            />
-          ) : viewMode === 'month' ? (
-            <MonthView
-              posts={posts}
-              currentDate={currentStartDate}
-              onPostClick={handlePostClick}
-              onPostReschedule={handlePostReschedule}
-              onPostCreate={handlePostCreate}
-              onMonthChange={handleMonthChange}
-            />
-          ) : (
-            <ul className="space-y-2">
-              {posts.map(p => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() => handlePostClick(p)}
-                    className="w-full text-left rounded-xl border border-white/10 bg-gray-900/40 px-4 py-3 hover:bg-white/5"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-sm text-white/80 truncate">
-                        {p.title || p.content.slice(0, 90)}
-                      </span>
-                      <span className="shrink-0 text-xs text-orange-300">
-                        {customerPostStatus(p.status)}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-white/40">
-                      {p.platforms.join(', ')} ·{' '}
-                      {new Date(p.scheduledFor).toLocaleString('en-AU')}
-                    </p>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
       )}
+      <div className="flex-1 min-h-[600px]">
+        {viewMode === 'week' ? (
+          <WeekView
+            posts={posts}
+            currentDate={currentStartDate}
+            onPostClick={handlePostClick}
+            onPostReschedule={handlePostReschedule}
+            onPostCreate={handlePostCreate}
+            onWeekChange={handleWeekChange}
+          />
+        ) : viewMode === 'month' ? (
+          <MonthView
+            posts={posts}
+            currentDate={currentStartDate}
+            onPostClick={handlePostClick}
+            onPostReschedule={handlePostReschedule}
+            onPostCreate={handlePostCreate}
+            onMonthChange={handleMonthChange}
+          />
+        ) : (
+          <ul className="space-y-2">
+            {posts.map(p => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => handlePostClick(p)}
+                  className="w-full text-left rounded-xl border border-white/10 bg-gray-900/40 px-4 py-3 hover:bg-white/5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-white/80 truncate">
+                      {p.title || p.content.slice(0, 90)}
+                    </span>
+                    <span className="shrink-0 text-xs text-orange-300">
+                      {customerPostStatus(p.status)}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-white/40">
+                    {p.platforms.join(', ')} ·{' '}
+                    {new Date(p.scheduledFor).toLocaleString('en-AU')}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Post Detail Modal */}
       {selectedPost && (
