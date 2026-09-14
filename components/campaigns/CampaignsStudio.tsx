@@ -9,8 +9,6 @@ import {
   AlertCircle,
   X,
   Search,
-  Grid,
-  List,
   Copy,
   Archive,
   Pause,
@@ -20,7 +18,6 @@ import { useBrandProfile } from '@/hooks/use-brand-profile';
 import { useActiveBusiness } from '@/hooks/useActiveBusiness';
 import { PublishConfirmModal } from '@/components/content';
 import { fetchWithCSRF } from '@/lib/csrf';
-import { humanizeAiError } from '@/lib/dashboard/humanize-error';
 import { customerPostStatus } from '@/lib/dashboard/post-status';
 import {
   parseCampaignCards,
@@ -132,8 +129,8 @@ export function CampaignsStudio() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sort, setSort] = useState<'newest' | 'name' | 'progress'>('newest');
-  const [board, setBoard] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
   const [scheduleCard, setScheduleCard] = useState<{
     text: string;
     platform: string;
@@ -321,13 +318,26 @@ export function CampaignsStudio() {
             .join(' ')
         );
       }
-      if (body.campaign) {
-        setCampaigns(prev => [
-          body.campaign as Campaign,
-          ...prev.filter(c => c.id !== body.campaign?.id),
-        ]);
-        setOpenId(body.campaign.id);
-      }
+      const created: Campaign = {
+        ...(body.campaign ?? {
+          id: `pending-${Date.now()}`,
+          name: brief.name.trim(),
+          platform: mixed
+            ? 'multi'
+            : (cards[0]?.platform ?? channelList[0] ?? 'instagram'),
+          status: 'draft',
+        }),
+        name: brief.name.trim(),
+        description: brief.job.trim().slice(0, 1000),
+        content: body.campaign?.content ?? serializeCampaignCards(cards),
+        settings: {
+          ...(startsAt ? { startsAt } : {}),
+          ...(endsAt ? { endsAt } : {}),
+          targetAudience: brief.audience.trim(),
+        },
+      };
+      setCampaigns(prev => [created, ...prev.filter(c => c.id !== created.id)]);
+      setOpenId(created.id);
       toast.success(
         'Campaign created. Captions are drafts for those dates — nothing was posted.'
       );
@@ -469,9 +479,15 @@ export function CampaignsStudio() {
   }, [campaigns]);
 
   const selected = useMemo(
-    () => campaigns.find(c => c.id === openId) ?? null,
-    [campaigns, openId]
+    () => visible.find(c => c.id === openId) ?? visible[0] ?? null,
+    [visible, openId]
   );
+
+  useEffect(() => {
+    if (selected && selected.id !== openId) {
+      setOpenId(selected.id);
+    }
+  }, [selected, openId]);
 
   return (
     <div className="space-y-8">
@@ -772,7 +788,7 @@ export function CampaignsStudio() {
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <label className="relative flex-1 min-w-[200px]">
+        <label className="relative flex-1 min-w-50">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
           <input
             value={query}
@@ -811,24 +827,6 @@ export function CampaignsStudio() {
         >
           {showArchived ? 'Hide archives' : 'Show archives'}
         </button>
-        <div className="flex rounded-md border border-white/10 p-0.5">
-          <button
-            type="button"
-            onClick={() => setBoard(true)}
-            className={`p-2 rounded ${board ? 'bg-orange-500/15 text-orange-400' : 'text-white/40'}`}
-            aria-label="Board"
-          >
-            <Grid className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setBoard(false)}
-            className={`p-2 rounded ${!board ? 'bg-orange-500/15 text-orange-400' : 'text-white/40'}`}
-            aria-label="List"
-          >
-            <List className="h-4 w-4" />
-          </button>
-        </div>
       </div>
 
       {loading ? (
@@ -869,119 +867,126 @@ export function CampaignsStudio() {
           </p>
         </div>
       ) : (
-        <ul
-          className={
-            board ? 'grid grid-cols-1 lg:grid-cols-2 gap-4' : 'space-y-3'
-          }
-        >
-          {visible.map(campaign => {
-            const cards = parseCampaignCards(campaign).filter(
-              c => !skippedKeys[`${campaign.id}:${c.key}`] && !c.skipped
-            );
-            const health = campaignHealth(cards);
-            const open = openId === campaign.id;
-            return (
-              <li
-                key={campaign.id}
-                className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden"
-              >
-                <div className="p-5">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(16rem,22rem)_1fr] gap-4 items-start">
+          <ul className="space-y-2">
+            {visible.map(campaign => {
+              const cards = parseCampaignCards(campaign).filter(
+                c => !skippedKeys[`${campaign.id}:${c.key}`] && !c.skipped
+              );
+              const health = campaignHealth(cards);
+              const open = selected?.id === campaign.id;
+              const preview = cards[0]?.text.replace(/\s+/g, ' ').slice(0, 96);
+              return (
+                <li key={campaign.id}>
                   <button
                     type="button"
-                    onClick={() => setOpenId(open ? null : campaign.id)}
-                    className="w-full text-left"
+                    onClick={() => setOpenId(campaign.id)}
+                    className={`w-full text-left rounded-xl border p-4 transition-colors ${
+                      open
+                        ? 'border-orange-400/40 bg-orange-500/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/8'
+                    }`}
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.16em] text-white/35">
-                          {platformLabel(campaign.platform)} ·{' '}
-                          {windowLabel(campaign)}
-                        </p>
-                        <h3 className="mt-1 text-xl font-light tracking-tight text-white">
-                          {campaign.name}
-                        </h3>
-                        {campaign.description && (
-                          <p className="mt-1 text-sm text-white/40">
-                            {campaign.description}
-                          </p>
-                        )}
-                      </div>
-                      <span className="text-xs capitalize rounded-full border border-white/10 px-2.5 py-1 text-white/55">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-xs uppercase tracking-[0.16em] text-white/35">
+                        {platformLabel(campaign.platform)} ·{' '}
+                        {windowLabel(campaign)}
+                      </p>
+                      <span className="text-xs capitalize text-white/45">
                         {campaign.status}
                       </span>
                     </div>
-                    <div className="mt-4">
-                      <div className="flex justify-between text-xs text-white/40 mb-1.5">
-                        <span>
-                          {health.bookedPercent}% booked · {health.total} cards
-                        </span>
-                        <span>
-                          {health.failed > 0
-                            ? `${health.failed} failed`
-                            : `${health.draft} still drafts`}
-                        </span>
-                      </div>
-                      <div className="h-1 rounded-full bg-white/10 overflow-hidden">
-                        <div
-                          className="h-full bg-orange-500"
-                          style={{ width: `${health.bookedPercent}%` }}
-                        />
-                      </div>
-                    </div>
+                    <h3 className="mt-1 text-lg font-light tracking-tight text-white">
+                      {campaign.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-white/50 line-clamp-2">
+                      {preview || campaign.description || 'No captions yet'}
+                    </p>
+                    <p className="mt-2 text-xs text-white/35">
+                      {health.total} posts · {health.bookedPercent}% booked
+                    </p>
                   </button>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void duplicateCampaign(campaign)}
-                      className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
-                    >
-                      <Copy className="h-3.5 w-3.5" /> Duplicate
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void setStatus(campaign.id, 'paused')}
-                      className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
-                    >
-                      <Pause className="h-3.5 w-3.5" /> Pause
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void setStatus(campaign.id, 'archived')}
-                      className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
-                    >
-                      <Archive className="h-3.5 w-3.5" /> Archive
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void removeCampaign(campaign.id)}
-                      className="text-xs text-rose-300/80 hover:text-rose-200"
-                    >
-                      Delete
-                    </button>
-                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          {selected && (
+            <article className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-md p-6 space-y-5 min-h-96">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.16em] text-white/35">
+                    {platformLabel(selected.platform)} · {windowLabel(selected)}
+                  </p>
+                  <h2 className="mt-1 text-2xl font-light tracking-tight text-white">
+                    {selected.name}
+                  </h2>
+                  {selected.description && (
+                    <p className="mt-1 text-sm text-white/45">
+                      {selected.description}
+                    </p>
+                  )}
                 </div>
-                {open && (
-                  <div className="border-t border-white/10 px-5 py-4 space-y-3 bg-slate-950/30">
-                    {cards.length === 0 ? (
-                      <p className="text-sm text-white/40">
-                        No posts in this campaign yet.{' '}
-                        {FIRST_WEEK_GUIDANCE.campaigns.empty}
-                      </p>
-                    ) : (
-                      cards.map(card => {
-                        const editKey = `${campaign.id}:${card.key}`;
-                        const text = edits[editKey] ?? card.text;
-                        return (
-                          <div
-                            key={card.key}
-                            className="rounded-lg border border-white/10 p-3 space-y-2"
-                          >
-                            <span className="text-xs text-white/40">
-                              {platformLabel(card.platform)}
-                              {card.status
-                                ? ` · ${customerPostStatus(card.status)}`
-                                : ' · Draft'}
-                            </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void duplicateCampaign(selected)}
+                    className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
+                  >
+                    <Copy className="h-3.5 w-3.5" /> Duplicate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void setStatus(selected.id, 'paused')}
+                    className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
+                  >
+                    <Pause className="h-3.5 w-3.5" /> Pause
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void setStatus(selected.id, 'archived')}
+                    className="inline-flex items-center gap-1 text-xs text-white/50 hover:text-white"
+                  >
+                    <Archive className="h-3.5 w-3.5" /> Archive
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void removeCampaign(selected.id)}
+                    className="text-xs text-rose-300/80 hover:text-rose-200"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              {(() => {
+                const cards = parseCampaignCards(selected).filter(
+                  c => !skippedKeys[`${selected.id}:${c.key}`] && !c.skipped
+                );
+                if (cards.length === 0) {
+                  return (
+                    <p className="text-sm text-white/40">
+                      No posts in this campaign yet.{' '}
+                      {FIRST_WEEK_GUIDANCE.campaigns.empty}
+                    </p>
+                  );
+                }
+                return (
+                  <ol className="space-y-5">
+                    {cards.map((card, index) => {
+                      const editKey = `${selected.id}:${card.key}`;
+                      const text = edits[editKey] ?? card.text;
+                      const editing = editingKey === editKey;
+                      return (
+                        <li
+                          key={card.key}
+                          className="rounded-lg border border-white/10 bg-slate-950/30 p-4 space-y-3"
+                        >
+                          <p className="text-xs text-white/40">
+                            Post {index + 1} · {platformLabel(card.platform)}
+                            {card.status
+                              ? ` · ${customerPostStatus(card.status)}`
+                              : ' · Draft'}
+                          </p>
+                          {editing ? (
                             <textarea
                               value={text}
                               onChange={e =>
@@ -990,65 +995,76 @@ export function CampaignsStudio() {
                                   [editKey]: e.target.value,
                                 }))
                               }
-                              rows={4}
+                              rows={6}
                               className="w-full px-3 py-2 rounded-md bg-white/5 border border-white/10 text-sm text-white"
                             />
-                            <div className="flex flex-wrap gap-3">
+                          ) : (
+                            <FormattedCaption text={text} />
+                          )}
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setScheduleCard({
+                                  text,
+                                  platform:
+                                    card.platform === 'multi'
+                                      ? 'instagram'
+                                      : card.platform,
+                                  campaignId: selected.id,
+                                })
+                              }
+                              className="text-sm text-orange-400 hover:text-orange-300"
+                            >
+                              Schedule
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditingKey(editing ? null : editKey)
+                              }
+                              className="text-sm text-white/40 hover:text-white/70"
+                            >
+                              {editing ? 'Done editing' : 'Edit'}
+                            </button>
+                            {editing && (
                               <button
                                 type="button"
-                                onClick={() =>
-                                  setScheduleCard({
-                                    text,
-                                    platform:
-                                      card.platform === 'multi'
-                                        ? 'instagram'
-                                        : card.platform,
-                                    campaignId: campaign.id,
-                                  })
-                                }
-                                className="text-sm text-orange-400 hover:text-orange-300"
-                              >
-                                Schedule
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setSkippedKeys(prev => ({
-                                    ...prev,
-                                    [editKey]: true,
-                                  }))
-                                }
+                                onClick={() => void saveOpenCards(selected)}
                                 className="text-sm text-white/40 hover:text-white/70"
                               >
-                                Don&apos;t use
+                                Save edits
                               </button>
-                              <Link
-                                href="/dashboard/content"
-                                className="text-sm text-white/40 hover:text-white/70"
-                              >
-                                Edit in Content
-                              </Link>
-                            </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setSkippedKeys(prev => ({
+                                  ...prev,
+                                  [editKey]: true,
+                                }))
+                              }
+                              className="text-sm text-white/40 hover:text-white/70"
+                            >
+                              Don&apos;t use
+                            </button>
+                            <Link
+                              href="/dashboard/content"
+                              className="text-sm text-white/40 hover:text-white/70"
+                            >
+                              Open in Content
+                            </Link>
                           </div>
-                        );
-                      })
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => void saveOpenCards(campaign)}
-                      className="h-9 px-3 text-sm rounded-md border border-white/10 text-white/70 hover:bg-white/5"
-                    >
-                      Save card edits
-                    </button>
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                );
+              })()}
+            </article>
+          )}
+        </div>
       )}
-
-      {selected && <p className="sr-only">Open campaign {selected.name}</p>}
 
       <PublishConfirmModal
         open={Boolean(scheduleCard)}
@@ -1082,6 +1098,23 @@ export function CampaignsStudio() {
         }}
       />
     </div>
+  );
+}
+
+function FormattedCaption({ text }: { text: string }) {
+  const tokens = text.split(/(\s+)/);
+  return (
+    <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/85">
+      {tokens.map((token, i) =>
+        token.startsWith('#') ? (
+          <span key={i} className="text-orange-300">
+            {token}
+          </span>
+        ) : (
+          token
+        )
+      )}
+    </p>
   );
 }
 
