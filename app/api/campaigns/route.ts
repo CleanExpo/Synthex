@@ -93,7 +93,7 @@ const campaignCreateSchema = z.object({
 
 const campaignUpdateSchema = z
   .object({
-    id: z.string().uuid('Invalid campaign ID'),
+    id: z.string().min(1, 'Invalid campaign ID'),
     name: z.string().min(1).max(100).optional(),
     description: z.string().max(1000).optional(),
     platform: z
