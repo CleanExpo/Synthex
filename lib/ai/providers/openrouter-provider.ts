@@ -36,9 +36,11 @@ export class OpenRouterProvider implements AIProvider {
   };
 
   private apiKey: string;
+  private usedPlatformKey: boolean;
   private baseURL = 'https://openrouter.ai/api/v1';
 
   constructor(apiKeyOverride?: string) {
+    this.usedPlatformKey = !apiKeyOverride;
     this.apiKey = apiKeyOverride || process.env.OPENROUTER_API_KEY || '';
     if (!this.apiKey) {
       logger.warn(
@@ -57,17 +59,24 @@ export class OpenRouterProvider implements AIProvider {
       // enforcement, so degrade to a prompt-for-JSON fallback. `outputFormat`
       // is stripped from the upstream body (it is not an OpenRouter param) and
       // the response is validated against the schema before returning.
-      const { outputFormat, thinking, thinkingDisplay, cache, ...rest } = request;
-      
+      const { outputFormat, thinking, thinkingDisplay, cache, ...rest } =
+        request;
+
       const body = {
         ...rest,
-        ...(thinking ? { 
-          thinking: { type: 'adaptive', effort: thinking },
-          ...(thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-        } : {}),
+        ...(thinking
+          ? {
+              thinking: { type: 'adaptive', effort: thinking },
+              ...(thinkingDisplay === 'omitted'
+                ? { thinking_display: 'omitted' }
+                : {}),
+            }
+          : {}),
         // OpenRouter passes cache_control to underlying Anthropic
         ...(cache ? { cache_control: { type: 'ephemeral' } } : {}),
-        messages: outputFormat ? withJsonInstruction(rest.messages, outputFormat) : rest.messages,
+        messages: outputFormat
+          ? withJsonInstruction(rest.messages, outputFormat)
+          : rest.messages,
         transforms: ['middle-out'],
         route: 'fallback',
       };
@@ -90,10 +99,25 @@ export class OpenRouterProvider implements AIProvider {
             status: error.response.status,
             data: error.response.data,
           });
-          throw new Error(
+          const message =
             error.response.data?.error?.message ||
-              'OpenRouter API request failed'
-          );
+            'OpenRouter API request failed';
+          if (
+            error.response.status === 401 &&
+            this.usedPlatformKey &&
+            process.env.OPENAI_API_KEY?.trim()
+          ) {
+            logger.warn(
+              'OpenRouter rejected the platform key; falling back to OpenAI'
+            );
+            const { OpenAIProvider } = await import('./openai-provider');
+            const openai = new OpenAIProvider();
+            return openai.complete({
+              ...request,
+              model: openai.models.balanced,
+            });
+          }
+          throw new Error(message);
         } else if (error.request) {
           logger.error('OpenRouter network error', { error: error.message });
           throw new Error('Network error connecting to OpenRouter');
@@ -114,10 +138,14 @@ export class OpenRouterProvider implements AIProvider {
       ...request,
       stream: true,
       // Map thinking parameters for streaming
-      ...(request.thinking ? { 
-        thinking: { type: 'adaptive', effort: request.thinking },
-        ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-      } : {}),
+      ...(request.thinking
+        ? {
+            thinking: { type: 'adaptive', effort: request.thinking },
+            ...(request.thinkingDisplay === 'omitted'
+              ? { thinking_display: 'omitted' }
+              : {}),
+          }
+        : {}),
       // OpenRouter passes cache_control to underlying Anthropic
       ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
     };
