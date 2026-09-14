@@ -30,12 +30,9 @@ describe('CampaignsPage', () => {
     expect(
       screen.getByRole('button', { name: /new campaign/i })
     ).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getByText(/two times on Calendar/i)).toBeInTheDocument()
-    );
   });
 
-  it('opens a composer with two post cards', async () => {
+  it('opens a brief, not empty post boxes', async () => {
     const user = userEvent.setup();
     render(<CampaignsPage />);
     await waitFor(() =>
@@ -46,27 +43,11 @@ describe('CampaignsPage', () => {
     await user.click(
       screen.getAllByRole('button', { name: /new campaign/i })[0]
     );
-    expect(screen.getByText('Post 1')).toBeInTheDocument();
-    expect(screen.getByText('Post 2')).toBeInTheDocument();
+    expect(screen.getByText(/job of this run/i)).toBeInTheDocument();
+    expect(screen.getByText(/who it is for/i)).toBeInTheDocument();
+    expect(screen.queryByText('Post 1')).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /save campaign/i })
     ).toBeInTheDocument();
-  });
-
-  it('opens a launch week with five posts the user still schedules', async () => {
-    const user = userEvent.setup();
-    render(<CampaignsPage />);
-    await waitFor(() =>
-      expect(
-        screen.getAllByRole('button', { name: /launch week/i }).length
-      ).toBeGreaterThan(0)
-    );
-    await user.click(
-      screen.getAllByRole('button', { name: /launch week/i })[0]
-    );
-    expect(screen.getByDisplayValue('Launch week')).toBeInTheDocument();
-    expect(screen.getByText('Post 5')).toBeInTheDocument();
-    expect(screen.queryByText('Post 6')).not.toBeInTheDocument();
-    expect(screen.getByText(/nothing goes out from Save/i)).toBeInTheDocument();
   });
 });
