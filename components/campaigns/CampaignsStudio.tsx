@@ -32,6 +32,11 @@ import {
   matchesCampaignQuery,
 } from '@/lib/dashboard/campaign-health';
 import { CAMPAIGN_TEMPLATES } from '@/lib/dashboard/campaign-templates';
+import {
+  daysInWindow,
+  defaultDateWindow,
+  extractGeneratedLines,
+} from '@/lib/dashboard/campaign-generate';
 import { toast } from 'sonner';
 import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 import {
@@ -109,6 +114,7 @@ export function CampaignsStudio() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(false);
+  const [scenarioId, setScenarioId] = useState(CAMPAIGN_TEMPLATES[0].id);
   const [launchWeek, setLaunchWeek] = useState(false);
   const [brief, setBrief] = useState<CampaignBrief>(EMPTY_CAMPAIGN_BRIEF);
   const [showPosts, setShowPosts] = useState(false);
@@ -160,21 +166,59 @@ export function CampaignsStudio() {
     void loadCampaigns();
   }, [loadCampaigns]);
 
-  const emptyComposer = !campaignBriefReady(brief);
-
-  function openComposer(templateId: string) {
+  function applyScenario(templateId: string) {
     const template =
       CAMPAIGN_TEMPLATES.find(t => t.id === templateId) ??
       CAMPAIGN_TEMPLATES[0];
+    const window = defaultDateWindow(template.days);
+    setScenarioId(template.id);
     setLaunchWeek(Boolean(template.launchWeek));
-    setBrief({
-      ...EMPTY_CAMPAIGN_BRIEF,
-      name: template.name,
-      job: template.job,
-    });
+    setBrief({ ...template.brief });
+    setStartsAt(window.startsAt);
+    setEndsAt(window.endsAt);
     setShowPosts(false);
     setDrafts([]);
+    setSaveError(null);
+  }
+
+  function openComposer(templateId: string) {
+    applyScenario(templateId);
     setComposerOpen(true);
+  }
+
+  async function generateCaptions(count: number): Promise<string[]> {
+    const topic = campaignBriefTopic(brief);
+    const apiPlatform = platform === 'threads' ? 'twitter' : platform;
+    const lines: string[] = [];
+    const attempts = Math.min(3, Math.max(1, count));
+    for (let i = 0; i < attempts && lines.length < count; i += 1) {
+      const res = await fetchWithCSRF('/api/ai/generate-content', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'post',
+          platform: apiPlatform === 'youtube' ? 'instagram' : apiPlatform,
+          topic: `${topic}\nThis is caption ${i + 1} of ${count} for the dated run. Do not repeat an earlier caption.`,
+          tone: 'casual',
+          length: 'medium',
+          includeEmojis: false,
+          includeHashtags: true,
+          includeCTA: true,
+        }),
+      });
+      if (!res.ok) {
+        break;
+      }
+      const data = await res.json();
+      for (const line of extractGeneratedLines(data)) {
+        if (!lines.includes(line)) lines.push(line);
+      }
+    }
+    const scenario = CAMPAIGN_TEMPLATES.find(t => t.id === scenarioId);
+    const fallback = scenario?.captions ?? [];
+    return fillDraftsFromGeneration(count, lines[0] ?? fallback[0] ?? '', [
+      ...lines.slice(1),
+      ...fallback,
+    ]).filter(Boolean);
   }
 
   function patchBrief<K extends keyof CampaignBrief>(
@@ -184,92 +228,19 @@ export function CampaignsStudio() {
     setBrief(prev => ({ ...prev, [key]: value }));
   }
 
-  async function fillCards() {
-    if (emptyComposer) {
-      toast.error(
-        'Fill the brief first — job, who it is for, the offer, and the ask.'
-      );
-      return;
-    }
-    const slotCount = drafts.length > 0 ? drafts.length : launchWeek ? 5 : 4;
-    if (drafts.length === 0) {
-      const rotation = channels.length ? channels : [platform];
-      setDrafts(
-        Array.from({ length: slotCount }, (_, i) => ({
-          text: '',
-          platform: rotation[i % rotation.length] ?? platform,
-        }))
-      );
-    }
-    setShowPosts(true);
-    setFilling(true);
-    try {
-      const topic = campaignBriefTopic(brief);
-      const res = await fetch('/api/ai/generate-content', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          type: 'post',
-          platform: platform === 'threads' ? 'twitter' : platform,
-          topic,
-          tone: 'casual',
-          length: 'medium',
-          includeEmojis: false,
-          includeHashtags: true,
-          includeCTA: true,
-        }),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as {
-          error?: string;
-          message?: string;
-        };
-        toast.error(humanizeAiError(body.error || body.message, res.status));
-        return;
-      }
-      const data = (await res.json()) as {
-        content?: string;
-        variations?: string[];
-        data?: { content?: string; variations?: string[] };
-      };
-      const primary =
-        data.content || data.data?.content || data.variations?.[0] || '';
-      const second =
-        data.variations?.[1] || data.data?.variations?.[1] || primary;
-      if (!primary.trim()) {
-        toast.error('We could not fill the cards. Try writing them yourself.');
-        return;
-      }
-      const extras = [
-        second,
-        ...(data.variations ?? data.data?.variations ?? []),
-      ];
-      const lines = fillDraftsFromGeneration(slotCount, primary, extras);
-      const rotation = channels.length ? channels : [platform];
-      setDrafts(prev => {
-        const base =
-          prev.length === slotCount
-            ? prev
-            : Array.from({ length: slotCount }, (_, i) => ({
-                text: '',
-                platform: rotation[i % rotation.length] ?? platform,
-              }));
-        return base.map((card, i) => ({ ...card, text: lines[i] ?? '' }));
-      });
-      const filled = lines.filter(Boolean).length;
-      if (filled < slotCount) {
-        toast.message(
-          `Filled ${filled} of ${drafts.length} cards. Write the rest — Save will not send them.`
-        );
-      }
-    } catch (err) {
-      toast.error(
-        humanizeAiError(err instanceof Error ? err.message : undefined)
-      );
-    } finally {
-      setFilling(false);
-    }
+  function slotCountForDates(): number {
+    const fromDates = daysInWindow(startsAt, endsAt);
+    if (fromDates > 0) return fromDates;
+    const scenario = CAMPAIGN_TEMPLATES.find(t => t.id === scenarioId);
+    return scenario?.days ?? 4;
+  }
+
+  function cardsFromLines(lines: string[]): DraftCard[] {
+    const rotation = channels.length ? channels : [platform];
+    return lines.map((text, i) => ({
+      text,
+      platform: rotation[i % rotation.length] ?? platform,
+    }));
   }
 
   async function createCampaign() {
@@ -288,8 +259,16 @@ export function CampaignsStudio() {
     }
     setSaveError(null);
     setSaving(true);
+    setFilling(true);
     try {
-      const cards: CampaignCard[] = drafts
+      let readyDrafts = drafts.filter(d => d.text.trim());
+      if (readyDrafts.length === 0) {
+        const lines = await generateCaptions(slotCountForDates());
+        readyDrafts = cardsFromLines(lines);
+        setDrafts(readyDrafts);
+        setShowPosts(true);
+      }
+      const cards: CampaignCard[] = readyDrafts
         .map((card, i) => ({
           key: String(i + 1),
           text: card.text.trim(),
@@ -350,9 +329,7 @@ export function CampaignsStudio() {
         setOpenId(body.campaign.id);
       }
       toast.success(
-        cards.length === 0
-          ? 'Campaign saved. Draft posts from the brief when you want — nothing was sent.'
-          : 'Campaign saved. Schedule each post when you are happy.'
+        'Campaign created. Captions are drafts for those dates — nothing was posted.'
       );
       setComposerOpen(false);
       setLaunchWeek(false);
@@ -368,6 +345,7 @@ export function CampaignsStudio() {
       toast.error(message);
     } finally {
       setSaving(false);
+      setFilling(false);
     }
   }
 
@@ -560,9 +538,34 @@ export function CampaignsStudio() {
               </h2>
             </div>
             <p className="text-xs text-white/40 max-w-sm text-right">
-              Answer the job first. Posts are drafted from this — Save still
-              sends nothing.
+              Pick a scenario. Create campaign writes drafts for those dates.
+              Nothing goes public.
             </p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs text-white/50">Scenario</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {CAMPAIGN_TEMPLATES.map(template => {
+                const on = scenarioId === template.id;
+                return (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => applyScenario(template.id)}
+                    className={`text-left rounded-md border px-3 py-2.5 ${
+                      on
+                        ? 'border-orange-400/40 bg-orange-500/15'
+                        : 'border-white/10 bg-white/3 hover:bg-white/6'
+                    }`}
+                  >
+                    <p className="text-sm text-white">{template.label}</p>
+                    <p className="mt-0.5 text-xs text-white/45">
+                      {template.blurb}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
           {!hasBrand && (
             <p className="text-xs text-white/45">
@@ -749,16 +752,6 @@ export function CampaignsStudio() {
             </>
           )}
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => void fillCards()}
-              disabled={filling || emptyComposer}
-              className="h-10 px-3 text-sm rounded-md border border-white/10 text-white/70 hover:bg-white/5 disabled:opacity-40"
-            >
-              {filling
-                ? 'Drafting from the brief…'
-                : 'Draft posts from this brief'}
-            </button>
             {saveError && (
               <p role="alert" className="w-full text-sm text-rose-200">
                 {saveError}
@@ -767,10 +760,12 @@ export function CampaignsStudio() {
             <button
               type="button"
               onClick={() => void createCampaign()}
-              disabled={saving}
+              disabled={saving || filling}
               className="h-10 px-4 text-sm rounded-md bg-orange-500 hover:bg-orange-400 text-slate-950 disabled:opacity-50"
             >
-              {saving ? 'Saving…' : 'Save campaign'}
+              {saving || filling
+                ? 'Creating campaign and drafting captions…'
+                : 'Create campaign'}
             </button>
           </div>
         </div>
