@@ -103,7 +103,7 @@ BANNED PHRASES (never use these): ${ANTI_SLOP_BANNED}
 
 BANNED STRUCTURAL PATTERNS:
 - Do not open paragraphs with transition words (moreover, furthermore, additionally, that said, importantly). Vary your openings.
-- Do not use bold-word-colon bullet lists (**Clarity:** Ensure...). Vary bullet formatting.
+- Do not use Markdown. No **bold**, no __underline__, no # headings, no bold-word-colon lists.
 - Do not use em-dashes (\u2014). Use full stops, commas, or restructure instead.
 - Do not wrap up with generic conclusions that could apply to any company. End with a specific next step or concrete takeaway.
 - Do not use "not X, but Y" forced negation framing. State what it IS directly.
