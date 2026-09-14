@@ -19,6 +19,7 @@ interface DroppableTimeSlotProps {
   date: Date;
   posts: ScheduledPost[];
   isOptimal?: boolean;
+  isRecommended?: boolean;
   platform?: string;
   onPostClick?: (post: ScheduledPost) => void;
   onCreateClick?: () => void;
@@ -32,6 +33,7 @@ export function DroppableTimeSlot({
   date,
   posts,
   isOptimal = false,
+  isRecommended = false,
   platform,
   onPostClick,
   onCreateClick,
@@ -66,12 +68,13 @@ export function DroppableTimeSlot({
     <div
       ref={setNodeRef}
       className={`
-        group relative min-h-[80px] p-2 border-b border-white/5
-        transition-all duration-200
-        ${isOver ? 'bg-orange-500/20 ring-2 ring-orange-500 ring-inset' : ''}
-        ${isOptimalForDrag && active ? 'bg-green-500/10' : ''}
-        ${isCurrentHour() ? 'bg-orange-500/5' : ''}
-        ${compact ? 'min-h-[60px] p-1' : ''}
+        group relative min-h-[80px] p-2 border-b border-white/[0.06]
+        transition-colors duration-150
+        ${isOver ? 'bg-orange-500/20 ring-1 ring-orange-500 ring-inset' : ''}
+        ${isOptimalForDrag && active ? 'bg-emerald-500/10' : ''}
+        ${isRecommended && !isOver ? 'bg-orange-500/10' : ''}
+        ${isCurrentHour() ? 'bg-white/[0.04]' : ''}
+        ${compact ? 'min-h-[52px] p-1' : ''}
       `}
     >
       {/* Hour Label */}

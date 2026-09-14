@@ -32,6 +32,7 @@ interface WeekViewProps extends CalendarViewProps {
   onWeekChange?: (direction: 'prev' | 'next') => void;
   startHour?: number;
   endHour?: number;
+  recommendedKeys?: string[];
 }
 
 export function WeekView({
@@ -42,8 +43,9 @@ export function WeekView({
   onPostCreate,
   optimalTimes = OPTIMAL_TIMES,
   onWeekChange,
-  startHour = 6,
-  endHour = 22,
+  startHour = 7,
+  endHour = 20,
+  recommendedKeys = [],
 }: WeekViewProps) {
   const [activePost, setActivePost] = React.useState<ScheduledPost | null>(
     null
@@ -143,23 +145,27 @@ export function WeekView({
     }
   };
 
+  const recommended = useMemo(
+    () => new Set(recommendedKeys),
+    [recommendedKeys]
+  );
+
   const formatDayHeader = (date: Date) => {
     const isToday = date.toDateString() === new Date().toDateString();
     return (
-      <div className={`text-center py-3 ${isToday ? 'bg-orange-500/10' : ''}`}>
-        <div className="text-xs text-gray-500 uppercase">
-          {date.toLocaleDateString('en-US', { weekday: 'short' })}
+      <div
+        className={`text-center py-2.5 ${isToday ? 'bg-orange-500/10' : ''}`}
+      >
+        <div className="text-xs uppercase tracking-[0.16em] text-white/40">
+          {date.toLocaleDateString('en-AU', { weekday: 'short' })}
         </div>
         <div
-          className={`text-lg font-semibold ${
+          className={`mt-0.5 text-lg font-light tracking-tight ${
             isToday ? 'text-orange-400' : 'text-white'
           }`}
         >
           {date.getDate()}
         </div>
-        {isToday && (
-          <div className="text-[10px] text-orange-400 font-medium">Today</div>
-        )}
       </div>
     );
   };
@@ -183,29 +189,31 @@ export function WeekView({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-gray-900/50 rounded-xl border border-white/10 overflow-hidden">
-        {/* Header with navigation */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-gray-900/80">
+      <div className="flex flex-col h-full rounded-lg border border-white/10 bg-slate-950/80 overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2.5 border-b border-white/10">
           <button
+            type="button"
             onClick={() => onWeekChange?.('prev')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
+            className="p-2 hover:bg-white/8 rounded-md text-white/55 hover:text-white"
+            aria-label="Previous week"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-sm font-light tracking-tight text-white">
             {weekRangeDisplay}
           </h2>
           <button
+            type="button"
             onClick={() => onWeekChange?.('next')}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-300 hover:text-white"
+            className="p-2 hover:bg-white/8 rounded-md text-white/55 hover:text-white"
+            aria-label="Next week"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Calendar Grid */}
         <div className="flex-1 overflow-auto">
-          <div className="grid grid-cols-8 sticky top-0 z-10 bg-gray-900 border-b border-white/10">
+          <div className="grid grid-cols-8 sticky top-0 z-10 bg-slate-950 border-b border-white/10">
             {/* Time column header */}
             <div className="w-16 border-r border-white/10" />
 
@@ -228,8 +236,9 @@ export function WeekView({
                 className="grid grid-cols-8 border-b border-white/5 last:border-b-0"
               >
                 {/* Hour label */}
-                <div className="w-16 flex items-start justify-end pr-2 pt-2 text-xs text-gray-500 border-r border-white/10">
-                  {hour % 12 || 12}:00 {hour >= 12 ? 'PM' : 'AM'}
+                <div className="w-16 flex items-start justify-end pr-2 pt-1.5 text-xs tabular-nums text-white/35 border-r border-white/10">
+                  {hour % 12 || 12}
+                  {hour >= 12 ? 'pm' : 'am'}
                 </div>
 
                 {/* Day slots */}
@@ -246,6 +255,7 @@ export function WeekView({
                       date={date}
                       posts={slotPosts}
                       isOptimal={isOptimalSlot(hour)}
+                      isRecommended={recommended.has(slotKey)}
                       onPostClick={onPostClick}
                       onCreateClick={() => onPostCreate?.(date, hour)}
                       showHourLabel={false}

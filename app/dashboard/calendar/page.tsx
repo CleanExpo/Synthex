@@ -7,7 +7,7 @@
  * and post detail modal. Uses useCalendar hook for data management.
  */
 
-import { useState, useCallback, useEffect, Suspense } from 'react';
+import { useState, useCallback, useEffect, useMemo, Suspense } from 'react';
 import dynamic from 'next/dynamic';
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -52,6 +52,9 @@ import { PageHeader } from '@/components/dashboard/page-header';
 import { DashboardEmptyState } from '@/components/dashboard/empty-state';
 import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 import { pickNeedsYouItems } from '@/lib/dashboard/needs-you';
+import { pickBestBusinessSlots } from '@/lib/dashboard/best-business-schedule';
+import { useOptimalTimes } from '@/hooks/use-optimal-times';
+import { BestScheduleDialog } from '@/components/calendar/BestScheduleDialog';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -74,11 +77,10 @@ import {
   Plus,
   Users,
   AlertTriangle,
-  Clock,
-  CheckCircle,
   Loader2,
   ListTodo,
   CalendarDays,
+  Sparkles,
 } from '@/components/icons';
 import type { ScheduledPost } from '@/components/calendar/CalendarTypes';
 import { customerPostStatus } from '@/lib/dashboard/post-status';
@@ -129,6 +131,7 @@ function CalendarPageContent() {
     platforms: [] as string[],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bestWeekOpen, setBestWeekOpen] = useState(false);
 
   // Live-mode readiness data (shared for nudge + card)
   const [activationModalOpen, setActivationModalOpen] = useState(false);
@@ -159,6 +162,32 @@ function CalendarPageContent() {
     organizationId,
     userId: selectedUserId === 'all' ? undefined : selectedUserId,
   });
+
+  const { slots: optimalSlots, isLoading: optimalLoading } = useOptimalTimes({
+    platforms: ['instagram', 'facebook', 'linkedin', 'twitter'],
+    enabled: Boolean(organizationId),
+  });
+
+  const recommendedKeys = useMemo(() => {
+    return pickBestBusinessSlots({
+      slots: optimalSlots,
+      weekStart: currentStartDate,
+      existing: posts.map(p => new Date(p.scheduledFor)),
+      count: 5,
+    }).map(slot => `${slot.at.toDateString()}-${slot.at.getHours()}`);
+  }, [optimalSlots, currentStartDate, posts]);
+
+  const upcoming = useMemo(
+    () =>
+      [...posts]
+        .sort(
+          (a, b) =>
+            new Date(a.scheduledFor).getTime() -
+            new Date(b.scheduledFor).getTime()
+        )
+        .slice(0, 8),
+    [posts]
+  );
 
   const needsYou = pickNeedsYouItems(
     posts.map(p => ({
@@ -332,55 +361,71 @@ function CalendarPageContent() {
     <div className="flex-1 flex flex-col gap-6 p-6">
       {/* Header */}
       <PageHeader
+        eyebrow="Scheduler"
         title="Calendar"
-        description="Practice: posts stay in Synthex. Live: they go out at the time you picked. You can switch back."
+        description="See the week. Drag to move. Book the hours that fit this business — nothing goes out until you say so."
         actions={
-          <div className="flex items-center gap-3">
-            {/* View Switcher */}
-            <div className="flex rounded-lg bg-gray-900/50 border border-white/10 p-0.5">
-              <button
-                onClick={() => setViewMode('week')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'week'
-                    ? 'bg-orange-500/20 text-orange-400'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <CalendarDays className="h-4 w-4" />
-                Week
-              </button>
-              <button
-                onClick={() => setViewMode('month')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'month'
-                    ? 'bg-orange-500/20 text-orange-400'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Calendar className="h-4 w-4" />
-                Month
-              </button>
-              <button
-                onClick={() => setViewMode('queue')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'queue'
-                    ? 'bg-orange-500/20 text-orange-400'
-                    : 'text-gray-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <ListTodo className="h-4 w-4" />
-                Queue
-              </button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setBestWeekOpen(true)}
+              className="border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.07]"
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-orange-400" />
+              Best week
+            </Button>
+            <Button
+              onClick={() => {
+                setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
+                setIsScheduleModalOpen(true);
+              }}
+              className="bg-orange-500 hover:bg-orange-400 text-black font-medium"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Schedule
+            </Button>
+          </div>
+        }
+      />
 
-            {/* Team Filter */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex rounded-md border border-white/10 bg-white/[0.03] p-0.5">
+          {(
+            [
+              ['week', CalendarDays, 'Week'],
+              ['month', Calendar, 'Month'],
+              ['queue', ListTodo, 'Queue'],
+            ] as const
+          ).map(([mode, Icon, label]) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => setViewMode(mode)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[5px] text-xs tracking-wide transition-colors ${
+                viewMode === mode
+                  ? 'bg-orange-500/15 text-orange-400'
+                  : 'text-white/50 hover:text-white'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-xs text-white/40 tabular-nums">
+            {stats.scheduledPosts} scheduled · {stats.publishedPosts} posted
+            {stats.conflictCount > 0 ? ` · ${stats.conflictCount} clash` : ''}
+          </p>
+          {teamMembers.length > 0 && (
             <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-              <SelectTrigger className="w-48 bg-gray-900/50 border-white/10">
-                <Users className="h-4 w-4 mr-2 text-gray-300" />
-                <SelectValue placeholder="All Members" />
+              <SelectTrigger className="w-40 h-8 bg-transparent border-white/10 text-xs">
+                <Users className="h-3.5 w-3.5 mr-1.5 text-white/40" />
+                <SelectValue placeholder="Everyone" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Members</SelectItem>
+                <SelectItem value="all">Everyone</SelectItem>
                 {teamMembers.map(member => (
                   <SelectItem key={member.id} value={member.id}>
                     {member.name || member.email}
@@ -388,30 +433,17 @@ function CalendarPageContent() {
                 ))}
               </SelectContent>
             </Select>
-
-            {/* Today Button */}
-            <Button
-              variant="outline"
-              onClick={goToToday}
-              className="bg-gray-900/50 border-white/10"
-            >
-              Today
-            </Button>
-
-            {/* Schedule Post CTA */}
-            <Button
-              onClick={() => {
-                setScheduleDate(new Date(Date.now() + 60 * 60 * 1000));
-                setIsScheduleModalOpen(true);
-              }}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Schedule Post
-            </Button>
-          </div>
-        }
-      />
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToToday}
+            className="h-8 border-white/10 bg-transparent text-white/70"
+          >
+            Today
+          </Button>
+        </div>
+      </div>
 
       {needsYou.length > 0 && (
         <div className="rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3">
@@ -467,79 +499,6 @@ function CalendarPageContent() {
         />
       )}
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Calendar className="h-5 w-5 text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {stats.totalPosts}
-              </p>
-              <p className="text-sm text-gray-300">Total Posts</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-500/10 rounded-lg">
-              <Clock className="h-5 w-5 text-orange-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {stats.scheduledPosts}
-              </p>
-              <p className="text-sm text-gray-300">Scheduled</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {stats.publishedPosts}
-              </p>
-              <p className="text-sm text-gray-300">Posted</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-yellow-500/10 rounded-lg">
-              <ListTodo className="h-5 w-5 text-yellow-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {stats.pendingApprovals || 0}
-              </p>
-              <p className="text-sm text-gray-300">Pending Approvals</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-900/50 border border-white/10 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-orange-500/10 rounded-lg">
-              <AlertTriangle className="h-5 w-5 text-orange-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-white">
-                {stats.conflictCount}
-              </p>
-              <p className="text-sm text-gray-300">Conflicts</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <button
         type="button"
         onClick={() => setShowAgencyTools(v => !v)}
@@ -588,52 +547,111 @@ function CalendarPageContent() {
           }}
         />
       )}
-      <div className="flex-1 min-h-[600px]">
-        {viewMode === 'week' ? (
-          <WeekView
-            posts={posts}
-            currentDate={currentStartDate}
-            onPostClick={handlePostClick}
-            onPostReschedule={handlePostReschedule}
-            onPostCreate={handlePostCreate}
-            onWeekChange={handleWeekChange}
-          />
-        ) : viewMode === 'month' ? (
-          <MonthView
-            posts={posts}
-            currentDate={currentStartDate}
-            onPostClick={handlePostClick}
-            onPostReschedule={handlePostReschedule}
-            onPostCreate={handlePostCreate}
-            onMonthChange={handleMonthChange}
-          />
-        ) : (
-          <ul className="space-y-2">
-            {posts.map(p => (
-              <li key={p.id}>
-                <button
-                  type="button"
-                  onClick={() => handlePostClick(p)}
-                  className="w-full text-left rounded-xl border border-white/10 bg-gray-900/40 px-4 py-3 hover:bg-white/5"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-white/80 truncate">
-                      {p.title || p.content.slice(0, 90)}
-                    </span>
-                    <span className="shrink-0 text-xs text-orange-300">
-                      {customerPostStatus(p.status)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-white/40">
-                    {p.platforms.join(', ')} ·{' '}
-                    {new Date(p.scheduledFor).toLocaleString('en-AU')}
-                  </p>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_280px] gap-4 items-start">
+        <div className="min-h-[560px]">
+          {viewMode === 'week' ? (
+            <WeekView
+              posts={posts}
+              currentDate={currentStartDate}
+              onPostClick={handlePostClick}
+              onPostReschedule={handlePostReschedule}
+              onPostCreate={handlePostCreate}
+              onWeekChange={handleWeekChange}
+              recommendedKeys={recommendedKeys}
+            />
+          ) : viewMode === 'month' ? (
+            <MonthView
+              posts={posts}
+              currentDate={currentStartDate}
+              onPostClick={handlePostClick}
+              onPostReschedule={handlePostReschedule}
+              onPostCreate={handlePostCreate}
+              onMonthChange={handleMonthChange}
+            />
+          ) : (
+            <ul className="space-y-2">
+              {posts.map(p => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => handlePostClick(p)}
+                    className="w-full text-left rounded-md border border-white/10 bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-sm text-white/80 truncate">
+                        {p.title || p.content.slice(0, 90)}
+                      </span>
+                      <span className="shrink-0 text-xs text-orange-400">
+                        {customerPostStatus(p.status)}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-white/40">
+                      {p.platforms.join(', ')} ·{' '}
+                      {new Date(p.scheduledFor).toLocaleString('en-AU')}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <aside className="rounded-lg border border-white/10 bg-white/[0.03] p-4">
+          <p className="text-xs uppercase tracking-[0.18em] text-white/35">
+            Upcoming
+          </p>
+          {upcoming.length === 0 ? (
+            <p className="mt-3 text-sm text-white/45 leading-relaxed">
+              Nothing booked in this range. Use Best week to pick quiet hours,
+              then write the post.
+            </p>
+          ) : (
+            <ul className="mt-3 space-y-2">
+              {upcoming.map(p => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onClick={() => handlePostClick(p)}
+                    className="w-full text-left rounded-md px-2 py-2 hover:bg-white/[0.05]"
+                  >
+                    <p className="text-xs text-orange-400 tabular-nums">
+                      {new Date(p.scheduledFor).toLocaleString('en-AU', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                    <p className="mt-0.5 text-sm text-white/80 line-clamp-2">
+                      {p.title || p.content}
+                    </p>
+                    <p className="mt-1 text-xs text-white/35 capitalize">
+                      {p.platforms.join(' · ')} · {customerPostStatus(p.status)}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
       </div>
+
+      <BestScheduleDialog
+        open={bestWeekOpen}
+        onOpenChange={setBestWeekOpen}
+        slots={optimalSlots}
+        weekStart={currentStartDate}
+        existing={posts.map(p => new Date(p.scheduledFor))}
+        isLoading={optimalLoading}
+        onBookSlot={(at, platform) => {
+          setScheduleDate(at);
+          setScheduleForm(prev => ({
+            ...prev,
+            platforms: prev.platforms.length ? prev.platforms : [platform],
+          }));
+          setIsScheduleModalOpen(true);
+        }}
+      />
 
       {/* Post Detail Modal */}
       {selectedPost && (
