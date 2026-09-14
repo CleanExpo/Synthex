@@ -7,6 +7,8 @@
 import { getAIProvider } from '@/lib/ai/providers';
 import type { AIProvider } from '@/lib/ai/providers';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
+import { sanitizeSocialPost } from '@/lib/ai/sanitize-social-post';
 import { buildLayeredPrompt } from '@/lib/ai/prompt-layer-builder';
 import {
   requireGenerationContext,
@@ -393,9 +395,12 @@ export class AIContentGenerator {
         outputTokens: Math.round(estimatedTokens * 0.6),
       }).catch(() => {});
 
+      const posted =
+        request.type === 'post' ? sanitizeSocialPost(mainContent) : mainContent;
+
       return {
         id: `content-${Date.now()}`,
-        content: mainContent,
+        content: posted,
         platform: request.platform,
         variations,
         hashtags,
@@ -545,6 +550,8 @@ Requirements:
 - ${request.includeEmojis ? 'Include relevant emojis' : 'Minimal or no emojis'}
 - ${request.includeHashtags ? 'Include 5-10 relevant hashtags' : 'No hashtags'}
 - ${request.includeCTA ? 'Include a clear call-to-action' : 'No explicit CTA'}
+- Write a real social caption, not an article or heading outline
+- No Markdown, no **bold titles**, no # headings
 - Optimize for viral potential
 - Make it highly engaging
 ${request.keywords?.length ? `- Include keywords: ${request.keywords.join(', ')}` : ''}
@@ -685,7 +692,11 @@ Generate content that will maximize engagement and shares.
         ? `You are a content expert for ${orgContext.businessName}${orgContext.industry ? `, a ${orgContext.industry} business` : ''}${orgContext.location ? ` in ${orgContext.location}` : ''}. ${orgContext.brandVoice ?? 'Generate unique, creative content optimized for maximum engagement.'}`
         : 'You are a viral content expert specializing in creating highly engaging social media content. Generate unique, creative content optimized for maximum engagement.';
     }
-    const systemPrompt = withAntiSlop(rawSystemPrompt);
+    const systemPrompt = withAntiSlop(
+      taskType === 'post'
+        ? withSocialPostVoice(rawSystemPrompt)
+        : rawSystemPrompt
+    );
 
     try {
       const response = await client.complete({
@@ -767,7 +778,8 @@ Keep the same message but change the style and tone.
         );
         variations.push({
           id: `var-${crypto.randomUUID()}`,
-          content: variation,
+          content:
+            request.type === 'post' ? sanitizeSocialPost(variation) : variation,
           style,
           score: 0, // Score should be calculated from actual engagement data, not randomized
         });
