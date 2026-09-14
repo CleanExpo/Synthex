@@ -77,5 +77,50 @@ describe('CampaignsPage', () => {
       screen.getAllByText('Post copy for the spring launch').length
     ).toBeGreaterThan(0);
     expect(screen.getByText(/LinkedIn · Scheduled/)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^schedule$/i })).toHaveLength(
+      1
+    );
+  });
+
+  it('asks before deleting one or more selected campaigns', async () => {
+    global.fetch = jest.fn(() =>
+      Promise.resolve(
+        jsonResponse({
+          campaigns: [
+            {
+              id: 'c1',
+              name: 'Spring launch',
+              platform: 'linkedin',
+              content: 'Hello',
+              status: 'draft',
+            },
+            {
+              id: 'c2',
+              name: 'Winter offer',
+              platform: 'instagram',
+              content: 'Hi',
+              status: 'draft',
+            },
+          ],
+        })
+      )
+    ) as unknown as typeof fetch;
+
+    render(<CampaignsPage />);
+    expect(
+      await screen.findByLabelText('Select Spring launch')
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText('Select Spring launch'));
+    fireEvent.click(screen.getByLabelText('Select Winter offer'));
+    fireEvent.click(
+      screen.getByRole('button', { name: /delete 2 selected campaigns/i })
+    );
+    expect(
+      screen.getByRole('heading', { name: /delete 2 campaigns/i })
+    ).toBeInTheDocument();
+    expect(screen.getAllByText(/spring launch/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole('button', { name: /keep them/i })
+    ).toBeInTheDocument();
   });
 });
