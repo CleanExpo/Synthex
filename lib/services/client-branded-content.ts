@@ -13,6 +13,9 @@ import { VaultService } from '@/lib/vault/vault-service';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getAIProvider } from '@/lib/ai/providers';
+import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
+import { sanitizeSocialPost } from '@/lib/ai/sanitize-social-post';
 import type { VaultActor } from '@/lib/vault/types';
 // =============================================================================
 // Types
@@ -261,8 +264,9 @@ function buildBrandSystemPrompt(brand: ClientBrand, platform: string): string {
   prompt += `\nPLATFORM: ${platform}\n`;
   prompt += `CRITICAL: Write as ${brand.businessName}. Never use generic marketing language. `;
   prompt += `Every word should sound like it came from this specific brand, not a template.\n`;
+  prompt += `Write a social caption people would actually post. No Markdown, no **headings**, no article sections.\n`;
 
-  return prompt;
+  return withSocialPostVoice(withAntiSlop(prompt));
 }
 // =============================================================================
 // AI Call
@@ -466,8 +470,8 @@ export const ClientBrandedContentService = {
       }
     }
     return {
-      content: primary.content,
-      variations,
+      content: sanitizeSocialPost(primary.content),
+      variations: variations.map(sanitizeSocialPost),
       brandApplied: !!brand,
       credentialSource: source,
       model: usedModel,
