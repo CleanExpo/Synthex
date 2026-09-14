@@ -76,12 +76,12 @@ export const FIRST_WEEK_GUIDANCE: Record<FirstWeekSurface, FirstWeekGuidance> =
     campaigns: {
       what: 'A campaign is a named set of posts with dates.',
       why: 'You still edit and schedule each card — nothing goes out from this page on its own.',
-      next: 'Name a run, write two cards, then schedule each one.',
+      next: 'Write the job, who it is for, and the offer. Draft posts from that.',
       nextHref: '/dashboard/campaigns',
       nextLabel: 'New campaign',
       goodLooksLike: 'Two times on Calendar.',
       empty:
-        'Name a run of posts, write two cards, then schedule each one. Good looks like two times on Calendar.',
+        'Name a run first if you want. Add posts when you have them, then schedule each one. Good looks like two times on Calendar.',
     },
     analytics: {
       what: 'Numbers after posts have gone out.',
