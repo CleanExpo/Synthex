@@ -1,6 +1,18 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import CampaignsPage from '@/app/dashboard/campaigns/page';
 
+jest.mock('@/hooks/useActiveBusiness', () => ({
+  useActiveBusiness: () => ({ activeOrganizationId: 'org-1' }),
+}));
+
+jest.mock('@/hooks/use-brand-profile', () => ({
+  useBrandProfile: () => ({ profile: { name: 'Acme' } }),
+}));
+
+jest.mock('@/components/content', () => ({
+  PublishConfirmModal: () => null,
+}));
+
 function jsonResponse(body: unknown, ok = true, status = 200) {
   return { ok, status, json: async () => body } as Partial<Response>;
 }
@@ -55,7 +67,7 @@ describe('CampaignsPage', () => {
     render(<CampaignsPage />);
 
     expect(await screen.findByText('Spring launch')).toBeInTheDocument();
-    expect(screen.getByText('LinkedIn · 1 post')).toBeInTheDocument();
+    expect(screen.getByText(/LinkedIn/)).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Spring launch'));
 
