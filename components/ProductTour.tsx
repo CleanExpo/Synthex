@@ -116,39 +116,10 @@ export function ProductTour() {
   const activeSteps = tourSteps.filter(s => !s.showIf || s.showIf());
   const step = activeSteps[currentStep];
 
-  // Validate that each step's target element exists in the DOM before starting.
-  // Steps targeting 'body' are always valid. Steps whose target is absent are
-  // silently dropped so the tour never highlights a missing element.
-  const startTourIfValid = useCallback(() => {
-    const validSteps = activeSteps.filter(s => {
-      if (!s.target || s.target === 'body') return true;
-      return document.querySelector(s.target) !== null;
-    });
-    if (validSteps.length > 0) {
-      setIsActive(true);
-    }
-  }, [activeSteps]);
-
-  // Check if should show tour
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const hasSeenTour = localStorage.getItem('hasSeenTour');
-    const showTourOnDashboard = localStorage.getItem('showTourOnDashboard');
-    const onboardingComplete = localStorage.getItem('onboardingComplete');
-
-    // Show tour if:
-    // 1. User just completed onboarding and wants tour (showTourOnDashboard flag)
-    // 2. User hasn't seen tour and has completed onboarding
-    if (showTourOnDashboard === 'true') {
-      // Clear the flag and start tour immediately
-      localStorage.removeItem('showTourOnDashboard');
-      setTimeout(() => startTourIfValid(), 500);
-    } else if (!hasSeenTour && onboardingComplete) {
-      // Returning user who hasn't seen tour
-      setTimeout(() => startTourIfValid(), 1000);
-    }
-  }, [startTourIfValid]);
+    localStorage.removeItem('showTourOnDashboard');
+  }, []);
 
   // Update highlight position
   useEffect(() => {
@@ -169,7 +140,10 @@ export function ProductTour() {
 
       // Scroll element into view
       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
     }
+
+    setHighlightPosition({ top: 0, left: 0, width: 0, height: 0 });
   }, [isActive, step, currentStep]);
 
   // Handle step navigation
@@ -233,7 +207,10 @@ export function ProductTour() {
 
   // Calculate tooltip position
   const getTooltipPosition = () => {
-    if (step.target === 'body') {
+    const { top, left, width, height } = highlightPosition;
+    const missingTarget = step.target !== 'body' && width <= 0;
+
+    if (step.target === 'body' || missingTarget) {
       return {
         top: '50%',
         left: '50%',
@@ -241,31 +218,34 @@ export function ProductTour() {
       };
     }
 
-    const { top, left, width, height } = highlightPosition;
+    const clampX = (x: number) =>
+      Math.min(Math.max(x, 24), window.innerWidth - 24);
+    const clampY = (y: number) =>
+      Math.min(Math.max(y, 24), window.innerHeight - 24);
 
     switch (step.position) {
       case 'top':
         return {
           bottom: window.innerHeight - top + 16,
-          left: left + width / 2,
+          left: clampX(left + width / 2),
           transform: 'translateX(-50%)',
         };
       case 'bottom':
         return {
-          top: top + height + 16,
-          left: left + width / 2,
+          top: clampY(top + height + 16),
+          left: clampX(left + width / 2),
           transform: 'translateX(-50%)',
         };
       case 'left':
         return {
-          top: top + height / 2,
+          top: clampY(top + height / 2),
           right: window.innerWidth - left + 16,
           transform: 'translateY(-50%)',
         };
       case 'right':
         return {
-          top: top + height / 2,
-          left: left + width + 16,
+          top: clampY(top + height / 2),
+          left: clampX(left + width + 16),
           transform: 'translateY(-50%)',
         };
     }
