@@ -64,6 +64,10 @@ jest.mock('@/lib/logger', () => ({
   logger: mockLogger,
 }));
 
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  getEffectiveOrganizationId: jest.fn().mockResolvedValue('org-1'),
+}));
+
 jest.mock('jsonwebtoken', () => ({
   verify: jest
     .fn()
