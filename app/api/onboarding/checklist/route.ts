@@ -8,7 +8,7 @@
  *   1. url_health_check   — BrandDNA exists (URL was audited during onboarding)
  *   2. social_connection  — at least one active non-GMB PlatformConnection
  *   3. gmb_connection     — at least one googlebusiness PlatformConnection or GBPLocation
- *   4. llm_integration    — active APICredential OR platform env key configured
+ *   4. llm_integration    — the user saved their own API credential (not a platform env key)
  *   5. first_post         — at least one Post across the org's campaigns
  *
  * UNI-1615
@@ -32,14 +32,6 @@ export interface ChecklistStatus {
   first_post: boolean;
 }
 
-// Platform env keys that count as an available LLM integration
-const PLATFORM_LLM_KEYS = [
-  process.env.OPENROUTER_API_KEY,
-  process.env.ANTHROPIC_API_KEY,
-  process.env.GOOGLE_AI_API_KEY,
-  process.env.OPENAI_API_KEY,
-].some(Boolean);
-
 export async function GET(request: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(request);
   if (!userId) return unauthorizedResponse();
@@ -51,7 +43,7 @@ export async function GET(request: NextRequest) {
         url_health_check: false,
         social_connection: false,
         gmb_connection: false,
-        llm_integration: PLATFORM_LLM_KEYS,
+        llm_integration: false,
         first_post: false,
       } satisfies ChecklistStatus,
     });
@@ -108,7 +100,7 @@ export async function GET(request: NextRequest) {
     url_health_check: !!brandDna,
     social_connection: !!socialConnections,
     gmb_connection: !!gmbConnections,
-    llm_integration: !!byokCredentials || PLATFORM_LLM_KEYS,
+    llm_integration: !!byokCredentials,
     first_post: !!posts,
   };
 
