@@ -88,6 +88,14 @@ export function verifyToken(token: string): JWTPayload {
     userId: decoded.userId || decoded.sub || '',
     email: decoded.email,
     name: decoded.name,
+    onboardingComplete:
+      typeof decoded.onboardingComplete === 'boolean'
+        ? decoded.onboardingComplete
+        : undefined,
+    apiKeyConfigured:
+      typeof decoded.apiKeyConfigured === 'boolean'
+        ? decoded.apiKeyConfigured
+        : undefined,
     iat: decoded.iat,
     exp: decoded.exp,
   };
