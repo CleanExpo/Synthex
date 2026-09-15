@@ -375,9 +375,10 @@ export default function DashboardLayout({
     '/dashboard/marketing-agency'
   );
   useTokenRefresh({ enabled: !isStaticReviewRoute });
-  const { user } = useUser({ enabled: !isStaticReviewRoute });
+  const { user, isLoading } = useUser({ enabled: !isStaticReviewRoute });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const needsOnboarding = user?.onboardingComplete === false;
+  // Wait for /api/auth/user — a stale JWT can look incomplete until GET restamps.
+  const needsOnboarding = !isLoading && user?.onboardingComplete === false;
   const isDashboardHome = pathname === '/dashboard';
 
   useEffect(() => {
