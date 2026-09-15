@@ -23,6 +23,7 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import prisma from '@/lib/prisma';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
 // Zod schemas for validation
 const PerformanceQuerySchema = z.object({
@@ -84,7 +85,10 @@ interface PostWithAnalytics {
 
 /** Where clause for post queries */
 interface PostWhereClause {
-  campaign: { userId: string };
+  campaign: {
+    userId: string;
+    OR: Array<{ organizationId: string | null }>;
+  };
   createdAt: { gte: Date; lte: Date };
   platform?: string;
 }
@@ -115,6 +119,11 @@ interface PerformanceMetrics {
     engagement: number;
     engagementRate: number;
     posts: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    clicks: number;
+    reach: number;
     bestTime: string;
     growthPercent: number;
   }>;
@@ -210,9 +219,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const effectiveOrgId = await getEffectiveOrganizationId(userId);
+    const campaignScope = {
+      userId,
+      OR: [{ organizationId: effectiveOrgId }, { organizationId: null }],
+    };
+
     // Fetch posts with analytics
     const whereClause: PostWhereClause = {
-      campaign: { userId },
+      campaign: campaignScope,
       createdAt: {
         gte: startDate,
         lte: endDate,
@@ -251,7 +266,7 @@ export async function GET(request: NextRequest) {
       }),
       prisma.post.findMany({
         where: {
-          campaign: { userId },
+          campaign: campaignScope,
           createdAt: {
             gte: previousStartDate,
             lte: previousEndDate,
@@ -577,6 +592,11 @@ function buildPlatformStats(
     {
       engagement: number;
       impressions: number;
+      likes: number;
+      comments: number;
+      shares: number;
+      clicks: number;
+      reach: number;
       posts: number;
       hourlyEngagement: Map<number, { total: number; count: number }>;
     }
@@ -588,6 +608,11 @@ function buildPlatformStats(
       platformMap.set(platform, {
         engagement: 0,
         impressions: 0,
+        likes: 0,
+        comments: 0,
+        shares: 0,
+        clicks: 0,
+        reach: 0,
         posts: 0,
         hourlyEngagement: new Map(),
       });
@@ -602,6 +627,11 @@ function buildPlatformStats(
 
     stats.engagement += engagement;
     stats.impressions += analytics.impressions || analytics.reach || 0;
+    stats.likes += analytics.likes || 0;
+    stats.comments += analytics.comments || 0;
+    stats.shares += analytics.shares || 0;
+    stats.clicks += analytics.clicks || 0;
+    stats.reach += analytics.reach || 0;
     stats.posts += 1;
 
     // Track hourly engagement for best time calculation
@@ -619,6 +649,11 @@ function buildPlatformStats(
     engagement: number;
     engagementRate: number;
     posts: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    clicks: number;
+    reach: number;
     bestTime: string;
     growthPercent: number;
   }> = [];
@@ -655,6 +690,11 @@ function buildPlatformStats(
           ? Math.round((stats.engagement / stats.impressions) * 10000) / 100
           : 0,
       posts: stats.posts,
+      likes: stats.likes,
+      comments: stats.comments,
+      shares: stats.shares,
+      clicks: stats.clicks,
+      reach: stats.reach,
       bestTime: `${bestHour}:00`,
       growthPercent,
     });
