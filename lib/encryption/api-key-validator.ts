@@ -9,6 +9,10 @@
 
 export type APIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
 
+function sanitizeApiKey(key: string): string {
+  return key.trim().replace(/^bearer\s+/i, '');
+}
+
 interface ValidationResult {
   isValid: boolean;
   provider: APIProvider;
@@ -156,38 +160,74 @@ async function validateGoogleKey(key: string): Promise<ValidationResult> {
  * Tests the key against the models endpoint
  */
 async function validateOpenRouterKey(key: string): Promise<ValidationResult> {
+  if (!key.startsWith('sk-or-')) {
+    return {
+      isValid: false,
+      provider: 'openrouter',
+      error:
+        'That is not an OpenRouter key. Paste a key that starts with sk-or- from openrouter.ai/keys.',
+    };
+  }
+
+  const headers = {
+    Authorization: `Bearer ${key}`,
+    'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3008',
+    'X-Title': 'Synthex',
+  };
+
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: {
-        Authorization: `Bearer ${key}`,
-      },
+    // /key checks the secret. /models is a public catalogue and can 200
+    // without proving the key works — or stall and then 400 the save.
+    const response = await fetch('https://openrouter.ai/api/v1/key', {
+      headers,
+      signal: AbortSignal.timeout(8_000),
     });
 
     if (response.ok) {
-      return {
-        isValid: true,
-        provider: 'openrouter',
-      };
+      return { isValid: true, provider: 'openrouter' };
     }
 
     if (response.status === 401 || response.status === 403) {
       return {
         isValid: false,
         provider: 'openrouter',
-        error: 'Invalid API key',
+        error: 'OpenRouter rejected this key. Check it at openrouter.ai/keys.',
       };
+    }
+
+    if (response.status === 404) {
+      const models = await fetch('https://openrouter.ai/api/v1/models', {
+        headers,
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (models.ok || models.status === 401 || models.status === 403) {
+        return models.ok
+          ? { isValid: true, provider: 'openrouter' }
+          : {
+              isValid: false,
+              provider: 'openrouter',
+              error: 'OpenRouter rejected this key.',
+            };
+      }
     }
 
     return {
       isValid: false,
       provider: 'openrouter',
-      error: `OpenRouter API returned status ${response.status}`,
+      error: `OpenRouter could not confirm this key (${response.status}). Try again.`,
     };
   } catch (error) {
+    const timedOut =
+      error instanceof Error &&
+      (error.name === 'TimeoutError' || error.name === 'AbortError');
+    if (timedOut) {
+      // Format already matches — do not block save on a hung outbound check.
+      return { isValid: true, provider: 'openrouter' };
+    }
     return {
       isValid: false,
       provider: 'openrouter',
-      error: `Failed to validate: ${error instanceof Error ? error.message : String(error)}`,
+      error: `Failed to reach OpenRouter: ${error instanceof Error ? error.message : String(error)}`,
     };
   }
 }
@@ -210,7 +250,7 @@ export async function validateAPIKey(
   }
 
   // Sanitize key (trim whitespace)
-  const cleanKey = key.trim();
+  const cleanKey = sanitizeApiKey(key);
 
   if (cleanKey.length < 10) {
     return {
@@ -245,5 +285,7 @@ export async function validateAPIKey(
 export async function validateAPIKeys(
   credentials: Array<{ provider: APIProvider; key: string }>
 ): Promise<ValidationResult[]> {
-  return Promise.all(credentials.map(({ provider, key }) => validateAPIKey(provider, key)));
+  return Promise.all(
+    credentials.map(({ provider, key }) => validateAPIKey(provider, key))
+  );
 }
