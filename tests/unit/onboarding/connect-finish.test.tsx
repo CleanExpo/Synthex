@@ -2,8 +2,8 @@
  * SYN-1216 — /onboarding/connect Finish setup.
  *
  * All channels are Coming soon. Finish must call complete (no connected
- * platform required), leave Finishing… on error, and push /dashboard on
- * success so the operator is not stuck on the connect step.
+ * platform required), leave Finishing… on error, and hard-navigate to
+ * /dashboard on success so the operator is not stuck on the connect step.
  */
 
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+const mockHardNavigate = jest.fn();
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -21,6 +22,10 @@ jest.mock('next/navigation', () => ({
     replace: mockReplace,
     back: jest.fn(),
   }),
+}));
+
+jest.mock('@/lib/onboarding/hard-navigate', () => ({
+  hardNavigate: (...args: unknown[]) => mockHardNavigate(...args),
 }));
 
 jest.mock('@/components/ui/HelpVideo', () => ({
@@ -85,7 +90,8 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
         credentials: 'include',
       })
     );
-    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    expect(mockHardNavigate).toHaveBeenCalledWith('/dashboard');
+    expect(mockPush).not.toHaveBeenCalled();
     expect(window.localStorage.getItem('onboardingComplete')).toBe('true');
     expect(toast.error).not.toHaveBeenCalled();
   });
@@ -103,6 +109,7 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
     await settle();
 
     expect(toast.error).toHaveBeenCalledWith('Failed to complete onboarding');
+    expect(mockHardNavigate).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
     expect(
       screen.getByRole('button', { name: /finish setup/i })
@@ -115,7 +122,9 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
       'The operation was aborted.',
       'AbortError'
     );
-    global.fetch = jest.fn().mockRejectedValue(abortErr) as unknown as typeof fetch;
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(abortErr) as unknown as typeof fetch;
 
     render(<ConnectPage />);
     await settle();
@@ -126,7 +135,29 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
     expect(toast.error).toHaveBeenCalledWith(
       'Setup is taking too long. Please try again.'
     );
+    expect(mockHardNavigate).not.toHaveBeenCalled();
     expect(mockPush).not.toHaveBeenCalled();
     expect(screen.queryByText('Finishing…')).not.toBeInTheDocument();
+  });
+
+  it('surfaces TimeoutError the same as AbortError', async () => {
+    const timeoutErr = new DOMException(
+      'The operation timed out.',
+      'TimeoutError'
+    );
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(timeoutErr) as unknown as typeof fetch;
+
+    render(<ConnectPage />);
+    await settle();
+
+    fireEvent.click(screen.getByRole('button', { name: /finish setup/i }));
+    await settle();
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Setup is taking too long. Please try again.'
+    );
+    expect(mockHardNavigate).not.toHaveBeenCalled();
   });
 });
