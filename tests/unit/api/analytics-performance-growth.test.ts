@@ -43,14 +43,29 @@ jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  getEffectiveOrganizationId: jest.fn().mockResolvedValue('org-1'),
+}));
+
 import { GET } from '@/app/api/analytics/performance/route';
 
-function request(url = 'http://localhost/api/analytics/performance?period=30d') {
+function request(
+  url = 'http://localhost/api/analytics/performance?period=30d'
+) {
   return createMockNextRequest({ url });
 }
 
 const now = new Date();
-function post(platform: string, engagementParts: { likes?: number; comments?: number; shares?: number; reach?: number; impressions?: number }) {
+function post(
+  platform: string,
+  engagementParts: {
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    reach?: number;
+    impressions?: number;
+  }
+) {
   return {
     id: `p-${Math.random()}`,
     content: 'hello world content here long enough to slice',
@@ -81,7 +96,12 @@ describe('GET /api/analytics/performance — real growth wiring', () => {
     // current period: 2 instagram posts (engagement 100 total), 1 linkedin (50)
     const currentPosts = [
       post('instagram', { likes: 40, comments: 10 }), // 50
-      post('instagram', { likes: 30, comments: 20, reach: 200, impressions: 200 }), // 50
+      post('instagram', {
+        likes: 30,
+        comments: 20,
+        reach: 200,
+        impressions: 200,
+      }), // 50
       post('linkedin', { likes: 50 }), // 50
     ];
     // previous period: 1 instagram post engagement 25, 1 linkedin 50, fewer posts total
@@ -104,17 +124,25 @@ describe('GET /api/analytics/performance — real growth wiring', () => {
     expect(data.growth.postsChange).toBe(50);
     expect(data.growth.postsChange).not.toBe(0);
 
-    const ig = data.platforms.find((p: { platform: string }) => p.platform === 'instagram');
-    const li = data.platforms.find((p: { platform: string }) => p.platform === 'linkedin');
+    const ig = data.platforms.find(
+      (p: { platform: string }) => p.platform === 'instagram'
+    );
+    const li = data.platforms.find(
+      (p: { platform: string }) => p.platform === 'linkedin'
+    );
 
     // instagram engagement 100 vs prior 25 => +300%
+    expect(ig.likes).toBe(70);
+    expect(ig.comments).toBe(30);
     expect(ig.growthPercent).toBe(300);
     // linkedin engagement 50 vs prior 50 => 0% (honest no-change, real comparison)
     expect(li.growthPercent).toBe(0);
 
     // At least one platform has real non-zero growth (regression guard)
     expect(
-      data.platforms.some((p: { growthPercent: number }) => p.growthPercent !== 0)
+      data.platforms.some(
+        (p: { growthPercent: number }) => p.growthPercent !== 0
+      )
     ).toBe(true);
   });
 
