@@ -3,7 +3,7 @@
  *
  * All channels are Coming soon. Finish must call complete (no connected
  * platform required), leave Finishing… on error, and hard-navigate to
- * /dashboard on success so the operator is not stuck on the connect step.
+ * /onboarding/goals on success so the optional 90-day plan is next.
  */
 
 import { fireEvent, render, screen } from '@testing-library/react';
@@ -65,7 +65,7 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
     window.sessionStorage.clear();
   });
 
-  it('completes with every channel Coming soon and navigates to /dashboard', async () => {
+  it('completes with every channel Coming soon and navigates to the 90-day plan', async () => {
     global.fetch = jest.fn().mockImplementation((url: unknown) => {
       if (String(url).includes('/api/onboarding/complete')) {
         return Promise.resolve({
@@ -90,7 +90,7 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
         credentials: 'include',
       })
     );
-    expect(mockHardNavigate).toHaveBeenCalledWith('/dashboard');
+    expect(mockHardNavigate).toHaveBeenCalledWith('/onboarding/goals');
     expect(mockPush).not.toHaveBeenCalled();
     expect(window.localStorage.getItem('onboardingComplete')).toBe('true');
     expect(toast.error).not.toHaveBeenCalled();
