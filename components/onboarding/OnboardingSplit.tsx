@@ -10,9 +10,9 @@ import { cn } from '@/lib/utils';
 import { ONBOARDING_STEPS_V2 } from './StepProgressV2';
 
 const STEP_BLURBS: Record<number, string> = {
-  1: 'Name your business, add a short description, and point us at your site.',
-  2: 'Confirm what AI extracted — identity, voice, and audience.',
-  3: 'Platform linking ships next. Finish setup and go to Home to write a post.',
+  1: 'Name the business, add a short description, and we will scan the site.',
+  2: 'Confirm identity, voice, and audience — then your market outlook.',
+  3: 'Finish setup. Platforms can wait. Then an optional 90-day plan.',
 };
 
 export function OnboardingStepRail({
