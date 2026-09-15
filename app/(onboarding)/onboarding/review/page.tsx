@@ -17,7 +17,7 @@
  * Data source: sessionStorage('synthex_pipeline_result') + server-side
  * OnboardingProgress record (fallback if sessionStorage is cleared).
  *
- * On "Continue" → navigates to /onboarding/connect (OAuth platform connection).
+ * On "Continue" → market outlook (when enabled) then /onboarding/connect.
  *
  * @module app/(onboarding)/onboarding/review/page
  */
@@ -46,6 +46,8 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { OnboardingSplit } from '@/components/onboarding';
+import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
+import { pathAfterBrandConfirm } from '@/lib/onboarding/journey';
 import type {
   PipelineResult,
   SocialProfile,
@@ -451,14 +453,16 @@ export default function ReviewPage() {
       const updated = { ...result, ...payload };
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(updated));
 
-      router.push('/onboarding/connect');
+      document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
+      router.push(pathAfterBrandConfirm());
     } catch (err) {
       console.error('Failed to save review:', err);
       // Show error to user but still navigate (non-blocking by design)
       toast.error(
         "Some settings couldn't be saved. You can update them in Settings later."
       );
-      router.push('/onboarding/connect');
+      document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
+      router.push(pathAfterBrandConfirm());
     } finally {
       setSaving(false);
     }
@@ -510,7 +514,7 @@ export default function ReviewPage() {
       currentStep={2}
       eyebrow="Step 2 · Review"
       title="Review your profile"
-      description="Our AI analysed your website. Everything below is pre-filled — review and adjust anything that needs it."
+      description="Everything below is pre-filled from the scan. Adjust what is wrong, then continue to your market outlook and finish."
       aside={
         confidence > 0 ? (
           <div className="flex items-center gap-2">
@@ -857,7 +861,7 @@ export default function ReviewPage() {
                 >
                   {mode.label}
                 </p>
-                <p className="text-[11px] text-gray-500 mt-0.5">
+                <p className="text-xs text-white/40 mt-0.5">
                   {mode.description}
                 </p>
               </button>
@@ -887,7 +891,7 @@ export default function ReviewPage() {
               </>
             ) : (
               <>
-                Looks good — Connect socials
+                Continue
                 <ArrowRight className="w-4 h-4 ml-2" />
               </>
             )}
