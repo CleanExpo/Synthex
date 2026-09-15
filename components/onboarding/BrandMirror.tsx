@@ -18,6 +18,7 @@ import {
   AlertCircle,
   ArrowRight,
   Globe,
+  Loader2,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { BRAND_CONFIDENCE_THRESHOLD } from '@/lib/constants/onboarding';
@@ -29,6 +30,7 @@ interface BrandMirrorProps {
   onSkip: () => void;
   /** Low-confidence: return to the website form without losing the flow. */
   onTryAgain?: () => void;
+  busy?: 'continue' | 'review' | null;
 }
 
 const DATA_REQUIRED_LABELS: Record<string, string> = {
@@ -75,6 +77,7 @@ export function BrandMirror({
   onContinue,
   onSkip,
   onTryAgain,
+  busy = null,
 }: BrandMirrorProps) {
   const isLowConfidence = result.confidence < BRAND_CONFIDENCE_THRESHOLD;
   const missingLabels = uniqueMissingLabels(result.dataRequired ?? [], result);
@@ -86,6 +89,7 @@ export function BrandMirror({
         onContinue={onContinue}
         onSkip={onSkip}
         onTryAgain={onTryAgain}
+        busy={busy}
       />
     );
   }
@@ -218,18 +222,36 @@ export function BrandMirror({
         <button
           type="button"
           onClick={onContinue}
-          className="sm:flex-1 text-sm text-white/45 hover:text-white/80 py-2.5 transition-colors"
+          disabled={busy !== null}
+          className="sm:flex-1 text-sm text-white/45 hover:text-white/80 py-2.5 transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
-          This looks right — continue
+          {busy === 'continue' ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Processing…
+            </span>
+          ) : (
+            'This looks right — continue'
+          )}
         </button>
         <Button
           size="lg"
           onClick={onSkip}
+          disabled={busy !== null}
           className="sm:flex-1 bg-orange-500 hover:bg-orange-400 text-black shadow-none rounded-sm"
         >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Review your profile
-          <ArrowRight className="w-4 h-4 ml-2" />
+          {busy === 'review' ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing…
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Review your profile
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </div>
@@ -241,6 +263,7 @@ function LowConfidenceFallback({
   onContinue,
   onSkip,
   onTryAgain,
+  busy = null,
 }: BrandMirrorProps) {
   return (
     <div className="w-full space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -269,17 +292,35 @@ function LowConfidenceFallback({
         <Button
           size="lg"
           onClick={onSkip}
+          disabled={busy !== null}
           className="w-full bg-orange-500 hover:bg-orange-400 text-black shadow-none rounded-sm"
         >
-          Complete your profile
-          <ArrowRight className="w-4 h-4 ml-2" />
+          {busy === 'review' ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing…
+            </>
+          ) : (
+            <>
+              Complete your profile
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </>
+          )}
         </Button>
         <button
           type="button"
           onClick={onContinue}
-          className="text-sm text-white/40 hover:text-white/70 py-2 transition-colors"
+          disabled={busy !== null}
+          className="text-sm text-white/40 hover:text-white/70 py-2 transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
-          Continue anyway
+          {busy === 'continue' ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Processing…
+            </span>
+          ) : (
+            'Continue anyway'
+          )}
         </button>
         {onTryAgain && (
           <button
