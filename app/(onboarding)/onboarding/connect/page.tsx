@@ -19,6 +19,7 @@ import { HelpVideo } from '@/components/ui/HelpVideo';
 import { toast } from 'sonner';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
+import { hardNavigate } from '@/lib/onboarding/hard-navigate';
 
 interface PlatformConfig {
   id: string;
@@ -220,13 +221,17 @@ function ConnectPageInner() {
       localStorage.setItem('onboardingComplete', 'true');
       localStorage.setItem('showTourOnDashboard', 'true');
 
-      router.push('/dashboard');
+      // Hard nav so the completed auth-token cookie is used (soft push can
+      // keep the stale JWT and bounce back to /onboarding).
+      hardNavigate('/dashboard');
     } catch (err) {
+      const name = err instanceof Error ? err.name : '';
       const aborted =
+        name === 'AbortError' ||
+        name === 'TimeoutError' ||
         (typeof DOMException !== 'undefined' &&
           err instanceof DOMException &&
-          err.name === 'AbortError') ||
-        (err instanceof Error && err.name === 'AbortError');
+          (err.name === 'AbortError' || err.name === 'TimeoutError'));
       const message = aborted
         ? 'Setup is taking too long. Please try again.'
         : err instanceof Error
