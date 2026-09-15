@@ -9,9 +9,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  generateToken,
   getUserIdFromRequestOrCookies,
   isOwnerEmail,
   unauthorizedResponse,
+  verifyTokenSafe,
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
@@ -99,19 +101,23 @@ export async function GET(request: NextRequest) {
       }
 
       const ownerBypass = isOwnerEmail(user.email);
+      const onboardingComplete = ownerBypass ? true : user.onboardingComplete;
+      const apiKeyConfigured = ownerBypass ? true : user.apiKeyConfigured;
+      const apiKeyValid = ownerBypass ? true : user.apiKeyValid;
+      const businessProfileComplete = ownerBypass
+        ? true
+        : user.businessProfileComplete;
 
       // Return user data. Owner accounts must not inherit stale setup flags from
       // historical rows because the owner email list is the access authority.
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         user: {
           ...user,
-          onboardingComplete: ownerBypass ? true : user.onboardingComplete,
-          businessProfileComplete: ownerBypass
-            ? true
-            : user.businessProfileComplete,
-          apiKeyConfigured: ownerBypass ? true : user.apiKeyConfigured,
-          apiKeyValid: ownerBypass ? true : user.apiKeyValid,
+          onboardingComplete,
+          businessProfileComplete,
+          apiKeyConfigured,
+          apiKeyValid,
           unreadNotifications: user._count.notifications,
           totalCampaigns: user._count.campaigns,
           totalProjects: user._count.projects,
@@ -120,6 +126,38 @@ export async function GET(request: NextRequest) {
           conversion_copy_variant: user.conversionCopyVariant ?? 'control',
         },
       });
+
+      // SYN-1216: proxy + dashboard bounce on a stale JWT even when the DB
+      // row is already complete. Re-stamp the cookie here so /onboarding's
+      // user fetch and the next /dashboard navigation see onboardingComplete.
+      const cookieToken = request.cookies.get('auth-token')?.value;
+      const cookieClaims = cookieToken ? verifyTokenSafe(cookieToken) : null;
+      if (
+        onboardingComplete === true &&
+        cookieToken &&
+        cookieClaims?.onboardingComplete !== true
+      ) {
+        const isProduction = process.env.NODE_ENV === 'production';
+        response.cookies.set(
+          'auth-token',
+          generateToken({
+            userId: user.id,
+            email: user.email,
+            name: user.name ?? undefined,
+            onboardingComplete: true,
+            apiKeyConfigured,
+          }),
+          {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: 'lax',
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7,
+          }
+        );
+      }
+
+      return response;
     } catch (dbError) {
       logger.error('Database unavailable:', dbError);
       return NextResponse.json(
