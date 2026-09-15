@@ -29,11 +29,6 @@ const CommandPalette = dynamic(
     })),
   { ssr: false }
 );
-const ProductTour = dynamic(
-  () =>
-    import('@/components/ProductTour').then(m => ({ default: m.ProductTour })),
-  { ssr: false }
-);
 const FloatingActionButton = dynamic(
   () =>
     import('@/components/FloatingActionButton').then(m => ({
@@ -65,25 +60,22 @@ const GoogleAnalyticsLoader = dynamic(
 
 export function LazyClientComponents() {
   const pathname = usePathname();
-  const isAppRoute =
-    pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding');
   const isStaticReviewRoute = pathname.startsWith(
     '/dashboard/marketing-agency'
   );
+  const isDashboardApp =
+    pathname.startsWith('/dashboard') && !isStaticReviewRoute;
 
   return (
     <>
       <PerformanceMonitor />
       <CommandPalette />
-      {isAppRoute &&
-        !isStaticReviewRoute &&
-        !pathname.startsWith('/dashboard') && (
-          <>
-            <ProductTour />
-            <FloatingActionButton />
-            <FloatingStreak />
-          </>
-        )}
+      {isDashboardApp && (
+        <>
+          <FloatingActionButton />
+          <FloatingStreak />
+        </>
+      )}
       <CookieConsentBanner />
       <GoogleAnalyticsLoader />
     </>
