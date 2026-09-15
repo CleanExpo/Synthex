@@ -233,18 +233,19 @@ export default function VoiceOnboardingPage() {
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-start justify-center px-4 py-12 sm:py-20">
+    <div className="min-h-screen bg-surface-dark flex items-start justify-center px-4 py-12 sm:py-20">
       <div className="w-full max-w-lg space-y-8">
         {/* Header */}
         <div className="space-y-1 text-center">
           <p className="text-xs font-medium uppercase tracking-widest text-orange-500">
-            Synthex
+            Voice setup
           </p>
-          <h1 className="text-2xl font-bold text-white">
+          <h1 className="text-2xl font-light text-white">
             Let&apos;s set up your account
           </h1>
           <p className="text-sm text-white/40">
-            5 quick questions to personalise your content
+            Five questions to personalise your first post. The full workspace
+            setup is Business → Review → Finish.
           </p>
         </div>
 
@@ -294,7 +295,7 @@ export default function VoiceOnboardingPage() {
               type="button"
               onClick={handleNext}
               disabled={!canAdvance()}
-              className="bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40"
+              className="bg-orange-500 hover:bg-orange-400 text-black disabled:opacity-40"
             >
               Next
             </Button>
@@ -303,7 +304,7 @@ export default function VoiceOnboardingPage() {
               type="button"
               onClick={handleSubmit}
               disabled={!canAdvance() || isSubmitting}
-              className="bg-orange-500 hover:bg-orange-600 text-white disabled:opacity-40 min-w-[160px]"
+              className="bg-orange-500 hover:bg-orange-400 text-black disabled:opacity-40 min-w-[160px]"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
