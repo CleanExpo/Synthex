@@ -18,10 +18,8 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import type { EngagementDataPoint } from './types';
 
 const engagementConfig: ChartConfig = {
-  twitter: { label: 'Twitter / X', color: '#1DA1F2' },
-  linkedin: { label: 'LinkedIn', color: '#0A66C2' },
-  instagram: { label: 'Instagram', color: '#E1306C' },
-  tiktok: { label: 'TikTok', color: '#FF6B35' },
+  engagement: { label: 'Engagement', color: 'rgb(249 115 22)' },
+  reach: { label: 'Reach', color: 'rgb(52 211 153)' },
 };
 
 interface EngagementChartProps {
@@ -39,7 +37,7 @@ export function EngagementChart({ data }: EngagementChartProps) {
           Engagement Over Time
         </h3>
         <p className="text-xs text-white/35 mt-0.5">
-          Daily engagement across platforms
+          Real likes, comments and shares versus reach, by day
         </p>
       </div>
 
@@ -91,20 +89,18 @@ export function EngagementChart({ data }: EngagementChartProps) {
               cursor={{ stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }}
             />
             <ChartLegend content={<ChartLegendContent />} />
-            {(['twitter', 'linkedin', 'instagram', 'tiktok'] as const).map(
-              key => (
-                <Area
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={engagementConfig[key].color}
-                  strokeWidth={1.5}
-                  fillOpacity={1}
-                  fill={`url(#grad-${key})`}
-                  dot={false}
-                />
-              )
-            )}
+            {(['engagement', 'reach'] as const).map(key => (
+              <Area
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={engagementConfig[key].color}
+                strokeWidth={1.5}
+                fillOpacity={1}
+                fill={`url(#grad-${key})`}
+                dot={false}
+              />
+            ))}
           </AreaChart>
         </ChartContainer>
       )}
