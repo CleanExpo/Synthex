@@ -139,6 +139,9 @@ export default function OnboardingPage() {
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(
     null
   );
+  const [mirrorBusy, setMirrorBusy] = useState<'continue' | 'review' | null>(
+    null
+  );
 
   // Chrome Extension detection
   const [extensionDetected, setExtensionDetected] = useState(false);
@@ -386,6 +389,8 @@ export default function OnboardingPage() {
 
   // Brand Mirror — persist org + analysis, then connect accounts
   const handleMirrorContinue = async () => {
+    if (mirrorBusy) return;
+    setMirrorBusy('continue');
     document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
     if (pipelineResult) {
       try {
@@ -431,6 +436,8 @@ export default function OnboardingPage() {
 
   // Brand Mirror — "edit first" fallback → existing review page
   const handleMirrorSkip = () => {
+    if (mirrorBusy) return;
+    setMirrorBusy('review');
     router.push('/onboarding/review');
   };
 
@@ -481,6 +488,7 @@ export default function OnboardingPage() {
           onContinue={handleMirrorContinue}
           onSkip={handleMirrorSkip}
           onTryAgain={handleMirrorTryAgain}
+          busy={mirrorBusy}
         />
       </OnboardingSplit>
     );
