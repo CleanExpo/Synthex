@@ -53,21 +53,7 @@ export function AnalyticsHeader({
   const isCustomRange = timeRange === 'custom';
 
   return (
-    <div className="flex flex-col gap-5 flex-1 min-w-0">
-      {/* Page title */}
-      <div>
-        <p className="text-xs uppercase tracking-[0.25em] text-white/30 mb-1">
-          Performance
-        </p>
-        <h1 className="text-3xl font-light text-white leading-none">
-          Analytics
-        </h1>
-        <p className="text-sm text-white/40 mt-1.5">
-          Track reach, engagement, and growth across all connected platforms.
-        </p>
-      </div>
-
-      {/* Controls row */}
+    <div className="flex flex-col gap-3 flex-1 min-w-0">
       <div className="flex flex-wrap items-center gap-2">
         {/* Time range */}
         <Select value={timeRange} onValueChange={onTimeRangeChange}>
