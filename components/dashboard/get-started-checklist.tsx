@@ -116,7 +116,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         description: 'Configure your AI integration next.',
         action: {
           label: 'Set up AI',
-          onClick: () => router.push('/dashboard/settings/integrations'),
+          onClick: () => router.push('/dashboard/settings?tab=integrations'),
         },
         duration: 6000,
       });
@@ -191,7 +191,7 @@ export function GetStartedChecklist({ className }: { className?: string }) {
         title: 'Configure AI Integration',
         description:
           'Add an API key for OpenRouter, Google, Anthropic, or OpenAI to power content generation.',
-        href: '/dashboard/settings/integrations',
+        href: '/dashboard/settings?tab=integrations',
         icon: BrainCircuit,
         completed: status.llm_integration,
         videoId: 'onboarding-setup-ai',
