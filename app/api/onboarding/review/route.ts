@@ -3,7 +3,7 @@
  *
  * POST /api/onboarding/review — Saves the user-reviewed onboarding data
  *
- * Called when the user clicks "Looks good — Connect socials" on the review page.
+ * Called when the user saves the review step and continues the journey.
  * Persists the (potentially edited) pipeline data + posting mode to
  * OnboardingProgress and updates the stage to 'platforms'.
  *
