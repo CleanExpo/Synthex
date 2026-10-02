@@ -776,6 +776,9 @@ export class LinkedInService extends BasePlatformService {
         const memberId =
           storedUserId ||
           (await this.makeRequest<LinkedInUserInfoResponse>('/userinfo')).sub;
+        if (!memberId) {
+          throw new PlatformError('linkedin', 'LinkedIn member id unavailable');
+        }
         authorUrn = `urn:li:person:${memberId}`;
       }
 

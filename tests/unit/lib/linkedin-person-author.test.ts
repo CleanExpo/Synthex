@@ -22,10 +22,12 @@ describe('LinkedInService person author URN', () => {
   const realFetch = global.fetch;
   let calls: string[];
   let postedAuthor: string | undefined;
+  let userInfoSub: string | undefined;
 
   beforeEach(() => {
     calls = [];
     postedAuthor = undefined;
+    userInfoSub = 'fetchedSub42';
     global.fetch = jest.fn(async (input: unknown, init?: RequestInit) => {
       const url = String(input);
       calls.push(url);
@@ -43,7 +45,7 @@ describe('LinkedInService person author URN', () => {
           ok: true,
           status: 200,
           headers: new Headers(),
-          json: async () => ({ sub: 'fetchedSub42' }),
+          json: async () => ({ sub: userInfoSub }),
         } as unknown as Response;
       }
       if (url.endsWith('/v2/ugcPosts')) {
@@ -87,6 +89,14 @@ describe('LinkedInService person author URN', () => {
     expect(result.success).toBe(true);
     expect(postedAuthor).toBe('urn:li:person:fetchedSub42');
     expect(calls.some(u => u.includes('/v2/me'))).toBe(false);
+  });
+
+  it('fails without posting when /v2/userinfo has no sub', async () => {
+    userInfoSub = undefined;
+    const result = await service().createPost({ text: 'hi' });
+
+    expect(result.success).toBe(false);
+    expect(postedAuthor).toBeUndefined();
   });
 
   it('validates credentials against /v2/userinfo', async () => {
