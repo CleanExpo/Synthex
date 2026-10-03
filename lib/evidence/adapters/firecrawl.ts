@@ -94,10 +94,7 @@ export function createFirecrawlRetriever(): EvidenceRetriever {
       const firecrawl = await getFirecrawl();
 
       // Firecrawl v4 returns a Document directly (throws on failure).
-      // TODO(type-safety): same v4 ScrapeParams cast as website-analyzer.ts.
-      const doc = await firecrawl.scrape(url, {
-        formats: ['markdown'],
-      } as Parameters<typeof firecrawl.scrape>[1]);
+      const doc = await firecrawl.scrape(url, { formats: ['markdown'] });
 
       if (!doc || !doc.markdown) {
         logger.warn('[evidence:firecrawl] scrape returned empty document', {
