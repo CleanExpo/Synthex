@@ -486,11 +486,12 @@ describe('Campaigns API - /api/campaigns', () => {
       expect(body.error).toBe('Campaign not found');
     });
 
-    it('should return 400 for invalid campaign ID format', async () => {
+    it('should return 400 for an empty campaign ID', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
 
+      // Campaign ids are cuids, so any non-empty string is a valid format.
       const req = createRequest('PUT', {
-        id: 'not-a-uuid',
+        id: '',
         name: 'Test',
       });
       const res = await PUT(req);
