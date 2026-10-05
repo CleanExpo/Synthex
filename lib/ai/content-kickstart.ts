@@ -106,6 +106,16 @@ const PLATFORM_SPECS: Record<string, PlatformSpec> = {
 /** Max number of platforms to generate drafts for */
 const MAX_PLATFORMS = 7;
 
+/**
+ * Platforms used when the new user has no OAuth connections and no selected
+ * platforms — ensures first-run value without requiring OAuth (SYN-1217).
+ */
+const SAMPLE_FALLBACK_PLATFORMS = [
+  'instagram',
+  'linkedin',
+  'facebook',
+] as const;
+
 /** Content themes for the first week */
 const FIRST_WEEK_THEMES = [
   'introduction — who we are and what we do',
@@ -135,7 +145,12 @@ export async function generateKickstartContent(
     platforms: [],
   };
 
-  const platforms = input.connectedPlatforms
+  const rawPlatforms =
+    input.connectedPlatforms.length > 0
+      ? input.connectedPlatforms
+      : [...SAMPLE_FALLBACK_PLATFORMS];
+
+  const platforms = rawPlatforms
     .filter(p => p in PLATFORM_SPECS)
     .slice(0, MAX_PLATFORMS);
 
@@ -145,6 +160,8 @@ export async function generateKickstartContent(
     });
     return result;
   }
+
+  const isSampleRun = input.connectedPlatforms.length === 0;
 
   const userCreds = await getUserAICredentials(input.userId);
   const ai = userCreds
@@ -247,7 +264,11 @@ HASHTAGS: [tag1, tag2, ...] or NONE`;
             status: 'active',
             userId: input.userId,
             organizationId: input.organizationId,
-            settings: { source: 'kickstart', generatedAt: now.toISOString() },
+            settings: {
+              source: 'kickstart',
+              generatedAt: now.toISOString(),
+              ...(isSampleRun && { isSample: true }),
+            },
           },
           select: { id: true },
         });
@@ -268,19 +289,30 @@ HASHTAGS: [tag1, tag2, ...] or NONE`;
         scheduledAt.setDate(scheduledAt.getDate() + idx + 1);
         scheduledAt.setHours(9, 0, 0, 0);
 
+        // Sample-run posts are always drafts — no platform is connected to
+        // publish to, so scheduling them would be misleading (SYN-1217).
+        const postStatus = isSampleRun
+          ? 'draft'
+          : input.postingMode !== 'manual'
+            ? 'scheduled'
+            : 'draft';
+        const postScheduledAt =
+          !isSampleRun && input.postingMode !== 'manual' ? scheduledAt : null;
+
         const post = await prisma.post.create({
           data: {
             content,
             platform,
             campaignId,
-            status: input.postingMode !== 'manual' ? 'scheduled' : 'draft',
-            scheduledAt: input.postingMode !== 'manual' ? scheduledAt : null,
+            status: postStatus,
+            scheduledAt: postScheduledAt,
             metadata: {
               hashtags,
               mediaUrls: [],
               source: 'kickstart',
               theme,
               generatedAt: now.toISOString(),
+              ...(isSampleRun && { isSample: true }),
             },
           },
           select: { id: true },
