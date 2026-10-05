@@ -180,8 +180,16 @@ export default function SeasonBriefPage() {
     <OnboardingSplit
       currentStep={2}
       eyebrow="Review · Market outlook"
-      title="Synthex already knows what's coming."
-      description="Based on your industry, here are the next market opportunity windows Synthex will help you capitalise on."
+      title={
+        signals.length > 0
+          ? "Synthex already knows what's coming."
+          : 'Upcoming Australian calendar windows.'
+      }
+      description={
+        signals.length > 0
+          ? 'Based on your industry, here are the next market opportunity windows Synthex will help you capitalise on.'
+          : 'A general sample, not based on your business: the next fixed Australian calendar dates worth planning content around.'
+      }
     >
       <div className="space-y-8">
         {/* Signal cards */}
