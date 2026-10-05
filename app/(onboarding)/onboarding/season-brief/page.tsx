@@ -32,6 +32,7 @@ import { OnboardingSplit } from '@/components/onboarding';
 import { fireEvent } from '@/lib/analytics/onboarding-events';
 import { ONBOARDING_INDUSTRY_TO_SLUG } from '@/lib/constants/onboarding';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
+import { getSampleSeasonWindows } from '@/lib/seasonal/sample-season-windows';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -239,18 +240,45 @@ export default function SeasonBriefPage() {
               );
             })
           ) : (
-            /* Fallback — no signals for this industry/state */
-            <div className="border border-white/[0.06] bg-white/[0.02] rounded-sm p-6 text-center space-y-3">
-              <CalendarDays className="h-8 w-8 text-white/20 mx-auto" />
-              <p className="text-sm text-white/50 leading-relaxed">
-                Your industry-specific market signals are loading — check back
-                in 24 hours for personalised opportunities.
+            /* Fallback — no signals for this industry/state (SYN-1218):
+               show a labelled sample from fixed AU dates, never a deferral. */
+            <>
+              <p className="text-xs text-white/50 leading-relaxed">
+                Sample outlook — built from fixed Australian calendar dates, not
+                from your business. Industry-specific signals are not available
+                for you yet; this page shows them once they are.
               </p>
-              <p className="text-xs text-white/30">
-                In the meantime, Synthex will start with AU national public
-                holidays and peak consumer periods.
-              </p>
-            </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {getSampleSeasonWindows().map(sample => (
+                  <div
+                    key={sample.id}
+                    data-testid="sample-season-window"
+                    className="border border-dashed border-white/[0.12] bg-white/[0.02] rounded-sm p-5 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <CalendarDays className="h-4 w-4 text-white/50 shrink-0" />
+                        <h3 className="text-sm font-medium text-white leading-snug">
+                          {sample.opportunityLabel}
+                        </h3>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider text-white/40 border border-white/[0.12] rounded-sm px-1.5 py-0.5">
+                        Sample
+                      </span>
+                    </div>
+                    <p className="text-xs text-orange-300/80 font-mono">
+                      {formatDateRange(sample.windowStart, sample.windowEnd)}
+                    </p>
+                    <p className="text-xs text-white/40 leading-relaxed">
+                      {whyThisMatters(
+                        { ...sample, confidenceScore: 0, source: 'sample' },
+                        industrySlug
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
