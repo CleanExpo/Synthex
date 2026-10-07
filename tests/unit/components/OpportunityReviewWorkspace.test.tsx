@@ -69,6 +69,10 @@ function response(body: unknown, ok = true, status = 200) {
 }
 
 let fetchMock: jest.Mock;
+const originalUrlDescriptors = {
+  createObjectURL: Object.getOwnPropertyDescriptor(URL, 'createObjectURL'),
+  revokeObjectURL: Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL'),
+};
 beforeEach(() => {
   clearUseApiCache();
   setUseApiActiveOrg('org-review');
@@ -78,6 +82,10 @@ beforeEach(() => {
 afterEach(() => {
   clearUseApiCache();
   setUseApiActiveOrg(null);
+  for (const [key, descriptor] of Object.entries(originalUrlDescriptors)) {
+    if (descriptor) Object.defineProperty(URL, key, descriptor);
+    else Reflect.deleteProperty(URL, key);
+  }
 });
 
 function change(label: string, value: string) {

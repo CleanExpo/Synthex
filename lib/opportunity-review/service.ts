@@ -49,8 +49,18 @@ const scope = (context: ProposalContext) => {
     );
   return { organizationId: context.organizationId, source: SOURCE };
 };
+function storedRouting(row: CommandPacket): z.infer<typeof RoutingSchema> {
+  const parsed = RoutingSchema.safeParse(row.routingHints);
+  if (!parsed.success)
+    throw new ProposalError(
+      'corrupt_packet',
+      500,
+      'Unable to read stored opportunity proposal'
+    );
+  return parsed.data;
+}
 function record(row: CommandPacket): ProposalRecord {
-  const metadata = RoutingSchema.parse(row.routingHints);
+  const metadata = storedRouting(row);
   if (
     row.approvalGate !== 'production_blocked' ||
     row.scenarioState !== 'blocked' ||
@@ -61,12 +71,19 @@ function record(row: CommandPacket): ProposalRecord {
       409,
       'Proposal execution block is inconsistent'
     );
-  return ProposalRecordSchema.parse({
+  const parsed = ProposalRecordSchema.safeParse({
     ...metadata.record,
     id: row.id,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   });
+  if (!parsed.success)
+    throw new ProposalError(
+      'corrupt_packet',
+      500,
+      'Unable to read stored opportunity proposal'
+    );
+  return parsed.data;
 }
 
 export function createOpportunityReviewService(database: ProposalDatabase) {
@@ -147,10 +164,7 @@ export function createOpportunityReviewService(database: ProposalDatabase) {
           409,
           'Capture identifier conflict'
         );
-      if (
-        RoutingSchema.parse(row.routingHints).captureFingerprint !==
-        captureFingerprint
-      )
+      if (storedRouting(row).captureFingerprint !== captureFingerprint)
         throw new ProposalError(
           'idempotency_conflict',
           409,
@@ -235,7 +249,7 @@ export function createOpportunityReviewService(database: ProposalDatabase) {
             : action.action === 'add-evidence'
               ? 'pending'
               : 'accepted';
-      const metadata = RoutingSchema.parse(row.routingHints);
+      const metadata = storedRouting(row);
       const next = ProposalRecordSchema.parse({
         ...current,
         status: state === 'rejected' ? 'blocked' : 'pending',

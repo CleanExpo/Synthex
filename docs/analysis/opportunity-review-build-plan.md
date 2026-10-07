@@ -1,5 +1,10 @@
 # Synthex → Unite-Group Nexus opportunity review build
 
+Historical planning snapshot: the restrictions and runtime observations below
+describe the original synthetic slice. Subsequent user-authorised engineering,
+publication and release admission are recorded in the current external SPM ledger;
+this snapshot is not the current deployment authority or completion receipt.
+
 07/10/2026. User-authorised continuation beyond the original synthetic slice.
 Keep dirty canonical checkouts intact. No deploy, commit, push, live ingestion,
 live database writes, migrations, credentials, schedulers or provider activation.
@@ -9,8 +14,7 @@ live database writes, migrations, credentials, schedulers or provider activation
 Synthex main c1a11c12bbbfed21456fccacc19baed2c7eb89c2, isolated existing worktree
 `C:\Users\Disaster Recovery 4\.codex\worktrees\synthex-opportunity-slice\Synthex`.
 Unite-Group main 0ab7699c6d9529c789844bdb07e110c8ae8d2034, isolated worktree
-`D:
-exus-opportunity-review` (branch codex/synthex-opportunity-review).
+`D:/nexus-opportunity-review` (branch codex/synthex-opportunity-review).
 Existing canonical checkouts have unrelated work and remain untouched.
 
 Loaded Superpowers using-superpowers, brainstorming, test-driven-development,

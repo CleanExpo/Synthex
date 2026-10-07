@@ -265,3 +265,86 @@ test('pending and cross-organisation exports fail with review required or not fo
   );
   expect(await list.json()).toEqual({ items: [], total: 0 });
 });
+
+test.each(
+  ['list', 'review', 'export'].flatMap(operation =>
+    ['routing', 'record'].map(corruption => [operation, corruption])
+  )
+)(
+  '%s treats corrupt persisted %s as a private server error without mutation',
+  async (operation, corruption) => {
+    const { prisma } = await import('@/lib/prisma');
+    const saved = await POST(captureRequest());
+    const { item } = await saved.json();
+    const row = await prisma.commandPacket.findFirst({
+      where: { id: item.id },
+    });
+    const corrupted =
+      corruption === 'routing'
+        ? { ...row!, routingHints: { privateSource: 'private-corrupt-marker' } }
+        : { ...row!, id: '' };
+    jest.spyOn(prisma.commandPacket, 'findMany').mockResolvedValue([corrupted]);
+    jest.spyOn(prisma.commandPacket, 'findFirst').mockResolvedValue(corrupted);
+    const mutation = jest.spyOn(prisma.commandPacket, 'updateMany');
+    const response =
+      operation === 'list'
+        ? await GET(
+            new NextRequest('https://synthex.test/api/opportunity-proposals')
+          )
+        : operation === 'review'
+          ? await PATCH(
+              new NextRequest(
+                'https://synthex.test/api/opportunity-proposals',
+                {
+                  method: 'PATCH',
+                  body: JSON.stringify({
+                    id: item.id,
+                    expectedRevision: 1,
+                    action: 'accept',
+                    note: 'Review persisted proposal',
+                  }),
+                }
+              )
+            )
+          : await EXPORT(
+              new NextRequest(
+                `https://synthex.test/api/opportunity-proposals/${item.id}/export`
+              ),
+              { params: Promise.resolve({ id: item.id }) }
+            );
+    expect(response.status).toBe(500);
+    expect(await response.json()).toEqual({
+      error: 'Unable to read stored opportunity proposal',
+      code: 'corrupt_packet',
+    });
+    expect(mutation).not.toHaveBeenCalled();
+  }
+);
+
+test('stored execution inconsistency remains an unsafe packet conflict', async () => {
+  const { prisma } = await import('@/lib/prisma');
+  const saved = await POST(captureRequest());
+  const { item } = await saved.json();
+  const row = await prisma.commandPacket.findFirst({ where: { id: item.id } });
+  jest
+    .spyOn(prisma.commandPacket, 'findFirst')
+    .mockResolvedValue({ ...row!, approvalGate: 'human_review' });
+  const mutation = jest.spyOn(prisma.commandPacket, 'updateMany');
+  const response = await PATCH(
+    new NextRequest('https://synthex.test/api/opportunity-proposals', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        id: item.id,
+        expectedRevision: 1,
+        action: 'accept',
+        note: 'Unsafe stored gate',
+      }),
+    })
+  );
+  expect(response.status).toBe(409);
+  expect(await response.json()).toEqual({
+    error: 'Proposal execution block is inconsistent',
+    code: 'unsafe_packet',
+  });
+  expect(mutation).not.toHaveBeenCalled();
+});
