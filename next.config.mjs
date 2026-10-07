@@ -352,7 +352,9 @@ const nextConfig = {
 
       config.resolve.alias = {
         ...config.resolve.alias,
-        canvg: new URL('./lib/empty-module.cjs', import.meta.url).pathname,
+        canvg: fileURLToPath(
+          new URL('./lib/empty-module.cjs', import.meta.url)
+        ),
       };
     }
 

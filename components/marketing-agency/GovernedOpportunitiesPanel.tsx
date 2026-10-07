@@ -1,6 +1,7 @@
 'use client';
 
 import { useApi } from '@/hooks/use-api';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface GovernedOpportunity {
@@ -58,6 +59,12 @@ export function GovernedOpportunitiesPanel() {
             Persisted opportunities from evidence-backed signals. Approval,
             risk, evidence, and outcome hooks stay visible before campaign work.
           </p>
+          <Link
+            href="/dashboard/opportunities"
+            className="mt-3 inline-flex min-h-11 items-center text-sm text-orange-200 underline"
+          >
+            Capture and review an opportunity proposal
+          </Link>
         </div>
         <div className="rounded-sm border border-white/10 px-3 py-2 text-sm text-muted-foreground">
           {isLoading ? 'Loading' : `${data?.total ?? 0} ready`}
@@ -73,8 +80,9 @@ export function GovernedOpportunitiesPanel() {
       {!error && !isLoading && opportunities.length === 0 && (
         <div className="mt-4 rounded-sm border border-white/10 px-4 py-4 text-sm text-muted-foreground">
           No persisted governed opportunities are available for the active
-          organisation yet. Run the Apify intelligence command with an explicit
-          organisation ID to populate this ledger.
+          organisation yet. Open the opportunity review workspace to manually
+          capture a real source, separate Unite-Group evidence and a blocked
+          forecasting proposal.
         </div>
       )}
 
@@ -130,7 +138,9 @@ export function GovernedOpportunitiesPanel() {
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">
                     Next Action
                   </dt>
-                  <dd className="mt-1 text-white/80">{opportunity.nextAction}</dd>
+                  <dd className="mt-1 text-white/80">
+                    {opportunity.nextAction}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -155,9 +165,10 @@ export function GovernedOpportunitiesPanel() {
               {(opportunity.blockedReasons.length > 0 ||
                 opportunity.warnings.length > 0) && (
                 <div className="mt-4 rounded-sm border border-orange-400/20 bg-orange-500/10 px-3 py-2 text-xs text-orange-100">
-                  {[...opportunity.blockedReasons, ...opportunity.warnings].join(
-                    ' '
-                  )}
+                  {[
+                    ...opportunity.blockedReasons,
+                    ...opportunity.warnings,
+                  ].join(' ')}
                 </div>
               )}
             </article>

@@ -216,6 +216,11 @@ export function createCommandPacketService(
     const packet = await getCommandPacket(organizationId, id);
     if (!packet) return { ok: false, error: 'not_found' };
 
+    // Proposal revisions and review state are owned by the opportunity workspace.
+    if (packet.source === 'opportunity_review') {
+      return { ok: false, error: 'opportunity_review_required', packet };
+    }
+
     const rule = TRANSITIONS[action];
     if (!rule) return { ok: false, error: 'invalid_action' };
 
