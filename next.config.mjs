@@ -165,6 +165,7 @@ const nextConfig = {
   ],
   experimental: {
     webpackMemoryOptimizations: true,
+    webpackBuildWorker: true,
     optimizePackageImports: [
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
