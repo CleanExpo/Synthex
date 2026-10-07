@@ -290,6 +290,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   webpack: (config, { dev, isServer, nextRuntime }) => {
+    if (!dev) {
+      config.parallelism = Math.min(config.parallelism ?? 100, 50);
+    }
     if (nextRuntime === 'edge') {
       config.resolve = config.resolve ?? {};
       config.resolve.alias = {
