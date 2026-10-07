@@ -121,7 +121,8 @@ export const AUTH_GUARD_IMPORTS: readonly {
   {
     // Existing authenticated policies + effective organisation resolution.
     // proposalResponse immediately awaits its operation; recognize only an
-    // inline callback directly returned through that exact imported wrapper.
+    // inline callback directly returned through that exact imported wrapper,
+    // with the resolver's NextResponse denial immediately returned.
     name: 'resolveProposalContext',
     module: /^lib\/opportunity-review\/http$/,
     callbackWrapper: 'proposalResponse',
@@ -172,6 +173,7 @@ export function hasAstAuthGuard(content: string): boolean {
   const guardSpecifiers = new Set<ts.ImportSpecifier>();
   const callbackGuardSpecifiers = new Set<ts.ImportSpecifier>();
   const callbackWrapperSpecifiers = new Set<ts.ImportSpecifier>();
+  const responseSpecifiers = new Set<ts.ImportSpecifier>();
 
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
@@ -186,6 +188,12 @@ export function hasAstAuthGuard(content: string): boolean {
     for (const element of clause.namedBindings.elements) {
       if (element.isTypeOnly) continue;
       const importedName = (element.propertyName ?? element.name).text;
+      if (
+        statement.moduleSpecifier.text === 'next/server' &&
+        importedName === 'NextResponse'
+      ) {
+        responseSpecifiers.add(element);
+      }
       const matches = AUTH_GUARD_IMPORTS.some(
         guard => guard.name === importedName && guard.module.test(specifier)
       );
@@ -233,22 +241,84 @@ export function hasAstAuthGuard(content: string): boolean {
         ts.isImportSpecifier(declaration) && specifiers.has(declaration)
     );
   };
+  const gatesProposalResult = (body: ts.Node): boolean => {
+    if (!ts.isBlock(body)) return false;
+    const [first, second] = body.statements;
+    if (
+      !first ||
+      !ts.isVariableStatement(first) ||
+      !(first.declarationList.flags & ts.NodeFlags.Const) ||
+      first.declarationList.declarations.length !== 1 ||
+      !second ||
+      !ts.isIfStatement(second) ||
+      second.elseStatement
+    ) {
+      return false;
+    }
+    const declaration = first.declarationList.declarations[0];
+    if (
+      !ts.isIdentifier(declaration.name) ||
+      !declaration.initializer ||
+      !ts.isAwaitExpression(declaration.initializer) ||
+      !ts.isCallExpression(declaration.initializer.expression) ||
+      !isImportedCall(
+        declaration.initializer.expression.expression,
+        callbackGuardSpecifiers
+      )
+    ) {
+      return false;
+    }
+    const binding = checker.getSymbolAtLocation(declaration.name);
+    const isResult = (node: ts.Node): boolean =>
+      !!binding &&
+      ts.isIdentifier(node) &&
+      checker.getSymbolAtLocation(node) === binding;
+    const condition = second.expression;
+    if (
+      !ts.isBinaryExpression(condition) ||
+      condition.operatorToken.kind !== ts.SyntaxKind.InstanceOfKeyword ||
+      !isResult(condition.left) ||
+      !isImportedCall(condition.right, responseSpecifiers)
+    ) {
+      return false;
+    }
+    const denial = ts.isBlock(second.thenStatement)
+      ? second.thenStatement.statements.length === 1
+        ? second.thenStatement.statements[0]
+        : undefined
+      : second.thenStatement;
+    return (
+      !!denial &&
+      ts.isReturnStatement(denial) &&
+      !!denial.expression &&
+      isResult(denial.expression)
+    );
+  };
   const callsGuard = (
     body: ts.Node,
     specifiers = guardSpecifiers,
     allowWrapper = true
   ): boolean => {
+    // This resolver returns a denial response instead of throwing. A call
+    // alone cannot protect the handler: require its initial bound result and
+    // immediate denial return, resolving both result and class by symbol.
+    if (gatesProposalResult(body)) return true;
     let found = false;
     const visit = (node: ts.Node): void => {
       if (found) return;
       if (isFunctionScope(node)) return;
       if (ts.isCallExpression(node)) {
-        if (isImportedCall(node.expression, specifiers)) {
+        if (
+          isImportedCall(node.expression, specifiers) &&
+          !isImportedCall(node.expression, callbackGuardSpecifiers)
+        ) {
           found = true;
           return;
         }
         if (
           allowWrapper &&
+          ts.isBlock(body) &&
+          body.statements[0] === node.parent &&
           ts.isReturnStatement(node.parent) &&
           node.parent.expression === node &&
           node.arguments.length === 1 &&

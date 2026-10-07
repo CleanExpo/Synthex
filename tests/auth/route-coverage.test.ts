@@ -425,12 +425,25 @@ describe('authenticateIntentScapeRequest recognition', () => {
  */
 describe('opportunity review auth recognition', () => {
   const imports = `import { resolveProposalContext, proposalResponse } from '@/lib/opportunity-review/http';`;
-  const guard = `const context = await resolveProposalContext(request);`;
+  const responseImport = `import { NextResponse } from 'next/server';`;
+  const guard =
+    `const context = await resolveProposalContext(request); ` +
+    `if (context instanceof NextResponse) return context;`;
   const callback = `async () => { ${guard} return new Response('ok'); }`;
-  const route = (body: string, bindings = imports) =>
-    `${bindings}\nexport async function GET(request) { ${body} }`;
+  const route = (body: string, bindings = imports, response = responseImport) =>
+    `${response}\n${bindings}\nexport async function GET(request) { ${body} }`;
 
-  it('accepts a directly called resolver', () => {
+  it('rejects a returned wrapper callback that discards the resolver denial', () => {
+    expect(
+      hasAuthGuard(
+        route(
+          `return proposalResponse(async () => { await resolveProposalContext(request); return new Response('ok'); });`
+        )
+      )
+    ).toBe(false);
+  });
+
+  it('accepts a directly called resolver whose denial is returned', () => {
     expect(hasAuthGuard(route(`${guard} return new Response('ok');`))).toBe(
       true
     );
@@ -445,10 +458,116 @@ describe('opportunity review auth recognition', () => {
   it('accepts aliased guard and wrapper import bindings', () => {
     expect(
       hasAuthGuard(
-        `import { resolveProposalContext as auth, proposalResponse as respond } from '@/lib/opportunity-review/http';\n` +
-          `export async function GET(request) { return respond(async () => { await auth(request); return new Response('ok'); }); }`
+        `import { NextResponse as Denial } from 'next/server';\n` +
+          `import { resolveProposalContext as auth, proposalResponse as respond } from '@/lib/opportunity-review/http';\n` +
+          `export async function GET(request) { return respond(async () => { const context = await auth(request); if (context instanceof Denial) return context; return new Response('ok'); }); }`
       )
     ).toBe(true);
+  });
+
+  it('accepts an immediate denial return in a single-statement block', () => {
+    expect(
+      hasAuthGuard(
+        route(
+          `return proposalResponse(async function () { const context = await resolveProposalContext(request); if (context instanceof NextResponse) { return context; } return new Response('ok'); });`
+        )
+      )
+    ).toBe(true);
+  });
+
+  it.each([
+    ['discarded awaited result', `await resolveProposalContext(request);`],
+    ['unawaited call', `resolveProposalContext(request);`],
+    [
+      'unchecked bound result',
+      `const context = await resolveProposalContext(request);`,
+    ],
+    [
+      'unawaited bound result',
+      `const context = resolveProposalContext(request); if (context instanceof NextResponse) return context;`,
+    ],
+    [
+      'mutable result binding',
+      `let context = await resolveProposalContext(request); if (context instanceof NextResponse) return context;`,
+    ],
+    [
+      'multiple declarations',
+      `const context = await resolveProposalContext(request), other = {}; if (context instanceof NextResponse) return context;`,
+    ],
+    ['resolver after handler work', `doWork(); ${guard}`],
+    [
+      'non-immediate denial check',
+      `const context = await resolveProposalContext(request); doWork(); if (context instanceof NextResponse) return context;`,
+    ],
+    [
+      'wrong denial return',
+      `const context = await resolveProposalContext(request); if (context instanceof NextResponse) return new Response('ok');`,
+    ],
+    [
+      'wrong denial binding',
+      `const context = await resolveProposalContext(request); if (other instanceof NextResponse) return context;`,
+    ],
+    [
+      'discarded denial',
+      `const context = await resolveProposalContext(request); if (context instanceof NextResponse) { context; }`,
+    ],
+    [
+      'shadowed denial result',
+      `const context = await resolveProposalContext(request); if (context instanceof NextResponse) { const context = new Response('ok'); return context; }`,
+    ],
+    ['conditional resolver', `if (allowed) { ${guard} }`],
+    ['nested resolver block', `{ ${guard} }`],
+    [
+      'conditional denial return',
+      `const context = await resolveProposalContext(request); if (context instanceof NextResponse) { if (allowed) return context; }`,
+    ],
+    ['unused nested denial guard', `async function unused() { ${guard} }`],
+    [
+      'shadowed response class',
+      `const context = await resolveProposalContext(request); if (context instanceof NextResponse) return context; function NextResponse() {}`,
+    ],
+    [
+      'different response class',
+      `const context = await resolveProposalContext(request); if (context instanceof Response) return context;`,
+    ],
+  ])('rejects %s in direct handlers and wrapper callbacks', (_name, body) => {
+    expect(hasAuthGuard(route(`${body} return new Response('ok');`))).toBe(
+      false
+    );
+    expect(
+      hasAuthGuard(
+        route(
+          `return proposalResponse(async () => { ${body} return new Response('ok'); });`
+        )
+      )
+    ).toBe(false);
+  });
+
+  it.each([
+    ['missing runtime response import', ''],
+    [
+      'type-only response import',
+      `import type { NextResponse } from 'next/server';`,
+    ],
+    [
+      'type-only response specifier',
+      `import { type NextResponse } from 'next/server';`,
+    ],
+    [
+      'fake response module',
+      `import { NextResponse } from '@/lib/fake/server';`,
+    ],
+    [
+      'local next/server lookalike',
+      `import { NextResponse } from '@/next/server';`,
+    ],
+    ['fake response class', `class NextResponse {}`],
+  ])('rejects %s', (_name, response) => {
+    expect(
+      hasAuthGuard(
+        route(`return proposalResponse(${callback});`, imports, response)
+      )
+    ).toBe(false);
   });
 
   it.each(['function*', 'async function*'])(
@@ -559,6 +678,16 @@ describe('opportunity review auth recognition', () => {
     [
       'discarded wrapper result',
       route(`proposalResponse(${callback}); return new Response('ok');`),
+    ],
+    [
+      'unguarded return before the wrapper',
+      route(`return new Response('ok'); return proposalResponse(${callback});`),
+    ],
+    [
+      'conditional-only wrapper',
+      route(
+        `if (allowed) return proposalResponse(${callback}); return new Response('ok');`
+      ),
     ],
     [
       'untrusted callback function',
