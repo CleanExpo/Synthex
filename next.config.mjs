@@ -165,6 +165,7 @@ const nextConfig = {
   ],
   experimental: {
     webpackMemoryOptimizations: true,
+    webpackBuildWorker: true,
     optimizePackageImports: [
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
@@ -289,6 +290,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   webpack: (config, { dev, isServer, nextRuntime }) => {
+    if (!dev) {
+      config.parallelism = Math.min(config.parallelism ?? 100, 50);
+    }
     if (nextRuntime === 'edge') {
       config.resolve = config.resolve ?? {};
       config.resolve.alias = {
@@ -352,7 +356,9 @@ const nextConfig = {
 
       config.resolve.alias = {
         ...config.resolve.alias,
-        canvg: new URL('./lib/empty-module.cjs', import.meta.url).pathname,
+        canvg: fileURLToPath(
+          new URL('./lib/empty-module.cjs', import.meta.url)
+        ),
       };
     }
 

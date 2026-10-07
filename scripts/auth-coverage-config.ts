@@ -91,7 +91,11 @@ export const AUTH_IMPORT_PATTERNS: readonly string[] = [
  * Comments and string literals do not exist in the AST, so those spoofs cannot
  * reach the recogniser at all.
  */
-export const AUTH_GUARD_IMPORTS: readonly { name: string; module: RegExp }[] = [
+export const AUTH_GUARD_IMPORTS: readonly {
+  name: string;
+  module: RegExp;
+  callbackWrapper?: string;
+}[] = [
   {
     // IntentScape gate — wraps APISecurityChecker.check(AUTHENTICATED_READ|WRITE)
     // + getEffectiveOrganizationId(), 401/403 fail-closed (lib/intentscape/api.ts).
@@ -113,6 +117,15 @@ export const AUTH_GUARD_IMPORTS: readonly { name: string; module: RegExp }[] = [
     // AND a call to that binding in every exported handler.
     name: 'requireMissionOrg',
     module: /(^|\/)lib\/mission-control\/api-auth$/,
+  },
+  {
+    // Existing authenticated policies + effective organisation resolution.
+    // proposalResponse immediately awaits its operation; recognize only an
+    // inline callback directly returned through that exact imported wrapper,
+    // with the resolver's NextResponse denial immediately returned.
+    name: 'resolveProposalContext',
+    module: /^lib\/opportunity-review\/http$/,
+    callbackWrapper: 'proposalResponse',
   },
 ];
 
@@ -158,6 +171,9 @@ export function hasAstAuthGuard(content: string): boolean {
 
   // The exact ImportSpecifier nodes that bring an approved guard into scope.
   const guardSpecifiers = new Set<ts.ImportSpecifier>();
+  const callbackGuardSpecifiers = new Set<ts.ImportSpecifier>();
+  const callbackWrapperSpecifiers = new Set<ts.ImportSpecifier>();
+  const responseSpecifiers = new Set<ts.ImportSpecifier>();
 
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement)) continue;
@@ -172,10 +188,35 @@ export function hasAstAuthGuard(content: string): boolean {
     for (const element of clause.namedBindings.elements) {
       if (element.isTypeOnly) continue;
       const importedName = (element.propertyName ?? element.name).text;
+      if (
+        statement.moduleSpecifier.text === 'next/server' &&
+        importedName === 'NextResponse'
+      ) {
+        responseSpecifiers.add(element);
+      }
       const matches = AUTH_GUARD_IMPORTS.some(
         guard => guard.name === importedName && guard.module.test(specifier)
       );
       if (matches) guardSpecifiers.add(element);
+      if (
+        AUTH_GUARD_IMPORTS.some(
+          guard =>
+            guard.name === importedName &&
+            guard.callbackWrapper &&
+            guard.module.test(specifier)
+        )
+      ) {
+        callbackGuardSpecifiers.add(element);
+      }
+      if (
+        AUTH_GUARD_IMPORTS.some(
+          guard =>
+            guard.callbackWrapper === importedName &&
+            guard.module.test(specifier)
+        )
+      ) {
+        callbackWrapperSpecifiers.add(element);
+      }
     }
   }
 
@@ -188,23 +229,112 @@ export function hasAstAuthGuard(content: string): boolean {
   // Traversal stops at nested function boundaries. Descending into them let an
   // uncalled helper *inside* the handler certify it — the same unused-helper
   // class as before, one scope deeper (independent review of 036128fb, P2).
-  const callsGuard = (body: ts.Node): boolean => {
+  const isImportedCall = (
+    expression: ts.Expression,
+    specifiers: Set<ts.ImportSpecifier>
+  ): boolean => {
+    if (!ts.isIdentifier(expression)) return false;
+    const declarations =
+      checker.getSymbolAtLocation(expression)?.declarations ?? [];
+    return declarations.some(
+      declaration =>
+        ts.isImportSpecifier(declaration) && specifiers.has(declaration)
+    );
+  };
+  const gatesProposalResult = (body: ts.Node): boolean => {
+    if (!ts.isBlock(body)) return false;
+    const [first, second] = body.statements;
+    if (
+      !first ||
+      !ts.isVariableStatement(first) ||
+      !(first.declarationList.flags & ts.NodeFlags.Const) ||
+      first.declarationList.declarations.length !== 1 ||
+      !second ||
+      !ts.isIfStatement(second) ||
+      second.elseStatement
+    ) {
+      return false;
+    }
+    const declaration = first.declarationList.declarations[0];
+    if (
+      !ts.isIdentifier(declaration.name) ||
+      !declaration.initializer ||
+      !ts.isAwaitExpression(declaration.initializer) ||
+      !ts.isCallExpression(declaration.initializer.expression) ||
+      !isImportedCall(
+        declaration.initializer.expression.expression,
+        callbackGuardSpecifiers
+      )
+    ) {
+      return false;
+    }
+    const binding = checker.getSymbolAtLocation(declaration.name);
+    const isResult = (node: ts.Node): boolean =>
+      !!binding &&
+      ts.isIdentifier(node) &&
+      checker.getSymbolAtLocation(node) === binding;
+    const condition = second.expression;
+    if (
+      !ts.isBinaryExpression(condition) ||
+      condition.operatorToken.kind !== ts.SyntaxKind.InstanceOfKeyword ||
+      !isResult(condition.left) ||
+      !isImportedCall(condition.right, responseSpecifiers)
+    ) {
+      return false;
+    }
+    const denial = ts.isBlock(second.thenStatement)
+      ? second.thenStatement.statements.length === 1
+        ? second.thenStatement.statements[0]
+        : undefined
+      : second.thenStatement;
+    return (
+      !!denial &&
+      ts.isReturnStatement(denial) &&
+      !!denial.expression &&
+      isResult(denial.expression)
+    );
+  };
+  const callsGuard = (
+    body: ts.Node,
+    specifiers = guardSpecifiers,
+    allowWrapper = true
+  ): boolean => {
+    // This resolver returns a denial response instead of throwing. A call
+    // alone cannot protect the handler: require its initial bound result and
+    // immediate denial return, resolving both result and class by symbol.
+    if (gatesProposalResult(body)) return true;
     let found = false;
     const visit = (node: ts.Node): void => {
       if (found) return;
       if (isFunctionScope(node)) return;
-      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
-        const symbol = checker.getSymbolAtLocation(node.expression);
-        const declarations = symbol?.declarations ?? [];
+      if (ts.isCallExpression(node)) {
         if (
-          declarations.some(
-            declaration =>
-              ts.isImportSpecifier(declaration) &&
-              guardSpecifiers.has(declaration)
-          )
+          isImportedCall(node.expression, specifiers) &&
+          !isImportedCall(node.expression, callbackGuardSpecifiers)
         ) {
           found = true;
           return;
+        }
+        if (
+          allowWrapper &&
+          ts.isBlock(body) &&
+          body.statements[0] === node.parent &&
+          ts.isReturnStatement(node.parent) &&
+          node.parent.expression === node &&
+          node.arguments.length === 1 &&
+          isImportedCall(node.expression, callbackWrapperSpecifiers)
+        ) {
+          const callback = node.arguments[0];
+          if (
+            (ts.isArrowFunction(callback) ||
+              (ts.isFunctionExpression(callback) && !callback.asteriskToken)) &&
+            callback.parameters.length === 0 &&
+            ts.isBlock(callback.body) &&
+            callsGuard(callback.body, callbackGuardSpecifiers, false)
+          ) {
+            found = true;
+            return;
+          }
         }
       }
       ts.forEachChild(node, visit);
@@ -232,8 +362,8 @@ export function hasAstAuthGuard(content: string): boolean {
  * kinds is exactly how that gap appeared; ask TypeScript instead.
  *
  * Known conservative false negative: a guard called inside a directly-invoked
- * IIFE is not counted. Recognising only *provably* invoked callbacks is the
- * safe direction for a gate, and no route in the repo uses that shape.
+ * IIFE is not counted. Only the explicitly registered, directly returned error
+ * wrapper may contribute its inline operation body to the auth scan.
  */
 function isFunctionScope(node: ts.Node): boolean {
   return (

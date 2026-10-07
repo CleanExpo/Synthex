@@ -16,6 +16,12 @@ jest.mock('@/lib/prisma', () => ({
     },
   },
 }));
+// Exercise the committed lifecycle implementation rather than a stale dist build.
+jest.mock('@unite-group/control-module', () =>
+  jest.requireActual(
+    '../../../packages/control-module/src/intake/command-packet.service'
+  )
+);
 
 import {
   deriveSafetyFlags,
@@ -78,13 +84,24 @@ describe('command-packet.service — safety flags (SYN-1032)', () => {
       commandPacket({ approvalGate: 'production_blocked', risks: ['legal'] })
     );
     expect(flags).toEqual(
-      expect.arrayContaining(['production_blocked', 'sensitivity:restricted', 'has_risks'])
+      expect.arrayContaining([
+        'production_blocked',
+        'sensitivity:restricted',
+        'has_risks',
+      ])
     );
   });
 
   it('does not flag public/internal sensitivity or a clean human_review packet', () => {
-    expect(deriveSafetyFlags(boardInput({ sensitivity: 'public' }), commandPacket())).toEqual([]);
-    expect(deriveSafetyFlags(boardInput({ sensitivity: 'internal' }), commandPacket())).toEqual([]);
+    expect(
+      deriveSafetyFlags(boardInput({ sensitivity: 'public' }), commandPacket())
+    ).toEqual([]);
+    expect(
+      deriveSafetyFlags(
+        boardInput({ sensitivity: 'internal' }),
+        commandPacket()
+      )
+    ).toEqual([]);
   });
 });
 
@@ -126,12 +143,72 @@ describe('command-packet.service — persistence', () => {
   it('inspects a packet org-scoped (id + organizationId)', async () => {
     mockFindFirst.mockResolvedValue(row());
     await getCommandPacket(ORG, 'cp-1');
-    expect(mockFindFirst).toHaveBeenCalledWith({ where: { id: 'cp-1', organizationId: ORG } });
+    expect(mockFindFirst).toHaveBeenCalledWith({
+      where: { id: 'cp-1', organizationId: ORG },
+    });
   });
 });
 
 describe('command-packet.service — lifecycle transitions', () => {
   beforeEach(() => jest.clearAllMocks());
+
+  it.each(['approve', 'route', 'complete', 'block'] as const)(
+    'requires opportunity review authority for generic %s actions in every lifecycle state',
+    async action => {
+      for (const status of [
+        'pending',
+        'approved',
+        'routed',
+        'complete',
+        'blocked',
+      ]) {
+        const routingHints = {
+          kind: 'opportunity_review',
+          record: { status: 'pending', revision: 0 },
+        };
+        const packet = row({
+          source: 'opportunity_review',
+          status,
+          approvalGate: 'production_blocked',
+          routingHints,
+        });
+        mockFindFirst.mockResolvedValue(packet);
+
+        const result = await transitionCommandPacket(
+          ORG,
+          'cp-1',
+          action,
+          'evidence:generic'
+        );
+
+        expect(result).toEqual({
+          ok: false,
+          error: 'opportunity_review_required',
+          packet,
+        });
+        expect(mockFindFirst).toHaveBeenLastCalledWith({
+          where: { id: 'cp-1', organizationId: ORG },
+        });
+        expect(mockUpdate).not.toHaveBeenCalled();
+        expect(routingHints.record).toEqual({ status: 'pending', revision: 0 });
+      }
+    }
+  );
+
+  it('still blocks a normal pending packet', async () => {
+    mockFindFirst.mockResolvedValue(
+      row({ source: 'manual', status: 'pending' })
+    );
+    mockUpdate.mockResolvedValue(row({ source: 'manual', status: 'blocked' }));
+
+    const result = await transitionCommandPacket(ORG, 'cp-1', 'block');
+
+    expect(result.ok).toBe(true);
+    expect(mockUpdate).toHaveBeenCalledWith({
+      where: { id: 'cp-1' },
+      data: { status: 'blocked' },
+    });
+  });
 
   it('returns not_found when the packet does not exist', async () => {
     mockFindFirst.mockResolvedValue(null);
@@ -152,7 +229,9 @@ describe('command-packet.service — lifecycle transitions', () => {
   });
 
   it('refuses to approve a production_blocked packet (safety gate)', async () => {
-    mockFindFirst.mockResolvedValue(row({ status: 'pending', approvalGate: 'production_blocked' }));
+    mockFindFirst.mockResolvedValue(
+      row({ status: 'pending', approvalGate: 'production_blocked' })
+    );
     const r = await transitionCommandPacket(ORG, 'cp-1', 'approve');
     expect(r).toMatchObject({ ok: false, error: 'production_blocked' });
     expect(mockUpdate).not.toHaveBeenCalled();
@@ -173,12 +252,17 @@ describe('command-packet.service — lifecycle transitions', () => {
   });
 
   it('appends an evidence ref on completion', async () => {
-    mockFindFirst.mockResolvedValue(row({ status: 'routed', evidenceRefs: ['linear:SYN-1'] }));
+    mockFindFirst.mockResolvedValue(
+      row({ status: 'routed', evidenceRefs: ['linear:SYN-1'] })
+    );
     mockUpdate.mockResolvedValue(row({ status: 'complete' }));
     await transitionCommandPacket(ORG, 'cp-1', 'complete', 'obsidian:note-9');
     expect(mockUpdate).toHaveBeenCalledWith({
       where: { id: 'cp-1' },
-      data: { status: 'complete', evidenceRefs: { set: ['linear:SYN-1', 'obsidian:note-9'] } },
+      data: {
+        status: 'complete',
+        evidenceRefs: { set: ['linear:SYN-1', 'obsidian:note-9'] },
+      },
     });
   });
 });

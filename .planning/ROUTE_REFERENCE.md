@@ -4,6 +4,8 @@
 >
 > **538 API routes · 101 dashboard pages · 116 Prisma models in use**
 > Auth: 431 user-authed · 23 admin-only · 27 cron · 57 public
+>
+> Last audited: 2026-10-07 — opportunity proposals API and dashboard slice only; counts above are the original generated inventory.
 
 ---
 
@@ -578,6 +580,13 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `POST /api/onboarding/review` — user — _onboardingProgress,organization_
 - `POST /api/onboarding/validate-key` — user — _user_
 
+### opportunity-proposals
+
+- `GET,POST,PATCH /api/opportunity-proposals` — user — _commandPacket_
+- `GET /api/opportunity-proposals/[id]/export` — user — _commandPacket_
+
+Both routes use the existing `APISecurityChecker` authenticated read/write policies and `getEffectiveOrganizationId(userId)` for organisation scope. Existing `CommandPacket.routingHints` stores the envelope `{ kind: 'opportunity_review', version, clientRequestId, captureFingerprint, record }`; the dashboard page uses the existing authenticated dashboard layout.
+
 ### optimize
 
 - `GET,POST,PUT /api/optimize/auto-schedule` — user — _user_
@@ -990,6 +999,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 | Listening                       | /dashboard/listening                     | (partial)                                                                                                                                                                                                                                                 |
 | Local                           | /dashboard/local                         | `/api/auth/oauth/[platform]`, `/api/google-business/posts`, `/api/local/case-studies`, `/api/google-business/reviews/[id]/auto-reply` (partial)                                                                                                           |
 | Monitoring                      | /dashboard/monitoring                    | (partial)                                                                                                                                                                                                                                                 |
+| Opportunities                   | /dashboard/opportunities                 | `/api/opportunity-proposals`, `/api/opportunity-proposals/[id]/export`                                                                                                                                                                                    |
 | Optimisation                    | /dashboard/optimisation                  | `/api/bayesian/spaces`, `/api/bayesian/run` (partial)                                                                                                                                                                                                     |
 | Patterns                        | /dashboard/patterns                      | `/api/patterns/analyze` (partial)                                                                                                                                                                                                                         |
 | Personas                        | /dashboard/personas                      | (partial)                                                                                                                                                                                                                                                 |
@@ -1256,30 +1266,33 @@ Reverse lookup: which routes touch each model. Top 30 most-used models.
 | ------------------------------------------- | ----- | ----- | ----- |
 | _Add entries here as issues are discovered_ |       |       |       |
 
+Opportunity slice documentation (2026-10-07): route scope and auth helpers recorded below; broader inventory issues remain outside this slice.
+
 ---
 
 ## Recent Changes
 
-| Date       | Route/Page                        | Change                                                                                                               | Issue      |
-| ---------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------- |
-| 2026-05-25 | GET /api/agency/ceo-review-queue  | Workflows in `waiting_approval`; `withAuth` + org; RBAC `posts:approve` or `campaigns:manage` when roles assigned    | SYN-972    |
-| 2026-05-25 | GET,POST /api/agency/tier1-report | Tier-1 snapshot; `withAuth`; GET `analytics:read`, POST `analytics:export` or `organization:manage` when roles exist | SYN-PM-107 |
-| 2026-05-25 | GET /api/cron/agency-tier1-weekly | Cron Tier-1 snapshot for Unite workspace (`verifyCronRequest`)                                                       | SYN-PM-107 |
-| 2026-05-25 | GET,POST,PATCH /api/tasks         | Optional `agencyTaskId` (AT-001–032); list filter; catalog in `lib/agency/`                                          | SYN-972    |
-| 2026-05-25 | PATCH /api/advisor/brief          | SYN-972: Mark done spawns content-campaign workflow + execution id                                                   | SYN-972    |
-| 2026-05-25 | docs/pm/\*                        | PM agency gap audit pack (catalog, matrix, gaps, roadmap)                                                            | SYN-971    |
-| 2026-05-22 | Prisma schema                     | SYN-968: Added governed signal/opportunity/outcome persistence                                                       | SYN-968    |
-| 2026-05-22 | Marketing Agency API              | SYN-968: Exposed org-scoped governed opportunities for dashboard review                                              | SYN-968    |
-| 2026-05-22 | Command Centre status             | SYN-968: Added Marketing Agency outcome-learning signal to Health Loop                                               | SYN-968    |
-| 2026-05-22 | Command Centre dashboard          | SYN-968: Added passive Board/Margot/@team routing queue for draft command packets                                    | SYN-968    |
-| 2026-03-23 | /api/user/account                 | COMP-1: Added `supabase.auth.admin.deleteUser()` — GDPR Art.17                                                       | COMP-1     |
-| 2026-03-23 | /api/user/export                  | COMP-3: Created GDPR Art.20 data export endpoint                                                                     | COMP-3     |
-| 2026-03-23 | /api/auth/unified-login           | SEC-3: Removed `accessToken` from response body                                                                      | SEC-3      |
-| 2026-03-23 | /api/content/branded              | SEC-1: Added auth + org check                                                                                        | SEC-1      |
-| 2026-03-23 | /api/brand/profile                | SEC-2: Added auth + org check                                                                                        | SEC-2      |
-| 2026-03-23 | middleware.ts                     | SEC-5: JWT HMAC verification via jose                                                                                | SEC-5      |
-| 2026-03-23 | /api/ws                           | COMP-5: WebSocket CORS restricted to synthex.social                                                                  | COMP-5     |
-| 2026-03-23 | /api/contact                      | Created — public POST, Resend SDK, rate-limited (writeDefault)                                                       | —          |
+| Date       | Route/Page                                                                                   | Change                                                                                                                                                  | Issue      |
+| ---------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 2026-10-07 | /dashboard/opportunities; /api/opportunity-proposals; /api/opportunity-proposals/[id]/export | Opportunity review queue, GET/POST/PATCH proposal operations, GET export; existing authenticated effective organisation scope and CommandPacket storage | —          |
+| 2026-05-25 | GET /api/agency/ceo-review-queue                                                             | Workflows in `waiting_approval`; `withAuth` + org; RBAC `posts:approve` or `campaigns:manage` when roles assigned                                       | SYN-972    |
+| 2026-05-25 | GET,POST /api/agency/tier1-report                                                            | Tier-1 snapshot; `withAuth`; GET `analytics:read`, POST `analytics:export` or `organization:manage` when roles exist                                    | SYN-PM-107 |
+| 2026-05-25 | GET /api/cron/agency-tier1-weekly                                                            | Cron Tier-1 snapshot for Unite workspace (`verifyCronRequest`)                                                                                          | SYN-PM-107 |
+| 2026-05-25 | GET,POST,PATCH /api/tasks                                                                    | Optional `agencyTaskId` (AT-001–032); list filter; catalog in `lib/agency/`                                                                             | SYN-972    |
+| 2026-05-25 | PATCH /api/advisor/brief                                                                     | SYN-972: Mark done spawns content-campaign workflow + execution id                                                                                      | SYN-972    |
+| 2026-05-25 | docs/pm/\*                                                                                   | PM agency gap audit pack (catalog, matrix, gaps, roadmap)                                                                                               | SYN-971    |
+| 2026-05-22 | Prisma schema                                                                                | SYN-968: Added governed signal/opportunity/outcome persistence                                                                                          | SYN-968    |
+| 2026-05-22 | Marketing Agency API                                                                         | SYN-968: Exposed org-scoped governed opportunities for dashboard review                                                                                 | SYN-968    |
+| 2026-05-22 | Command Centre status                                                                        | SYN-968: Added Marketing Agency outcome-learning signal to Health Loop                                                                                  | SYN-968    |
+| 2026-05-22 | Command Centre dashboard                                                                     | SYN-968: Added passive Board/Margot/@team routing queue for draft command packets                                                                       | SYN-968    |
+| 2026-03-23 | /api/user/account                                                                            | COMP-1: Added `supabase.auth.admin.deleteUser()` — GDPR Art.17                                                                                          | COMP-1     |
+| 2026-03-23 | /api/user/export                                                                             | COMP-3: Created GDPR Art.20 data export endpoint                                                                                                        | COMP-3     |
+| 2026-03-23 | /api/auth/unified-login                                                                      | SEC-3: Removed `accessToken` from response body                                                                                                         | SEC-3      |
+| 2026-03-23 | /api/content/branded                                                                         | SEC-1: Added auth + org check                                                                                                                           | SEC-1      |
+| 2026-03-23 | /api/brand/profile                                                                           | SEC-2: Added auth + org check                                                                                                                           | SEC-2      |
+| 2026-03-23 | middleware.ts                                                                                | SEC-5: JWT HMAC verification via jose                                                                                                                   | SEC-5      |
+| 2026-03-23 | /api/ws                                                                                      | COMP-5: WebSocket CORS restricted to synthex.social                                                                                                     | COMP-5     |
+| 2026-03-23 | /api/contact                                                                                 | Created — public POST, Resend SDK, rate-limited (writeDefault)                                                                                          | —          |
 
 ### 2026-03-30 — SYN-532: Review Intelligence → Authority Score + Weekly Digest + GEO schema
 
