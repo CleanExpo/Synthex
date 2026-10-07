@@ -476,6 +476,22 @@ describe('opportunity review auth recognition', () => {
   });
 
   it.each([
+    ['arrow', 'async (unused = leakPrivateData()) =>'],
+    ['function expression', 'async function (unused = leakPrivateData())'],
+  ])(
+    'rejects a %s callback with a default parameter before authentication',
+    (_name, signature) => {
+      expect(
+        hasAuthGuard(
+          route(
+            `return proposalResponse(${signature} { ${guard} return new Response('ok'); });`
+          )
+        )
+      ).toBe(false);
+    }
+  );
+
+  it.each([
     ['discarded awaited result', `await resolveProposalContext(request);`],
     ['unawaited call', `resolveProposalContext(request);`],
     [

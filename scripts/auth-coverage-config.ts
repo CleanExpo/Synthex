@@ -328,6 +328,7 @@ export function hasAstAuthGuard(content: string): boolean {
           if (
             (ts.isArrowFunction(callback) ||
               (ts.isFunctionExpression(callback) && !callback.asteriskToken)) &&
+            callback.parameters.length === 0 &&
             ts.isBlock(callback.body) &&
             callsGuard(callback.body, callbackGuardSpecifiers, false)
           ) {
