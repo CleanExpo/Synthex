@@ -1451,6 +1451,16 @@ export async function sendEscalation(
 
   // Defensive: do not throw under any circumstance.
   try {
+    // Urgent approvals still appear in Slack; Telegram is the additional urgent path.
+    if (opts.channel === NotificationChannel.TELEGRAM &&
+        opts.priority === 'urgent' && opts.requiresApproval === true) {
+      const slack = await dispatchEscalation(
+        NotificationChannel.SLACK, opts.message, opts.priority, true
+      );
+      if (!slack.success) {
+        logger.error('[HERMES] Urgent approval Slack delivery failed', { error: slack.error });
+      }
+    }
     const primary = await dispatchEscalation(
       opts.channel === NotificationChannel.CONSOLE ||
         (opts.channel === NotificationChannel.TELEGRAM && opts.priority === 'urgent' && opts.requiresApproval)
