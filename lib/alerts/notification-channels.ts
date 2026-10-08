@@ -1160,7 +1160,7 @@ export class AlertManager {
       if (!channel.enabled) continue;
       if (channel.type === NotificationChannel.TELEGRAM && !isUrgentApproval(fullAlert)) continue;
       // Decisions and monitoring must reach Slack even below an old severity floor.
-      if (channel.type !== NotificationChannel.SLACK &&
+      if (channel.type !== NotificationChannel.SLACK && channel.type !== NotificationChannel.TELEGRAM &&
           !severityMeetsMinimum(fullAlert.severity, channel.minSeverity)) continue;
 
       try {
