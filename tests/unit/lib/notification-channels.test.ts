@@ -144,7 +144,11 @@ describe('approval routing policy', () => {
       requiresApproval: true,
     });
     expect(result).toMatchObject({ sent: true, channel: NotificationChannel.TELEGRAM });
-    expect((global.fetch as jest.Mock).mock.calls[0][0]).toContain('api.telegram.org');
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    const calls = (global.fetch as jest.Mock).mock.calls;
+    expect(calls[0][0]).toBe('https://slack.com/api/chat.postMessage');
+    expect(JSON.parse(calls[0][1].body).channel).toBe('C0C8GB2TBMW');
+    expect(calls[1][0]).toContain('api.telegram.org');
   });
 
   it('keeps owner identity independent of legacy outbound targets', () => {
