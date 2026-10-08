@@ -92,6 +92,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           channel: NotificationChannel.LINEAR,
           message: `HERMES draft skipped — no Owner for org ${orgId}.`,
           priority: 'routine',
+          requiresApproval: true,
           context: { orgId, hermesConfigId: config.id },
         });
         skipped += 1;
@@ -426,8 +427,8 @@ async function processOrgWithQuestions(args: ProcessOrgQuestionsArgs): Promise<{
         data: { status: 'drafted' },
       });
 
-      // Surface the questions to the author over the existing Telegram channel.
-      // Falls back to Linear, and no-ops gracefully if neither is configured.
+      // Surface author questions in Slack approvals without mentioning anyone.
+      // Retain Linear as a best-effort fallback if Slack delivery fails.
       await sendEscalation({
         channel: NotificationChannel.TELEGRAM,
         message: formatAuthorQuestionsMessage(
@@ -436,6 +437,7 @@ async function processOrgWithQuestions(args: ProcessOrgQuestionsArgs): Promise<{
           proposal.id
         ),
         priority: 'routine',
+        requiresApproval: true,
         fallback: NotificationChannel.LINEAR,
         context: { orgId: args.orgId, proposalId: proposal.id },
       });
