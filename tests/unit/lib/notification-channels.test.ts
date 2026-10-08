@@ -2,6 +2,9 @@ import {
   resolveTelegramChannelConfig,
   sendEscalation,
   NotificationChannel,
+  AlertManager,
+  AlertSeverity,
+  type Alert,
 } from '@/lib/alerts/notification-channels';
 
 // Keep a copy of the process env shape for deterministic tests.
@@ -39,7 +42,9 @@ function resetEnv() {
 beforeEach(() => {
   resetEnv();
   jest.resetAllMocks();
-  global.fetch = jest.fn(async () => textResponse('{}')) as unknown as typeof fetch;
+  global.fetch = jest.fn(async () =>
+    textResponse('{"ok":true}')
+  ) as unknown as typeof fetch;
 });
 
 afterAll(() => {
@@ -84,6 +89,7 @@ describe('resolveTelegramChannelConfig', () => {
       channel: NotificationChannel.TELEGRAM,
       message: 'Telegram outage test',
       priority: 'urgent',
+      requiresApproval: true,
     });
 
     expect(result.sent).toBe(false);
@@ -98,10 +104,224 @@ describe('resolveTelegramChannelConfig', () => {
     const result = await sendEscalation({
       channel: NotificationChannel.TELEGRAM,
       message: 'Telegram outage test',
-      priority: 'routine',
+      priority: 'urgent',
+      requiresApproval: true,
     });
 
     expect(result.sent).toBe(true);
     expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('approval routing policy (#984)', () => {
+  const alert: Alert = {
+    title: 'Approval needed',
+    message: 'Please review',
+    severity: AlertSeverity.INFO,
+    source: 'test',
+  };
+  let manager: AlertManager;
+
+  beforeEach(() => {
+    process.env.ALERT_SLACK_BOT_TOKEN = 'test-slack-token';
+    process.env.TELEGRAM_BOT_TOKEN = VALID_BOT_TOKEN;
+    process.env.TELEGRAM_CHAT_ID = VALID_CHAT_ID;
+    manager = AlertManager.getInstance();
+    for (const channel of manager.getChannels())
+      manager.removeChannel(channel.type);
+    manager.addChannel({
+      type: NotificationChannel.SLACK,
+      enabled: true,
+      minSeverity: AlertSeverity.WARNING,
+      config: { botToken: 'test-slack-token' },
+    });
+    manager.addChannel({
+      type: NotificationChannel.TELEGRAM,
+      enabled: true,
+      minSeverity: AlertSeverity.ERROR,
+      config: { botToken: VALID_BOT_TOKEN, chatId: VALID_CHAT_ID },
+    });
+  });
+
+  function payload(call = 0) {
+    return JSON.parse((global.fetch as jest.Mock).mock.calls[call][1].body);
+  }
+
+  it.each([
+    { urgent: false, requiresApproval: false },
+    { urgent: true, requiresApproval: false },
+    { urgent: false, requiresApproval: true },
+    {},
+  ])(
+    'never sends non-approval or non-urgent alerts to Telegram: %j',
+    async flags => {
+      // Even critical severity and an opt-out-looking env value cannot bypass policy.
+      process.env.ALERT_TELEGRAM_URGENT_ONLY = 'false';
+      await manager.sendAlert({
+        ...alert,
+        severity: AlertSeverity.CRITICAL,
+        ...flags,
+      });
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect((global.fetch as jest.Mock).mock.calls[0][0]).toBe(
+        'https://slack.com/api/chat.postMessage'
+      );
+      expect(payload().channel).toBe(
+        flags.requiresApproval ? 'C0C8GB2TBMW' : '#ops-alerts'
+      );
+    }
+  );
+
+  it('delivers low-severity urgent approvals to Slack and Telegram', async () => {
+    await manager.sendAlert({ ...alert, urgent: true, requiresApproval: true });
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(payload().channel).toBe('C0C8GB2TBMW');
+    expect(payload(1).chat_id).toBe(VALID_CHAT_ID);
+  });
+
+  it('does not tag users or broadcast mentions from any Slack text field', async () => {
+    const mentions = '<@U123> <!here> <!channel> @here @channel @everyone';
+    await manager.sendAlert({
+      ...alert,
+      requiresApproval: true,
+      title: mentions,
+      message: mentions,
+      source: mentions,
+      tags: [mentions],
+    });
+    const sent = JSON.stringify(payload());
+    expect(sent).not.toMatch(/<@U|<!here>|<!channel>|@here|@channel|@everyone/);
+    expect(payload()).toMatchObject({
+      channel: 'C0C8GB2TBMW',
+      parse: 'none',
+      link_names: false,
+    });
+  });
+
+  it.each([
+    [NotificationChannel.TELEGRAM, 'routine', true, 'C0C8GB2TBMW'],
+    [NotificationChannel.TELEGRAM, 'urgent', false, '#ops-alerts'],
+    [NotificationChannel.LINEAR, 'routine', false, '#ops-alerts'],
+  ] as const)(
+    'reroutes %s %s escalations to Slack',
+    async (channel, priority, requiresApproval, target) => {
+      const result = await sendEscalation({
+        channel,
+        message: 'Escalation',
+        priority,
+        requiresApproval,
+      });
+      expect(result).toEqual({
+        sent: true,
+        channel: NotificationChannel.SLACK,
+      });
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(payload().channel).toBe(target);
+    }
+  );
+
+  it('also posts urgent Telegram approval asks to Slack approvals', async () => {
+    await sendEscalation({
+      channel: NotificationChannel.TELEGRAM,
+      message: 'Approve?',
+      priority: 'urgent',
+      requiresApproval: true,
+    });
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(payload().channel).toBe('C0C8GB2TBMW');
+    expect(payload(1).chat_id).toBe(VALID_CHAT_ID);
+  });
+
+  it('cannot use Telegram as a fallback for monitoring', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(textResponse('{}', 500));
+    await sendEscalation({
+      channel: NotificationChannel.SLACK,
+      message: 'Monitor',
+      priority: 'urgent',
+      fallback: NotificationChannel.TELEGRAM,
+    });
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    for (const [url] of (global.fetch as jest.Mock).mock.calls)
+      expect(url).toContain('slack.com');
+  });
+
+  it('reports Slack API failures even for HTTP 200', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue(
+      textResponse('{"ok":false,"error":"channel_not_found"}')
+    );
+    const result = await sendEscalation({
+      channel: NotificationChannel.SLACK,
+      message: 'Ask',
+      priority: 'routine',
+      requiresApproval: true,
+    });
+    expect(result.sent).toBe(false);
+    expect(result.error).toContain('channel_not_found');
+  });
+
+  it('uses separate channel-bound webhooks and refuses the approvals webhook for FYI', async () => {
+    delete process.env.ALERT_SLACK_BOT_TOKEN;
+    process.env.ALERT_SLACK_WEBHOOK_URL = 'https://hooks.slack.test/approvals';
+    process.env.ALERT_SLACK_OPS_WEBHOOK_URL = 'https://hooks.slack.test/ops';
+    await sendEscalation({
+      channel: NotificationChannel.SLACK,
+      message: 'Ask',
+      priority: 'routine',
+      requiresApproval: true,
+    });
+    await sendEscalation({
+      channel: NotificationChannel.SLACK,
+      message: 'FYI',
+      priority: 'routine',
+    });
+    expect((global.fetch as jest.Mock).mock.calls.map(call => call[0])).toEqual(
+      ['https://hooks.slack.test/approvals', 'https://hooks.slack.test/ops']
+    );
+    delete process.env.ALERT_SLACK_OPS_WEBHOOK_URL;
+    expect(
+      (
+        await sendEscalation({
+          channel: NotificationChannel.SLACK,
+          message: 'FYI',
+          priority: 'routine',
+        })
+      ).sent
+    ).toBe(false);
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not send a Telegram channel test as a routine alert', async () => {
+    expect(
+      (await manager.testChannel(NotificationChannel.TELEGRAM)).success
+    ).toBe(false);
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('keeps dry runs free of network requests', async () => {
+    process.env.HERMES_ESCALATION_DRY_RUN = 'true';
+    expect(
+      await sendEscalation({
+        channel: NotificationChannel.TELEGRAM,
+        message: 'Digest',
+        priority: 'routine',
+      })
+    ).toEqual({ sent: true, channel: NotificationChannel.SLACK });
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('resolves the owner destination independently of legacy outbound chat IDs', () => {
+    expect(
+      resolveTelegramChannelConfig({
+        TELEGRAM_BOT_TOKEN: VALID_BOT_TOKEN,
+        TELEGRAM_OWNER_ID: '123456789',
+        TELEGRAM_CHAT_ID: '-1009999999999',
+      }).config?.chatId
+    ).toBe('123456789');
+    expect(
+      resolveTelegramChannelConfig({
+        TELEGRAM_BOT_TOKEN: VALID_BOT_TOKEN,
+        TELEGRAM_OWNER_ID: '123456789',
+      }).valid
+    ).toBe(true);
   });
 });

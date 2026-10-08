@@ -426,17 +426,16 @@ async function processOrgWithQuestions(args: ProcessOrgQuestionsArgs): Promise<{
         data: { status: 'drafted' },
       });
 
-      // Surface the questions to the author over the existing Telegram channel.
-      // Falls back to Linear, and no-ops gracefully if neither is configured.
+      // Surface non-urgent author questions in Slack #approvals without mentions.
       await sendEscalation({
-        channel: NotificationChannel.TELEGRAM,
+        channel: NotificationChannel.SLACK,
         message: formatAuthorQuestionsMessage(
           candidate.topic,
           dq.questions,
           proposal.id
         ),
         priority: 'routine',
-        fallback: NotificationChannel.LINEAR,
+        requiresApproval: true,
         context: { orgId: args.orgId, proposalId: proposal.id },
       });
 

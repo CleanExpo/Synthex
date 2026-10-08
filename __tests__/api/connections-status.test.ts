@@ -92,6 +92,19 @@ describe('connection status manifest', () => {
     expect(body).not.toContain('STRIPE_SECRET_KEY');
   });
 
+  it.each([
+    { HERMES_LINEAR_TEAM_ID: 'team-1' },
+    { ALERT_SLACK_BOT_TOKEN: 'slack-test' },
+    { ALERT_SLACK_WEBHOOK_URL: 'https://hooks.slack.test/approvals' },
+  ])('does not block Hermes when optional Telegram is absent: %j', env => {
+    const hermes = buildConnectionStatusManifest(env).connections.find(
+      row => row.id === 'hermes'
+    );
+    expect(hermes).toMatchObject({ state: 'ready' });
+    expect(hermes?.detail).toContain('optional Telegram');
+    expect(hermes?.nextAction).toBeUndefined();
+  });
+
   it('serves the manifest through GET', async () => {
     const { GET } = await import('@/app/api/v1/connections/status/route');
 

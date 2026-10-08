@@ -123,6 +123,8 @@ const sendAlertSchema = z.object({
   source: z.string().min(1),
   metadata: z.record(z.string(), z.unknown()).optional(),
   tags: z.array(z.string()).optional(),
+  urgent: z.boolean().optional(),
+  requiresApproval: z.boolean().optional(),
 });
 
 /**
@@ -185,8 +187,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { title, message, severity, source, metadata, tags } =
-      alertValidation.data;
+    const {
+      title,
+      message,
+      severity,
+      source,
+      metadata,
+      tags,
+      urgent,
+      requiresApproval,
+    } = alertValidation.data;
 
     const alert: Alert = {
       title,
@@ -195,6 +205,8 @@ export async function POST(request: NextRequest) {
       source,
       metadata,
       tags,
+      urgent,
+      requiresApproval,
     };
 
     const results = await alertManager.sendAlert(alert);

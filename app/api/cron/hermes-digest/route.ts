@@ -8,7 +8,7 @@
  * For each org with HermesConfig.enabled=true:
  *   1. Build last 7 days of metrics (READ-ONLY — zero writes to content tables)
  *   2. Format as plain-text digest (Grade 4 readable, no markdown)
- *   3. Send via sendEscalation({ channel: TELEGRAM, priority: 'routine' })
+ *   3. Send via sendEscalation({ channel: SLACK, priority: 'routine' })
  *   4. Log full metrics object to Vercel logs for archival
  *
  * The success metric — hours of human work eliminated per week — is credited
@@ -105,12 +105,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
 
     const escalation = await sendEscalation({
-      channel: NotificationChannel.TELEGRAM,
+      channel: NotificationChannel.SLACK,
       message: digest,
       priority: 'routine',
-      // Linear fallback is unnecessary for the digest — a missed weekly send is
-      // recoverable from the Vercel logs above. Telegram-only keeps the digest
-      // out of Linear noise during a Telegram outage.
+      // Monitoring-only digest goes to Slack #ops-alerts.
       context: { orgId: config.organizationId },
     });
 

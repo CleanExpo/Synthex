@@ -51,7 +51,8 @@ function cleanEnvValue(value: string | undefined): string | undefined {
 function hasValidTelegramCredentials(env: EnvReader = process.env): boolean {
   for (const [tokenVar, chatIdVar] of TELEGRAM_CREDENTIAL_PAIRS) {
     const tokenValue = cleanEnvValue(env[tokenVar]);
-    const chatIdValue = cleanEnvValue(env[chatIdVar]);
+    const chatIdValue =
+      cleanEnvValue(env.TELEGRAM_OWNER_ID) || cleanEnvValue(env[chatIdVar]);
 
     if (!tokenValue || !chatIdValue) {
       continue;
@@ -180,13 +181,16 @@ export function buildConnectionStatusManifest(
     row(
       'hermes',
       'Hermes escalation',
-      hasValidTelegramCredentials(env) &&
-        hasAny(env, ['HERMES_LINEAR_TEAM_ID']),
-      'Hermes escalation can route to Telegram and Linear.',
+      hasAny(env, [
+        'ALERT_SLACK_BOT_TOKEN',
+        'ALERT_SLACK_WEBHOOK_URL',
+        'HERMES_LINEAR_TEAM_ID',
+      ]),
       hasValidTelegramCredentials(env)
-        ? 'Linear team reference is missing for Hermes escalation.'
-        : 'Hermes Telegram credentials are not in a valid bot/chat format.',
-      'Set Telegram and Hermes Linear team references.'
+        ? 'Hermes routing is configured; Telegram is available for urgent approvals only.'
+        : 'Hermes routing is configured; optional Telegram urgent approvals are disabled.',
+      'Slack routing or a Linear team reference is missing for Hermes escalation.',
+      'Configure Slack routing or the Hermes Linear team reference.'
     ),
     row(
       'ai_providers',
@@ -244,10 +248,15 @@ export function buildConnectionStatusManifest(
       'monitoring',
       'Monitoring and alerts',
       hasAny(env, ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN']) ||
-        hasAny(env, ['TELEGRAM_BOT_TOKEN', 'LINEAR_API_KEY']),
+        hasAny(env, [
+          'ALERT_SLACK_BOT_TOKEN',
+          'ALERT_SLACK_WEBHOOK_URL',
+          'ALERT_SLACK_OPS_WEBHOOK_URL',
+          'LINEAR_API_KEY',
+        ]),
       'Monitoring or alert routing references are present.',
       'Monitoring and alert routing references are missing.',
-      'Configure Sentry, Telegram, or Linear alert routing.'
+      'Configure Sentry, Slack, or Linear alert routing.'
     ),
   ];
 
