@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "b8262a0d9b82a958a6ec832293c14ee1181ec5da",
+  "tests": "5 suites / 107 tests passed on committed source",
+  "testCommand": "NODE_DISABLE_COMPILE_CACHE=1 npm run visual:test -- --no-cache --cacheDirectory <external cache>",
+  "eslintFiles": 18,
+  "eslintWarnings": 0,
+  "preCommitHooks": "Secret detection, lint-staged and formatting passed without bypass",
+  "brandPackageBuild": "ESM/CJS/DTS passed on committed source",
+  "buildCommand": "NODE_DISABLE_COMPILE_CACHE=1 npm run build (packages/brand-config)",
+  "generatedFiles": 156,
+  "sourceMasterFiles": 28,
+  "missingAssets": 0,
+  "codeDebt": 0,
+  "approvalInputs": 3,
+  "preflightExitCode": 1,
+  "providerGenerationCalls": 0,
+  "spend": 0,
+  "deploys": 0,
+  "productionWrites": 0,
+  "lintStallResolved": "Node compile-cache reads stalled; NODE_DISABLE_COMPILE_CACHE=1 resolved validation",
+  "fullApplicationBuild": "Not run; focused visual contracts and brand package validated"
+}

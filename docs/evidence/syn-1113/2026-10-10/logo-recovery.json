@@ -1,0 +1,71 @@
+[
+  {
+    "path": "public/logos/dr/primary.jpg",
+    "source": "/Users/phill-mac/pi-seo-workspace/Synthex/public/brands/disaster-recovery/logo.jpg",
+    "sha256": "143b91b30f86beec3c0b5db070671270cd82d2dc66d5c99ce2962573f3e3cd5b",
+    "method": "Exact original bytes copied; no generation, recolouring, cropping or retouching."
+  },
+  {
+    "path": "public/logos/ra/primary.png",
+    "source": "/Volumes/Storage Unit/RestoreAssist/Application/public/logo.png",
+    "sha256": "63ac9a49ecb5765444b5be4d95a4083916f98c97c758809c92b2745158dfc6fb",
+    "method": "Exact original bytes copied; no generation, recolouring, cropping or retouching."
+  },
+  {
+    "path": "public/logos/carsi/primary.png",
+    "source": "/Volumes/Storage Unit/CARSI/public/logo/logo1.png",
+    "sha256": "e5c83872468c9b6f8ba80f0ab0dda077d028c76339b22210243f83afeae9fcd7",
+    "method": "Exact original bytes copied; no generation, recolouring, cropping or retouching."
+  },
+  {
+    "path": "public/logos/nrpg/primary.png",
+    "source": "/Volumes/Storage Unit/Unite-Group/apps/empire/public/logos/nrpg.png",
+    "sha256": "5a661ed9e9ce13a3e7a1ef71143b87bf6ea070822f012507c891ad7cdb232bd6",
+    "method": "Exact original bytes copied; no generation, recolouring, cropping or retouching."
+  },
+  {
+    "path": "public/logos/synthex/primary.svg",
+    "source": "/Users/phill-mac/pi-seo-workspace/Synthex/components/landing/synthex-logo.tsx",
+    "sourceSha256": "07adf2aabb0c0985707b6283765da86d17c7d562257d2d0fe7f18b6c5bb4cad0",
+    "sha256": "4d2944280efa7ea6c9b88d8c01d69d708d9a4dd18858023c252572b069b835cc",
+    "method": "Static serialization of current app SVG; same orange transparent mark on both surfaces, without invented inverse colours."
+  },
+  {
+    "path": "public/logos/synthex/inverted.svg",
+    "source": "/Users/phill-mac/pi-seo-workspace/Synthex/components/landing/synthex-logo.tsx",
+    "sourceSha256": "07adf2aabb0c0985707b6283765da86d17c7d562257d2d0fe7f18b6c5bb4cad0",
+    "sha256": "4d2944280efa7ea6c9b88d8c01d69d708d9a4dd18858023c252572b069b835cc",
+    "method": "Static serialization of current app SVG; same orange transparent mark on both surfaces, without invented inverse colours."
+  },
+  {
+    "path": "public/logos/synthex/icon.svg",
+    "source": "/Users/phill-mac/pi-seo-workspace/Synthex/components/landing/synthex-logo.tsx",
+    "sourceSha256": "07adf2aabb0c0985707b6283765da86d17c7d562257d2d0fe7f18b6c5bb4cad0",
+    "sha256": "4d2944280efa7ea6c9b88d8c01d69d708d9a4dd18858023c252572b069b835cc",
+    "method": "Static serialization of current app SVG; same orange transparent mark on both surfaces, without invented inverse colours."
+  },
+  {
+    "path": "public/logos/ra/icon.svg",
+    "source": "/Volumes/Storage Unit/RestoreAssist/Application/distribution/icon-source/icon-mark.svg",
+    "sha256": "f75ea2e25314af1a97499410b7849fc403a39356ba0ec3372f25a8a0dd94b499",
+    "method": "Exact original bytes copied; no modification. CCW remains gated for brand-video use."
+  },
+  {
+    "path": "public/logos/nrpg/icon.png",
+    "source": "/Users/phill-mac/pi-seo-workspace/Disaster-Recovery/public/images/favicons/NRP favicon_128x128.png",
+    "sha256": "f125b21d268a40a54f3fecf136e97d4f485962603b67fb2700b7ffff1b00c082",
+    "method": "Exact original bytes copied; no modification. CCW remains gated for brand-video use."
+  },
+  {
+    "path": "public/logos/unite/primary.png",
+    "source": "/Volumes/Storage Unit/Unite-Group/apps/web/public/logos/unite-group-nexus-logo.png",
+    "sha256": "f73cd4c57a89aac1c39ba95b638a94022b68cf9e17dceed6c97452a744adeac7",
+    "method": "Exact original bytes copied; no modification. CCW remains gated for brand-video use."
+  },
+  {
+    "path": "public/logos/ccw/primary.png",
+    "source": "/Volumes/Storage Unit/Unite-Group/apps/empire/public/logos/ccw.png",
+    "sha256": "2b8283e28d5c62ba35db79dca0a8beb41dcf38d9ecc0c872734b913b46a2c240",
+    "method": "Exact original bytes copied; no modification. CCW remains gated for brand-video use."
+  }
+]

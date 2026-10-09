@@ -1,0 +1,138 @@
+
+> synthex@2.0.1 visual:test
+> node --require ./scripts/brand-visual-preflight-offline.cjs ./node_modules/jest/bin/jest.js --config config/jest/jest.visual-preflight.cjs --runInBand
+
+PASS tests/unit/brand-video/preflight.test.ts (15.366 s)
+  preflightBrandAssets — brand resolution
+    ✓ accepts every brand that brand-config actually defines (14 ms)
+    ✓ refuses a brand that does not exist (2 ms)
+    ✓ names the valid brands when it refuses, so the caller can correct it (1 ms)
+    ✓ refuses empty and whitespace-only input (1 ms)
+    ✓ normalises casing and spacing rather than refusing on formatting (1 ms)
+    ✓ does not accept a brand by display name or a partial match (1 ms)
+  preflightBrandAssets — unapproved tokens
+    ✓ refuses john-coutis, whose tokens are still a proposal
+    ✓ still resolves the slug it refuses, so the caller can report which brand (1 ms)
+    ✓ passes brands whose tokens are signed off (5 ms)
+    ✓ agrees with brand-config about which brands are proposals
+  preflightBrandAssets — declared logo assets
+    ✓ reports no missing logo warnings after every brand variant is restored
+    ✓ reports missing logos as warnings, never as blocking findings (2 ms)
+  pending portfolio identity
+    ✓ refuses ccw with an actionable approval gap before a job can be created
+    ✓ refuses CCWarehouse with an actionable approval gap before a job can be created (2 ms)
+    ✓ refuses Carpet Cleaners Warehouse with an actionable approval gap before a job can be created
+  recovered Synthex identity
+    ✓ does not report missing logos once all declared variants exist PASS __tests__/brand-config/visual-preflight.test.ts (65.098 s)
+  offline reference preflight
+    ✓ does not count a manifest entry whose local file is absent (2253 ms)
+    ✓ does not promote unlicensed images to owned coverage (2488 ms)
+    ✓ counts a present, owned reference (1078 ms)
+    ✓ refuses unsafe manifest file ../photo.webp (1680 ms)
+    ✓ refuses unsafe manifest file /photo.webp (5857 ms)
+    ✓ refuses unsafe manifest file https://example.com/photo.webp (2358 ms)
+    ✓ refuses missing dimensions rather than pretending it is grounded (14031 ms)
+    ✓ reports empty coverage (11902 ms)
+  canonical brand and repository evidence
+    ✓ resolves John without inventing publishing copy or approving his tokens (7 ms)
+    ✓ uses the canonical DR primary and preserves the no-red rule (3 ms)
+    ✓ keeps identity approvals blocking after the complete logo pack is restored (29 ms)
+  readiness stays scoped to the actual identity
+    ✓ allows recovered Synthex identity to be ready while refusing John (17 ms)
+
+PASS PASS __tests__/remotion/brand-registry.test.ts (20.172 s)
+  lib/remotion/brand-registry
+    BRAND_SLUG_MAP
+      ✓ every key matches an existing BrandContent.id (16 ms)
+      ✓ every value resolves to a real BrandConfig in the package (3 ms)
+      ✓ is frozen (cannot be mutated at runtime) (1 ms)
+    getBrandConfig
+      ✓ resolves BrandContent IDs to their BrandConfig (1 ms)
+      ✓ returns undefined for unknown IDs (2 ms)
+    getBrandSlug
+      ✓ returns the canonical slug for a BrandContent.id
+      ✓ returns undefined for unmapped IDs (2 ms)
+    getBrandContent
+      ✓ resolves a slug back to its BrandContent (3 ms)
+      ✓ returns undefined for invalid slugs at runtime (4 ms)
+    colour.primary parity with brand-content.ts (SYN-901)
+      ✓ BrandConfig.colour.primary matches BRAND_CONTENT[disaster-recovery].brandColour (1 ms)
+      ✓ BrandConfig.colour.primary matches BRAND_CONTENT[carsi].brandColour (1 ms)
+      ✓ BrandConfig.colour.primary matches BRAND_CONTENT[nrpg].brandColour (4 ms)
+      ✓ BrandConfig.colour.primary matches BRAND_CONTENT[restore-assist].brandColour (58 ms)
+      ✓ BrandConfig.colour.primary matches BRAND_CONTENT[synthex].brandColour (6 ms)
+      ✓ BrandConfig.colour.primary matches BRAND_CONTENT[unite-group].brandColour (5 ms)
+    getPortfolioBrand
+      ✓ returns both systems together for a mapped brand (4 PASS __tests__/brand-config/logo-packs.test.ts
+  compPASS __tests__/brand-config/logo-packs.test.ts
+  complete offline logo packs
+    ✓ uses the NRPG Group shield instead of the rejected legacy NRP badge (3 ms)
+    ✓ uses present Synthex icons in the installed-app manifest (12 ms)
+    ✓ covers all eight requested business identities
+    ✓ ra has deployable SVG, browser and app icons (14 ms)
+    ✓ dr has deployable SVG, browser and app icons (7 ms)
+    ✓ nrpg has deployable SVG, browser and app icons (11 ms)
+    ✓ carsi has deployable SVG, browser and app icons (7 ms)
+    ✓ synthex has deployable SVG, browser and app icons (6 ms)
+    ✓ unite has deployable SVG, browser and app icons (6 ms)
+    ✓ ccw has deployable SVG, browser and app icons (13 ms)
+    ✓ john-coPASS __tests__/brand-config/logo-paths.test.ts
+  brand-cPASS __tests__/brand-config/logo-paths.test.ts (5.718 s)
+  brand-config logo paths
+    ✓ declares three logo variants for every tenant
+    ✓ ra primary resolves on disk or is an acknowledged gap (1 ms)
+    ✓ ra inverted resolves on disk or is an acknowledged gap
+    ✓ ra icon resolves on disk or is an acknowledged gap (1 ms)
+    ✓ dr primary resolves on disk or is an acknowledged gap
+    ✓ dr inverted resolves on disk or is an acknowledged gap
+    ✓ dr icon resolves on disk or is an acknowledged gap
+    ✓ nrpg primary resolves on disk or is an acknowledged gap (1 ms)
+    ✓ nrpg inverted resolves on disk or is an acknowledged gap
+    ✓ nrpg icon resolves on disk or is an acknowledged gap
+    ✓ carsi primary resolves on disk or is an acknowledged gap
+    ✓ carsi inverted resolves on disk or is an acknowledged gap (1 ms)
+    ✓ carsi icon resolves on disk or is an acknowledged gap
+    ✓ synthex primary resolves on disk or is an acknowledged gap
+    ✓ synthex inverted resolves on disk or is an acknowledged gap
+    ✓ synthex icon resolves on disk or is an acknowledged gap
+    ✓ unite primary resolves on disk or is an acknowledged gap (1 ms)
+    ✓ unite inverted resolves on disk or is an acknowledged gap
+    ✓ unite icon resolves on disk or is an acknowledged gap
+    ✓ john-coutis primary resolves on disk or is an acknowledged gap
+    ✓ john-coutis inverted resolves on disk or is an acknowledged gap
+    ✓ john-coutis icon resolves on disk or is an acknowledged gap
+    ✓ phill primary resolves on disk or is an acknowledged gap
+    ✓ phill inverted resolves on disk or is an acknowledged gap
+    ✓ phill icon resolves on disk or is an acknowledged gap (1 ms)
+    ✓ has no stale baseline entries — a gap that now resolves must be removed
+    ✓ has no orphaned baseline entries — every gap is still declared (1 ms)
+    ✓ ra primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ ra inverted uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ ra icon uses the canonical logos/<slug>/<variant> scheme
+    ✓ dr primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ dr inverted uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ dr icon uses the canonical logos/<slug>/<variant> scheme
+    ✓ nrpg primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ nrpg inverted uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ nrpg icon uses the canonical logos/<slug>/<variant> scheme
+    ✓ carsi primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ carsi inverted uses the canonical logos/<slug>/<variant> scheme (3 ms)
+    ✓ carsi icon uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ synthex primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ synthex inverted uses the canonical logos/<slug>/<variant> scheme
+    ✓ synthex icon uses the canonical logos/<slug>/<variant> scheme
+    ✓ unite primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ unite inverted uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ unite icon uses the canonical logos/<slug>/<variant> scheme
+    ✓ john-coutis primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ john-coutis inverted uses the canonical logos/<slug>/<variant> scheme
+    ✓ john-coutis icon uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ phill primary uses the canonical logos/<slug>/<variant> scheme
+    ✓ phill inverted uses the canonical logos/<slug>/<variant> scheme (1 ms)
+    ✓ phill icon uses the canonical logos/<slug>/<variant> scheme
+
+Test Suites: 5 passed, 5 total
+Tests:       107 passed, 107 total
+Snapshots:   0 total
+Time:        94.456 s
+Ran all test suites.

@@ -1,0 +1,159 @@
+{
+  "head": "d06377e9c7da091102943abfc35ff74548278b26",
+  "sourceRepository": "/Users/phill-mac/pi-seo-workspace/Synthex",
+  "method": "Committed source materialised from exact Git objects; tree inventory proves none of the declared brand assets exists at this head.",
+  "providerCalls": 0,
+  "spend": 0,
+  "deploys": 0,
+  "productionWrites": 0,
+  "report": {
+    "root": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-preflight-20261010",
+    "configuredBrandSlugs": [
+      "ra",
+      "dr",
+      "nrpg",
+      "carsi",
+      "synthex",
+      "unite",
+      "john-coutis"
+    ],
+    "missingBrandSlugs": ["ccw"],
+    "unmappedBrandSlugs": ["john-coutis"],
+    "declaredAssets": [
+      "fonts/carsi/Inter-Regular.woff2",
+      "fonts/carsi/Lora-Bold.woff2",
+      "fonts/dr/Inter-ExtraBold.woff2",
+      "fonts/dr/Inter-Regular.woff2",
+      "fonts/john-coutis/BebasNeue-Bold.woff2",
+      "fonts/john-coutis/Inter-Regular.woff2",
+      "fonts/nrpg/Inter-ExtraBold.woff2",
+      "fonts/nrpg/Inter-Regular.woff2",
+      "fonts/ra/Inter-ExtraBold.woff2",
+      "fonts/ra/Inter-Regular.woff2",
+      "fonts/ra/JetBrainsMono-Medium.woff2",
+      "fonts/synthex/Inter-ExtraBold.woff2",
+      "fonts/synthex/Inter-Regular.woff2",
+      "fonts/synthex/JetBrainsMono-Medium.woff2",
+      "fonts/unite/Inter-Bold.woff2",
+      "fonts/unite/Inter-Regular.woff2",
+      "logos/carsi/icon.svg",
+      "logos/carsi/inverted.svg",
+      "logos/carsi/primary.svg",
+      "logos/dr/icon.svg",
+      "logos/dr/inverted.svg",
+      "logos/dr/primary.svg",
+      "logos/john-coutis/icon.svg",
+      "logos/john-coutis/inverted.svg",
+      "logos/john-coutis/primary.svg",
+      "logos/nrpg/icon.svg",
+      "logos/nrpg/inverted.svg",
+      "logos/nrpg/primary.svg",
+      "logos/ra/icon.svg",
+      "logos/ra/inverted.svg",
+      "logos/ra/primary.svg",
+      "logos/synthex/icon.svg",
+      "logos/synthex/inverted.svg",
+      "logos/synthex/primary.svg",
+      "logos/unite/icon.svg",
+      "logos/unite/inverted.svg",
+      "logos/unite/primary.svg"
+    ],
+    "missingAssets": [
+      "fonts/carsi/Inter-Regular.woff2",
+      "fonts/carsi/Lora-Bold.woff2",
+      "fonts/dr/Inter-ExtraBold.woff2",
+      "fonts/dr/Inter-Regular.woff2",
+      "fonts/john-coutis/BebasNeue-Bold.woff2",
+      "fonts/john-coutis/Inter-Regular.woff2",
+      "fonts/nrpg/Inter-ExtraBold.woff2",
+      "fonts/nrpg/Inter-Regular.woff2",
+      "fonts/ra/Inter-ExtraBold.woff2",
+      "fonts/ra/Inter-Regular.woff2",
+      "fonts/ra/JetBrainsMono-Medium.woff2",
+      "fonts/synthex/Inter-ExtraBold.woff2",
+      "fonts/synthex/Inter-Regular.woff2",
+      "fonts/synthex/JetBrainsMono-Medium.woff2",
+      "fonts/unite/Inter-Bold.woff2",
+      "fonts/unite/Inter-Regular.woff2",
+      "logos/carsi/icon.svg",
+      "logos/carsi/inverted.svg",
+      "logos/carsi/primary.svg",
+      "logos/dr/icon.svg",
+      "logos/dr/inverted.svg",
+      "logos/dr/primary.svg",
+      "logos/john-coutis/icon.svg",
+      "logos/john-coutis/inverted.svg",
+      "logos/john-coutis/primary.svg",
+      "logos/nrpg/icon.svg",
+      "logos/nrpg/inverted.svg",
+      "logos/nrpg/primary.svg",
+      "logos/ra/icon.svg",
+      "logos/ra/inverted.svg",
+      "logos/ra/primary.svg",
+      "logos/synthex/icon.svg",
+      "logos/synthex/inverted.svg",
+      "logos/synthex/primary.svg",
+      "logos/unite/icon.svg",
+      "logos/unite/inverted.svg",
+      "logos/unite/primary.svg"
+    ],
+    "proposalMarkers": [
+      {
+        "file": "carsi.ts",
+        "line": 4,
+        "text": "// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md."
+      },
+      {
+        "file": "dr.ts",
+        "line": 3,
+        "text": "// [divergence-noted-2026-05-05 \u00b7 colour.primary] lib/remotion/brand-content.ts uses `#DC2626` (red-600) as the"
+      },
+      {
+        "file": "john-coutis.ts",
+        "line": 12,
+        "text": "// Open items flagged inline with `TODO confirm with John` \u2014 see dossier"
+      },
+      {
+        "file": "john-coutis.ts",
+        "line": 42,
+        "text": "// CONTRACT.md line 100). All values are PROPOSAL \u2014 TODO confirm with John."
+      },
+      {
+        "file": "john-coutis.ts",
+        "line": 59,
+        "text": "icon: 'logos/john-coutis/icon.svg',         // \"JC\" monogram \u2014 TODO commission, currently TBD"
+      },
+      {
+        "file": "john-coutis.ts",
+        "line": 79,
+        "text": "elevenLabsVoiceId: 'EXAVITQu4vr4xnSDxMaL', // Sarah \u2014 neutral AU; placeholder. TODO clone JC voice w/ consent."
+      },
+      {
+        "file": "nrpg.ts",
+        "line": 4,
+        "text": "// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md."
+      },
+      {
+        "file": "synthex.ts",
+        "line": 6,
+        "text": "// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md."
+      },
+      {
+        "file": "unite.ts",
+        "line": 4,
+        "text": "// Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md."
+      }
+    ],
+    "referenceCoverage": {
+      "industries": 3,
+      "subjects": 143,
+      "images": 310,
+      "updatedAt": "2026-07-11",
+      "missing": []
+    },
+    "readiness": {
+      "ready": false,
+      "debtCount": 48
+    }
+  }
+}

@@ -1,0 +1,494 @@
+[
+  {
+    "file": "public/logos/ra/primary.png",
+    "width": 1200,
+    "height": 1212,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ra/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/primary.png",
+    "width": 1200,
+    "height": 480,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/dr/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/primary.png",
+    "width": 1200,
+    "height": 1223,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/nrpg/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/primary.png",
+    "width": 1200,
+    "height": 307,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/carsi/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/primary.png",
+    "width": 1200,
+    "height": 1200,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/synthex/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logo.png",
+    "width": 1200,
+    "height": 1200,
+    "nonblank": true
+  },
+  {
+    "file": "public/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-72.png",
+    "width": 72,
+    "height": 72,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-96.png",
+    "width": 96,
+    "height": 96,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-128.png",
+    "width": 128,
+    "height": 128,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-144.png",
+    "width": 144,
+    "height": 144,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-152.png",
+    "width": 152,
+    "height": 152,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-384.png",
+    "width": 384,
+    "height": 384,
+    "nonblank": true
+  },
+  {
+    "file": "public/icons/icon-512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/primary.png",
+    "width": 1200,
+    "height": 938,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/unite/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/primary.png",
+    "width": 1200,
+    "height": 195,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/ccw/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/primary.png",
+    "width": 1200,
+    "height": 131,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/favicon-16x16.png",
+    "width": 16,
+    "height": 16,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/favicon-32x32.png",
+    "width": 32,
+    "height": 32,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/favicon-48x48.png",
+    "width": 48,
+    "height": 48,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/apple-touch-icon.png",
+    "width": 180,
+    "height": 180,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/android-chrome-192x192.png",
+    "width": 192,
+    "height": 192,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/favicon-256x256.png",
+    "width": 256,
+    "height": 256,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/android-chrome-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  },
+  {
+    "file": "public/logos/john-coutis/maskable-512x512.png",
+    "width": 512,
+    "height": 512,
+    "nonblank": true
+  }
+]
