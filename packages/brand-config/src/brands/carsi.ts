@@ -13,7 +13,7 @@ export const carsi = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#2563EB',     // blue-600 — canonical CARSI brand colour
+    primary: '#2563EB', // blue-600 — canonical CARSI brand colour
     secondary: '#2D2A26',
     accent: '#F2E8D5',
     neutral: { 50: '#FBF8F2', 100: '#EFE7D9', 500: '#736B5E', 900: '#1A1714' },
@@ -21,8 +21,16 @@ export const carsi = {
     family: 'training',
   },
   typography: {
-    display: { family: 'Lora', weight: 700, src: 'fonts/carsi/Lora-Bold.woff2' },
-    body: { family: 'Inter', weight: 400, src: 'fonts/carsi/Inter-Regular.woff2' },
+    display: {
+      family: 'Lora',
+      weight: 700,
+      src: 'fonts/carsi/Lora-Bold.woff2',
+    },
+    body: {
+      family: 'Inter',
+      weight: 400,
+      src: 'fonts/carsi/Inter-Regular.woff2',
+    },
   },
   logo: {
     primary: 'logos/carsi/primary.svg',

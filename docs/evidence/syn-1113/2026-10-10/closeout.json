@@ -1,0 +1,45 @@
+{
+  "task": "SYN-1113",
+  "date": "2026-10-10 Australia/Brisbane",
+  "sourceCommit": "b8262a0d9b82a958a6ec832293c14ee1181ec5da",
+  "sourceFingerprintSha256": "2e7b6a59d2baf91c66f5b98e0355844bffd96b674ab235b348ed1be4ac76beea",
+  "status": "Local remediation finalized; external approval gates retained",
+  "changedSourceAndAssetFiles": 219,
+  "reviewedSourceAndAssetFiles": 543,
+  "remainingMissingAssetPaths": [],
+  "remainingCodeBlockers": [],
+  "remainingApprovalCount": 3,
+  "remainingApprovals": [
+    {
+      "slug": "ccw",
+      "file": "config/brand-identity-gaps.json#/ccw",
+      "source": ".claude/memory/ceo-foundation.md",
+      "requirement": "approved colour, typography, logo and motion identity"
+    },
+    {
+      "slug": "john-coutis",
+      "file": "config/brand-identity-gaps.json#/john-coutis",
+      "source": "packages/brand-config/src/brands/john-coutis.ts",
+      "requirement": "visual token approval by John"
+    },
+    {
+      "slug": "john-coutis",
+      "file": "config/brand-identity-gaps.json#/john-coutis",
+      "source": "packages/brand-config/src/brands/john-coutis.ts",
+      "requirement": "consented original recordings, or explicit synthetic-speech permission and a licensed voice asset"
+    }
+  ],
+  "validation": "final-validation.json",
+  "cleanup": "cleanup.json",
+  "preservedUserEdit": {
+    "path": "docs/marketing/synthex-social-pipeline.md",
+    "sha256": "08e49ce3877fe7ce2ea14a7f382de28750e385e641f49fe9b3df69c5e0c3497a"
+  },
+  "nrpgAcceptance": "User confirmed the four-letter NRPG shield: Yes, this is it..thanks",
+  "execution": {
+    "providerCalls": 0,
+    "spend": 0,
+    "deploys": 0,
+    "productionWrites": 0
+  }
+}

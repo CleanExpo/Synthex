@@ -79,9 +79,9 @@ describe('lib/remotion/brand-registry', () => {
   });
 
   describe('colour.primary parity with brand-content.ts (SYN-901)', () => {
-    // Brands with a clean production source in BRAND_CONTENT and no doNot conflict.
-    // dr is excluded (production red conflicts with dr's "never use red" doNot rule).
+    // Every published identity uses its canonical primary colour.
     const reconciledBrands: Array<[string, string]> = [
+      ['disaster-recovery', '#0B2545'],
       ['carsi', '#2563EB'],
       ['nrpg', '#059669'],
       ['restore-assist', '#1C2E47'],
@@ -97,7 +97,7 @@ describe('lib/remotion/brand-registry', () => {
 
         const config = getBrandConfig(contentId);
         expect(config?.colour.primary).toBe(expected);
-      },
+      }
     );
   });
 

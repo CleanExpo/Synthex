@@ -23,34 +23,63 @@ export const ra = {
     forbiddenWords: [
       ...FORBIDDEN_PRONOUNS,
       // Wave 1 brief must_avoid jargon
-      'leverage', 'synergy', 'unlock value', 'streamline', 'revolutionise',
+      'leverage',
+      'synergy',
+      'unlock value',
+      'streamline',
+      'revolutionise',
       'AI-powered',
       // Carry-forward from earlier RA codify
-      'utilise', 'best-in-class', 'world-class', 'game-changer', 'revolutionary',
-      'seamless', 'powerful', 'unlock', 'journey',
-      'excited', 'thrilled', 'delighted',
+      'utilise',
+      'best-in-class',
+      'world-class',
+      'game-changer',
+      'revolutionary',
+      'seamless',
+      'powerful',
+      'unlock',
+      'journey',
+      'excited',
+      'thrilled',
+      'delighted',
       // Competitor names — must_avoid per Wave 1 brief
-      'DocuSketch', 'Encircle', 'Magicplan', 'Xactimate',
+      'DocuSketch',
+      'Encircle',
+      'Magicplan',
+      'Xactimate',
     ],
     requiredCadence: 'short',
   },
   colour: {
-    primary: '#1C2E47',     // navy — CLAUDE.md rule 17, canonical RA brand colour
-    secondary: '#8A6B4E',   // warm earth — CLAUDE.md rule 17
-    accent: '#D4A574',      // light tan — CLAUDE.md rule 17, action / highlight
+    primary: '#1C2E47', // navy — CLAUDE.md rule 17, canonical RA brand colour
+    secondary: '#8A6B4E', // warm earth — CLAUDE.md rule 17
+    accent: '#D4A574', // light tan — CLAUDE.md rule 17, action / highlight
     neutral: { 50: '#F5F5F4', 100: '#E7E5E4', 500: '#78716C', 900: '#050505' },
     semantic: { success: '#3FA34D', warning: '#E0A800', danger: '#C0392B' },
     family: 'restoration',
     darkVariant: {
-      primary: '#D4A574',    // light tan lifts to primary on dark bg
+      primary: '#D4A574', // light tan lifts to primary on dark bg
       secondary: '#8A6B4E',
-      neutral: { 50: '#050505', 100: '#1C2E47', 500: '#A8A29E', 900: '#F5F5F4' },
+      neutral: {
+        50: '#050505',
+        100: '#1C2E47',
+        500: '#A8A29E',
+        900: '#F5F5F4',
+      },
     },
   },
   typography: {
-    display: { family: 'Inter', weight: 800, src: 'fonts/ra/Inter-ExtraBold.woff2' },
+    display: {
+      family: 'Inter',
+      weight: 800,
+      src: 'fonts/ra/Inter-ExtraBold.woff2',
+    },
     body: { family: 'Inter', weight: 400, src: 'fonts/ra/Inter-Regular.woff2' },
-    mono: { family: 'JetBrains Mono', weight: 500, src: 'fonts/ra/JetBrainsMono-Medium.woff2' },
+    mono: {
+      family: 'JetBrains Mono',
+      weight: 500,
+      src: 'fonts/ra/JetBrainsMono-Medium.woff2',
+    },
   },
   logo: {
     primary: 'logos/ra/primary.svg',
@@ -59,17 +88,17 @@ export const ra = {
     safeAreaPx: 48,
   },
   motion: {
-    durations: { fast: 8, base: 18, slow: 36 },          // frames @ 30fps
+    durations: { fast: 8, base: 18, slow: 36 }, // frames @ 30fps
     easing: {
-      in: 'cubic-bezier(0.22, 1, 0.36, 1)',              // expo-out
-      out: 'cubic-bezier(0.64, 0, 0.78, 0)',             // expo-in
-      inOut: 'cubic-bezier(0.83, 0, 0.17, 1)',           // expo-in-out
+      in: 'cubic-bezier(0.22, 1, 0.36, 1)', // expo-out
+      out: 'cubic-bezier(0.64, 0, 0.78, 0)', // expo-in
+      inOut: 'cubic-bezier(0.83, 0, 0.17, 1)', // expo-in-out
     },
-    signature: 'sweep',                                   // horizontal reveal — decisive
+    signature: 'sweep', // horizontal reveal — decisive
     transitionFrames: 14,
   },
   voiceover: {
-    elevenLabsVoiceId: 'phill-elevenlabs-pro',           // Phill's cloned voice — audience trusts a tradie, not a corporate narrator
+    elevenLabsVoiceId: 'phill-elevenlabs-pro', // Phill's cloned voice — audience trusts a tradie, not a corporate narrator
     style: 'narration',
     locale: 'en-AU',
   },
@@ -81,11 +110,12 @@ export const ra = {
     'never use a technical term without a plain-English explanation in the same sentence',
     "never position the brand before the reader's problem in any opening line",
     'never end with a CTA that drives traffic to a brand destination — direct the reader to act in their own interest instead',
-    'never name a competitor (DocuSketch / Encircle / Magicplan / Xactimate) — position by what RA does, not what they don\'t',
+    "never name a competitor (DocuSketch / Encircle / Magicplan / Xactimate) — position by what RA does, not what they don't",
     'never use "AI-powered" as standalone filler — every AI mention must name the specific lifecycle hook',
   ],
   audience: {
-    primary: 'Australian water-damage restoration tradies (sole traders and small companies)',
+    primary:
+      'Australian water-damage restoration tradies (sole traders and small companies)',
     secondary: 'insurer claims teams and assessor networks',
   },
   defaultChannel: 'linkedin',

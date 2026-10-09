@@ -1,0 +1,60 @@
+{
+  "searched": [
+    "Synthex public assets and source SVG",
+    "Disaster-Recovery public logos and favicons",
+    "CARSI public logo and landing component",
+    "RestoreAssist public/distribution/iOS icon sources",
+    "Unite-Group apps/empire and apps/web branding assets",
+    "Pi-Dev-Ops source location (historical folder absent)",
+    "2nd Brain CCW / John Coutis / association launch records",
+    "Google Fonts official CSS and OFL files"
+  ],
+  "rejectedCandidates": [
+    {
+      "path": "/Volumes/Storage Unit/Unite-Group/apps/empire/public/images/unite-logo.png",
+      "reason": "Visual inspection shows a placeholder image, not a brand logo."
+    },
+    {
+      "path": "/Volumes/Storage Unit/CARSI/public/logo.png",
+      "reason": "Generic C app symbol does not match the current CARSI wordmark used by PublicLogo."
+    },
+    {
+      "path": "/Volumes/Storage Unit/Unite-Group/apps/empire/public/logos/ccw.svg",
+      "reason": "Generic gradient dashboard symbol differs from the original company logo; public reference rights do not turn it into the company identity."
+    },
+    {
+      "path": "/Users/phill-mac/pi-seo-workspace/Disaster-Recovery/public/images/logos/dr-logo-white.svg",
+      "reason": "Legacy blue DR glyph does not match the current red DR pulse artwork; not imported as an inverse of that artwork."
+    },
+    {
+      "path": "/Volumes/Storage Unit/Unite-Group/apps/web/public/favicon.png",
+      "reason": "Unite-Hub product identity differs from the Unite-Group Nexus parent identity."
+    }
+  ],
+  "permissionFindings": [
+    {
+      "source": "/Users/phill-mac/2nd Brain/2nd Brain/Wiki/ccw-nps-summary-2026-09-01.md",
+      "lines": [85, 85],
+      "finding": "Existing public-reference logo permission recorded on 2026-05-03. No specific video identity/motion/typography approval found."
+    },
+    {
+      "source": "/Users/phill-mac/2nd Brain/2nd Brain/Wiki/john-coutis-content-kickoff.md",
+      "finding": "Arrangement explicitly paused; no synthetic speech permitted on John lines; recordings remain missing."
+    },
+    {
+      "source": "/Users/phill-mac/2nd Brain/2nd Brain/Wiki/association-launch-plan-2026.md",
+      "finding": "Internal-only posture; engagement contract remains a drafted deliverable, not verified signed consent."
+    }
+  ],
+  "externalReadOnlySources": [
+    "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@700&family=Space+Grotesk:wght@600&display=swap",
+    "https://github.com/google/fonts/blob/main/ofl/spacegrotesk/OFL.txt",
+    "https://github.com/google/fonts/blob/main/ofl/inter/OFL.txt",
+    "https://github.com/google/fonts/blob/main/ofl/bebasneue/METADATA.pb",
+    "https://www.johncoutis.com/"
+  ],
+  "generationProviderCalls": 0,
+  "spend": 0,
+  "deploys": 0,
+  "productionWrites": 0
+}

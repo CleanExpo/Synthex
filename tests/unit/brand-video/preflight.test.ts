@@ -11,6 +11,7 @@
  */
 import { preflightBrandAssets } from '@/lib/brand-video/preflight';
 import { brands } from '@unite-group/brand-config';
+import identityGaps from '@/config/brand-identity-gaps.json';
 
 describe('preflightBrandAssets — brand resolution', () => {
   it('accepts every brand that brand-config actually defines', () => {
@@ -92,22 +93,10 @@ describe('preflightBrandAssets — unapproved tokens', () => {
 });
 
 describe('preflightBrandAssets — declared logo assets', () => {
-  it('warns about declared logo files that do not exist without blocking', () => {
-    // All 21 declared brand logos are absent (SYN-1133). Nothing reads
-    // `brand.logo` at runtime, so blocking would refuse work that never needed
-    // the file — but staying silent is how they went missing unnoticed.
-    const result = preflightBrandAssets('synthex');
-
-    expect(result.ok).toBe(true);
-    expect(result.warnings.map(w => w.code)).toContain('missing-logo-assets');
-  });
-
-  it('lists the absent files so the gap is actionable', () => {
-    const warning = preflightBrandAssets('synthex').warnings.find(
-      w => w.code === 'missing-logo-assets'
-    );
-
-    expect(warning?.message).toContain('logos/synthex/primary.svg');
+  it('reports no missing logo warnings after every brand variant is restored', () => {
+    for (const slug of Object.keys(brands)) {
+      expect(preflightBrandAssets(slug).warnings).toEqual([]);
+    }
   });
 
   it('reports missing logos as warnings, never as blocking findings', () => {
@@ -117,4 +106,45 @@ describe('preflightBrandAssets — declared logo assets', () => {
       expect(codes).not.toContain('missing-logo-assets');
     }
   });
+});
+
+describe('pending portfolio identity', () => {
+  it.each(['ccw', 'CCWarehouse', 'Carpet Cleaners Warehouse'])(
+    'refuses %s with an actionable approval gap before a job can be created',
+    input => {
+      const result = preflightBrandAssets(input);
+      expect(result.ok).toBe(false);
+      expect(result.slug).toBeNull();
+      expect(result.findings.map(f => f.code)).toEqual(['unapproved-tokens']);
+      expect(result.findings[0].message).toContain('ccw');
+    }
+  );
+});
+
+describe('recovered Synthex identity', () => {
+  it('does not report missing logos once all declared variants exist', () => {
+    expect(preflightBrandAssets('synthex').warnings).toEqual([]);
+  });
+});
+
+it('keeps John blocked after visual approval while recording rights remain open', () => {
+  const john = brands['john-coutis'];
+  const previousStatus = john.tokenStatus;
+  const gap = identityGaps['john-coutis'];
+  const previousRequirements = gap.required;
+  try {
+    john.tokenStatus = 'confirmed';
+    gap.required = [previousRequirements[1]];
+    const result = preflightBrandAssets('john-coutis');
+    expect(result.ok).toBe(false);
+    expect(result.findings.map(f => f.code)).toEqual([
+      'identity-approval-required',
+    ]);
+    expect(result.findings[0].message).toContain(
+      'consented original recordings'
+    );
+  } finally {
+    john.tokenStatus = previousStatus;
+    gap.required = previousRequirements;
+  }
 });

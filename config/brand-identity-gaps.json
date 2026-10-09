@@ -1,0 +1,19 @@
+{
+  "ccw": {
+    "status": "approval-required",
+    "aliases": ["ccw", "ccwarehouse", "carpet-cleaners-warehouse"],
+    "source": ".claude/memory/ceo-foundation.md",
+    "required": ["approved colour, typography, logo and motion identity"],
+    "reason": "The committed CCW brief establishes identity and trade voice, but contains no approved visual tokens. A renderable BrandConfig must not be fabricated."
+  },
+  "john-coutis": {
+    "status": "approval-required",
+    "aliases": ["john-coutis"],
+    "source": "packages/brand-config/src/brands/john-coutis.ts",
+    "required": [
+      "visual token approval by John",
+      "consented original recordings, or explicit synthetic-speech permission and a licensed voice asset"
+    ],
+    "reason": "tokenStatus is proposal; the Sarah fallback is not a consented John Coutis voice. The kickoff record keeps the arrangement paused and prohibits synthetic speech; original recordings or an explicit change to that rule are required."
+  }
+}

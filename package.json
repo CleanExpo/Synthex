@@ -119,7 +119,10 @@
     "marketing-agency:apify-intel": "npx tsx scripts/marketing-agency-apify-intelligence.ts",
     "routes:refresh": "bash .claude/scripts/refresh-routes.sh",
     "rls:coverage": "node scripts/validate-rls-coverage.js",
-    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config config/jest/jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand"
+    "rls:adversarial": "RLS_ADVERSARIAL=true jest --config config/jest/jest.worktree.cjs tests/security/cross-tenant.spec.ts --runInBand",
+    "visual:preflight": "node --require ./scripts/brand-visual-preflight-offline.cjs ./node_modules/tsx/dist/cli.mjs scripts/brand-visual-preflight.ts",
+    "visual:logos": "node --require ./scripts/brand-visual-preflight-offline.cjs scripts/brand-logo-pack.cjs",
+    "visual:test": "node --require ./scripts/brand-visual-preflight-offline.cjs ./node_modules/jest/bin/jest.js --config config/jest/jest.visual-preflight.cjs --runInBand"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.116",

@@ -12,7 +12,7 @@
  *      a video with no brand colour, logo, type or voice, and reported success.
  *   2. **The brand's tokens are unapproved.** `john-coutis` carries
  *      `tokenStatus: 'proposal'`.
- *   3. **The brand's declared logo files do not exist.** 21 such paths are
+ *   3. **The brand's declared logo files do not exist.** The remaining paths are
  *      recorded in `config/brand-logo-baseline.json` (SYN-1133); no runtime code reads
  *      `brand.logo`, so a missing file never errored.
  *
@@ -24,10 +24,12 @@
 import { brands, type BrandSlug } from '@unite-group/brand-config';
 
 import logoBaseline from '@/config/brand-logo-baseline.json';
+import identityGaps from '@/config/brand-identity-gaps.json';
 
 export type PreflightCode =
   | 'unknown-brand'
   | 'unapproved-tokens'
+  | 'identity-approval-required'
   | 'missing-logo-assets';
 
 export interface PreflightFinding {
@@ -56,13 +58,30 @@ const MISSING_LOGO_PATHS = new Set<string>(logoBaseline.missing);
  *
  * A missing logo is a warning rather than a blocker because no runtime code
  * reads `brand.logo` today, so blocking on it would refuse work that never
- * depended on the file. It still needs saying — silence is how 21 of them went
+ * depended on the file. It still needs saying — silence is how the original artwork paths went
  * missing without anyone noticing.
  */
 export function preflightBrandAssets(brand: string): PreflightResult {
   const slug = normaliseSlug(brand);
 
   if (!slug) {
+    const candidate = brand.trim().toLowerCase().replace(/\s+/g, '-');
+    const pending = Object.entries(identityGaps).find(([, gap]) =>
+      gap.aliases.includes(candidate)
+    );
+    if (pending) {
+      return {
+        ok: false,
+        slug: null,
+        findings: [
+          {
+            code: 'unapproved-tokens',
+            message: `Brand "${pending[0]}" requires approved identity assets: ${pending[1].required.join('; ')}. No renderable config will be fabricated.`,
+          },
+        ],
+        warnings: [],
+      };
+    }
     return {
       ok: false,
       slug: null,
@@ -81,6 +100,16 @@ export function preflightBrandAssets(brand: string): PreflightResult {
   const config = brands[slug];
   const findings: PreflightFinding[] = [];
   const warnings: PreflightFinding[] = [];
+
+  const outstanding = Object.entries(identityGaps).find(
+    ([key]) => key === slug
+  )?.[1];
+  if (outstanding && outstanding.required.length > 0) {
+    findings.push({
+      code: 'identity-approval-required',
+      message: `Brand "${slug}" still requires: ${outstanding.required.join('; ')}. Visual token approval alone does not clear recording or voice rights.`,
+    });
+  }
 
   if (config.tokenStatus === 'proposal') {
     findings.push({

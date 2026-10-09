@@ -1,0 +1,110 @@
+
+> @unite-group/brand-config@0.1.0 build
+> tsup src/index.ts src/theme-factory.ts --format cjs,esm --dts --clean
+
+CLI Building entry: src/index.ts, src/theme-factory.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Target: es2022
+CLI Cleaning output folder
+CJS Build start
+ESM Build start
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:14:6:
+[37m      14 │       [32m"types"[37m: "./dist/index.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:12:6:
+[37m      12 │       [32m"import"[37m: "./dist/index.js",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:13:6:
+[37m      13 │       [32m"require"[37m: "./dist/index.cjs",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:19:6:
+[37m      19 │       [32m"types"[37m: "./dist/theme-factory.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:17:6:
+[37m      17 │       [32m"import"[37m: "./dist/theme-factory.js",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:18:6:
+[37m      18 │       [32m"require"[37m: "./dist/theme-factory.cjs",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:14:6:
+[37m      14 │       [32m"types"[37m: "./dist/index.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:12:6:
+[37m      12 │       [32m"import"[37m: "./dist/index.js",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:13:6:
+[37m      13 │       [32m"require"[37m: "./dist/index.cjs",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+
+ WARN  [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mThe condition "types" here will never be used as it comes after both "import" and "require"[0m [package.json]
+
+    package.json:19:6:
+[37m      19 │       [32m"types"[37m: "./dist/theme-factory.d.ts"
+         ╵       [32m~~~~~~~[0m
+
+  The "import" condition comes earlier and will be used for all "import" statements:
+
+    package.json:17:6:
+[37m      17 │       [32m"import"[37m: "./dist/theme-factory.js",
+         ╵       [32m~~~~~~~~[0m
+
+  The "require" condition comes earlier and will be used for all "require" calls:
+
+    package.json:18:6:
+[37m      18 │       [32m"require"[37m: "./dist/theme-factory.cjs",
+         ╵       [32m~~~~~~~~~[0m
+
+
+
+ESM dist/index.js          20.55 KB
+ESM dist/chunk-3RFMQ4QZ.js 4.02 KB
+ESM dist/theme-factory.js  113.00 B
+ESM ⚡️ Build success in 96ms
+CJS dist/theme-factory.cjs 5.07 KB
+CJS dist/index.cjs         25.82 KB
+CJS ⚡️ Build success in 96ms
+DTS Build start
+DTS ⚡️ Build success in 965ms
+DTS dist/index.d.cts                  17.81 KB
+DTS dist/theme-factory.d.cts          160.00 B
+DTS dist/theme-factory-DmIQq5EQ.d.cts 5.23 KB
+DTS dist/index.d.ts                   17.81 KB
+DTS dist/theme-factory.d.ts           159.00 B
+DTS dist/theme-factory-DmIQq5EQ.d.ts  5.23 KB

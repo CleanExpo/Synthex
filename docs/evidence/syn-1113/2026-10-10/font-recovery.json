@@ -1,0 +1,41 @@
+[
+  {
+    "path": "public/fonts/synthex/SpaceGrotesk-SemiBold.woff2",
+    "family": "Space Grotesk",
+    "weight": 600,
+    "subset": "latin",
+    "sourceUrl": "https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj42VnskPMBBSSJLm2E.woff2",
+    "licenseUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/spacegrotesk/OFL.txt",
+    "licenseFile": "public/fonts/synthex/spacegrotesk-OFL.txt",
+    "sha256": "564c913b0f490680c150486d120600c3a75f5aca3026ae6dd07d82c76aff6c1b",
+    "bytes": 13276,
+    "retrieved": "2026-10-10",
+    "cost": 0
+  },
+  {
+    "path": "public/fonts/unite/Inter-Bold.woff2",
+    "family": "Inter",
+    "weight": 700,
+    "subset": "latin",
+    "sourceUrl": "https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hiJ-Ek-_EeA.woff2",
+    "licenseUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt",
+    "licenseFile": "public/fonts/unite/inter-OFL.txt",
+    "sha256": "ea90630996b19c80bec9dfe46cd52b9871705a8d6d89035cf18eddef24c82b74",
+    "bytes": 24456,
+    "retrieved": "2026-10-10",
+    "cost": 0
+  },
+  {
+    "path": "public/fonts/john-coutis/BebasNeue-Regular.woff2",
+    "family": "Bebas Neue",
+    "weight": 400,
+    "subset": "latin",
+    "sourceUrl": "https://fonts.gstatic.com/s/bebasneue/v16/JTUSjIg69CK48gW7PXoo9WlhyyTh89Y.woff2",
+    "licenseUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/OFL.txt",
+    "licenseFile": "public/fonts/john-coutis/bebasneue-OFL.txt",
+    "sha256": "441b026df205d28954f61b6989c7bbd228c0adff42f746a266c6a5d89134bc34",
+    "bytes": 8596,
+    "retrieved": "2026-10-10",
+    "cost": 0
+  }
+]

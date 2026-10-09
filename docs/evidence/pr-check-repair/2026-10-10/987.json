@@ -1,0 +1,36 @@
+{
+  "pr": 987,
+  "originalHead": "89096e83674ecd880aa05785f1aca88fae3db554",
+  "originalFailure": "lib/brand/visual-preflight.ts(152,39): TS2345 string not assignable to never",
+  "fix": "Use a Set<string> for the empty JSON logo baseline; preserve missing/stale asset detection.",
+  "latestMainMerged": "64d4126d4f97724a9e30e87c6783aa5046ebc54a",
+  "validatedCodeHead": "97d9895de68dc4d48cbd5d57574178f7e1cd1ad3",
+  "changedCodeSha256": "9beecef99dd9b70db92b82be296325f9ff24ab35eacb44ac12c51482a0a5cf8e",
+  "localValidation": {
+    "fullTypecheck": "passed",
+    "offlineVisualTests": 109,
+    "suites": 5
+  },
+  "deploymentGuard": "codex/syn-1113-finalized: false",
+  "remainingExternalBrandApprovalInputs": 3,
+  "remoteCI": "Must be verified after the repair push; local checks alone do not close the PR.",
+  "providerCalls": 0,
+  "spend": 0,
+  "deploys": 0,
+  "productionWrites": 0,
+  "reviewFixes": [
+    "Configured identities retain outstanding recording/voice rights blocks after visual approval",
+    "Per-brand readiness includes every declared logo-pack asset",
+    "NRPG description matches confirmed website destination",
+    "Portable logo manifests omit application launch metadata"
+  ],
+  "remaining": {
+    "ready": false,
+    "codeDebtCount": 0,
+    "assetGapCount": 0,
+    "rightsGapCount": 3,
+    "coverageGapCount": 0,
+    "debtCount": 3
+  },
+  "verifiedLogoPackHashes": 156
+}

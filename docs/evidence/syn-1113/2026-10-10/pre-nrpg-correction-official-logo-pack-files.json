@@ -1,0 +1,782 @@
+[
+  {
+    "path": "public/logos/ra/primary.svg",
+    "sha256": "9dde0189f11c9b392ca3f842bb5585b0e2d3369fe75503636b3c0ac3ed40d7ff",
+    "bytes": 279024
+  },
+  {
+    "path": "public/logos/ra/inverted.svg",
+    "sha256": "9dde0189f11c9b392ca3f842bb5585b0e2d3369fe75503636b3c0ac3ed40d7ff",
+    "bytes": 279024
+  },
+  {
+    "path": "public/logos/ra/monochrome-light.svg",
+    "sha256": "ed9aed6bc98e8e03fc9b9e7eae1363e98657495dfa6d10ba242b32cbeeece6c5",
+    "bytes": 279024
+  },
+  {
+    "path": "public/logos/ra/monochrome-dark.svg",
+    "sha256": "174b83670a29bc8f58dd47587b3a17fe691d033b39b850849a06e8e51a674631",
+    "bytes": 279024
+  },
+  {
+    "path": "public/logos/ra/icon.svg",
+    "sha256": "0a9e48419ef55e6d40295c897b9b13f3606f4842644123f5100c53eddf19ad37",
+    "bytes": 113751
+  },
+  {
+    "path": "public/logos/ra/favicon.svg",
+    "sha256": "0a9e48419ef55e6d40295c897b9b13f3606f4842644123f5100c53eddf19ad37",
+    "bytes": 113751
+  },
+  {
+    "path": "public/logos/ra/safari-pinned-tab.svg",
+    "sha256": "892b4202baed4c7669c66eb30a4d10f09f6a5698893a19324e8ec2e26140056a",
+    "bytes": 15733
+  },
+  {
+    "path": "public/logos/ra/primary.png",
+    "sha256": "d7829a04b7f4c4d1f38407ec950ff0b8d4694ec2840a5bde1774d329fab70f1f",
+    "bytes": 187681
+  },
+  {
+    "path": "public/logos/ra/favicon-16x16.png",
+    "sha256": "4f947ed412674816b30f7377712f23c6ed9aed0f3c9afcbd6b20da0c0eb602f0",
+    "bytes": 779
+  },
+  {
+    "path": "public/logos/ra/favicon-32x32.png",
+    "sha256": "42a6058ac544803de76fc6e5be23ed7be45547a190757aa668f9e848bffe285e",
+    "bytes": 2036
+  },
+  {
+    "path": "public/logos/ra/favicon-48x48.png",
+    "sha256": "da016a2d108a1c0e23a2c1aa505204f5ee324eb589f35d101176d5219aa4b655",
+    "bytes": 3504
+  },
+  {
+    "path": "public/logos/ra/apple-touch-icon.png",
+    "sha256": "aa6c046617b3ac44d161b2d49e459c137678eac3ed9be74110858457f3f9b326",
+    "bytes": 21027
+  },
+  {
+    "path": "public/logos/ra/android-chrome-192x192.png",
+    "sha256": "2dcd962b4fe84baef8d90ae5cf0ce0e2195346cdf6d30eb5c0e51af90ec28f51",
+    "bytes": 22806
+  },
+  {
+    "path": "public/logos/ra/favicon-256x256.png",
+    "sha256": "59ff1672a7a37dc9e2199c73650846a988e4997513c94cc7943b8e38dde460d9",
+    "bytes": 32264
+  },
+  {
+    "path": "public/logos/ra/android-chrome-512x512.png",
+    "sha256": "049255b474f7f5a58ea1becd571c83c6ea477af56831e4a6d1d59fdfde82e437",
+    "bytes": 70265
+  },
+  {
+    "path": "public/logos/ra/favicon.ico",
+    "sha256": "7ce221d540828aedf71750edcf99a2b2d28f211f520bd3cba106d679df3f0bbc",
+    "bytes": 38653
+  },
+  {
+    "path": "public/logos/ra/maskable-512x512.png",
+    "sha256": "d168aa1df0a8eca2ccfd119733b82fd8a3cc4aad346026aa85382bd2b7f060d3",
+    "bytes": 37482
+  },
+  {
+    "path": "public/logos/ra/site.webmanifest",
+    "sha256": "8225f13790cfd865cb6352f1f5b9fc3b0b2dcd669264333e577987d712f042cc",
+    "bytes": 538
+  },
+  {
+    "path": "public/logos/dr/primary.svg",
+    "sha256": "92ae80addad3437ab1f499625ad96923dbd220cc62aaad6d081ccb1e28541024",
+    "bytes": 601
+  },
+  {
+    "path": "public/logos/dr/inverted.svg",
+    "sha256": "92ae80addad3437ab1f499625ad96923dbd220cc62aaad6d081ccb1e28541024",
+    "bytes": 601
+  },
+  {
+    "path": "public/logos/dr/monochrome-light.svg",
+    "sha256": "89e6eb88228f04ad4573e56cd51a05c1639c8fdb33f29596d91c5ca04fa0cae2",
+    "bytes": 601
+  },
+  {
+    "path": "public/logos/dr/monochrome-dark.svg",
+    "sha256": "82b53f7f90353cc9db90083e81cf524a536cf097e9ba817c53286990f30b59f2",
+    "bytes": 601
+  },
+  {
+    "path": "public/logos/dr/icon.svg",
+    "sha256": "81bf46085ba4f06c038241f87fa5e22e622979431a2214e7446b808695661b5d",
+    "bytes": 277
+  },
+  {
+    "path": "public/logos/dr/favicon.svg",
+    "sha256": "81bf46085ba4f06c038241f87fa5e22e622979431a2214e7446b808695661b5d",
+    "bytes": 277
+  },
+  {
+    "path": "public/logos/dr/safari-pinned-tab.svg",
+    "sha256": "e5660a30dfba9a6d1e4e8d3ea7213c1cd5bf1fac84208062a3c118852053eef2",
+    "bytes": 277
+  },
+  {
+    "path": "public/logos/dr/primary.png",
+    "sha256": "dba4406a42dec8f244b5d113d583445b4fe5f0be2faf8d27276b510a2ec05da6",
+    "bytes": 24404
+  },
+  {
+    "path": "public/logos/dr/favicon-16x16.png",
+    "sha256": "70537a7e7ff2a9948ce901a6fdcd655b4b67f8de61c663736e3a27fbb31918eb",
+    "bytes": 365
+  },
+  {
+    "path": "public/logos/dr/favicon-32x32.png",
+    "sha256": "789592534f1e87e7454023bfda7f5a3bbe6b478cd579f37347296847a24607d3",
+    "bytes": 661
+  },
+  {
+    "path": "public/logos/dr/favicon-48x48.png",
+    "sha256": "9df5d84c1454ed89d51d4089b7ac072f9d2531f4c8724ed64be4f9f916dffa85",
+    "bytes": 857
+  },
+  {
+    "path": "public/logos/dr/apple-touch-icon.png",
+    "sha256": "52caa6dd5054d4b3763dec29e79b839e206ef3a5fcc213bf681d8d2fe824dede",
+    "bytes": 2480
+  },
+  {
+    "path": "public/logos/dr/android-chrome-192x192.png",
+    "sha256": "de2518e8ce0ff462e2b98e60ae65aa740ef4073ef34908a8321f8a0975894ea0",
+    "bytes": 2747
+  },
+  {
+    "path": "public/logos/dr/favicon-256x256.png",
+    "sha256": "4d74ac8ad6a54c9d46c781ea60a3294f35a17c8ccedd27e8e62730b67fc0d10c",
+    "bytes": 3775
+  },
+  {
+    "path": "public/logos/dr/android-chrome-512x512.png",
+    "sha256": "59319c899b93df5151ba699b179f65746f36e063a52988cd2fda8664f4d11b6a",
+    "bytes": 9375
+  },
+  {
+    "path": "public/logos/dr/favicon.ico",
+    "sha256": "4c13f4573fcca25d3718a2c3c33e21132efd8b80369c275e98a67306c605ed6e",
+    "bytes": 5728
+  },
+  {
+    "path": "public/logos/dr/maskable-512x512.png",
+    "sha256": "d34dadd3f866a224f9d4601a8ae2bf281cc06915b7300ce97f105eb4cd0cdded",
+    "bytes": 10462
+  },
+  {
+    "path": "public/logos/dr/site.webmanifest",
+    "sha256": "43b15b7e987ff256afee742439e2e4f0a481284e4e52ce9c794292d6e408ee62",
+    "bytes": 546
+  },
+  {
+    "path": "public/logos/nrpg/primary.svg",
+    "sha256": "6f9f648ca80a376139c26ba7f5ae1d3b8118cfc7ad52c9713b78a093c98001b8",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/inverted.svg",
+    "sha256": "6f9f648ca80a376139c26ba7f5ae1d3b8118cfc7ad52c9713b78a093c98001b8",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/monochrome-light.svg",
+    "sha256": "1b3465b906cc6c4ed1ae0abed1d9e4c0ae18f82227b0192d9366ab8b6fa5dc10",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/monochrome-dark.svg",
+    "sha256": "db091bc13ce7c878be985e00e55c8f7bb22b4cac01ddfe63df3a480f57a65ad9",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/icon.svg",
+    "sha256": "6f9f648ca80a376139c26ba7f5ae1d3b8118cfc7ad52c9713b78a093c98001b8",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/favicon.svg",
+    "sha256": "6f9f648ca80a376139c26ba7f5ae1d3b8118cfc7ad52c9713b78a093c98001b8",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/safari-pinned-tab.svg",
+    "sha256": "4d11e2421265ba4497078b775e4b9dedfd36f0e3e0564da916d2223f73a47524",
+    "bytes": 131955
+  },
+  {
+    "path": "public/logos/nrpg/primary.png",
+    "sha256": "477162459975b9c7846485e67031f3611af25b81f7bd7effb2a3834efb3866a4",
+    "bytes": 199869
+  },
+  {
+    "path": "public/logos/nrpg/favicon-16x16.png",
+    "sha256": "2ff215adbddbdc5db9f163c4b86af0a854db482f4601587bf94b424c78d93729",
+    "bytes": 924
+  },
+  {
+    "path": "public/logos/nrpg/favicon-32x32.png",
+    "sha256": "1006dedb21e2f36f07e878c6b1ed668d87eccf928f0ce3d2afd07a263b41077b",
+    "bytes": 2372
+  },
+  {
+    "path": "public/logos/nrpg/favicon-48x48.png",
+    "sha256": "6a78dec9f2695865c721625e0316397158d76fcb5b7892641f6af0d875a042d7",
+    "bytes": 4181
+  },
+  {
+    "path": "public/logos/nrpg/apple-touch-icon.png",
+    "sha256": "6796bb74a9bbb1d80662a68455fa768303835c34f2bd0062c01407bc12b36dcb",
+    "bytes": 23434
+  },
+  {
+    "path": "public/logos/nrpg/android-chrome-192x192.png",
+    "sha256": "7637665d7549f1e30221335317e4e4b5ce6e33e55c8e86028b19f20df75d6aad",
+    "bytes": 25287
+  },
+  {
+    "path": "public/logos/nrpg/favicon-256x256.png",
+    "sha256": "205d4ab2d300aeb04b42afb252e4c549c60e31916d0b91524a82a69762b9bce3",
+    "bytes": 35651
+  },
+  {
+    "path": "public/logos/nrpg/android-chrome-512x512.png",
+    "sha256": "e2a7c060718548fe2831476f65e7f6820407382d008c14ddad6b623a6111af9a",
+    "bytes": 75671
+  },
+  {
+    "path": "public/logos/nrpg/favicon.ico",
+    "sha256": "59db4a2fe24fe96951d9f148223424dbe36bfc1f968ac30147d709f84820872b",
+    "bytes": 43198
+  },
+  {
+    "path": "public/logos/nrpg/maskable-512x512.png",
+    "sha256": "0eef00f55269162d8ff6e3cfa23ae9016243e5593aa71d9046b752a4c11ab9d4",
+    "bytes": 42528
+  },
+  {
+    "path": "public/logos/nrpg/site.webmanifest",
+    "sha256": "04ce7b71e5d5d548742a4ac1d187b4bf6af0514d70a82ceabdf1000e1191aa32",
+    "bytes": 520
+  },
+  {
+    "path": "public/logos/carsi/primary.svg",
+    "sha256": "7891639c8a85a0cc64a34b760b0d3fb8ff06a3b6dbdd4cfb574d225c6a4225f2",
+    "bytes": 86998
+  },
+  {
+    "path": "public/logos/carsi/inverted.svg",
+    "sha256": "c11fff4c84ad566f31a254c7d2bad93c3098dbfc312dca167fdd16ecfdf01c1c",
+    "bytes": 86998
+  },
+  {
+    "path": "public/logos/carsi/monochrome-light.svg",
+    "sha256": "2c2f41e08e14a5dabb821ffdd4ecacb3fc2b8828380087abf360f9128e8805db",
+    "bytes": 86998
+  },
+  {
+    "path": "public/logos/carsi/monochrome-dark.svg",
+    "sha256": "f0c35968f7d4cb2c92a0ef35ee371365266dead8c4d4db4ea3deb4602fce6194",
+    "bytes": 86998
+  },
+  {
+    "path": "public/logos/carsi/icon.svg",
+    "sha256": "804ce691aa932fcead5ebd0e91ba3abd67dce4b323cf258c7582f0e53c7c7fc0",
+    "bytes": 196966
+  },
+  {
+    "path": "public/logos/carsi/favicon.svg",
+    "sha256": "804ce691aa932fcead5ebd0e91ba3abd67dce4b323cf258c7582f0e53c7c7fc0",
+    "bytes": 196966
+  },
+  {
+    "path": "public/logos/carsi/safari-pinned-tab.svg",
+    "sha256": "cffeb3993d00e88095eb574811ced14c8e061c1aafc141c471387ef8fa67f74c",
+    "bytes": 196966
+  },
+  {
+    "path": "public/logos/carsi/primary.png",
+    "sha256": "4f7d6ba559cc69c5b2808a6423f6b470db9099762e04a925017ad603cab13940",
+    "bytes": 37983
+  },
+  {
+    "path": "public/logos/carsi/favicon-16x16.png",
+    "sha256": "be449a678081d51c1148ef564cfabf7cc633f10244f001a9c4fd3f1cece420d0",
+    "bytes": 707
+  },
+  {
+    "path": "public/logos/carsi/favicon-32x32.png",
+    "sha256": "852215c64dcef1f2be3b090bb96512744bd10e6906cf1eb2407dba013f7fee51",
+    "bytes": 1476
+  },
+  {
+    "path": "public/logos/carsi/favicon-48x48.png",
+    "sha256": "2a3286b1de2a1315c3da78434d8be7e29d7a48d5ed9735ad8e9af73f69ed539b",
+    "bytes": 2432
+  },
+  {
+    "path": "public/logos/carsi/apple-touch-icon.png",
+    "sha256": "ac31c29610751bcf1af677cfdf9d7c87efaf589a1d885d6ee2f8fa189c003db8",
+    "bytes": 13649
+  },
+  {
+    "path": "public/logos/carsi/android-chrome-192x192.png",
+    "sha256": "dc8c49ca77ffb96f86904b454074dee2d1f15cbdaad91b412dfdcce3eab86d66",
+    "bytes": 15073
+  },
+  {
+    "path": "public/logos/carsi/favicon-256x256.png",
+    "sha256": "2b143a6c333a44f292bc6a08e7cfba7e9102a7c68f84b9c2ca15c0d7ff96bab1",
+    "bytes": 22027
+  },
+  {
+    "path": "public/logos/carsi/android-chrome-512x512.png",
+    "sha256": "fb6e95893f57f20010a7e5a0269651207b693c83512efebd9b409e807d229d45",
+    "bytes": 51474
+  },
+  {
+    "path": "public/logos/carsi/favicon.ico",
+    "sha256": "a78e4a2980618087fef6c0a86b14018d467a422c6bc97fc59d124ad001061d90",
+    "bytes": 26712
+  },
+  {
+    "path": "public/logos/carsi/maskable-512x512.png",
+    "sha256": "d9472af90a7b12de76b620b34a57409e320ae76891f661233dd9a3d13533cc25",
+    "bytes": 27763
+  },
+  {
+    "path": "public/logos/carsi/site.webmanifest",
+    "sha256": "223ecb3faff6c0c6cdeff1b5bfd164de59687d3748a72c3e5795cac20d98c3bc",
+    "bytes": 522
+  },
+  {
+    "path": "public/logos/synthex/primary.svg",
+    "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logos/synthex/inverted.svg",
+    "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logos/synthex/monochrome-light.svg",
+    "sha256": "713118709b5114fba1398fbbaa06138646bb9477764a2680405565d3adf1466a",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logos/synthex/monochrome-dark.svg",
+    "sha256": "dc73409245f4903ecfb8800f1c2e65da45da61d4c7873be6d7a6f17d7b81e745",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logos/synthex/icon.svg",
+    "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logos/synthex/favicon.svg",
+    "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logos/synthex/safari-pinned-tab.svg",
+    "sha256": "0cf0ab6381748c948cead25552a1d967aaf9f5767ce5e60425d277c6221ea2af",
+    "bytes": 1296
+  },
+  {
+    "path": "public/logos/synthex/primary.png",
+    "sha256": "52e4fc40f0dfd685fe99c7b8d125ce30d8ab329e09e47d0f1cc85c01aaa6194e",
+    "bytes": 79888
+  },
+  {
+    "path": "public/logos/synthex/favicon-16x16.png",
+    "sha256": "a6a75be166ac506c5bb80685b7a7b1669021bb5b424ebbac86e1e5426d33129e",
+    "bytes": 412
+  },
+  {
+    "path": "public/logos/synthex/favicon-32x32.png",
+    "sha256": "8d58c75efe4b07e93dbfbb504da82ad47df9d0036c78949e7fc18cfec6cbe47f",
+    "bytes": 878
+  },
+  {
+    "path": "public/logos/synthex/favicon-48x48.png",
+    "sha256": "20d5feadfc2e7bc2105619ce1de855ecea4e69dcf0f65e1b8f316f6cbe66eb82",
+    "bytes": 1383
+  },
+  {
+    "path": "public/logos/synthex/apple-touch-icon.png",
+    "sha256": "fe4e3257b0748b02bbfca0e6e9db225810070e3ad63ae64a4e23120addcd0dbc",
+    "bytes": 6557
+  },
+  {
+    "path": "public/logos/synthex/android-chrome-192x192.png",
+    "sha256": "bd4356b39ad9cbb71e6baf64b47cd89fd9a782ac69b012a0833a7aaae7c25249",
+    "bytes": 6970
+  },
+  {
+    "path": "public/logos/synthex/favicon-256x256.png",
+    "sha256": "f45dc8939564e8f3ea12ae38a78720010f886858237c02cda165a4553782b41a",
+    "bytes": 9709
+  },
+  {
+    "path": "public/logos/synthex/android-chrome-512x512.png",
+    "sha256": "a144cd9132cd59c6f27a6d6205ec4569621d14d3ee8af9bd47e6f9fbbcfbe7c6",
+    "bytes": 24024
+  },
+  {
+    "path": "public/logos/synthex/favicon.ico",
+    "sha256": "c2e8267827509c6794a3dd60121d240cb233267bd79c3b74c94392e3498a8874",
+    "bytes": 12452
+  },
+  {
+    "path": "public/logos/synthex/maskable-512x512.png",
+    "sha256": "c77312962fb8522e416864a53cc89f903c43abaffdbb1b252510e1aa8c38df4b",
+    "bytes": 17398
+  },
+  {
+    "path": "public/logos/synthex/site.webmanifest",
+    "sha256": "b3c1e92485edad4d78eb8fa24914ee70c5a95f7f7572c065fc8fe12052693416",
+    "bytes": 526
+  },
+  {
+    "path": "public/icon.svg",
+    "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+    "bytes": 1595
+  },
+  {
+    "path": "public/logo.png",
+    "sha256": "52e4fc40f0dfd685fe99c7b8d125ce30d8ab329e09e47d0f1cc85c01aaa6194e",
+    "bytes": 79888
+  },
+  {
+    "path": "public/favicon.ico",
+    "sha256": "c2e8267827509c6794a3dd60121d240cb233267bd79c3b74c94392e3498a8874",
+    "bytes": 12452
+  },
+  {
+    "path": "public/apple-touch-icon.png",
+    "sha256": "fe4e3257b0748b02bbfca0e6e9db225810070e3ad63ae64a4e23120addcd0dbc",
+    "bytes": 6557
+  },
+  {
+    "path": "public/icons/icon-72.png",
+    "sha256": "369aef559ea935f8feb64fa905c0f16c201d5af178025ea48ad1c2037b7e6974",
+    "bytes": 2202
+  },
+  {
+    "path": "public/icons/icon-96.png",
+    "sha256": "fe14c956e096735f0fad6677b7a1a34c09b8d50c758ad813b0416ed02fa6d10b",
+    "bytes": 3029
+  },
+  {
+    "path": "public/icons/icon-128.png",
+    "sha256": "c9347da928c194eeeb4d7256cb88f6e281e8733b362f819ffd30b4b3ebc87d4a",
+    "bytes": 4279
+  },
+  {
+    "path": "public/icons/icon-144.png",
+    "sha256": "55a68b0d2d66160afb28e742d1a65abcb2d69a17bf05c6d78a570bc94169e2fa",
+    "bytes": 4934
+  },
+  {
+    "path": "public/icons/icon-152.png",
+    "sha256": "8ece4126acdb4342334729ecbc6ec7bf0176f25c8ce1078906e2c66575435c9d",
+    "bytes": 5274
+  },
+  {
+    "path": "public/icons/icon-192.png",
+    "sha256": "bd4356b39ad9cbb71e6baf64b47cd89fd9a782ac69b012a0833a7aaae7c25249",
+    "bytes": 6970
+  },
+  {
+    "path": "public/icons/icon-384.png",
+    "sha256": "b504a445a43568a95cd63beffc17b0302a56f2a35dd85d834e007888cdfaeffc",
+    "bytes": 16226
+  },
+  {
+    "path": "public/icons/icon-512.png",
+    "sha256": "a144cd9132cd59c6f27a6d6205ec4569621d14d3ee8af9bd47e6f9fbbcfbe7c6",
+    "bytes": 24024
+  },
+  {
+    "path": "public/logos/unite/primary.svg",
+    "sha256": "70cd981fae82ba40f59d0f980416d5648b246b6d3beb38a6e8eebac55e412870",
+    "bytes": 15091
+  },
+  {
+    "path": "public/logos/unite/inverted.svg",
+    "sha256": "70cd981fae82ba40f59d0f980416d5648b246b6d3beb38a6e8eebac55e412870",
+    "bytes": 15091
+  },
+  {
+    "path": "public/logos/unite/monochrome-light.svg",
+    "sha256": "5d6a8b34539d2be977a850dd3fe1cec74e01f3797fcce1c9a3e4f25d75e12b28",
+    "bytes": 15091
+  },
+  {
+    "path": "public/logos/unite/monochrome-dark.svg",
+    "sha256": "6b70fdcc509db62482d013292fb95c39f04b336866017a982498a0ef812371c7",
+    "bytes": 15091
+  },
+  {
+    "path": "public/logos/unite/icon.svg",
+    "sha256": "fd48d401d55fcddf3076e3152d695347d00cf91eebe06aa667d8901a74c327eb",
+    "bytes": 1137
+  },
+  {
+    "path": "public/logos/unite/favicon.svg",
+    "sha256": "fd48d401d55fcddf3076e3152d695347d00cf91eebe06aa667d8901a74c327eb",
+    "bytes": 1137
+  },
+  {
+    "path": "public/logos/unite/safari-pinned-tab.svg",
+    "sha256": "876e3b26e62cd706d6277cc60c7636395d1a5b3efc0e53ab81199a607bf29a80",
+    "bytes": 1137
+  },
+  {
+    "path": "public/logos/unite/primary.png",
+    "sha256": "3d18da4eec9d924bfae52a6200d08bcf64fe174078507e2670de2b0f24861338",
+    "bytes": 79081
+  },
+  {
+    "path": "public/logos/unite/favicon-16x16.png",
+    "sha256": "be3d9d0c6a719d7bbebfcf48cfd0e94b50b763dfc692fffd5aec2eed9305d905",
+    "bytes": 692
+  },
+  {
+    "path": "public/logos/unite/favicon-32x32.png",
+    "sha256": "9e3099ea58112ad66dd1dc2d0e681315340cc549f6a00da304d5211dcd80b8df",
+    "bytes": 1388
+  },
+  {
+    "path": "public/logos/unite/favicon-48x48.png",
+    "sha256": "a5ffdb222210429a4a1189b6632cfb5e8ec7ea00815f50859735635947d01168",
+    "bytes": 2157
+  },
+  {
+    "path": "public/logos/unite/apple-touch-icon.png",
+    "sha256": "0e87b3ee231acf8b117c83b33ed2c549199fff7905ea021f515c262aec6ba15b",
+    "bytes": 9915
+  },
+  {
+    "path": "public/logos/unite/android-chrome-192x192.png",
+    "sha256": "82eb6744099c0279c9dd43bc643d23d44f4835cc730b7b94f923c6732b00b203",
+    "bytes": 10690
+  },
+  {
+    "path": "public/logos/unite/favicon-256x256.png",
+    "sha256": "7874706ae632bf797fb075ea019bf5bb296077a336fffff8273cdea58570c925",
+    "bytes": 14820
+  },
+  {
+    "path": "public/logos/unite/android-chrome-512x512.png",
+    "sha256": "97d07380e1e0eb0e971b2f8d6a4a9ec90f3b626e009792ddae82036f7cfef0d5",
+    "bytes": 34762
+  },
+  {
+    "path": "public/logos/unite/favicon.ico",
+    "sha256": "4ebb9b978efd92c5b7420bbd6c7889e1bee35cdae6083b20c08acd6c6bedb4c4",
+    "bytes": 19127
+  },
+  {
+    "path": "public/logos/unite/maskable-512x512.png",
+    "sha256": "ca4180921c338b0d6296851c3fecb09e4517de7156e1b20b91671c7cce8dbab0",
+    "bytes": 24514
+  },
+  {
+    "path": "public/logos/unite/site.webmanifest",
+    "sha256": "ef682fef1de55148200cb98ff4d1c46d1de4a9b7f0d67c1b38ee1cd1712becc0",
+    "bytes": 546
+  },
+  {
+    "path": "public/logos/ccw/primary.svg",
+    "sha256": "441b9c266ad4fe24c56326767435b0854086361d1539615bbce249e66f2302af",
+    "bytes": 230738
+  },
+  {
+    "path": "public/logos/ccw/inverted.svg",
+    "sha256": "1b0a16b6c37c4e1499696297d0aecdfa3076a4a9ad6c2a7634befc21c688581c",
+    "bytes": 230738
+  },
+  {
+    "path": "public/logos/ccw/monochrome-light.svg",
+    "sha256": "303cf059d7e8d36397ec22a81108f13296b94d367ff750154c771c7d85589d3f",
+    "bytes": 230738
+  },
+  {
+    "path": "public/logos/ccw/monochrome-dark.svg",
+    "sha256": "c863cfdc7127580d8753ac27b815f3cb73f75cde693d5d1e9ed6e068c59565f7",
+    "bytes": 230738
+  },
+  {
+    "path": "public/logos/ccw/icon.svg",
+    "sha256": "66bb4d62fcbae66b20769238b15d028ee623f72915b1d74ab214f305c97e267d",
+    "bytes": 18693
+  },
+  {
+    "path": "public/logos/ccw/favicon.svg",
+    "sha256": "66bb4d62fcbae66b20769238b15d028ee623f72915b1d74ab214f305c97e267d",
+    "bytes": 18693
+  },
+  {
+    "path": "public/logos/ccw/safari-pinned-tab.svg",
+    "sha256": "cdbdec44dae5c82ac34f704500946e754451707e6694bc0277bf2ac21a71b219",
+    "bytes": 18693
+  },
+  {
+    "path": "public/logos/ccw/primary.png",
+    "sha256": "af04dbcfea24818515cfd46934e92e07314cb295ed088b733c3518f345258cf9",
+    "bytes": 78599
+  },
+  {
+    "path": "public/logos/ccw/favicon-16x16.png",
+    "sha256": "135c68887b7969cf11a7bb8e202ea396887a5db41afb1129f33ed81a45d846fe",
+    "bytes": 482
+  },
+  {
+    "path": "public/logos/ccw/favicon-32x32.png",
+    "sha256": "47aa119b7788e7b4a8b0c71db0a1396920efe636c1abbda95b25c1dbdf129920",
+    "bytes": 953
+  },
+  {
+    "path": "public/logos/ccw/favicon-48x48.png",
+    "sha256": "f37fec3afbefb4353e9839df7dd66e8f3ca45067cba6960ecaa21002f0bb585d",
+    "bytes": 1405
+  },
+  {
+    "path": "public/logos/ccw/apple-touch-icon.png",
+    "sha256": "20f44ff9654f1f560663d8a5bfb7319daaa3275a889c129683280223635f974d",
+    "bytes": 4730
+  },
+  {
+    "path": "public/logos/ccw/android-chrome-192x192.png",
+    "sha256": "118ea38d5f20c055f3043405156ea015fa5c3df9a93c50651ff16d01fafa614d",
+    "bytes": 5046
+  },
+  {
+    "path": "public/logos/ccw/favicon-256x256.png",
+    "sha256": "05af2d567a3dd749b400f73bfc4ec236ca5d15aa4c936f774e40604898433eb9",
+    "bytes": 6959
+  },
+  {
+    "path": "public/logos/ccw/android-chrome-512x512.png",
+    "sha256": "a4b1a93f7c9b6c9b2169f2f7f24932f20ddc0e25a64c97f6f749b783311ba367",
+    "bytes": 16903
+  },
+  {
+    "path": "public/logos/ccw/favicon.ico",
+    "sha256": "a8f661e98d9cfb3e3d552c86cd09f5b59ecb0399b36f03e9aa0ccd0a397d8d1a",
+    "bytes": 9869
+  },
+  {
+    "path": "public/logos/ccw/maskable-512x512.png",
+    "sha256": "f3aa43688a73ba8264d22459539563099fd5c93d0f642ae154d0df7550a636a3",
+    "bytes": 10356
+  },
+  {
+    "path": "public/logos/ccw/site.webmanifest",
+    "sha256": "a3b9f4c68c9c16b62e498e3964ae82392212cc49793ab612b37a4b6a54b54119",
+    "bytes": 562
+  },
+  {
+    "path": "public/logos/john-coutis/primary.svg",
+    "sha256": "fe6b6a2942c3c8b7cf2702d69727fbd5961af0386c9d457cb5b40fb246aadad9",
+    "bytes": 5269
+  },
+  {
+    "path": "public/logos/john-coutis/inverted.svg",
+    "sha256": "fe6b6a2942c3c8b7cf2702d69727fbd5961af0386c9d457cb5b40fb246aadad9",
+    "bytes": 5269
+  },
+  {
+    "path": "public/logos/john-coutis/monochrome-light.svg",
+    "sha256": "14dc09d258f146371eca895d152893ac8b369216e47ec5ae323fdda522b5946c",
+    "bytes": 5269
+  },
+  {
+    "path": "public/logos/john-coutis/monochrome-dark.svg",
+    "sha256": "67a49bbda8a651cb86b7a78415c6391350bad9b128827c9e94bae5131577aa25",
+    "bytes": 5269
+  },
+  {
+    "path": "public/logos/john-coutis/icon.svg",
+    "sha256": "c55ea9e03ad034be5406f82095d528375d6a80a4154463fdd33c342bb895fb98",
+    "bytes": 291600
+  },
+  {
+    "path": "public/logos/john-coutis/favicon.svg",
+    "sha256": "c55ea9e03ad034be5406f82095d528375d6a80a4154463fdd33c342bb895fb98",
+    "bytes": 291600
+  },
+  {
+    "path": "public/logos/john-coutis/safari-pinned-tab.svg",
+    "sha256": "3cb254a118622868f6309af1cec7be196ca6d36525f83586f6a49660b18d6360",
+    "bytes": 291600
+  },
+  {
+    "path": "public/logos/john-coutis/primary.png",
+    "sha256": "28d037b5ed9c6a4d796e25b5c9a9d9339beeeb3ba54ba04dd8afda7032eead79",
+    "bytes": 20983
+  },
+  {
+    "path": "public/logos/john-coutis/favicon-16x16.png",
+    "sha256": "3199fb8daa562b104f2a956d85049010d7bcbf7319d20832b55661eb01c82538",
+    "bytes": 724
+  },
+  {
+    "path": "public/logos/john-coutis/favicon-32x32.png",
+    "sha256": "de2602a16312bd9f4caf0a0711a5a8f77b32ed5dc3afbd0be21ce757476eefe8",
+    "bytes": 1928
+  },
+  {
+    "path": "public/logos/john-coutis/favicon-48x48.png",
+    "sha256": "d12133bcc959d00da837b5bfc5e89ab243a4b3738dea06147d9dcc69f4466d51",
+    "bytes": 3422
+  },
+  {
+    "path": "public/logos/john-coutis/apple-touch-icon.png",
+    "sha256": "4be42a92ebfb7a6dd02ec760d49cb2b9d3c8f265562e9544440ddfd482033115",
+    "bytes": 21062
+  },
+  {
+    "path": "public/logos/john-coutis/android-chrome-192x192.png",
+    "sha256": "5f5aafdfa7a2483a2da7da2df1965dcc962f4c03ff1a8d0b2be88ada8c5c50a4",
+    "bytes": 22975
+  },
+  {
+    "path": "public/logos/john-coutis/favicon-256x256.png",
+    "sha256": "d86dfa9ad767127993b4bfae4b5dab866cffa0a42d5afc5910a7bc0919dea73b",
+    "bytes": 32775
+  },
+  {
+    "path": "public/logos/john-coutis/android-chrome-512x512.png",
+    "sha256": "9d7f9c191fe782127072834af0383e5a4d3b5d4864f74654f6e9546370f48e4f",
+    "bytes": 74050
+  },
+  {
+    "path": "public/logos/john-coutis/favicon.ico",
+    "sha256": "fa5c2e7b4e00d8a35902b8f5b55ec1fedf1ab23b9553363caea5360a0f320dc6",
+    "bytes": 38919
+  },
+  {
+    "path": "public/logos/john-coutis/maskable-512x512.png",
+    "sha256": "4c9b33daffed28f6c7c7b207393208641979cf87f8aa07519edbf82150009548",
+    "bytes": 40751
+  },
+  {
+    "path": "public/logos/john-coutis/site.webmanifest",
+    "sha256": "d619f2bee4c7f10e2ebab610ccb12477192d559150057ac6330a353720487515",
+    "bytes": 534
+  }
+]

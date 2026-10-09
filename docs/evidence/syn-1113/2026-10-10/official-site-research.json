@@ -1,0 +1,579 @@
+{
+  "sites": [
+    {
+      "slug": "john-coutis",
+      "url": "https://www.johncoutis.com/",
+      "error": "HTTP Error 406: Not Acceptable"
+    },
+    {
+      "slug": "ccw",
+      "url": "https://ccwonline.com.au/",
+      "finalUrl": "https://ccwonline.com.au/",
+      "sha256": "3a0359e2d7d6bb4ce79885b1fa3396a8a45ea380dea3c4208c2fcefab1a2fb19",
+      "items": [
+        {
+          "rel": "shortcut icon",
+          "href": "//ccwonline.com.au/cdn/shop/files/CCW_Logo_2017_png_sqr_tbg_32x32.png?v=1613771142",
+          "type": "image/png"
+        },
+        {
+          "href": "//fonts.googleapis.com/css?family=Arvo:400,700",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "id": "shopify-accelerated-checkout-styles",
+          "rel": "stylesheet",
+          "media": "screen",
+          "href": "https://ccwonline.com.au/cdn/shopifycloud/portable-wallets/latest/accelerated-checkout-backwards-compat.css",
+          "crossorigin": "anonymous"
+        },
+        {
+          "href": "//ccwonline.com.au/cdn/shop/t/31/assets/bold.css?v=54254136045752905771788076934",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+        },
+        {
+          "href": "//ccwonline.com.au/cdn/shop/t/31/assets/theme.scss.css?v=108675987536212069491788079456",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "href": "//ccwonline.com.au/cdn/shop/t/31/assets/custom_style.scss.css?v=96188284502717180711788076934",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "href": "//ccwonline.com.au/cdn/shop/t/31/assets/font-awesome.min.css?v=175554054069795284561788076934",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "https://gravity-software.com/js/shopify/jqueryui/jquery-uinew.min18136.css?v=gsf23230b18cbf3d8c2352d99147980c14"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "https://gravity-software.com/js/shopify/jqueryui/jquery-uinew.min21796391.css?v=f23230b18cbf3d8c2352d99147980c14"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "https://cdn.shopify.com/extensions/01a12100-f11b-763d-b284-dbdb781b7a3f/mega-menu-builder-413/assets/globo.menu.submenu-styles.min.css",
+          "media": "print",
+          "onload": "this.media='all'"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "https://cdn.shopify.com/extensions/01a12100-f11b-763d-b284-dbdb781b7a3f/mega-menu-builder-413/assets/globo.menu.submenu-styles.min.css"
+        },
+        {
+          "href": "//cdn.shopify.com/extensions/01a12100-f11b-763d-b284-dbdb781b7a3f/mega-menu-builder-413/assets/globo.menu.simple.bundle.min.css",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "href": "https://fonts.googleapis.com/css2?family=Arvo:ital,wght@0,400&display=swap",
+          "rel": "stylesheet"
+        },
+        {
+          "id": "HeaderLogo",
+          "class": "lazyload",
+          "src": "//ccwonline.com.au/cdn/shop/files/website_logo.png?v=1780628157",
+          "itemprop": "logo"
+        },
+        {
+          "class": "site-header__logo",
+          "src": "//ccwonline.com.au/cdn/shop/files/website_logo_small.png?v=1780628157",
+          "srcset": "//ccwonline.com.au/cdn/shop/files/website_logo_small.png?v=1780628157 1x, //ccwonline.com.au/cdn/shop/files/website_logo.png?v=1780628157 2x",
+          "itemprop": "logo"
+        },
+        {
+          "href": "//ccwonline.com.au/cdn/shop/t/31/assets/globopreorder.css?v=6296322829246671161788076934",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "href": "//cdn.shopify.com/extensions/01a116cc-0376-7f64-81be-d6d23904e5c6/upcharge-fees-390/assets/mws_fees_bundle.css",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        },
+        {
+          "href": "//cdn.shopify.com/extensions/01a116fe-4b57-74e5-9810-23f4725b56b9/customer-pricing-98/assets/v3.css",
+          "rel": "stylesheet",
+          "type": "text/css",
+          "media": "all"
+        }
+      ]
+    },
+    {
+      "slug": "ra",
+      "url": "https://restoreassist.app/",
+      "finalUrl": "https://restoreassist.app/",
+      "sha256": "62c2149ae71f0dd7342f82696468335c197e349ce3f44e267bf1f91853508d82",
+      "items": [
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/chunks/30v0uzh4f9stc.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/chunks/04udjysffahfx.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/chunks/0-l9hzcq4_ydb.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "manifest",
+          "href": "/manifest.webmanifest"
+        },
+        {
+          "rel": "icon",
+          "href": "/icon.png?icon.19tyf484ebd23.png",
+          "sizes": "32x32",
+          "type": "image/png"
+        },
+        {
+          "rel": "apple-touch-icon",
+          "href": "/apple-icon.png?apple-icon.28orhtwi-01vh.png",
+          "sizes": "180x180",
+          "type": "image/png"
+        },
+        {
+          "alt": "",
+          "width": "36",
+          "height": "36",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "h-9 w-9 object-contain",
+          "style": "color:transparent;width:auto;height:auto",
+          "srcset": "/_next/image?url=%2Flogo.png&w=48&q=75 1x, /_next/image?url=%2Flogo.png&w=96&q=75 2x",
+          "src": "/_next/image?url=%2Flogo.png&w=96&q=75"
+        },
+        {
+          "alt": "",
+          "loading": "lazy",
+          "width": "32",
+          "height": "32",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "object-contain",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Flogo.png&w=32&q=75 1x, /_next/image?url=%2Flogo.png&w=64&q=75 2x",
+          "src": "/_next/image?url=%2Flogo.png&w=64&q=75"
+        }
+      ]
+    },
+    {
+      "slug": "dr",
+      "url": "https://www.disasterrecovery.com.au/",
+      "finalUrl": "https://www.disasterrecovery.com.au/",
+      "sha256": "62538c640df35cd1424500542fd00a6305787abcee651efc80667960d1241beb",
+      "items": [
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/6aae022388d60338.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/3c1a4103b4b7460b.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/0099636b68a75234.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/1bd13b66d5e4b661.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "icon",
+          "href": "/favicon.ico",
+          "sizes": "any"
+        },
+        {
+          "rel": "icon",
+          "type": "image/png",
+          "sizes": "32x32",
+          "href": "/favicon-32x32.png"
+        },
+        {
+          "rel": "icon",
+          "type": "image/png",
+          "sizes": "16x16",
+          "href": "/favicon-16x16.png"
+        },
+        {
+          "rel": "apple-touch-icon",
+          "sizes": "180x180",
+          "href": "/apple-touch-icon.png"
+        },
+        {
+          "rel": "shortcut icon",
+          "href": "/favicon.ico"
+        },
+        {
+          "rel": "manifest",
+          "href": "/manifest.webmanifest"
+        },
+        {
+          "alt": "IICRC, CARSI, RestoreAssist, and NRPG industry partnership materials",
+          "loading": "lazy",
+          "width": "600",
+          "height": "340",
+          "decoding": "async",
+          "data-nimg": "1",
+          "style": "color:transparent;object-fit:cover",
+          "sizes": "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=256&q=75 256w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=384&q=75 384w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=640&q=75 640w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=750&q=75 750w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=828&q=75 828w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=1080&q=75 1080w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=1200&q=75 1200w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=1920&q=75 1920w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=2048&q=75 2048w, /_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=3840&q=75 3840w",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Fgear-industryPartners.webp&w=3840&q=75"
+        },
+        {
+          "alt": "Water Emergency",
+          "draggable": "false",
+          "loading": "lazy",
+          "width": "80",
+          "height": "80",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "ag-custom-icon",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_water.webp&w=96&q=75 1x, /_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_water.webp&w=256&q=75 2x",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_water.webp&w=256&q=75"
+        },
+        {
+          "alt": "Fire Emergency",
+          "draggable": "false",
+          "loading": "lazy",
+          "width": "80",
+          "height": "80",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "ag-custom-icon",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_fire.webp&w=96&q=75 1x, /_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_fire.webp&w=256&q=75 2x",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_fire.webp&w=256&q=75"
+        },
+        {
+          "alt": "Mould Emergency",
+          "draggable": "false",
+          "loading": "lazy",
+          "width": "80",
+          "height": "80",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "ag-custom-icon",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_mould.webp&w=96&q=75 1x, /_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_mould.webp&w=256&q=75 2x",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_mould.webp&w=256&q=75"
+        },
+        {
+          "alt": "Storm Emergency",
+          "draggable": "false",
+          "loading": "lazy",
+          "width": "80",
+          "height": "80",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "ag-custom-icon",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_storm.webp&w=96&q=75 1x, /_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_storm.webp&w=256&q=75 2x",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_storm.webp&w=256&q=75"
+        },
+        {
+          "alt": "Biohazard Emergency",
+          "draggable": "false",
+          "loading": "lazy",
+          "width": "80",
+          "height": "80",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "ag-custom-icon",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_trauma.webp&w=96&q=75 1x, /_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_trauma.webp&w=256&q=75 2x",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_trauma.webp&w=256&q=75"
+        },
+        {
+          "alt": "Sewage Emergency",
+          "draggable": "false",
+          "loading": "lazy",
+          "width": "80",
+          "height": "80",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "ag-custom-icon",
+          "style": "color:transparent",
+          "srcset": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_sewage.webp&w=96&q=75 1x, /_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_sewage.webp&w=256&q=75 2x",
+          "src": "/_next/image?url=%2Fimages%2Fantigravity%2Flogo_3d_sewage.webp&w=256&q=75"
+        }
+      ]
+    },
+    {
+      "slug": "nrpg",
+      "url": "https://nrpg.com.au/",
+      "error": "<urlopen error [Errno 8] nodename nor servname provided, or not known>"
+    },
+    {
+      "slug": "carsi",
+      "url": "https://carsi.com.au/",
+      "finalUrl": "https://carsi.com.au/",
+      "sha256": "346928a219badde7e4cde3984ceebe1434d1364cd62a2e93413c66e937d66655",
+      "items": [
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/chunks/0ixwr1scrg92w.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/chunks/0hjclf5hdfkyx.css",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "manifest",
+          "href": "/manifest.json"
+        },
+        {
+          "rel": "shortcut icon",
+          "href": "/logo/favicon.png"
+        },
+        {
+          "rel": "icon",
+          "href": "/logo/favicon.png",
+          "type": "image/png",
+          "sizes": "512x512"
+        },
+        {
+          "rel": "icon",
+          "href": "/logo/favicon.png",
+          "type": "image/png",
+          "sizes": "32x32"
+        },
+        {
+          "rel": "apple-touch-icon",
+          "href": "/logo/favicon.png",
+          "sizes": "180x180",
+          "type": "image/png"
+        },
+        {
+          "alt": "CARSI",
+          "width": "220",
+          "height": "48",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "h-10 w-auto max-w-[min(200px,52vw)] object-contain object-left",
+          "style": "color:transparent",
+          "src": "/logo/logo1.png"
+        },
+        {
+          "src": "https://res.cloudinary.com/dmaulkthb/image/upload/v1782410710/carsi/admin-courses/9e530122-2810-43e5-81e9-f30941703ceb.png",
+          "alt": "",
+          "loading": "eager",
+          "decoding": "async",
+          "fetchpriority": "high",
+          "class": "pointer-events-none absolute inset-0 z-0 h-full w-full object-cover"
+        },
+        {
+          "alt": "CARSI",
+          "loading": "lazy",
+          "width": "280",
+          "height": "64",
+          "decoding": "async",
+          "data-nimg": "1",
+          "class": "h-12 w-auto max-w-[min(260px,70vw)] object-contain object-left sm:h-14",
+          "style": "color:transparent",
+          "src": "/logo/logo1.png"
+        }
+      ]
+    },
+    {
+      "slug": "unite",
+      "url": "https://unite-group.in/",
+      "finalUrl": "https://unite-group.in/auth/login?redirectTo=%2F",
+      "sha256": "6007d43ea6c05041065ccbb6858e82019c94ed38e4b181e24fc3501215cf0a47",
+      "items": [
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/fe69256c862e8b9e.css?dpl=dpl_Gbgyu6Y64XcrJT77N9zmQGMF8k9g",
+          "nonce": "KFWLTV/vXzRT63EN0cUBQQ==",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/28afcdf0d4110121.css?dpl=dpl_Gbgyu6Y64XcrJT77N9zmQGMF8k9g",
+          "nonce": "KFWLTV/vXzRT63EN0cUBQQ==",
+          "data-precedence": "next"
+        }
+      ]
+    },
+    {
+      "slug": "synthex",
+      "url": "https://synthex.social/",
+      "finalUrl": "https://synthex.social/",
+      "sha256": "522f5a770e12291d54f01ba44e2f55f696fdcc03c32adfc02c74602e982dee5a",
+      "items": [
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/fe8aacd19360d858.css?dpl=dpl_7er2YFxBBtFZWqWpC3SQDV9oNcNY",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "stylesheet",
+          "href": "/_next/static/css/6807e7077159ea26.css?dpl=dpl_7er2YFxBBtFZWqWpC3SQDV9oNcNY",
+          "data-precedence": "next"
+        },
+        {
+          "rel": "manifest",
+          "href": "/manifest.json"
+        },
+        {
+          "rel": "icon",
+          "href": "/favicon.ico",
+          "sizes": "any"
+        },
+        {
+          "rel": "icon",
+          "href": "/icon.svg",
+          "type": "image/svg+xml"
+        },
+        {
+          "rel": "apple-touch-icon",
+          "href": "/apple-touch-icon.png",
+          "sizes": "180x180"
+        }
+      ]
+    }
+  ],
+  "downloadedAssets": [
+    {
+      "key": "ra-primary",
+      "url": "https://restoreassist.app/logo.png",
+      "finalUrl": "https://restoreassist.app/logo.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/ra-primary.png",
+      "contentType": "image/png",
+      "bytes": 263275
+    },
+    {
+      "key": "carsi-primary",
+      "url": "https://carsi.com.au/logo/logo1.png",
+      "finalUrl": "https://carsi.com.au/logo/logo1.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/carsi-primary.png",
+      "contentType": "image/png",
+      "bytes": 73673
+    },
+    {
+      "key": "carsi-icon",
+      "url": "https://carsi.com.au/logo/favicon.png",
+      "finalUrl": "https://carsi.com.au/logo/favicon.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/carsi-icon.png",
+      "contentType": "image/png",
+      "bytes": 135074
+    },
+    {
+      "key": "ccw-primary",
+      "url": "https://ccwonline.com.au/cdn/shop/files/website_logo.png?v=1780628157",
+      "finalUrl": "https://ccwonline.com.au/cdn/shop/files/website_logo.png?v=1780628157",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/ccw-primary.png",
+      "contentType": "image/png",
+      "bytes": 297301
+    },
+    {
+      "key": "ccw-icon",
+      "url": "https://ccwonline.com.au/cdn/shop/files/CCW_Logo_2017_png_sqr_tbg.png?v=1613771142",
+      "finalUrl": "https://ccwonline.com.au/cdn/shop/files/CCW_Logo_2017_png_sqr_tbg.png?v=1613771142",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/ccw-icon.png",
+      "contentType": "image/png",
+      "bytes": 54505
+    },
+    {
+      "key": "dr-icon",
+      "url": "https://www.disasterrecovery.com.au/favicon-32x32.png",
+      "finalUrl": "https://www.disasterrecovery.com.au/favicon-32x32.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/dr-icon.png",
+      "contentType": "image/png",
+      "bytes": 1902
+    },
+    {
+      "key": "synthex-icon",
+      "url": "https://synthex.social/icon.svg",
+      "finalUrl": "https://synthex.social/icon.svg",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/synthex-icon.svg",
+      "contentType": "image/svg+xml",
+      "bytes": 466
+    },
+    {
+      "key": "unite-primary",
+      "url": "https://unite-group.in/logos/unite-group-nexus-logo.png",
+      "finalUrl": "https://unite-group.in/logos/unite-group-nexus-logo.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/unite-primary.png",
+      "contentType": "image/png",
+      "bytes": 433728
+    },
+    {
+      "key": "john-coutis-primary",
+      "url": "https://www.johncoutis.com/wp-content/uploads/2024/02/JOHN-COUTIS-2.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/john-coutis-primary.png",
+      "contentType": "image/png",
+      "bytes": 7480
+    },
+    {
+      "key": "john-coutis-icon",
+      "url": "https://www.johncoutis.com/wp-content/uploads/2024/02/character-logo-transparent-john-coutis-2.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/john-coutis-icon.png",
+      "contentType": "image/png",
+      "bytes": 1239144
+    },
+    {
+      "key": "nrpg-primary",
+      "url": "https://www.disasterrecovery.com.au/logos/nrp-logo.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/nrpg-primary.png",
+      "contentType": "image/png",
+      "bytes": 195429
+    },
+    {
+      "key": "nrpg-icon",
+      "url": "https://www.disasterrecovery.com.au/logos/NRP%20favicon_512x512.png",
+      "sourcePath": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/nrpg-icon.png",
+      "contentType": "image/png",
+      "bytes": 195429
+    }
+  ],
+  "synthexSvgVariables": {
+    "--sx-warning": "#f59e0b",
+    "--sx-evidence": "#41d6c3",
+    "--sx-evidence-bright": "#72eadb",
+    "--sx-accent": "#ff7a18",
+    "--sx-text-primary": "#f5f7fa",
+    "--sx-accent-hover": "#ff933c"
+  },
+  "providerGenerationCalls": 0,
+  "spend": 0,
+  "deployment": 0,
+  "productionWrites": 0,
+  "permissions": "Public artwork download and format conversion do not establish John voice consent or identity token approval.",
+  "nrpgIdentityCorrection": {
+    "legacyPublicFiles": "Rejected for NRPG: badge reads NRP, not NRPG",
+    "replacementSource": "CleanExpo/DR-NRPG at fc7ecd47fd03481a31947aa9d5f0e3662907bf24: apps/web/public/images/brand/nrpg-logo-full.png",
+    "replacementPublicSiteProbe": 404,
+    "evidence": "nrpg-correction.json"
+  }
+}

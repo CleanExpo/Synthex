@@ -13,16 +13,20 @@ export const unite = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#E55A2B',     // candy orange dark — canonical Unite Group brand colour
+    primary: '#E55A2B', // candy orange dark — canonical Unite Group brand colour
     secondary: '#1E293B',
-    accent: '#FBBF24',      // amber — signal
+    accent: '#FBBF24', // amber — signal
     neutral: { 50: '#F8FAFC', 100: '#E2E8F0', 500: '#64748B', 900: '#0F172A' },
     semantic: { success: '#16A34A', warning: '#D97706', danger: '#DC2626' },
     family: 'industrial',
   },
   typography: {
-    display: { family: 'Inter', weight: 700, src: 'fonts/unite/Inter-Bold.woff2' },
-    body: { family: 'Inter', weight: 400, src: 'fonts/unite/Inter-Regular.woff2' },
+    display: {
+      family: 'Inter',
+      weight: 700,
+      src: 'fonts/unite/Inter-Bold.woff2',
+    },
+    body: { family: 'Inter', weight: 400, src: 'fonts/ra/Inter-Regular.woff2' },
   },
   logo: {
     primary: 'logos/unite/primary.svg',

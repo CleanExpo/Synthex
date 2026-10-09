@@ -1,0 +1,22 @@
+{
+  "removedUnusedLocalCopies": [
+    "public/logos/dr/primary.jpg",
+    "public/logos/nrpg/icon.png"
+  ],
+  "removedTaskTemporaryDirectories": [
+    {
+      "path": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/vector-tools",
+      "regularFileBytes": 2233489
+    },
+    {
+      "path": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/vector-tools-312",
+      "regularFileBytes": 2233324
+    },
+    {
+      "path": "/Volumes/Storage Unit/ccw-agent/scratch/syn-1113-official-logos-20261010/prepared",
+      "regularFileBytes": 5973759
+    }
+  ],
+  "preserved": "Exact source originals, SVG masters, all 156 outputs, public research receipts and historical checkpoints; pre-existing social-pipeline edit",
+  "sharedCachesDeleted": false
+}
