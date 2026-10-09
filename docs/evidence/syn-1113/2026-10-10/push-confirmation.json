@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-10 Australia/Brisbane",
+  "branch": "codex/syn-1113-finalized",
+  "url": "https://github.com/CleanExpo/Synthex/tree/codex/syn-1113-finalized",
+  "verifiedPushedCommit": "9771e1c12cdde03b9b566a67e97e9d5b724ca12b",
+  "localAndRemoteCommitMatch": true,
+  "outstandingWorkingTreeChanges": 0,
+  "includes": "All SYN-1113 implementation and evidence commits, corrected NRPG preview, previously preserved campaign-document edit, and branch-only Vercel deployment guard",
+  "githubDeploymentsForVerifiedCommit": 0,
+  "githubActionsRunsOnBranch": 0,
+  "githubCheckRuns": [
+    {
+      "name": "Supabase Preview",
+      "status": "completed",
+      "conclusion": "skipped"
+    }
+  ],
+  "providerCalls": 0,
+  "spend": 0,
+  "deploys": 0,
+  "productionWrites": 0,
+  "mainMerged": false,
+  "mainMergeBoundary": "Remote main has newer work and triggers deployments. No force push, main merge, PR creation or deployment was performed.",
+  "remainingExternalApprovalInputs": 3,
+  "remainingRequirements": "approval-action-sheet.md",
+  "validation": "final-validation.json",
+  "finalReceiptCommit": "This evidence-only follow-up is also pushed; it changes no code or deployment configuration."
+}
