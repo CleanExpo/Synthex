@@ -144,12 +144,13 @@ export function runBrandVisualPreflight(repositoryRoot: string) {
     .filter(asset => asset.startsWith('public/logos/'))
     .map(asset => asset.slice(7))
     .filter(asset => declaredLogos.includes(asset));
+  const baselineMissingLogos = new Set<string>(logoBaseline.missing);
   const logoBaselineDrift = [
     ...new Set([...actualMissingLogos, ...logoBaseline.missing]),
   ].filter(
     asset =>
-      actualMissingLogos.includes(asset) !==
-        logoBaseline.missing.includes(asset) || !declaredLogos.includes(asset)
+      actualMissingLogos.includes(asset) !== baselineMissingLogos.has(asset) ||
+      !declaredLogos.includes(asset)
   );
   const manifest = JSON.parse(
     fs.readFileSync(
