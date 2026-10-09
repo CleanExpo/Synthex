@@ -132,16 +132,16 @@ jest.mock('next/navigation', () => ({
 // parsed as JavaScript and the import failed with "Invalid or unexpected token".
 jest.mock('../../../app/globals.css', () => ({}));
 
-// next/font/google is a build-time babel transform; imported at runtime it throws. Each
-// loader returns the shape the layout reads off it.
-jest.mock('next/font/google', () => {
-  const face = () => ({
+// next/font/local is transformed at build time. Keep its render-time shape while
+// rendering the real ancestors: the font loader does not own route markers.
+jest.mock('next/font/local', () => ({
+  __esModule: true,
+  default: () => ({
     className: 'font-stub',
     variable: '--font-stub',
     style: { fontFamily: 'stub' },
-  });
-  return new Proxy({}, { get: () => face });
-});
+  }),
+}));
 
 import { cleanup, render } from '@testing-library/react';
 import { existsSync, readdirSync } from 'node:fs';
