@@ -4,7 +4,7 @@
   "cause": "Conflicts with current main; existing remote checks passed.",
   "repair": "Merged current main; preserved its explicit approval/ops Slack destinations and owner routing; retained PR regression tests and disabled preview deployment for this branch. Dry-run reports actual routing channel.",
   "localValidation": {
-    "focusedOfflineTests": 47,
+    "focusedOfflineTests": 49,
     "suites": 3,
     "result": "passed",
     "method": "Exact source tests copied to scoped external discovery; aliases point to this worktree, provider/network guard enabled."
@@ -12,5 +12,9 @@
   "fullRemoteValidation": "Must verify CI on pushed head.",
   "deploymentsEnabled": false,
   "providerCalls": 0,
-  "productionWrites": 0
+  "productionWrites": 0,
+  "reviewFindings": {
+    "duplicateSlackFallback": "Fixed; successful Slack approval is not repeated after Telegram failure, failed Slack delivery may retry. Both cases covered.",
+    "readinessComments": "Superseded by current main routing policy; paired approval/ops webhooks or bot token required, team reference alone does not mark Hermes ready. Explicit Linear credentials plus team retain main fallback readiness."
+  }
 }

@@ -1564,6 +1564,7 @@ export async function sendEscalation(
 
   // Defensive: do not throw under any circumstance.
   try {
+    let approvalSlackDelivered = false;
     // Urgent approvals still appear in Slack; Telegram is the additional urgent path.
     if (
       opts.channel === NotificationChannel.TELEGRAM &&
@@ -1576,6 +1577,7 @@ export async function sendEscalation(
         opts.priority,
         true
       );
+      approvalSlackDelivered = slack.success;
       if (!slack.success) {
         logger.error('[HERMES] Urgent approval Slack delivery failed', {
           error: slack.error,
@@ -1593,7 +1595,11 @@ export async function sendEscalation(
     }
 
     // Primary failed. Attempt fallback as best-effort if provided.
-    if (opts.fallback && opts.fallback !== opts.channel) {
+    if (
+      opts.fallback &&
+      opts.fallback !== primaryChannel &&
+      !(approvalSlackDelivered && opts.fallback === NotificationChannel.SLACK)
+    ) {
       logger.warn(
         '[HERMES] sendEscalation primary failed, attempting fallback',
         {

@@ -513,4 +513,33 @@ describe('approval routing policy (#984)', () => {
       }).valid
     ).toBe(true);
   });
+  it.each([true, false])(
+    'only retries Slack after Telegram failure when its first delivery failed: %s',
+    async slackDelivered => {
+      const fetch = global.fetch as jest.Mock;
+      fetch
+        .mockResolvedValueOnce(
+          textResponse(
+            slackDelivered
+              ? '{"ok":true}'
+              : '{"ok":false,"error":"unavailable"}'
+          )
+        )
+        .mockResolvedValueOnce(textResponse('{}', 500))
+        .mockResolvedValueOnce(textResponse('{"ok":true}'));
+      const result = await sendEscalation({
+        channel: NotificationChannel.TELEGRAM,
+        message: 'Approve?',
+        priority: 'urgent',
+        requiresApproval: true,
+        fallback: NotificationChannel.SLACK,
+      });
+      expect(result.sent).toBe(false);
+      expect(fetch).toHaveBeenCalledTimes(slackDelivered ? 2 : 3);
+      expect(fetch.mock.calls[0][0]).toContain('slack.com');
+      expect(fetch.mock.calls[1][0]).toContain('api.telegram.org');
+      if (!slackDelivered)
+        expect(fetch.mock.calls[2][0]).toContain('slack.com');
+    }
+  );
 });
