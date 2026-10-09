@@ -25,9 +25,19 @@ import { DEFAULT_TIMEZONE, getZonedParts, zonedTimeToUtc } from './timezone';
 // TYPES
 // ============================================================================
 
-export type PostStatus = 'draft' | 'scheduled' | 'published' | 'failed' | 'cancelled';
+export type PostStatus =
+  | 'draft'
+  | 'scheduled'
+  | 'published'
+  | 'failed'
+  | 'cancelled';
 
-export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'biweekly' | 'monthly';
+export type RecurrenceType =
+  | 'none'
+  | 'daily'
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly';
 
 export interface CalendarPost {
   id: string;
@@ -166,7 +176,7 @@ export class CalendarService {
     userId?: string
   ): Promise<CalendarView> {
     const cache = getCache();
-    const cacheKey = `${this.cachePrefix}:view:${startDate.toISOString()}:${endDate.toISOString()}:${userId ?? 'all'}`;
+    const cacheKey = `${this.cachePrefix}:view:v2:${startDate.toISOString()}:${endDate.toISOString()}:${userId ?? 'all'}`;
 
     const cached = await cache.get<CalendarView>(cacheKey);
     if (cached) {
@@ -204,14 +214,20 @@ export class CalendarService {
 
     let scheduledTime = new Date(post.scheduledFor);
     if (autoOptimize) {
-      const optimizedTime = await this.findOptimalTime(scheduledTime, post.platforms[0]);
+      const optimizedTime = await this.findOptimalTime(
+        scheduledTime,
+        post.platforms[0]
+      );
       if (optimizedTime) {
         scheduledTime = optimizedTime;
       }
     }
 
     if (checkConflicts) {
-      const conflicts = await this.checkTimeConflicts(scheduledTime, post.platforms);
+      const conflicts = await this.checkTimeConflicts(
+        scheduledTime,
+        post.platforms
+      );
       if (conflicts.some(c => c.severity === 'error')) {
         throw new Error(`Scheduling conflict: ${conflicts[0].message}`);
       }
@@ -267,7 +283,10 @@ export class CalendarService {
       throw new Error('Cannot reschedule a published post');
     }
 
-    const conflicts = await this.checkTimeConflicts(newTime, existing.platforms);
+    const conflicts = await this.checkTimeConflicts(
+      newTime,
+      existing.platforms
+    );
     if (conflicts.some(c => c.severity === 'error')) {
       throw new Error(`Cannot reschedule: ${conflicts[0].message}`);
     }
@@ -330,7 +349,9 @@ export class CalendarService {
       // regardless of where the server runs (DST-correct via Intl).
       const suggestedTime = zonedTimeToUtc(date, this.timezone, hour, 0);
 
-      const conflicts = await this.checkTimeConflicts(suggestedTime, [platform]);
+      const conflicts = await this.checkTimeConflicts(suggestedTime, [
+        platform,
+      ]);
       const isAvailable = !conflicts.some(c => c.severity === 'error');
 
       if (isAvailable) {
@@ -356,29 +377,73 @@ export class CalendarService {
     userId?: string
   ): Promise<CalendarPost[]> {
     try {
-      const posts = await prisma.calendarPost.findMany({
-        where: {
-          organizationId: this.organizationId,
-          ...(userId ? { userId } : {}),
-          scheduledFor: {
-            gte: startDate,
-            lte: endDate,
+      const [calendarRows, liveRows] = await Promise.all([
+        prisma.calendarPost.findMany({
+          where: {
+            organizationId: this.organizationId,
+            ...(userId ? { userId } : {}),
+            scheduledFor: {
+              gte: startDate,
+              lte: endDate,
+            },
+            status: {
+              in: ['draft', 'scheduled', 'published', 'failed'],
+            },
           },
-          status: {
-            in: ['draft', 'scheduled', 'published'],
+          orderBy: {
+            scheduledFor: 'asc',
           },
-        },
-        orderBy: {
-          scheduledFor: 'asc',
-        },
-      });
+        }),
+        prisma.post.findMany({
+          where: {
+            deletedAt: null,
+            scheduledAt: {
+              gte: startDate,
+              lte: endDate,
+            },
+            status: {
+              in: [
+                'draft',
+                'scheduled',
+                'published',
+                'failed',
+                'pending_approval',
+              ],
+            },
+            campaign: userId
+              ? { organizationId: this.organizationId, userId }
+              : { organizationId: this.organizationId },
+          },
+          include: {
+            campaign: {
+              select: { userId: true, organizationId: true },
+            },
+          },
+          orderBy: {
+            scheduledAt: 'asc',
+          },
+        }),
+      ]);
 
-      return posts.map(this.mapPrismaToCalendarPost);
+      const fromCalendar = calendarRows.map(row =>
+        this.mapPrismaToCalendarPost(row)
+      );
+      const seen = new Set(fromCalendar.map(p => p.id));
+      const fromLive = liveRows
+        .filter(row => !seen.has(row.id))
+        .map(row => this.mapLivePostToCalendarPost(row));
+
+      return [...fromCalendar, ...fromLive].sort(
+        (a, b) => a.scheduledFor.getTime() - b.scheduledFor.getTime()
+      );
     } catch (error) {
-      logger.error('Failed to get posts from database, falling back to cache', { error });
+      logger.error('Failed to get posts from database, falling back to cache', {
+        error,
+      });
       // Fallback to cache on DB failure
       const cache = getCache();
-      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      const allPosts =
+        (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
       return allPosts.filter(
         p =>
           new Date(p.scheduledFor) >= startDate &&
@@ -395,17 +460,55 @@ export class CalendarService {
         where: { id: postId },
       });
 
-      return post ? this.mapPrismaToCalendarPost(post) : null;
+      if (post && post.organizationId === this.organizationId) {
+        return this.mapPrismaToCalendarPost(post);
+      }
+
+      const live = await prisma.post.findFirst({
+        where: {
+          id: postId,
+          deletedAt: null,
+          campaign: { organizationId: this.organizationId },
+        },
+        include: {
+          campaign: { select: { userId: true, organizationId: true } },
+        },
+      });
+
+      return live ? this.mapLivePostToCalendarPost(live) : null;
     } catch (error) {
-      logger.error('Failed to get post from database, falling back to cache', { error });
+      logger.error('Failed to get post from database, falling back to cache', {
+        error,
+      });
       const cache = getCache();
-      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      const allPosts =
+        (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
       return allPosts.find(p => p.id === postId) || null;
     }
   }
 
   private async savePost(post: CalendarPost): Promise<void> {
     try {
+      const live = await prisma.post.findFirst({
+        where: {
+          id: post.id,
+          campaign: { organizationId: this.organizationId },
+        },
+        select: { id: true },
+      });
+
+      if (live) {
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            content: post.content,
+            status: post.status,
+            scheduledAt: post.scheduledFor,
+          },
+        });
+        return;
+      }
+
       const data = {
         title: post.title,
         content: post.content,
@@ -439,27 +542,63 @@ export class CalendarService {
 
       // Also update cache for fast reads
       const cache = getCache();
-      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      const allPosts =
+        (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
       const index = allPosts.findIndex(p => p.id === post.id);
       if (index >= 0) {
         allPosts[index] = post;
       } else {
         allPosts.push(post);
       }
-      await cache.set(`${this.cachePrefix}:posts`, allPosts, { ttl: 86400 * 30 });
+      await cache.set(`${this.cachePrefix}:posts`, allPosts, {
+        ttl: 86400 * 30,
+      });
     } catch (error) {
-      logger.error('Failed to save post to database, saving to cache only', { error });
+      logger.error('Failed to save post to database, saving to cache only', {
+        error,
+      });
       // Fallback to cache-only on DB failure
       const cache = getCache();
-      const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+      const allPosts =
+        (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
       const index = allPosts.findIndex(p => p.id === post.id);
       if (index >= 0) {
         allPosts[index] = post;
       } else {
         allPosts.push(post);
       }
-      await cache.set(`${this.cachePrefix}:posts`, allPosts, { ttl: 86400 * 30 });
+      await cache.set(`${this.cachePrefix}:posts`, allPosts, {
+        ttl: 86400 * 30,
+      });
     }
+  }
+
+  private mapLivePostToCalendarPost(post: {
+    id: string;
+    content: string;
+    platform: string;
+    status: string;
+    scheduledAt: Date | null;
+    publishedAt: Date | null;
+    campaignId: string;
+    createdAt: Date;
+    updatedAt: Date;
+    campaign: { userId: string; organizationId: string | null };
+  }): CalendarPost {
+    const scheduledFor = post.scheduledAt ?? post.publishedAt ?? post.createdAt;
+    return {
+      id: post.id,
+      title: '',
+      content: post.content,
+      platforms: [post.platform],
+      scheduledFor,
+      status: post.status as PostStatus,
+      campaignId: post.campaignId,
+      organizationId: post.campaign.organizationId || this.organizationId,
+      createdBy: post.campaign.userId,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+    };
   }
 
   private mapPrismaToCalendarPost(post: PrismaCalendarPost): CalendarPost {
@@ -496,7 +635,13 @@ export class CalendarService {
     posts: CalendarPost[]
   ): TimeSlot[] {
     const slots: TimeSlot[] = [];
-    const platforms = ['twitter', 'instagram', 'facebook', 'linkedin', 'tiktok'];
+    const platforms = [
+      'twitter',
+      'instagram',
+      'facebook',
+      'linkedin',
+      'tiktok',
+    ];
 
     const current = new Date(startDate);
     const maxSlots = 168; // Limit to 1 week of hourly slots
@@ -540,7 +685,9 @@ export class CalendarService {
         const post1 = posts[i];
         const post2 = posts[j];
 
-        const commonPlatforms = post1.platforms.filter(p => post2.platforms.includes(p));
+        const commonPlatforms = post1.platforms.filter(p =>
+          post2.platforms.includes(p)
+        );
         if (commonPlatforms.length === 0) continue;
 
         const time1 = new Date(post1.scheduledFor).getTime();
@@ -577,14 +724,21 @@ export class CalendarService {
     const platforms = ['twitter', 'instagram', 'facebook', 'linkedin'];
 
     for (const platform of platforms) {
-      const platformSuggestions = await this.getOptimalTimes(platform, startDate, 3);
+      const platformSuggestions = await this.getOptimalTimes(
+        platform,
+        startDate,
+        3
+      );
       suggestions.push(...platformSuggestions);
     }
 
     return suggestions.sort((a, b) => b.score - a.score).slice(0, 10);
   }
 
-  private async checkTimeConflicts(time: Date, platforms: string[]): Promise<Conflict[]> {
+  private async checkTimeConflicts(
+    time: Date,
+    platforms: string[]
+  ): Promise<Conflict[]> {
     const conflicts: Conflict[] = [];
 
     for (const platform of platforms) {
@@ -618,10 +772,14 @@ export class CalendarService {
           });
         }
       } catch (error) {
-        logger.error('Failed to check conflicts in database, falling back to cache', { error });
+        logger.error(
+          'Failed to check conflicts in database, falling back to cache',
+          { error }
+        );
         // Fallback to cache
         const cache = getCache();
-        const allPosts = await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`) || [];
+        const allPosts =
+          (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
         const nearbyPosts = allPosts.filter(
           p =>
             p.platforms.includes(platform) &&
@@ -648,7 +806,10 @@ export class CalendarService {
     return conflicts;
   }
 
-  private async findOptimalTime(requestedTime: Date, platform: string): Promise<Date | null> {
+  private async findOptimalTime(
+    requestedTime: Date,
+    platform: string
+  ): Promise<Date | null> {
     const suggestions = await this.getOptimalTimes(platform, requestedTime, 1);
     return suggestions[0]?.suggestedTime || null;
   }
@@ -672,7 +833,10 @@ export class CalendarService {
       score += 10;
     }
 
-    if (['instagram', 'tiktok'].includes(platform) && (dayOfWeek === 0 || dayOfWeek === 6)) {
+    if (
+      ['instagram', 'tiktok'].includes(platform) &&
+      (dayOfWeek === 0 || dayOfWeek === 6)
+    ) {
       score += 10;
     }
 

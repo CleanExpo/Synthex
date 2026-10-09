@@ -28,10 +28,11 @@ import {
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { StepProgressV2 } from '@/components/onboarding';
+import { OnboardingSplit } from '@/components/onboarding';
 import { fireEvent } from '@/lib/analytics/onboarding-events';
 import { ONBOARDING_INDUSTRY_TO_SLUG } from '@/lib/constants/onboarding';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
+import { getSampleSeasonWindows } from '@/lib/seasonal/sample-season-windows';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -176,111 +177,146 @@ export default function SeasonBriefPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-8">
-      <StepProgressV2 currentStep={2} />
-
-      {/* Header */}
-      <div className="text-center space-y-3">
-        <span className="text-[10px] uppercase tracking-[0.3em] text-orange-400/70">
-          Your Market Outlook
-        </span>
-        <h1 className="text-3xl font-light tracking-tight text-white">
-          Synthex already knows{' '}
-          <span className="text-orange-400">what&apos;s coming.</span>
-        </h1>
-        <p className="text-white/40 text-sm max-w-md mx-auto leading-relaxed">
-          Based on your industry, here are the next market opportunity windows
-          Synthex will help you capitalise on.
-        </p>
-      </div>
-
-      {/* Signal cards */}
-      <div
-        className={cn(
-          'grid gap-3',
-          signals.length > 0 ? 'sm:grid-cols-2' : 'grid-cols-1'
-        )}
-        aria-live="polite"
-        aria-label="Seasonal market signals"
-      >
-        {loading ? (
-          <div className="col-span-2 flex items-center justify-center py-12">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
-          </div>
-        ) : signals.length > 0 ? (
-          signals.map(signal => {
-            const { label, colour } = confidenceLabel(signal.confidenceScore);
-            return (
-              <div
-                key={signal.id}
-                className="border border-white/[0.06] bg-white/[0.02] rounded-sm p-5 space-y-3 hover:border-orange-500/20 transition-colors"
-              >
-                {/* Label + icon */}
-                <div className="flex items-start gap-2">
-                  {signalTypeIcon(signal.signalType)}
-                  <h3 className="text-sm font-medium text-white leading-snug">
-                    {signal.opportunityLabel}
-                  </h3>
-                </div>
-
-                {/* Date range */}
-                <p className="text-xs text-orange-300/80 font-mono">
-                  {formatDateRange(signal.windowStart, signal.windowEnd)}
-                </p>
-
-                {/* Why this matters */}
-                <p className="text-xs text-white/40 leading-relaxed">
-                  {whyThisMatters(signal, industrySlug)}
-                </p>
-
-                {/* Confidence indicator */}
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn('inline-block w-2 h-2 rounded-full', colour)}
-                    aria-hidden="true"
-                  />
-                  <span className="text-[10px] text-white/30 uppercase tracking-wider">
-                    {label}
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-          /* Fallback — no signals for this industry/state */
-          <div className="border border-white/[0.06] bg-white/[0.02] rounded-sm p-6 text-center space-y-3">
-            <CalendarDays className="h-8 w-8 text-white/20 mx-auto" />
-            <p className="text-sm text-white/50 leading-relaxed">
-              Your industry-specific market signals are loading — check back in
-              24 hours for personalised opportunities.
-            </p>
-            <p className="text-xs text-white/30">
-              In the meantime, Synthex will start with AU national public
-              holidays and peak consumer periods.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Content recommendation note */}
-      {signals.length > 0 && (
-        <p className="text-center text-xs text-white/25">
-          Synthex will pre-load content for each window — 2–3 posts starting 2
-          weeks before each peak.
-        </p>
-      )}
-
-      {/* CTA — cannot be blocked, always available */}
-      <div className="flex justify-center pt-2">
-        <Button
-          onClick={handleContinue}
-          className="gap-2 bg-orange-500 hover:bg-orange-600 text-white px-8"
-          size="lg"
+    <OnboardingSplit
+      currentStep={2}
+      eyebrow="Review · Market outlook"
+      title={
+        signals.length > 0
+          ? "Synthex already knows what's coming."
+          : 'Upcoming Australian calendar windows.'
+      }
+      description={
+        signals.length > 0
+          ? 'Based on your industry, here are the next market opportunity windows Synthex will help you capitalise on.'
+          : 'A general sample, not based on your business: the next fixed Australian calendar dates worth planning content around.'
+      }
+    >
+      <div className="space-y-8">
+        {/* Signal cards */}
+        <div
+          className={cn(
+            'grid gap-3',
+            signals.length > 0 ? 'sm:grid-cols-2' : 'grid-cols-1'
+          )}
+          aria-live="polite"
+          aria-label="Seasonal market signals"
         >
-          Continue to connect accounts
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+          {loading ? (
+            <div className="col-span-2 flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
+            </div>
+          ) : signals.length > 0 ? (
+            signals.map(signal => {
+              const { label, colour } = confidenceLabel(signal.confidenceScore);
+              return (
+                <div
+                  key={signal.id}
+                  className="border border-white/[0.06] bg-white/[0.02] rounded-sm p-5 space-y-3 hover:border-orange-500/20 transition-colors"
+                >
+                  {/* Label + icon */}
+                  <div className="flex items-start gap-2">
+                    {signalTypeIcon(signal.signalType)}
+                    <h3 className="text-sm font-medium text-white leading-snug">
+                      {signal.opportunityLabel}
+                    </h3>
+                  </div>
+
+                  {/* Date range */}
+                  <p className="text-xs text-orange-300/80 font-mono">
+                    {formatDateRange(signal.windowStart, signal.windowEnd)}
+                  </p>
+
+                  {/* Why this matters */}
+                  <p className="text-xs text-white/40 leading-relaxed">
+                    {whyThisMatters(signal, industrySlug)}
+                  </p>
+
+                  {/* Confidence indicator */}
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        'inline-block w-2 h-2 rounded-full',
+                        colour
+                      )}
+                      aria-hidden="true"
+                    />
+                    <span className="text-xs text-white/30 uppercase tracking-wider">
+                      {label}
+                    </span>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            /* Fallback — no signals for this industry/state (SYN-1218):
+               show a labelled sample from fixed AU dates, never a deferral. */
+            <>
+              <p className="text-xs text-white/50 leading-relaxed">
+                Sample outlook — built from fixed Australian calendar dates, not
+                from your business. Industry-specific signals are not available
+                for you yet; this page shows them once they are.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {getSampleSeasonWindows().map(sample => (
+                  <div
+                    key={sample.id}
+                    data-testid="sample-season-window"
+                    className="border border-dashed border-white/[0.12] bg-white/[0.02] rounded-sm p-5 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2">
+                        <CalendarDays className="h-4 w-4 text-white/50 shrink-0" />
+                        <h3 className="text-sm font-medium text-white leading-snug">
+                          {sample.opportunityLabel}
+                        </h3>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider text-white/40 border border-white/[0.12] rounded-sm px-1.5 py-0.5">
+                        Sample
+                      </span>
+                    </div>
+                    <p className="text-xs text-orange-300/80 font-mono">
+                      {formatDateRange(sample.windowStart, sample.windowEnd)}
+                    </p>
+                    <p className="text-xs text-white/40 leading-relaxed">
+                      {whyThisMatters(
+                        { ...sample, confidenceScore: 0, source: 'sample' },
+                        industrySlug
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Content recommendation note */}
+        {signals.length > 0 && (
+          <p className="text-center text-xs text-white/25">
+            Synthex will pre-load content for each window — 2–3 posts starting 2
+            weeks before each peak.
+          </p>
+        )}
+
+        {/* CTA — cannot be blocked, always available */}
+        <div className="flex items-center justify-between pt-2 gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="text-white/40 hover:text-white rounded-sm"
+          >
+            ← Back
+          </Button>
+          <Button
+            onClick={handleContinue}
+            className="gap-2 bg-orange-500 hover:bg-orange-400 text-black px-8 rounded-sm"
+            size="lg"
+          >
+            Continue to finish setup
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
-    </div>
+    </OnboardingSplit>
   );
 }

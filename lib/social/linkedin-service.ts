@@ -28,6 +28,11 @@ import { logger } from '@/lib/logger';
 // LINKEDIN API RESPONSE TYPES
 // ============================================================================
 
+/** OpenID Connect response from /v2/userinfo */
+interface LinkedInUserInfoResponse {
+  sub: string;
+}
+
 /** LinkedIn profile response from /me endpoint */
 interface LinkedInProfileResponse {
   id: string;
@@ -364,7 +369,7 @@ export class LinkedInService extends BasePlatformService {
 
   async validateCredentials(): Promise<boolean> {
     try {
-      await this.makeRequest('/me');
+      await this.makeRequest('/userinfo');
       return true;
     } catch (error) {
       logger.error('LinkedIn credentials validation failed', { error });
@@ -765,9 +770,16 @@ export class LinkedInService extends BasePlatformService {
           organizationUrn: authorUrn,
         });
       } else {
-        // Personal profile posting — fetch current member ID
-        const profile = await this.makeRequest<LinkedInProfileResponse>('/me');
-        authorUrn = `urn:li:person:${profile.id}`;
+        // Personal profile posting. The OpenID scopes we request cannot read
+        // the legacy /me endpoint (403 me.GET.NO_VERSION); the member id is
+        // the OpenID `sub`, stored at connect time or read from /userinfo.
+        const memberId =
+          storedUserId ||
+          (await this.makeRequest<LinkedInUserInfoResponse>('/userinfo')).sub;
+        if (!memberId) {
+          throw new PlatformError('linkedin', 'LinkedIn member id unavailable');
+        }
+        authorUrn = `urn:li:person:${memberId}`;
       }
 
       // Build post payload

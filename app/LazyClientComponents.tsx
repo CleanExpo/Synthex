@@ -12,9 +12,7 @@ import { usePathname } from 'next/navigation';
  *
  * - PerformanceMonitor: returns null in DOM (Web Vitals only)
  * - CommandPalette: invisible until Ctrl+K
- * - ProductTour: only for new users
- * - FloatingActionButton: returns null on desktop
- * - FloatingStreak: streak counter widget
+ * First-week dashboard: no product tour and no floating popup stack.
  */
 
 const PerformanceMonitor = dynamic(
@@ -29,11 +27,6 @@ const CommandPalette = dynamic(
     import('@/components/CommandPalette').then(m => ({
       default: m.CommandPalette,
     })),
-  { ssr: false }
-);
-const ProductTour = dynamic(
-  () =>
-    import('@/components/ProductTour').then(m => ({ default: m.ProductTour })),
   { ssr: false }
 );
 const FloatingActionButton = dynamic(
@@ -67,17 +60,18 @@ const GoogleAnalyticsLoader = dynamic(
 
 export function LazyClientComponents() {
   const pathname = usePathname();
-  const isAppRoute =
-    pathname.startsWith('/dashboard') || pathname.startsWith('/onboarding');
-  const isStaticReviewRoute = pathname.startsWith('/dashboard/marketing-agency');
+  const isStaticReviewRoute = pathname.startsWith(
+    '/dashboard/marketing-agency'
+  );
+  const isDashboardApp =
+    pathname.startsWith('/dashboard') && !isStaticReviewRoute;
 
   return (
     <>
       <PerformanceMonitor />
       <CommandPalette />
-      {isAppRoute && !isStaticReviewRoute && (
+      {isDashboardApp && (
         <>
-          <ProductTour />
           <FloatingActionButton />
           <FloatingStreak />
         </>

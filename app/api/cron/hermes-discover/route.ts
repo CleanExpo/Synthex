@@ -84,6 +84,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           channel: NotificationChannel.LINEAR,
           message: `HERMES: org ${orgId} skipped — no active Owner-role user. Cron cannot impersonate an author.`,
           priority: 'routine',
+          requiresApproval: true,
           context: { orgId, hermesConfigId: config.id },
         });
         skipped += 1;

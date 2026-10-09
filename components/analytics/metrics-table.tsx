@@ -41,14 +41,6 @@ interface MetricsTableProps {
   contentData?: ContentTableRow[];
 }
 
-const defaultPlatforms = [
-  'Twitter',
-  'LinkedIn',
-  'Instagram',
-  'TikTok',
-  'Facebook',
-];
-
 function fmt(n: number) {
   return n.toLocaleString();
 }
@@ -118,60 +110,19 @@ export function MetricsTable({
   const hasEng = engagementData && engagementData.length > 0;
   const hasCon = contentData && contentData.length > 0;
 
-  const overviewRows = hasData
-    ? data
-    : defaultPlatforms
-        .map(p => null)
-        .map((_, i) => ({
-          platform: defaultPlatforms[i],
-          followers: 0,
-          posts: 0,
-          engagement: 0,
-          reach: 0,
-          growth: 0,
-        }));
-  const engRows = hasEng
-    ? engagementData
-    : defaultPlatforms.map((p, i) => ({
-        platform: p,
-        likes: 0,
-        comments: 0,
-        shares: 0,
-        total: 0,
-      }));
-  const conRows = hasCon
-    ? contentData
-    : defaultPlatforms.map((p, i) => ({
-        platform: p,
-        topPosts: 0,
-        avgEngagementRate: 0,
-        bestTime: EM,
-      }));
+  const overviewRows = hasData ? data : [];
+  const engRows = hasEng ? engagementData : [];
+  const conRows = hasCon ? contentData : [];
 
-  const audienceRows = hasEng
-    ? engagementData!.map(r => ({
+  const audienceRows = hasData
+    ? data!.map(r => ({
         platform: r.platform,
-        engagementRate:
-          r.total > 0
-            ? `${(((r.likes + r.comments + r.shares) / r.total) * 100).toFixed(1)}%`
-            : EM,
-        trend: 'Stable',
-        bestTime: EM,
+        engagementRate: r.engagement > 0 ? `${r.engagement.toFixed(1)}%` : EM,
+        trend: r.growth > 0 ? 'Growing' : r.growth < 0 ? 'Declining' : 'Stable',
+        bestTime:
+          contentData?.find(c => c.platform === r.platform)?.bestTime ?? EM,
       }))
-    : hasData
-      ? data!.map(r => ({
-          platform: r.platform,
-          engagementRate: `${r.engagement.toFixed(1)}%`,
-          trend:
-            r.growth > 0 ? 'Growing' : r.growth < 0 ? 'Declining' : 'Stable',
-          bestTime: EM,
-        }))
-      : defaultPlatforms.map(p => ({
-          platform: p,
-          engagementRate: EM,
-          trend: 'Stable',
-          bestTime: EM,
-        }));
+    : [];
 
   return (
     <div className="border-[0.5px] border-white/6 bg-white/1.5 rounded-sm p-5">

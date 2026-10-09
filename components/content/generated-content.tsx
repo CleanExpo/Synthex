@@ -25,6 +25,7 @@ import {
   Send,
 } from '@/components/icons';
 import type { GeneratedContentData } from './types';
+import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 
 interface GeneratedContentProps {
   content: GeneratedContentData | null;
@@ -218,10 +219,10 @@ export function GeneratedContent({
           <div className="text-center py-12">
             <Sparkles className="h-16 w-16 mx-auto mb-4 text-gray-500" />
             <h3 className="text-xl font-semibold text-white mb-2">
-              No Content Yet
+              No draft yet
             </h3>
-            <p className="text-gray-300">
-              Configure your settings and click generate to create content
+            <p className="text-gray-300 max-w-md mx-auto">
+              {FIRST_WEEK_GUIDANCE.content.empty}
             </p>
           </div>
         )}

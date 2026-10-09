@@ -60,7 +60,7 @@ function cardsFromJson(value: unknown, platform: string): CampaignCard[] {
   const cards = (value as { cards?: unknown }).cards;
   if (!Array.isArray(cards)) return [];
   return cards
-    .map((card, i) => {
+    .map((card, i): CampaignCard | null => {
       if (!card || typeof card !== 'object') return null;
       const text = String((card as { text?: unknown }).text ?? '').trim();
       if (!text) return null;

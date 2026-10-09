@@ -34,7 +34,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       'Paste the key in Settings → Integrations → OpenAI and click Save',
     ],
     youtubeUrl: null, // TODO: Phil to provide tutorial link
-    settingsPath: '/dashboard/settings/integrations',
+    settingsPath: '/dashboard/settings?tab=integrations',
     docsUrl: 'https://platform.openai.com/api-keys',
   },
   anthropic: {
@@ -49,7 +49,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       'Paste the key in Settings → Integrations → Anthropic and click Save',
     ],
     youtubeUrl: null,
-    settingsPath: '/dashboard/settings/integrations',
+    settingsPath: '/dashboard/settings?tab=integrations',
     docsUrl: 'https://console.anthropic.com/settings/keys',
   },
   google: {
@@ -64,7 +64,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       'Paste the key in Settings → Integrations → Google AI and click Save',
     ],
     youtubeUrl: null,
-    settingsPath: '/dashboard/settings/integrations',
+    settingsPath: '/dashboard/settings?tab=integrations',
     docsUrl: 'https://aistudio.google.com/apikey',
   },
   openrouter: {
@@ -79,7 +79,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       'Paste the key in Settings → Integrations → OpenRouter and click Save',
     ],
     youtubeUrl: null,
-    settingsPath: '/dashboard/settings/integrations',
+    settingsPath: '/dashboard/settings?tab=integrations',
     docsUrl: 'https://openrouter.ai/keys',
   },
   elevenlabs: {
@@ -93,7 +93,7 @@ export const PROVIDER_CONFIGS: Record<string, ProviderConfig> = {
       'Paste the key in Settings → Integrations → ElevenLabs and click Save',
     ],
     youtubeUrl: null,
-    settingsPath: '/dashboard/settings/integrations',
+    settingsPath: '/dashboard/settings?tab=integrations',
     docsUrl: 'https://elevenlabs.io/app/speech-synthesis',
   },
 };
@@ -112,7 +112,7 @@ export function getProviderConfig(providerId: string): ProviderConfig {
         'Copy the key and paste it in Settings → Integrations',
       ],
       youtubeUrl: null,
-      settingsPath: '/dashboard/settings/integrations',
+      settingsPath: '/dashboard/settings?tab=integrations',
       docsUrl: '#',
     }
   );

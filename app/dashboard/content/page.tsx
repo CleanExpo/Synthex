@@ -511,14 +511,9 @@ export default function ContentPage() {
         throw new Error((data as { error?: string }).error || 'Failed to save');
       }
 
-      toast.success('Draft saved!', {
-        action: {
-          label: 'View Drafts',
-          onClick: () => {
-            window.location.href = '/dashboard/content/drafts';
-          },
-        },
-      });
+      toast.success(
+        'Draft saved. Schedule it when you are happy with the words.'
+      );
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : 'Failed to save content'
@@ -789,8 +784,8 @@ export default function ContentPage() {
   ]);
 
   const handleViewAnalytics = useCallback(() => {
-    window.location.href = '/dashboard/analytics';
-  }, []);
+    router.push('/dashboard/analytics');
+  }, [router]);
 
   if (isLoading || personasLoading) {
     return <DashboardSkeleton />;
@@ -800,7 +795,7 @@ export default function ContentPage() {
     return (
       <div className="p-6">
         <APIErrorCard
-          title="Content Generator Error"
+          title="Content Error"
           message={error}
           onRetry={() => window.location.reload()}
         />

@@ -21,6 +21,7 @@ import { prisma } from '@/lib/prisma';
 import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { evaluateContent, scoreDimensions } from '@/lib/autopilot/quality-gate';
+import { humanizeAiError } from '@/lib/dashboard/humanize-error';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
@@ -213,12 +214,14 @@ export async function POST(request: NextRequest) {
         });
       } catch (error) {
         logger.error('Quick post creation error', { error });
+        const raw =
+          error instanceof Error ? error.message : 'Failed to create post';
         return NextResponse.json(
           {
-            error: 'Failed to create post',
-            message: 'An unexpected error occurred. Please try again.',
+            error: humanizeAiError(raw),
+            message: humanizeAiError(raw),
           },
-          { status: 500 }
+          { status: 503 }
         );
       }
     });

@@ -81,7 +81,7 @@ export default function OnboardingLayout({
             </div>
           </Link>
           <p className="hidden sm:block text-xs text-white/30 tracking-wide">
-            Goal → brand → platforms
+            Business → review → finish
           </p>
         </div>
       </header>

@@ -26,6 +26,7 @@ jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
     calendarPost: { findMany: mockFindMany, findUnique: jest.fn() },
+    post: { findMany: jest.fn().mockResolvedValue([]) },
   },
 }));
 
@@ -92,12 +93,14 @@ describe('CalendarService.getOptimalTimes — timezone awareness', () => {
     // Every suggested instant reads as an OPTIMAL twitter hour IN SYDNEY.
     const twitterOptimal = [9, 12, 15, 18];
     for (const s of suggestions) {
-      expect(twitterOptimal).toContain(hourInZone(s.suggestedTime, 'Australia/Sydney'));
+      expect(twitterOptimal).toContain(
+        hourInZone(s.suggestedTime, 'Australia/Sydney')
+      );
     }
 
     // Concretely: 9am Sydney in June === 23:00 UTC the prior day.
     const nineAmSydney = suggestions.find(
-      (s) => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
+      s => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
     );
     expect(nineAmSydney).toBeDefined();
     expect(nineAmSydney!.suggestedTime.getUTCHours()).toBe(23);
@@ -119,7 +122,7 @@ describe('CalendarService.getOptimalTimes — timezone awareness', () => {
     const suggestions = await service.getOptimalTimes('twitter', date, 10);
 
     const nineAmSydney = suggestions.find(
-      (s) => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
+      s => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
     );
     expect(nineAmSydney).toBeDefined();
     // UTC+11 → 9am local is 22:00 UTC the previous day (not 23:00 as in winter).
@@ -132,7 +135,7 @@ describe('CalendarService.getOptimalTimes — timezone awareness', () => {
 
     const suggestions = await service.getOptimalTimes('twitter', date, 10);
     const nineAm = suggestions.find(
-      (s) => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
+      s => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
     );
     expect(nineAm).toBeDefined();
     expect(nineAm!.suggestedTime.getUTCHours()).toBe(23);
@@ -151,7 +154,7 @@ describe('CalendarService.getOptimalTimes — timezone awareness', () => {
       );
     }
     const nineAmNy = suggestions.find(
-      (s) => hourInZone(s.suggestedTime, 'America/New_York') === 9
+      s => hourInZone(s.suggestedTime, 'America/New_York') === 9
     );
     expect(nineAmNy).toBeDefined();
     expect(nineAmNy!.suggestedTime.getUTCHours()).toBe(13);
@@ -163,7 +166,7 @@ describe('CalendarService.getOptimalTimes — timezone awareness', () => {
 
     const suggestions = await service.getOptimalTimes('twitter', date, 10);
     const nineAmSydney = suggestions.find(
-      (s) => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
+      s => hourInZone(s.suggestedTime, 'Australia/Sydney') === 9
     );
     expect(nineAmSydney).toBeDefined();
     // calculateTimeScore adds +30 when the hour matches an optimal hour in the

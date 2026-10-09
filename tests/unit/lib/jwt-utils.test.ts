@@ -29,7 +29,8 @@ describe('JWT Utilities', () => {
 
   describe('verifyToken', () => {
     it('should verify a valid token', async () => {
-      const { verifyToken, generateToken } = await import('../../../lib/auth/jwt-utils');
+      const { verifyToken, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
 
       const token = generateToken(TEST_PAYLOAD);
       const decoded = verifyToken(token);
@@ -37,6 +38,17 @@ describe('JWT Utilities', () => {
       expect(decoded.userId).toBe(TEST_PAYLOAD.userId);
       expect(decoded.email).toBe(TEST_PAYLOAD.email);
       expect(decoded.name).toBe(TEST_PAYLOAD.name);
+    });
+
+    it('round-trips onboardingComplete from the signed payload', async () => {
+      const { verifyToken, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
+
+      const token = generateToken({
+        ...TEST_PAYLOAD,
+        onboardingComplete: true,
+      });
+      expect(verifyToken(token).onboardingComplete).toBe(true);
     });
 
     it('should throw on invalid token', async () => {
@@ -72,7 +84,8 @@ describe('JWT Utilities', () => {
 
   describe('verifyTokenSafe', () => {
     it('should return payload for valid token', async () => {
-      const { verifyTokenSafe, generateToken } = await import('../../../lib/auth/jwt-utils');
+      const { verifyTokenSafe, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
 
       const token = generateToken(TEST_PAYLOAD);
       const decoded = verifyTokenSafe(token);
@@ -141,7 +154,8 @@ describe('JWT Utilities', () => {
       jest.resetModules();
       delete process.env.JWT_SECRET;
 
-      const { verifyToken, generateToken } = await import('../../../lib/auth/jwt-utils');
+      const { verifyToken, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
 
       const testToken = jwt.sign(TEST_PAYLOAD, 'any-secret');
 
@@ -170,7 +184,8 @@ describe('JWT Utilities', () => {
 
   describe('getUserIdFromRequest', () => {
     it('should extract userId from valid Authorization header', async () => {
-      const { getUserIdFromRequest, generateToken } = await import('../../../lib/auth/jwt-utils');
+      const { getUserIdFromRequest, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
 
       const token = generateToken(TEST_PAYLOAD);
       const mockRequest = {
@@ -185,7 +200,8 @@ describe('JWT Utilities', () => {
     });
 
     it('should return null if no Authorization header', async () => {
-      const { getUserIdFromRequest } = await import('../../../lib/auth/jwt-utils');
+      const { getUserIdFromRequest } =
+        await import('../../../lib/auth/jwt-utils');
 
       const mockRequest = {
         headers: {
@@ -199,7 +215,8 @@ describe('JWT Utilities', () => {
     });
 
     it('should return null if Authorization header is not Bearer', async () => {
-      const { getUserIdFromRequest } = await import('../../../lib/auth/jwt-utils');
+      const { getUserIdFromRequest } =
+        await import('../../../lib/auth/jwt-utils');
 
       const mockRequest = {
         headers: {
@@ -213,7 +230,8 @@ describe('JWT Utilities', () => {
     });
 
     it('should return null for invalid token', async () => {
-      const { getUserIdFromRequest } = await import('../../../lib/auth/jwt-utils');
+      const { getUserIdFromRequest } =
+        await import('../../../lib/auth/jwt-utils');
 
       const mockRequest = {
         headers: {
@@ -229,7 +247,8 @@ describe('JWT Utilities', () => {
 
   describe('authenticateRequest', () => {
     it('should return authenticated: true for valid request', async () => {
-      const { authenticateRequest, generateToken } = await import('../../../lib/auth/jwt-utils');
+      const { authenticateRequest, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
 
       const token = generateToken(TEST_PAYLOAD);
       const mockRequest = {
@@ -246,7 +265,8 @@ describe('JWT Utilities', () => {
     });
 
     it('should return authenticated: false for missing header', async () => {
-      const { authenticateRequest } = await import('../../../lib/auth/jwt-utils');
+      const { authenticateRequest } =
+        await import('../../../lib/auth/jwt-utils');
 
       const mockRequest = {
         headers: {
@@ -263,7 +283,8 @@ describe('JWT Utilities', () => {
 
   describe('withAuth higher-order function', () => {
     it('should call handler with userId for authenticated request', async () => {
-      const { withAuth, generateToken } = await import('../../../lib/auth/jwt-utils');
+      const { withAuth, generateToken } =
+        await import('../../../lib/auth/jwt-utils');
 
       const token = generateToken(TEST_PAYLOAD);
       const mockRequest = {

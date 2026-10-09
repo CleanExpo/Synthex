@@ -52,12 +52,38 @@ export interface UseOptimalTimesResult {
 // Helpers
 // =============================================================================
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+] as const;
+
+/** API slots use 0–6; the picker compares weekday names. */
+export function normalizeSlotDay(day: unknown): string {
+  if (typeof day === 'number' && Number.isFinite(day)) {
+    return DAY_NAMES[((Math.trunc(day) % 7) + 7) % 7];
+  }
+  if (typeof day === 'string' && day.trim()) {
+    const named = DAY_NAMES.find(
+      d => d.toLowerCase() === day.trim().toLowerCase()
+    );
+    if (named) return named;
+    const asNum = Number(day);
+    if (Number.isFinite(asNum)) {
+      return DAY_NAMES[((Math.trunc(asNum) % 7) + 7) % 7];
+    }
+  }
+  return DAY_NAMES[0];
+}
 
 /** Map string day name to 0-6 index (Sunday=0) */
 function dayNameToIndex(dayName: string): number {
   const idx = DAY_NAMES.findIndex(
-    (d) => d.toLowerCase() === dayName.toLowerCase()
+    d => d.toLowerCase() === normalizeSlotDay(dayName).toLowerCase()
   );
   return idx >= 0 ? idx : 0;
 }
@@ -77,7 +103,12 @@ function parseTimeToHour(timeStr: string): number {
 
 interface ApiPlatformPrediction {
   topSlot: { day: string; hour: number; score: number; confidence: number };
-  slots: Array<{ day: string; hour: number; score: number; confidence: number }>;
+  slots: Array<{
+    day: string;
+    hour: number;
+    score: number;
+    confidence: number;
+  }>;
   nextOptimalTime: string;
   methodology: string;
 }
@@ -138,7 +169,7 @@ export function useOptimalTimes({
       : 'UTC');
 
   const platformsKey = platforms
-    .map((p) => p.toLowerCase())
+    .map(p => p.toLowerCase())
     .sort()
     .join(',');
 
@@ -164,7 +195,7 @@ export function useOptimalTimes({
       if (!prediction?.slots) continue;
       for (const slot of prediction.slots) {
         result.push({
-          day: slot.day,
+          day: normalizeSlotDay(slot.day),
           hour: slot.hour,
           score: slot.score,
           confidence: slot.confidence,
@@ -184,7 +215,7 @@ export function useOptimalTimes({
 
       // Get slots for this platform, sorted by score descending
       const platformSlots = slots
-        .filter((s) => s.platform === platformLower)
+        .filter(s => s.platform === platformLower)
         .sort((a, b) => b.score - a.score);
 
       if (platformSlots.length === 0) return null;

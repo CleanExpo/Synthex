@@ -162,6 +162,10 @@ export async function POST(request: NextRequest) {
     const validation = await validateAPIKey(provider as APIProvider, apiKey);
 
     if (!validation.isValid) {
+      logger.warn('[Settings API Credentials] key rejected', {
+        provider,
+        error: validation.error,
+      });
       return NextResponse.json(
         {
           error: validation.error || 'Invalid API key',

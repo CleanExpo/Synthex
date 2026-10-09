@@ -19,6 +19,8 @@ import { HelpVideo } from '@/components/ui/HelpVideo';
 import { toast } from 'sonner';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
+import { hardNavigate } from '@/lib/onboarding/hard-navigate';
+import { PATH_AFTER_FINISH } from '@/lib/onboarding/journey';
 
 interface PlatformConfig {
   id: string;
@@ -100,6 +102,8 @@ const GOOGLE_SEO_LIST: PlatformConfig[] = [
 ];
 
 const SESSION_KEY = 'synthex_pipeline_result';
+/** Client cap so Finish setup cannot sit on “Finishing…” if complete hangs. */
+const COMPLETE_TIMEOUT_MS = 15_000;
 
 function ComingSoonBadge() {
   return (
@@ -192,12 +196,18 @@ function ConnectPageInner() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(COMPLETE_TIMEOUT_MS),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const json = (await res.json().catch(() => ({}))) as {
+        error?: unknown;
+      };
       if (!res.ok) {
         throw new Error(
-          json.error || 'Could not finish setup. Please try again.'
+          typeof json.error === 'string'
+            ? json.error
+            : 'Could not finish setup. Please try again.'
         );
       }
 
@@ -210,12 +220,21 @@ function ConnectPageInner() {
 
       sessionStorage.removeItem(SESSION_KEY);
       localStorage.setItem('onboardingComplete', 'true');
-      localStorage.setItem('showTourOnDashboard', 'true');
 
-      router.push('/dashboard');
+      // Hard nav so the completed auth-token cookie is used (soft push can
+      // keep the stale JWT and bounce back to /onboarding).
+      hardNavigate(PATH_AFTER_FINISH);
     } catch (err) {
-      const message =
-        err instanceof Error
+      const name = err instanceof Error ? err.name : '';
+      const aborted =
+        name === 'AbortError' ||
+        name === 'TimeoutError' ||
+        (typeof DOMException !== 'undefined' &&
+          err instanceof DOMException &&
+          (err.name === 'AbortError' || err.name === 'TimeoutError'));
+      const message = aborted
+        ? 'Setup is taking too long. Please try again.'
+        : err instanceof Error
           ? err.message
           : 'Could not finish setup. Please try again.';
       toast.error(message);
@@ -235,10 +254,32 @@ function ConnectPageInner() {
       currentStep={3}
       eyebrow="Step 3 · Connect"
       title="Connect your platforms"
-      description="Social and Google connections are on the way. Finish setup now — you can link accounts from the dashboard when this ships."
-      aside={<HelpVideo videoId="onboarding-connect-social" />}
+      description="Social and Google connections are on the way. Finish setup now — you can link accounts from Home when this ships. After that you can build a 90-day plan or skip straight to Home."
+      aside={
+        <div className="space-y-3">
+          <p className="text-xs text-white/35 leading-relaxed">
+            Optional guides. Finish setup does not require a connected channel.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <HelpVideo videoId="onboarding-connect-social" />
+            <HelpVideo videoId="onboarding-connect-gmb" />
+            <HelpVideo videoId="onboarding-setup-ai" />
+          </div>
+        </div>
+      }
     >
       <div className="space-y-5">
+        <div className="border-[0.5px] border-orange-500/20 bg-orange-500/5 rounded-sm px-4 py-3.5 space-y-2">
+          <p className="text-xs uppercase tracking-[0.22em] text-orange-400/80">
+            What happens next
+          </p>
+          <ol className="text-sm text-white/60 font-light space-y-1.5 list-decimal list-inside">
+            <li>Finish setup — your workspace is ready.</li>
+            <li>Optional: answer six questions for a 90-day marketing plan.</li>
+            <li>Open Home and write your first post.</li>
+          </ol>
+        </div>
+
         <div className="border-[0.5px] border-dashed border-white/10 bg-white/1 rounded-sm px-4 py-3.5 flex items-start gap-3">
           <Lock className="w-4 h-4 text-orange-400/80 shrink-0 mt-0.5" />
           <div>

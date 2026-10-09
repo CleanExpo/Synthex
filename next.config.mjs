@@ -2,6 +2,8 @@ import { createRequire } from 'module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { LEGACY_PATH_REDIRECTS } from './config/legacy-path-redirects.mjs';
+
 const _require = createRequire(import.meta.url);
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 const skipBuildTypecheck = process.env.NEXT_SKIP_BUILD_TYPECHECK === '1';
@@ -34,6 +36,7 @@ const nextConfig = {
     return [
       { source: '/platform', destination: '/features', permanent: true },
       { source: '/solutions', destination: '/about', permanent: true },
+      ...LEGACY_PATH_REDIRECTS,
     ];
   },
   async headers() {
@@ -162,6 +165,7 @@ const nextConfig = {
   ],
   experimental: {
     webpackMemoryOptimizations: true,
+    webpackBuildWorker: true,
     optimizePackageImports: [
       '@radix-ui/react-dialog',
       '@radix-ui/react-dropdown-menu',
@@ -286,6 +290,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256],
   },
   webpack: (config, { dev, isServer, nextRuntime }) => {
+    if (!dev) {
+      config.parallelism = Math.min(config.parallelism ?? 100, 50);
+    }
     if (nextRuntime === 'edge') {
       config.resolve = config.resolve ?? {};
       config.resolve.alias = {
@@ -349,7 +356,9 @@ const nextConfig = {
 
       config.resolve.alias = {
         ...config.resolve.alias,
-        canvg: new URL('./lib/empty-module.cjs', import.meta.url).pathname,
+        canvg: fileURLToPath(
+          new URL('./lib/empty-module.cjs', import.meta.url)
+        ),
       };
     }
 

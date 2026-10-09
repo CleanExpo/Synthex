@@ -26,6 +26,7 @@ jest.mock('@/lib/prisma', () => ({
 
 import { AIContentGenerator } from '@/lib/ai/content-generator';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
+import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
 import type { AIProvider } from '@/lib/ai/providers';
 
 interface CapturedCall {
@@ -58,9 +59,9 @@ beforeEach(() => {
 
 // Access the private callAI without widening the public surface.
 function callAI(gen: AIContentGenerator, ...args: unknown[]): Promise<string> {
-  return (gen as unknown as { callAI: (...a: unknown[]) => Promise<string> }).callAI(
-    ...args
-  );
+  return (
+    gen as unknown as { callAI: (...a: unknown[]) => Promise<string> }
+  ).callAI(...args);
 }
 
 describe('callAI system-prompt characterisation', () => {
@@ -74,11 +75,22 @@ describe('callAI system-prompt characterisation', () => {
       brandVoice: 'Speak plainly.',
     };
 
-    await callAI(gen, 'write a post', 'model-x', client, undefined, orgContext, 'org-1', 'post');
+    await callAI(
+      gen,
+      'write a post',
+      'model-x',
+      client,
+      undefined,
+      orgContext,
+      'org-1',
+      'post'
+    );
 
     expect(calls[0].system).toBe(
       withAntiSlop(
-        'You are a content expert for Acme Plumbing, a plumbing business in Sydney. Speak plainly.'
+        withSocialPostVoice(
+          'You are a content expert for Acme Plumbing, a plumbing business in Sydney. Speak plainly.'
+        )
       )
     );
   });
@@ -93,11 +105,22 @@ describe('callAI system-prompt characterisation', () => {
       brandVoice: null,
     };
 
-    await callAI(gen, 'write a post', 'model-x', client, undefined, orgContext, 'org-1', 'post');
+    await callAI(
+      gen,
+      'write a post',
+      'model-x',
+      client,
+      undefined,
+      orgContext,
+      'org-1',
+      'post'
+    );
 
     expect(calls[0].system).toBe(
       withAntiSlop(
-        'You are a content expert for Solo. Generate unique, creative content optimized for maximum engagement.'
+        withSocialPostVoice(
+          'You are a content expert for Solo. Generate unique, creative content optimized for maximum engagement.'
+        )
       )
     );
   });

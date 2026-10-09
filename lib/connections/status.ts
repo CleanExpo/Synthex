@@ -26,48 +26,6 @@ const DEFAULT_APP_URL = 'https://synthex.social';
 
 type EnvReader = Record<string, string | undefined>;
 
-const TELEGRAM_BOT_TOKEN_REGEX = /^\d+:[A-Za-z0-9_-]{35,}$/;
-const TELEGRAM_CHAT_ID_REGEX = /^-?\d{8,}$/;
-
-const TELEGRAM_CREDENTIAL_PAIRS: [string, string][] = [
-  ['TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'],
-  ['SYNTHEX_TELEGRAM_BOT_TOKEN', 'SYNTHEX_TELEGRAM_CHAT_ID'],
-  ['HERMES_TELEGRAM_BOT_TOKEN', 'HERMES_TELEGRAM_CHAT_ID'],
-];
-
-function cleanEnvValue(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  const trimmed = value.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-    (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1).trim();
-  }
-
-  return trimmed;
-}
-
-function hasValidTelegramCredentials(env: EnvReader = process.env): boolean {
-  for (const [tokenVar, chatIdVar] of TELEGRAM_CREDENTIAL_PAIRS) {
-    const tokenValue = cleanEnvValue(env[tokenVar]);
-    const chatIdValue = cleanEnvValue(env[chatIdVar]);
-
-    if (!tokenValue || !chatIdValue) {
-      continue;
-    }
-
-    if (
-      TELEGRAM_BOT_TOKEN_REGEX.test(tokenValue) &&
-      TELEGRAM_CHAT_ID_REGEX.test(chatIdValue)
-    ) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 function hasAny(env: EnvReader, names: string[]): boolean {
   return names.some(name => Boolean(env[name]?.trim()));
 }
@@ -180,13 +138,13 @@ export function buildConnectionStatusManifest(
     row(
       'hermes',
       'Hermes escalation',
-      hasValidTelegramCredentials(env) &&
-        hasAny(env, ['HERMES_LINEAR_TEAM_ID']),
-      'Hermes escalation can route to Telegram and Linear.',
-      hasValidTelegramCredentials(env)
-        ? 'Linear team reference is missing for Hermes escalation.'
-        : 'Hermes Telegram credentials are not in a valid bot/chat format.',
-      'Set Telegram and Hermes Linear team references.'
+      hasAny(env, ['ALERT_SLACK_BOT_TOKEN']) ||
+        (hasAny(env, ['ALERT_SLACK_APPROVALS_WEBHOOK_URL']) &&
+          hasAny(env, ['ALERT_SLACK_OPS_WEBHOOK_URL', 'ALERT_SLACK_WEBHOOK_URL'])) ||
+        (hasAny(env, ['LINEAR_API_KEY']) && hasAny(env, ['HERMES_LINEAR_TEAM_ID'])),
+      'Slack or Linear escalation routing is configured. Telegram is optional for urgent approvals.',
+      'Routine escalation routing is missing.',
+      'Configure Slack approvals and ops routing or a Linear team.'
     ),
     row(
       'ai_providers',
@@ -244,10 +202,11 @@ export function buildConnectionStatusManifest(
       'monitoring',
       'Monitoring and alerts',
       hasAny(env, ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN']) ||
-        hasAny(env, ['TELEGRAM_BOT_TOKEN', 'LINEAR_API_KEY']),
+        hasAny(env, ['ALERT_SLACK_BOT_TOKEN', 'ALERT_SLACK_WEBHOOK_URL',
+          'ALERT_SLACK_APPROVALS_WEBHOOK_URL', 'ALERT_SLACK_OPS_WEBHOOK_URL', 'LINEAR_API_KEY']),
       'Monitoring or alert routing references are present.',
       'Monitoring and alert routing references are missing.',
-      'Configure Sentry, Telegram, or Linear alert routing.'
+      'Configure Sentry, Slack, or Linear alert routing.'
     ),
   ];
 

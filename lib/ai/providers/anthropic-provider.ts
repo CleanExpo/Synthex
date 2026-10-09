@@ -19,6 +19,31 @@ import type {
   ModelPresets,
 } from './base-provider';
 
+/**
+ * Newer Claude aliases reject `temperature` / `top_p`
+ * (`invalid_request_error`: temperature is deprecated for this model).
+ * Dated 3.x / 4.5 snapshots still accept them.
+ */
+export function anthropicOmitsSampling(model: string): boolean {
+  const id = model.toLowerCase();
+  if (/claude-(sonnet|opus|haiku)-[5-9]/.test(id)) return true;
+  if (/claude-opus-4-[6-9]/.test(id)) return true;
+  return false;
+}
+
+function anthropicSamplingParams(
+  model: string,
+  request: Pick<AICompletionRequest, 'temperature' | 'top_p' | 'thinking'>
+): { temperature?: number; top_p?: number } {
+  if (request.thinking || anthropicOmitsSampling(model)) return {};
+  return {
+    ...(request.temperature !== undefined
+      ? { temperature: request.temperature }
+      : {}),
+    ...(request.top_p !== undefined ? { top_p: request.top_p } : {}),
+  };
+}
+
 export class AnthropicProvider implements AIProvider {
   readonly name = 'Anthropic';
 
@@ -78,7 +103,6 @@ export class AnthropicProvider implements AIProvider {
           content: m.content,
         })),
         ...(systemParam !== undefined ? { system: systemParam } : {}),
-        ...(request.top_p !== undefined ? { top_p: request.top_p } : {}),
         ...(request.tools && request.tools.length > 0
           ? {
               tools: request.tools.map(t => ({
@@ -109,9 +133,7 @@ export class AnthropicProvider implements AIProvider {
             }
           : {
               ...baseParams,
-              ...(request.temperature !== undefined
-                ? { temperature: request.temperature }
-                : {}),
+              ...anthropicSamplingParams(request.model, request),
             }
       ) as Anthropic.MessageCreateParamsNonStreaming;
 
@@ -206,10 +228,7 @@ export class AnthropicProvider implements AIProvider {
         content: m.content,
       })),
       ...(systemParam !== undefined ? { system: systemParam } : {}),
-      ...(request.temperature !== undefined
-        ? { temperature: request.temperature }
-        : {}),
-      ...(request.top_p !== undefined ? { top_p: request.top_p } : {}),
+      ...anthropicSamplingParams(request.model, request),
     };
 
     try {

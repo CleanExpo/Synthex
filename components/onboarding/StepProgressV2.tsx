@@ -8,7 +8,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 export const ONBOARDING_STEPS_V2 = [
-  { id: 1, name: 'Your Website' },
+  { id: 1, name: 'Your business' },
   { id: 2, name: 'Review' },
   { id: 3, name: 'Connect' },
 ] as const;

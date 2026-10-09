@@ -10,8 +10,8 @@
  *   1. User enters business name + URL (+ optional industry)
  *   2. Pipeline runs (~20s) with animated progress stages
  *   3. Brand Mirror shows extracted brand voice + sample caption
- *   4. "Connect accounts" CTA → /onboarding/connect
- *      OR "edit first" → /onboarding/review (existing flow)
+ *   4. Review profile (primary) or continue (fast path)
+ *   5. Market outlook when enabled, then Connect, then optional 90-day plan
  *
  * Existing users with connected accounts skip directly to dashboard (no change).
  * Chrome Extension integration: if detected, offers to use current tab URL.
@@ -42,10 +42,8 @@ import {
 import { cn } from '@/lib/utils';
 import { BrandMirror, OnboardingSplit } from '@/components/onboarding';
 import { HelpVideo } from '@/components/ui/HelpVideo';
-import {
-  BRAND_MIRROR_COOKIE,
-  SEASONAL_BRIEF_ENABLED,
-} from '@/lib/constants/onboarding';
+import { BRAND_MIRROR_COOKIE } from '@/lib/constants/onboarding';
+import { pathAfterBrandConfirm } from '@/lib/onboarding/journey';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 import { fireEvent } from '@/lib/analytics/onboarding-events';
 import { MascotCard } from '@/components/mascots/MascotCard';
@@ -139,6 +137,9 @@ export default function OnboardingPage() {
   // SYN-1022: message shown after a name-only discovery pass (confirm/choose URL).
   const [discoveryNotice, setDiscoveryNotice] = useState<string | null>(null);
   const [pipelineResult, setPipelineResult] = useState<PipelineResult | null>(
+    null
+  );
+  const [mirrorBusy, setMirrorBusy] = useState<'continue' | 'review' | null>(
     null
   );
 
@@ -388,6 +389,8 @@ export default function OnboardingPage() {
 
   // Brand Mirror — persist org + analysis, then connect accounts
   const handleMirrorContinue = async () => {
+    if (mirrorBusy) return;
+    setMirrorBusy('continue');
     document.cookie = `${BRAND_MIRROR_COOKIE}=1; path=/; max-age=3600; SameSite=Lax`;
     if (pipelineResult) {
       try {
@@ -423,15 +426,18 @@ export default function OnboardingPage() {
         );
       }
     }
-    router.push(
-      SEASONAL_BRIEF_ENABLED
-        ? '/onboarding/season-brief'
-        : '/onboarding/connect'
-    );
+    router.push(pathAfterBrandConfirm());
+  };
+
+  const handleMirrorTryAgain = () => {
+    setPhase('form');
+    setError(null);
   };
 
   // Brand Mirror — "edit first" fallback → existing review page
   const handleMirrorSkip = () => {
+    if (mirrorBusy) return;
+    setMirrorBusy('review');
     router.push('/onboarding/review');
   };
 
@@ -473,14 +479,16 @@ export default function OnboardingPage() {
     return (
       <OnboardingSplit
         currentStep={1}
-        eyebrow="Brand mirror"
-        title="Here's what we found"
-        description="Confirm your brand voice before connecting platforms."
+        eyebrow="Step 1 · Snapshot"
+        title="Does this sound like you?"
+        description="We scanned the site. Review the profile to fill gaps, or continue if this is enough."
       >
         <BrandMirror
           result={pipelineResult}
           onContinue={handleMirrorContinue}
           onSkip={handleMirrorSkip}
+          onTryAgain={handleMirrorTryAgain}
+          busy={mirrorBusy}
         />
       </OnboardingSplit>
     );
@@ -491,9 +499,13 @@ export default function OnboardingPage() {
       currentStep={1}
       eyebrow="Step 1 · Your website"
       title="Welcome to Synthex"
-      description="Tell us about your business. We'll analyse the site and set up your workspace — usually about 15 seconds."
+      description="Start with the business name. We will scan the site, show a brand snapshot, then you confirm details and finish setup."
       aside={
         <div className="space-y-4 pt-2">
+          <p className="text-xs text-white/35 leading-relaxed">
+            Short guides for later steps — platforms, Google Business, and AI
+            setup. You do not need them to start.
+          </p>
           <div className="flex flex-wrap gap-2">
             <HelpVideo videoId="onboarding-connect-social" />
             <HelpVideo videoId="onboarding-connect-gmb" />

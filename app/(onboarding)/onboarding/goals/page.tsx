@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, Sparkles, CheckCircle } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { OnboardingSplit } from '@/components/onboarding';
 import type {
   GoalsAnswers,
   MarketingPlan,
@@ -52,68 +53,228 @@ const QUESTIONS: Question[] = [
     id: 'businessType',
     heading: 'What best describes your business?',
     options: [
-      { id: 'ecommerce', label: 'E-commerce', icon: '🛒', description: 'Selling products online' },
-      { id: 'service', label: 'Service Business', icon: '🔧', description: 'Professional services' },
-      { id: 'saas', label: 'SaaS / Software', icon: '💻', description: 'Software or subscriptions' },
-      { id: 'personal', label: 'Personal Brand', icon: '🧑', description: 'Creator or consultant' },
-      { id: 'agency', label: 'Agency', icon: '🏢', description: 'Marketing or design agency' },
-      { id: 'nonprofit', label: 'Non-profit', icon: '❤️', description: 'Mission-driven organisation' },
+      {
+        id: 'ecommerce',
+        label: 'E-commerce',
+        icon: '🛒',
+        description: 'Selling products online',
+      },
+      {
+        id: 'service',
+        label: 'Service Business',
+        icon: '🔧',
+        description: 'Professional services',
+      },
+      {
+        id: 'saas',
+        label: 'SaaS / Software',
+        icon: '💻',
+        description: 'Software or subscriptions',
+      },
+      {
+        id: 'personal',
+        label: 'Personal Brand',
+        icon: '🧑',
+        description: 'Creator or consultant',
+      },
+      {
+        id: 'agency',
+        label: 'Agency',
+        icon: '🏢',
+        description: 'Marketing or design agency',
+      },
+      {
+        id: 'nonprofit',
+        label: 'Non-profit',
+        icon: '❤️',
+        description: 'Mission-driven organisation',
+      },
     ],
   },
   {
     id: 'primaryGoal',
     heading: 'What is your primary marketing goal?',
     options: [
-      { id: 'awareness', label: 'Brand Awareness', icon: '📣', description: 'Get more people to know you' },
-      { id: 'leads', label: 'Lead Generation', icon: '🎯', description: 'Attract potential clients' },
-      { id: 'sales', label: 'Drive Sales', icon: '💰', description: 'Convert followers into buyers' },
-      { id: 'community', label: 'Build Community', icon: '🤝', description: 'Grow an engaged audience' },
-      { id: 'thought', label: 'Thought Leadership', icon: '🧠', description: 'Establish expertise' },
-      { id: 'retention', label: 'Customer Retention', icon: '🔄', description: 'Keep customers engaged' },
+      {
+        id: 'awareness',
+        label: 'Brand Awareness',
+        icon: '📣',
+        description: 'Get more people to know you',
+      },
+      {
+        id: 'leads',
+        label: 'Lead Generation',
+        icon: '🎯',
+        description: 'Attract potential clients',
+      },
+      {
+        id: 'sales',
+        label: 'Drive Sales',
+        icon: '💰',
+        description: 'Convert followers into buyers',
+      },
+      {
+        id: 'community',
+        label: 'Build Community',
+        icon: '🤝',
+        description: 'Grow an engaged audience',
+      },
+      {
+        id: 'thought',
+        label: 'Thought Leadership',
+        icon: '🧠',
+        description: 'Establish expertise',
+      },
+      {
+        id: 'retention',
+        label: 'Customer Retention',
+        icon: '🔄',
+        description: 'Keep customers engaged',
+      },
     ],
   },
   {
     id: 'targetAudience',
     heading: 'Who is your primary audience?',
     options: [
-      { id: 'b2b', label: 'B2B Professionals', icon: '👔', description: 'Business decision-makers' },
-      { id: 'local', label: 'Local Community', icon: '📍', description: 'Your city or region' },
-      { id: 'young', label: 'Young Adults 18–35', icon: '🎓', description: 'Millennials and Gen Z' },
-      { id: 'parents', label: 'Parents & Families', icon: '👨‍👩‍👧', description: 'Family-focused consumers' },
-      { id: 'consumers', label: 'General Consumers', icon: '🛍️', description: 'Broad B2C demographics' },
-      { id: 'global', label: 'Global / Online', icon: '🌏', description: 'Worldwide digital audience' },
+      {
+        id: 'b2b',
+        label: 'B2B Professionals',
+        icon: '👔',
+        description: 'Business decision-makers',
+      },
+      {
+        id: 'local',
+        label: 'Local Community',
+        icon: '📍',
+        description: 'Your city or region',
+      },
+      {
+        id: 'young',
+        label: 'Young Adults 18–35',
+        icon: '🎓',
+        description: 'Millennials and Gen Z',
+      },
+      {
+        id: 'parents',
+        label: 'Parents & Families',
+        icon: '👨‍👩‍👧',
+        description: 'Family-focused consumers',
+      },
+      {
+        id: 'consumers',
+        label: 'General Consumers',
+        icon: '🛍️',
+        description: 'Broad B2C demographics',
+      },
+      {
+        id: 'global',
+        label: 'Global / Online',
+        icon: '🌏',
+        description: 'Worldwide digital audience',
+      },
     ],
   },
   {
     id: 'contentVolume',
     heading: 'How often do you want to post?',
     options: [
-      { id: 'light', label: '1–2× per week', icon: '🌱', description: 'Sustainable approach' },
-      { id: 'moderate', label: '3–4× per week', icon: '📅', description: 'Consistent presence' },
-      { id: 'active', label: '5–7× per week', icon: '⚡', description: 'Daily for rapid growth' },
-      { id: 'intensive', label: 'Multiple daily', icon: '🚀', description: 'Maximum visibility' },
+      {
+        id: 'light',
+        label: '1–2× per week',
+        icon: '🌱',
+        description: 'Sustainable approach',
+      },
+      {
+        id: 'moderate',
+        label: '3–4× per week',
+        icon: '📅',
+        description: 'Consistent presence',
+      },
+      {
+        id: 'active',
+        label: '5–7× per week',
+        icon: '⚡',
+        description: 'Daily for rapid growth',
+      },
+      {
+        id: 'intensive',
+        label: 'Multiple daily',
+        icon: '🚀',
+        description: 'Maximum visibility',
+      },
     ],
   },
   {
     id: 'budgetTier',
     heading: 'What is your monthly marketing budget?',
     options: [
-      { id: 'bootstrap', label: 'Bootstrapped', icon: '🌿', description: 'Organic growth only' },
-      { id: 'starter', label: 'Starter ($1–500)', icon: '💡', description: 'Small paid budget' },
-      { id: 'growth', label: 'Growth ($500–2k)', icon: '📈', description: 'Meaningful paid promotion' },
-      { id: 'scale', label: 'Scale ($2,000+)', icon: '🏆', description: 'Serious investment' },
+      {
+        id: 'bootstrap',
+        label: 'Bootstrapped',
+        icon: '🌿',
+        description: 'Organic growth only',
+      },
+      {
+        id: 'starter',
+        label: 'Starter ($1–500)',
+        icon: '💡',
+        description: 'Small paid budget',
+      },
+      {
+        id: 'growth',
+        label: 'Growth ($500–2k)',
+        icon: '📈',
+        description: 'Meaningful paid promotion',
+      },
+      {
+        id: 'scale',
+        label: 'Scale ($2,000+)',
+        icon: '🏆',
+        description: 'Serious investment',
+      },
     ],
   },
   {
     id: 'biggestChallenge',
     heading: 'What is your biggest marketing challenge?',
     options: [
-      { id: 'time', label: 'Not Enough Time', icon: '⏰', description: 'Hard to stay consistent' },
-      { id: 'ideas', label: 'No Content Ideas', icon: '💭', description: "Don't know what to post" },
-      { id: 'engagement', label: 'Low Engagement', icon: '😶', description: 'Posts get little interaction' },
-      { id: 'reach', label: 'Limited Reach', icon: '📡', description: 'Not reaching new people' },
-      { id: 'consistency', label: 'Inconsistent Results', icon: '📊', description: 'Unpredictable month to month' },
-      { id: 'platforms', label: 'Too Many Platforms', icon: '🌀', description: 'Overwhelmed by channels' },
+      {
+        id: 'time',
+        label: 'Not Enough Time',
+        icon: '⏰',
+        description: 'Hard to stay consistent',
+      },
+      {
+        id: 'ideas',
+        label: 'No Content Ideas',
+        icon: '💭',
+        description: "Don't know what to post",
+      },
+      {
+        id: 'engagement',
+        label: 'Low Engagement',
+        icon: '😶',
+        description: 'Posts get little interaction',
+      },
+      {
+        id: 'reach',
+        label: 'Limited Reach',
+        icon: '📡',
+        description: 'Not reaching new people',
+      },
+      {
+        id: 'consistency',
+        label: 'Inconsistent Results',
+        icon: '📊',
+        description: 'Unpredictable month to month',
+      },
+      {
+        id: 'platforms',
+        label: 'Too Many Platforms',
+        icon: '🌀',
+        description: 'Overwhelmed by channels',
+      },
     ],
   },
 ];
@@ -140,7 +301,7 @@ function OptionCard({
         'p-3.5 rounded-xl border text-left transition-all duration-150 w-full',
         selected
           ? 'bg-orange-500/10 border-orange-500/50 shadow-sm shadow-orange-500/10'
-          : 'bg-white/3 border-white/8 hover:bg-white/5 hover:border-white/15',
+          : 'bg-white/3 border-white/8 hover:bg-white/5 hover:border-white/15'
       )}
     >
       <div className="flex items-start gap-3">
@@ -150,7 +311,7 @@ function OptionCard({
             <span
               className={cn(
                 'text-sm font-semibold',
-                selected ? 'text-orange-300' : 'text-white',
+                selected ? 'text-orange-300' : 'text-white'
               )}
             >
               {option.label}
@@ -159,7 +320,9 @@ function OptionCard({
               <CheckCircle className="w-3.5 h-3.5 text-orange-400 shrink-0" />
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5 truncate">{option.description}</p>
+          <p className="text-xs text-gray-500 mt-0.5 truncate">
+            {option.description}
+          </p>
         </div>
       </div>
     </button>
@@ -175,18 +338,23 @@ function QuestionBlock({
   selected: string | undefined;
   onSelect: (value: string) => void;
 }) {
-  const cols = question.options.length <= 4 ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-3';
+  const cols =
+    question.options.length <= 4
+      ? 'grid-cols-2 sm:grid-cols-4'
+      : 'grid-cols-2 sm:grid-cols-3';
 
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-white font-display">{question.heading}</h2>
+        <h2 className="text-sm font-semibold text-white font-display">
+          {question.heading}
+        </h2>
         {selected && (
           <span className="text-xs text-orange-400 font-medium">✓</span>
         )}
       </div>
       <div className={cn('grid gap-2', cols)}>
-        {question.options.map((option) => (
+        {question.options.map(option => (
           <OptionCard
             key={option.id}
             option={option}
@@ -203,14 +371,18 @@ function QuestionBlock({
 // Plan Result Display
 // ────────────────────────────────────────────────────────────
 
-function PriorityBadge({ priority }: { priority: PlatformRecommendation['priority'] }) {
+function PriorityBadge({
+  priority,
+}: {
+  priority: PlatformRecommendation['priority'];
+}) {
   return (
     <span
       className={cn(
-        'text-[11px] font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide',
+        'text-xs font-semibold px-1.5 py-0.5 rounded-full uppercase tracking-wide',
         priority === 'primary'
           ? 'bg-orange-500/20 text-orange-400'
-          : 'bg-white/10 text-gray-400',
+          : 'bg-white/10 text-gray-400'
       )}
     >
       {priority}
@@ -226,10 +398,17 @@ function PlanResults({ plan }: { plan: MarketingPlan }) {
         <div className="flex items-start gap-3">
           <Sparkles className="w-5 h-5 text-orange-400 shrink-0 mt-0.5" />
           <div>
-            <h2 className="text-lg font-bold text-white font-display">{plan.headline}</h2>
-            <p className="text-sm text-gray-400 mt-1.5 leading-relaxed">{plan.summary}</p>
+            <h2 className="text-lg font-bold text-white font-display">
+              {plan.headline}
+            </h2>
+            <p className="text-sm text-gray-400 mt-1.5 leading-relaxed">
+              {plan.summary}
+            </p>
             <p className="text-xs text-orange-500/70 mt-2">
-              Estimated time: <span className="font-medium text-orange-400">{plan.estimatedTimePerWeek}/week</span>
+              Estimated time:{' '}
+              <span className="font-medium text-orange-400">
+                {plan.estimatedTimePerWeek}/week
+              </span>
             </p>
           </div>
         </div>
@@ -241,24 +420,28 @@ function PlanResults({ plan }: { plan: MarketingPlan }) {
           Recommended Platforms
         </h3>
         <div className="grid gap-2">
-          {plan.platforms.map((platform) => (
+          {plan.platforms.map(platform => (
             <div
               key={platform.name}
               className="p-4 rounded-xl border border-white/8 bg-white/3"
             >
               <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-semibold text-white">{platform.name}</span>
+                <span className="text-sm font-semibold text-white">
+                  {platform.name}
+                </span>
                 <div className="flex items-center gap-2">
                   <PriorityBadge priority={platform.priority} />
-                  <span className="text-xs text-gray-500">{platform.frequency}</span>
+                  <span className="text-xs text-gray-500">
+                    {platform.frequency}
+                  </span>
                 </div>
               </div>
               <p className="text-xs text-gray-400 mb-2">{platform.reason}</p>
               <div className="flex flex-wrap gap-1.5">
-                {platform.contentTypes.map((type) => (
+                {platform.contentTypes.map(type => (
                   <span
                     key={type}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-300"
+                    className="text-xs px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-gray-300"
                   >
                     {type}
                   </span>
@@ -283,8 +466,11 @@ function PlanResults({ plan }: { plan: MarketingPlan }) {
               <p className="text-sm font-semibold text-white">{pillar.name}</p>
               <p className="text-xs text-gray-400">{pillar.description}</p>
               <ul className="space-y-0.5">
-                {pillar.examples.map((ex) => (
-                  <li key={ex} className="text-xs text-gray-500 flex items-start gap-1.5">
+                {pillar.examples.map(ex => (
+                  <li
+                    key={ex}
+                    className="text-xs text-gray-500 flex items-start gap-1.5"
+                  >
                     <span className="text-orange-500 mt-0.5">›</span>
                     {ex}
                   </li>
@@ -318,13 +504,15 @@ function PlanResults({ plan }: { plan: MarketingPlan }) {
           90-Day Success Metrics
         </h3>
         <div className="grid sm:grid-cols-3 gap-2">
-          {plan.metrics.map((metric) => (
+          {plan.metrics.map(metric => (
             <div
               key={metric.name}
               className="p-3.5 rounded-xl border border-white/8 bg-white/3"
             >
               <p className="text-xs text-gray-400">{metric.name}</p>
-              <p className="text-sm font-semibold text-orange-400 mt-1">{metric.target}</p>
+              <p className="text-sm font-semibold text-orange-400 mt-1">
+                {metric.target}
+              </p>
             </div>
           ))}
         </div>
@@ -352,7 +540,10 @@ export default function OnboardingGoalsPage() {
     try {
       const cached = sessionStorage.getItem(SESSION_KEY);
       if (cached) {
-        const data = JSON.parse(cached) as { answers: Answers; plan: MarketingPlan };
+        const data = JSON.parse(cached) as {
+          answers: Answers;
+          plan: MarketingPlan;
+        };
         if (data.answers) setAnswers(data.answers);
         if (data.plan) setPlan(data.plan);
       }
@@ -362,11 +553,13 @@ export default function OnboardingGoalsPage() {
   }, []);
 
   const allAnswered =
-    QUESTIONS.length > 0 &&
-    QUESTIONS.every((q) => answers[q.id] !== undefined);
+    QUESTIONS.length > 0 && QUESTIONS.every(q => answers[q.id] !== undefined);
 
   const handleSelect = (questionId: keyof GoalsAnswers, value: string) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value as GoalsAnswers[typeof questionId] }));
+    setAnswers(prev => ({
+      ...prev,
+      [questionId]: value as GoalsAnswers[typeof questionId],
+    }));
     // Clear plan if they change an answer after generating
     if (plan) setPlan(null);
   };
@@ -387,127 +580,135 @@ export default function OnboardingGoalsPage() {
       });
 
       if (!res.ok) {
-        const err = await res.json() as { error?: string };
+        const err = (await res.json()) as { error?: string };
         throw new Error(err.error ?? 'Failed to generate plan');
       }
 
-      const generatedPlan = await res.json() as MarketingPlan;
+      const generatedPlan = (await res.json()) as MarketingPlan;
       setPlan(generatedPlan);
 
       // Cache to sessionStorage
       try {
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({ answers, plan: generatedPlan }));
+        sessionStorage.setItem(
+          SESSION_KEY,
+          JSON.stringify({ answers, plan: generatedPlan })
+        );
       } catch {
         /* storage full — ignore */
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not generate plan. Please try again.');
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Could not generate plan. Please try again.'
+      );
     } finally {
       setGenerating(false);
     }
   };
 
-  const answeredCount = QUESTIONS.filter((q) => answers[q.id] !== undefined).length;
+  const answeredCount = QUESTIONS.filter(
+    q => answers[q.id] !== undefined
+  ).length;
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/20 flex items-center justify-center mx-auto mb-4 backdrop-blur-sm">
-          <Sparkles className="w-7 h-7 text-orange-400" />
-        </div>
-        <h1 className="text-2xl font-bold text-white font-display">Build your marketing plan</h1>
-        <p className="text-gray-400 max-w-sm mx-auto">
-          Answer 6 quick questions and we'll generate a personalised 90-day strategy.
-        </p>
-      </div>
+    <OnboardingSplit
+      currentStep={3}
+      eyebrow="After setup · Optional"
+      title="Build your marketing plan"
+      description="Setup is done. Answer six questions for a personalised 90-day strategy, or skip and go to Home."
+    >
+      <div className="space-y-8">
+        {/* Questions */}
+        <div className="space-y-8">
+          {QUESTIONS.map(question => (
+            <QuestionBlock
+              key={question.id}
+              question={question}
+              selected={answers[question.id]}
+              onSelect={value => handleSelect(question.id, value)}
+            />
+          ))}
 
-      {/* Questions */}
-      <div className="max-w-2xl mx-auto space-y-8">
-        {QUESTIONS.map((question) => (
-          <QuestionBlock
-            key={question.id}
-            question={question}
-            selected={answers[question.id]}
-            onSelect={(value) => handleSelect(question.id, value)}
-          />
-        ))}
-
-        {/* Progress + Generate */}
-        <div className="pt-2 space-y-4">
-          {/* Answer progress */}
-          <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-              <div
-                className="h-full bg-orange-500 rounded-full transition-all duration-300"
-                style={{ width: `${(answeredCount / QUESTIONS.length) * 100}%` }}
-              />
+          {/* Progress + Generate */}
+          <div className="pt-2 space-y-4">
+            {/* Answer progress */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className="h-full bg-orange-500 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${(answeredCount / QUESTIONS.length) * 100}%`,
+                  }}
+                />
+              </div>
+              <span className="text-xs text-gray-500 shrink-0 tabular-nums">
+                {answeredCount}/{QUESTIONS.length}
+              </span>
             </div>
-            <span className="text-xs text-gray-500 shrink-0 tabular-nums">
-              {answeredCount}/{QUESTIONS.length}
-            </span>
+
+            {error && (
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400 text-center">
+                {error}
+              </div>
+            )}
+
+            <Button
+              onClick={handleGenerate}
+              disabled={!allAnswered || generating}
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating your plan…
+                </>
+              ) : plan ? (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Regenerate Plan
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate My Plan
+                </>
+              )}
+            </Button>
           </div>
+        </div>
 
-          {error && (
-            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-400 text-center">
-              {error}
-            </div>
-          )}
+        {/* Plan Results */}
+        {plan && (
+          <div>
+            <PlanResults plan={plan} />
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex items-center justify-between pt-2">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Skip for now
+          </button>
 
           <Button
-            onClick={handleGenerate}
-            disabled={!allAnswered || generating}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => router.push('/dashboard')}
+            disabled={!plan}
+            className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {generating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating your plan…
-              </>
-            ) : plan ? (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Regenerate Plan
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate My Plan
-              </>
-            )}
+            Continue
+            <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
+
+        <p className="text-center text-xs text-white/35 pb-2">
+          Your plan is saved and can be updated anytime in Settings → Marketing
+          Plan
+        </p>
       </div>
-
-      {/* Plan Results */}
-      {plan && (
-        <div className="max-w-2xl mx-auto">
-          <PlanResults plan={plan} />
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="max-w-2xl mx-auto flex items-center justify-between pt-2">
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="text-sm text-gray-500 hover:text-gray-300 transition-colors"
-        >
-          Skip for now
-        </button>
-
-        <Button
-          onClick={() => router.push('/dashboard')}
-          disabled={!plan}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Continue
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
-
-      <p className="text-center text-xs text-gray-600 pb-2">
-        Your plan is saved and can be updated anytime in Settings → Marketing Plan
-      </p>
-    </div>
+    </OnboardingSplit>
   );
 }

@@ -17,7 +17,11 @@ export interface AnalyticsData {
   };
   platformBreakdown: Record<string, { posts: number; published: number }>;
   chartData: Array<{ date: string; posts: number }>;
-  recentActivity: Array<{ endpoint: string; status: string; createdAt: string }>;
+  recentActivity: Array<{
+    endpoint: string;
+    status: string;
+    createdAt: string;
+  }>;
 }
 
 export interface GrowthData {
@@ -48,6 +52,11 @@ export interface PerformanceData {
     engagement: number;
     engagementRate: number;
     posts: number;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    clicks?: number;
+    reach?: number;
     bestTime: string;
     growthPercent: number;
   }>;
@@ -76,10 +85,8 @@ export interface DisplayData {
 
 export interface EngagementDataPoint {
   date: string;
-  twitter: number;
-  linkedin: number;
-  instagram: number;
-  tiktok: number;
+  engagement: number;
+  reach: number;
 }
 
 export interface PlatformDistributionItem {

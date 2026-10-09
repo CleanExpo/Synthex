@@ -17,6 +17,12 @@
  *   5. Fires welcome email + webhook
  *   6. Generates a new JWT with onboardingComplete: true
  *
+ * SYN-1216: connected/skipped channels are NOT a completion gate. The HTTP
+ * response + refreshed auth-token MUST return as soon as the flag is persisted.
+ * Vault seed / launch pipeline / welcome email must not block Finish setup,
+ * or the client stays on “Finishing…” and /dashboard still sees a stale
+ * onboardingComplete:false JWT and loops back to /onboarding.
+ *
  * @module app/api/onboarding/complete/route
  */
 
@@ -48,6 +54,88 @@ const completeOnboardingSchema = z
   })
   .strict()
   .optional();
+
+function setAuthTokenCookie(response: NextResponse, token: string): void {
+  const isProduction = process.env.NODE_ENV === 'production';
+  response.cookies.set('auth-token', token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 24 * 7,
+  });
+}
+
+async function stampCompletedOnboardingToken(user: {
+  id: string;
+  email: string;
+}): Promise<string> {
+  const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
+  return generateToken({
+    userId: user.id,
+    email: user.email,
+    onboardingComplete: true,
+    apiKeyConfigured,
+  });
+}
+
+function runPostCompletionSideEffects(
+  user: { id: string; email: string; name: string | null },
+  orgId: string
+): void {
+  void (async () => {
+    try {
+      sendWelcomeSequenceDay0(user.email, user.name ?? undefined);
+    } catch {
+      // Non-fatal
+    }
+
+    try {
+      const currentPrefs = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { preferences: true },
+      });
+      const existingPrefs =
+        currentPrefs?.preferences !== null &&
+        typeof currentPrefs?.preferences === 'object' &&
+        !Array.isArray(currentPrefs?.preferences)
+          ? (currentPrefs.preferences as Record<string, unknown>)
+          : {};
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          preferences: {
+            ...existingPrefs,
+            emailSequenceStartedAt: new Date().toISOString(),
+          },
+        },
+      });
+    } catch {
+      // Non-fatal
+    }
+
+    try {
+      await seedVaultFromOnboarding(user.id, orgId);
+    } catch (vaultErr) {
+      logger.warn('[complete] Vault seeding failed (non-fatal)', {
+        error: vaultErr instanceof Error ? vaultErr.message : String(vaultErr),
+      });
+    }
+
+    try {
+      runLaunchPipeline({ userId: user.id, organizationId: orgId }).catch(
+        err => {
+          logger.warn('[complete] Autopilot launch failed (non-fatal)', {
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      );
+    } catch {
+      // Non-fatal — autopilot will retry via daily cron
+    }
+  })();
+}
 
 // ============================================================================
 // POST — Complete Onboarding
@@ -97,9 +185,19 @@ async function handlePost(
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Already completed — idempotent
+    // Already completed — idempotent, but still re-issue the JWT.
+    // SYN-1216: a prior attempt can persist the flag and then hang before
+    // Set-Cookie. Retrying without a fresh onboardingComplete:true token
+    // sends /dashboard back to /onboarding (proxy) which then bounces to
+    // /dashboard (entry-page guard) — the loop.
     if (user.onboardingComplete) {
-      return NextResponse.json({ success: true, alreadyComplete: true });
+      const completedToken = await stampCompletedOnboardingToken(user);
+      const response = NextResponse.json({
+        success: true,
+        alreadyComplete: true,
+      });
+      setAuthTokenCookie(response, completedToken);
+      return response;
     }
 
     // Find the user's organisation (created during scan/review). If the
@@ -304,83 +402,17 @@ async function handlePost(
       }
     });
 
-    // Fire welcome email (fire-and-forget)
-    try {
-      sendWelcomeSequenceDay0(user.email, user.name ?? undefined);
-    } catch {
-      // Non-fatal
-    }
-
-    // Store email sequence start timestamp
-    try {
-      const currentPrefs = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { preferences: true },
-      });
-      const existingPrefs =
-        currentPrefs?.preferences !== null &&
-        typeof currentPrefs?.preferences === 'object' &&
-        !Array.isArray(currentPrefs?.preferences)
-          ? (currentPrefs.preferences as Record<string, unknown>)
-          : {};
-
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          preferences: {
-            ...existingPrefs,
-            emailSequenceStartedAt: new Date().toISOString(),
-          },
-        },
-      });
-    } catch {
-      // Non-fatal
-    }
-
-    const apiKeyConfigured = await resolveApiKeyConfigured(user.id);
-
-    const newToken = await generateToken({
-      userId: user.id,
-      email: user.email,
-      onboardingComplete: true,
-      apiKeyConfigured,
-    });
-
+    // Stamp the cookie BEFORE vault / launch / welcome email. Those jobs
+    // are best-effort; awaiting them is what left Finish setup on
+    // “Finishing…” (SYN-1216).
+    const newToken = await stampCompletedOnboardingToken(user);
     const response = NextResponse.json({
       success: true,
       organizationId: org.id,
     });
+    setAuthTokenCookie(response, newToken);
 
-    const isProduction = process.env.NODE_ENV === 'production';
-    response.cookies.set('auth-token', newToken, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
-    // Seed vault with credentials (non-fatal, best-effort)
-    try {
-      await seedVaultFromOnboarding(user.id, org.id);
-    } catch (vaultErr) {
-      logger.warn('[complete] Vault seeding failed (non-fatal)', {
-        error: vaultErr instanceof Error ? vaultErr.message : String(vaultErr),
-      });
-    }
-
-    // Launch autopilot content pipeline (fire-and-forget)
-    try {
-      runLaunchPipeline({ userId: user.id, organizationId: org.id }).catch(
-        err => {
-          logger.warn('[complete] Autopilot launch failed (non-fatal)', {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }
-      );
-    } catch {
-      // Non-fatal — autopilot will retry via daily cron
-    }
+    runPostCompletionSideEffects(user, org.id);
 
     logger.info('[complete] Onboarding completed', {
       userId: user.id,

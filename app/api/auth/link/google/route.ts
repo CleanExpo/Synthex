@@ -22,6 +22,7 @@ import {
   storePKCEState,
 } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
+import { setGoogleOAuthBinding } from '@/lib/auth/google-oauth-binding';
 
 const GOOGLE_CONFIG = {
   authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -91,10 +92,12 @@ export async function GET(request: NextRequest) {
 
     const authorizationUrl = `${GOOGLE_CONFIG.authUrl}?${authParams.toString()}`;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       authorizationUrl,
       message: 'Redirecting to Google to link your account...',
     });
+    setGoogleOAuthBinding(response, state);
+    return response;
   } catch (error) {
     logger.error('[Link Google] Error:', error);
     return NextResponse.json(

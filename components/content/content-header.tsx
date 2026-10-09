@@ -21,9 +21,10 @@ export function ContentHeader({ onViewAnalytics }: ContentHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 className="text-3xl font-bold gradient-text">Content Generator</h1>
+        <h1 className="text-3xl font-bold gradient-text">Content</h1>
         <p className="text-gray-300 mt-1">
-          AI-powered content creation with viral patterns
+          Write a draft, then save, schedule, or post. Nothing is public until
+          you say so.
         </p>
       </div>
       <div className="flex space-x-3 mt-4 sm:mt-0">

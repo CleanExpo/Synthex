@@ -42,6 +42,7 @@ import {
   platformReadyKind,
 } from '@/lib/dashboard/platform-ready';
 import { ShadowLiveToggle } from '@/components/calendar/ShadowLiveToggle';
+import { FIRST_WEEK_GUIDANCE } from '@/lib/dashboard/first-week-guidance';
 import useSWR from 'swr';
 
 // ---------------------------------------------------------------------------
@@ -649,7 +650,7 @@ function PlatformsPageContent() {
         title="Platforms"
         description={
           connectedCount === 0
-            ? 'Nothing is ready to post yet. Connect one account — Ready looks like a green check. You can still write drafts without this.'
+            ? FIRST_WEEK_GUIDANCE.platforms.empty
             : 'Ready accounts can go live. If one is missing or expired, reconnect it here or posts will stay inside Synthex.'
         }
         actions={
@@ -714,10 +715,15 @@ function PlatformsPageContent() {
           <p className="text-sm font-light text-white/40">
             No account is ready yet
           </p>
-          <p className="text-xs text-white/50 mt-1">
-            Tap Connect on Instagram or another channel. You can still write
-            drafts in Content.
+          <p className="text-xs text-white/50 mt-1 max-w-md mx-auto">
+            {FIRST_WEEK_GUIDANCE.platforms.empty}
           </p>
+          <Link
+            href={FIRST_WEEK_GUIDANCE.platforms.nextHref}
+            className="mt-3 inline-block text-sm text-orange-400/90 hover:text-orange-400"
+          >
+            {FIRST_WEEK_GUIDANCE.platforms.nextLabel}
+          </Link>
         </div>
       )}
 
