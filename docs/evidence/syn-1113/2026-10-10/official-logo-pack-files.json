@@ -86,8 +86,8 @@
   },
   {
     "path": "public/logos/ra/site.webmanifest",
-    "sha256": "8225f13790cfd865cb6352f1f5b9fc3b0b2dcd669264333e577987d712f042cc",
-    "bytes": 538
+    "sha256": "18556f796d82185f355efa35f9faaa404713f9b44a79300194fe69be8bbaeeba",
+    "bytes": 475
   },
   {
     "path": "public/logos/dr/primary.svg",
@@ -176,8 +176,8 @@
   },
   {
     "path": "public/logos/dr/site.webmanifest",
-    "sha256": "43b15b7e987ff256afee742439e2e4f0a481284e4e52ce9c794292d6e408ee62",
-    "bytes": 546
+    "sha256": "64d942f3282a39ab70b49f9400a313aa7b770183eb61bb69b0394c1b975f97ad",
+    "bytes": 483
   },
   {
     "path": "public/logos/nrpg/primary.svg",
@@ -266,8 +266,8 @@
   },
   {
     "path": "public/logos/nrpg/site.webmanifest",
-    "sha256": "04ce7b71e5d5d548742a4ac1d187b4bf6af0514d70a82ceabdf1000e1191aa32",
-    "bytes": 520
+    "sha256": "603d8369ef4e09079d744e00e1a479fcc103535d2fbd858575d7dbe9a20a9b3b",
+    "bytes": 457
   },
   {
     "path": "public/logos/carsi/primary.svg",
@@ -356,8 +356,8 @@
   },
   {
     "path": "public/logos/carsi/site.webmanifest",
-    "sha256": "223ecb3faff6c0c6cdeff1b5bfd164de59687d3748a72c3e5795cac20d98c3bc",
-    "bytes": 522
+    "sha256": "5d0b3b0e0b37ebf1cbbc0c33740ab93ba585bec3540db1e01cedae2123972131",
+    "bytes": 459
   },
   {
     "path": "public/logos/synthex/primary.svg",
@@ -446,8 +446,8 @@
   },
   {
     "path": "public/logos/synthex/site.webmanifest",
-    "sha256": "b3c1e92485edad4d78eb8fa24914ee70c5a95f7f7572c065fc8fe12052693416",
-    "bytes": 526
+    "sha256": "f168c7a33aee2e0b6c513766aa597aed20db31a100a78a4ba490be906d84a046",
+    "bytes": 463
   },
   {
     "path": "public/icon.svg",
@@ -596,8 +596,8 @@
   },
   {
     "path": "public/logos/unite/site.webmanifest",
-    "sha256": "ef682fef1de55148200cb98ff4d1c46d1de4a9b7f0d67c1b38ee1cd1712becc0",
-    "bytes": 546
+    "sha256": "690b6d8c701c8c2250ea109dac66760a53a0dc6e2b1e76bb63d8bbad7c6f0cd8",
+    "bytes": 483
   },
   {
     "path": "public/logos/ccw/primary.svg",
@@ -686,8 +686,8 @@
   },
   {
     "path": "public/logos/ccw/site.webmanifest",
-    "sha256": "a3b9f4c68c9c16b62e498e3964ae82392212cc49793ab612b37a4b6a54b54119",
-    "bytes": 562
+    "sha256": "b67b68b5cc55676d9cc50fb0d5bd91441e9e9b53a7ecf0da4b5842bb04b1d0c9",
+    "bytes": 499
   },
   {
     "path": "public/logos/john-coutis/primary.svg",
@@ -776,7 +776,7 @@
   },
   {
     "path": "public/logos/john-coutis/site.webmanifest",
-    "sha256": "d619f2bee4c7f10e2ebab610ccb12477192d559150057ac6330a353720487515",
-    "bytes": 534
+    "sha256": "8a1def5cf26da561391f78f6e92a5a70bae49f52ef43c8c2c4647982cc8386b2",
+    "bytes": 471
   }
 ]

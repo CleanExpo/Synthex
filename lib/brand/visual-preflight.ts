@@ -198,6 +198,7 @@ export function runBrandVisualPreflight(repositoryRoot: string) {
         ...(['primary', 'inverted', 'icon'] as const).map(
           variant => `public/${brand.logo[variant]}`
         ),
+        ...(logoPacks[slug as keyof typeof logoPacks] ?? []),
       ];
       const absent = missingAssets.filter(asset => assets.includes(asset));
       const approvals = approvalGaps.filter(gap => gap.slug === slug);

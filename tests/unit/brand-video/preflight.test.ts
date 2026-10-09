@@ -11,6 +11,7 @@
  */
 import { preflightBrandAssets } from '@/lib/brand-video/preflight';
 import { brands } from '@unite-group/brand-config';
+import identityGaps from '@/config/brand-identity-gaps.json';
 
 describe('preflightBrandAssets — brand resolution', () => {
   it('accepts every brand that brand-config actually defines', () => {
@@ -124,4 +125,26 @@ describe('recovered Synthex identity', () => {
   it('does not report missing logos once all declared variants exist', () => {
     expect(preflightBrandAssets('synthex').warnings).toEqual([]);
   });
+});
+
+it('keeps John blocked after visual approval while recording rights remain open', () => {
+  const john = brands['john-coutis'];
+  const previousStatus = john.tokenStatus;
+  const gap = identityGaps['john-coutis'];
+  const previousRequirements = gap.required;
+  try {
+    john.tokenStatus = 'confirmed';
+    gap.required = [previousRequirements[1]];
+    const result = preflightBrandAssets('john-coutis');
+    expect(result.ok).toBe(false);
+    expect(result.findings.map(f => f.code)).toEqual([
+      'identity-approval-required',
+    ]);
+    expect(result.findings[0].message).toContain(
+      'consented original recordings'
+    );
+  } finally {
+    john.tokenStatus = previousStatus;
+    gap.required = previousRequirements;
+  }
 });

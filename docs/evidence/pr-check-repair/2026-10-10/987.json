@@ -7,9 +7,9 @@
   "validatedCodeHead": "97d9895de68dc4d48cbd5d57574178f7e1cd1ad3",
   "changedCodeSha256": "9beecef99dd9b70db92b82be296325f9ff24ab35eacb44ac12c51482a0a5cf8e",
   "localValidation": {
-    "fullTypeScriptCheck": "passed (tsc --noEmit --incremental false)",
-    "visualTests": "5 suites, 107 tests passed",
-    "networkGuard": "loaded before compiler and test runner"
+    "fullTypecheck": "passed",
+    "offlineVisualTests": 109,
+    "suites": 5
   },
   "deploymentGuard": "codex/syn-1113-finalized: false",
   "remainingExternalBrandApprovalInputs": 3,
@@ -17,5 +17,20 @@
   "providerCalls": 0,
   "spend": 0,
   "deploys": 0,
-  "productionWrites": 0
+  "productionWrites": 0,
+  "reviewFixes": [
+    "Configured identities retain outstanding recording/voice rights blocks after visual approval",
+    "Per-brand readiness includes every declared logo-pack asset",
+    "NRPG description matches confirmed website destination",
+    "Portable logo manifests omit application launch metadata"
+  ],
+  "remaining": {
+    "ready": false,
+    "codeDebtCount": 0,
+    "assetGapCount": 0,
+    "rightsGapCount": 3,
+    "coverageGapCount": 0,
+    "debtCount": 3
+  },
+  "verifiedLogoPackHashes": 156
 }

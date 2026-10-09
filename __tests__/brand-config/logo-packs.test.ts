@@ -86,6 +86,8 @@ describe('complete offline logo packs', () => {
         }
         if (file.endsWith('.webmanifest')) {
           const manifest = JSON.parse(bytes.toString('utf8'));
+          expect(manifest.start_url).toBeUndefined();
+          expect(manifest.scope).toBeUndefined();
           expect(
             manifest.icons.some(
               (icon: { purpose: string }) => icon.purpose === 'maskable'

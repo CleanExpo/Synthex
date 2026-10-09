@@ -1,9 +1,6 @@
 {
   "name": "Carpet Cleaners Warehouse",
   "short_name": "Carpet Cleaners Warehouse",
-  "scope": ".",
-  "start_url": ".",
-  "display": "standalone",
   "icons": [
     {
       "src": "android-chrome-192x192.png",

@@ -305,7 +305,7 @@ Our Mission:
 
 NRPG is building a stronger restoration industry by connecting professionals, establishing standards, and advocating for excellence. Whether you're an independent operator, a restoration company, or an industry supplier — NRPG is your national network.
 
-Visit nrpg.com.au to learn more about membership and upcoming events.
+Visit disasterrecovery.com.au to learn more about membership and upcoming events.
 
 #NRPG #RestorationProfessionals #Australia #IndustryNetwork #ProfessionalDevelopment #RestorationIndustry #Standards`,
     youtubeTags: [

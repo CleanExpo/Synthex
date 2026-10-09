@@ -1,9 +1,6 @@
 {
   "name": "Disaster Recovery",
   "short_name": "Disaster Recovery",
-  "scope": ".",
-  "start_url": ".",
-  "display": "standalone",
   "icons": [
     {
       "src": "android-chrome-192x192.png",

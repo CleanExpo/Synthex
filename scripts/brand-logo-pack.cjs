@@ -238,9 +238,7 @@ async function main() {
         {
           name: source.label,
           short_name: source.label,
-          scope: '.',
-          start_url: '.',
-          display: 'standalone',
+          // Portable icon pack; the consuming application owns launch metadata.
           icons: [
             ...[192, 512].map(size => ({
               src: `android-chrome-${size}x${size}.png`,

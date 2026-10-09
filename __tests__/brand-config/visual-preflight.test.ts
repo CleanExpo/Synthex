@@ -115,6 +115,25 @@ describe('canonical brand and repository evidence', () => {
 });
 
 describe('readiness stays scoped to the actual identity', () => {
+  it('blocks Synthex readiness when its favicon pack is incomplete', () => {
+    const exists = fs.existsSync;
+    const spy = jest
+      .spyOn(fs, 'existsSync')
+      .mockImplementation(file =>
+        String(file).endsWith('/logos/synthex/favicon.ico')
+          ? false
+          : exists(file)
+      );
+    try {
+      const report = runBrandVisualPreflight(path.join(__dirname, '../..'));
+      expect(report.brandReadiness.synthex.ready).toBe(false);
+      expect(report.brandReadiness.synthex.missingAssets).toContain(
+        'public/logos/synthex/favicon.ico'
+      );
+    } finally {
+      spy.mockRestore();
+    }
+  });
   it('allows recovered Synthex identity to be ready while refusing John', () => {
     const report = runBrandVisualPreflight(path.join(__dirname, '../..'));
     expect(report.brandReadiness.synthex.ready).toBe(true);

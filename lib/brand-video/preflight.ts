@@ -29,6 +29,7 @@ import identityGaps from '@/config/brand-identity-gaps.json';
 export type PreflightCode =
   | 'unknown-brand'
   | 'unapproved-tokens'
+  | 'identity-approval-required'
   | 'missing-logo-assets';
 
 export interface PreflightFinding {
@@ -99,6 +100,16 @@ export function preflightBrandAssets(brand: string): PreflightResult {
   const config = brands[slug];
   const findings: PreflightFinding[] = [];
   const warnings: PreflightFinding[] = [];
+
+  const outstanding = Object.entries(identityGaps).find(
+    ([key]) => key === slug
+  )?.[1];
+  if (outstanding && outstanding.required.length > 0) {
+    findings.push({
+      code: 'identity-approval-required',
+      message: `Brand "${slug}" still requires: ${outstanding.required.join('; ')}. Visual token approval alone does not clear recording or voice rights.`,
+    });
+  }
 
   if (config.tokenStatus === 'proposal') {
     findings.push({

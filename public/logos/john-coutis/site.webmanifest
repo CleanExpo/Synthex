@@ -1,9 +1,6 @@
 {
   "name": "John Coutis",
   "short_name": "John Coutis",
-  "scope": ".",
-  "start_url": ".",
-  "display": "standalone",
   "icons": [
     {
       "src": "android-chrome-192x192.png",
