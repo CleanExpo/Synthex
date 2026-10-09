@@ -297,5 +297,10 @@
       "path": "/api/cron/agency-hypercare-daily",
       "schedule": "0 6 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "dependabot/npm_and_yarn/multi-74917263de": false
+    }
+  }
 }

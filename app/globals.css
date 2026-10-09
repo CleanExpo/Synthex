@@ -202,7 +202,7 @@ html.lenis body {
     /* =========================================================================
        TYPOGRAPHY TOKENS
        ========================================================================= */
-    /* SYN-455: self-hosted SIL-OFL fonts (next/font/google, see app/layout.tsx).
+    /* Self-hosted SIL-OFL fonts (next/font/local, see app/layout.tsx).
        Space Grotesk = display/headings, Inter = body/sans. --font-satoshi is a
        legacy alias with no consumers, kept pointing at the body font. */
     --font-satoshi: var(--font-inter, 'Inter', system-ui, sans-serif);

@@ -1,0 +1,15 @@
+{
+  "pr": 979,
+  "originalHead": "f4098a606567d635956ca2debc5b1c3e19ac2867",
+  "cause": "MCP handler v2 upgrade retained removed 1.x handler arguments and omitted the required v2 server peer.",
+  "repair": "Use one-argument handler registration with complete Zod schemas and object argument narrowing; declare server peer in package and lock; add real SDK transport regression; disable branch preview deployment.",
+  "localTypecheck": {
+    "scope": "MCP route and transitive imports plus repository pg declaration",
+    "result": "passed"
+  },
+  "localTests": "Validation pending; must verify latest source before closeout.",
+  "fullRemoteValidation": "Must verify CI on pushed head.",
+  "providerCalls": 0,
+  "productionWrites": 0,
+  "deploymentsEnabled": false
+}

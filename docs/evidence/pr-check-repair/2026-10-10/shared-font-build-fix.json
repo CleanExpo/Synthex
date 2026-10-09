@@ -1,0 +1,31 @@
+{
+  "failureRun": 37983046795,
+  "failureHead": "75bfb0ae1e955c9da9ba01d14e3fee78548219f0",
+  "failure": "next/font/google URL extension parsing returned null and crashed app/layout.tsx compilation",
+  "repair": "Use next/font/local with eight pinned licensed Latin static faces; preserve font families, weights, CSS variable names, display swap. Build runs an offline asset integrity and actual font metadata contract.",
+  "sources": "public/fonts/app/sources.json",
+  "faces": 8,
+  "license": "OFL-1.1",
+  "documentation": "https://nextjs.org/docs/app/getting-started/fonts",
+  "providerCalls": 0,
+  "spend": 0,
+  "deploys": 0,
+  "productionWrites": 0,
+  "localValidation": {
+    "fullTypecheck": "passed",
+    "offlineIntegrityAndMetadata": "8 faces passed",
+    "realNextLocalFontLoader": "2 families, 8 emitted faces; network guard enabled"
+  },
+  "unitHarnessCorrection": {
+    "cause": "Route ownership test mocked next/font/google, so the new local loader could not render in Jest.",
+    "repair": "Mock next/font/local with its render-time shape; keep real ancestors and all route-ownership assertions.",
+    "localAssertionsPassed": 6,
+    "ciBeforeCorrection": {
+      "passedSuites": 820,
+      "failedSuites": 1,
+      "passedTests": 8695,
+      "failedTests": 1,
+      "failedSuite": "tests/unit/components/route-identity-ownership.test.tsx"
+    }
+  }
+}

@@ -12,13 +12,12 @@
  *   { "synthex-studio": { "type": "http", "url": "https://<host>/api/mcp/mcp",
  *     "headers": { "Authorization": "Bearer <key>" } } }
  *
- * Installed: mcp-handler@1.1.0 — uses createMcpHandler (alias for
- * createMcpRouteHandler). Registration API: server.registerTool(name, config, cb)
- * where config.inputSchema is a ZodRawShapeCompat (raw shape, not z.object()).
+ * Installed: mcp-handler@2.2.0 with the MCP v2 server peer.
+ * The handler is mounted directly at this route; transport/basePath options
+ * from 1.x are removed. Registration uses full Zod input/output schemas.
  */
 import { createMcpHandler } from 'mcp-handler';
 import { NextRequest } from 'next/server';
-import { z } from 'zod';
 import {
   toolsForScopes,
   executeStudioTool,
@@ -29,53 +28,53 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function buildHandler(caller: McpAuthResult) {
-  return createMcpHandler(
-    server => {
-      // SYN-MCP-007: register ONLY tools covered by the caller key's scopes
-      // ('*' = all; empty/absent scopes = zero tools — deny by default).
-      // buildHandler runs per-request, so tools/list is always per-caller.
-      for (const tool of toolsForScopes(caller.scopes)) {
-        // The SDK's registerTool accepts a ZodRawShapeCompat (raw shape object)
-        // for input/output schemas, not a full z.object(). All tool schemas are
-        // z.object(...) instances so .shape gives us the raw shape.
-        const rawShape = (tool.schema as z.ZodObject<z.ZodRawShape>).shape;
+  return createMcpHandler(server => {
+    // SYN-MCP-007: register ONLY tools covered by the caller key's scopes
+    // ('*' = all; empty/absent scopes = zero tools — deny by default).
+    // buildHandler runs per-request, so tools/list is always per-caller.
+    for (const tool of toolsForScopes(caller.scopes)) {
+      // MCP v2 consumes full Standard Schemas rather than raw Zod shapes.
 
-        // SYN-MCP-007 spike (SYN-1084): once outputSchema is declared the SDK
-        // VALIDATES structuredContent at call time and throws on mismatch —
-        // only tools with contract-tested output shapes declare one.
-        const outputShape = tool.outputSchema
-          ? (tool.outputSchema as z.ZodObject<z.ZodRawShape>).shape
-          : undefined;
+      // SYN-MCP-007 spike (SYN-1084): once outputSchema is declared the SDK
+      // VALIDATES structuredContent at call time and throws on mismatch —
+      // only tools with contract-tested output shapes declare one.
+      const outputSchema = tool.outputSchema;
 
-        server.registerTool(
-          tool.name,
-          {
-            description: tool.description,
-            inputSchema: rawShape,
-            ...(outputShape ? { outputSchema: outputShape } : {}),
-          },
-          async (args: Record<string, unknown>) => {
-            const result = await executeStudioTool(tool.name, args, {
+      server.registerTool(
+        tool.name,
+        {
+          description: tool.description,
+          inputSchema: tool.schema,
+          ...(outputSchema ? { outputSchema } : {}),
+        },
+        async args => {
+          if (
+            typeof args !== 'object' ||
+            args === null ||
+            Array.isArray(args)
+          ) {
+            throw new Error('Tool arguments must be an object');
+          }
+          const result = await executeStudioTool(
+            tool.name,
+            args as Record<string, unknown>,
+            {
               userId: caller.userId,
               organizationId: caller.organizationId,
               initiatedBy: 'mcp',
               scopes: caller.scopes,
-            });
-            return {
-              content: [
-                { type: 'text' as const, text: JSON.stringify(result) },
-              ],
-              // Emit structuredContent alongside text only when the tool
-              // declares an outputSchema (SDK validates it against the shape).
-              ...(tool.outputSchema ? { structuredContent: result } : {}),
-            };
-          }
-        );
-      }
-    },
-    {},
-    { basePath: '/api/mcp' }
-  );
+            }
+          );
+          return {
+            content: [{ type: 'text' as const, text: JSON.stringify(result) }],
+            // Emit structuredContent alongside text only when the tool
+            // declares an outputSchema (SDK validates it against the shape).
+            ...(tool.outputSchema ? { structuredContent: result } : {}),
+          };
+        }
+      );
+    }
+  });
 }
 
 async function handle(request: NextRequest) {
