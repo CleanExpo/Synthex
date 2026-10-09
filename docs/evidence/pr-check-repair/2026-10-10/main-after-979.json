@@ -1,0 +1,9 @@
+{
+  "cause": "PR #979 merged externally after final green verification; new main created a deployment-guard merge conflict.",
+  "mainHead": "0ef4437d0c978d846cbf878e194ab274125d3421",
+  "resolution": "Retain all three branch deployment holds, and merge the already validated MCP and shared font repairs from main.",
+  "providerCalls": 0,
+  "spend": 0,
+  "deploysInitiated": 0,
+  "productionWrites": 0
+}
