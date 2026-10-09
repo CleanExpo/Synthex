@@ -5,7 +5,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LazyClientComponents } from './LazyClientComponents';
 import { ServiceWorkerRegistration } from '@/components/pwa/ServiceWorkerRegistration';
 import { InstallPrompt } from '@/components/pwa/InstallPrompt';
-import { Space_Grotesk, Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import {
   BASE_URL,
   LANDING_VIDEO_POSTER_URL,
@@ -14,20 +14,58 @@ import {
 } from '@/lib/seo/site-constants';
 import './globals.css';
 
-// SYN-455: self-hosted SIL-OFL fonts via next/font/google (woff2 self-served at
-// build time — zero runtime request to any font CDN). Replaces the Fontshare-
-// licensed Satoshi, whose Free Font EULA forbids self-hosting. Families match the
-// documented design standard: Space Grotesk headings, Inter body.
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
+// Bundled SIL-OFL fonts preserve the design families and exact static weights.
+// Neither builds nor clients need a font CDN. See public/fonts/app/README.md.
+const spaceGrotesk = localFont({
+  src: [
+    {
+      path: '../public/fonts/app/space-grotesk-latin-300-normal.woff2',
+      weight: '300',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/app/space-grotesk-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/app/space-grotesk-latin-500-normal.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/app/space-grotesk-latin-600-normal.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+  ],
   variable: '--font-space-grotesk',
   display: 'swap',
 });
 
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+const inter = localFont({
+  src: [
+    {
+      path: '../public/fonts/app/inter-latin-400-normal.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/app/inter-latin-500-normal.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/app/inter-latin-600-normal.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../public/fonts/app/inter-latin-700-normal.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-inter',
   display: 'swap',
 });
