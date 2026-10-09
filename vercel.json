@@ -300,6 +300,8 @@
   ],
   "git": {
     "deploymentEnabled": {
+      "codex/syn-1113-finalized": false,
+      "dependabot/npm_and_yarn/multi-74917263de": false,
       "fix/984-alert-approval-routing": false
     }
   }
