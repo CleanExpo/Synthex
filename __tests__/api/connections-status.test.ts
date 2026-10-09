@@ -93,16 +93,31 @@ describe('connection status manifest', () => {
   });
 
   it.each([
-    { HERMES_LINEAR_TEAM_ID: 'team-1' },
+    { HERMES_LINEAR_TEAM_ID: 'team-1', LINEAR_API_KEY: 'linear-fixture' },
     { ALERT_SLACK_BOT_TOKEN: 'slack-test' },
-    { ALERT_SLACK_WEBHOOK_URL: 'https://hooks.slack.test/approvals' },
+    {
+      ALERT_SLACK_APPROVALS_WEBHOOK_URL: 'https://hooks.slack.test/approvals',
+      ALERT_SLACK_OPS_WEBHOOK_URL: 'https://hooks.slack.test/ops',
+    },
   ])('does not block Hermes when optional Telegram is absent: %j', env => {
     const hermes = buildConnectionStatusManifest(env).connections.find(
       row => row.id === 'hermes'
     );
     expect(hermes).toMatchObject({ state: 'ready' });
-    expect(hermes?.detail).toContain('optional Telegram');
+    expect(hermes?.detail).toContain('Telegram is optional');
     expect(hermes?.nextAction).toBeUndefined();
+  });
+
+  it.each([
+    { HERMES_LINEAR_TEAM_ID: 'team-1' },
+    { ALERT_SLACK_WEBHOOK_URL: 'https://hooks.slack.test/ops' },
+    { ALERT_SLACK_APPROVALS_WEBHOOK_URL: 'https://hooks.slack.test/approvals' },
+  ])('blocks Hermes when mandatory routing is incomplete: %j', env => {
+    expect(
+      buildConnectionStatusManifest(env).connections.find(
+        row => row.id === 'hermes'
+      )?.state
+    ).toBe('blocked');
   });
 
   it('serves the manifest through GET', async () => {
@@ -117,5 +132,37 @@ describe('connection status manifest', () => {
     expect(response.status).toBe(200);
     expect(body.source).toBe('synthex:connection-status');
     expect(body.connections.length).toBeGreaterThan(0);
+  });
+});
+
+describe('optional Telegram configuration', () => {
+  it('reports Slack routing ready without any Telegram credentials', () => {
+    const manifest = buildConnectionStatusManifest({
+      ALERT_SLACK_BOT_TOKEN: 'test-token',
+    });
+    expect(manifest.connections.find(row => row.id === 'hermes')).toMatchObject(
+      { state: 'ready' }
+    );
+    expect(
+      manifest.connections.find(row => row.id === 'monitoring')
+    ).toMatchObject({ state: 'ready' });
+  });
+
+  it('reports absent routine routing rather than a Telegram error', () => {
+    const manifest = buildConnectionStatusManifest({});
+    const hermes = manifest.connections.find(row => row.id === 'hermes');
+    expect(hermes?.detail).toBe('Routine escalation routing is missing.');
+    expect(hermes?.nextAction).not.toContain('Telegram');
+  });
+
+  it('accepts two channel-bound webhooks without requiring Telegram', () => {
+    const manifest = buildConnectionStatusManifest({
+      ALERT_SLACK_APPROVALS_WEBHOOK_URL:
+        'https://hooks.slack.com/services/test/approvals',
+      ALERT_SLACK_OPS_WEBHOOK_URL: 'https://hooks.slack.com/services/test/ops',
+    });
+    expect(manifest.connections.find(row => row.id === 'hermes')?.state).toBe(
+      'ready'
+    );
   });
 });

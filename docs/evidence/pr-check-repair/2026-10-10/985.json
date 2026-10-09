@@ -1,0 +1,16 @@
+{
+  "pr": 985,
+  "originalHead": "ed77a5912e1cd5d9673e7baecf0be65ae25950f4",
+  "cause": "Conflicts with current main; existing remote checks passed.",
+  "repair": "Merged current main; preserved its explicit approval/ops Slack destinations and owner routing; retained PR regression tests and disabled preview deployment for this branch. Dry-run reports actual routing channel.",
+  "localValidation": {
+    "focusedOfflineTests": 47,
+    "suites": 3,
+    "result": "passed",
+    "method": "Exact source tests copied to scoped external discovery; aliases point to this worktree, provider/network guard enabled."
+  },
+  "fullRemoteValidation": "Must verify CI on pushed head.",
+  "deploymentsEnabled": false,
+  "providerCalls": 0,
+  "productionWrites": 0
+}

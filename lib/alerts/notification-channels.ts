@@ -32,20 +32,18 @@
  *
  * await sendEscalation({
  *   channel: NotificationChannel.TELEGRAM,
- *   message: 'Urgent approval needed: pause scheduled publishing',
+ *   message: 'RestoreAssist: 35% organic traffic drop on /water-damage',
  *   priority: 'urgent',
- *   requiresApproval: true,
- *   fallback: NotificationChannel.SLACK,  // approval remains visible if Telegram fails
+ *   fallback: NotificationChannel.LINEAR,  // if Telegram fails, fall through to Linear
  * });
  * ```
  *
  * Env vars (HER-1b):
  *   TELEGRAM_BOT_TOKEN          - bot token for @piceo247agent_bot
- *   ALERT_SLACK_BOT_TOKEN       - Unite-Group bot token with chat:write (preferred)
- *   ALERT_SLACK_WEBHOOK_URL     - webhook bound to #approvals
- *   ALERT_SLACK_OPS_WEBHOOK_URL - webhook bound to #ops-alerts
- *   TELEGRAM_OWNER_ID           - owner destination for urgent approvals (legacy chat IDs still supported)
- *   ALERT_SLACK_OPS_CHANNEL    - ops channel ID/name (defaults to #ops-alerts)
+ *   TELEGRAM_OWNER_ID           - owner identity; never unset to mute alerts
+ *   TELEGRAM_URGENT_APPROVAL_CHAT_ID - optional separate urgent destination
+ *   TELEGRAM_CHAT_ID            - legacy urgent destination fallback
+ *   HERMES_LINEAR_TEAM_ID       - Linear team ID for routine escalations
  *   HERMES_ESCALATION_DRY_RUN   - 'true' in local/staging; logs to console only
  */
 
@@ -135,6 +133,7 @@ export function resolveTelegramChannelConfig(
   for (const source of TELEGRAM_CREDENTIAL_SOURCES) {
     const botToken = readEnvValue(env[source.botTokenEnv]);
     const chatId =
+      readEnvValue(env.TELEGRAM_URGENT_APPROVAL_CHAT_ID) ||
       readEnvValue(env.TELEGRAM_OWNER_ID) ||
       readEnvValue(env[source.chatIdEnv]);
 
@@ -218,10 +217,10 @@ interface SlackPayload {
   channel?: string;
   username?: string;
   icon_emoji?: string;
-  link_names: false;
-  parse: 'none';
-  unfurl_links: false;
-  unfurl_media: false;
+  link_names?: boolean;
+  parse?: 'none';
+  unfurl_links?: boolean;
+  unfurl_media?: boolean;
 }
 
 /** Discord webhook payload structure */
@@ -274,7 +273,7 @@ export interface Alert {
   timestamp?: Date;
   metadata?: Record<string, unknown>;
   tags?: string[];
-  /** Urgency is explicit; severity alone never authorises a Telegram send. */
+  /** Explicit urgency and decision flags; severity alone never enables Telegram. */
   urgent?: boolean;
   requiresApproval?: boolean;
 }
@@ -301,6 +300,7 @@ export interface SlackConfig extends ChannelConfig {
   config: {
     webhookUrl?: string;
     botToken?: string;
+    approvalsWebhookUrl?: string;
     opsWebhookUrl?: string;
     channel?: string;
     username?: string;
@@ -413,11 +413,13 @@ function getSeverityEmoji(severity: AlertSeverity): string {
 
 async function sendConsoleAlert(alert: Alert): Promise<NotificationResult> {
   const emoji = getSeverityEmoji(alert.severity);
-  const logFn = alert.severity === AlertSeverity.CRITICAL || alert.severity === AlertSeverity.ERROR
-    ? logger.error
-    : alert.severity === AlertSeverity.WARNING
-      ? logger.warn
-      : logger.info;
+  const logFn =
+    alert.severity === AlertSeverity.CRITICAL ||
+    alert.severity === AlertSeverity.ERROR
+      ? logger.error
+      : alert.severity === AlertSeverity.WARNING
+        ? logger.warn
+        : logger.info;
 
   logFn(`${emoji} [ALERT] ${alert.title}`, {
     message: alert.message,
@@ -445,7 +447,7 @@ async function sendEmailAlert(
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -477,25 +479,40 @@ async function sendEmailAlert(
   }
 }
 
-const SLACK_APPROVALS_CHANNEL = 'C0C8GB2TBMW';
+export const SLACK_APPROVALS_CHANNEL = 'C0C8GB2TBMW';
 
-/** Escape Slack markup, including explicit user and broadcast mentions. */
-function slackText(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/@(here|channel|everyone)\b/gi, '@\u200b$1');
+function needsApproval(alert: Alert): boolean {
+  return (
+    alert.requiresApproval === true || alert.metadata?.requiresApproval === true
+  );
 }
 
-function slackConfigFromEnv(): SlackConfig['config'] {
+function isUrgentApproval(alert: Alert): boolean {
+  const urgent = alert.urgent === true || alert.metadata?.urgent === true;
+  return urgent && needsApproval(alert);
+}
+
+/** Alert content must never turn into a Slack notification mention. */
+export function neutraliseSlackMentions(value: string): string {
+  return value
+    .replace(/<[@!][^>]*>/g, '[mention]')
+    .replace(/@(here|channel|everyone)\b/gi, '$1')
+    .replace(/@U[A-Z0-9]+\b/g, '[user]')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function slackConfigFromEnv(
+  env: EnvReader = process.env
+): SlackConfig['config'] {
   return {
-    botToken: process.env.ALERT_SLACK_BOT_TOKEN,
-    webhookUrl: process.env.ALERT_SLACK_WEBHOOK_URL,
-    opsWebhookUrl: process.env.ALERT_SLACK_OPS_WEBHOOK_URL,
-    channel: process.env.ALERT_SLACK_OPS_CHANNEL || '#ops-alerts',
-    username: process.env.ALERT_SLACK_USERNAME || 'SYNTHEX Bot',
-    iconEmoji: process.env.ALERT_SLACK_ICON_EMOJI || ':robot_face:',
+    botToken: readEnvValue(env.ALERT_SLACK_BOT_TOKEN),
+    approvalsWebhookUrl: readEnvValue(env.ALERT_SLACK_APPROVALS_WEBHOOK_URL),
+    opsWebhookUrl: readEnvValue(env.ALERT_SLACK_OPS_WEBHOOK_URL),
+    webhookUrl: readEnvValue(env.ALERT_SLACK_WEBHOOK_URL),
+    username: env.ALERT_SLACK_USERNAME || 'SYNTHEX Bot',
+    iconEmoji: env.ALERT_SLACK_ICON_EMOJI || ':robot_face:',
   };
 }
 
@@ -505,22 +522,20 @@ async function sendSlackAlert(
 ): Promise<NotificationResult> {
   try {
     const { botToken, username, iconEmoji } = config;
-    const channel =
-      alert.requiresApproval === true
-        ? SLACK_APPROVALS_CHANNEL
-        : config.channel || '#ops-alerts';
-    // Incoming webhooks are bound to a channel and ignore payload overrides.
-    // Use a bot token for dynamic routing, or a separate ops webhook.
-    const webhookUrl =
-      alert.requiresApproval === true
-        ? config.webhookUrl
-        : config.opsWebhookUrl;
+    const approval = needsApproval(alert);
+    const channel = approval ? SLACK_APPROVALS_CHANNEL : '#ops-alerts';
+    // Incoming webhooks are channel-bound; never use an ops webhook for an ask.
+    const webhookUrl = approval
+      ? config.approvalsWebhookUrl
+      : config.opsWebhookUrl || config.webhookUrl;
     if (!botToken && !webhookUrl) {
-      throw new Error(`Slack delivery is not configured for ${channel}`);
+      throw new Error(
+        `Slack ${approval ? 'approvals' : 'ops-alerts'} destination is not configured`
+      );
     }
 
     const payload: SlackPayload = {
-      text: `${getSeverityEmoji(alert.severity)} *${slackText(alert.title)}*`,
+      text: `${getSeverityEmoji(alert.severity)} *${neutraliseSlackMentions(alert.title)}*`,
       link_names: false,
       parse: 'none',
       unfurl_links: false,
@@ -531,7 +546,7 @@ async function sendSlackAlert(
           fields: [
             {
               title: 'Message',
-              value: slackText(alert.message),
+              value: neutraliseSlackMentions(alert.message),
               short: false,
             },
             {
@@ -541,7 +556,7 @@ async function sendSlackAlert(
             },
             {
               title: 'Source',
-              value: slackText(alert.source),
+              value: neutraliseSlackMentions(alert.source),
               short: true,
             },
           ],
@@ -559,7 +574,7 @@ async function sendSlackAlert(
     if (alert.tags && alert.tags.length > 0) {
       payload.attachments[0].fields.push({
         title: 'Tags',
-        value: slackText(alert.tags.join(', ')),
+        value: neutraliseSlackMentions(alert.tags.join(', ')),
         short: true,
       });
     }
@@ -581,8 +596,11 @@ async function sendSlackAlert(
       throw new Error(`Slack API error: ${response.status}`);
     }
     if (botToken) {
-      const result = (await response.json()) as { ok: boolean; error?: string };
-      if (!result.ok)
+      const result = (await response.json()) as {
+        ok?: boolean;
+        error?: string;
+      };
+      if (result.ok !== true)
         throw new Error(`Slack API error: ${result.error || 'unknown'}`);
     }
 
@@ -614,7 +632,10 @@ async function sendDiscordAlert(
         {
           title: alert.title,
           description: alert.message,
-          color: parseInt(getSeverityColor(alert.severity).replace('#', ''), 16),
+          color: parseInt(
+            getSeverityColor(alert.severity).replace('#', ''),
+            16
+          ),
           fields: [
             {
               name: 'Severity',
@@ -769,11 +790,11 @@ async function sendTelegramAlert(
   alert: Alert,
   config: TelegramConfig['config']
 ): Promise<NotificationResult> {
-  if (alert.urgent !== true || alert.requiresApproval !== true) {
+  if (!isUrgentApproval(alert)) {
     return {
       channel: NotificationChannel.TELEGRAM,
       success: false,
-      error: 'Telegram is reserved for urgent approvals',
+      error: 'Telegram is reserved for explicitly urgent approvals',
       timestamp: new Date(),
     };
   }
@@ -933,12 +954,16 @@ function formatEmailHtml(alert: Alert): string {
         <div class="field-label">Time</div>
         <div class="field-value">${(alert.timestamp || new Date()).toISOString()}</div>
       </div>
-      ${alert.tags && alert.tags.length > 0 ? `
+      ${
+        alert.tags && alert.tags.length > 0
+          ? `
       <div class="field">
         <div class="field-label">Tags</div>
         <div class="tags">${alert.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
       </div>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
     <div class="footer">
       SYNTHEX Monitoring System
@@ -1004,11 +1029,17 @@ export class AlertManager {
     });
 
     // Email channel
-    if (process.env.ALERT_EMAIL_API_KEY && process.env.ALERT_EMAIL_FROM && process.env.ALERT_EMAIL_TO) {
+    if (
+      process.env.ALERT_EMAIL_API_KEY &&
+      process.env.ALERT_EMAIL_FROM &&
+      process.env.ALERT_EMAIL_TO
+    ) {
       this.channels.push({
         type: NotificationChannel.EMAIL,
         enabled: true,
-        minSeverity: (process.env.ALERT_EMAIL_MIN_SEVERITY as AlertSeverity) || AlertSeverity.ERROR,
+        minSeverity:
+          (process.env.ALERT_EMAIL_MIN_SEVERITY as AlertSeverity) ||
+          AlertSeverity.ERROR,
         config: {
           apiKey: process.env.ALERT_EMAIL_API_KEY,
           fromEmail: process.env.ALERT_EMAIL_FROM,
@@ -1018,28 +1049,23 @@ export class AlertManager {
       });
     }
 
-    // Slack channel
-    if (
-      process.env.ALERT_SLACK_BOT_TOKEN ||
-      process.env.ALERT_SLACK_WEBHOOK_URL ||
-      process.env.ALERT_SLACK_OPS_WEBHOOK_URL
-    ) {
-      this.channels.push({
-        type: NotificationChannel.SLACK,
-        enabled: true,
-        minSeverity:
-          (process.env.ALERT_SLACK_MIN_SEVERITY as AlertSeverity) ||
-          AlertSeverity.INFO,
-        config: slackConfigFromEnv(),
-      });
-    }
+    // All monitoring reaches ops-alerts; all human decisions reach approvals.
+    const slackConfig = slackConfigFromEnv();
+    this.channels.push({
+      type: NotificationChannel.SLACK,
+      enabled: true,
+      minSeverity: AlertSeverity.INFO,
+      config: slackConfig,
+    });
 
     // Discord channel
     if (process.env.ALERT_DISCORD_WEBHOOK_URL) {
       const discordConfig: DiscordConfig = {
         type: NotificationChannel.DISCORD,
         enabled: true,
-        minSeverity: (process.env.ALERT_DISCORD_MIN_SEVERITY as AlertSeverity) || AlertSeverity.WARNING,
+        minSeverity:
+          (process.env.ALERT_DISCORD_MIN_SEVERITY as AlertSeverity) ||
+          AlertSeverity.WARNING,
         config: {
           webhookUrl: process.env.ALERT_DISCORD_WEBHOOK_URL,
           username: process.env.ALERT_DISCORD_USERNAME || 'SYNTHEX Bot',
@@ -1056,7 +1082,9 @@ export class AlertManager {
       const webhookConfig: WebhookConfig = {
         type: NotificationChannel.WEBHOOK,
         enabled: true,
-        minSeverity: (process.env.ALERT_WEBHOOK_MIN_SEVERITY as AlertSeverity) || AlertSeverity.WARNING,
+        minSeverity:
+          (process.env.ALERT_WEBHOOK_MIN_SEVERITY as AlertSeverity) ||
+          AlertSeverity.WARNING,
         config: {
           url: process.env.ALERT_WEBHOOK_URL,
           method: process.env.ALERT_WEBHOOK_METHOD || 'POST',
@@ -1083,10 +1111,13 @@ export class AlertManager {
         config: telegramConfigResolution.config,
       });
     } else if (telegramConfigResolution.source) {
-      logger.warn('[HERMES] Telegram channel disabled due to invalid/missing config', {
-        source: telegramConfigResolution.source,
-        reason: telegramConfigResolution.reason,
-      });
+      logger.warn(
+        '[HERMES] Telegram channel disabled due to invalid/missing config',
+        {
+          source: telegramConfigResolution.source,
+          reason: telegramConfigResolution.reason,
+        }
+      );
     }
 
     // SYN-910 / HER-1b — Linear channel (uses LINEAR_API_KEY via lib/linear/client.ts).
@@ -1168,16 +1199,13 @@ export class AlertManager {
       if (!channel.enabled) continue;
       if (
         channel.type === NotificationChannel.TELEGRAM &&
-        (fullAlert.urgent !== true || fullAlert.requiresApproval !== true)
+        !isUrgentApproval(fullAlert)
       )
         continue;
-      // Human decisions must reach Slack even when their severity is INFO.
+      // Decisions and monitoring must reach Slack even below an old severity floor.
       if (
-        !(
-          (channel.type === NotificationChannel.SLACK ||
-            channel.type === NotificationChannel.TELEGRAM) &&
-          fullAlert.requiresApproval === true
-        ) &&
+        channel.type !== NotificationChannel.SLACK &&
+        channel.type !== NotificationChannel.TELEGRAM &&
         !severityMeetsMinimum(fullAlert.severity, channel.minSeverity)
       )
         continue;
@@ -1190,22 +1218,40 @@ export class AlertManager {
             result = await sendConsoleAlert(fullAlert);
             break;
           case NotificationChannel.EMAIL:
-            result = await sendEmailAlert(fullAlert, channel.config as EmailConfig['config']);
+            result = await sendEmailAlert(
+              fullAlert,
+              channel.config as EmailConfig['config']
+            );
             break;
           case NotificationChannel.SLACK:
-            result = await sendSlackAlert(fullAlert, channel.config as SlackConfig['config']);
+            result = await sendSlackAlert(
+              fullAlert,
+              channel.config as SlackConfig['config']
+            );
             break;
           case NotificationChannel.DISCORD:
-            result = await sendDiscordAlert(fullAlert, channel.config as DiscordConfig['config']);
+            result = await sendDiscordAlert(
+              fullAlert,
+              channel.config as DiscordConfig['config']
+            );
             break;
           case NotificationChannel.WEBHOOK:
-            result = await sendWebhookAlert(fullAlert, channel.config as WebhookConfig['config']);
+            result = await sendWebhookAlert(
+              fullAlert,
+              channel.config as WebhookConfig['config']
+            );
             break;
           case NotificationChannel.TELEGRAM:
-            result = await sendTelegramAlert(fullAlert, channel.config as TelegramConfig['config']);
+            result = await sendTelegramAlert(
+              fullAlert,
+              channel.config as TelegramConfig['config']
+            );
             break;
           case NotificationChannel.LINEAR:
-            result = await sendLinearAlert(fullAlert, channel.config as LinearConfig['config']);
+            result = await sendLinearAlert(
+              fullAlert,
+              channel.config as LinearConfig['config']
+            );
             break;
           default:
             continue;
@@ -1236,7 +1282,12 @@ export class AlertManager {
   /**
    * Send info alert
    */
-  async info(title: string, message: string, source: string, metadata?: Record<string, unknown>): Promise<void> {
+  async info(
+    title: string,
+    message: string,
+    source: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     await this.sendAlert({
       title,
       message,
@@ -1249,7 +1300,12 @@ export class AlertManager {
   /**
    * Send warning alert
    */
-  async warning(title: string, message: string, source: string, metadata?: Record<string, unknown>): Promise<void> {
+  async warning(
+    title: string,
+    message: string,
+    source: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     await this.sendAlert({
       title,
       message,
@@ -1262,7 +1318,12 @@ export class AlertManager {
   /**
    * Send error alert
    */
-  async error(title: string, message: string, source: string, metadata?: Record<string, unknown>): Promise<void> {
+  async error(
+    title: string,
+    message: string,
+    source: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     await this.sendAlert({
       title,
       message,
@@ -1275,7 +1336,12 @@ export class AlertManager {
   /**
    * Send critical alert
    */
-  async critical(title: string, message: string, source: string, metadata?: Record<string, unknown>): Promise<void> {
+  async critical(
+    title: string,
+    message: string,
+    source: string,
+    metadata?: Record<string, unknown>
+  ): Promise<void> {
     await this.sendAlert({
       title,
       message,
@@ -1299,7 +1365,8 @@ export class AlertManager {
     const testAlert: Alert = {
       id: generateAlertId(),
       title: 'Test Alert',
-      message: 'This is a test alert to verify the notification channel is working correctly.',
+      message:
+        'This is a test alert to verify the notification channel is working correctly.',
       severity: AlertSeverity.INFO,
       source: 'alert-manager-test',
       timestamp: new Date(),
@@ -1320,17 +1387,35 @@ export class AlertManager {
       case NotificationChannel.CONSOLE:
         return sendConsoleAlert(testAlert);
       case NotificationChannel.EMAIL:
-        return sendEmailAlert(testAlert, channel.config as EmailConfig['config']);
+        return sendEmailAlert(
+          testAlert,
+          channel.config as EmailConfig['config']
+        );
       case NotificationChannel.SLACK:
-        return sendSlackAlert(testAlert, channel.config as SlackConfig['config']);
+        return sendSlackAlert(
+          testAlert,
+          channel.config as SlackConfig['config']
+        );
       case NotificationChannel.DISCORD:
-        return sendDiscordAlert(testAlert, channel.config as DiscordConfig['config']);
+        return sendDiscordAlert(
+          testAlert,
+          channel.config as DiscordConfig['config']
+        );
       case NotificationChannel.WEBHOOK:
-        return sendWebhookAlert(testAlert, channel.config as WebhookConfig['config']);
+        return sendWebhookAlert(
+          testAlert,
+          channel.config as WebhookConfig['config']
+        );
       case NotificationChannel.TELEGRAM:
-        return sendTelegramAlert(testAlert, channel.config as TelegramConfig['config']);
+        return sendTelegramAlert(
+          testAlert,
+          channel.config as TelegramConfig['config']
+        );
       case NotificationChannel.LINEAR:
-        return sendLinearAlert(testAlert, channel.config as LinearConfig['config']);
+        return sendLinearAlert(
+          testAlert,
+          channel.config as LinearConfig['config']
+        );
       default:
         return {
           channel: type,
@@ -1390,24 +1475,22 @@ async function dispatchEscalation(
     message,
     severity,
     source: 'hermes',
+    timestamp: new Date(),
     urgent: priority === 'urgent',
     requiresApproval,
-    timestamp: new Date(),
   };
 
-  // Apply policy to primary AND fallback deliveries.
-  if (
-    channel === NotificationChannel.LINEAR ||
-    (channel === NotificationChannel.TELEGRAM &&
-      !(alert.urgent && requiresApproval))
-  ) {
-    channel = NotificationChannel.SLACK;
+  // Legacy Telegram callers include digests and monitoring. Reroute those too.
+  if (channel === NotificationChannel.TELEGRAM && !isUrgentApproval(alert)) {
+    return sendSlackAlert(alert, slackConfigFromEnv());
   }
   switch (channel) {
     case NotificationChannel.SLACK:
       return sendSlackAlert(alert, slackConfigFromEnv());
     case NotificationChannel.TELEGRAM: {
-      const telegramConfigResolution = resolveTelegramChannelConfig(process.env);
+      const telegramConfigResolution = resolveTelegramChannelConfig(
+        process.env
+      );
 
       if (!telegramConfigResolution.valid || !telegramConfigResolution.config) {
         return {
@@ -1421,6 +1504,18 @@ async function dispatchEscalation(
       }
 
       return sendTelegramAlert(alert, telegramConfigResolution.config);
+    }
+    case NotificationChannel.LINEAR: {
+      const teamId = process.env.HERMES_LINEAR_TEAM_ID;
+      if (!teamId) {
+        return {
+          channel,
+          success: false,
+          error: 'HERMES_LINEAR_TEAM_ID not configured',
+          timestamp: new Date(),
+        };
+      }
+      return sendLinearAlert(alert, { teamId });
     }
     case NotificationChannel.CONSOLE:
       return sendConsoleAlert(alert);
@@ -1440,76 +1535,82 @@ async function dispatchEscalation(
  * @example
  *   await sendEscalation({
  *     channel: NotificationChannel.TELEGRAM,
- *     message: 'Urgent approval needed: pause scheduled publishing',
+ *     message: 'RestoreAssist: 35% organic traffic drop on /water-damage',
  *     priority: 'urgent',
- *     requiresApproval: true,
- *     fallback: NotificationChannel.SLACK,
+ *     fallback: NotificationChannel.LINEAR,
  *   });
  */
 export async function sendEscalation(
   opts: SendEscalationOptions
 ): Promise<EscalationResult> {
-  const channel =
-    opts.channel === NotificationChannel.LINEAR ||
+  const primaryChannel =
+    opts.channel === NotificationChannel.CONSOLE ||
     (opts.channel === NotificationChannel.TELEGRAM &&
-      !(opts.priority === 'urgent' && opts.requiresApproval === true))
-      ? NotificationChannel.SLACK
-      : opts.channel;
+      opts.priority === 'urgent' &&
+      opts.requiresApproval)
+      ? opts.channel
+      : NotificationChannel.SLACK;
   // Dry-run short-circuit — used in local + staging to prevent real sends.
   if (process.env.HERMES_ESCALATION_DRY_RUN === 'true') {
     logger.info('[HERMES DRY RUN] sendEscalation', {
-      channel,
+      channel: primaryChannel,
       message: opts.message,
       priority: opts.priority,
       fallback: opts.fallback,
       context: opts.context,
     });
-    return { sent: true, channel };
+    return { sent: true, channel: primaryChannel };
   }
 
   // Defensive: do not throw under any circumstance.
   try {
-    if (channel === NotificationChannel.TELEGRAM) {
+    // Urgent approvals still appear in Slack; Telegram is the additional urgent path.
+    if (
+      opts.channel === NotificationChannel.TELEGRAM &&
+      opts.priority === 'urgent' &&
+      opts.requiresApproval === true
+    ) {
       const slack = await dispatchEscalation(
         NotificationChannel.SLACK,
         opts.message,
         opts.priority,
         true
       );
-      if (!slack.success)
-        logger.error('[HERMES] Slack approval delivery failed', {
+      if (!slack.success) {
+        logger.error('[HERMES] Urgent approval Slack delivery failed', {
           error: slack.error,
         });
+      }
     }
     const primary = await dispatchEscalation(
-      channel,
+      primaryChannel,
       opts.message,
       opts.priority,
       opts.requiresApproval
     );
     if (primary.success) {
-      return { sent: true, channel };
+      return { sent: true, channel: primary.channel };
     }
 
     // Primary failed. Attempt fallback as best-effort if provided.
-    if (opts.fallback && opts.fallback !== channel) {
+    if (opts.fallback && opts.fallback !== opts.channel) {
       logger.warn(
         '[HERMES] sendEscalation primary failed, attempting fallback',
         {
-          primary: channel,
+          primary: opts.channel,
           fallback: opts.fallback,
           primaryError: primary.error,
         }
       );
       const fallback = await dispatchEscalation(
         opts.fallback,
-        `[FALLBACK from ${channel}] ${opts.message}`,
+        `[FALLBACK from ${opts.channel}] ${opts.message}`,
         opts.priority,
         opts.requiresApproval
       );
       if (!fallback.success) {
         logger.error('[HERMES] sendEscalation fallback also failed', {
-          primary: channel,
+          primary: opts.channel,
           fallback: opts.fallback,
           primaryError: primary.error,
           fallbackError: fallback.error,
@@ -1518,15 +1619,16 @@ export async function sendEscalation(
     }
 
     // Return the PRIMARY result so the caller knows what their declared channel did.
-    return { sent: false, channel, error: primary.error };
+    return { sent: false, channel: primary.channel, error: primary.error };
   } catch (error) {
     // dispatchEscalation should never throw, but belt-and-braces.
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error';
     logger.error('[HERMES] sendEscalation threw unexpectedly', {
-      channel,
+      channel: opts.channel,
       error: errorMessage,
     });
-    return { sent: false, channel, error: errorMessage };
+    return { sent: false, channel: opts.channel, error: errorMessage };
   }
 }
 
