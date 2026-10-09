@@ -15,5 +15,17 @@
     "fullTypecheck": "passed",
     "offlineIntegrityAndMetadata": "8 faces passed",
     "realNextLocalFontLoader": "2 families, 8 emitted faces; network guard enabled"
+  },
+  "unitHarnessCorrection": {
+    "cause": "Route ownership test mocked next/font/google, so the new local loader could not render in Jest.",
+    "repair": "Mock next/font/local with its render-time shape; keep real ancestors and all route-ownership assertions.",
+    "localAssertionsPassed": 6,
+    "ciBeforeCorrection": {
+      "passedSuites": 820,
+      "failedSuites": 1,
+      "passedTests": 8695,
+      "failedTests": 1,
+      "failedSuite": "tests/unit/components/route-identity-ownership.test.tsx"
+    }
   }
 }
