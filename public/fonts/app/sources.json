@@ -1,0 +1,82 @@
+[
+  {
+    "path": "public/fonts/app/inter-latin-400-normal.woff2",
+    "family": "inter",
+    "weight": 400,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.3.0/files/inter-latin-400-normal.woff2",
+    "sha256": "8909904ab6c872eb994093482a88a28eca2cd95912d7b6fecd72103b0dc07edc",
+    "bytes": 23664,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/inter-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/inter-latin-500-normal.woff2",
+    "family": "inter",
+    "weight": 500,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.3.0/files/inter-latin-500-normal.woff2",
+    "sha256": "f3779f1efccc4bdcdf9c0a02ab95bf6bd092ed09c48c08cedc725889edd1d19f",
+    "bytes": 24272,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/inter-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/inter-latin-600-normal.woff2",
+    "family": "inter",
+    "weight": 600,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.3.0/files/inter-latin-600-normal.woff2",
+    "sha256": "f9a06e79cd3a2a20951c0f0e28f66dd0e6d3fda73911d640a2125c8fcb78f21a",
+    "bytes": 24452,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/inter-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/inter-latin-700-normal.woff2",
+    "family": "inter",
+    "weight": 700,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.3.0/files/inter-latin-700-normal.woff2",
+    "sha256": "6f56409fd3d64bb85f7d070bce20749db2d66b6d63cec586cc22d1c761be2491",
+    "bytes": 24356,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/inter-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/space-grotesk-latin-300-normal.woff2",
+    "family": "space-grotesk",
+    "weight": 300,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.3.0/files/space-grotesk-latin-300-normal.woff2",
+    "sha256": "a5de30e3b00eec05d96c3db37b9a90e36c6ed68f1bed5b38eb3e6871ff04a145",
+    "bytes": 12908,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/space-grotesk-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/space-grotesk-latin-400-normal.woff2",
+    "family": "space-grotesk",
+    "weight": 400,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.3.0/files/space-grotesk-latin-400-normal.woff2",
+    "sha256": "65fd17fcbd2e2f522940b5f67ead3d23329e02891aa5495e74d11a499c0b0673",
+    "bytes": 13388,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/space-grotesk-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/space-grotesk-latin-500-normal.woff2",
+    "family": "space-grotesk",
+    "weight": 500,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.3.0/files/space-grotesk-latin-500-normal.woff2",
+    "sha256": "1b1a8131d9edf975d9decee81e2f2bf504812f7a4f498e5500f28a613e22e64c",
+    "bytes": 13312,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/space-grotesk-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/space-grotesk-latin-600-normal.woff2",
+    "family": "space-grotesk",
+    "weight": 600,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.3.0/files/space-grotesk-latin-600-normal.woff2",
+    "sha256": "685bbbf69fa616df1ef81847c85fc76be097ddfb3468ff2257be54511ab3130f",
+    "bytes": 13284,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/space-grotesk-OFL.txt"
+  }
+]
