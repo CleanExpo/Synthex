@@ -1,0 +1,16 @@
+{
+  "cause": "PR #979 merged externally after final green verification; new main created a deployment-guard merge conflict.",
+  "mainHead": "0ef4437d0c978d846cbf878e194ab274125d3421",
+  "resolution": "Retain all three repair-branch deployment holds and add main:false so future merges of this configuration preserve the deployment hold. Merge the validated MCP and shared font repairs from main.",
+  "providerCalls": 0,
+  "spend": 0,
+  "deploysInitiated": 0,
+  "productionWrites": 0,
+  "externalMerge": {
+    "pr": 979,
+    "mergeHead": "0ef4437d0c978d846cbf878e194ab274125d3421",
+    "actor": "CleanExpo",
+    "deploymentRecords": [6970590633, 6970573950, 6970562358]
+  },
+  "externalDeploymentsObserved": 3
+}

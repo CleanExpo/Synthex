@@ -140,8 +140,12 @@ export function buildConnectionStatusManifest(
       'Hermes escalation',
       hasAny(env, ['ALERT_SLACK_BOT_TOKEN']) ||
         (hasAny(env, ['ALERT_SLACK_APPROVALS_WEBHOOK_URL']) &&
-          hasAny(env, ['ALERT_SLACK_OPS_WEBHOOK_URL', 'ALERT_SLACK_WEBHOOK_URL'])) ||
-        (hasAny(env, ['LINEAR_API_KEY']) && hasAny(env, ['HERMES_LINEAR_TEAM_ID'])),
+          hasAny(env, [
+            'ALERT_SLACK_OPS_WEBHOOK_URL',
+            'ALERT_SLACK_WEBHOOK_URL',
+          ])) ||
+        (hasAny(env, ['LINEAR_API_KEY']) &&
+          hasAny(env, ['HERMES_LINEAR_TEAM_ID'])),
       'Slack or Linear escalation routing is configured. Telegram is optional for urgent approvals.',
       'Routine escalation routing is missing.',
       'Configure Slack approvals and ops routing or a Linear team.'
@@ -202,8 +206,13 @@ export function buildConnectionStatusManifest(
       'monitoring',
       'Monitoring and alerts',
       hasAny(env, ['SENTRY_DSN', 'NEXT_PUBLIC_SENTRY_DSN']) ||
-        hasAny(env, ['ALERT_SLACK_BOT_TOKEN', 'ALERT_SLACK_WEBHOOK_URL',
-          'ALERT_SLACK_APPROVALS_WEBHOOK_URL', 'ALERT_SLACK_OPS_WEBHOOK_URL', 'LINEAR_API_KEY']),
+        hasAny(env, [
+          'ALERT_SLACK_BOT_TOKEN',
+          'ALERT_SLACK_WEBHOOK_URL',
+          'ALERT_SLACK_APPROVALS_WEBHOOK_URL',
+          'ALERT_SLACK_OPS_WEBHOOK_URL',
+          'LINEAR_API_KEY',
+        ]),
       'Monitoring or alert routing references are present.',
       'Monitoring and alert routing references are missing.',
       'Configure Sentry, Slack, or Linear alert routing.'

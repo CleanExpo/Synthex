@@ -45,7 +45,7 @@ removing the owner identity.
 
 Run `npm run lint`, `npm run type-check`, and `npm test -- --runInBand`.
 Focused tests are tests/unit/lib/notification-channels.test.ts and
-__tests__/api/connections-status.test.ts. All fetches in routing tests are mocked.
+**tests**/api/connections-status.test.ts. All fetches in routing tests are mocked.
 After configuration, verify a routine decision reaches only Slack approvals, a
 monitoring alert reaches only ops-alerts, and an urgent approval preserves the
 existing Telegram owner controls. Do not use a routine Telegram channel test to

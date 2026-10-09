@@ -430,7 +430,7 @@ async function processOrgWithQuestions(args: ProcessOrgQuestionsArgs): Promise<{
       // Surface author questions in Slack approvals without mentioning anyone.
       // Retain Linear as a best-effort fallback if Slack delivery fails.
       await sendEscalation({
-        channel: NotificationChannel.TELEGRAM,
+        channel: NotificationChannel.SLACK,
         message: formatAuthorQuestionsMessage(
           candidate.topic,
           dq.questions,
