@@ -38,7 +38,11 @@
  * Linear: SYN-898 (parent: SYN-806)
  */
 
-import { brands, type BrandConfig, type BrandSlug } from '@unite-group/brand-config';
+import {
+  brands,
+  type BrandConfig,
+  type BrandSlug,
+} from '@unite-group/brand-config';
 
 import { BRAND_CONTENT, type BrandContent } from './brand-content';
 
@@ -48,14 +52,24 @@ import { BRAND_CONTENT, type BrandContent } from './brand-content';
 // new BrandContent entry without an entry here means `getBrandConfig()` will
 // return undefined for it.
 
-export const BRAND_SLUG_MAP: Readonly<Record<string, BrandSlug>> = Object.freeze({
-  'disaster-recovery': 'dr',
-  carsi: 'carsi',
-  nrpg: 'nrpg',
-  synthex: 'synthex',
-  'restore-assist': 'ra',
-  'unite-group': 'unite',
-});
+export const BRAND_SLUG_MAP: Readonly<Record<string, BrandSlug>> =
+  Object.freeze({
+    'disaster-recovery': 'dr',
+    carsi: 'carsi',
+    nrpg: 'nrpg',
+    synthex: 'synthex',
+    'restore-assist': 'ra',
+    'unite-group': 'unite',
+  });
+
+/** Canonical identities include brands without publishing copy. */
+export const BRAND_IDENTITY_SLUG_MAP: Readonly<Record<string, BrandSlug>> =
+  Object.freeze({
+    ...BRAND_SLUG_MAP,
+    ...Object.fromEntries(
+      Object.keys(brands).map(slug => [slug, slug as BrandSlug])
+    ),
+  });
 
 // ── Forward lookup: BrandContent.id → BrandConfig ──────────────────────────
 
@@ -68,8 +82,10 @@ export const BRAND_SLUG_MAP: Readonly<Record<string, BrandSlug>> = Object.freeze
  *   getBrandConfig('disaster-recovery')?.voice.tone
  *   // → ['authoritative', 'urgent']  (once the dr stub is filled in)
  */
-export function getBrandConfig(brandContentId: string): BrandConfig | undefined {
-  const slug = BRAND_SLUG_MAP[brandContentId];
+export function getBrandConfig(
+  brandContentId: string
+): BrandConfig | undefined {
+  const slug = BRAND_IDENTITY_SLUG_MAP[brandContentId];
   if (!slug) return undefined;
   return brands[slug];
 }
@@ -82,7 +98,7 @@ export function getBrandConfig(brandContentId: string): BrandConfig | undefined 
  * the slug for routing / file paths but not the full config.
  */
 export function getBrandSlug(brandContentId: string): BrandSlug | undefined {
-  return BRAND_SLUG_MAP[brandContentId];
+  return BRAND_IDENTITY_SLUG_MAP[brandContentId];
 }
 
 // ── Reverse lookup: BrandSlug → BrandContent ───────────────────────────────

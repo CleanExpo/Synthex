@@ -34,12 +34,12 @@ export const synthex = {
     body: {
       family: 'Inter',
       weight: 400,
-      src: 'fonts/synthex/Inter-Regular.woff2',
+      src: 'fonts/ra/Inter-Regular.woff2',
     },
     mono: {
       family: 'JetBrains Mono',
       weight: 500,
-      src: 'fonts/synthex/JetBrainsMono-Medium.woff2',
+      src: 'fonts/ra/JetBrainsMono-Medium.woff2',
     },
   },
   logo: {

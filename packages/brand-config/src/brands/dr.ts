@@ -1,9 +1,7 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// [divergence-noted-2026-05-05 · colour.primary] lib/remotion/brand-content.ts uses `#DC2626` (red-600) as the
-// production DR brand colour. That conflicts with this file's `doNot` rule "never use red as a primary brand
-// colour". SYN-901 leaves the navy primary in place; reconciling the two requires a CEO decision (either drop
-// the doNot rule or change the production colour) — separate ticket when raised.
+// Remotion brand-content uses this navy primary (SYN-1113); the doNot rule
+// prohibits primary red. Semantic danger red remains available for warnings.
 export const dr = {
   slug: 'dr',
   legalName: 'Disaster Recovery Pty Ltd',
@@ -23,8 +21,12 @@ export const dr = {
     family: 'safety',
   },
   typography: {
-    display: { family: 'Inter', weight: 800, src: 'fonts/dr/Inter-ExtraBold.woff2' },
-    body: { family: 'Inter', weight: 400, src: 'fonts/dr/Inter-Regular.woff2' },
+    display: {
+      family: 'Inter',
+      weight: 800,
+      src: 'fonts/ra/Inter-ExtraBold.woff2',
+    },
+    body: { family: 'Inter', weight: 400, src: 'fonts/ra/Inter-Regular.woff2' },
   },
   logo: {
     primary: 'logos/dr/primary.svg',

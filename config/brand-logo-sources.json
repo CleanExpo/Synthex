@@ -1,0 +1,191 @@
+[
+  {
+    "slug": "ra",
+    "label": "RestoreAssist",
+    "primary": {
+      "path": "public/logos/ra/source-original.png",
+      "url": "https://restoreassist.app/logo.png",
+      "sha256": "63ac9a49ecb5765444b5be4d95a4083916f98c97c758809c92b2745158dfc6fb",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/ra/source-vector.svg",
+      "vectorSha256": "9dde0189f11c9b392ca3f842bb5585b0e2d3369fe75503636b3c0ac3ed40d7ff",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    },
+    "icon": {
+      "path": "public/logos/ra/source-original-icon.png",
+      "url": "https://restoreassist.app/logo.png",
+      "sha256": "63ac9a49ecb5765444b5be4d95a4083916f98c97c758809c92b2745158dfc6fb",
+      "method": "Official house/lens mark cropped from the primary logo; light paper matte removed, preserving existing linework.",
+      "vectorPath": "public/logos/ra/source-vector-icon.svg",
+      "vectorSha256": "0a9e48419ef55e6d40295c897b9b13f3606f4842644123f5100c53eddf19ad37",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained",
+      "extract": {
+        "left": 315,
+        "top": 240,
+        "width": 300,
+        "height": 300
+      },
+      "removeWhitePaper": 225
+    }
+  },
+  {
+    "slug": "dr",
+    "label": "Disaster Recovery",
+    "primary": {
+      "path": "public/logos/dr/source-original.svg",
+      "url": "https://www.disasterrecovery.com.au/",
+      "sha256": "92ae80addad3437ab1f499625ad96923dbd220cc62aaad6d081ccb1e28541024",
+      "method": "Inline current header SVG extracted from public HTML; website CSS variables resolved. Icon uses the same mark."
+    },
+    "icon": {
+      "path": "public/logos/dr/source-original-icon.svg",
+      "url": "https://www.disasterrecovery.com.au/",
+      "sha256": "81bf46085ba4f06c038241f87fa5e22e622979431a2214e7446b808695661b5d",
+      "method": "Existing waveform and node extracted from the official header SVG; no new initials or mark invented."
+    }
+  },
+  {
+    "slug": "nrpg",
+    "label": "NRPG",
+    "primary": {
+      "path": "public/logos/nrpg/source-original.png",
+      "url": "https://github.com/CleanExpo/DR-NRPG/blob/fc7ecd47fd03481a31947aa9d5f0e3662907bf24/apps/web/public/images/brand/nrpg-logo-full.png",
+      "sha256": "0dff636d5f96c15acac66aa7a2f0a73ed837f1ce101126d402de77d593b63399",
+      "method": "NRPG shield with four-letter NRPG and full Group name, recovered from first-party DR-NRPG repository; public shared-site legacy NRP file rejected. Original retained; SVG is a traced derivative.",
+      "vectorPath": "public/logos/nrpg/source-vector.svg",
+      "vectorSha256": "4e3e0a5c9c5c2dbc4ded459f8926517cbddcff74db0268b931295b6798def4fd",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained",
+      "sourceRepositoryPath": "/Users/phill-mac/pi-seo-workspace/DR-NRPG/apps/web/public/images/brand/nrpg-logo-full.png",
+      "publicAssetProbe": {
+        "url": "https://www.disasterrecovery.com.au/images/brand/nrpg-logo-full.png",
+        "httpStatus": 404
+      }
+    },
+    "icon": {
+      "path": "public/logos/nrpg/source-original-icon.png",
+      "url": "https://github.com/CleanExpo/DR-NRPG/blob/fc7ecd47fd03481a31947aa9d5f0e3662907bf24/apps/web/public/images/brand/nrpg-logo-full.png",
+      "sha256": "0dff636d5f96c15acac66aa7a2f0a73ed837f1ce101126d402de77d593b63399",
+      "method": "NRPG shield with four-letter NRPG and full Group name, recovered from first-party DR-NRPG repository; public shared-site legacy NRP file rejected. Original retained; SVG is a traced derivative.",
+      "vectorPath": "public/logos/nrpg/source-vector-icon.svg",
+      "vectorSha256": "4e3e0a5c9c5c2dbc4ded459f8926517cbddcff74db0268b931295b6798def4fd",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained",
+      "sourceRepositoryPath": "/Users/phill-mac/pi-seo-workspace/DR-NRPG/apps/web/public/images/brand/nrpg-logo-full.png",
+      "publicAssetProbe": {
+        "url": "https://www.disasterrecovery.com.au/images/brand/nrpg-logo-full.png",
+        "httpStatus": 404
+      }
+    }
+  },
+  {
+    "slug": "carsi",
+    "label": "CARSI",
+    "primary": {
+      "path": "public/logos/carsi/source-original.png",
+      "url": "https://carsi.com.au/logo/logo1.png",
+      "sha256": "d97be09255015fbe130139652d24f68d8badcae2d40d58f6a15ea2b94407fa4b",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/carsi/source-vector.svg",
+      "vectorSha256": "7891639c8a85a0cc64a34b760b0d3fb8ff06a3b6dbdd4cfb574d225c6a4225f2",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    },
+    "icon": {
+      "path": "public/logos/carsi/source-original-icon.png",
+      "url": "https://carsi.com.au/logo/favicon.png",
+      "sha256": "4fcc0701d86a4c0f812455e7ed798e0eb4c84ce8d3fb83f303d7c40cf6d71bf8",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/carsi/source-vector-icon.svg",
+      "vectorSha256": "804ce691aa932fcead5ebd0e91ba3abd67dce4b323cf258c7582f0e53c7c7fc0",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    }
+  },
+  {
+    "slug": "synthex",
+    "label": "Synthex",
+    "primary": {
+      "path": "public/logos/synthex/source-original.svg",
+      "url": "https://synthex.social/",
+      "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+      "method": "Inline current header SVG extracted from public HTML; website CSS variables resolved. Icon uses the same mark."
+    },
+    "icon": {
+      "path": "public/logos/synthex/source-original-icon.svg",
+      "url": "https://synthex.social/",
+      "sha256": "3adfc34ccacf56aba910dfbb2cbfdb4ff422f48d7fd017356e71c66f974c0438",
+      "method": "Inline current header SVG extracted from public HTML; website CSS variables resolved. Icon uses the same mark."
+    }
+  },
+  {
+    "slug": "unite",
+    "label": "Unite-Group Nexus",
+    "primary": {
+      "path": "public/logos/unite/source-original.png",
+      "url": "https://unite-group.in/logos/unite-group-nexus-logo.png",
+      "sha256": "f73cd4c57a89aac1c39ba95b638a94022b68cf9e17dceed6c97452a744adeac7",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "unmatteBlack": true,
+      "vectorPath": "public/logos/unite/source-vector.svg",
+      "vectorSha256": "70cd981fae82ba40f59d0f980416d5648b246b6d3beb38a6e8eebac55e412870",
+      "traceTool": "Local geometric SVG redraw from the official square network mark; photographic glow removed. Primary lettering uses original-image traced outlines. This is a derivative reconstruction, not an original vector supplied by the business. Wordmark contours use the original bright-ink mask (160/255) to exclude glow."
+    },
+    "icon": {
+      "path": "public/logos/unite/source-original-icon.png",
+      "url": "https://unite-group.in/logos/unite-group-nexus-logo.png",
+      "sha256": "f73cd4c57a89aac1c39ba95b638a94022b68cf9e17dceed6c97452a744adeac7",
+      "method": "Network mark cropped from the official parent logo; original retained.",
+      "unmatteBlack": true,
+      "extract": {
+        "left": 340,
+        "top": 245,
+        "width": 345,
+        "height": 345
+      },
+      "vectorPath": "public/logos/unite/source-vector-icon.svg",
+      "vectorSha256": "fd48d401d55fcddf3076e3152d695347d00cf91eebe06aa667d8901a74c327eb",
+      "traceTool": "Local geometric SVG redraw from the official square network mark; photographic glow removed. Primary lettering uses original-image traced outlines. This is a derivative reconstruction, not an original vector supplied by the business."
+    }
+  },
+  {
+    "slug": "ccw",
+    "label": "Carpet Cleaners Warehouse",
+    "primary": {
+      "path": "public/logos/ccw/source-original.png",
+      "url": "https://ccwonline.com.au/cdn/shop/files/website_logo.png?v=1780628157",
+      "sha256": "5222ce75dd73e8b1b830500123347e411eb9a81f871add3182e05e37d73c9e5b",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/ccw/source-vector.svg",
+      "vectorSha256": "441b9c266ad4fe24c56326767435b0854086361d1539615bbce249e66f2302af",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    },
+    "icon": {
+      "path": "public/logos/ccw/source-original-icon.png",
+      "url": "https://ccwonline.com.au/cdn/shop/files/CCW_Logo_2017_png_sqr_tbg.png?v=1613771142",
+      "sha256": "2899a3f47ff294b75f86509bf8293f3fef3a6e3dd6ffca192cdb919d7916db69",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/ccw/source-vector-icon.svg",
+      "vectorSha256": "66bb4d62fcbae66b20769238b15d028ee623f72915b1d74ab214f305c97e267d",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    }
+  },
+  {
+    "slug": "john-coutis",
+    "label": "John Coutis",
+    "primary": {
+      "path": "public/logos/john-coutis/source-original.png",
+      "url": "https://www.johncoutis.com/wp-content/uploads/2024/02/JOHN-COUTIS-2.png",
+      "sha256": "7946b32480038c094db2898ddced2edcf882d35bfdbe23b8b875d888e0931814",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/john-coutis/source-vector.svg",
+      "vectorSha256": "fe6b6a2942c3c8b7cf2702d69727fbd5961af0386c9d457cb5b40fb246aadad9",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    },
+    "icon": {
+      "path": "public/logos/john-coutis/source-original-icon.png",
+      "url": "https://www.johncoutis.com/wp-content/uploads/2024/02/character-logo-transparent-john-coutis-2.png",
+      "sha256": "2004743aa0cae7ef67d2874574a68ac77bdc9b3223fd2fdcff3e553c51974fe6",
+      "method": "Exact public source bytes retained; raster-derived SVG uses deterministic vector paths.",
+      "vectorPath": "public/logos/john-coutis/source-vector-icon.svg",
+      "vectorSha256": "c55ea9e03ad034be5406f82095d528375d6a80a4154463fdd33c342bb895fb98",
+      "traceTool": "vtracer 0.6.12 on Python 3.12; colour spline trace (5 bits/channel, layer 16, speckle 4, path precision 2); original bitmap retained"
+    }
+  }
+]

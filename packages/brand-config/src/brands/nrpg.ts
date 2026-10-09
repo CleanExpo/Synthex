@@ -13,7 +13,7 @@ export const nrpg = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#059669',     // emerald-600 — canonical NRPG brand colour
+    primary: '#059669', // emerald-600 — canonical NRPG brand colour
     secondary: '#2A3D5F',
     accent: '#F2B33D',
     neutral: { 50: '#FAF8F2', 100: '#EDE7D6', 500: '#7A7468', 900: '#0F1626' },
@@ -21,8 +21,12 @@ export const nrpg = {
     family: 'safety',
   },
   typography: {
-    display: { family: 'Inter', weight: 800, src: 'fonts/nrpg/Inter-ExtraBold.woff2' },
-    body: { family: 'Inter', weight: 400, src: 'fonts/nrpg/Inter-Regular.woff2' },
+    display: {
+      family: 'Inter',
+      weight: 800,
+      src: 'fonts/ra/Inter-ExtraBold.woff2',
+    },
+    body: { family: 'Inter', weight: 400, src: 'fonts/ra/Inter-Regular.woff2' },
   },
   logo: {
     primary: 'logos/nrpg/primary.svg',
@@ -45,7 +49,11 @@ export const nrpg = {
     style: 'narration',
     locale: 'en-AU',
   },
-  doNot: ['never present NRPG as a regulatory body — it is an industry standard'],
-  audience: { primary: 'industry training coordinators and response-network operators' },
+  doNot: [
+    'never present NRPG as a regulatory body — it is an industry standard',
+  ],
+  audience: {
+    primary: 'industry training coordinators and response-network operators',
+  },
   defaultChannel: 'linkedin',
 } as const satisfies BrandConfig;

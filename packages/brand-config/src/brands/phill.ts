@@ -9,7 +9,7 @@ import type { BrandConfig, BrandConfigWithPilot, TenantConfig } from '../types';
 import { FORBIDDEN_PRONOUNS } from '../types';
 
 export const phillBrand: BrandConfig = {
-  slug: 'unite',  // closest portfolio brand — phill operates under Unite Group
+  slug: 'unite', // closest portfolio brand — phill operates under Unite Group
   legalName: 'Phill McGurk',
   displayName: 'Phill',
   tagline: 'Autonomous CEO operations.',
@@ -27,8 +27,12 @@ export const phillBrand: BrandConfig = {
     family: 'industrial',
   },
   typography: {
-    display: { family: 'Inter', weight: 700, src: 'fonts/unite/Inter-Bold.woff2' },
-    body: { family: 'Inter', weight: 400, src: 'fonts/unite/Inter-Regular.woff2' },
+    display: {
+      family: 'Inter',
+      weight: 700,
+      src: 'fonts/unite/Inter-Bold.woff2',
+    },
+    body: { family: 'Inter', weight: 400, src: 'fonts/ra/Inter-Regular.woff2' },
   },
   logo: {
     primary: 'logos/unite/primary.svg',

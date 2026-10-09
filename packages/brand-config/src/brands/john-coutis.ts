@@ -71,13 +71,13 @@ export const johnCoutis = {
     // The full type scale (display-xl down to caption) lives in john-coutis.design.md.
     display: {
       family: 'Bebas Neue',
-      weight: 700,
-      src: 'fonts/john-coutis/BebasNeue-Bold.woff2',
+      weight: 400,
+      src: 'fonts/john-coutis/BebasNeue-Regular.woff2',
     },
     body: {
       family: 'Inter',
       weight: 400,
-      src: 'fonts/john-coutis/Inter-Regular.woff2',
+      src: 'fonts/ra/Inter-Regular.woff2',
     },
   },
   logo: {

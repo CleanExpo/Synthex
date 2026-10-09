@@ -203,7 +203,7 @@ supabase/.temp/
 *-current.png
 *-updated.png
 
-Synthex/
+/Synthex/
 *.py
 !scripts/**/*.py
 !.claude/**/*.py

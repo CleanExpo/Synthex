@@ -114,7 +114,7 @@ export const BRAND_CONTENT: BrandContent[] = [
     brandName: 'Disaster Recovery',
     tagline: '24/7 Emergency Restoration. When Disaster Strikes, We Respond.',
     industry: 'Emergency Restoration Services',
-    brandColour: '#DC2626', // red-600
+    brandColour: '#0B2545', // canonical DR primary; brand-config prohibits primary red
     websiteUrl: 'disasterrecovery.com.au',
     valueProps: [
       'Rapid 24/7 Emergency Response',
@@ -128,7 +128,7 @@ export const BRAND_CONTENT: BrandContent[] = [
       'When flood, fire, or storm damage hits, every hour of delay costs thousands',
     solution:
       'Disaster Recovery provides immediate 24/7 response with IICRC-certified technicians and direct insurance liaison',
-    logoUrl: '/brands/disaster-recovery/logo.jpg',
+    logoUrl: '/logos/dr/primary.svg',
     ctaText: 'Call Now — 24/7 Response',
     youtubeDescription: `Disaster Recovery — Australia's trusted emergency restoration service. When flood, fire, storm, or mould damage strikes your property, our IICRC-certified technicians respond 24/7 to minimise damage and restore your home or business.
 
@@ -195,6 +195,7 @@ Our IICRC-certified technicians handle everything, including direct insurance li
     industry: 'Cleaning & Restoration Science Institute',
     brandColour: '#2563EB', // blue-600
     websiteUrl: 'carsi.com.au',
+    logoUrl: '/logos/carsi/primary.svg',
     valueProps: [
       '40+ Years of Restoration Science Expertise',
       'IICRC-Aligned Standards & Certification',
@@ -273,7 +274,8 @@ Whether you're seeking certification or looking to elevate your team's capabilit
     tagline: "Australia's Restoration Professionals Network",
     industry: 'National Restoration Professional Group',
     brandColour: '#059669', // emerald-600
-    websiteUrl: 'nrpg.com.au',
+    websiteUrl: 'disasterrecovery.com.au',
+    logoUrl: '/logos/nrpg/primary.svg',
     valueProps: [
       'National Network of Certified Restoration Professionals',
       'Industry Standards & Best Practice Advocacy',
@@ -349,6 +351,7 @@ Join the national network building a stronger restoration industry.
     industry: 'Marketing Technology',
     brandColour: '#FF6B35', // candy orange
     websiteUrl: 'synthex.social',
+    logoUrl: '/logos/synthex/primary.svg',
     valueProps: [
       'AI Content Generation Across 9 Platforms',
       'Automated Multi-Platform Publishing',
@@ -430,6 +433,7 @@ Built for businesses and agencies ready to scale their social presence intellige
     industry: 'Restoration Technology',
     brandColour: '#1C2E47', // navy — RA Wave 1 launch codify, CLAUDE.md rule 17
     websiteUrl: 'restoreassist.app',
+    logoUrl: '/logos/ra/primary.svg',
     valueProps: [
       'AI-Powered Job Estimation & Scoping',
       'Automated Documentation & Compliance',
@@ -497,6 +501,7 @@ Purpose-built for the restoration industry. Less paperwork, more restoration.
     industry: 'Technology Holdings',
     brandColour: '#E55A2B', // candy orange dark
     websiteUrl: 'unite-group.in',
+    logoUrl: '/logos/unite/primary.svg',
     valueProps: [
       'Innovation Portfolio Across Multiple Industries',
       '100% Australian-Owned Technology Company',
