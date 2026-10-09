@@ -297,5 +297,10 @@
       "path": "/api/cron/agency-hypercare-daily",
       "schedule": "0 6 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "codex/syn-1113-finalized": false
+    }
+  }
 }
