@@ -40,7 +40,7 @@
  *   (image generation env — STABILITY_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY /
  *   fal keys — is owned by lib/services/ai/image-generation.ts, not this worker)
  * Optional env:
- *   ELEVENLABS_VOICE_ID          — voice (falls back to Rachel default)
+ *   ELEVENLABS_VOICE_ID          — voice (required with the key; no default voice)
  */
 
 import * as fs from 'fs';
@@ -58,6 +58,7 @@ import {
   type GenerationContext,
 } from '@/lib/ai/generation-context';
 import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
+import { resolveElevenLabsVoiceId } from './lib/elevenlabs-voice';
 import {
   toBeats,
   claimJob,
@@ -76,10 +77,8 @@ dotenv.config({ path: path.join(ROOT_DIR, '.env') });
 const WORK_DIR = path.join(ROOT_DIR, 'tmp', 'brand-video');
 
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
-const ELEVEN_VOICE_ID =
-  process.env.ELEVENLABS_VOICE_ID ??
-  process.env.ELEVENLABS_VIOCE_ID ?? // typo variant used elsewhere in repo
-  '21m00Tcm4TlvDq8ikWAM'; // Rachel default
+// Fails closed: throws at startup when the key is set but no voice id is.
+const ELEVEN_VOICE_ID = ELEVEN_API_KEY ? resolveElevenLabsVoiceId() : undefined;
 
 const BRAND_VIDEO_BUCKET = process.env.BRAND_VIDEO_BUCKET || 'brand-videos';
 

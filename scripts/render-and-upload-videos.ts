@@ -19,8 +19,7 @@
  *
  * Environment variables:
  *   ELEVENLABS_API_KEY     — ElevenLabs API key (optional — voiceover skipped if absent)
- *   ELEVENLABS_VOICE_ID    — ElevenLabs voice ID (falls back to Rachel default)
- *   ELEVENLABS_VIOCE_ID    — Typo variant also supported
+ *   ELEVENLABS_VOICE_ID    — ElevenLabs voice ID (required with the key; no default voice)
  *   YOUTUBE_CLIENT_ID      — YouTube OAuth client ID
  *   YOUTUBE_CLIENT_SECRET  — YouTube OAuth client secret
  *   YOUTUBE_REFRESH_TOKEN  — YouTube OAuth refresh token
@@ -42,6 +41,7 @@ import {
   YouTubeUploader,
   YOUTUBE_CATEGORIES,
 } from '../lib/video/youtube-uploader';
+import { resolveElevenLabsVoiceId } from './lib/elevenlabs-voice';
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -60,11 +60,8 @@ const VIDEO_IDS_PATH = path.join(__dirname, 'video-ids.json');
 // ── ElevenLabs config ─────────────────────────────────────────────────────────
 
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
-// Support the VIOCE_ID typo variant present in the existing audio script
-const ELEVEN_VOICE_ID =
-  process.env.ELEVENLABS_VIOCE_ID ??
-  process.env.ELEVENLABS_VOICE_ID ??
-  '21m00Tcm4TlvDq8ikWAM'; // Rachel (default)
+// Fails closed: throws at startup when the key is set but no voice id is.
+const ELEVEN_VOICE_ID = ELEVEN_API_KEY ? resolveElevenLabsVoiceId() : undefined;
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -359,7 +356,7 @@ async function main(): Promise<void> {
   log(
     `Mode:     ${[dryRun && 'DRY RUN', force && 'FORCE'].filter(Boolean).join(', ') || 'INCREMENTAL'}`
   );
-  log(`Voice ID: ${ELEVEN_VOICE_ID}`);
+  log(`Voice ID: ${ELEVEN_VOICE_ID ?? 'none (no API key)'}`);
   log(
     `ElevenLabs: ${ELEVEN_API_KEY ? 'configured' : 'NOT CONFIGURED (renders without audio)'}`
   );

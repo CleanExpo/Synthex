@@ -92,7 +92,7 @@ in `--loop` mode to drain the queue.
 | `ELEVENLABS_API_KEY`                           | yes (worker) | Voiceover — job fails without it         |
 | `GEMINI_API_KEY`                               | yes (worker) | Per-beat images (default Gemini adapter) |
 | `BRAND_VIDEO_BUCKET`                           | yes (worker) | Storage bucket for finished mp4s         |
-| `ELEVENLABS_VOICE_ID`                          | recommended  | Voice (falls back to Rachel)             |
+| `ELEVENLABS_VOICE_ID`                          | yes (worker) | Voice id — no default; worker refuses    |
 | `IMAGE_API_URL` + `IMAGE_API_KEY`              | optional     | Override the Gemini image adapter        |
 
 ## Migration
