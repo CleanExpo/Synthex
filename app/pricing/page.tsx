@@ -19,14 +19,12 @@ import {
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
 import { RouteIdentity } from '@/components/system/RouteIdentity';
-import { generateMetadata } from '@/lib/seo/metadata';
 
-export const metadata: Metadata = generateMetadata({
-  title: 'Pilot Access',
+export const metadata: Metadata = {
+  title: 'Pilot Access | Synthex',
   description:
     'Synthex pilot access for evidence-backed marketing command workflows, campaign planning, Gen Media and approval-gated execution.',
-  path: '/pricing',
-});
+};
 
 const faqs = [
   {

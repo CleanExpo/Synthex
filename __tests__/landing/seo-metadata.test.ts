@@ -26,10 +26,10 @@ function absoluteTitle(metadata: Metadata): string | undefined {
 describe('generateMetadata()', () => {
   it('canonicalises a page to its own path', () => {
     const metadata = generateMetadata({
-      title: 'Pilot Access',
-      path: '/pricing',
+      title: 'Platform',
+      path: '/features',
     });
-    expect(metadata.alternates?.canonical).toBe(`${BASE_URL}/pricing`);
+    expect(metadata.alternates?.canonical).toBe(`${BASE_URL}/features`);
   });
 
   it('brands a title once and keeps the layout template off it', () => {
@@ -57,7 +57,6 @@ describe('root layout', () => {
 });
 
 describe.each([
-  ['app/pricing/page.tsx', '/pricing'],
   ['app/features/page.tsx', '/features'],
   ['app/(marketing)/waitlist/layout.tsx', '/waitlist'],
   ['app/compare/page.tsx', '/compare'],
