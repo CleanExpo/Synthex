@@ -112,10 +112,15 @@ describe('public copy — inventory', () => {
     expect(inventory.map(rel)).toContain(file);
   });
 
-  it('excludes API routes and auth-protected areas', () => {
-    const stray = inventory
+  // Seeds are routes the proxy serves without auth. Files they import are
+  // public by reach even when they live under app/dashboard (e.g. the
+  // /vision-board-preview panels), so the closure is not filtered.
+  it('seeds no API route or auth-protected route', () => {
+    const stray = publicAppFiles()
       .map(rel)
-      .filter(f => /^app\/(api|dashboard|onboarding|admin)\//.test(f));
+      .filter(f =>
+        /^app\/(\([^/]+\)\/)*(api|dashboard|onboarding|admin)\//.test(f)
+      );
     expect(stray).toEqual([]);
   });
 });

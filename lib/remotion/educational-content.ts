@@ -510,7 +510,7 @@ Start free: https://synthex.social
       'Three CTA formulas that drive action. ' +
       'One: benefit-plus-command — "save ten hours a week: start your free trial." ' +
       'Two: curiosity — "want to know the one thing top brands do differently? Click the link." ' +
-      'Three: social proof — "join 5,000 businesses already using Synthex." ' +
+      'Three: social proof — "join the businesses already using Synthex." ' +
       'Always end your post with a clear next step.',
     durationInFrames: 450,
     fps: 30,
@@ -2422,7 +2422,7 @@ Book now: https://synthex.social
 
   {
     id: 'cta-join-community',
-    title: 'Join 5,000+ Business Owners Using Synthex | Community',
+    title: 'Join the Synthex Community',
     description: `You're not alone in figuring out AI marketing. Join the Synthex community.
 
 Join free: https://synthex.social
@@ -2437,9 +2437,9 @@ Join free: https://synthex.social
     ],
     compositionId: 'CountdownCTA',
     voiceoverScript:
-      'Five thousand business owners are already using Synthex to automate their social media marketing. ' +
-      'They are saving hours every week, growing their audiences, and generating real business results. ' +
-      'Join them today — it takes sixty seconds to get started. ' +
+      'Synthex helps business owners plan, approve and publish their social media marketing in one place. ' +
+      'You approve every post before it goes live. ' +
+      'Get started today. ' +
       'Visit synthex dot social.',
     durationInFrames: 450,
     fps: 30,
