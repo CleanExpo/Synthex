@@ -210,8 +210,6 @@ export function generateProductMetadata(
 export const PAGE_METADATA = {
   home: generateMetadata({
     title: 'Synthex - AI-Powered Marketing Agency',
-    description:
-      "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimize engagement 24/7.",
     path: '/',
     keywords: [
       'AI marketing agency',

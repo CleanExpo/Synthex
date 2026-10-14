@@ -24,8 +24,8 @@ const PAIN_POINTS = [
   {
     icon: '⏱️',
     title: 'Manual posting is stealing your time',
-    body: "The average SMB spends 10+ hours per week on social media. That's a part-time employee you're already paying for — just with your own time.",
-    stat: '10+ hrs/week wasted',
+    body: 'Writing, formatting and scheduling every post by hand takes time away from running the business.',
+    stat: 'Less manual posting',
   },
   {
     icon: '🎯',
@@ -75,7 +75,7 @@ const FAQS = [
   },
   {
     q: 'Is there a free trial?',
-    a: "Yes — no credit card required. Start free and upgrade when you're ready. Every plan includes a 30-day money-back guarantee.",
+    a: "Yes — no credit card required. Start free and upgrade when you're ready.",
   },
 ];
 
@@ -136,9 +136,6 @@ export default function AgenciesPage() {
               See how it works
             </Link>
           </div>
-          <p className="text-sm text-white/30 mt-3">
-            30-day money-back guarantee · Cancel anytime
-          </p>
         </div>
       </section>
 
@@ -173,8 +170,8 @@ export default function AgenciesPage() {
             Built for every Australian business
           </h2>
           <p className="text-white/50 mb-10">
-            5,000+ businesses across every industry trust Synthex to handle
-            their social media.
+            Synthex learns your brand voice from your own website, whatever your
+            industry.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {INDUSTRIES.map(industry => (
@@ -216,8 +213,8 @@ export default function AgenciesPage() {
             Ready to automate your social media?
           </h2>
           <p className="text-white/50 mb-8">
-            Join 5,000+ Australian businesses posting to 9 platforms
-            automatically.
+            Publish to 9 platforms from one dashboard — you approve every post
+            first.
           </p>
           <Link
             href="/signup"

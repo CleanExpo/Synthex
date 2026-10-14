@@ -188,7 +188,7 @@ export function MarketingFooter() {
               <span className="text-xl font-bold text-white">SYNTHEX</span>
             </Link>
             <p className="text-gray-500 text-sm">
-              The world's first fully autonomous AI marketing agency.
+              Evidence-backed marketing command center.
             </p>
             <p className="text-orange-400 font-medium">synthex.social</p>
           </div>
