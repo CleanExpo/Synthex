@@ -414,7 +414,7 @@ Start free: https://synthex.social
     voiceoverScript:
       'Marketing tip: post at the right time. ' +
       'Instagram: Tuesday 9am. LinkedIn: Wednesday 10am. TikTok: Thursday 7pm. ' +
-      'Facebook: Friday 1pm. Posting at peak times doubles your organic reach. ' +
+      'Facebook: Friday 1pm. Check your own analytics, as your audience may be online at different times. ' +
       'Synthex schedules automatically for each platform.',
     durationInFrames: 450,
     fps: 30,

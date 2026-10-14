@@ -16,12 +16,11 @@ export const NIR_STORYBOARD: NIRStoryboard = {
   channel: 'linkedin',
   aspectRatio: '1920x1080',
   totalDurationSec: 90,
-  voiceId: 'EXAVITQu4vr4xnSDxMaL',          // Sarah, en-AU narration (matches ra.ts)
+  voiceId: 'EXAVITQu4vr4xnSDxMaL', // Sarah, en-AU narration (matches ra.ts)
   topic:
     'The National Inspection Report is a single IICRC-grounded format that ' +
     'replaces 50+ fragmented report formats currently used across Australian ' +
-    'restoration — removing double-handling, eliminating re-inspections, and ' +
-    'saving $2,000–5,000 per claim.',
+    'restoration — removing double-handling and eliminating re-inspections.',
   scenes: [
     {
       index: 1,
