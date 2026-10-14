@@ -146,7 +146,11 @@ export function normaliseCopy(raw: string): string {
     previous = text;
     text = text.replace(/(\d),(\d{3})(?!\d)/g, '$1$2');
   } while (text !== previous);
-  return numberWordsToDigits(text);
+  text = numberWordsToDigits(text);
+  return text
+    .replace(/(\d+) point (\d+)/g, '$1.$2') // "6 point 9" → 6.9
+    .replace(/\b(\d+)k\b/g, '$1000') // "10k" → 10000
+    .replace(/(\d)\s*×/g, '$1x'); // "6.9×" → 6.9x
 }
 
 // ── Patterns ─────────────────────────────────────────────────────────────────
@@ -163,6 +167,43 @@ export const BANNED_CLAIMS: Array<[string, RegExp]> = [
     /average (?:smb|small business\w*) spends|\d+\+?\s*(?:hrs|hours)\s*(?:\/|per|a)\s*week wasted/,
   ],
 ];
+
+// A number that reads as an outcome: a percentage, a multiplier, a dollar
+// amount, or a count of followers, leads, customers, sales or orders.
+const GROWTH = String.raw`(?:\$\d+|\d+(?:\.\d+)?\s?(?:%|percent|x\b)|\d+\+? (?:\w+ )?(?:followers?|subscribers?|leads?|customers?|sales|orders?))`;
+
+BANNED_CLAIMS.push(
+  [
+    'follower-growth claim',
+    new RegExp(
+      [
+        String.raw`\bfrom \d+ (?:\w+ )?(?:followers?|subscribers?) to (?:over )?\d+`,
+        String.raw`\bfrom \d+ to (?:over )?\d+\+? (?:\w+ )?(?:followers?|subscribers?)\b`,
+        String.raw`\b(?:grew|grow|grows|growing) (?:\w+ ){0,3}to \d+\+? (?:\w+ )?(?:followers?|subscribers?)`,
+        String.raw`\b\d+\+? (?:\w+ )?(?:followers?|subscribers?) in \d+ (?:days?|weeks?|months?)`,
+      ].join('|')
+    ),
+  ],
+  [
+    'case-study result claim',
+    new RegExp(
+      String.raw`case stud(?:y|ies)[^.]{0,160}?${GROWTH}|${GROWTH}[^.]{0,160}?case stud(?:y|ies)`
+    ),
+  ],
+  [
+    'unsourced results claim',
+    new RegExp(
+      [
+        String.raw`\b(?:users|customers|clients|early adopters) (?:\w+ ){0,2}report (?:saving|seeing|growing)`,
+        String.raw`\bsaves? (?:over |up to |an average of )?\d+\+? ?(?:hours?|hrs)\b`,
+        String.raw`\bincrease[sd]? (?:\w+ ){0,3}by (?:an average of |up to |over )?\d+(?:\.\d+)? ?(?:%|percent)`,
+        String.raw`\b\d+(?:\.\d+)? ?(?:%|percent) (?:increase|more (?:engagement|sales|leads|reach|clicks|comments|revenue))`,
+        String.raw`\b\d+(?:\.\d+)? ?(?:x|times) (?:the )?(?:roi|more (?:engagement|comments|content|reach|leads|sales)|faster|the audience)`,
+        String.raw`\broi of \$?\d+`,
+      ].join('|')
+    ),
+  ]
+);
 
 export function findClaims(raw: string): string[] {
   const text = normaliseCopy(raw);
@@ -197,6 +238,27 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   'The average SMB spends 10+ hours per week on social media.',
   'The average SMB spends ten hours per week on social media.',
   '10+ hrs/week wasted',
+  // Follower-growth and case-study results (removed catalogue videos).
+  'From 200 to 10,000 Instagram followers in 90 days — the Synthex case study.',
+  'From two hundred to ten thousand Instagram followers in ninety days.',
+  'How a Local Bakery Grew to 10K Instagram Followers | Synthex',
+  'The result: from 200 followers to over 10,000 in ninety days.',
+  'Synthex case study: five hundred qualified leads in ninety days.',
+  'Online order enquiries increased by three hundred and forty percent.',
+  'Optimal Time: Posts at 9 AM get 45% more engagement',
+  // Time-saved, uplift and ROI numbers (removed catalogue videos and lines).
+  'Early adopters report saving over ten hours per week while seeing improved engagement.',
+  'At Synthex, our users report saving up to fifteen hours per week.',
+  'AI Marketing Saves 10+ Hours Per Week | Synthex',
+  '"save ten hours a week: start your free trial."',
+  'Video content generates forty-nine percent more engagement than static images.',
+  'Video Gets 49% More Engagement Than Static Posts | Synthex',
+  'Businesses with a documented social media strategy see three times the ROI.',
+  'Email marketing delivers an average ROI of thirty-six dollars for every one dollar spent.',
+  'Consistent brand presentation increases revenue by an average of twenty-three percent.',
+  'UGC Drives 6.9× More Engagement | Synthex',
+  'User-generated content drives six point nine times more engagement than branded content.',
+  'Businesses with documented content strategies grow three times faster than those without one.',
 ];
 
 // ── Inventory ────────────────────────────────────────────────────────────────

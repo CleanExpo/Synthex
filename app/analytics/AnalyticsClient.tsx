@@ -611,12 +611,6 @@ export default function AnalyticsDashboard() {
                         the highest engagement
                       </p>
                     </div>
-                    <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded">
-                      <p className="text-sm">
-                        <strong>Optimal Time:</strong> Posts at 9 AM get 45%
-                        more engagement
-                      </p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

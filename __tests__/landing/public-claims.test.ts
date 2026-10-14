@@ -70,6 +70,9 @@ describe('public copy — normalisation', () => {
     ['The world&#x27;s FIRST', "the world's first"],
     ['world’s   first', "world's first"],
     ['Join 5&#44;000+', 'join 5000+'],
+    ['Grew to 10K followers', 'grew to 10000 followers'],
+    ['6.9× more', '6.9x more'],
+    ['six point nine times', '6.9 times'],
   ])('normalises %j', (raw, expected) => {
     expect(normaliseCopy(raw)).toBe(expected);
   });
