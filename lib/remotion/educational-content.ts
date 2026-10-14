@@ -2742,7 +2742,7 @@ Claim now: https://synthex.social
       'to determine the correct action in a given situation. ' +
       'In marketing, social proof includes testimonials, reviews, star ratings, follower counts, and case studies. ' +
       'When potential customers see that others trust and value your product, they become more likely to do the same. ' +
-      'Example: "Join 10,000 businesses using Synthex" is social proof. ' +
+      'Example: a verified customer review on your website is social proof. ' +
       'Build yours at synthex dot social.',
     durationInFrames: 600,
     fps: 30,
