@@ -6,7 +6,7 @@ import prisma from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Authority Campaign | Synthex Marketing Agency',
+  title: { absolute: 'Authority Campaign | Synthex Marketing Agency' },
   description:
     'Portfolio authority campaign package with source register, owned-media drafts, QA checks, and external publishing gates.',
 };

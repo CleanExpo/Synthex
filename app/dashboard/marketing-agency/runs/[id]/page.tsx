@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AgentRunDetail } from '@/components/marketing-agency/agent/AgentRunDetail';
 
 export const metadata: Metadata = {
-  title: 'Agent Run | Marketing Agency | Synthex',
+  title: { absolute: 'Agent Run | Marketing Agency | Synthex' },
 };
 
 export default function AgentRunPage({ params }: { params: { id: string } }) {

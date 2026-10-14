@@ -5,7 +5,7 @@ import { MarketingAgentsPanel } from '@/components/marketing-agency/agent/Market
 import { BrandPackageCards } from '@/components/marketing-agency/BrandPackageCards';
 
 export const metadata: Metadata = {
-  title: 'Marketing Agency | Synthex',
+  title: { absolute: 'Marketing Agency | Synthex' },
   description:
     'Agentic marketing agency that drives the governed campaign substrate between gates — propose claims, flag evidence gaps, submit QA reports. Publishing stays human-approved.',
 };

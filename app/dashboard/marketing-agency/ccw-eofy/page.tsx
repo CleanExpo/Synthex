@@ -6,7 +6,7 @@ import { ccwEofyCampaignCalendar } from '@/lib/marketing-agency/ccw-eofy-calenda
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'CCW EOFY Sales Package | Synthex Marketing Agency',
+  title: { absolute: 'CCW EOFY Sales Package | Synthex Marketing Agency' },
   description:
     'Live CCW EOFY sales package with staged social drafts, QA gates, export notes, and credential blockers.',
 };

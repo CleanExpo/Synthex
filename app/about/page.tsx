@@ -23,7 +23,7 @@ import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
 
 export const metadata: Metadata = {
-  title: 'About Synthex | Synthex',
+  title: { absolute: 'About Synthex' },
   description:
     'Synthex is a controlled pilot marketing command center for turning business context, research and ideas into approval-gated campaign production.',
 };

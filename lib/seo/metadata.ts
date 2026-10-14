@@ -43,7 +43,8 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
   } = config;
 
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
+  // Brand once: titles that already name Synthex are used as-is.
+  const fullTitle = /synthex/i.test(title) ? title : `${title} | ${SITE_NAME}`;
 
   // Use dynamic OG image route; fall back to static only if an explicit image is provided
   const ogImageUrl = image
@@ -68,7 +69,8 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
 
   return {
     metadataBase: new URL(BASE_URL),
-    title: fullTitle,
+    // Absolute, so the root layout's `%s | SYNTHEX` template does not brand it twice.
+    title: { absolute: fullTitle },
     description,
     keywords: [...defaultKeywords, ...keywords].join(', '),
     authors: authors

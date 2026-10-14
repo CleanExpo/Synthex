@@ -11,7 +11,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social';
  *   1.0 — Homepage
  *   0.9 — Primary pillar pages (high conversion, high keyword value)
  *   0.8 — Secondary pillar/compare/feature pages
- *   0.7 — Standard marketing + signup
+ *   0.7 — Standard marketing
  *   0.6 — Blog index + individual posts
  *   0.5–0.6 — Support, contact, utility
  *   0.3 — Legal
@@ -74,6 +74,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // ── Compare / Competitor Pages ─────────────────────────────
     {
+      url: `${BASE_URL}/compare`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${BASE_URL}/compare/hootsuite`,
       lastModified: now,
       changeFrequency: 'monthly',
@@ -100,13 +106,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/about`,
+      url: `${BASE_URL}/add-ons`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/signup`,
+      url: `${BASE_URL}/about`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,

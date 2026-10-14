@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { SafetyStrip, SiteShell } from '@/components/landing/public-v2';
 
 export const metadata: Metadata = {
-  title: 'MCP App Development — Add-On | Synthex',
+  title: { absolute: 'MCP App Development — Add-On | Synthex' },
   description:
     'Synthex builds and operates your business as an interactive MCP App inside Claude and ChatGPT. Powered by Alpic Skybridge, deployed to the Claude + ChatGPT app stores. Add-on service.',
   openGraph: {
@@ -80,12 +80,12 @@ const whyThis = [
   {
     icon: Zap,
     title: 'Skybridge does the heavy lifting',
-    copy: 'Alpic\'s Skybridge framework (MIT-licensed, v1.0 released May 2026) powers ~10% of all apps on the Claude + ChatGPT stores. Used by Datadog, Bitmovin, Evaneos. We build on the same stack.',
+    copy: "Alpic's Skybridge framework (MIT-licensed, v1.0 released May 2026) powers ~10% of all apps on the Claude + ChatGPT stores. Used by Datadog, Bitmovin, Evaneos. We build on the same stack.",
   },
   {
     icon: Shield,
     title: 'You own the code',
-    copy: 'Repo handover at end of Build. Self-host fallback always available — no vendor lock-in to Alpic\'s managed plane. MIT framework + your choice of hosting.',
+    copy: "Repo handover at end of Build. Self-host fallback always available — no vendor lock-in to Alpic's managed plane. MIT framework + your choice of hosting.",
   },
 ];
 
@@ -114,7 +114,7 @@ const costModel = [
   {
     layer: 'Synthex delivery',
     cost: 'See tiers above',
-    note: 'Discovery → Build → Operate. Each stage is independently scoped; you can stop after any stage and own what\'s delivered.',
+    note: "Discovery → Build → Operate. Each stage is independently scoped; you can stop after any stage and own what's delivered.",
     link: null,
     linkLabel: null,
   },
@@ -124,7 +124,7 @@ const faqs = [
   {
     question: 'Is this required to use Synthex?',
     answer:
-      'No. This is an add-on service. Synthex\'s core social-media platform is independent. The MCP App add-on is for businesses that also want a presence inside Claude and ChatGPT.',
+      "No. This is an add-on service. Synthex's core social-media platform is independent. The MCP App add-on is for businesses that also want a presence inside Claude and ChatGPT.",
   },
   {
     question: 'How is this different from a chatbot?',
@@ -132,7 +132,7 @@ const faqs = [
       'A chatbot is text-only and lives on your site. An MCP App renders interactive React views inside Claude or ChatGPT and executes real actions against your APIs — booking, scheduling, lookups, transactions. The user never opens your website.',
   },
   {
-    question: 'What\'s the relationship between Skybridge and Alpic?',
+    question: "What's the relationship between Skybridge and Alpic?",
     answer:
       'Alpic is the company that builds Skybridge (open-source framework, MIT) AND offers paid hosting + analytics + app-store-submission help. You can use Skybridge without Alpic hosting — self-host on any Node.js platform. We recommend Alpic for revenue-critical apps because the compliance-auditing alone is worth the cost.',
   },
@@ -149,12 +149,12 @@ const faqs = [
   {
     question: 'Do we own the code?',
     answer:
-      'Yes. Repo handover at end of Build. You can take it in-house, switch hosting providers, or fork in any direction. The Operate + Evolve tier is opt-in — you can cancel and we don\'t hold the keys.',
+      "Yes. Repo handover at end of Build. You can take it in-house, switch hosting providers, or fork in any direction. The Operate + Evolve tier is opt-in — you can cancel and we don't hold the keys.",
   },
   {
     question: 'What if Anthropic or OpenAI changes their policies?',
     answer:
-      'It will happen — the MCP ecosystem is young. The Operate + Evolve tier explicitly includes monitoring policy changes and re-submitting as needed. If you\'re self-hosting after handover, we publish updates to the underlying Skybridge framework as Alpic ships them and you re-deploy on your schedule.',
+      "It will happen — the MCP ecosystem is young. The Operate + Evolve tier explicitly includes monitoring policy changes and re-submitting as needed. If you're self-hosting after handover, we publish updates to the underlying Skybridge framework as Alpic ships them and you re-deploy on your schedule.",
   },
 ];
 
@@ -177,9 +177,8 @@ export default function Page() {
             inside Claude + ChatGPT
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/60">
-            We design, build, deploy and operate your business as an
-            interactive MCP App that lives inside Claude and ChatGPT. Powered
-            by{' '}
+            We design, build, deploy and operate your business as an interactive
+            MCP App that lives inside Claude and ChatGPT. Powered by{' '}
             <a
               href="https://github.com/alpic-ai/skybridge"
               target="_blank"
@@ -299,10 +298,9 @@ export default function Page() {
             Cost breakdown — what you actually pay for
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">
-            An MCP App stack has four cost layers. The framework itself is
-            free. Hosting is optional. Auth depends on volume. Our delivery
-            fee is the only mandatory line item once you proceed past
-            Discovery.
+            An MCP App stack has four cost layers. The framework itself is free.
+            Hosting is optional. Auth depends on volume. Our delivery fee is the
+            only mandatory line item once you proceed past Discovery.
           </p>
           <div className="mt-10 overflow-hidden border border-white/[0.08] bg-[#0d0f12]">
             <table className="w-full text-left text-sm">
@@ -340,8 +338,8 @@ export default function Page() {
           </div>
           <p className="mt-4 text-xs italic text-white/40">
             Alpic does not publish public pricing as of May 2026. We surface
-            their actual quote during Discovery so you can compare against
-            the self-host alternative before committing.
+            their actual quote during Discovery so you can compare against the
+            self-host alternative before committing.
           </p>
         </div>
       </section>
@@ -384,8 +382,8 @@ export default function Page() {
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/55">
             Start with a 30-minute Discovery conversation. We'll work out
             whether your business fits the MCP App pattern, what tier you'd
-            need, and what the realistic timeline + cost looks like — before
-            any commitment.
+            need, and what the realistic timeline + cost looks like — before any
+            commitment.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button asChild>

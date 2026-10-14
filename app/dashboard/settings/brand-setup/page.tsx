@@ -1,7 +1,7 @@
 import { BrandSetupWizard } from '@/components/settings/brand-setup-wizard';
 
 export const metadata = {
-  title: 'Brand Setup | Synthex',
+  title: { absolute: 'Brand Setup | Synthex' },
   description: 'Set up your brand profile in a few steps',
 };
 

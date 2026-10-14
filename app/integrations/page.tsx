@@ -19,7 +19,7 @@ import { Icon3D } from '@/components/icons/Icon3D';
 import MarketingLayout from '@/components/marketing/MarketingLayout';
 
 export const metadata: Metadata = {
-  title: 'Integrations | Synthex',
+  title: { absolute: 'Integrations | Synthex' },
   description:
     'Connect Synthex with 9 social media platforms, AI providers, and business tools. Publish, schedule, and analyse content everywhere from one dashboard.',
   openGraph: {

@@ -19,12 +19,14 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
+import { generateMetadata } from '@/lib/seo/metadata';
 
-export const metadata: Metadata = {
-  title: 'Platform | Synthex',
+export const metadata: Metadata = generateMetadata({
+  title: 'Platform',
   description:
     'Explore Synthex command-center features for market research, campaign planning, Gen Media production, approvals and ROI learning.',
-};
+  path: '/features',
+});
 
 const featureCards = [
   {

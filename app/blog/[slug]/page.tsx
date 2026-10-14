@@ -57,14 +57,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = await getPost(slug);
 
   if (!post) {
-    return { title: 'Post Not Found | Synthex Blog' };
+    return { title: { absolute: 'Post Not Found | Synthex Blog' } };
   }
 
   const title = post.seoTitle ?? `${post.title} | Synthex Blog`;
   const description = post.seoDescription ?? post.excerpt;
 
   return {
-    title,
+    // The fallback already carries the brand; keep the layout template off it.
+    title: post.seoTitle ? title : { absolute: title },
     description,
     openGraph: {
       title,

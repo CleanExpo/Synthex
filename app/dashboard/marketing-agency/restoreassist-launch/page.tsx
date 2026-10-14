@@ -13,7 +13,9 @@ import { buildRemotionStoryboardPlans } from '@/lib/marketing-agency/remotion/st
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'RestoreAssist Launch Package | Synthex Marketing Agency',
+  title: {
+    absolute: 'RestoreAssist Launch Package | Synthex Marketing Agency',
+  },
   description:
     'Review the RestoreAssist mock campaign package with personas, storyboards, QA gates, and blocked publish controls.',
 };
@@ -41,7 +43,8 @@ export default function RestoreAssistLaunchPage() {
         </p>
         <h1 className="text-3xl font-bold">RestoreAssist Launch Package</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Mock-mode campaign package with evidence, licensing, QA, and export gates visible before provider integrations.
+          Mock-mode campaign package with evidence, licensing, QA, and export
+          gates visible before provider integrations.
         </p>
       </header>
 

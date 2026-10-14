@@ -11,7 +11,7 @@ import { Metadata } from 'next';
 import { BrandProfileTab } from '@/components/settings/brand-profile-tab';
 
 export const metadata: Metadata = {
-  title: 'Brand Profile | Synthex',
+  title: { absolute: 'Brand Profile | Synthex' },
   description:
     'Manage your organisation brand identity, colours, and social handles.',
 };
