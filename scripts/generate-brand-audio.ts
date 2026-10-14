@@ -34,6 +34,7 @@ import {
   getBrandById,
   type BrandContent,
 } from '../lib/remotion/brand-content';
+import { resolveElevenLabsVoiceId } from './lib/elevenlabs-voice';
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -67,16 +68,13 @@ function log(msg: string) {
 // ── ElevenLabs Voiceover ──────────────────────────────────────────────────────
 
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
-// Note: env var has typo VIOCE_ID — support both spellings
-const ELEVEN_VOICE_ID =
-  process.env.ELEVENLABS_VIOCE_ID ??
-  process.env.ELEVENLABS_VOICE_ID ??
-  '21m00Tcm4TlvDq8ikWAM'; // Rachel (default)
+// Fails closed: throws at startup when the key is set but no voice id is.
+const ELEVEN_VOICE_ID = ELEVEN_API_KEY ? resolveElevenLabsVoiceId() : undefined;
 
 async function generateVoiceover(
   text: string,
   outputPath: string,
-  force: boolean,
+  force: boolean
 ): Promise<boolean> {
   if (!ELEVEN_API_KEY) {
     log('  ⚠ ELEVENLABS_API_KEY not configured — skipping voiceover');
@@ -105,17 +103,19 @@ async function generateVoiceover(
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
             stability: 0.55,
-            similarity_boost: 0.80,
+            similarity_boost: 0.8,
             style: 0.25,
             use_speaker_boost: true,
           },
         }),
-      },
+      }
     );
 
     if (!response.ok) {
       const errBody = await response.text();
-      throw new Error(`ElevenLabs ${response.status}: ${errBody.slice(0, 200)}`);
+      throw new Error(
+        `ElevenLabs ${response.status}: ${errBody.slice(0, 200)}`
+      );
     }
 
     const buffer = await response.arrayBuffer();
@@ -123,7 +123,9 @@ async function generateVoiceover(
     log(`  ✓ Voiceover saved (${(buffer.byteLength / 1024).toFixed(0)} KB)`);
     return true;
   } catch (err) {
-    log(`  ✗ Voiceover failed: ${err instanceof Error ? err.message : String(err)}`);
+    log(
+      `  ✗ Voiceover failed: ${err instanceof Error ? err.message : String(err)}`
+    );
     return false;
   }
 }
@@ -181,7 +183,11 @@ function ffmpegAvailable(): boolean {
   }
 }
 
-function generateMusic(style: MusicStyle, outputPath: string, force: boolean): boolean {
+function generateMusic(
+  style: MusicStyle,
+  outputPath: string,
+  force: boolean
+): boolean {
   if (!force && fs.existsSync(outputPath)) {
     log(`  ✓ Music cached: ${path.basename(outputPath)}`);
     return true;
@@ -205,17 +211,17 @@ function generateMusic(style: MusicStyle, outputPath: string, force: boolean): b
     const expr =
       style === 'corporate'
         ? [
-            '0.22*sin(2*PI*261.63*t)*sin(PI*0.08*t+0.5)',   // C4 + tremolo
-            '0.16*sin(2*PI*329.63*t)*sin(PI*0.07*t+1.0)',   // E4
-            '0.12*sin(2*PI*392.00*t)*sin(PI*0.06*t+0.3)',   // G4
-            '0.07*sin(2*PI*523.25*t)*sin(PI*0.05*t+0.8)',   // C5 (octave)
+            '0.22*sin(2*PI*261.63*t)*sin(PI*0.08*t+0.5)', // C4 + tremolo
+            '0.16*sin(2*PI*329.63*t)*sin(PI*0.07*t+1.0)', // E4
+            '0.12*sin(2*PI*392.00*t)*sin(PI*0.06*t+0.3)', // G4
+            '0.07*sin(2*PI*523.25*t)*sin(PI*0.05*t+0.8)', // C5 (octave)
           ].join('+')
         : [
-            '0.20*sin(2*PI*220.00*t)*sin(PI*0.10*t+0.2)',   // A3 + faster pulse
-            '0.15*sin(2*PI*261.63*t)*sin(PI*0.09*t+0.7)',   // C4
-            '0.12*sin(2*PI*329.63*t)*sin(PI*0.08*t+1.2)',   // E4
-            '0.08*sin(2*PI*440.00*t)*sin(PI*0.12*t+0.4)',   // A4 (octave)
-            '0.03*(sin(2*PI*4*t)>0)*sin(2*PI*880*t)*0.4',   // subtle 4Hz pulse click
+            '0.20*sin(2*PI*220.00*t)*sin(PI*0.10*t+0.2)', // A3 + faster pulse
+            '0.15*sin(2*PI*261.63*t)*sin(PI*0.09*t+0.7)', // C4
+            '0.12*sin(2*PI*329.63*t)*sin(PI*0.08*t+1.2)', // E4
+            '0.08*sin(2*PI*440.00*t)*sin(PI*0.12*t+0.4)', // A4 (octave)
+            '0.03*(sin(2*PI*4*t)>0)*sin(2*PI*880*t)*0.4', // subtle 4Hz pulse click
           ].join('+');
 
     const cmd = [
@@ -228,10 +234,14 @@ function generateMusic(style: MusicStyle, outputPath: string, force: boolean): b
 
     execSync(cmd, { stdio: 'ignore' });
     const size = fs.statSync(outputPath).size;
-    log(`  ✓ Music generated: ${path.basename(outputPath)} (${(size / 1024).toFixed(0)} KB)`);
+    log(
+      `  ✓ Music generated: ${path.basename(outputPath)} (${(size / 1024).toFixed(0)} KB)`
+    );
     return true;
   } catch (err) {
-    log(`  ✗ Music generation failed: ${err instanceof Error ? err.message : String(err)}`);
+    log(
+      `  ✗ Music generation failed: ${err instanceof Error ? err.message : String(err)}`
+    );
     return false;
   }
 }
@@ -240,16 +250,16 @@ function generateMusic(style: MusicStyle, outputPath: string, force: boolean): b
 
 interface BrandAudioManifest {
   brandId: string;
-  showcaseVoice: string | null;  // staticFile path
+  showcaseVoice: string | null; // staticFile path
   reelVoice: string | null;
   squareVoice: string | null;
   musicStyle: MusicStyle;
-  musicFile: string | null;      // staticFile path
+  musicFile: string | null; // staticFile path
 }
 
 async function processBrand(
   brand: BrandContent,
-  force: boolean,
+  force: boolean
 ): Promise<BrandAudioManifest> {
   const brandAudioDir = path.join(PUBLIC_AUDIO, brand.id);
   fs.mkdirSync(brandAudioDir, { recursive: true });
@@ -296,7 +306,7 @@ async function processBrand(
     fs.writeFileSync(
       path.join(videoDir, 'audio-manifest.json'),
       JSON.stringify(manifest, null, 2),
-      'utf-8',
+      'utf-8'
     );
   }
 
@@ -322,8 +332,10 @@ async function main(): Promise<void> {
 
   console.log('\n================================');
   console.log('Brand Audio Generator');
-  console.log(`ElevenLabs voice: ${ELEVEN_VOICE_ID}`);
-  console.log(`Mode: ${force ? 'FORCE (re-generate all)' : 'INCREMENTAL (skip cached)'}`);
+  console.log(`ElevenLabs voice: ${ELEVEN_VOICE_ID ?? 'none (no API key)'}`);
+  console.log(
+    `Mode: ${force ? 'FORCE (re-generate all)' : 'INCREMENTAL (skip cached)'}`
+  );
   console.log('================================\n');
 
   const manifests: BrandAudioManifest[] = [];
@@ -339,7 +351,9 @@ async function main(): Promise<void> {
   console.log('================================\n');
 
   for (const m of manifests) {
-    const voiceCount = [m.showcaseVoice, m.reelVoice, m.squareVoice].filter(Boolean).length;
+    const voiceCount = [m.showcaseVoice, m.reelVoice, m.squareVoice].filter(
+      Boolean
+    ).length;
     console.log(`${m.brandId}:`);
     console.log(`  Voiceovers: ${voiceCount}/3`);
     console.log(`  Music: ${m.musicFile ?? 'not generated'}`);
@@ -349,7 +363,7 @@ async function main(): Promise<void> {
   console.log('  npx tsx scripts/render-brand-videos.ts\n');
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error('Fatal:', err);
   process.exit(1);
 });
