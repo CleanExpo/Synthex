@@ -14,6 +14,7 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import path from 'path';
+import ts from 'typescript';
 
 export const ROOT = path.join(__dirname, '../../..');
 const APP = path.join(ROOT, 'app');
@@ -126,10 +127,39 @@ const ATTRIBUTE_RE = /([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|`[^`]*`)/g;
 const NON_COPY_ATTRIBUTE =
   /^(?:class(?:Name)?|style|href|src|srcSet|id|key|type|variant|size|name|role|rel|target|method|action|htmlFor|for|width|height|viewBox|d|fill|stroke|xmlns|loading|sizes|data-[\w-]+|aria-(?!label)[\w-]+|tw|as|icon|route|path|gradientVariant)$/i;
 
+// Copy split across literals reads as one string to a visitor:
+//   {'Synthex gets 45'}{'% more'}  ·  'Join 5,' + '000+'  ·  `${'45'}% more`
+// Join them before matching. A literal's body may hold the other quote marks
+// (an apostrophe in "world's") but not its own, and never a line break.
+const LITERAL = String.raw`(['"\x60])((?:(?!\1)[^\n\\])*)\1`;
+const ADJACENT_EXPRESSIONS = new RegExp(
+  String.raw`${LITERAL}\s*\}\s*\{\s*${LITERAL.replace('\\1', '\\3').replace('\\1', '\\3')}`,
+  'g'
+);
+const CONCATENATION = new RegExp(
+  String.raw`${LITERAL}\s*\+\s*${LITERAL.replace('\\1', '\\3').replace('\\1', '\\3')}`,
+  'g'
+);
+const LITERAL_INTERPOLATION =
+  /\$\{\s*(?:'([^'\n]*)'|"([^"\n]*)"|(\d+(?:\.\d+)?))\s*\}/g;
+
+export function joinLiterals(source: string): string {
+  let text = source;
+  let previous: string;
+  do {
+    previous = text;
+    text = text
+      .replace(LITERAL_INTERPOLATION, (_m, a, b, c) => a ?? b ?? c)
+      .replace(ADJACENT_EXPRESSIONS, (_m, q, x, _q2, y) => `${q}${x}${y}${q}`)
+      .replace(CONCATENATION, (_m, q, x, _q2, y) => `${q}${x}${y}${q}`);
+  } while (text !== previous);
+  return text;
+}
+
 export function normaliseCopy(raw: string): string {
   // Markup is not copy: a tag is replaced by its quoted attribute values
   // (alt, description, title… are copy), and JSX whitespace ({' '}) by a space.
-  let text = decodeEntities(raw)
+  let text = decodeEntities(joinLiterals(raw))
     .replace(/<\/?[a-z][^<>]*>/gi, tag => {
       const values = [...tag.matchAll(ATTRIBUTE_RE)]
         .filter(([, name]) => !NON_COPY_ATTRIBUTE.test(name))
@@ -205,12 +235,59 @@ BANNED_CLAIMS.push(
   ]
 );
 
+// Growth claims, by class rather than by phrasing: a growth verb, a quantity
+// and a growth object inside one short window of a single sentence, in any
+// order — "grew by 10000 followers", "followers jumped 300%", "revenue rose
+// 23%", "sales doubled", "saved 15 hours a week".
+//
+// The quantity must read as an outcome: a measure (N%, N×, $N), a number
+// directly counting a growth object ("10000 instagram followers"), or a
+// doubling verb. A number counting something else ("add 1-2 emojis", "7 ways
+// to increase engagement") or a list index ("4: follower growth") is not one.
+const GROWTH_VERB =
+  /\b(?:gr[eo]w(?:s|n|ing)?|increas(?:e[ds]?|ing)|boost(?:s|ed|ing)?|gain(?:s|ed|ing)?|add(?:s|ed|ing)?|jump(?:s|ed|ing)?|doubl(?:e[ds]?|ing)|tripl(?:e[ds]?|ing)|quadrupl(?:e[ds]?|ing)|went from|r[io]se[ns]?|rising|climb(?:s|ed|ing)?|up|surg(?:e[ds]?|ing)|soar(?:s|ed|ing)?|skyrocket(?:s|ed|ing)?|spik(?:e[ds]?|ing)|sav(?:e[ds]?|ings?)|lift(?:s|ed)?)\b/g;
+const DOUBLING_VERB = /^(?:doubl|tripl|quadrupl)/;
+const GROWTH_OBJECT_WORD = String.raw`(?:followers?|subscribers?|fans|likes|views|leads?|customers?|clients?|sales|orders?|bookings?|enquiries|inquiries|revenue|profit|income|engagement|reach|traffic|visitors?|impressions|conversions?|sign-?ups|roi|hours?)`;
+const GROWTH_OBJECT = new RegExp(String.raw`\b${GROWTH_OBJECT_WORD}\b`);
+const MEASURE =
+  /(?:\$\s?\d+(?:\.\d+)?(?:k|m)?|\b\d+(?:\.\d+)?\s?(?:%|percent\b|x\b|times\b|fold\b))/;
+const COUNTED_OBJECT = new RegExp(
+  String.raw`\b\d+(?:\.\d+)?(?:k|m)?\+? (?:[a-z-]+ ){0,2}${GROWTH_OBJECT_WORD}\b`
+);
+const GROWTH_WINDOW = 60; // characters either side of the verb
+
+export function findGrowthClaims(normalised: string): string[] {
+  const hits: string[] = [];
+  for (const verb of normalised.matchAll(GROWTH_VERB)) {
+    const at = verb.index ?? 0;
+    // Stay inside the verb's sentence: a full stop followed by a space ends it.
+    const before = normalised.slice(Math.max(0, at - GROWTH_WINDOW), at);
+    const after = normalised.slice(at, at + verb[0].length + GROWTH_WINDOW);
+    const window =
+      (before.split(/[.!?;](?:\s|$)/).pop() ?? '') +
+      (after.split(/[.!?;](?:\s|$)/)[0] ?? '');
+    // "saving $140,000 a year" needs no growth object: the money is the result.
+    if (/^sav/.test(verb[0]) && /\$\s?\d/.test(window)) {
+      hits.push(`growth claim — "${window.trim()}"`);
+      continue;
+    }
+    if (!GROWTH_OBJECT.test(window)) continue;
+    const quantified =
+      MEASURE.test(window) ||
+      COUNTED_OBJECT.test(window) ||
+      DOUBLING_VERB.test(verb[0]);
+    if (quantified) hits.push(`growth claim — "${window.trim()}"`);
+  }
+  return hits;
+}
+
 export function findClaims(raw: string): string[] {
   const text = normaliseCopy(raw);
-  return BANNED_CLAIMS.flatMap(([label, pattern]) => {
+  const patternHits = BANNED_CLAIMS.flatMap(([label, pattern]) => {
     const match = text.match(pattern);
     return match ? [`${label} — "${match[0]}"`] : [];
   });
+  return [...patternHits, ...findGrowthClaims(text)];
 }
 
 // Every claim removed on this branch, verbatim, plus spelled-out and
@@ -259,6 +336,41 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   'UGC Drives 6.9× More Engagement | Synthex',
   'User-generated content drives six point nine times more engagement than branded content.',
   'Businesses with documented content strategies grow three times faster than those without one.',
+  // Growth claims by class (round-3 review mutants and siblings).
+  'The bakery grew by 10,000 Instagram followers',
+  'The bakery grew by ten thousand Instagram followers',
+  'Followers jumped 300% in a month',
+  'Revenue rose by twenty-three percent after switching',
+  'We gained 5,000 new subscribers in six weeks',
+  'Engagement is up 45% this quarter',
+  'Sales doubled after switching to Synthex',
+  'Traffic climbed from 2,000 to 9,000 visitors',
+  'Synthex boosted conversions by 2.5x',
+  'The account went from 800 to 42,000 followers',
+  'Synthex saved our team 15 hours a week',
+  'They added 120 qualified leads in a month',
+  'The shop has grown to $1M in revenue',
+  'Synthex gets 45% more engagement.',
+  // Removed on this branch from emails and the catalogue.
+  "You've joined 1000+ businesses saving $140,000+ per year",
+  '$140,436/year savings vs traditional agencies',
+  '2.2x engagement boost with AI optimization',
+  'Posting at peak times doubles your organic reach.',
+];
+
+// Copy that must NOT be flagged: advice, formulas and counts of things that
+// are not outcomes. Keeps the growth rule honest about false positives.
+export const NOT_CLAIMS: string[] = [
+  'Add 1-2 relevant emojis to increase visual appeal and reach',
+  '7 ways to increase your social media engagement',
+  'Four: follower growth rate — are you growing, stagnating, or declining?',
+  'Formula: conversions divided by total visitors, multiplied by 100.',
+  'Each re-inspection costs $2,000–$5,000.',
+  'A post seen by 3,000 people without any boosting has a reach of 3,000.',
+  'Instagram: aim for three percent or above. LinkedIn: above two percent is strong.',
+  'Reply to every comment within the first hour — it boosts your ranking.',
+  'Body text body-lg - 18px - gray 300 Generate viral content with AI, analyze engagement patterns',
+  'Set up your account and add 3 team members.',
 ];
 
 // ── Inventory ────────────────────────────────────────────────────────────────
@@ -325,7 +437,198 @@ function resolveImport(from: string, spec: string): string | null {
 const IMPORT_RE =
   /(?:import|export)\s[^'"]*?from\s*['"]([^'"]+)['"]|import\s*\(\s*['"]([^'"]+)['"]\s*\)|import\s+['"]([^'"]+)['"]/g;
 
+// ── Copy extraction ──────────────────────────────────────────────────────────
+//
+// Source files are judged on their copy, not their code: the strings and JSX
+// text that can reach a visitor. Parsed with the TypeScript compiler, so
+// comments, identifiers and object keys never count, while copy split across
+// literals is reassembled the way a visitor reads it:
+//   'Join 5,' + '000+'            → constant-folded
+//   `${'45'}% more`              → template with literal spans folded
+//   <p>{'Synthex gets 45'}{'% more'}</p>, <p>Join <b>5,000+</b> firms</p>
+//                                 → one JSX text run per element
+// A non-constant expression contributes a space, so unrelated values are not
+// glued together.
+
+const NON_COPY_JSX_ATTRIBUTE =
+  /^(?:class(?:Name)?|style|href|src|srcSet|id|key|type|variant|size|name|role|rel|target|method|action|htmlFor|width|height|viewBox|d|fill|stroke|xmlns|loading|sizes|data-[\w-]+|aria-(?!label)[\w-]+|as|icon|route|path|gradientVariant)$/i;
+
+function constantText(node: ts.Node): string | null {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+    return node.text;
+  }
+  if (ts.isNumericLiteral(node)) return node.text;
+  if (ts.isParenthesizedExpression(node)) return constantText(node.expression);
+  if (ts.isTemplateExpression(node)) {
+    let text = node.head.text;
+    for (const span of node.templateSpans) {
+      const value = constantText(span.expression);
+      if (value === null) return null;
+      text += value + span.literal.text;
+    }
+    return text;
+  }
+  if (
+    ts.isBinaryExpression(node) &&
+    node.operatorToken.kind === ts.SyntaxKind.PlusToken
+  ) {
+    const left = constantText(node.left);
+    const right = constantText(node.right);
+    return left !== null && right !== null ? left + right : null;
+  }
+  return null;
+}
+
+// Template text with non-constant spans replaced by a space.
+function templateText(node: ts.TemplateExpression): string {
+  return [
+    node.head.text,
+    ...node.templateSpans.map(
+      span => (constantText(span.expression) ?? ' ') + span.literal.text
+    ),
+  ].join('');
+}
+
+// JSX text collapses whitespace runs that contain a line break.
+const jsxText = (raw: string) => raw.replace(/\s*\n\s*/g, ' ');
+
+function jsxChildrenText(children: ts.NodeArray<ts.JsxChild>): string {
+  return children
+    .map(child => {
+      if (ts.isJsxText(child)) return jsxText(child.text);
+      if (ts.isJsxExpression(child)) {
+        if (!child.expression) return '';
+        return constantText(child.expression) ?? ' ';
+      }
+      if (ts.isJsxElement(child)) return jsxChildrenText(child.children);
+      if (ts.isJsxFragment(child)) return jsxChildrenText(child.children);
+      return ' ';
+    })
+    .join('');
+}
+
+export function extractCopy(source: string, fileName: string): string[] {
+  if (!SOURCE_EXT.includes(path.extname(fileName))) return [source];
+  const sf = ts.createSourceFile(
+    fileName,
+    source,
+    ts.ScriptTarget.Latest,
+    false,
+    fileName.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+  );
+  const copy: string[] = [];
+  const visit = (node: ts.Node): void => {
+    // Module specifiers are wiring, not copy.
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) return;
+    if (ts.isJsxElement(node) || ts.isJsxFragment(node)) {
+      const text = jsxChildrenText(node.children).trim();
+      if (text) copy.push(text);
+    } else if (ts.isJsxAttribute(node)) {
+      const name = node.name.getText(sf);
+      if (NON_COPY_JSX_ATTRIBUTE.test(name)) return;
+    } else {
+      const folded = constantText(node);
+      if (folded !== null) {
+        copy.push(folded);
+        return; // parts of a folded constant are already in it
+      }
+      if (ts.isTemplateExpression(node)) copy.push(templateText(node));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return copy.filter(text => /[a-z]/i.test(text));
+}
+
+/** Claims in a source file's copy, each tagged with the text it came from. */
+export function findClaimsInSource(source: string, fileName: string): string[] {
+  return extractCopy(source, fileName).flatMap(findClaims);
+}
+
+// ── Same-origin API routes ───────────────────────────────────────────────────
+
+export interface ApiRoute {
+  file: string;
+  /** URL path segments; `[name]` is a param, `[...name]` a catch-all. */
+  segments: string[];
+}
+
+export function apiRoutes(): ApiRoute[] {
+  return walk(path.join(APP, 'api'))
+    .filter(file => /^route\.(ts|js)$/.test(path.basename(file)))
+    .map(file => ({
+      file,
+      segments: path
+        .relative(APP, path.dirname(file))
+        .split(path.sep)
+        .filter(s => s && !s.startsWith('(')),
+    }));
+}
+
+/** The route file serving `pathname` (e.g. /api/blog/hello), with its params. */
+export function matchApiRoute(
+  routes: ApiRoute[],
+  pathname: string
+): { route: ApiRoute; params: Record<string, string | string[]> } | null {
+  const parts = pathname.split('/').filter(Boolean);
+  // Static segments beat dynamic ones, as in Next.
+  const ranked = [...routes].sort(
+    (a, b) =>
+      a.segments.filter(s => s.startsWith('[')).length -
+      b.segments.filter(s => s.startsWith('[')).length
+  );
+  for (const route of ranked) {
+    const params: Record<string, string | string[]> = {};
+    let ok = true;
+    for (let i = 0; i < route.segments.length; i++) {
+      const seg = route.segments[i];
+      const catchAll = seg.match(/^\[\[?\.\.\.(\w+)\]\]?$/);
+      if (catchAll) {
+        params[catchAll[1]] = parts.slice(i);
+        i = route.segments.length;
+        break;
+      }
+      if (i >= parts.length) {
+        ok = false;
+        break;
+      }
+      const param = seg.match(/^\[(\w+)\]$/);
+      if (param) params[param[1]] = decodeURIComponent(parts[i]);
+      else if (seg !== parts[i]) ok = false;
+      if (!ok) break;
+    }
+    const exact =
+      route.segments.some(s => s.includes('...')) ||
+      route.segments.length === parts.length;
+    if (ok && exact) return { route, params };
+  }
+  return null;
+}
+
+// `/api/...` paths a source file references: fetch('/api/x'), useSWR('/api/x'),
+// `${base}/api/blog/${slug}`. Interpolations stand in for one dynamic segment.
+const API_PATH_RE = /\/api\/[\w\-./[\]${}]*/g;
+
+function referencedApiRoutes(source: string, routes: ApiRoute[]): string[] {
+  const files = new Set<string>();
+  for (const [raw] of source.matchAll(API_PATH_RE)) {
+    const pathname = raw
+      .replace(/\$\{[^}]*\}/g, 'x')
+      .replace(/[?#].*$/, '')
+      .replace(/\/+$/, '');
+    const hit = matchApiRoute(routes, pathname);
+    if (hit) files.add(hit.route.file);
+  }
+  return [...files];
+}
+
+/**
+ * Everything a public page can put in front of a visitor: route files, what
+ * they import, the same-origin API routes any of those reference, and what
+ * those routes import — followed to a fixpoint.
+ */
 export function publicSourceInventory(): string[] {
+  const routes = apiRoutes();
   const seen = new Set<string>();
   const queue = publicAppFiles();
   while (queue.length) {
@@ -337,6 +640,9 @@ export function publicSourceInventory(): string[] {
     for (const m of source.matchAll(IMPORT_RE)) {
       const resolved = resolveImport(file, m[1] ?? m[2] ?? m[3]);
       if (resolved && !seen.has(resolved)) queue.push(resolved);
+    }
+    for (const routeFile of referencedApiRoutes(source, routes)) {
+      if (!seen.has(routeFile)) queue.push(routeFile);
     }
   }
   return [...seen, path.join(ROOT, 'public/llms.txt')].sort();

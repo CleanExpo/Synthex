@@ -2,38 +2,94 @@
  * Unsupported marketing claims must not appear in what a visitor receives —
  * rendered check (SYN-1226).
  *
- * The source check (public-claims.test.ts) cannot see copy composed at
- * runtime ('Join 5,' + '000+ …'). This suite renders every public page.tsx to
- * static markup with react-dom/server — awaiting async pages and the async
- * server components inside them — and scans the normalised text and
- * user-visible attributes with the same patterns.
+ * The source check (public-claims.test.ts) judges copy as written; this suite
+ * judges it as served. Every public page.tsx is rendered twice:
+ *  - on the server, with react-dom/server, awaiting async pages and the async
+ *    server components inside them;
+ *  - in the browser (jsdom, Testing Library), waiting for client effects and
+ *    data loads to settle, so copy fetched after mount is judged too.
+ * The normalised text, JSON-LD and copy-bearing attributes of both are
+ * scanned with the shared patterns.
  *
- * A page that cannot render under Jest is listed in UNRENDERABLE with its
- * reason. It still gets the source check, and this suite asserts it really
- * still fails to render, so the list cannot go stale and no page is skipped
- * silently: a new public page must either render clean or be added here.
+ * Data is real code over deterministic fixtures, not stubbed copy:
+ *  - Prisma resolves per-page fixture rows (PAGE_FIXTURES), empty otherwise;
+ *  - same-origin fetch('/api/…') is routed to the real route handler (its
+ *    exported GET/POST called with a NextRequest), as a signed-in visitor, so
+ *    API-fed copy renders as visitors see it. Other origins answer 503.
+ * Each fixture names marker strings that must appear in the rendered copy,
+ * which proves the page rendered its populated state, not an empty one.
  *
- * Mocks are the minimum a page needs outside Next: router hooks, request
- * headers/cookies, the Prisma client (empty results) and fetch (503).
+ * There is no source-only category: a page that stops rendering fails here.
+ * Redirect-only pages (they call redirect()) serve no body to judge.
  */
 
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { act, cleanup, render } from '@testing-library/react';
+import { NextRequest } from 'next/server';
+import { generateToken } from '@/lib/auth/jwt-utils';
+import { createCredentialIntakeToken } from '@/lib/credential-intake/tokens';
 import {
+  apiRoutes,
   findClaims,
+  matchApiRoute,
   publicPageFiles,
   rel,
   routeOf,
 } from './helpers/public-claims';
 
+// ── Fixture registry (read by the Prisma mock) ──────────────────────────────
+
+type FixtureValue = unknown | ((args: unknown) => unknown);
+type PrismaFixtures = Record<string, Record<string, FixtureValue>>;
+
+declare global {
+  var __copyFixtures: PrismaFixtures;
+}
+globalThis.__copyFixtures = {};
+
+jest.mock('@/lib/prisma', () => {
+  const empty = (method: string) => {
+    if (/^find(Many)?$|^groupBy$/.test(method)) return [];
+    if (/^count$/.test(method)) return 0;
+    if (/^aggregate$/.test(method)) return {};
+    return null;
+  };
+  const model = (name: string) =>
+    new Proxy(
+      {},
+      {
+        get: (_t, method: string) => async (args: unknown) => {
+          const fixture = globalThis.__copyFixtures[name]?.[String(method)];
+          if (fixture === undefined) return empty(String(method));
+          return typeof fixture === 'function'
+            ? (fixture as (a: unknown) => unknown)(args)
+            : fixture;
+        },
+      }
+    );
+  const client = new Proxy(
+    {},
+    {
+      get: (_t, key: string) => {
+        if (key === '__esModule') return false;
+        if (key === 'then') return undefined;
+        if (String(key).startsWith('$')) return async () => [];
+        return model(String(key));
+      },
+    }
+  );
+  return { __esModule: true, default: client, prisma: client };
+});
+
 jest.mock('next/navigation', () => {
   const router = {
-    push: jest.fn(),
-    replace: jest.fn(),
-    prefetch: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-    refresh: jest.fn(),
+    push: () => undefined,
+    replace: () => undefined,
+    prefetch: () => undefined,
+    back: () => undefined,
+    forward: () => undefined,
+    refresh: () => undefined,
   };
   return {
     useRouter: () => router,
@@ -64,79 +120,389 @@ jest.mock('next/headers', () => ({
   draftMode: async () => ({ isEnabled: false }),
 }));
 
-// Every model method resolves empty, so data-driven pages render their
-// empty state rather than reaching a database.
-jest.mock('@/lib/prisma', () => {
-  const empty = (method: string) => {
-    if (/^find(Many)?$|^groupBy$/.test(method)) return Promise.resolve([]);
-    if (/^count$/.test(method)) return Promise.resolve(0);
-    if (/^aggregate$/.test(method)) return Promise.resolve({});
-    return Promise.resolve(null);
-  };
-  const model = new Proxy(
-    {},
-    { get: (_t, method: string) => () => empty(String(method)) }
-  );
-  const client = new Proxy(
-    {},
-    {
-      get: (_t, key: string) => {
-        if (key === '__esModule') return false;
-        if (String(key).startsWith('$')) return async () => [];
-        return model;
-      },
-    }
-  );
-  return { __esModule: true, default: client, prisma: client };
-});
-
 jest.mock('server-only', () => ({}), { virtual: true });
 
-// Pages that cannot be rendered outside Next, with the reason. Each still gets
-// the normalised source check in public-claims.test.ts. `outcome` is asserted,
-// so an entry is removed the moment its page starts rendering copy.
-const UNRENDERABLE: Record<
-  string,
-  { outcome: 'throws' | 'empty'; reason: string }
-> = {
+// react-markdown is ESM-only and not transformed by this Jest config. Render
+// the markdown source as text: the copy, not its formatting, is judged.
+jest.mock('react-markdown', () => ({
+  __esModule: true,
+  default: ({ children }: { children?: React.ReactNode }) => (
+    <div data-markdown="">{children}</div>
+  ),
+}));
+
+// ── Per-page fixtures ───────────────────────────────────────────────────────
+
+const NOW = new Date('2026-10-14T00:00:00.000Z');
+const SOON = new Date('2026-10-16T09:00:00.000Z');
+const FIXTURE_USER = 'fixture-user';
+const FIXTURE_ORG = 'fixture-org';
+
+interface PageFixture {
+  params?: Record<string, string>;
+  /** Browser URL for the client render (path + query). */
+  url?: () => string;
+  prisma: PrismaFixtures;
+  /** Strings that must appear in the rendered copy. */
+  markers: string[];
+}
+
+const PAGE_FIXTURES: Record<string, PageFixture> = {
   'app/bio/[slug]/page.tsx': {
-    outcome: 'throws',
-    reason: 'dynamic route: renders notFound() unless a bio page record exists',
+    params: { slug: 'fixture-bio' },
+    prisma: {
+      linkBioPage: {
+        findUnique: {
+          id: 'bio-1',
+          slug: 'fixture-bio',
+          title: 'Fixture Bio Title',
+          bio: 'Fixture bio description text.',
+          avatarUrl: 'https://example.com/avatar.png',
+          coverUrl: 'https://example.com/cover.png',
+          theme: 'default',
+          primaryColor: '#ff6b35',
+          backgroundColor: '#0f172a',
+          textColor: '#ffffff',
+          buttonStyle: 'rounded',
+          socialLinks: [
+            { platform: 'instagram', url: 'https://instagram.com/fixture' },
+          ],
+          showBranding: true,
+          isPublished: true,
+          links: [
+            {
+              id: 'link-1',
+              title: 'Fixture Link Title',
+              url: 'https://example.com/fixture',
+              iconType: 'emoji',
+              iconValue: '🔗',
+              isHighlighted: true,
+            },
+          ],
+        },
+      },
+    },
+    markers: [
+      'Fixture Bio Title',
+      'Fixture bio description text.',
+      'Fixture Link Title',
+    ],
   },
+
   'app/clients/[slug]/page.tsx': {
-    outcome: 'throws',
-    reason: 'dynamic route: renders notFound() unless a client record exists',
+    params: { slug: 'fixture-client' },
+    prisma: {
+      organization: {
+        findUnique: {
+          slug: 'fixture-client',
+          name: 'Fixture Organisation',
+          description: 'Fixture client description.',
+          website: 'https://fixture.example.com',
+          industry: 'Fixture Industry',
+          phoneNumber: '+61 2 0000 0000',
+          logo: 'https://example.com/logo.png',
+          primaryColor: '#ff6b35',
+          brandDna: {
+            businessName: 'Fixture Business Name',
+            vertical: 'Fixture Vertical',
+            brandVoice: { tone: 'friendly' },
+          },
+          gbpLocations: [
+            {
+              address: {
+                addressLines: ['1 Fixture Street'],
+                locality: 'Fixtureville',
+                region: 'NSW',
+                postalCode: '2000',
+                country: 'AU',
+              },
+              phone: '+61 2 1111 1111',
+              hours: {
+                regularHours: {
+                  periods: [
+                    {
+                      openDay: 'MONDAY',
+                      openTime: '09:00',
+                      closeDay: 'MONDAY',
+                      closeTime: '17:00',
+                    },
+                  ],
+                },
+              },
+              reviews: [
+                {
+                  id: 'review-1',
+                  reviewerName: 'Fixture Reviewer',
+                  rating: 5,
+                  comment: 'Fixture review comment.',
+                  reviewTime: NOW,
+                  isFeatured: true,
+                },
+              ],
+            },
+          ],
+        },
+        findMany: [{ slug: 'fixture-client' }],
+      },
+      authorityScore: {
+        findFirst: {
+          score: 72,
+          eeAtBreakdown: {
+            gbpCompleteness: 80,
+            reviewVelocity: 60,
+            contentFreshness: 70,
+            backlinkSignals: 50,
+            schemaCoverage: 90,
+            reviewResponseRate: 65,
+            averageReviewScore: 85,
+          },
+        },
+      },
+    },
+    markers: [
+      'Fixture Business Name',
+      'Fixture client description.',
+      'Fixture Reviewer',
+      'Fixture review comment.',
+      '1 Fixture Street',
+    ],
   },
+
   'app/blog/[slug]/page.tsx': {
-    outcome: 'throws',
-    reason:
-      'imports react-markdown, ESM-only and not transformed by this Jest config',
+    params: { slug: 'fixture-post' },
+    prisma: {
+      blogPost: {
+        findFirst: {
+          id: 'post-1',
+          slug: 'fixture-post',
+          title: 'Fixture Post Title',
+          excerpt: 'Fixture post excerpt.',
+          content: 'Fixture post body paragraph.',
+          author: 'Fixture Author',
+          category: 'Fixture Category',
+          tags: ['fixture-tag'],
+          ogImage: null,
+          ogImageAlt: null,
+          seoTitle: null,
+          seoDescription: null,
+          readTime: 4,
+          wordCount: 800,
+          publishedAt: NOW.toISOString(),
+          updatedAt: NOW.toISOString(),
+          aiGenerated: false,
+          views: 12,
+        },
+        update: {},
+      },
+    },
+    markers: [
+      'Fixture Post Title',
+      'Fixture post body paragraph.',
+      'Fixture Author',
+    ],
   },
+
   'app/credential-intake/page.tsx': {
-    outcome: 'empty',
-    reason: 'client page renders nothing until its token is read after mount',
+    url: () =>
+      `/credential-intake?token=${encodeURIComponent(
+        createCredentialIntakeToken({
+          organizationId: FIXTURE_ORG,
+          providers: ['facebook'],
+          createdByUserId: FIXTURE_USER,
+        })
+      )}`,
+    prisma: {
+      organization: {
+        findUnique: {
+          id: FIXTURE_ORG,
+          name: 'Fixture Intake Organisation',
+          slug: 'fixture-intake',
+          status: 'active',
+        },
+      },
+    },
+    markers: ['Fixture Intake Organisation'],
   },
+
   'app/testimonial/[token]/page.tsx': {
-    outcome: 'empty',
-    reason: 'renders nothing until the testimonial request loads on the client',
+    params: { token: 'fixture-token' },
+    prisma: {
+      testimonialRequest: {
+        findUnique: {
+          id: 'treq-1',
+          title: 'Fixture Testimonial Title',
+          subtitle: 'Fixture testimonial subtitle.',
+          isActive: true,
+          expiresAt: null,
+          organization: { name: 'Fixture Testimonial Business' },
+        },
+      },
+    },
+    markers: ['Fixture Testimonial Title', 'Fixture testimonial subtitle.'],
   },
+
   'app/welcome/page.tsx': {
-    outcome: 'empty',
-    reason:
-      'client page renders nothing until the session check runs after mount',
+    prisma: {
+      teamMember: {
+        findFirst: {
+          id: 'tm-1',
+          organizationId: FIXTURE_ORG,
+          lastActiveAt: null,
+          lastWeeklyActiveFiredAt: null,
+          organization: {
+            id: FIXTURE_ORG,
+            name: 'Fixture Welcome Organisation',
+            users: [{ name: 'Fixture Owner', email: 'owner@example.com' }],
+          },
+        },
+        update: {},
+      },
+      authorityScore: { findFirst: { score: 64 } },
+      monthlyStory: {
+        findFirst: {
+          monthYear: '2026-09',
+          storyText: 'Fixture monthly story text.',
+          totalReach: 1234,
+          postsPublished: 8,
+        },
+      },
+      publishQueueItem: {
+        findMany: [
+          {
+            id: 'post-q-1',
+            platform: 'instagram',
+            scheduledAt: SOON,
+            status: 'pending',
+          },
+        ],
+      },
+    },
+    markers: [
+      'Fixture Welcome Organisation',
+      'Fixture Owner',
+      'Fixture monthly story text.',
+    ],
   },
 };
 
-const SAMPLE_PARAMS: Record<string, string> = {
-  slug: 'example',
-  token: 'example',
-  id: 'example',
-};
+// ── Same-origin fetch → real route handlers ─────────────────────────────────
 
-function paramsFor(route: string): Record<string, string> {
+const ROUTES = apiRoutes();
+const SITE = new URL(
+  process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social'
+);
+const SAME_ORIGIN_HOSTS = new Set([
+  'localhost',
+  SITE.hostname,
+  'synthex.social',
+]);
+let inflight = 0;
+
+function plainResponse(status: number, body: unknown): Response {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    headers: new Headers(),
+    json: async () => body,
+    text: async () => JSON.stringify(body),
+  } as unknown as Response;
+}
+
+function urlOf(input: RequestInfo | URL): string {
+  if (typeof input === 'string') return input;
+  if (input instanceof URL) return input.href;
+  return (input as Request).url;
+}
+
+async function routedFetch(
+  input: RequestInfo | URL,
+  init: RequestInit = {}
+): Promise<Response> {
+  const url = new URL(urlOf(input), `${SITE.origin}/`);
+  if (
+    !SAME_ORIGIN_HOSTS.has(url.hostname) ||
+    !url.pathname.startsWith('/api/')
+  ) {
+    return plainResponse(503, {});
+  }
+  const hit = matchApiRoute(ROUTES, url.pathname);
+  if (!hit) return plainResponse(404, { error: 'No such route' });
+  const method = (init.method ?? 'GET').toUpperCase();
+
+  const handler = (require(hit.route.file) as Record<string, unknown>)[method];
+  if (typeof handler !== 'function') return plainResponse(405, {});
+  // A plain object: the Jest Request polyfill reads headers with
+  // Object.entries, which sees nothing on a Headers instance.
+  const headers: Record<string, string> = {
+    ...(init.headers as Record<string, string> | undefined),
+    authorization: `Bearer ${generateToken({ userId: FIXTURE_USER, email: 'fixture@example.com' } as never)}`,
+  };
+  const request = new NextRequest(
+    new URL(url.pathname + url.search, SITE.origin),
+    {
+      method,
+      headers,
+      body:
+        method === 'GET' || method === 'HEAD'
+          ? undefined
+          : (init.body as BodyInit),
+    }
+  );
+  inflight++;
+  try {
+    const response = await (
+      handler as (r: NextRequest, c: unknown) => Promise<Response>
+    )(request, { params: Promise.resolve(hit.params) });
+    // The Jest Response polyfill has no `ok`; pages branch on it.
+    return {
+      ok: response.status >= 200 && response.status < 300,
+      status: response.status,
+      headers: response.headers,
+      json: () => response.json(),
+      text: () => response.text(),
+    } as unknown as Response;
+  } finally {
+    inflight--;
+  }
+}
+
+// ── Rendering ───────────────────────────────────────────────────────────────
+
+// Browser APIs jsdom does not implement, at their inert defaults.
+function installBrowserApis() {
+  window.matchMedia ??= ((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+  class Observer {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  globalThis.ResizeObserver ??= Observer as unknown as typeof ResizeObserver;
+  globalThis.IntersectionObserver ??=
+    Observer as unknown as typeof IntersectionObserver;
+  window.scrollTo ??= (() => undefined) as typeof window.scrollTo;
+  HTMLMediaElement.prototype.play ??= async () => undefined;
+  HTMLMediaElement.prototype.pause ??= () => undefined;
+}
+
+function paramsFor(
+  route: string,
+  fixture?: PageFixture
+): Record<string, string> {
   const params: Record<string, string> = {};
   for (const [, name] of route.matchAll(/\[(?:\.\.\.)?([^\]]+)\]/g)) {
-    params[name] = SAMPLE_PARAMS[name] ?? 'example';
+    params[name] = fixture?.params?.[name] ?? 'example';
   }
   return params;
 }
@@ -144,8 +510,8 @@ function paramsFor(route: string): Record<string, string> {
 const isAsync = (fn: unknown) =>
   typeof fn === 'function' && fn.constructor.name === 'AsyncFunction';
 
-// Resolve async server components ahead of react-dom/server, which (unlike
-// the RSC renderer) cannot await them. Client components are left to React.
+// Resolve async server components ahead of React DOM, which (unlike the RSC
+// renderer) cannot await them. Client components are left to React.
 async function resolveServerTree(
   node: React.ReactNode
 ): Promise<React.ReactNode> {
@@ -179,23 +545,46 @@ function visibleCopy(markup: string): string {
   return `${text} ${attributes.join(' ')}`;
 }
 
-async function renderPage(file: string): Promise<string> {
-  const route = routeOf(file);
-
+async function pageTree(
+  file: string,
+  fixture?: PageFixture
+): Promise<React.ReactNode> {
   const mod = require(file) as { default: (props: unknown) => React.ReactNode };
   const Page = mod.default;
-  if (typeof Page !== 'function')
+  if (typeof Page !== 'function') {
     throw new Error('no default export component');
-  const params = paramsFor(route);
+  }
   const props = {
-    params: Promise.resolve(params),
+    params: Promise.resolve(paramsFor(routeOf(file), fixture)),
     searchParams: Promise.resolve({}),
   };
   const tree = isAsync(Page)
     ? await (Page as (p: unknown) => Promise<React.ReactNode>)(props)
     : React.createElement(Page as React.ComponentType<unknown>, props);
-  return renderToStaticMarkup(<>{await resolveServerTree(tree)}</>);
+  return resolveServerTree(tree);
 }
+
+// Mount in jsdom and wait until effects and same-origin fetches settle.
+async function clientMarkup(tree: React.ReactNode): Promise<string> {
+  const { container } = render(<>{tree}</>);
+  let last = '';
+  let stable = 0;
+  // Data libraries (SWR) start requests on a later frame, so each step is a
+  // real wait, and the DOM must be quiet for several steps in a row.
+  for (let i = 0; i < 100 && stable < 5; i++) {
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 20));
+    });
+    const html = container.innerHTML;
+    stable = inflight === 0 && html === last ? stable + 1 : 0;
+    last = html;
+  }
+  const html = container.innerHTML;
+  cleanup();
+  return html;
+}
+
+// ── Suite ───────────────────────────────────────────────────────────────────
 
 const pages = publicPageFiles();
 
@@ -207,13 +596,9 @@ describe('public copy — unsupported claims (rendered)', () => {
   beforeAll(() => {
     process.env.NEXT_PUBLIC_SUPABASE_URL ||= 'http://localhost:54321';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||= 'test-anon-key';
+    installBrowserApis();
     // A plain function: the Jest config resets jest.fn implementations.
-    global.fetch = (async () => ({
-      ok: false,
-      status: 503,
-      json: async () => ({}),
-      text: async () => '',
-    })) as unknown as typeof fetch;
+    global.fetch = routedFetch as unknown as typeof fetch;
     // Rendering 50+ pages outside Next is noisy; failures are asserted below.
     console.error = () => undefined;
     console.warn = () => undefined;
@@ -225,6 +610,11 @@ describe('public copy — unsupported claims (rendered)', () => {
     console.warn = originalWarn;
   });
 
+  afterEach(() => {
+    globalThis.__copyFixtures = {};
+    window.history.replaceState({}, '', '/');
+  });
+
   it('finds the public pages', () => {
     expect(pages.map(rel)).toEqual(
       expect.arrayContaining([
@@ -232,43 +622,53 @@ describe('public copy — unsupported claims (rendered)', () => {
         'app/add-ons/page.tsx',
         'app/(auth)/signup/page.tsx',
         'app/vision-board-preview/ra-launch-2026-05/page.tsx',
+        ...Object.keys(PAGE_FIXTURES),
       ])
     );
   });
 
-  it('lists only real pages as unrenderable', () => {
+  it('has fixtures only for real pages', () => {
     const known = new Set(pages.map(rel));
-    expect(Object.keys(UNRENDERABLE).filter(f => !known.has(f))).toEqual([]);
+    expect(Object.keys(PAGE_FIXTURES).filter(f => !known.has(f))).toEqual([]);
   });
 
   it.each(pages.map(file => [rel(file), file]))(
     '%s',
     async (relative, file) => {
-      const known = UNRENDERABLE[relative];
-      if (known?.outcome === 'throws') {
-        // Still unrenderable — if this starts passing, remove it from the list.
-        await expect(renderPage(file)).rejects.toThrow();
-        return;
-      }
-      let markup: string;
+      const fixture = PAGE_FIXTURES[relative];
+      globalThis.__copyFixtures = fixture?.prisma ?? {};
+      const route = routeOf(file);
+      const params = paramsFor(route, fixture);
+      const path =
+        fixture?.url?.() ??
+        route.replace(
+          /\[(?:\.\.\.)?([^\]]+)\]/g,
+          (_m, name: string) => params[name]
+        );
+      window.history.replaceState({}, '', path);
+
+      let served: string;
+      let hydrated: string;
       try {
-        markup = await renderPage(file);
+        const tree = await pageTree(file, fixture);
+        served = renderToStaticMarkup(<>{tree}</>);
+        hydrated = await clientMarkup(tree);
       } catch (error) {
+        cleanup();
         // A redirect-only page serves no body, so there is no copy to judge.
         if (String((error as Error).message).startsWith('NEXT_REDIRECT ')) {
           return;
         }
         throw error;
       }
-      const copy = visibleCopy(markup);
-      const length = copy.replace(/\s+/g, '').length;
-      if (known?.outcome === 'empty') {
-        expect(length).toBe(0);
-        return;
+      const copy = visibleCopy(`${served}\n${hydrated}`);
+
+      expect(copy.replace(/\s+/g, '').length).toBeGreaterThan(0);
+      for (const marker of fixture?.markers ?? []) {
+        expect(copy).toContain(marker);
       }
-      expect(length).toBeGreaterThan(0);
       expect(findClaims(copy)).toEqual([]);
     },
-    30_000
+    60_000
   );
 });

@@ -20,8 +20,10 @@
 import { readFileSync } from 'fs';
 import {
   BANNED_CLAIMS,
+  NOT_CLAIMS,
   REMOVED_CLAIM_SEEDS,
   findClaims,
+  findClaimsInSource,
   normaliseCopy,
   publicAppFiles,
   publicSourceInventory,
@@ -43,6 +45,12 @@ describe('public copy — inventory', () => {
     'lib/remotion/educational-content.ts',
     'lib/seo/metadata.ts',
     'public/llms.txt',
+    // Same-origin API routes public pages fetch, and what those routes import.
+    'app/api/blog/[slug]/route.ts',
+    'app/api/public/testimonials/[token]/route.ts',
+    'app/api/collaborator/context/route.ts',
+    'app/api/credential-intake/route.ts',
+    'lib/clients/getClientBySlug.ts',
   ])('covers %s', file => {
     expect(inventory.map(rel)).toContain(file);
   });
@@ -50,6 +58,7 @@ describe('public copy — inventory', () => {
   // Seeds are routes the proxy serves without auth. Files they import are
   // public by reach even when they live under app/dashboard (e.g. the
   // /vision-board-preview panels), so the closure is not filtered.
+  // API routes enter only by reference from public code, never as seeds.
   it('seeds no API route or auth-protected route', () => {
     const stray = publicAppFiles()
       .map(rel)
@@ -81,6 +90,10 @@ describe('public copy — normalisation', () => {
     expect(findClaims(seed)).not.toEqual([]);
   });
 
+  it.each(NOT_CLAIMS)('does not flag %j', text => {
+    expect(findClaims(text)).toEqual([]);
+  });
+
   it('every pattern is exercised by at least one seed', () => {
     const unused = BANNED_CLAIMS.filter(
       ([, pattern]) =>
@@ -90,10 +103,37 @@ describe('public copy — normalisation', () => {
   });
 });
 
+describe('public copy — source extraction', () => {
+  // Copy split across literals, expressions and elements reads as one string
+  // to a visitor, so the source check must reassemble it the same way.
+  it.each([
+    ["<p>{'Synthex gets 45'}{'% more engagement.'}</p>", 'x.tsx'],
+    ["<p>{'Synthex gets '}{'45'}{'% more engagement.'}</p>", 'x.tsx'],
+    ['<p>Join <strong>5,000+</strong> Australian businesses</p>', 'x.tsx'],
+    ["const t = 'Join 5,' + '000+ Australian businesses';", 'x.ts'],
+    ["const t = `Synthex gets ${'45'}% more engagement`;", 'x.ts'],
+    ["const post = { title: 'Synthex gets 45% more engagement.' };", 'x.ts'],
+    [
+      "<Hero description={'The bakery grew by ' + '10,000 followers'} />",
+      'x.tsx',
+    ],
+  ])('flags %s', (source, file) => {
+    expect(findClaimsInSource(source, file)).not.toEqual([]);
+  });
+
+  it('ignores comments, which never reach a visitor', () => {
+    expect(
+      findClaimsInSource('// grew by 10,000 followers\nconst a = 1;', 'x.ts')
+    ).toEqual([]);
+  });
+});
+
 describe('public copy — unsupported claims (source)', () => {
   it('no public page or anything it imports carries a banned claim', () => {
     const hits = inventory.flatMap(file =>
-      findClaims(readFileSync(file, 'utf8')).map(hit => `${rel(file)}: ${hit}`)
+      findClaimsInSource(readFileSync(file, 'utf8'), file).map(
+        hit => `${rel(file)}: ${hit}`
+      )
     );
     expect(hits).toEqual([]);
   });
