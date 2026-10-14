@@ -5,7 +5,7 @@
 ## Business Identity
 
 - Brand Name: SYNTHEX
-- Parent Organisation: Unite-Group (https://unite-group.com.au)
+- Parent Organisation: Unite-Group
 - Website: https://synthex.social
 - Status Page: https://status.synthex.social
 - Category: SaaS — AI marketing automation (B2B + creator-economy)

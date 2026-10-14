@@ -102,10 +102,7 @@ export const metadata: Metadata = {
     'AI content generation',
     'marketing automation',
   ],
-  authors: [
-    { name: 'Synthex Team', url: BASE_URL },
-    { name: 'Unite-Group', url: 'https://unite-group.com.au' },
-  ],
+  authors: [{ name: 'Synthex Team', url: BASE_URL }, { name: 'Unite-Group' }],
   creator: 'Synthex',
   publisher: 'Unite-Group',
   applicationName: 'SYNTHEX',
