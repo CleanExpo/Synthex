@@ -121,10 +121,21 @@ function numberWordsToDigits(text: string): string {
   });
 }
 
+const ATTRIBUTE_RE = /([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|`[^`]*`)/g;
+// Attributes that carry styling, wiring or identifiers rather than copy.
+const NON_COPY_ATTRIBUTE =
+  /^(?:class(?:Name)?|style|href|src|srcSet|id|key|type|variant|size|name|role|rel|target|method|action|htmlFor|for|width|height|viewBox|d|fill|stroke|xmlns|loading|sizes|data-[\w-]+|aria-(?!label)[\w-]+|tw|as|icon|route|path|gradientVariant)$/i;
+
 export function normaliseCopy(raw: string): string {
-  // Markup is not copy: drop tags and JSX whitespace expressions ({' '}).
+  // Markup is not copy: a tag is replaced by its quoted attribute values
+  // (alt, description, title… are copy), and JSX whitespace ({' '}) by a space.
   let text = decodeEntities(raw)
-    .replace(/<\/?[a-z][^<>]*>/gi, '')
+    .replace(/<\/?[a-z][^<>]*>/gi, tag => {
+      const values = [...tag.matchAll(ATTRIBUTE_RE)]
+        .filter(([, name]) => !NON_COPY_ATTRIBUTE.test(name))
+        .map(([, , value]) => value.slice(1, -1));
+      return ` ${values.join(' ')} `;
+    })
     .replace(/\{\s*(['"`])\s*\1\s*\}/g, ' ')
     .toLowerCase();
   text = text.replace(/[‘’`´]/g, "'").replace(/[“”]/g, '"');
@@ -176,6 +187,7 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   'Five thousand business owners are already using Synthex for social media marketing.',
   'Join five-thousand Australian businesses using Synthex.',
   'Join 5&#44;000+ Australian businesses',
+  '<PublicPageHero description="Join 5,000+ Australian businesses using Synthex." />',
   'Every plan includes a 30-day money-back guarantee.',
   '30-day money-back guarantee · Cancel anytime',
   'Thirty day money back guarantee',
