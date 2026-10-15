@@ -1,0 +1,20 @@
+# gitleaks ignore list (SYN-1226). Exactly the 13 historical findings, by
+# gitleaks' own fingerprint (commit:file:rule:line), generated from its report
+# for 83243588..HEAD. They are the whitespace-free normalised seed keys that
+# commit 84876b17 stored in the tripwire seed file (later commits dropped
+# stored keys). Fingerprints pin one commit and line each, so any NEW finding
+# in that file, or anywhere else, is still reported. gitleaks loads this file
+# from the scan source / --gitleaks-ignore-path (default ".").
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:1064
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:1232
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:1238
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:1454
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:1484
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:2480
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:3020
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:3230
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:4610
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:632
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:830
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:884
+84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:914
