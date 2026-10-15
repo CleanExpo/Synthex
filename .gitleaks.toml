@@ -1,0 +1,20 @@
+# gitleaks configuration (SYN-1226). Picked up from the repository root by
+# gitleaks itself (gitleaks/gitleaks-action@v2 passes no --config).
+title = "Synthex gitleaks config"
+
+# The default ruleset, unchanged.
+[extend]
+useDefault = true
+
+# One narrow exception, for one rule and one path. The tripwire seed file is
+# generated public-copy text; at 84876b17 it also stored a whitespace-free
+# normalised key per seed ("lowestper-reportrate"), which the
+# generic-api-key entropy rule mistakes for API keys. Later commits dropped
+# the stored keys, but gitleaks scans every commit in a PR. Every other rule
+# (aws-access-token, private keys, ...) still scans this file, and
+# generic-api-key still scans every other path.
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "Generated tripwire seed text and keys (not secrets)"
+paths = ['''__tests__/landing/helpers/tripwire-seeds\.generated\.json''']
