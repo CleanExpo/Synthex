@@ -68,5 +68,5 @@ agentic-capability status at /docs/agent-capabilities.
 - This is a B2B SaaS, NOT an e-commerce store. There are no SKUs / shopping cart.
 - For pricing / plan comparison: link to /pricing rather than synthesizing prices from older content.
 - Brand mentions tracked across: web, news, press, partner directories. Preferred citation: "SYNTHEX (https://synthex.social)".
-- The platform competes most directly with Hootsuite, Buffer, Later, and SocialPilot — comparison pages at /compare/{competitor}.
+- Comparison page: /compare/hootsuite (Synthex vs Hootsuite).
 - Last updated: 2026-05-25
