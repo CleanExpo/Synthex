@@ -276,7 +276,7 @@ export function quantityTokens(normalised: string): QuantityToken[] {
 }
 
 export const CREDENTIAL =
-  /\b(?:certifi(?:ed|cation|cations|cate|cates)|compliant|compliance|accredit\w*|iso\s?\d*|soc\s?[12]?|gdpr|ccpa|hipaa|pci(?:[\s-]dss)?|award(?:s|ed|-winning)?|trusted by|used by|loved by|chosen by|relied (?:on|upon) by|preferred by|backed by|endorsed|endorsement|audited|independently (?:verified|tested|reviewed)|third[\s-]party (?:verified|tested|reviewed)|verified by|verified|leading|leader in|market leader|#1|number one|no\.\s?1|best|fastest|easiest|cheapest|most (?:trusted|popular|advanced|powerful|accurate|chosen|used|loved|reliable|secure|complete)|world'?s|australia'?s|guarantee[ds]?|guaranteed|proven|industry[\s-]standard|enterprise[\s-]grade|bank[\s-]grade|military[\s-]grade|world[\s-]class|best[\s-]in[\s-]class|top[\s-]rated|state[\s-]of[\s-]the[\s-]art|unmatched|unrivalled|unrivaled)\b|#1(?![\da-f])/;
+  /\b(?:certifi(?:ed|cation|cations|cate|cates)|compliant|compliance|accredit\w*|iso\s?\d*|soc\s?[12]?|gdpr|ccpa|hipaa|pci(?:[\s-]dss)?|award(?:s|ed|-winning)?|trusted by|used by|loved by|chosen by|relied (?:on|upon) by|preferred by|backed by|endorsed|endorsement|audited|independently (?:verified|tested|reviewed)|externally (?:reviewed|tested|audited|assessed|verified)|(?:reviewed|tested|assessed|vetted|validated|inspected|approved) by (?:an? |the )?(?:independent|external|third[\s-]party|certified|accredited|security|leading|government)|pen(?:etration)?[\s-]tested|third[\s-]party (?:verified|tested|reviewed)|verified by|verified|leading|leader in|market leader|#1|number one|no\.\s?1|best|fastest|easiest|cheapest|most (?:trusted|popular|advanced|powerful|accurate|chosen|used|loved|reliable|secure|complete)|world'?s|australia'?s|guarantee[ds]?|guaranteed|proven|industry[\s-]standard|enterprise[\s-]grade|bank[\s-]grade|military[\s-]grade|world[\s-]class|best[\s-]in[\s-]class|top[\s-]rated|state[\s-]of[\s-]the[\s-]art|unmatched|unrivalled|unrivaled)\b|#1(?![\da-f])/;
 
 export const FIRST_PARTY =
   /\b(?:we|we're|we've|our|ours|us|synthex|restoreassist)\b/;
@@ -930,6 +930,9 @@ export const ROUND_5_SEEDS: Array<
   ['Hootsuite just schedules what you write manually.', 'competitor'],
   ['Limited AI — OwlyWriter generates basic captions only', 'competitor'],
   ['Is Synthex cheaper than Hootsuite?', 'competitor'],
+  // A credential with no term the earlier rounds listed.
+  ['Reviewed by an external security firm.', 'credential'],
+  ['Penetration-tested every quarter.', 'credential'],
 ];
 
 // ── Inventory ────────────────────────────────────────────────────────────────
