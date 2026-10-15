@@ -36,6 +36,7 @@ import {
   publicApiRouteFiles,
   rel,
   sentenceKey,
+  type AllowIndex,
 } from './helpers/public-claims';
 import { allowIndex } from './helpers/public-claims-allowlist';
 
@@ -407,10 +408,7 @@ describe('public copy — unsupported claims (API responses)', () => {
       const judged = maskData(values.join('\n'), second.values.join('\n'));
       const findings = claimHits(judged).flatMap(hit => {
         const key = sentenceKey(hit.sentence);
-        if (
-          (hit.rule === 'number' && allow.number.has(key)) ||
-          (hit.rule === 'credential' && allow.credential.has(key))
-        ) {
+        if (allow[hit.rule as keyof AllowIndex]?.has(key)) {
           used.add(`${hit.rule}|${key}`);
           return [];
         }
@@ -477,6 +475,7 @@ describe('public copy — unsupported claims (API responses)', () => {
     const stale = [
       ...[...allow.number].map(k => `number|${k}`),
       ...[...allow.credential].map(k => `credential|${k}`),
+      ...[...allow.competitor].map(k => `competitor|${k}`),
     ].filter(k => !used.has(k));
     expect(stale).toEqual([]);
   });

@@ -298,13 +298,23 @@ export function splitSentences(normalised: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Competitors by name. Any sentence naming one is a COMPETITOR finding: a
+ * judgement about another company needs evidence, and only neutral
+ * comparison wording ("Synthex vs Hootsuite") passes without it.
+ */
+export const COMPETITOR =
+  /\b(?:hootsuite|owlywriter|sprout social|sprinklr|agorapulse|loomly|metricool|socialbee|planoly|sendible|socialpilot|meltwater|brandwatch)\b/;
+
 export interface AllowIndex {
   number: Set<string>;
   credential: Set<string>;
+  competitor: Set<string>;
 }
 export const NO_ALLOW: AllowIndex = {
   number: new Set(),
   credential: new Set(),
+  competitor: new Set(),
 };
 
 /**
@@ -331,6 +341,9 @@ export function claimHits(
     }
     if (CREDENTIAL.test(sentence) && !allow.credential.has(key)) {
       hits.push({ sentence, rule: 'credential' });
+    }
+    if (COMPETITOR.test(sentence) && !allow.competitor.has(key)) {
+      hits.push({ sentence, rule: 'competitor' });
     }
   }
   return hits;
@@ -886,7 +899,9 @@ export const NOT_CLAIMS: string[] = [
 
 // Round-5 review mutants and the claims removed from /security and support:
 // permanent positive controls.
-export const ROUND_5_SEEDS: Array<[string, 'number' | 'credential']> = [
+export const ROUND_5_SEEDS: Array<
+  [string, 'number' | 'credential' | 'competitor']
+> = [
   ['The campaign delivered 8,200 qualified prospects.', 'number'],
   ['Synthex delivered 8,200 qualified leads.', 'number'],
   ['The campaign harvested 9,000 qualified leads.', 'number'],
@@ -911,6 +926,10 @@ export const ROUND_5_SEEDS: Array<[string, 'number' | 'credential']> = [
   ],
   ['The most advanced AI-powered social media platform', 'credential'],
   ["Australia's best restoration training.", 'credential'],
+  // Removed Hootsuite judgements: no number or credential term in them.
+  ['Hootsuite just schedules what you write manually.', 'competitor'],
+  ['Limited AI — OwlyWriter generates basic captions only', 'competitor'],
+  ['Is Synthex cheaper than Hootsuite?', 'competitor'],
 ];
 
 // ── Inventory ────────────────────────────────────────────────────────────────

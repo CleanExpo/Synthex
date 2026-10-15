@@ -36,6 +36,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import {
   CREDENTIAL,
+  COMPETITOR,
   FIRST_PARTY,
   ROOT,
   type AllowIndex,
@@ -63,6 +64,7 @@ export type NumberKind =
   | 'hypothetical-example'
   | 'evidence';
 export type CredentialKind = 'neutral' | 'evidence';
+export type CompetitorKind = 'neutral' | 'evidence';
 
 interface EntryBase {
   /** Exact normalised sentence (whitespace is ignored when matching). */
@@ -76,7 +78,8 @@ interface EntryBase {
 }
 export type AllowEntry =
   | (EntryBase & { class: 'number'; kinds: NumberKind[] })
-  | (EntryBase & { class: 'credential'; kinds: CredentialKind[] });
+  | (EntryBase & { class: 'credential'; kinds: CredentialKind[] })
+  | (EntryBase & { class: 'competitor'; kinds: CompetitorKind[] });
 
 let prices: Set<string> | null = null;
 let limits: Map<string, Set<string>> | null = null;
@@ -134,6 +137,22 @@ export const NEUTRAL_USES: RegExp[] = [
   /\bemail\b[^.]{0,30}\bverified\b|\bverified email\b|\bonce verified\b|\b(?:not|not yet|already) verified\b/,
 ];
 
+/**
+ * Neutral comparison wording about a competitor: the roles a name may play
+ * without evidence. Once they are removed, no evaluative word may remain.
+ */
+const COMPETITOR_NAME = COMPETITOR.source.replace(/^\\b|\\b$/g, '');
+export const COMPETITOR_ROLES: RegExp[] = [
+  `\\bsynthex (?:vs\\.?|versus|and|alongside) ${COMPETITOR_NAME}\\b`,
+  `\\bvs\\.? ${COMPETITOR_NAME}\\b`,
+  `\\b${COMPETITOR_NAME} alternative\\b`,
+  `\\b(?:teams |for teams )?considering ${COMPETITOR_NAME}\\b`,
+  `\\balongside ${COMPETITOR_NAME}\\b`,
+  `\\/compare\\/${COMPETITOR_NAME}\\b`,
+].map(r => new RegExp(r, 'g'));
+export const EVALUATIVE =
+  /\b(?:only|just|manual(?:ly)?|limited|basic|lacks?|no|not|doesn'?t|does not|can'?t|cannot|requires?|expensive|cheap(?:er)?|costl(?:y|ier)|better|worse|slow(?:er)?|outdated|clunky|switch(?:es|ing)?|replaces?|beats?|wins?|more|less|fewer|instead)\b/;
+
 /** Why an entry fails its kinds, or null when every constraint holds. */
 export function checkEntry(e: AllowEntry): string | null {
   const s = e.sentence;
@@ -171,6 +190,15 @@ export function checkEntry(e: AllowEntry): string | null {
     }
     return null;
   }
+  if (e.class === 'competitor') {
+    if (e.kinds.includes('evidence') && hasEvidence(e)) return null;
+    if (!e.kinds.includes('neutral')) return 'no competitor kind satisfied';
+    const rest = COMPETITOR_ROLES.reduce((t, role) => t.replace(role, ' '), s);
+    if (COMPETITOR.test(rest))
+      return 'names a competitor outside a neutral comparison role';
+    if (EVALUATIVE.test(rest)) return 'judges a competitor without evidence';
+    return null;
+  }
   const terms = [...s.matchAll(new RegExp(CREDENTIAL.source, 'g'))];
   if (terms.length === 0) return 'no credential term in the sentence';
   for (const term of terms) {
@@ -197,7 +225,11 @@ export function checkEntry(e: AllowEntry): string | null {
 }
 
 export function allowIndex(layer: EntryBase['layer']): AllowIndex {
-  const index: AllowIndex = { number: new Set(), credential: new Set() };
+  const index: AllowIndex = {
+    number: new Set(),
+    credential: new Set(),
+    competitor: new Set(),
+  };
   for (const e of ALLOW_LIST) {
     if (e.layer === layer) index[e.class].add(sentenceKey(e.sentence));
   }
@@ -597,6 +629,64 @@ export const ALLOW_LIST: AllowEntry[] = [
     kinds: ['ordinal-step-version'],
     sentence: 'out of 5 stars',
   },
+  // app/compare/hootsuite/page.tsx
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'alongside hootsuite?',
+  },
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'answer synthex vs hootsuite',
+  },
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'considering synthex alongside hootsuite?',
+  },
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'hootsuite alternative australia',
+  },
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'synthex and hootsuite: what synthex does | synthex',
+  },
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'synthex vs hootsuite',
+  },
+  {
+    layer: 'source',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'synthex vs hootsuite considering synthex',
+  },
+  // app/compare/page.tsx
+  {
+    layer: 'source',
+    file: 'app/compare/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'what synthex does, for teams considering hootsuite.',
+  },
   // app/contact/ContactForm.tsx
   {
     layer: 'source',
@@ -773,6 +863,14 @@ export const ALLOW_LIST: AllowEntry[] = [
     class: 'number',
     kinds: ['ordinal-step-version'],
     sentence: 'brand voice ai 01',
+  },
+  // app/features/platforms/page.tsx
+  {
+    layer: 'source',
+    file: 'app/features/platforms/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'vs hootsuite →',
   },
   // app/integrations/page.tsx
   {
@@ -1616,6 +1714,13 @@ export const ALLOW_LIST: AllowEntry[] = [
   {
     layer: 'source',
     file: 'public/llms.txt',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: '- comparison page: /compare/hootsuite (synthex vs hootsuite).',
+  },
+  {
+    layer: 'source',
+    file: 'public/llms.txt',
     class: 'number',
     kinds: ['date-time'],
     sentence: '- last updated: 2026-05-25',
@@ -2310,6 +2415,29 @@ export const ALLOW_LIST: AllowEntry[] = [
     sentence:
       'you can reach fixture business name by phone at +61 2 1111 1111 or visit their website at',
   },
+  // app/compare/hootsuite/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'considering synthex alongside hootsuite?',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/compare/hootsuite/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'synthex vs hootsuite',
+  },
+  // app/compare/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/compare/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'what synthex does, for teams considering hootsuite.',
+  },
   // app/credential-intake/page.tsx
   {
     layer: 'rendered',
@@ -2539,6 +2667,14 @@ export const ALLOW_LIST: AllowEntry[] = [
     class: 'number',
     kinds: ['ordinal-step-version'],
     sentence: '05',
+  },
+  // app/features/platforms/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/features/platforms/page.tsx',
+    class: 'competitor',
+    kinds: ['neutral'],
+    sentence: 'ai content →for agencies →vs hootsuite →',
   },
   // app/integrations/page.tsx
   {

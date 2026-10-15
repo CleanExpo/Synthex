@@ -37,6 +37,7 @@ import {
   publicSourceInventory,
   rel,
   sentenceKey,
+  type AllowIndex,
 } from './helpers/public-claims';
 
 const inventory = publicSourceInventory();
@@ -120,7 +121,7 @@ describe('public copy — mechanical allow-list kinds', () => {
   const entry = (
     sentence: string,
     kinds: string[],
-    cls: 'number' | 'credential' = 'number',
+    cls: 'number' | 'credential' | 'competitor' = 'number',
     extra: Partial<AllowEntry> = {}
   ) =>
     ({
@@ -135,7 +136,7 @@ describe('public copy — mechanical allow-list kinds', () => {
   type Case = [
     string,
     string[],
-    ('number' | 'credential')?,
+    ('number' | 'credential' | 'competitor')?,
     Partial<AllowEntry>?,
   ];
 
@@ -157,6 +158,17 @@ describe('public copy — mechanical allow-list kinds', () => {
     ['Independently audited security', ['neutral'], 'credential'],
     ['Most chosen', ['neutral'], 'credential'],
     ['Award-winning platform', ['neutral'], 'credential'],
+    [
+      'Hootsuite just schedules what you write manually.',
+      ['neutral'],
+      'competitor',
+    ],
+    [
+      'Synthex vs Hootsuite: Hootsuite has no brand voice.',
+      ['neutral'],
+      'competitor',
+    ],
+    ['Is Synthex cheaper than Hootsuite?', ['neutral'], 'competitor'],
     [
       'Synthex delivered 8,200 qualified leads.',
       ['evidence'],
@@ -189,6 +201,12 @@ describe('public copy — mechanical allow-list kinds', () => {
     ],
     ['Start date must be a valid ISO date string', ['neutral'], 'credential'],
     ['Your best posts based on engagement', ['neutral'], 'credential'],
+    ['Synthex vs Hootsuite', ['neutral'], 'competitor'],
+    [
+      'What Synthex does, for teams considering Hootsuite.',
+      ['neutral'],
+      'competitor',
+    ],
   ] as Case[])('accepts %j as %j', (sentence, kinds, cls = 'number') => {
     expect(checkEntry(entry(sentence, kinds, cls))).toBeNull();
   });
@@ -254,10 +272,7 @@ describe('public copy — unsupported claims (source)', () => {
     const hits = inventory.flatMap(file =>
       claimHitsInSource(readFileSync(file, 'utf8'), file).flatMap(hit => {
         const key = sentenceKey(hit.sentence);
-        if (
-          (hit.rule === 'number' && allow.number.has(key)) ||
-          (hit.rule === 'credential' && allow.credential.has(key))
-        ) {
+        if (allow[hit.rule as keyof AllowIndex]?.has(key)) {
           used.add(`${hit.rule}|${key}`);
           return [];
         }
