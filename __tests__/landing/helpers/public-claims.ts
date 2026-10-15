@@ -1678,9 +1678,16 @@ function referencedApiRoutes(source: string, routes: ApiRoute[]): string[] {
  * they import, the same-origin API routes any of those reference, and what
  * those routes import — followed to a fixpoint.
  */
+/**
+ * Copy published outside the site: the video catalogue is rendered and
+ * uploaded to YouTube, so the tripwire judges it although no page bundles it.
+ */
+export const PUBLISHED_OFF_SITE = ['lib/remotion/educational-content.ts'];
+
 export function publicSourceInventory({
   followApi = true,
-}: { followApi?: boolean } = {}): string[] {
+  followRouteImports = false,
+}: { followApi?: boolean; followRouteImports?: boolean } = {}): string[] {
   const routes = followApi ? apiRoutes() : [];
   const routeFiles = new Set(routes.map(r => r.file));
   const seen = new Set<string>();
@@ -1694,7 +1701,9 @@ export function publicSourceInventory({
     // An API route's own literals are judged (every branch it can return);
     // the server modules it imports reach a visitor only through its
     // response, which the API-response scan judges field by field.
-    if (!routeFiles.has(file)) {
+    // With followRouteImports (tripwire only), those server modules are judged
+    // too: a seed is exact enough that a wider scope cannot raise noise.
+    if (followRouteImports || !routeFiles.has(file)) {
       for (const m of source.matchAll(IMPORT_RE)) {
         const resolved = resolveImport(file, m[1] ?? m[2] ?? m[3]);
         if (resolved && !seen.has(resolved)) queue.push(resolved);

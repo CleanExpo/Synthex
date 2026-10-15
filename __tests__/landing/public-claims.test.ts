@@ -22,9 +22,12 @@
  */
 
 import { readFileSync } from 'fs';
+import path from 'path';
 import {
   EMPTY_SEEDS,
   NOT_CLAIMS,
+  PUBLISHED_OFF_SITE,
+  ROOT,
   REVIEWER_MUTANTS,
   ROUND_5_REMOVED,
   ROUND_5_SEEDS,
@@ -40,6 +43,13 @@ import {
 } from './helpers/public-claims';
 
 const inventory = publicSourceInventory();
+// The tripwire also reads what API routes import, and off-site published copy.
+const tripwireInventory = [
+  ...new Set([
+    ...publicSourceInventory({ followRouteImports: true }),
+    ...PUBLISHED_OFF_SITE.map(f => path.join(ROOT, f)),
+  ]),
+];
 
 describe('public copy — inventory', () => {
   it.each([
@@ -235,8 +245,18 @@ describe('public copy — source extraction', () => {
 });
 
 describe('public copy — removed claims (source)', () => {
+  it('reads server modules behind API routes and off-site copy', () => {
+    const files = tripwireInventory.map(rel);
+    expect(files).toEqual(
+      expect.arrayContaining([
+        'lib/ai/content-scorer.ts',
+        'lib/remotion/educational-content.ts',
+      ])
+    );
+  });
+
   it('no public file carries a removed claim or a banned pattern', () => {
-    const hits = inventory.flatMap(file =>
+    const hits = tripwireInventory.flatMap(file =>
       tripwireHitsInSource(readFileSync(file, 'utf8'), file).map(
         hit =>
           `${rel(file)}:${hit.line ?? '?'}: ${hit.rule} — "${hit.sentence}"`
