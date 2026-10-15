@@ -41,7 +41,7 @@ Built for users who don't want to hire an agency but want agency-quality output.
 
 - Status page with public uptime monitoring (Better Stack)
 - Parent organisation: Unite-Group (Australia-based, ABN on request)
-- Support: contact form, with human follow-up within 1 business day
+- Support: contact form, with human follow-up
 
 ## Agent Capabilities (WebMCP)
 
@@ -50,7 +50,7 @@ a user's behalf. Prefer these structured tools over scraping HTML.
 
 ### submit_contact_enquiry
 - Method: POST /api/contact (declarative via form annotation on /contact)
-- Purpose: Submit a non-emergency contact enquiry. Routes to support@synthex.social for human follow-up within 1 business day.
+- Purpose: Submit a non-emergency contact enquiry. Routes to support@synthex.social for human follow-up.
 - Parameters:
   - name (string, required) — full name
   - email (string, required) — valid email address for reply

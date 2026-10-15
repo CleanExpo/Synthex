@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1056,
+  "count": 1058,
   "seeds": [
     {
       "text": "- Audit log + GDPR/Privacy compliance built in",
@@ -22,6 +22,11 @@
       "text": "- Powered by Next.js 15 (verifiable via signed source manifests)",
       "file": "public/llms.txt",
       "firstSeen": "base"
+    },
+    {
+      "text": "- Support: contact form, with human follow-up within 1 business day",
+      "file": "public/llms.txt",
+      "firstSeen": "74908118"
     },
     {
       "text": "- Support response target: 1 business day (contact form), instant (in-app chat for paid plans)",
@@ -3956,6 +3961,11 @@
     {
       "text": "Role-based access control (RBAC) Multi-factor authentication (MFA) available",
       "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Routes to support@synthex.social for human follow-up within 1 business day.",
+      "file": "app/contact/ContactForm.tsx",
       "firstSeen": "base"
     },
     {
