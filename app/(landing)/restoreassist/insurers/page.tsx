@@ -51,7 +51,7 @@ import {
 export const metadata: Metadata = {
   title: 'RestoreAssist for Insurers | One report format across your network',
   description:
-    'Insurance claims teams read 50+ contractor report formats a week. RestoreAssist gives every contractor one IICRC-grounded inspection report — fewer re-inspections, shorter claim cycles, a clean audit trail.',
+    'Insurance claims teams read reports in every contractor format. RestoreAssist gives every contractor one IICRC-grounded inspection report — fewer re-inspections, shorter claim cycles, a clean audit trail.',
   alternates: { canonical: '/restoreassist/insurers' },
   openGraph: {
     title: 'RestoreAssist for Insurers — one report format across your network',
@@ -95,14 +95,14 @@ const RA = {
 const fragmentationStats = [
   {
     icon: Layers,
-    value: '50+',
+    value: 'Many',
     label: 'report formats',
     note: 'across a typical contractor network — every trade files its own way',
   },
   {
     icon: Repeat,
-    value: '20–30%',
-    label: 'of claims re-inspected',
+    value: 'Re-inspections',
+    label: 'from incomplete reports',
     note: 'when a report is missing readings, photos, or a clear moisture map',
   },
   {
@@ -184,8 +184,8 @@ export default function InsurersLandingPage() {
               For insurance claims teams
             </p>
             <h1 className="mt-5 text-4xl font-extrabold leading-[1.08] sm:text-5xl">
-              Fifty contractor reports a week. Fifty different formats. One
-              re-inspection after another.
+              Every contractor report in a different format. One re-inspection
+              after another.
             </h1>
             <p
               className="mt-6 max-w-xl text-lg leading-relaxed"

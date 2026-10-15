@@ -35,13 +35,13 @@ export interface QuickAccessItem {
   kind: ItemKind;
   title: string;
   summary: string;
-  timeCostMin?: number;          // estimated minutes — undefined for reference / link
-  linearTicket?: string;          // e.g. "SYN-915"
-  vaultPath?: string;             // path inside ~/Synthex-Brain-2 or ~/Desktop/Synthex-Quick-Access
+  timeCostMin?: number; // estimated minutes — undefined for reference / link
+  linearTicket?: string; // e.g. "SYN-915"
+  vaultPath?: string; // path inside ~/Synthex-Brain-2 or ~/Desktop/Synthex-Quick-Access
   externalUrl?: string;
   brandSlug?: 'ra' | 'dr' | 'nrpg' | 'carsi' | 'synthex' | 'portfolio';
-  highlight?: boolean;            // featured / top-of-pile
-  badges?: string[];              // free-form short tags
+  highlight?: boolean; // featured / top-of-pile
+  badges?: string[]; // free-form short tags
 }
 
 // ── 01 · APPROVAL NEEDED ────────────────────────────────────────────────────
@@ -52,7 +52,8 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     status: 'approval-needed',
     kind: 'launch-package',
     title: 'RestoreAssist launch package',
-    summary: 'Full audit · Waves 0–7 · positioning · ICP · channels · copy · runbook · evidence · E-E-A-T',
+    summary:
+      'Full audit · Waves 0–7 · positioning · ICP · channels · copy · runbook · evidence · E-E-A-T',
     timeCostMin: 5,
     linearTicket: 'SYN-915',
     vaultPath: '02-Projects/RA-2026-05-AppStore-Launch/_kickoff.md',
@@ -65,7 +66,8 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     status: 'approval-needed',
     kind: 'copy',
     title: 'Insurer-facing landing copy',
-    summary: '6 sections · 1,168 words · counter-intuitive segment-1 proof surface',
+    summary:
+      '6 sections · 1,168 words · counter-intuitive segment-1 proof surface',
     timeCostMin: 8,
     linearTicket: 'SYN-918',
     vaultPath: '02-Projects/RA-2026-05-AppStore-Launch/copy/insurer-landing.md',
@@ -92,7 +94,8 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     summary: '2 founder + 10 brand · 5 fallbacks specced · 2,365 words',
     timeCostMin: 15,
     linearTicket: 'SYN-920',
-    vaultPath: '02-Projects/RA-2026-05-AppStore-Launch/copy/linkedin-drumbeat.md',
+    vaultPath:
+      '02-Projects/RA-2026-05-AppStore-Launch/copy/linkedin-drumbeat.md',
     brandSlug: 'ra',
     badges: ['T+1 → T+30', 'fallbacks ready'],
   },
@@ -113,10 +116,12 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     status: 'approval-needed',
     kind: 'evidence',
     title: 'Evidence base (AU + NZ data)',
-    summary: '3,200 words · 6 verified-public sources · 4 SVG figures · submissible',
+    summary:
+      '3,200 words · 6 verified-public sources · 4 SVG figures · submissible',
     timeCostMin: 12,
     linearTicket: 'SYN-924',
-    vaultPath: '02-Projects/RA-2026-05-AppStore-Launch/research/evidence-base.md',
+    vaultPath:
+      '02-Projects/RA-2026-05-AppStore-Launch/research/evidence-base.md',
     brandSlug: 'ra',
     badges: ['hard-strict sourcing', '5 ⚠ flags pending'],
   },
@@ -125,7 +130,8 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     status: 'approval-needed',
     kind: 'curriculum',
     title: 'RestoreAssist training curriculum',
-    summary: '9 videos · ~38 min total runtime · 3 tiers (Getting Started · Core · Advanced)',
+    summary:
+      '9 videos · ~38 min total runtime · 3 tiers (Getting Started · Core · Advanced)',
     timeCostMin: 6,
     linearTicket: 'SYN-925a',
     vaultPath: '02-Projects/training-videos-2026-05/curricula/ra-curriculum.md',
@@ -140,7 +146,8 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     summary: '5 templates × 4 brands = 20 renders · 5× efficiency multiplier',
     timeCostMin: 5,
     linearTicket: 'SYN-925e',
-    vaultPath: '02-Projects/training-videos-2026-05/curricula/byok-shared-module.md',
+    vaultPath:
+      '02-Projects/training-videos-2026-05/curricula/byok-shared-module.md',
     brandSlug: 'portfolio',
     badges: ['cross-brand'],
   },
@@ -149,10 +156,12 @@ const APPROVAL_NEEDED: QuickAccessItem[] = [
     status: 'approval-needed',
     kind: 'storyboard',
     title: 'Training pilot · RA · BYOK setup ⭐',
-    summary: '10-scene shot list · per-scene voiceover script · per-scene voice-enforce check',
+    summary:
+      '10-scene shot list · per-scene voiceover script · per-scene voice-enforce check',
     timeCostMin: 12,
     linearTicket: 'SYN-925a',
-    vaultPath: '02-Projects/training-videos-2026-05/ra/byok-setup/storyboard.md',
+    vaultPath:
+      '02-Projects/training-videos-2026-05/ra/byok-setup/storyboard.md',
     brandSlug: 'ra',
     highlight: true,
     badges: ['pilot', 'unlocks 39 more videos'],
@@ -167,9 +176,11 @@ const CHANGES_REQUIRED: QuickAccessItem[] = [
     status: 'changes-required',
     kind: 'verification',
     title: 'Senate Inquiry · cycle-time figures',
-    summary: '"Flood failure to future fairness" Oct 2024 · pull cycle-time + complaint-volume data',
+    summary:
+      '"Flood failure to future fairness" Oct 2024 · pull cycle-time + complaint-volume data',
     timeCostMin: 45,
-    externalUrl: 'https://www.aph.gov.au/Parliamentary_Business/Committees/House/Economics',
+    externalUrl:
+      'https://www.aph.gov.au/Parliamentary_Business/Committees/House/Economics',
     brandSlug: 'ra',
     badges: ['evidence-base §1.1'],
   },
@@ -199,8 +210,9 @@ const CHANGES_REQUIRED: QuickAccessItem[] = [
     id: 'verify-reinspection-figure',
     status: 'changes-required',
     kind: 'verification',
-    title: '"20–30% re-inspection" figure',
-    summary: 'Source it OR replace with the structural argument (already drafted)',
+    title: 'Re-inspection rate figure',
+    summary:
+      'Source it OR replace with the structural argument (already drafted)',
     timeCostMin: 30,
     brandSlug: 'ra',
     badges: ['LinkedIn T+4 carousel', 'founder T+1', 'video Scene 2'],
@@ -209,8 +221,9 @@ const CHANGES_REQUIRED: QuickAccessItem[] = [
     id: 'verify-cost-figure',
     status: 'changes-required',
     kind: 'verification',
-    title: '"≈ 10c per inspection" cost figure',
-    summary: 'Verify against Anthropic per-token pricing × typical RA inspection token usage',
+    title: 'Per-inspection cost figure',
+    summary:
+      'Verify against Anthropic per-token pricing × typical RA inspection token usage',
     timeCostMin: 15,
     externalUrl: 'https://www.anthropic.com/pricing',
     brandSlug: 'ra',
@@ -226,9 +239,11 @@ const HUMAN_ACTION: QuickAccessItem[] = [
     status: 'human-action',
     kind: 'debug',
     title: 'Investigate spawn-task client issue',
-    summary: 'Single fix unblocks ALL future cross-repo Pi-CEO work · restart Claude Code · check version · check MCP health',
+    summary:
+      'Single fix unblocks ALL future cross-repo Pi-CEO work · restart Claude Code · check version · check MCP health',
     timeCostMin: 15,
-    vaultPath: '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/spawn-task-blocker.md',
+    vaultPath:
+      '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/spawn-task-blocker.md',
     brandSlug: 'portfolio',
     highlight: true,
     badges: ['CRITICAL ENABLER', 'unblocks Pi-CEO'],
@@ -238,9 +253,11 @@ const HUMAN_ACTION: QuickAccessItem[] = [
     status: 'human-action',
     kind: 'recording',
     title: 'Record screen-capture: RA · BYOK setup',
-    summary: 'Pilot for the entire training-video system · 4 scenes · ~45 min recording time',
+    summary:
+      'Pilot for the entire training-video system · 4 scenes · ~45 min recording time',
     timeCostMin: 45,
-    vaultPath: '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/screen-capture-pilot.md',
+    vaultPath:
+      '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/screen-capture-pilot.md',
     brandSlug: 'ra',
     badges: ['unlocks pilot render', '4 scenes'],
   },
@@ -249,9 +266,11 @@ const HUMAN_ACTION: QuickAccessItem[] = [
     status: 'human-action',
     kind: 'handoff',
     title: 'Paste Pi-CEO video render brief',
-    summary: 'Open Pi-CEO Claude Code session · paste brief · runs autonomously',
+    summary:
+      'Open Pi-CEO Claude Code session · paste brief · runs autonomously',
     timeCostMin: 5,
-    vaultPath: '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/pi-ceo-video-render-handoff.md',
+    vaultPath:
+      '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/pi-ceo-video-render-handoff.md',
     brandSlug: 'ra',
     badges: ['unblocks SYN-921'],
   },
@@ -260,9 +279,11 @@ const HUMAN_ACTION: QuickAccessItem[] = [
     status: 'human-action',
     kind: 'authoring',
     title: 'Edit + post 2 founder LinkedIn drafts',
-    summary: 'T+1 origin · T+30 reflection · founder voice tag · placeholder claims need verifying',
+    summary:
+      'T+1 origin · T+30 reflection · founder voice tag · placeholder claims need verifying',
     timeCostMin: 30,
-    vaultPath: '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/linkedin-founder-posts.md',
+    vaultPath:
+      '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/linkedin-founder-posts.md',
     brandSlug: 'ra',
     badges: ['founder voice', '2 posts'],
   },
@@ -271,9 +292,11 @@ const HUMAN_ACTION: QuickAccessItem[] = [
     status: 'human-action',
     kind: 'setup',
     title: 'Open Synthex-Brain-2 in Obsidian',
-    summary: 'One-time vault setup · adds graph view across portfolio operations',
+    summary:
+      'One-time vault setup · adds graph view across portfolio operations',
     timeCostMin: 3,
-    vaultPath: '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/obsidian-vault-setup.md',
+    vaultPath:
+      '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/obsidian-vault-setup.md',
     brandSlug: 'portfolio',
     badges: ['one-time'],
   },
@@ -284,7 +307,8 @@ const HUMAN_ACTION: QuickAccessItem[] = [
     title: 'Configure Web Clipper destination',
     summary: 'Land clips at 00-Inbox/Clips/ with the right template',
     timeCostMin: 3,
-    vaultPath: '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/obsidian-vault-setup.md',
+    vaultPath:
+      '~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/obsidian-vault-setup.md',
     brandSlug: 'portfolio',
     badges: ['one-time'],
   },
@@ -298,7 +322,8 @@ const REFERENCE: QuickAccessItem[] = [
     status: 'reference',
     kind: 'discipline',
     title: 'SEO / AEO / GEO / E-E-A-T discipline',
-    summary: 'Portfolio-wide · 21-item audit checklist · YMYL rules · Google Helpful Content alignment',
+    summary:
+      'Portfolio-wide · 21-item audit checklist · YMYL rules · Google Helpful Content alignment',
     vaultPath: '_meta/seo-aeo-geo-eeat-discipline.md',
     brandSlug: 'portfolio',
     badges: ['~3,500 words', 'always-on'],
@@ -308,7 +333,8 @@ const REFERENCE: QuickAccessItem[] = [
     status: 'reference',
     kind: 'discipline',
     title: 'Training video discipline',
-    summary: 'Portfolio-wide · 3 length tiers · 12-item pre-render checklist · production runbook',
+    summary:
+      'Portfolio-wide · 3 length tiers · 12-item pre-render checklist · production runbook',
     vaultPath: '_meta/training-video-discipline.md',
     brandSlug: 'portfolio',
     badges: ['~3,200 words', 'always-on'],
@@ -318,7 +344,8 @@ const REFERENCE: QuickAccessItem[] = [
     status: 'reference',
     kind: 'discipline',
     title: 'Vault connections + topology',
-    summary: 'Pi-CEO ↔ Brain-2 ↔ Synthex symlink topology · read/write rules · data flow',
+    summary:
+      'Pi-CEO ↔ Brain-2 ↔ Synthex symlink topology · read/write rules · data flow',
     vaultPath: '_meta/connections.md',
     brandSlug: 'portfolio',
     badges: ['short', 'living-doc'],
@@ -328,7 +355,8 @@ const REFERENCE: QuickAccessItem[] = [
     status: 'reference',
     kind: 'discipline',
     title: 'Vault conventions',
-    summary: 'File naming · YAML frontmatter · status lifecycle · Pi-CEO write rules',
+    summary:
+      'File naming · YAML frontmatter · status lifecycle · Pi-CEO write rules',
     vaultPath: '_meta/conventions.md',
     brandSlug: 'portfolio',
     badges: ['short', 'living-doc'],
@@ -419,7 +447,8 @@ export const QUICK_ACCESS_LANES: Array<{
   {
     status: 'changes-required',
     label: 'Changes required',
-    description: 'Verification flags · source the figure or use the structural fallback',
+    description:
+      'Verification flags · source the figure or use the structural fallback',
     emoji: '🟡',
     items: CHANGES_REQUIRED,
   },
@@ -433,7 +462,8 @@ export const QUICK_ACCESS_LANES: Array<{
   {
     status: 'reference',
     label: 'Reference',
-    description: 'Always-on discipline docs · read before authoring in the named area',
+    description:
+      'Always-on discipline docs · read before authoring in the named area',
     emoji: '⚪️',
     items: REFERENCE,
   },
