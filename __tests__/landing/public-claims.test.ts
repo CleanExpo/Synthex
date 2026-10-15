@@ -55,6 +55,7 @@ import {
   tripwireHits,
   tripwireHitsInSource,
   tripwireSourceInventory,
+  renderedSentencesText,
 } from './helpers/public-claims';
 
 const inventory = publicSourceInventory();
@@ -278,6 +279,58 @@ describe('public copy — source extraction', () => {
         'x.ts'
       )
     ).toEqual([]);
+  });
+});
+
+// The rendered layer's reader: what it treats as visitor copy (runs on this
+// suite's jsdom DOM).
+describe('public copy — rendered text reader', () => {
+  const lines = (markup: string) =>
+    renderedSentencesText(markup)
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+  it('reads visible text, nested inline elements included', () => {
+    expect(
+      lines(
+        '<main><p>Plans <strong>start <em>here</em></strong> today</p></main>'
+      )
+    ).toContain('Plans start here today');
+  });
+
+  it('reads alt, title and aria-label as copy', () => {
+    expect(
+      lines(
+        '<img alt="Alt copy" /><a title="Title copy" aria-label="Aria copy">x</a>'
+      )
+    ).toEqual(expect.arrayContaining(['Alt copy', 'Title copy', 'Aria copy']));
+  });
+
+  it('reads each JSON-LD string value, whatever the type attribute case', () => {
+    expect(
+      lines(
+        '<script type=" Application/LD+JSON ">{"@type":"Offer","description":"JSON-LD copy","n":3}</script>'
+      )
+    ).toEqual(['Offer', 'JSON-LD copy']);
+  });
+
+  it('ignores ordinary scripts and style sheets by element type', () => {
+    expect(
+      lines(
+        '<p>Visible</p><script>var claim = "Synthex gets 45% more engagement."</script>' +
+          '<script type="module">window.x = "Join 5,000+ businesses"</script>' +
+          '<style>.a::after { content: "99.99% uptime"; }</style>'
+      )
+    ).toEqual(['Visible']);
+  });
+
+  it('fails loudly on malformed JSON-LD instead of scanning it as text', () => {
+    expect(() =>
+      renderedSentencesText(
+        '<script type="application/ld+json">{"description": "Synthex gets 45% more</script>'
+      )
+    ).toThrow('Malformed JSON-LD');
   });
 });
 

@@ -1801,20 +1801,30 @@ const COPY_ATTRIBUTES = [
 ];
 
 // JSON-LD: crawlers read each string value, so each becomes its own line.
-function jsonStrings(json: string): string {
+// Malformed JSON-LD is an error, never scanned as raw text.
+function jsonLdStrings(json: string): string {
+  let data: unknown;
   try {
-    const out: string[] = [];
-    const walkJson = (v: unknown): void => {
-      if (typeof v === 'string') out.push(v);
-      else if (Array.isArray(v)) v.forEach(walkJson);
-      else if (v && typeof v === 'object') Object.values(v).forEach(walkJson);
-    };
-    walkJson(JSON.parse(json));
-    return `\n${out.join('\n')}\n`;
-  } catch {
-    return `\n${json}\n`;
+    data = JSON.parse(json);
+  } catch (error) {
+    throw new Error(
+      `Malformed JSON-LD in rendered markup (${(error as Error).message}): ${json.slice(0, 120)}`
+    );
   }
+  const out: string[] = [];
+  const walkJson = (v: unknown): void => {
+    if (typeof v === 'string') out.push(v);
+    else if (Array.isArray(v)) v.forEach(walkJson);
+    else if (v && typeof v === 'object') Object.values(v).forEach(walkJson);
+  };
+  walkJson(data);
+  return `\n${out.join('\n')}\n`;
 }
+
+/** A script crawlers read as copy: type application/ld+json (any case, trimmed). */
+const isJsonLd = (element: Element) =>
+  (element.getAttribute('type') ?? '').trim().toLowerCase() ===
+  'application/ld+json';
 
 export function renderedSentencesText(markup: string): string {
   if (typeof document === 'undefined') {
@@ -1838,19 +1848,22 @@ export function renderedSentencesText(markup: string): string {
       return;
     }
     const element = node as Element;
-    for (const name of COPY_ATTRIBUTES) {
-      const value = element.getAttribute(name);
-      if (value !== null) attributes.push(value);
-    }
     const tag = element.localName.toLowerCase();
+    // Only JSON-LD is copy; every other script is code, ignored by type.
     if (tag === 'script') {
-      parts.push(jsonStrings(element.textContent ?? ''));
+      if (isJsonLd(element))
+        parts.push(jsonLdStrings(element.textContent ?? ''));
+      else parts.push('\n');
       return;
     }
     // Style sheets are presentation, not copy a visitor reads.
     if (tag === 'style') {
       parts.push('\n');
       return;
+    }
+    for (const name of COPY_ATTRIBUTES) {
+      const value = element.getAttribute(name);
+      if (value !== null) attributes.push(value);
     }
     const block = BLOCK_ELEMENTS.has(tag);
     if (block) parts.push('\n');
