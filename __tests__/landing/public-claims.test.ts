@@ -20,9 +20,15 @@
  * Every other number, credential or competitor mention goes to the advisory
  * audit (npm run copy:audit) for human review.
  *
- * Same tripwire, other layers: public-claims-rendered.test.tsx (every public
- * page, every fixture state, tabs opened) and public-claims-api.test.ts
- * (every string of every same-origin API response public code reads).
+ * This SOURCE layer is the complete layer for restored literal copy: it
+ * judges the copy streams of every public file — route files, what they
+ * import, the API routes they call and those routes' server modules,
+ * llms.txt, the published video catalogue — including the static parts of
+ * template literals. The blocking command `npm run claims:guard` runs it
+ * together with two SUPPLEMENTARY layers that only add states a running
+ * page or handler produces (public-claims-rendered.test.tsx,
+ * public-claims-api.test.ts; each lists the states it exercises) and the
+ * seed completeness check (public-claims-seeds.test.ts).
  */
 
 import { readFileSync } from 'fs';
@@ -276,6 +282,24 @@ describe('public copy — source extraction', () => {
         "const r = { messages: [{ role: 'user', content: 'Example: Synthex gets 45% more engagement.' }] };",
         'x.ts'
       )
+    ).toEqual([]);
+  });
+});
+
+describe('public copy — the blocking command', () => {
+  // The guarantee is the union of the layers this one command runs.
+  it('runs every claims suite in npm run claims:guard', () => {
+    const pkg = JSON.parse(
+      readFileSync(path.join(ROOT, 'package.json'), 'utf8')
+    );
+    const command: string = pkg.scripts['claims:guard'];
+    expect(
+      [
+        '__tests__/landing/public-claims.test.ts',
+        '__tests__/landing/public-claims-rendered.test.tsx',
+        '__tests__/landing/public-claims-api.test.ts',
+        '__tests__/landing/public-claims-seeds.test.ts',
+      ].filter(suite => !command.includes(suite))
     ).toEqual([]);
   });
 });

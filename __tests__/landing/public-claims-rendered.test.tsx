@@ -1,6 +1,23 @@
 /**
  * Claims this branch removed must not appear in what a visitor receives —
- * blocking regression tripwire, rendered layer (SYN-1226).
+ * SUPPLEMENTARY layer of the blocking tripwire (SYN-1226).
+ *
+ * The blocking guarantee is the union of the layers `npm run claims:guard`
+ * runs; the source fragment-stream layer (public-claims.test.ts) is the
+ * complete layer for restored literal copy. This layer adds what only a
+ * render produces, in the states it exercises — and only those:
+ *  - every public page.tsx, server render and client render (effects and
+ *    same-origin fetches settled);
+ *  - the default state (no rows) and the PAGE_VARIANTS fixture states
+ *    (bio, clients, blog post, blog, benchmark, analytics, credential
+ *    intake, testimonial, welcome — each with its listed variants);
+ *  - every inactive tab selected, collapsed accordion/disclosure expanded and
+ *    <details> opened, once;
+ *  - same-origin API data as the real handlers answer it for the fixtures.
+ * Not exercised (covered by the source layer only): client branches fed by
+ * a response shape the API does not return (e.g. /analytics' trends — its
+ * API answers { data: { totals } }), states behind other inputs or
+ * interactions, and copy from live AI/DB/external data.
  *
  * The source check (public-claims.test.ts) judges copy as written; this suite
  * judges it as served. Every public page.tsx is rendered twice:
@@ -25,7 +42,7 @@
  * is selected, every collapsed accordion or disclosure expanded and every
  * <details> opened, and the markup of each state is judged.
  *
- * There is no source-only category: a page that stops rendering fails here.
+ * A page that stops rendering fails here.
  * Redirect-only pages (they call redirect()) serve no body to judge.
  */
 

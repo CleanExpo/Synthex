@@ -4,7 +4,21 @@
 
 /**
  * Claims this branch removed must not reach a visitor through an API
- * response — blocking regression tripwire, API layer (SYN-1226).
+ * response — SUPPLEMENTARY layer of the blocking tripwire (SYN-1226).
+ *
+ * The blocking guarantee is the union of the layers `npm run claims:guard`
+ * runs; the source fragment-stream layer (public-claims.test.ts) is the
+ * complete layer for restored literal copy. This layer adds what only a
+ * running handler produces, in the states it exercises — and only those:
+ *  - every exported method of every same-origin API route public code calls;
+ *  - one request body per route (BODIES), or the listed matrix: demo
+ *    caption for each sample category and the fallback name; performance
+ *    web-vitals above and below every threshold;
+ *  - external services down, then up and answering a fixture page;
+ *  - schema-derived fixture rows, a signed-in visitor.
+ * Not exercised (covered by the source layer only): branches behind other
+ * inputs, auth-gated routes that answer 401 to the fixture visitor (e.g.
+ * ai-content/optimize's suggestions), and copy from live AI/DB/external data.
  *
  * The rendered suite judges what pages show; a page shows an API string only
  * in the UI state that displays it. This suite does not depend on UI state:
@@ -222,7 +236,8 @@ const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] as const;
  * validation errors. A route without one is called with an empty object.
  */
 const BRIEF = `# Fixture brief\n\n${'Fixture brief line for review. '.repeat(5)}`;
-const BODIES: Record<string, unknown> = {
+/** A body, or a matrix of bodies each judged in turn. */
+const BODIES: Record<string, unknown | unknown[]> = {
   'app/api/contact/route.ts': {
     name: 'Fixture Visitor',
     email: 'fixture@example.com',
@@ -230,7 +245,26 @@ const BODIES: Record<string, unknown> = {
     message: 'Fixture message from a visitor.',
   },
   'app/api/waitlist/route.ts': { email: 'fixture@example.com' },
-  'app/api/demo/caption/route.ts': { businessName: 'Fixture Cafe' },
+  // Each sample category, then a name no category matches (the fallback).
+  'app/api/demo/caption/route.ts': [
+    { businessName: 'Fixture Cafe' },
+    { businessName: 'Fixture Restoration' },
+    { businessName: 'Fixture Tradie' },
+    { businessName: 'Fixture Salon' },
+    { businessName: 'Fixture Gym' },
+    { businessName: 'Fixture Florist' },
+  ],
+  // Web vitals above every warning threshold, then below all of them.
+  'app/api/analytics/performance/route.ts': [
+    {
+      url: 'https://synthex.social/',
+      metrics: { lcp: 4000, fid: 300, cls: 0.5, ttfb: 900, fcp: 3000 },
+    },
+    {
+      url: 'https://synthex.social/',
+      metrics: { lcp: 1200, fid: 20, cls: 0.01, ttfb: 200, fcp: 900 },
+    },
+  ],
   'app/api/intentscape/public/expand/route.ts': {
     originSignal: 'A bakery wants more weekday orders.',
   },
@@ -375,9 +409,15 @@ describe('public copy — unsupported claims (API responses)', () => {
         r: NextRequest,
         c: unknown
       ) => Promise<Response>;
-      // Two states: external services down, then up with a fixture page.
-      const first = await call(handler, relative, method, file, false);
-      const second = await call(handler, relative, method, file, true);
+      // Each body, in two states: external services down, then up with a
+      // fixture page.
+      const bodies = [BODIES[relative] ?? {}].flat();
+      const runs = [];
+      for (const body of bodies) {
+        runs.push(await call(handler, relative, method, file, false, body));
+        runs.push(await call(handler, relative, method, file, true, body));
+      }
+      const [first] = runs;
       const values = first.values;
       if (
         first.status >= 200 &&
@@ -388,9 +428,11 @@ describe('public copy — unsupported claims (API responses)', () => {
         unpopulated.push(`${relative} ${method}`);
       }
 
-      const findings = [...values, ...second.values].flatMap(v =>
-        tripwireHits(v).map(hit => `${hit.rule} — "${hit.sentence}"`)
-      );
+      const findings = runs
+        .flatMap(run => run.values)
+        .flatMap(v =>
+          tripwireHits(v).map(hit => `${hit.rule} — "${hit.sentence}"`)
+        );
       expect([...new Set(findings)]).toEqual([]);
     },
     30_000
@@ -401,7 +443,8 @@ describe('public copy — unsupported claims (API responses)', () => {
     relative: string,
     method: string,
     file: string,
-    servicesUp: boolean
+    servicesUp: boolean,
+    requestBody: unknown
   ): Promise<{ status: number; reads: number; values: string[] }> {
     globalThis.__apiPrisma = populatedClient();
     globalThis.__apiReads = 0;
@@ -422,7 +465,7 @@ describe('public copy — unsupported claims (API responses)', () => {
         origin: SITE,
         authorization: `Bearer ${generateToken({ userId: 'fixture-userId', email: 'fixture@example.com' } as never)}`,
       } as unknown as HeadersInit,
-      body: withBody ? JSON.stringify(BODIES[relative] ?? {}) : undefined,
+      body: withBody ? JSON.stringify(requestBody) : undefined,
     });
     const response = await handler(request, {
       params: Promise.resolve(paramsOf(relative)),
