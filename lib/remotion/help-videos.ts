@@ -103,7 +103,6 @@ export const HELP_VIDEOS: EducationalVideo[] = [
     ],
     compositionId: 'HowToVideo',
     voiceoverScript:
-      'Creating content with Synthex takes seconds, not hours. ' +
       'Navigate to Content Drafts and click New Draft. ' +
       'Enter a topic or let AI suggest one based on your content calendar. ' +
       'Synthex generates platform-optimised copy for every connected channel simultaneously. ' +
@@ -240,7 +239,6 @@ export const HELP_VIDEOS: EducationalVideo[] = [
     ],
     compositionId: 'HowToVideo',
     voiceoverScript:
-      'Connecting Instagram to Synthex takes under a minute. ' +
       'Go to Integrations, find Instagram in the platform list, and click Connect. ' +
       "You will be redirected to Instagram's authorisation page. " +
       'Log in with your business account and approve the Synthex permissions. ' +
@@ -266,10 +264,9 @@ export const HELP_VIDEOS: EducationalVideo[] = [
     compositionId: 'ExplainerVideo',
     voiceoverScript:
       'The Synthex Creative Suite is where ideas become campaigns. ' +
-      'Start in the AI Content Studio to generate copy, images, and video briefs in minutes. ' +
+      'Start in the AI Content Studio to generate copy, images, and video briefs. ' +
       'Move to the Brand Tools section to apply your visual identity — logo, colours, fonts. ' +
       'Then hand off to the Campaign Builder to schedule and distribute across every platform. ' +
-      'The full workflow from concept to published campaign takes minutes, not days. ' +
       'Your creative output scales with your ambition.',
     durationInFrames: 900,
     fps: 30,

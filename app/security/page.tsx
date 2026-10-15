@@ -96,10 +96,8 @@ const authenticationFeatures = [
   'JWT tokens with secure httpOnly cookies',
   'OAuth 2.0 support (Google, GitHub, LinkedIn)',
   'Role-based access control (RBAC)',
-  'Multi-factor authentication (MFA) available',
   'Comprehensive audit logging for all actions',
   'Automatic session expiration and renewal',
-  'IP-based anomaly detection',
   'Rate limiting and brute-force protection',
 ];
 

@@ -349,8 +349,8 @@ Start free: https://synthex.social
       'one video becomes ten quote cards. ' +
       'Fourth — let your analytics guide your timing. Post when your audience is most active, ' +
       'not just when it is convenient. ' +
-      'And fifth — use AI to fill the gaps. Synthex can generate a month of on-brand content ' +
-      'in minutes, keeping your calendar full without burning out your team. ' +
+      'And fifth — use AI to fill the gaps. Synthex can draft on-brand content for you to ' +
+      'review, so your calendar stays full. ' +
       'Visit Synthex dot social to build your content calendar today.',
     durationInFrames: 900,
     fps: 30,
@@ -1169,7 +1169,7 @@ Start free: https://synthex.social
     compositionId: 'ListicleVideo',
     voiceoverScript:
       'Five marketing tasks you should automate immediately. ' +
-      'One: social media content creation — AI can generate weeks of posts in minutes. ' +
+      'One: social media content creation — AI can draft posts for you to review. ' +
       'Two: post scheduling — no more logging in at 8am every day. ' +
       'Three: performance reporting — dashboards should update themselves, not require manual pulls. ' +
       'Four: content repurposing — one piece of content should auto-adapt to every platform format. ' +
@@ -1564,15 +1564,15 @@ Start free: https://synthex.social
 
   {
     id: 'quote-engagement-over-followers',
-    title: '"1,000 Engaged Followers Beat 100,000 Passive Ones" | Synthex',
+    title: '"Engaged Followers Over Passive Ones" | Synthex',
     description: `Follower count is a vanity metric. Engagement is the real measure of social media success.
 
 #SocialMedia #EngagementRate #Synthex`,
     tags: ['engagement', 'followers', 'social media', 'community', 'Synthex'],
     compositionId: 'QuoteCard',
     voiceoverScript:
-      '"One thousand engaged followers will always beat one hundred thousand passive ones." ' +
-      'An audience that reads, responds, and shares your content is infinitely more valuable ' +
+      '"Build an audience that engages, not just one that is large." ' +
+      'An audience that reads, responds, and shares your content gives you more to build on ' +
       'than a large audience that scrolls past. ' +
       'Build depth before width. Build trust before scale. ' +
       'Synthex helps you build the right audience at synthex dot social.',
@@ -1918,7 +1918,7 @@ Connect now: https://synthex.social
 
   {
     id: 'cta-schedule-content',
-    title: 'Schedule a Month of Content in Minutes | Synthex',
+    title: 'Plan and Schedule Your Content | Synthex',
     description: `Stop posting manually every day. Let Synthex schedule everything for you.
 
 Start free: https://synthex.social
@@ -1962,7 +1962,7 @@ Get yours: https://synthex.social
     voiceoverScript:
       'How does your brand actually look online? ' +
       "Synthex's free AI brand audit scans your social profiles, analyses your content, " +
-      'and tells you exactly what to improve — in minutes. ' +
+      'and suggests what to improve. ' +
       'No charge. No commitment. Just clarity. ' +
       'Get your free audit at synthex dot social.',
     durationInFrames: 450,
@@ -2179,7 +2179,6 @@ Start now: https://synthex.social
     voiceoverScript:
       'Content pillars are the core themes or categories that define what a brand posts about on social media. ' +
       'They give your content strategy structure and ensure variety without losing focus. ' +
-      'Most businesses operate with three to five pillars. ' +
       'Example: a fitness brand might use education, motivation, transformation stories, and nutrition tips as their four pillars. ' +
       'Every piece of content fits into one of these, keeping the feed coherent and purposeful. ' +
       'Define your content pillars with Synthex at synthex dot social.',
@@ -2390,9 +2389,9 @@ Start now: https://synthex.social
 
   {
     id: 'use-case-campaign-scheduling',
-    title: 'Scheduling a Month of Content in Minutes | Synthex',
+    title: 'Scheduling a Month of Content | Synthex',
     description:
-      'Discover how the Synthex Campaign Planner generates a 30-day content calendar across all your platforms — then schedules everything automatically.\n\n#Scheduling #ContentCalendar #Automation #Synthex',
+      'See how the Synthex Campaign Planner drafts a content calendar across your connected platforms, ready for you to review and schedule.\n\n#Scheduling #ContentCalendar #Automation #Synthex',
     tags: [
       'scheduling',
       'content calendar',
@@ -2402,13 +2401,11 @@ Start now: https://synthex.social
     ],
     compositionId: 'ExplainerVideo',
     voiceoverScript:
-      'Planning a month of content used to take days. With Synthex, it takes minutes. ' +
       'Open Campaign Planner, enter your campaign goal and target audience, and Synthex ' +
       'generates a 30-day content calendar — one post per day, across all your connected ' +
       'platforms, with themes, hooks, and calls to action pre-planned. Review the calendar, ' +
-      'tweak any posts you want to customise, then click Schedule All. Every post queues ' +
-      'automatically at the optimal posting time for each platform. Your content runs ' +
-      'on autopilot while you focus on the work that actually needs you.',
+      'tweak any posts you want to customise, then schedule the ones you approve. ' +
+      'Each approved post is queued for the time you set on each platform.',
     durationInFrames: 900,
     fps: 30,
     width: 1920,

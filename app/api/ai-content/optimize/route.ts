@@ -520,7 +520,7 @@ function applyRulesOptimization(
   }
 
   if (optimized.split(' ').length < 10) {
-    suggestions.push('Short content may have lower reach - consider expanding');
+    suggestions.push('Short content - consider expanding');
   }
 
   return { content: optimized, suggestions };
