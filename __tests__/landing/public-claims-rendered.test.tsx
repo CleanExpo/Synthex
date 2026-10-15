@@ -1,6 +1,6 @@
 /**
- * Unsupported marketing claims must not appear in what a visitor receives —
- * rendered check (SYN-1226).
+ * Claims this branch removed must not appear in what a visitor receives —
+ * blocking regression tripwire, rendered layer (SYN-1226).
  *
  * The source check (public-claims.test.ts) judges copy as written; this suite
  * judges it as served. Every public page.tsx is rendered twice:
@@ -9,7 +9,8 @@
  *  - in the browser (jsdom, Testing Library), waiting for client effects and
  *    data loads to settle, so copy fetched after mount is judged too.
  * The normalised text, JSON-LD and copy-bearing attributes of both are
- * scanned with the shared patterns.
+ * judged by the tripwire (exact seeds + high-precision patterns, nothing
+ * allow-listed; see public-claims.test.ts).
  *
  * Data is real code over deterministic fixtures, not stubbed copy:
  *  - Prisma resolves per-page fixture rows (PAGE_FIXTURES), empty otherwise;
@@ -23,12 +24,6 @@
  * Copy behind an interaction is opened before scanning: every inactive tab
  * is selected, every collapsed accordion or disclosure expanded and every
  * <details> opened, and the markup of each state is judged.
- *
- * Numbers are denied by default, as in the source check. A visitor's own
- * data is not copy, and is told apart mechanically: each populated state is
- * rendered a second time with every fixture number changed, and a number
- * that changes with the fixture is masked as data ("#"). A number that stays
- * put is copy, and needs an allow-list entry like any other.
  *
  * There is no source-only category: a page that stops rendering fails here.
  * Redirect-only pages (they call redirect()) serve no body to judge.
@@ -45,18 +40,13 @@ import path from 'path';
 import {
   ROOT,
   apiRoutes,
-  claimHits,
-  maskData,
   matchApiRoute,
-  perturb,
   publicPageFiles,
   rel,
   renderedSentencesText,
   routeOf,
-  sentenceKey,
-  type AllowIndex,
+  tripwireHits,
 } from './helpers/public-claims';
-import { allowIndex } from './helpers/public-claims-allowlist';
 
 // ── Fixture registry (read by the Prisma mock) ──────────────────────────────
 
@@ -942,8 +932,6 @@ describe('public copy — unsupported claims (rendered)', () => {
     );
   });
   const readsData = new Set<string>();
-  const allow = allowIndex('rendered');
-  const used = new Set<string>();
 
   it.each(cases)(
     '%s — %s',
@@ -954,40 +942,21 @@ describe('public copy — unsupported claims (rendered)', () => {
       globalThis.__copyReads = 0;
       const route = routeOf(file);
       const params = paramsFor(route, fixture);
-      const visit = () =>
-        window.history.replaceState(
-          {},
-          '',
-          fixture?.url?.() ??
-            route.replace(
-              /\[(?:\.\.\.)?([^\]]+)\]/g,
-              (_m, name: string) => params[name]
-            )
-        );
+      window.history.replaceState(
+        {},
+        '',
+        fixture?.url?.() ??
+          route.replace(
+            /\[(?:\.\.\.)?([^\]]+)\]/g,
+            (_m, name: string) => params[name]
+          )
+      );
 
-      // The perturbed render also mints its URL a little over a day later, so
-      // values that follow the clock (a link's expiry) move and read as data.
-      const renderAll = async (clockShift = 0) => {
-        const now = Date.now;
-        Date.now = () => now() + clockShift;
-        try {
-          visit();
-        } finally {
-          Date.now = now;
-        }
-        const tree = await pageTree(file, fixture);
-        const server = renderToStaticMarkup(<>{tree}</>);
-        return `${server}\n${await clientMarkup(tree)}`;
-      };
       let markup: string;
-      let moved: string | null = null;
       try {
-        markup = await renderAll();
-        if (fixture) {
-          globalThis.__copyFixtures = perturb(fixture.prisma) as PrismaFixtures;
-          moved = await renderAll(90_061_000); // +1 d 1 h 1 min 1 s
-          globalThis.__copyFixtures = fixture.prisma;
-        }
+        const tree = await pageTree(file, fixture);
+        markup = renderToStaticMarkup(<>{tree}</>);
+        markup += `\n${await clientMarkup(tree)}`;
       } catch (error) {
         cleanup();
         const message = String((error as Error).message);
@@ -1011,17 +980,9 @@ describe('public copy — unsupported claims (rendered)', () => {
       for (const marker of fixture?.markers ?? []) {
         expect(text).toContain(marker);
       }
-      const judged = moved
-        ? maskData(text, renderedSentencesText(moved))
-        : text;
-      const findings = claimHits(judged).flatMap(hit => {
-        const key = sentenceKey(hit.sentence);
-        if (allow[hit.rule as keyof AllowIndex]?.has(key)) {
-          used.add(`${hit.rule}|${key}`);
-          return [];
-        }
-        return [`${hit.rule} — "${hit.sentence}"`];
-      });
+      const findings = tripwireHits(text).map(
+        hit => `${hit.rule} — "${hit.sentence}"`
+      );
       expect(findings).toEqual([]);
     },
     60_000
@@ -1032,15 +993,5 @@ describe('public copy — unsupported claims (rendered)', () => {
   it('gives every data-reading page a populated fixture', () => {
     const missing = [...readsData].filter(f => !PAGE_VARIANTS[f]?.populated);
     expect(missing).toEqual([]);
-  });
-
-  // Every rendered allow-list entry must still be needed.
-  it('has no stale rendered allow-list entries', () => {
-    const stale = [
-      ...[...allow.number].map(k => `number|${k}`),
-      ...[...allow.credential].map(k => `credential|${k}`),
-      ...[...allow.competitor].map(k => `competitor|${k}`),
-    ].filter(k => !used.has(k));
-    expect(stale).toEqual([]);
   });
 });

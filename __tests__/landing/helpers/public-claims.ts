@@ -7,16 +7,23 @@
  *   followed transitively, plus public/llms.txt.
  * - normaliseCopy(): text is judged the way a reader would see it, so trivial
  *   rewording cannot slip a claim past the patterns.
- * - BANNED_CLAIMS: patterns matched against normalised text.
+ * - TRIPWIRE_PATTERNS: patterns matched against normalised text.
  * - REMOVED_CLAIM_SEEDS: every claim this branch removed, numeric and spelled
  *   out, so the patterns are proven against the real wording.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
+import { createRequire } from 'module';
 import path from 'path';
 import ts from 'typescript';
 
-export const ROOT = path.join(__dirname, '../../..');
+// Under Jest (CommonJS) from this file; under `npm run copy:audit` (ESM, run
+// from the package root) from the working directory.
+export const ROOT =
+  typeof __dirname === 'string'
+    ? path.join(__dirname, '../../..')
+    : process.cwd();
+const requireFromRoot = createRequire(path.join(ROOT, 'package.json'));
 const APP = path.join(ROOT, 'app');
 const SOURCE_EXT = ['.ts', '.tsx', '.js', '.jsx', '.mjs'];
 
@@ -191,7 +198,7 @@ export function normaliseCopy(raw: string): string {
 
 // ── Patterns ─────────────────────────────────────────────────────────────────
 
-export const BANNED_CLAIMS: Array<[string, RegExp]> = [
+export const TRIPWIRE_PATTERNS: Array<[string, RegExp]> = [
   [
     'customer-count claim',
     /\b\d{3,}\+?\s*(?:australian\s+|local\s+|small\s+)?(?:business(?:es)?|business owners|customers|users|brands|companies)\b/,
@@ -208,7 +215,7 @@ export const BANNED_CLAIMS: Array<[string, RegExp]> = [
 // amount, or a count of followers, leads, customers, sales or orders.
 const GROWTH = String.raw`(?:\$\d+|\d+(?:\.\d+)?\s?(?:%|percent|x\b)|\d+\+? (?:\w+ )?(?:followers?|subscribers?|leads?|customers?|sales|orders?))`;
 
-BANNED_CLAIMS.push(
+TRIPWIRE_PATTERNS.push(
   [
     'follower-growth claim',
     new RegExp(
@@ -241,16 +248,34 @@ BANNED_CLAIMS.push(
   ]
 );
 
-// ── Deny by default: numbers and credentials ────────────────────────────────
+// High-precision patterns: each names a claim class this branch removed and
+// matches nothing in the current public copy (proven by the three suites).
+TRIPWIRE_PATTERNS.push(
+  ['SOC 2 claim', /\bsoc ?2\b/],
+  ['ISO 27001 claim', /\biso ?27001\b/],
+  [
+    'privacy-law compliance claim',
+    /\b(?:gdpr|ccpa|hipaa)(?: (?:&|and) privacy)?[\s-](?:compliant|certified|ready)\b|\b(?:compliant|compliance) with (?:the )?(?:gdpr|ccpa|hipaa)\b|\bfull compliance with\b/,
+  ],
+  [
+    'Synthex certification claim',
+    /\b(?:synthex|we|we're|we are|our platform)\b[^.]{0,30}\b(?:certified|accredited)\b/,
+  ],
+  ['uptime guarantee', /\b\d{2}(?:\.\d+)?\s?% (?:uptime|availability)\b/],
+  [
+    'trusted-by count',
+    /\b(?:trusted|used|loved) by (?:over |more than )?\d[\d,]*\+?\s/,
+  ]
+);
+
+// ── Advisory audit: numbers, credentials, competitors ────────────────────────
 //
-// Two fail-closed classes, with no vocabulary of "outcomes":
-//  - NUMBER: every quantity in public copy — digits, number words, K/M,
-//    %, ×, $, multipliers — is a finding;
-//  - CREDENTIAL: certification, compliance, endorsement and superlative
-//    terms are findings, with or without a number.
-// A finding passes only through an allow-list entry of a kind whose
-// constraint the guard checks mechanically (public-claims-allowlist.ts →
-// checkEntry). Hard patterns (money-back, world's first…) never pass.
+// Not blocking (npm run copy:audit). Every quantity, every certification /
+// compliance / endorsement / superlative term and every competitor name in
+// public copy is listed for human content review. A mechanical kind
+// (copy-audit-kinds.ts) annotates the structural ones — dates, steps, prices
+// equal to the pricing source — but never blesses a sentence: no rule can
+// establish that natural-language copy is true.
 
 export const QUANTITY =
   /(?:\b(?:doubl(?:e[ds]?|ing)|tripl(?:e[ds]?|ing)|quadrupl(?:e[ds]?|ing)|twice|halved)\b(?![-\s]tap)(?!-)|\$\s?\d[\d.,]*(?:[kmb](?![a-z]))?|\b\d[\d.,]*(?:[kmb](?![a-z]))?\+?(?:\s?(?:%|percent\b|x\b|×|times\b|fold\b))?|\b(?:millions?|billions?|thousands?|hundreds?|dozens?)\b)/;
@@ -284,8 +309,10 @@ export const FIRST_PARTY =
 export interface ClaimHit {
   /** Normalised sentence that triggered the finding. */
   sentence: string;
-  /** 'number', 'credential', or a hard pattern label. */
+  /** 'seed', a tripwire pattern label, or an advisory class. */
   rule: string;
+  /** Source line of the copy, where known. */
+  line?: number;
 }
 
 export const sentenceKey = (normalised: string) =>
@@ -306,54 +333,28 @@ export function splitSentences(normalised: string): string[] {
 export const COMPETITOR =
   /\b(?:hootsuite|owlywriter|sprout social|sprinklr|agorapulse|loomly|metricool|socialbee|planoly|sendible|socialpilot|meltwater|brandwatch)\b/;
 
-export interface AllowIndex {
-  number: Set<string>;
-  credential: Set<string>;
-  competitor: Set<string>;
-}
-export const NO_ALLOW: AllowIndex = {
-  number: new Set(),
-  credential: new Set(),
-  competitor: new Set(),
-};
-
-/**
- * Findings in plain text, sentence by sentence. A sentence with a quantity
- * needs a number entry; a sentence with a credential term needs a
- * credential entry; a hard pattern is always a finding.
- */
-export function claimHits(
-  raw: string,
-  allow: AllowIndex = NO_ALLOW
-): ClaimHit[] {
+/** Advisory findings in plain text, sentence by sentence. */
+export function claimHits(raw: string): ClaimHit[] {
   const hits: ClaimHit[] = [];
   const sentences = raw
     .replace(/https?:\/\/[^\s"'<>)]+/g, ' ') // URLs are addresses, not prose
     .split(/\n+/)
     .flatMap(line => splitSentences(normaliseCopy(line)));
   for (const sentence of sentences) {
-    const key = sentenceKey(sentence);
-    for (const [label, pattern] of BANNED_CLAIMS) {
+    for (const [label, pattern] of TRIPWIRE_PATTERNS) {
       if (pattern.test(sentence)) hits.push({ sentence, rule: label });
     }
-    if (quantityTokens(sentence).length > 0 && !allow.number.has(key)) {
+    if (quantityTokens(sentence).length > 0) {
       hits.push({ sentence, rule: 'number' });
     }
-    if (CREDENTIAL.test(sentence) && !allow.credential.has(key)) {
-      hits.push({ sentence, rule: 'credential' });
-    }
-    if (COMPETITOR.test(sentence) && !allow.competitor.has(key)) {
-      hits.push({ sentence, rule: 'competitor' });
-    }
+    if (CREDENTIAL.test(sentence)) hits.push({ sentence, rule: 'credential' });
+    if (COMPETITOR.test(sentence)) hits.push({ sentence, rule: 'competitor' });
   }
   return hits;
 }
 
-export function findClaims(
-  raw: string,
-  allow: AllowIndex = NO_ALLOW
-): string[] {
-  return claimHits(raw, allow).map(h => `${h.rule} — "${h.sentence}"`);
+export function findClaims(raw: string): string[] {
+  return claimHits(raw).map(h => `${h.rule} — "${h.sentence}"`);
 }
 
 // ── Mechanical kind checks ──────────────────────────────────────────────────
@@ -752,9 +753,9 @@ export function productConstantMatches(
   value: string
 ): boolean {
   return PRODUCT_CONSTANTS.some(c => {
-    const v = (require(path.join(ROOT, c.module)) as Record<string, unknown>)[
-      c.name
-    ];
+    const v = (
+      requireFromRoot(path.join(ROOT, c.module)) as Record<string, unknown>
+    )[c.name];
     return String(v) === value && c.subject.test(sentence);
   });
 }
@@ -820,7 +821,7 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   'Five thousand business owners are already using Synthex for social media marketing.',
   'Join five-thousand Australian businesses using Synthex.',
   'Join 5&#44;000+ Australian businesses',
-  '<PublicPageHero description="Join 5,000+ Australian businesses using Synthex." />',
+  'Join 5,000+ Australian businesses using Synthex.',
   'Every plan includes a 30-day money-back guarantee.',
   '30-day money-back guarantee · Cancel anytime',
   'Thirty day money back guarantee',
@@ -886,9 +887,7 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   '99.99% Uptime SLA',
 ];
 
-// Copy with no quantity and no credential term: never a finding. (A list
-// index, a date or a price is still a finding — it needs an allow-list entry
-// whose kind the guard checks.)
+// Copy that is no claim: the tripwire never flags it.
 export const NOT_CLAIMS: string[] = [
   'Reply to every comment quickly — it boosts your ranking.',
   'One dashboard for all your platforms.',
@@ -934,6 +933,99 @@ export const ROUND_5_SEEDS: Array<
   ['Reviewed by an external security firm.', 'credential'],
   ['Penetration-tested every quarter.', 'credential'],
 ];
+
+// Reviewer mutants and siblings from rounds 1–5 that are not already seeds.
+export const REVIEWER_MUTANTS: string[] = [
+  'The account racked up 9,000 new followers.',
+  'Revenue climbed 37% after switching to Synthex.',
+  'Synthex grew leads by 340%.',
+  'Clients saw 340% more bookings.',
+  'Synthex runs on independently audited security.',
+  'Independently audited security',
+  'Customers recovered 640 abandoned carts last quarter.',
+  'Most businesses see 3x more reach in their first month.',
+  'Unlike Sprout Social, Synthex writes the posts for you.',
+  'Similar bakeries saw enquiries rise 42% with Synthex.',
+];
+
+// Claims removed or neutralised in round 5 and after the guard decision.
+export const ROUND_5_REMOVED: string[] = [
+  'GDPR & Privacy Compliant',
+  'Multi-factor authentication (MFA) available',
+  'IP-based anomaly detection',
+  'Industry-leading security',
+  "For most SMBs, yes. Synthex handles everything Hootsuite does (scheduling, multi-platform publishing) plus everything Hootsuite doesn't (AI content creation, brand voice, content scoring).",
+  'Hootsuite is a scheduling tool — it publishes content you create manually.',
+  'Hootsuite schedules what you write manually.',
+  'No brand voice feature — copy/paste your own content',
+  'Verified authority profile for',
+  'The platform competes most directly with Hootsuite, Buffer, Later, and SocialPilot',
+  'One thousand engaged followers will always beat one hundred thousand passive ones.',
+  '1,000 Engaged Followers Beat 100,000 Passive Ones',
+  'Most businesses operate with three to five pillars.',
+  'then schedules everything automatically',
+  'Planning a month of content used to take days. With Synthex, it takes minutes.',
+  'Facebook posts with 250-500 characters tend to get better organic reach',
+  'LinkedIn posts without paragraph breaks have lower reach',
+  'Add 1-2 relevant emojis to increase visual appeal and reach',
+  'Short content may have lower reach',
+  'Creating content with Synthex takes seconds, not hours.',
+  'Connecting Instagram to Synthex takes under a minute.',
+  'The full workflow from concept to published campaign takes minutes, not days.',
+  'Synthex can generate a month of on-brand content in minutes',
+  'AI can generate weeks of posts in minutes.',
+  'Your engagement has increased by 0% this week',
+  'The observed on-page search foundation scored 0/100.',
+];
+
+/** Plain text of a seed: markup and JSX spacers dropped. */
+const seedText = (seed: string) =>
+  decodeEntities(seed)
+    .replace(/\{\s*(['"`])\s*\1\s*\}/g, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[{}]/g, ' ');
+const seedKey = (seed: string) =>
+  sentenceKey(normaliseCopy(seedText(seed))).replace(/[.!?:]+$/, '');
+
+/**
+ * Every claim this branch removed or neutralised, and every reviewer mutant:
+ * the exact-seed half of the blocking tripwire.
+ */
+export const TRIPWIRE_SEEDS: string[] = [
+  ...new Set([
+    ...REMOVED_CLAIM_SEEDS,
+    ...ROUND_5_SEEDS.map(([seed]) => seed),
+    ...REVIEWER_MUTANTS,
+    ...ROUND_5_REMOVED,
+  ]),
+];
+const SEED_KEYS = TRIPWIRE_SEEDS.map(seed => ({ seed, key: seedKey(seed) }));
+
+/** Seeds whose plain text is empty (markup only): they could never match. */
+export const EMPTY_SEEDS = SEED_KEYS.filter(s => !s.key).map(s => s.seed);
+
+/**
+ * Blocking tripwire over plain text: a restored seed anywhere in the text
+ * (whitespace and markup splits ignored), or a high-precision pattern in a
+ * sentence. Nothing is allow-listed.
+ */
+export function tripwireHits(raw: string): ClaimHit[] {
+  const text = raw.replace(/https?:\/\/[^\s"'<>)]+/g, ' ');
+  const hits: ClaimHit[] = [];
+  for (const sentence of text
+    .split(/\n+/)
+    .flatMap(line => splitSentences(normaliseCopy(line)))) {
+    for (const [label, pattern] of TRIPWIRE_PATTERNS) {
+      if (pattern.test(sentence)) hits.push({ sentence, rule: label });
+    }
+  }
+  const stream = sentenceKey(normaliseCopy(text.replace(/\n+/g, ' ')));
+  for (const { seed, key } of SEED_KEYS) {
+    if (key && stream.includes(key))
+      hits.push({ sentence: seed, rule: 'seed' });
+  }
+  return hits;
+}
 
 // ── Inventory ────────────────────────────────────────────────────────────────
 
@@ -1019,7 +1111,7 @@ const IMPORT_RE =
 // windows of up to MAX_WINDOW adjacent fragments, so a claim split across
 // .join(''), a ternary, an array or adjacent JSX expressions is contiguous in
 // at least one of them. A finding is reported for the smallest window that
-// produces it; its allow-list key is that window's sentence.
+// produces it, at the line of the window's first fragment.
 
 const NON_COPY_JSX_ATTRIBUTE =
   /^(?:class(?:Name)?|style|href|src|srcSet|id|key|type|variant|size|name|role|rel|target|method|action|htmlFor|width|height|viewBox|d|fill|stroke|xmlns|loading|sizes|data-[\w-]+|aria-(?!label)[\w-]+|as|icon|route|path|gradientVariant)$/i;
@@ -1122,6 +1214,8 @@ export interface Fragment {
   text: string;
   /** Rendered through JSX (text, child expression, copy attribute). */
   jsx: boolean;
+  /** 1-based source line. */
+  line: number;
 }
 
 // AI prompt text is sent to a model, never served; what the model returns
@@ -1181,11 +1275,17 @@ export function extractFragments(source: string, fileName: string): string[] {
 
 export function extractCopyFragments(
   source: string,
-  fileName: string
+  fileName: string,
+  { keepWiring = false }: { keepWiring?: boolean } = {}
 ): Fragment[] {
   if (!SOURCE_EXT.includes(path.extname(fileName))) {
     // Of non-source files, only text copy (llms.txt) is judged; CSS is not.
-    return /\.txt$/.test(fileName) ? [{ text: source, jsx: true }] : [];
+    return /\.txt$/.test(fileName)
+      ? source
+          .split('\n')
+          .map((text, i) => ({ text, jsx: true, line: i + 1 }))
+          .filter(f => f.text.trim())
+      : [];
   }
   const sf = ts.createSourceFile(
     fileName,
@@ -1201,10 +1301,11 @@ export function extractCopyFragments(
     const t = text
       .replace(/\s*\n\s*/g, ' ')
       .replace(/^\s*\d{1,2}[.)]\s+(?=[A-Za-z])/, '');
-    if (t.trim() && !isWiring(t)) {
+    if (t.trim() && (keepWiring || !isWiring(t))) {
       fragments.push({
         text: t,
         jsx: ts.isJsxText(current) || isInJsx(current),
+        line: sf.getLineAndCharacterOfPosition(current.getStart(sf)).line + 1,
       });
     }
   };
@@ -1358,11 +1459,11 @@ export function extractCopyFragments(
 /** Back-compat name used by older call sites. */
 export const extractCopy = extractFragments;
 
-/** Findings in a source file's copy streams (see the section comment). */
-export function claimHitsInSource(
+/** Hits of `scan` in a source file's copy streams (see the section comment). */
+function scanSource(
   source: string,
   fileName: string,
-  allow: AllowIndex = NO_ALLOW
+  scan: (text: string) => ClaimHit[]
 ): ClaimHit[] {
   const copy = extractCopyFragments(source, fileName);
   const fragments = copy.map(f => f.text);
@@ -1388,9 +1489,15 @@ export function claimHitsInSource(
         const text = window
           .map(f => (/[.!?]\s*$/.test(f) ? `${f} ` : f))
           .join(sep);
-        for (const hit of claimHits(text, allow)) {
+        for (const hit of scan(text)) {
           const key = `${hit.rule}|${sentenceKey(hit.sentence)}`;
-          if (!found.has(key)) found.set(key, { hit, from: i, to: i + len });
+          if (!found.has(key)) {
+            found.set(key, {
+              hit: { ...hit, line: copy[i].line },
+              from: i,
+              to: i + len,
+            });
+          }
         }
       }
     }
@@ -1412,14 +1519,38 @@ export function claimHitsInSource(
     .map(x => x.hit);
 }
 
-export function findClaimsInSource(
+/** Advisory findings in a source file's copy streams, with lines. */
+export function claimHitsInSource(
   source: string,
-  fileName: string,
-  allow: AllowIndex = NO_ALLOW
-): string[] {
-  return claimHitsInSource(source, fileName, allow).map(
+  fileName: string
+): ClaimHit[] {
+  return scanSource(source, fileName, claimHits);
+}
+
+export function findClaimsInSource(source: string, fileName: string): string[] {
+  return claimHitsInSource(source, fileName).map(
     h => `${h.rule} — "${h.sentence}"`
   );
+}
+
+/**
+ * Blocking tripwire over a source file: patterns in its copy windows, and
+ * seeds anywhere in its whole copy stream (all fragments, in order).
+ */
+export function tripwireHitsInSource(
+  source: string,
+  fileName: string
+): ClaimHit[] {
+  const patterns = scanSource(source, fileName, text =>
+    tripwireHits(text).filter(h => h.rule !== 'seed')
+  );
+  // Seeds are long exact phrases no class list or identifier can produce, so
+  // their stream keeps every fragment, wiring-looking ones included.
+  const copy = extractCopyFragments(source, fileName, { keepWiring: true });
+  const seeds = tripwireHits(copy.map(f => f.text).join('\n')).filter(
+    h => h.rule === 'seed'
+  );
+  return [...patterns, ...seeds];
 }
 
 // Rendered markup → sentences: block-level tags end a sentence, inline tags
@@ -1459,60 +1590,6 @@ export function renderedSentencesText(markup: string): string {
     .replace(BLOCK_TAG, '\n')
     .replace(ANY_TAG, '');
   return `${text}\n${attributes.join('\n')}`;
-}
-
-// ── Data-bound numbers ───────────────────────────────────────────────────────
-// A visitor's own data is not copy. Both dynamic suites render or call twice,
-// the second time with every input number moved, and mask as "#" each digit
-// run that moved with it; a number that stays put is copy.
-
-// Fixture numbers changed so data-bound numbers move: n → 2n + 1. Status
-// codes and calendar fields are left alone; they steer branches, not copy.
-const FIXED_KEYS = /status|code|year|month|day|hour|minute|port|version/i;
-export function perturb(value: unknown, key = ''): unknown {
-  if (typeof value === 'number') {
-    return FIXED_KEYS.test(key) ? value : value * 2 + 1;
-  }
-  if (typeof value === 'function') {
-    return (args: unknown) =>
-      perturb((value as (a: unknown) => unknown)(args), key);
-  }
-  if (Array.isArray(value)) return value.map(v => perturb(v, key));
-  if (value && typeof value === 'object' && !(value instanceof Date)) {
-    return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [k, perturb(v, k)])
-    );
-  }
-  return value;
-}
-
-const DIGITS = /\d[\d.,]*/g;
-const sentencesOf = (text: string) =>
-  text.split(/\n+/).flatMap(line => splitSentences(normaliseCopy(line)));
-
-/**
- * The sentences of render A with every digit run that differs from the
- * matching sentence of render B (same words, other digits) masked as "#".
- */
-export function maskData(a: string, b: string): string {
-  const skeleton = (s: string) => s.replace(DIGITS, '§');
-  const others = new Map<string, string[]>();
-  for (const s of sentencesOf(b)) {
-    const k = skeleton(s);
-    others.set(k, [...(others.get(k) ?? []), s]);
-  }
-  return sentencesOf(a)
-    .map(s => {
-      const runs = s.match(DIGITS) ?? [];
-      const match = (others.get(skeleton(s)) ?? []).find(o =>
-        (o.match(DIGITS) ?? []).some((r, i) => r !== runs[i])
-      );
-      if (!match) return s;
-      const moved = match.match(DIGITS) ?? [];
-      let i = 0;
-      return s.replace(DIGITS, run => (run === moved[i++] ? run : '#'));
-    })
-    .join('\n');
 }
 
 // ── Same-origin API routes ───────────────────────────────────────────────────

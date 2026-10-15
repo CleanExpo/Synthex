@@ -1,43 +1,42 @@
 /**
- * Unsupported marketing claims must not return to public copy — source check.
+ * Claims this branch removed must not return to public copy — blocking
+ * regression tripwire, source layer (SYN-1226).
  *
- * Deny by default (SYN-1226, round 5). Two classes, no vocabulary of outcomes:
- *  - NUMBER: every quantity in public copy is a finding;
- *  - CREDENTIAL: certification, compliance, endorsement and superlative
- *    terms are findings, with or without a number.
- * A finding passes only through an allow-list entry whose kind the guard
- * checks mechanically (helpers/public-claims-allowlist.ts → checkEntry).
+ * Orchestrator decision (round 5): a mechanical rule cannot establish that
+ * natural-language copy is true, so the blocking guard is a tripwire, not a
+ * fact-checker. It fails on:
+ *  - an EXACT SEED: every claim this branch removed or neutralised and every
+ *    reviewer mutant from rounds 1–5 (TRIPWIRE_SEEDS), matched in the whole
+ *    normalised copy stream, so markup, joins and spacing cannot hide it;
+ *  - a HIGH-PRECISION PATTERN (TRIPWIRE_PATTERNS): SOC 2, ISO 27001,
+ *    GDPR/CCPA compliance, Synthex "certified", money-back, world's first,
+ *    customer counts, "N% more engagement", "saves N hours", uptime %,
+ *    "trusted by N" — each with zero hits in the current public copy.
+ * Nothing is allow-listed: a blocking test never blesses a sentence.
+ * Every other number, credential or competitor mention goes to the advisory
+ * audit (npm run copy:audit) for human review.
  *
- * Layers, sharing one normaliser and rule set (helpers/public-claims.ts):
- *  - this file: the copy streams of every public file (UI code reachable
- *    from public routes, plus the API route files they reference);
- *  - public-claims-rendered.test.tsx: every public page, rendered in every
- *    fixture state with tabs and accordions opened;
- *  - public-claims-api.test.ts: every string field of every same-origin API
- *    response public code reads, whatever UI state would show it.
+ * Same tripwire, other layers: public-claims-rendered.test.tsx (every public
+ * page, every fixture state, tabs opened) and public-claims-api.test.ts
+ * (every string of every same-origin API response public code reads).
  */
 
 import { readFileSync } from 'fs';
 import {
-  ALLOW_LIST,
-  allowIndex,
-  checkEntry,
-  type AllowEntry,
-} from './helpers/public-claims-allowlist';
-import {
+  EMPTY_SEEDS,
   NOT_CLAIMS,
-  REMOVED_CLAIM_SEEDS,
+  REVIEWER_MUTANTS,
+  ROUND_5_REMOVED,
   ROUND_5_SEEDS,
-  claimHits,
-  claimHitsInSource,
-  findClaims,
-  findClaimsInSource,
+  REMOVED_CLAIM_SEEDS,
+  TRIPWIRE_PATTERNS,
+  TRIPWIRE_SEEDS,
   normaliseCopy,
   publicAppFiles,
   publicSourceInventory,
   rel,
-  sentenceKey,
-  type AllowIndex,
+  tripwireHits,
+  tripwireHitsInSource,
 } from './helpers/public-claims';
 
 const inventory = publicSourceInventory();
@@ -103,120 +102,84 @@ describe('public copy — normalisation', () => {
   });
 });
 
-describe('public copy — positive controls', () => {
-  it.each(REMOVED_CLAIM_SEEDS)('catches the removed claim %j', seed => {
-    expect(findClaims(seed)).not.toEqual([]);
+describe('public copy — tripwire positive controls', () => {
+  it('seeds every removed claim and every reviewer mutant', () => {
+    expect(TRIPWIRE_SEEDS).toEqual(
+      expect.arrayContaining([
+        ...REMOVED_CLAIM_SEEDS,
+        ...ROUND_5_SEEDS.map(([seed]) => seed),
+        ...REVIEWER_MUTANTS,
+        ...ROUND_5_REMOVED,
+      ])
+    );
   });
 
-  it.each(ROUND_5_SEEDS)('catches %j as a %s finding', (seed, rule) => {
-    expect(claimHits(seed).map(h => h.rule)).toContain(rule);
+  it('has no seed without plain text', () => {
+    expect(EMPTY_SEEDS).toEqual([]);
+  });
+
+  it.each(TRIPWIRE_SEEDS)('catches the seed %j as text', seed => {
+    expect(tripwireHits(seed).length).toBeGreaterThan(0);
+  });
+
+  // Restored into a page exactly as written, split across elements.
+  it.each(TRIPWIRE_SEEDS)('catches the seed %j restored in JSX', seed => {
+    const words = seed
+      .replace(/<[^>]*>|\{\s*'\s*'\s*\}/g, ' ')
+      .replace(/[{}<>`]/g, ' ')
+      .split(/\s+/)
+      .filter(Boolean);
+    const half = Math.ceil(words.length / 2);
+    const jsx = `export const P = () => <p>${words.slice(0, half).join(' ')} <strong>${words.slice(half).join(' ')}</strong></p>;`;
+    expect(tripwireHitsInSource(jsx, 'x.tsx').length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    ['SOC 2 claim', 'Synthex is SOC 2 Type II audited.'],
+    ['ISO 27001 claim', 'Hosted under ISO 27001 controls.'],
+    ['privacy-law compliance claim', 'Fully GDPR-compliant.'],
+    ['privacy-law compliance claim', 'Compliant with the CCPA.'],
+    ['Synthex certification claim', 'Synthex is a certified partner.'],
+    ['money-back guarantee', '14-day money back promise'],
+    ["world's first claim", "The world's first AI agency for florists"],
+    ['customer-count claim', 'Join 2,500+ local businesses'],
+    ['unsourced results claim', 'Posts get 30% more engagement.'],
+    ['unsourced results claim', 'Saves 6 hours every week.'],
+    ['uptime guarantee', '99.9% uptime, guaranteed.'],
+    ['trusted-by count', 'Trusted by 300 agencies.'],
+    ['follower-growth claim', 'From 50 to 5,000 followers'],
+    ['case-study result claim', 'Case study: 70% more leads'],
+    [
+      'unsourced hours-per-week stat',
+      'The average small business spends 6 hours',
+    ],
+  ])('pattern %s catches a fresh phrasing: %j', (label, text) => {
+    expect(tripwireHits(text).map(h => h.rule)).toContain(label);
+  });
+
+  it('exercises every tripwire pattern above', () => {
+    const tested = new Set([
+      'SOC 2 claim',
+      'ISO 27001 claim',
+      'privacy-law compliance claim',
+      'Synthex certification claim',
+      'money-back guarantee',
+      "world's first claim",
+      'customer-count claim',
+      'unsourced results claim',
+      'uptime guarantee',
+      'trusted-by count',
+      'follower-growth claim',
+      'case-study result claim',
+      'unsourced hours-per-week stat',
+    ]);
+    expect(
+      TRIPWIRE_PATTERNS.map(([label]) => label).filter(l => !tested.has(l))
+    ).toEqual([]);
   });
 
   it.each(NOT_CLAIMS)('does not flag %j', text => {
-    expect(findClaims(text)).toEqual([]);
-  });
-});
-
-describe('public copy — mechanical allow-list kinds', () => {
-  const entry = (
-    sentence: string,
-    kinds: string[],
-    cls: 'number' | 'credential' | 'competitor' = 'number',
-    extra: Partial<AllowEntry> = {}
-  ) =>
-    ({
-      sentence: normaliseCopy(sentence),
-      layer: 'source',
-      file: 'app/page.tsx',
-      class: cls,
-      kinds,
-      ...extra,
-    }) as AllowEntry;
-
-  type Case = [
-    string,
-    string[],
-    ('number' | 'credential' | 'competitor')?,
-    Partial<AllowEntry>?,
-  ];
-
-  it.each([
-    ['Synthex delivered 8,200 qualified leads.', ['product-limit']],
-    [
-      'Synthex delivered 8,200 qualified leads.',
-      ['date-time', 'ordinal-step-version', 'contact-legal', 'price'],
-    ],
-    ['Plans from $59 a month', ['price']],
-    ['Up to 3 users on Starter', ['date-time']],
-    ['Join 50 businesses', ['product-limit']],
-    ['Saves 10 hours in the last 7 days', ['date-time']],
-    ['Scored #/100', ['date-time']],
-    ['Scored 40/100', ['date-time']],
-    ['ISO 27001 certified.', ['neutral'], 'credential'],
-    ['We are GDPR compliant.', ['neutral'], 'credential'],
-    ['GDPR compliant.', ['neutral'], 'credential'],
-    ['Independently audited security', ['neutral'], 'credential'],
-    ['Most chosen', ['neutral'], 'credential'],
-    ['Award-winning platform', ['neutral'], 'credential'],
-    [
-      'Hootsuite just schedules what you write manually.',
-      ['neutral'],
-      'competitor',
-    ],
-    [
-      'Synthex vs Hootsuite: Hootsuite has no brand voice.',
-      ['neutral'],
-      'competitor',
-    ],
-    ['Is Synthex cheaper than Hootsuite?', ['neutral'], 'competitor'],
-    [
-      'Synthex delivered 8,200 qualified leads.',
-      ['evidence'],
-      'number',
-      { source: 'docs/x.md', retrieved: '2026-10-15' },
-    ],
-  ] as Case[])(
-    'rejects %j as %j',
-    (sentence, kinds, cls = 'number', extra = {}) => {
-      expect(checkEntry(entry(sentence, kinds, cls, extra))).not.toBeNull();
-    }
-  );
-
-  it.each([
-    ['Plans from $49 a month', ['price']],
-    ['Updated 14 October 2026', ['date-time']],
-    ['Step 2: define your audience.', ['ordinal-step-version']],
-    ['Scored #/100', ['ordinal-step-version']],
-    ['Card expires 12/25', ['date-time']],
-    ['Call +61 2 9000 0000', ['contact-legal']],
-    [
-      'For example, 100 interactions on a post seen by 2,000 people.',
-      ['hypothetical-example'],
-    ],
-    ['Synthex returns 3 ranked growth directions.', ['product-limit']],
-    [
-      'The GDPR is the EU regulation on personal data.',
-      ['neutral'],
-      'credential',
-    ],
-    ['Start date must be a valid ISO date string', ['neutral'], 'credential'],
-    ['Your best posts based on engagement', ['neutral'], 'credential'],
-    ['Synthex vs Hootsuite', ['neutral'], 'competitor'],
-    [
-      'What Synthex does, for teams considering Hootsuite.',
-      ['neutral'],
-      'competitor',
-    ],
-  ] as Case[])('accepts %j as %j', (sentence, kinds, cls = 'number') => {
-    expect(checkEntry(entry(sentence, kinds, cls))).toBeNull();
-  });
-
-  it('every allow-list entry passes its own kind check', () => {
-    const failures = ALLOW_LIST.flatMap(e => {
-      const why = checkEntry(e);
-      return why ? [`${e.layer} ${e.file}: "${e.sentence}" — ${why}`] : [];
-    });
-    expect(failures).toEqual([]);
+    expect(tripwireHits(text)).toEqual([]);
   });
 });
 
@@ -231,7 +194,7 @@ describe('public copy — source extraction', () => {
     ["const t = `Synthex gets ${'45'}% more engagement`;", 'x.ts'],
     ["const post = { title: 'Synthex gets 45% more engagement.' };", 'x.ts'],
     [
-      "<Hero description={'The bakery grew by ' + '10,000 followers'} />",
+      "<Hero description={'The bakery grew by ' + '10,000 Instagram followers'} />",
       'x.tsx',
     ],
     [
@@ -239,55 +202,46 @@ describe('public copy — source extraction', () => {
       'x.tsx',
     ],
     [
-      "<p>{links.length ? 'Links' : ['We pulled in 4', '50 leads'].join('')}</p>",
+      "<p>{links.length ? 'Links' : ['Synthex pulled in 4', '50 qualified leads'].join('')}</p>",
       'x.tsx',
     ],
     ['<p>ISO 27001 certified.</p>', 'x.tsx'],
+    [
+      '<PublicPageHero description="Join 5,000+ Australian businesses using Synthex." />',
+      'x.tsx',
+    ],
     ["const badge = { label: 'Independently audited security' };", 'x.ts'],
   ])('flags %s', (source, file) => {
-    expect(findClaimsInSource(source, file)).not.toEqual([]);
+    expect(tripwireHitsInSource(source, file)).not.toEqual([]);
   });
 
   it('ignores comments, which never reach a visitor', () => {
     expect(
-      findClaimsInSource('// grew by 10,000 followers\nconst a = 1;', 'x.ts')
+      tripwireHitsInSource(
+        '// Synthex gets 45% more engagement.\nconst a = 1;',
+        'x.ts'
+      )
     ).toEqual([]);
   });
 
   it('ignores AI prompt text, which is sent to a model, not served', () => {
     expect(
-      findClaimsInSource(
-        "const r = { messages: [{ role: 'user', content: `Write 3 captions for ${n}.` }] };",
+      tripwireHitsInSource(
+        "const r = { messages: [{ role: 'user', content: 'Example: Synthex gets 45% more engagement.' }] };",
         'x.ts'
       )
     ).toEqual([]);
   });
 });
 
-describe('public copy — unsupported claims (source)', () => {
-  const allow = allowIndex('source');
-  const used = new Set<string>();
-
-  it('no public file carries an unreviewed number or credential', () => {
+describe('public copy — removed claims (source)', () => {
+  it('no public file carries a removed claim or a banned pattern', () => {
     const hits = inventory.flatMap(file =>
-      claimHitsInSource(readFileSync(file, 'utf8'), file).flatMap(hit => {
-        const key = sentenceKey(hit.sentence);
-        if (allow[hit.rule as keyof AllowIndex]?.has(key)) {
-          used.add(`${hit.rule}|${key}`);
-          return [];
-        }
-        return [`${rel(file)}: ${hit.rule} — "${hit.sentence}"`];
-      })
+      tripwireHitsInSource(readFileSync(file, 'utf8'), file).map(
+        hit =>
+          `${rel(file)}:${hit.line ?? '?'}: ${hit.rule} — "${hit.sentence}"`
+      )
     );
     expect(hits).toEqual([]);
-  });
-
-  it('has no stale source allow-list entries', () => {
-    const stale = ALLOW_LIST.filter(
-      e =>
-        e.layer === 'source' &&
-        !used.has(`${e.class}|${sentenceKey(e.sentence)}`)
-    ).map(e => `${e.file}: ${e.sentence}`);
-    expect(stale).toEqual([]);
   });
 });

@@ -3,15 +3,16 @@
  */
 
 /**
- * Unsupported marketing claims must not reach a visitor through an API
- * response — API-response check (SYN-1226, round 5).
+ * Claims this branch removed must not reach a visitor through an API
+ * response — blocking regression tripwire, API layer (SYN-1226).
  *
  * The rendered suite judges what pages show; a page shows an API string only
  * in the UI state that displays it. This suite does not depend on UI state:
  * every same-origin API route that public code calls (publicApiRouteFiles)
  * is called directly, with every exported method, as a signed-in visitor,
- * and every string field of the JSON it answers is judged with the same
- * rules and allow-list kinds as the other layers.
+ * twice — external services down, then up and answering a fixture page —
+ * and every string field of the JSON it answers is judged by the tripwire
+ * (exact seeds + high-precision patterns, nothing allow-listed).
  *
  * Data is populated mechanically from prisma/schema.prisma: every model
  * returns a row whose String fields carry a "Fixture <Model> <field>" marker.
@@ -30,15 +31,10 @@ import { generateToken } from '@/lib/auth/jwt-utils';
 import {
   ROOT,
   apiRoutes,
-  claimHits,
-  maskData,
-  perturb,
   publicApiRouteFiles,
   rel,
-  sentenceKey,
-  type AllowIndex,
+  tripwireHits,
 } from './helpers/public-claims';
-import { allowIndex } from './helpers/public-claims-allowlist';
 
 // ── Populated Prisma, built from the schema ─────────────────────────────────
 
@@ -76,7 +72,7 @@ jest.mock('next/headers', () => ({
 jest.mock('server-only', () => ({}), { virtual: true });
 
 // DNS is not resolvable here; a fixture URL is treated as a public site so
-// the second call reaches the fixture page instead of the blocked branch.
+// the services-up call reaches the fixture page instead of the blocked branch.
 jest.mock('@/lib/security/validate-url', () => ({
   ...jest.requireActual('@/lib/security/validate-url'),
   assertExternalUrlSafe: async () => undefined,
@@ -177,18 +173,15 @@ function value(model: string, f: Field, depth: number): unknown {
   return f.list ? [one()] : one();
 }
 
-function populatedClient(moved = false): Record<string, unknown> {
+function populatedClient(): Record<string, unknown> {
   const delegate = (model: string) =>
     new Proxy(
       {},
       {
         get: (_t, method: string) => async (args?: { data?: object }) => {
           globalThis.__apiReads++;
-          const r = (moved ? perturb(row(model)) : row(model)) as Record<
-            string,
-            unknown
-          >;
-          const n = moved ? 7 : 3;
+          const r = row(model);
+          const n = 3;
           if (/^find(First|Unique)(OrThrow)?$/.test(method)) return r;
           if (method === 'findMany') return [r];
           if (method === 'count') return n;
@@ -294,14 +287,8 @@ function urlOf(file: string): string {
   return `${SITE}${route}`;
 }
 
-// A value that is wholly an ISO timestamp is a point in time: its digits
-// are data by format, masked so the allow-list key does not follow the clock.
-const ISO_VALUE =
-  /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
-
 function strings(v: unknown, out: string[] = []): string[] {
-  if (typeof v === 'string')
-    out.push(ISO_VALUE.test(v) ? v.replace(/\d/g, '#') : v);
+  if (typeof v === 'string') out.push(v);
   else if (Array.isArray(v)) v.forEach(x => strings(x, out));
   else if (v && typeof v === 'object')
     Object.values(v).forEach(x => strings(x, out));
@@ -316,8 +303,6 @@ describe('public copy — unsupported claims (API responses)', () => {
   const originalFetch = global.fetch;
   const originalError = console.error;
   const originalWarn = console.warn;
-  const allow = allowIndex('api');
-  const used = new Set<string>();
   const unpopulated: string[] = [];
 
   beforeAll(() => {
@@ -390,9 +375,7 @@ describe('public copy — unsupported claims (API responses)', () => {
         r: NextRequest,
         c: unknown
       ) => Promise<Response>;
-      // First call: fixture rows, services down. Second call: every number
-      // moved — rows, counts, the clock and what external pages contain — so
-      // a number that moves with them is data and is masked.
+      // Two states: external services down, then up with a fixture page.
       const first = await call(handler, relative, method, file, false);
       const second = await call(handler, relative, method, file, true);
       const values = first.values;
@@ -405,16 +388,10 @@ describe('public copy — unsupported claims (API responses)', () => {
         unpopulated.push(`${relative} ${method}`);
       }
 
-      const judged = maskData(values.join('\n'), second.values.join('\n'));
-      const findings = claimHits(judged).flatMap(hit => {
-        const key = sentenceKey(hit.sentence);
-        if (allow[hit.rule as keyof AllowIndex]?.has(key)) {
-          used.add(`${hit.rule}|${key}`);
-          return [];
-        }
-        return [`${hit.rule} — "${hit.sentence}"`];
-      });
-      expect(findings).toEqual([]);
+      const findings = [...values, ...second.values].flatMap(v =>
+        tripwireHits(v).map(hit => `${hit.rule} — "${hit.sentence}"`)
+      );
+      expect([...new Set(findings)]).toEqual([]);
     },
     30_000
   );
@@ -424,13 +401,12 @@ describe('public copy — unsupported claims (API responses)', () => {
     relative: string,
     method: string,
     file: string,
-    moved: boolean
+    servicesUp: boolean
   ): Promise<{ status: number; reads: number; values: string[] }> {
-    globalThis.__apiPrisma = populatedClient(moved);
+    globalThis.__apiPrisma = populatedClient();
     globalThis.__apiReads = 0;
-    jest.setSystemTime(moved ? NOW.getTime() + 90_061_000 : NOW);
     global.fetch = (async () =>
-      moved
+      servicesUp
         ? new Response(FIXTURE_PAGE, {
             status: 200,
             headers: { 'content-type': 'text/html' },
@@ -469,15 +445,6 @@ describe('public copy — unsupported claims (API responses)', () => {
   // populated state was never judged. Known cases are listed with the reason.
   it('judges a populated answer wherever a route reads data', () => {
     expect(unpopulated.filter(c => !UNPOPULATED_EXPECTED[c])).toEqual([]);
-  });
-
-  it('has no stale API allow-list entries', () => {
-    const stale = [
-      ...[...allow.number].map(k => `number|${k}`),
-      ...[...allow.credential].map(k => `credential|${k}`),
-      ...[...allow.competitor].map(k => `competitor|${k}`),
-    ].filter(k => !used.has(k));
-    expect(stale).toEqual([]);
   });
 });
 
