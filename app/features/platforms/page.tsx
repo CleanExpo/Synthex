@@ -27,63 +27,54 @@ const PLATFORMS = [
     icon: '/icons/3d/platforms/instagram.svg',
     description:
       'Feed posts, Reels, and Stories. AI captions with hashtag optimisation for the Explore algorithm.',
-    users: '2.3B users',
   },
   {
     name: 'Facebook',
     icon: '/icons/3d/platforms/facebook.svg',
     description:
       'Page posts and community content. Engagement-first copy designed for the Facebook feed.',
-    users: '3.0B users',
   },
   {
     name: 'TikTok',
     icon: '/icons/3d/platforms/tiktok.svg',
     description:
       'Short-form hooks, trending sounds guidance, and captions tuned for the FYP algorithm.',
-    users: '1.5B users',
   },
   {
     name: 'YouTube',
     icon: '/icons/3d/platforms/youtube.svg',
     description:
       'SEO-optimised descriptions, keyword-rich titles, and chapter timestamps for long-form content.',
-    users: '2.7B users',
   },
   {
     name: 'X (Twitter)',
     icon: '/icons/3d/platforms/twitter.svg',
     description:
       'Punchy single posts and thread formats. Under 280 characters with maximum impact.',
-    users: '550M users',
   },
   {
     name: 'LinkedIn',
     icon: '/icons/3d/platforms/linkedin.svg',
     description:
       'Professional posts with hook, insight, and CTA structure. B2B tone with personal authority.',
-    users: '1.0B users',
   },
   {
     name: 'Pinterest',
     icon: '/icons/3d/platforms/pinterest.svg',
     description:
       'Search-optimised pin descriptions. Ideal for product-forward businesses and visual content.',
-    users: '482M users',
   },
   {
     name: 'Reddit',
     icon: '/icons/3d/platforms/reddit.svg',
     description:
       'Community-aware posts that contribute value. Synthex adapts tone for subreddit culture.',
-    users: '850M users',
   },
   {
     name: 'Threads',
     icon: '/icons/3d/platforms/threads.svg',
     description:
       "Conversational content for Meta's fast-growing platform. Short, punchy, shareable.",
-    users: '175M users',
   },
 ];
 
@@ -138,7 +129,7 @@ export default function PlatformsPage() {
             Platform-specific AI content
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {PLATFORMS.map(({ name, icon, description, users }) => (
+            {PLATFORMS.map(({ name, icon, description }) => (
               <div
                 key={name}
                 className="bg-charcoal-800/60 border border-white/[0.06] rounded-2xl p-6 hover:border-orange-500/20 transition-colors"
@@ -153,7 +144,6 @@ export default function PlatformsPage() {
                   />
                   <div>
                     <p className="text-sm font-bold text-white">{name}</p>
-                    <p className="text-[10px] text-white/30">{users}</p>
                   </div>
                 </div>
                 <p className="text-sm text-white/50 leading-relaxed">
@@ -171,7 +161,6 @@ export default function PlatformsPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
               { value: '9', label: 'Platforms supported' },
-              { value: '< 3s', label: 'Content generation time' },
               { value: '1', label: 'Dashboard for everything' },
               { value: '∞', label: 'Scheduling capacity' },
             ].map(({ value, label }) => (

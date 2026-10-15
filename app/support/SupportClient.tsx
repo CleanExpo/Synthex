@@ -8,7 +8,6 @@ import {
   Book,
   Video,
   Mail,
-  Clock,
   Search,
   ChevronRight,
   Zap,
@@ -46,7 +45,7 @@ const faqs: FAQItem[] = [
   {
     question: 'How does the viral pattern analysis work?',
     answer:
-      'Our AI analyzes millions of posts daily to identify engagement patterns, trending topics, and viral triggers specific to your industry and audience. It then applies these insights to optimize your content.',
+      'Our AI analyzes posts to identify engagement patterns, trending topics, and viral triggers specific to your industry and audience. It then applies these insights to optimize your content.',
     category: 'AI & Features',
   },
   {
@@ -356,12 +355,6 @@ export default function SupportPage() {
                     <MessageCircle className="w-5 h-5 text-orange-400" />
                     <span className="text-gray-300">
                       Live chat available 24/7
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-orange-400" />
-                    <span className="text-gray-300">
-                      Average response time: 2 hours
                     </span>
                   </div>
                 </div>

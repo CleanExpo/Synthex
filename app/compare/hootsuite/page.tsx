@@ -36,27 +36,18 @@ const COMPARISON = [
   {
     feature: 'Platforms supported',
     synthex: '9 platforms including Threads, Reddit, Pinterest',
-    hootsuite: '35+ platforms but requires manual content for each',
+    hootsuite:
+      'Multi-network scheduling; you write the content for each network',
     synthexWins: false,
   },
-  {
-    feature: 'Setup time',
-    synthex: 'Paste URL → first post ready in under 60 seconds',
-    hootsuite: 'Hours of profile setup, manual content library building',
-    synthexWins: true,
-  },
+
   {
     feature: 'AI capabilities',
     synthex: 'AI content generation, scoring, brand DNA extraction',
     hootsuite: 'Limited AI — OwlyWriter generates basic captions only',
     synthexWins: true,
   },
-  {
-    feature: 'Pricing entry point',
-    synthex: 'Free tier available, no credit card required',
-    hootsuite: 'No free tier — plans start at $99/month USD',
-    synthexWins: true,
-  },
+
   {
     feature: 'Analytics',
     synthex: 'Real-time content scoring + SEO + brand signals',
@@ -77,16 +68,12 @@ const FAQS = [
     a: 'Hootsuite is a scheduling tool — it publishes content you create manually. Synthex is an AI content platform that creates, optimises, and publishes content automatically based on your brand voice.',
   },
   {
-    q: 'Is Synthex cheaper than Hootsuite?',
-    a: 'Yes. Hootsuite starts at $99/month USD with no free tier. Synthex offers a free plan with no credit card required.',
-  },
-  {
     q: 'Can Synthex replace my Hootsuite subscription?',
     a: "For most SMBs, yes. Synthex handles everything Hootsuite does (scheduling, multi-platform publishing) plus everything Hootsuite doesn't (AI content creation, brand voice, content scoring).",
   },
   {
     q: 'How long does it take to switch from Hootsuite to Synthex?',
-    a: 'Under 60 seconds. Paste your website URL, connect your platforms, and Synthex generates your first post immediately — no library migration required.',
+    a: 'Paste your website URL, connect your platforms, and Synthex drafts your first post — no library migration required.',
   },
 ];
 

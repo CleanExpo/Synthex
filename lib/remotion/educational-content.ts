@@ -88,8 +88,8 @@ Start free: https://synthex.social
     voiceoverScript:
       'Ever wonder how AI generates social media posts that sound exactly like you? ' +
       'It starts with your Business DNA — your tone, vocabulary, values, and audience. ' +
-      'The AI studies thousands of high-performing posts in your industry, then combines ' +
-      'that knowledge with your brand profile to craft content that is both on-brand and ' +
+      'The AI combines ' +
+      'what it knows about your industry with your brand profile to craft content that is both on-brand and ' +
       'optimised for engagement. Every post is scored before it reaches you, ensuring ' +
       'quality and relevance. You review, approve, and publish — the AI handles the rest. ' +
       'Discover how Synthex creates content that sounds authentically you at synthex dot social.',
@@ -285,12 +285,11 @@ Start free: https://synthex.social
     ],
     compositionId: 'ExplainerVideo',
     voiceoverScript:
-      'Ninety days is all it takes to go from zero to a social media presence that drives real business results. ' +
+      'Here is a ninety-day plan for building a social media presence. ' +
       'In the first thirty days: set up your profiles, define your brand voice, and commit to a content calendar. ' +
       'In days thirty-one to sixty: publish consistently, engage with every comment, and test different content formats. ' +
       'Analyse your top performers and create more like them. ' +
       'In days sixty-one to ninety: scale what works, experiment with video, and start growing your following intentionally. ' +
-      'Ninety days of consistent effort compounds into results that last. ' +
       'Synthex accelerates every stage — start your 90-day journey at synthex dot social.',
     durationInFrames: 900,
     fps: 30,
@@ -319,7 +318,6 @@ Start free: https://synthex.social
       'Personalisation has moved from batch-and-blast to one-to-one content at scale. ' +
       'Autonomous agents now research trends, draft content, and optimise campaigns overnight while you sleep. ' +
       'Video has overtaken static images as the default content format across every platform. ' +
-      'And businesses that adopted AI marketing tools early are outpacing their competitors by a factor of three. ' +
       'The question is no longer whether to use AI in your marketing — it is how fast you can get started. ' +
       'The future is already here at synthex dot social.',
     durationInFrames: 900,
@@ -682,9 +680,9 @@ Start free: https://synthex.social
     ],
     compositionId: 'ComparisonSlide',
     voiceoverScript:
-      'Facebook: average user age thirty-five to fifty-five, stronger for local businesses, ' +
+      'Facebook: strong for local businesses, ' +
       'events, groups, and long-form content. Excellent for community building and retargeting. ' +
-      'Instagram: average user age eighteen to thirty-four, visual-first platform, ' +
+      'Instagram: a visual-first platform, ' +
       'strong for product-based businesses, lifestyle brands, and short-form video. ' +
       'Your choice depends entirely on where your audience spends their time. ' +
       'Synthex publishes to both automatically — learn more at synthex dot social.',
@@ -1674,7 +1672,6 @@ Start free: https://synthex.social
     compositionId: 'QuoteCard',
     voiceoverScript:
       '"People trust people — not brands. Your customers\' voices are more powerful than yours." ' +
-      'One genuine testimonial outperforms ten promotional posts. ' +
       'Collect reviews, amplify success stories, and let your customers do your marketing. ' +
       'Social proof is free, authentic, and converts better than any ad. ' +
       'Synthex helps you build it at synthex dot social.',
@@ -1946,10 +1943,9 @@ Start free: https://synthex.social
     ],
     compositionId: 'CountdownCTA',
     voiceoverScript:
-      'What if you could schedule an entire month of social media content in under thirty minutes? ' +
+      'What if you could plan an entire month of social media content in one sitting? ' +
       'Synthex generates your content, adapts it for every platform, ' +
       'and schedules it automatically at the optimal time for each audience. ' +
-      'Thirty minutes of setup, thirty days of automated posting. ' +
       'Start at synthex dot social.',
     durationInFrames: 450,
     fps: 30,
@@ -2007,33 +2003,6 @@ Start now: https://synthex.social
       'growth, engagement, top posts, and strategic recommendations for next year. ' +
       'Know what worked, understand what did not, and go into the next year with a clear plan. ' +
       'Get your report at synthex dot social.',
-    durationInFrames: 450,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'cta-limited-offer',
-    title: 'Limited: 3 Months of Synthex Pro at Starter Price',
-    description: `This offer won't last. Lock in 3 months of Pro access at the Starter price.
-
-Claim now: https://synthex.social
-
-#LimitedOffer #AIMarketing #Synthex`,
-    tags: [
-      'limited offer',
-      'AI marketing',
-      'Synthex',
-      'discount',
-      'marketing automation',
-    ],
-    compositionId: 'CountdownCTA',
-    voiceoverScript:
-      'For a limited time, get three months of Synthex Pro at the Starter plan price. ' +
-      'Full AI content generation, all platforms, advanced analytics — at a fraction of the regular cost. ' +
-      'This offer expires soon. ' +
-      'Lock it in now at synthex dot social.',
     durationInFrames: 450,
     fps: 30,
     width: 1920,
@@ -2377,7 +2346,7 @@ Claim now: https://synthex.social
       'Track engagement rate, follower growth, reach, and top-performing content from one screen. ' +
       'Use the campaign selector to compare performance across different time periods. ' +
       'The AI insights panel surfaces actionable recommendations — like the best time to post or which content format resonates most. ' +
-      'Data updates every thirty minutes so you always have a current picture of your social presence.',
+      'Data updates regularly so you always have a current picture of your social presence.',
     durationInFrames: 900,
     fps: 30,
     width: 1920,
@@ -2506,11 +2475,11 @@ Claim now: https://synthex.social
     id: 'how-to-sign-up',
     title: 'How to Create Your Synthex Account',
     description:
-      'Learn how to create your Synthex account in under two minutes — from the sign-up form to the activation checklist.\n\n#Synthex #GettingStarted #AccountCreation',
+      'Learn how to create your Synthex account — from the sign-up form to the activation checklist.\n\n#Synthex #GettingStarted #AccountCreation',
     tags: ['signup', 'getting started', 'account creation', 'Synthex'],
     compositionId: 'HowToVideo',
     voiceoverScript:
-      'Creating your Synthex account takes under two minutes. Head to synthex dot social ' +
+      'Creating your Synthex account is quick. Head to synthex dot social ' +
       'and click Get Started Free. Enter your business name, email address, and a strong ' +
       "password — then click Create Account. You'll receive a verification email immediately. " +
       "Open it and click Verify Email Address. Once verified, you'll be taken straight into " +

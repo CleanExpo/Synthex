@@ -7,7 +7,7 @@ export const MASTER_ORCHESTRATOR_PROMPT = `
 # ROLE: Master Brand Psychology Architect
 
 You are an elite branding expert who understands the deep psychology behind consumer decision-making. 
-Your expertise lies in applying 50+ psychological principles to create irresistible brand identities.
+Your expertise lies in applying psychological principles to create irresistible brand identities.
 
 ## CONTEXT:
 - Client Input: {user_input}
@@ -47,7 +47,7 @@ export const PSYCHOLOGY_ANALYZER_PROMPT = `
 # ROLE: Cognitive Bias Detective & Strategic Advisor
 
 ## SPECIALIZATION: 
-Identify which of the 50+ psychological principles will be most effective for specific branding scenarios.
+Identify which of the psychological principles will be most effective for specific branding scenarios.
 
 ## PSYCHOLOGICAL PRINCIPLE CATEGORIES:
 1. **Cognitive Biases & Mental Shortcuts** (17 principles)
@@ -254,32 +254,32 @@ export const AGENT_CONFIG = {
     model: 'gpt-4',
     temperature: 0.7,
     maxTokens: 4000,
-    systemPrompt: MASTER_ORCHESTRATOR_PROMPT
+    systemPrompt: MASTER_ORCHESTRATOR_PROMPT,
   },
   psychologyAnalyzer: {
     model: 'gpt-4',
     temperature: 0.6,
     maxTokens: 2000,
-    systemPrompt: PSYCHOLOGY_ANALYZER_PROMPT
+    systemPrompt: PSYCHOLOGY_ANALYZER_PROMPT,
   },
   brandNameGenerator: {
     model: 'gpt-4',
     temperature: 0.8,
     maxTokens: 2000,
-    systemPrompt: BRAND_NAME_GENERATOR_PROMPT
+    systemPrompt: BRAND_NAME_GENERATOR_PROMPT,
   },
   taglineSpecialist: {
     model: 'gpt-4',
     temperature: 0.8,
     maxTokens: 1500,
-    systemPrompt: TAGLINE_SPECIALIST_PROMPT
+    systemPrompt: TAGLINE_SPECIALIST_PROMPT,
   },
   metadataOptimizer: {
     model: 'gpt-3.5-turbo',
     temperature: 0.6,
     maxTokens: 2000,
-    systemPrompt: METADATA_OPTIMIZER_PROMPT
-  }
+    systemPrompt: METADATA_OPTIMIZER_PROMPT,
+  },
 };
 
 // Psychological principles knowledge base
@@ -291,10 +291,10 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Use premium-sounding prefixes',
         tagline: 'Start with highest benefit',
-        metadata: 'Lead with strongest value proposition'
+        metadata: 'Lead with strongest value proposition',
       },
       triggerWords: ['Premium', 'Elite', 'First', 'Original', 'Leading'],
-      audienceRelevance: { B2B: 9, Luxury: 10, Budget: 3, Youth: 6 }
+      audienceRelevance: { B2B: 9, Luxury: 10, Budget: 3, Youth: 6 },
     },
     {
       name: 'Confirmation Bias',
@@ -302,10 +302,10 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Align with audience preconceptions',
         tagline: 'Reinforce existing values',
-        metadata: 'Use familiar terminology'
+        metadata: 'Use familiar terminology',
       },
       triggerWords: ['Proven', 'Trusted', 'Traditional', 'Authentic'],
-      audienceRelevance: { B2B: 7, Luxury: 6, Budget: 8, Youth: 5 }
+      audienceRelevance: { B2B: 7, Luxury: 6, Budget: 8, Youth: 5 },
     },
     // Add remaining cognitive biases...
   ],
@@ -316,10 +316,10 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Imply community or popularity',
         tagline: 'Reference user success',
-        metadata: 'Include testimonial keywords'
+        metadata: 'Include testimonial keywords',
       },
       triggerWords: ['Community', 'Popular', 'Trending', 'Choice', 'Preferred'],
-      audienceRelevance: { B2B: 8, Luxury: 7, Budget: 9, Youth: 10 }
+      audienceRelevance: { B2B: 8, Luxury: 7, Budget: 9, Youth: 10 },
     },
     {
       name: 'Authority Principle',
@@ -327,10 +327,16 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Use professional terminology',
         tagline: 'Establish expertise',
-        metadata: 'Include credentials and awards'
+        metadata: 'Include credentials and awards',
       },
-      triggerWords: ['Expert', 'Professional', 'Certified', 'Official', 'Master'],
-      audienceRelevance: { B2B: 10, Luxury: 9, Budget: 6, Youth: 4 }
+      triggerWords: [
+        'Expert',
+        'Professional',
+        'Certified',
+        'Official',
+        'Master',
+      ],
+      audienceRelevance: { B2B: 10, Luxury: 9, Budget: 6, Youth: 4 },
     },
     // Add remaining social psychology principles...
   ],
@@ -341,10 +347,10 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Imply protection or security',
         tagline: 'Frame as avoiding loss',
-        metadata: 'Emphasize what they might miss'
+        metadata: 'Emphasize what they might miss',
       },
       triggerWords: ['Secure', 'Protect', 'Save', 'Preserve', 'Guard'],
-      audienceRelevance: { B2B: 9, Luxury: 5, Budget: 10, Youth: 6 }
+      audienceRelevance: { B2B: 9, Luxury: 5, Budget: 10, Youth: 6 },
     },
     {
       name: 'Scarcity Principle',
@@ -352,10 +358,10 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Suggest exclusivity',
         tagline: 'Emphasize limited access',
-        metadata: 'Use urgency indicators'
+        metadata: 'Use urgency indicators',
       },
       triggerWords: ['Exclusive', 'Limited', 'Rare', 'Select', 'Private'],
-      audienceRelevance: { B2B: 7, Luxury: 10, Budget: 8, Youth: 9 }
+      audienceRelevance: { B2B: 7, Luxury: 10, Budget: 8, Youth: 9 },
     },
     // Add remaining behavioral economics principles...
   ],
@@ -366,13 +372,13 @@ export const PSYCHOLOGY_PRINCIPLES = {
       brandingApplication: {
         naming: 'Use familiar patterns',
         tagline: 'Repeat key messages',
-        metadata: 'Consistent terminology'
+        metadata: 'Consistent terminology',
       },
       triggerWords: ['Familiar', 'Classic', 'Known', 'Recognized'],
-      audienceRelevance: { B2B: 6, Luxury: 7, Budget: 9, Youth: 8 }
+      audienceRelevance: { B2B: 6, Luxury: 7, Budget: 9, Youth: 8 },
     },
     // Add remaining memory & learning principles...
-  ]
+  ],
 };
 
 const agentPrompts = {
@@ -382,7 +388,7 @@ const agentPrompts = {
   PSYCHOLOGY_ANALYZER_PROMPT,
   BRAND_NAME_GENERATOR_PROMPT,
   TAGLINE_SPECIALIST_PROMPT,
-  METADATA_OPTIMIZER_PROMPT
+  METADATA_OPTIMIZER_PROMPT,
 };
 
 export default agentPrompts;

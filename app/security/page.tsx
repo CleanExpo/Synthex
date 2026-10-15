@@ -28,9 +28,7 @@ import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
 
 const securityHighlights = [
-  { value: 'SOC 2 Type II', label: 'Certified' },
   { value: '256-bit', label: 'Encryption' },
-  { value: '99.99%', label: 'Uptime SLA' },
   { value: 'GDPR', label: 'Compliant' },
 ];
 
@@ -41,19 +39,9 @@ const securityFeatures = [
     copy: 'All data is encrypted in transit (TLS 1.3) and at rest (AES-256) to ensure your content and credentials remain secure.',
   },
   {
-    icon: Shield,
-    title: 'SOC 2 Type II Compliance',
-    copy: 'Our infrastructure and processes undergo regular third-party audits to meet the highest security standards.',
-  },
-  {
     icon: CheckCircle,
     title: 'GDPR & Privacy Compliant',
     copy: 'Full compliance with GDPR, CCPA, and international data protection regulations. Your data, your rights.',
-  },
-  {
-    icon: Server,
-    title: '99.99% Uptime Guarantee',
-    copy: 'Enterprise-grade infrastructure with redundancy, failover, and 24/7 monitoring to keep your marketing running.',
   },
 ];
 
@@ -120,12 +108,6 @@ const authenticationFeatures = [
 
 const certifications = [
   {
-    icon: Award,
-    name: 'SOC 2 Type II',
-    description: 'Service Organization Control',
-    status: 'Certified',
-  },
-  {
     icon: Shield,
     name: 'GDPR',
     description: 'General Data Protection Regulation',
@@ -150,7 +132,7 @@ export const metadata = generateMetadata({
   description:
     'How Synthex protects your data — encryption, access controls, compliance, and security practices.',
   path: '/security',
-  keywords: ['security', 'data security', 'encryption', 'compliance', 'SOC 2'],
+  keywords: ['security', 'data security', 'encryption', 'compliance'],
 });
 
 export default function SecurityPage() {

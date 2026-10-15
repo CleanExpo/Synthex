@@ -75,12 +75,12 @@ const whyThis = [
   {
     icon: Sparkles,
     title: 'Be where the users are',
-    copy: 'AI Overviews answer 60%+ of US search queries and CTR drops up to 65% where they appear. Your business needs to live inside the AI assistant, not on the other side of a click.',
+    copy: 'Your business needs to live inside the AI assistant, not on the other side of a click.',
   },
   {
     icon: Zap,
     title: 'Skybridge does the heavy lifting',
-    copy: "Alpic's Skybridge framework (MIT-licensed, v1.0 released May 2026) powers ~10% of all apps on the Claude + ChatGPT stores. Used by Datadog, Bitmovin, Evaneos. We build on the same stack.",
+    copy: "Alpic's Skybridge framework (MIT-licensed, v1.0 released May 2026) is the stack we build on.",
   },
   {
     icon: Shield,
