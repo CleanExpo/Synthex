@@ -88,7 +88,9 @@ const infrastructureDetails = [
     icon: Server,
     title: 'AI Processing',
     provider: 'OpenRouter API',
-    copy: 'Encrypted API calls, no data retention',
+    // Only transport is enforced in code; retention follows each model
+    // provider's own policy, so no retention promise is made here.
+    copy: 'API calls sent over encrypted (HTTPS) connections',
   },
 ];
 

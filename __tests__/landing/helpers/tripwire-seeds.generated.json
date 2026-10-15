@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1054,
+  "count": 1056,
   "seeds": [
     {
       "text": "- Audit log + GDPR/Privacy compliance built in",
@@ -2359,6 +2359,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Encrypted API calls, no data retention",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Encryption 99.99%",
       "file": "app/security/page.tsx",
       "firstSeen": "base"
@@ -3551,6 +3556,11 @@
     {
       "text": "Only value.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "OpenRouter API Encrypted API calls, no data retention",
+      "file": "app/security/page.tsx",
       "firstSeen": "base"
     },
     {
