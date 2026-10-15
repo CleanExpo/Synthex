@@ -118,9 +118,9 @@ export function ReportVolumePicker() {
       <p className="mt-6 text-sm text-[var(--ra-n100)]">
         Packs are added to a subscription, so the choice can wait until a busy
         month actually arrives.{' '}
-        {REPORT_PACKS.map(
-          pack => `${pack.reports} reports for $${pack.priceAud}`
-        ).join(' · ')}
+        {REPORT_PACKS.map(pack => `${pack.reports} for $${pack.priceAud}`).join(
+          ' · '
+        )}
         .
       </p>
     </div>

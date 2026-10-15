@@ -90,7 +90,7 @@ interface ComparisonRow {
 const comparisonRows: ComparisonRow[] = [
   {
     feature: 'Inspection report credits',
-    trial: `${TRIAL_REPORT_CREDITS} credits over ${TRIAL_DAYS} days`,
+    trial: `${TRIAL_REPORT_CREDITS} over ${TRIAL_DAYS} days`,
     monthly: `${INCLUDED_REPORTS_PER_MONTH} every month`,
   },
   {
@@ -104,7 +104,7 @@ const comparisonRows: ComparisonRow[] = [
     trial: 'Basic',
     monthly: 'Basic, Enhanced and Optimised',
   },
-  { feature: 'Reports structured to IICRC S500', trial: true, monthly: true },
+  { feature: 'IICRC S500 compliant reports', trial: true, monthly: true },
   { feature: 'PDF and Excel export', trial: true, monthly: true },
   { feature: 'Email support', trial: true, monthly: true },
   { feature: 'PDF upload and processing', trial: false, monthly: true },
@@ -230,7 +230,7 @@ export default function RestoreAssistPricingPage() {
                 `${TRIAL_REPORT_CREDITS} inspection report credits`,
                 `${TRIAL_QUICK_FILL_CREDITS} Quick Fill credits`,
                 'Basic report type',
-                'Reports structured to IICRC S500',
+                'IICRC S500 compliant reports',
                 'PDF and Excel export',
                 'Email support',
               ].map(item => (
@@ -255,7 +255,12 @@ export default function RestoreAssistPricingPage() {
           {/* Monthly — carries the single tan CTA on this screen, per the RA
               design rule that cta-primary appears at most once per surface. */}
           <div className="flex flex-col rounded-[12px] border-2 border-[var(--ra-navy)] bg-[var(--ra-white)] p-8">
-            <h2 className="text-2xl font-bold">Monthly</h2>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-bold">Monthly</h2>
+              <span className="rounded-[4px] bg-[var(--ra-n100)] px-2 py-1 font-mono text-xs font-medium text-[var(--ra-navy)]">
+                Most chosen
+              </span>
+            </div>
             <p className="mt-2 text-base text-[var(--ra-n500)]">
               For a business writing up jobs every week of the month.
             </p>
@@ -386,9 +391,10 @@ export default function RestoreAssistPricingPage() {
               signup, and that provider bills directly for what gets used.
             </p>
             <p>
-              It follows that the usage is billed at the provider&apos;s own
-              rates with nothing added on top, and the job data goes to an
-              account the business controls, not one held on its behalf.
+              Two things follow from that. The usage is billed at the
+              provider&apos;s own rates with nothing added on top. And the job
+              data goes to an account the business controls, not one held on its
+              behalf.
             </p>
             <p>
               It is a separate usage-based amount on top of the $
@@ -468,7 +474,7 @@ export default function RestoreAssistPricingPage() {
               },
               {
                 included: true,
-                text: 'Repeat fields pre-filled from details already entered, so the same information is not typed again.',
+                text: 'Repeat fields pre-filled from details already entered, so the same information is not typed twice.',
               },
               {
                 included: true,

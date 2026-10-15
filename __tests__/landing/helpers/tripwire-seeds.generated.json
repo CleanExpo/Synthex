@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1058,
+  "count": 1054,
   "seeds": [
     {
       "text": "- Audit log + GDPR/Privacy compliance built in",
@@ -731,11 +731,6 @@
     {
       "text": "2 reviewers assigned Approve",
       "file": "components/landing/premium/hero-product-mock.tsx",
-      "firstSeen": "base"
-    },
-    {
-      "text": "Two things follow from that.",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -1749,16 +1744,6 @@
       "firstSeen": "base"
     },
     {
-      "text": "Basic, Enhanced and Optimised IICRC S500 compliant reports",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
-      "firstSeen": "base"
-    },
-    {
-      "text": "Basic report type IICRC S500 compliant reports",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
-      "firstSeen": "base"
-    },
-    {
       "text": "beautiful, but not driving reservations.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -1791,11 +1776,6 @@
     {
       "text": "Best Posting Times 9:00 AM",
       "file": "app/analytics/AnalyticsClient.tsx",
-      "firstSeen": "base"
-    },
-    {
-      "text": "Best value",
-      "file": "app/(landing)/restoreassist/pricing/plan-data.ts",
       "firstSeen": "base"
     },
     {
@@ -2214,6 +2194,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "credits over",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
       "text": "cta-limited-offer",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -2526,11 +2511,6 @@
     {
       "text": "foot traffic",
       "file": "lib/remotion/educational-content.ts",
-      "firstSeen": "base"
-    },
-    {
-      "text": "for $",
-      "file": "app/(landing)/restoreassist/pricing/report-volume-picker.tsx",
       "firstSeen": "base"
     },
     {
@@ -2949,16 +2929,6 @@
       "firstSeen": "base"
     },
     {
-      "text": "IICRC S500 compliant reports",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
-      "firstSeen": "base"
-    },
-    {
-      "text": "IICRC S500 compliant reports PDF and Excel export",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
-      "firstSeen": "base"
-    },
-    {
       "text": "Image Posts vs Video Posts: The Data | Synthex",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3097,6 +3067,11 @@
       "text": "It drives real revenue.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "It follows that the usage is billed at the provider&apos;s own rates with nothing added on top, and the job data goes to an account the business controls, not one held on its behalf.",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
     },
     {
       "text": "Join 5,000+ Australian businesses posting to 9 platforms automatically.",
@@ -3249,6 +3224,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Lowest per-report rate",
+      "file": "app/(landing)/restoreassist/pricing/plan-data.ts",
+      "firstSeen": "74908118"
+    },
+    {
       "text": "Magnetic Buttons",
       "file": "app/demo/DemoClient.tsx",
       "firstSeen": "base"
@@ -3341,11 +3321,6 @@
     {
       "text": "Most businesses struggle with brand consistency because they have too many people creating content.",
       "file": "lib/remotion/educational-content.ts",
-      "firstSeen": "base"
-    },
-    {
-      "text": "Most chosen",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3601,11 +3576,6 @@
     {
       "text": "Our support team is available 24/7 to help you get the most out of Synthex.",
       "file": "app/support/SupportClient.tsx",
-      "firstSeen": "base"
-    },
-    {
-      "text": "over",
-      "file": "app/(landing)/restoreassist/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3904,14 +3874,24 @@
       "firstSeen": "base"
     },
     {
-      "text": "Repeat fields pre-filled from details already entered, so the same information is not typed twice.",
+      "text": "Repeat fields pre-filled from details already entered, so the same information is not typed again.",
       "file": "app/(landing)/restoreassist/pricing/page.tsx",
-      "firstSeen": "base"
+      "firstSeen": "74908118"
     },
     {
       "text": "replaces 50+ fragmented report formats currently used across Australian",
       "file": "lib/vision-board/nir-storyboard.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "Reports structured to IICRC S500",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "Reports structured to IICRC S500 PDF and Excel export",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
     },
     {
       "text": "restaurant marketing",
@@ -5294,5 +5274,46 @@
       "firstSeen": "base"
     }
   ],
-  "retired": []
+  "retired": [
+    {
+      "text": "Basic report type IICRC S500 compliant reports",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Basic, Enhanced and Optimised IICRC S500 compliant reports",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Best value",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "IICRC S500 compliant reports",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "IICRC S500 compliant reports PDF and Excel export",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Most chosen",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Repeat fields pre-filled from details already entered, so the same information is not typed twice.",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Two things follow from that.",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "for $",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "over",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    }
+  ]
 }
