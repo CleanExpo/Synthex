@@ -17,7 +17,18 @@
  *    exported GET/POST called with a NextRequest), as a signed-in visitor, so
  *    API-fed copy renders as visitors see it. Other origins answer 503.
  * Each fixture names marker strings that must appear in the rendered copy,
- * which proves the page rendered its populated state, not an empty one.
+ * which proves the page rendered its populated state, not an empty one; a
+ * populated fixture without a marker fails.
+ *
+ * Copy behind an interaction is opened before scanning: every inactive tab
+ * is selected, every collapsed accordion or disclosure expanded and every
+ * <details> opened, and the markup of each state is judged.
+ *
+ * Numbers are denied by default, as in the source check. A visitor's own
+ * data is not copy, and is told apart mechanically: each populated state is
+ * rendered a second time with every fixture number changed, and a number
+ * that changes with the fixture is masked as data ("#"). A number that stays
+ * put is copy, and needs an allow-list entry like any other.
  *
  * There is no source-only category: a page that stops rendering fails here.
  * Redirect-only pages (they call redirect()) serve no body to judge.
@@ -25,7 +36,7 @@
 
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { NextRequest } from 'next/server';
 import { SWRConfig } from 'swr';
 import { generateToken } from '@/lib/auth/jwt-utils';
@@ -35,13 +46,16 @@ import {
   ROOT,
   apiRoutes,
   claimHits,
+  maskData,
   matchApiRoute,
+  perturb,
   publicPageFiles,
   rel,
   renderedSentencesText,
   routeOf,
+  sentenceKey,
 } from './helpers/public-claims';
-import { allowKeys } from './helpers/public-claims-allowlist';
+import { allowIndex } from './helpers/public-claims-allowlist';
 
 // ── Fixture registry (read by the Prisma mock) ──────────────────────────────
 
@@ -369,7 +383,10 @@ const PAGE_FIXTURES: Record<string, PageFixture> = {
         findMany: [{ endpoint: '/api/fixture', status: 200, createdAt: NOW }],
       },
     },
-    markers: [],
+    // /api/analytics answers { data: { totals } }, which this client does not
+    // read, so no row reaches the copy. The markers are copy that exists only
+    // on the Top Content and Insights tabs: they prove the tabs were opened.
+    markers: ['Your best posts based on engagement', 'Key Insights'],
   },
 
   'app/credential-intake/page.tsx': {
@@ -705,6 +722,9 @@ function installBrowserApis() {
   globalThis.IntersectionObserver ??=
     Observer as unknown as typeof IntersectionObserver;
   window.scrollTo ??= (() => undefined) as typeof window.scrollTo;
+  Element.prototype.scrollIntoView ??= () => undefined;
+  Element.prototype.hasPointerCapture ??= () => false;
+  Element.prototype.releasePointerCapture ??= () => undefined;
   HTMLMediaElement.prototype.play ??= async () => undefined;
   HTMLMediaElement.prototype.pause ??= () => undefined;
 }
@@ -765,6 +785,14 @@ async function pageTree(
   return resolveServerTree(tree);
 }
 
+// Interactive controls that hide copy until used.
+const HIDDEN_COPY_CONTROLS = [
+  '[role="tab"][aria-selected="false"]',
+  'button[aria-expanded="false"]',
+  '[role="button"][aria-expanded="false"]',
+  'summary',
+].join(', ');
+
 // Mount in jsdom and wait until effects and same-origin fetches settle.
 async function clientMarkup(tree: React.ReactNode): Promise<string> {
   // A fresh SWR cache per render: states must not reuse each other's data.
@@ -773,21 +801,44 @@ async function clientMarkup(tree: React.ReactNode): Promise<string> {
       {tree}
     </SWRConfig>
   );
-  let last = '';
-  let stable = 0;
   // Data libraries (SWR) start requests on a later frame, so each step is a
   // real wait, and the DOM must be quiet for several steps in a row.
-  for (let i = 0; i < 100 && stable < 5; i++) {
+  const settle = async () => {
+    let last = '';
+    let stable = 0;
+    for (let i = 0; i < 100 && stable < 5; i++) {
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 20));
+      });
+      const html = container.innerHTML;
+      stable = inflight === 0 && html === last ? stable + 1 : 0;
+      last = html;
+    }
+  };
+  await settle();
+  const states = [container.innerHTML];
+  // Open every hidden-copy control once, judging each resulting state.
+  const used = new WeakSet<Element>();
+  for (let round = 0; round < 40; round++) {
+    container
+      .querySelectorAll('details:not([open])')
+      .forEach(d => d.setAttribute('open', ''));
+    const next = [...container.querySelectorAll(HIDDEN_COPY_CONTROLS)].find(
+      el => !used.has(el)
+    );
+    if (!next) break;
+    used.add(next);
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 20));
+      // Radix tabs select on mousedown; other controls on click.
+      fireEvent.mouseDown(next, { button: 0 });
+      fireEvent.click(next);
     });
-    const html = container.innerHTML;
-    stable = inflight === 0 && html === last ? stable + 1 : 0;
-    last = html;
+    await settle();
+    states.push(container.innerHTML);
   }
-  const html = container.innerHTML;
+  states.push(container.innerHTML);
   cleanup();
-  return html;
+  return states.join('\n');
 }
 
 // ── Suite ───────────────────────────────────────────────────────────────────
@@ -800,6 +851,27 @@ describe('public copy — unsupported claims (rendered)', () => {
   const originalWarn = console.warn;
 
   beforeAll(() => {
+    // The calendar is the fixtures' NOW, so dates in copy are reproducible.
+    // Only Date is faked: renders settle on real timers.
+    jest.useFakeTimers({
+      now: NOW,
+      doNotFake: [
+        'hrtime',
+        'nextTick',
+        'performance',
+        'queueMicrotask',
+        'requestAnimationFrame',
+        'cancelAnimationFrame',
+        'requestIdleCallback',
+        'cancelIdleCallback',
+        'setImmediate',
+        'clearImmediate',
+        'setInterval',
+        'clearInterval',
+        'setTimeout',
+        'clearTimeout',
+      ],
+    });
     process.env.NEXT_PUBLIC_SUPABASE_URL ||= 'http://localhost:54321';
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||= 'test-anon-key';
     installBrowserApis();
@@ -811,6 +883,7 @@ describe('public copy — unsupported claims (rendered)', () => {
   });
 
   afterAll(() => {
+    jest.useRealTimers();
     global.fetch = originalFetch;
     console.error = originalError;
     console.warn = originalWarn;
@@ -827,10 +900,29 @@ describe('public copy — unsupported claims (rendered)', () => {
         'app/compare/page.tsx',
         'app/add-ons/page.tsx',
         'app/(auth)/signup/page.tsx',
-        'app/vision-board-preview/ra-launch-2026-05/page.tsx',
         ...Object.keys(PAGE_VARIANTS),
       ])
     );
+  });
+
+  // Review previews leave the inventory only because they 404 in production.
+  it.each([
+    'app/vision-board-preview/ra-launch-2026-05/page.tsx',
+    'app/quick-access-preview/page.tsx',
+  ])('serves %s to no production visitor', async relative => {
+    expect(pages.map(rel)).not.toContain(relative);
+    const env = process.env as Record<string, string | undefined>;
+    const nodeEnv = env.NODE_ENV;
+    env.NODE_ENV = 'production';
+    try {
+      const served = async () => {
+        const tree = await pageTree(path.join(ROOT, relative));
+        return renderToStaticMarkup(<>{tree}</>);
+      };
+      await expect(served()).rejects.toThrow('NEXT_NOT_FOUND');
+    } finally {
+      env.NODE_ENV = nodeEnv;
+    }
   });
 
   it('has fixtures only for real pages', () => {
@@ -849,9 +941,8 @@ describe('public copy — unsupported claims (rendered)', () => {
     );
   });
   const readsData = new Set<string>();
-  const allow = allowKeys('rendered');
-  const usedAllowKeys = new Set<string>();
-  const keyOf = (sentence: string) => sentence.replace(/\s+/g, '');
+  const allow = allowIndex('rendered');
+  const used = new Set<string>();
 
   it.each(cases)(
     '%s — %s',
@@ -862,19 +953,40 @@ describe('public copy — unsupported claims (rendered)', () => {
       globalThis.__copyReads = 0;
       const route = routeOf(file);
       const params = paramsFor(route, fixture);
-      const urlPath =
-        fixture?.url?.() ??
-        route.replace(
-          /\[(?:\.\.\.)?([^\]]+)\]/g,
-          (_m, name: string) => params[name]
+      const visit = () =>
+        window.history.replaceState(
+          {},
+          '',
+          fixture?.url?.() ??
+            route.replace(
+              /\[(?:\.\.\.)?([^\]]+)\]/g,
+              (_m, name: string) => params[name]
+            )
         );
-      window.history.replaceState({}, '', urlPath);
 
-      let markup: string;
-      try {
+      // The perturbed render also mints its URL a little over a day later, so
+      // values that follow the clock (a link's expiry) move and read as data.
+      const renderAll = async (clockShift = 0) => {
+        const now = Date.now;
+        Date.now = () => now() + clockShift;
+        try {
+          visit();
+        } finally {
+          Date.now = now;
+        }
         const tree = await pageTree(file, fixture);
-        markup = renderToStaticMarkup(<>{tree}</>);
-        markup += `\n${await clientMarkup(tree)}`;
+        const server = renderToStaticMarkup(<>{tree}</>);
+        return `${server}\n${await clientMarkup(tree)}`;
+      };
+      let markup: string;
+      let moved: string | null = null;
+      try {
+        markup = await renderAll();
+        if (fixture) {
+          globalThis.__copyFixtures = perturb(fixture.prisma) as PrismaFixtures;
+          moved = await renderAll(90_061_000); // +1 d 1 h 1 min 1 s
+          globalThis.__copyFixtures = fixture.prisma;
+        }
       } catch (error) {
         cleanup();
         const message = String((error as Error).message);
@@ -894,17 +1006,25 @@ describe('public copy — unsupported claims (rendered)', () => {
 
       const text = renderedSentencesText(markup);
       expect(text.replace(/\s+/g, '').length).toBeGreaterThan(0);
+      if (fixture) expect(fixture.markers.length).toBeGreaterThan(0);
       for (const marker of fixture?.markers ?? []) {
         expect(text).toContain(marker);
       }
-      const hits = claimHits(text, new Set());
-      const allowed = (h: { rule: string; sentence: string }) =>
-        h.rule === 'quantified outcome' && allow.has(keyOf(h.sentence));
-      for (const hit of hits.filter(allowed)) {
-        usedAllowKeys.add(keyOf(hit.sentence));
-      }
-      const findings = hits.filter(h => !allowed(h));
-      expect(findings.map(h => `${h.rule} — "${h.sentence}"`)).toEqual([]);
+      const judged = moved
+        ? maskData(text, renderedSentencesText(moved))
+        : text;
+      const findings = claimHits(judged).flatMap(hit => {
+        const key = sentenceKey(hit.sentence);
+        if (
+          (hit.rule === 'number' && allow.number.has(key)) ||
+          (hit.rule === 'credential' && allow.credential.has(key))
+        ) {
+          used.add(`${hit.rule}|${key}`);
+          return [];
+        }
+        return [`${hit.rule} — "${hit.sentence}"`];
+      });
+      expect(findings).toEqual([]);
     },
     60_000
   );
@@ -918,6 +1038,10 @@ describe('public copy — unsupported claims (rendered)', () => {
 
   // Every rendered allow-list entry must still be needed.
   it('has no stale rendered allow-list entries', () => {
-    expect([...allow].filter(k => !usedAllowKeys.has(k))).toEqual([]);
+    const stale = [
+      ...[...allow.number].map(k => `number|${k}`),
+      ...[...allow.credential].map(k => `credential|${k}`),
+    ].filter(k => !used.has(k));
+    expect(stale).toEqual([]);
   });
 });

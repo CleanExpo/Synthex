@@ -1,35 +1,42 @@
 /**
  * Unsupported marketing claims must not return to public copy — source check.
  *
- * None of these is backed by anything in the repo: there is no customer count
- * behind "5,000+ businesses", no refund policy behind a "money-back guarantee",
- * and nothing that substantiates "world's first fully autonomous". /case-studies
- * itself says case studies are still being prepared. Copy that states them on a
- * public page is an Australian Consumer Law exposure.
+ * Deny by default (SYN-1226, round 5). Two classes, no vocabulary of outcomes:
+ *  - NUMBER: every quantity in public copy is a finding;
+ *  - CREDENTIAL: certification, compliance, endorsement and superlative
+ *    terms are findings, with or without a number.
+ * A finding passes only through an allow-list entry whose kind the guard
+ * checks mechanically (helpers/public-claims-allowlist.ts → checkEntry).
  *
- * Two layers, sharing one inventory, normaliser and pattern set
- * (helpers/public-claims.ts):
- *  - this file scans the normalised SOURCE of every public file and everything
- *    it imports, which also covers copy that only renders after interaction
- *    (dynamic imports, effects, other video ids in a catalogue);
- *  - public-claims-rendered.test.tsx renders every public page and scans the
- *    markup a visitor gets, which catches copy composed at runtime
- *    ('Join 5,' + '000+ …').
+ * Layers, sharing one normaliser and rule set (helpers/public-claims.ts):
+ *  - this file: the copy streams of every public file (UI code reachable
+ *    from public routes, plus the API route files they reference);
+ *  - public-claims-rendered.test.tsx: every public page, rendered in every
+ *    fixture state with tabs and accordions opened;
+ *  - public-claims-api.test.ts: every string field of every same-origin API
+ *    response public code reads, whatever UI state would show it.
  */
 
 import { readFileSync } from 'fs';
-import { ALLOW_LIST, allowKeys } from './helpers/public-claims-allowlist';
 import {
-  BANNED_CLAIMS,
+  ALLOW_LIST,
+  allowIndex,
+  checkEntry,
+  type AllowEntry,
+} from './helpers/public-claims-allowlist';
+import {
   NOT_CLAIMS,
-  claimHitsInSource,
   REMOVED_CLAIM_SEEDS,
+  ROUND_5_SEEDS,
+  claimHits,
+  claimHitsInSource,
   findClaims,
   findClaimsInSource,
   normaliseCopy,
   publicAppFiles,
   publicSourceInventory,
   rel,
+  sentenceKey,
 } from './helpers/public-claims';
 
 const inventory = publicSourceInventory();
@@ -41,26 +48,31 @@ describe('public copy — inventory', () => {
     'app/add-ons/page.tsx',
     'app/add-ons/mcp-app-development/page.tsx',
     'app/agencies/page.tsx',
-    'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx',
+    'app/security/page.tsx',
     'components/marketing/MarketingLayout.tsx',
     'components/demo/CaptionDemo.tsx',
-    'lib/remotion/educational-content.ts',
+    'lib/remotion/help-videos.ts',
     'lib/seo/metadata.ts',
     'public/llms.txt',
-    // Same-origin API routes public pages fetch, and what those routes import.
+    // Same-origin API route files public code references.
     'app/api/blog/[slug]/route.ts',
     'app/api/public/testimonials/[token]/route.ts',
     'app/api/collaborator/context/route.ts',
     'app/api/credential-intake/route.ts',
+    'app/api/analytics/route.ts',
     'lib/clients/getClientBySlug.ts',
   ])('covers %s', file => {
     expect(inventory.map(rel)).toContain(file);
   });
 
-  // Seeds are routes the proxy serves without auth. Files they import are
-  // public by reach even when they live under app/dashboard (e.g. the
-  // /vision-board-preview panels), so the closure is not filtered.
-  // API routes enter only by reference from public code, never as seeds.
+  // The YouTube marketing catalogue is not bundled into public pages: they
+  // play only in-app help videos (lib/remotion/help-videos.ts).
+  it('does not ship the marketing video catalogue on public pages', () => {
+    expect(inventory.map(rel)).not.toContain(
+      'lib/remotion/educational-content.ts'
+    );
+  });
+
   it('seeds no API route or auth-protected route', () => {
     const stray = publicAppFiles()
       .map(rel)
@@ -84,50 +96,115 @@ describe('public copy — normalisation', () => {
     ['Grew to 10K followers', 'grew to 10000 followers'],
     ['6.9× more', '6.9x more'],
     ['six point nine times', '6.9 times'],
+    ['no one', 'no one'],
   ])('normalises %j', (raw, expected) => {
     expect(normaliseCopy(raw)).toBe(expected);
   });
+});
 
+describe('public copy — positive controls', () => {
   it.each(REMOVED_CLAIM_SEEDS)('catches the removed claim %j', seed => {
     expect(findClaims(seed)).not.toEqual([]);
+  });
+
+  it.each(ROUND_5_SEEDS)('catches %j as a %s finding', (seed, rule) => {
+    expect(claimHits(seed).map(h => h.rule)).toContain(rule);
   });
 
   it.each(NOT_CLAIMS)('does not flag %j', text => {
     expect(findClaims(text)).toEqual([]);
   });
+});
 
-  // False-positive probe: neutral product copy with a number is still a
-  // finding, and passes only through an explicit allow-list entry.
-  it('passes neutral product copy with a number only via the allow-list', () => {
-    const probe = 'Up to 3 users on Starter';
-    expect(findClaims(probe)).not.toEqual([]);
-    expect(findClaims(probe, new Set(['upto3usersonstarter']))).toEqual([]);
+describe('public copy — mechanical allow-list kinds', () => {
+  const entry = (
+    sentence: string,
+    kinds: string[],
+    cls: 'number' | 'credential' = 'number',
+    extra: Partial<AllowEntry> = {}
+  ) =>
+    ({
+      sentence: normaliseCopy(sentence),
+      layer: 'source',
+      file: 'app/page.tsx',
+      class: cls,
+      kinds,
+      ...extra,
+    }) as AllowEntry;
+
+  type Case = [
+    string,
+    string[],
+    ('number' | 'credential')?,
+    Partial<AllowEntry>?,
+  ];
+
+  it.each([
+    ['Synthex delivered 8,200 qualified leads.', ['product-limit']],
+    [
+      'Synthex delivered 8,200 qualified leads.',
+      ['date-time', 'ordinal-step-version', 'contact-legal', 'price'],
+    ],
+    ['Plans from $59 a month', ['price']],
+    ['Up to 3 users on Starter', ['date-time']],
+    ['Join 50 businesses', ['product-limit']],
+    ['Saves 10 hours in the last 7 days', ['date-time']],
+    ['Scored #/100', ['date-time']],
+    ['Scored 40/100', ['date-time']],
+    ['ISO 27001 certified.', ['neutral'], 'credential'],
+    ['We are GDPR compliant.', ['neutral'], 'credential'],
+    ['GDPR compliant.', ['neutral'], 'credential'],
+    ['Independently audited security', ['neutral'], 'credential'],
+    ['Most chosen', ['neutral'], 'credential'],
+    ['Award-winning platform', ['neutral'], 'credential'],
+    [
+      'Synthex delivered 8,200 qualified leads.',
+      ['evidence'],
+      'number',
+      { source: 'docs/x.md', retrieved: '2026-10-15' },
+    ],
+  ] as Case[])(
+    'rejects %j as %j',
+    (sentence, kinds, cls = 'number', extra = {}) => {
+      expect(checkEntry(entry(sentence, kinds, cls, extra))).not.toBeNull();
+    }
+  );
+
+  it.each([
+    ['Plans from $49 a month', ['price']],
+    ['Updated 14 October 2026', ['date-time']],
+    ['Step 2: define your audience.', ['ordinal-step-version']],
+    ['Scored #/100', ['ordinal-step-version']],
+    ['Card expires 12/25', ['date-time']],
+    ['Call +61 2 9000 0000', ['contact-legal']],
+    [
+      'For example, 100 interactions on a post seen by 2,000 people.',
+      ['hypothetical-example'],
+    ],
+    ['Synthex returns 3 ranked growth directions.', ['product-limit']],
+    [
+      'The GDPR is the EU regulation on personal data.',
+      ['neutral'],
+      'credential',
+    ],
+    ['Start date must be a valid ISO date string', ['neutral'], 'credential'],
+    ['Your best posts based on engagement', ['neutral'], 'credential'],
+  ] as Case[])('accepts %j as %j', (sentence, kinds, cls = 'number') => {
+    expect(checkEntry(entry(sentence, kinds, cls))).toBeNull();
   });
 
-  it('allow-lists only with an approved reason and a note', () => {
-    const reasons = new Set([
-      'advice',
-      'definition',
-      'formula',
-      'target',
-      'product-ui',
-    ]);
-    expect(ALLOW_LIST.filter(e => !reasons.has(e.reason))).toEqual([]);
-    expect(ALLOW_LIST.filter(e => !e.note || !e.sentence)).toEqual([]);
-  });
-
-  it('every pattern is exercised by at least one seed', () => {
-    const unused = BANNED_CLAIMS.filter(
-      ([, pattern]) =>
-        !REMOVED_CLAIM_SEEDS.some(s => pattern.test(normaliseCopy(s)))
-    ).map(([label]) => label);
-    expect(unused).toEqual([]);
+  it('every allow-list entry passes its own kind check', () => {
+    const failures = ALLOW_LIST.flatMap(e => {
+      const why = checkEntry(e);
+      return why ? [`${e.layer} ${e.file}: "${e.sentence}" — ${why}`] : [];
+    });
+    expect(failures).toEqual([]);
   });
 });
 
 describe('public copy — source extraction', () => {
   // Copy split across literals, expressions and elements reads as one string
-  // to a visitor, so the source check must reassemble it the same way.
+  // to a visitor, so the source streams must reassemble it.
   it.each([
     ["<p>{'Synthex gets 45'}{'% more engagement.'}</p>", 'x.tsx'],
     ["<p>{'Synthex gets '}{'45'}{'% more engagement.'}</p>", 'x.tsx'],
@@ -139,16 +216,16 @@ describe('public copy — source extraction', () => {
       "<Hero description={'The bakery grew by ' + '10,000 followers'} />",
       'x.tsx',
     ],
-    // Round-4 review mutant: a claim joined from an array in a ternary arm.
     [
       "<p>{true ? ['Synthex gets 45', '% more engagement.'].join('') : 'No links yet'}</p>",
       'x.tsx',
     ],
-    // …and the other arm of a non-literal condition.
     [
       "<p>{links.length ? 'Links' : ['We pulled in 4', '50 leads'].join('')}</p>",
       'x.tsx',
     ],
+    ['<p>ISO 27001 certified.</p>', 'x.tsx'],
+    ["const badge = { label: 'Independently audited security' };", 'x.ts'],
   ])('flags %s', (source, file) => {
     expect(findClaimsInSource(source, file)).not.toEqual([]);
   });
@@ -158,30 +235,44 @@ describe('public copy — source extraction', () => {
       findClaimsInSource('// grew by 10,000 followers\nconst a = 1;', 'x.ts')
     ).toEqual([]);
   });
+
+  it('ignores AI prompt text, which is sent to a model, not served', () => {
+    expect(
+      findClaimsInSource(
+        "const r = { messages: [{ role: 'user', content: `Write 3 captions for ${n}.` }] };",
+        'x.ts'
+      )
+    ).toEqual([]);
+  });
 });
 
 describe('public copy — unsupported claims (source)', () => {
-  const allow = allowKeys('source');
+  const allow = allowIndex('source');
   const used = new Set<string>();
 
-  it('no public page or anything it imports carries a banned claim', () => {
+  it('no public file carries an unreviewed number or credential', () => {
     const hits = inventory.flatMap(file =>
-      claimHitsInSource(readFileSync(file, 'utf8'), file, new Set()).flatMap(
-        hit => {
-          const key = hit.sentence.replace(/\s+/g, '');
-          if (hit.rule === 'quantified outcome' && allow.has(key)) {
-            used.add(key);
-            return [];
-          }
-          return [`${rel(file)}: ${hit.rule} — "${hit.sentence}"`];
+      claimHitsInSource(readFileSync(file, 'utf8'), file).flatMap(hit => {
+        const key = sentenceKey(hit.sentence);
+        if (
+          (hit.rule === 'number' && allow.number.has(key)) ||
+          (hit.rule === 'credential' && allow.credential.has(key))
+        ) {
+          used.add(`${hit.rule}|${key}`);
+          return [];
         }
-      )
+        return [`${rel(file)}: ${hit.rule} — "${hit.sentence}"`];
+      })
     );
     expect(hits).toEqual([]);
   });
 
-  // Every source allow-list entry must still be needed.
   it('has no stale source allow-list entries', () => {
-    expect([...allow].filter(k => !used.has(k))).toEqual([]);
+    const stale = ALLOW_LIST.filter(
+      e =>
+        e.layer === 'source' &&
+        !used.has(`${e.class}|${sentenceKey(e.sentence)}`)
+    ).map(e => `${e.file}: ${e.sentence}`);
+    expect(stale).toEqual([]);
   });
 });

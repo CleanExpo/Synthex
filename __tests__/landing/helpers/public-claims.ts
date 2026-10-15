@@ -38,6 +38,9 @@ const NAMED_ENTITIES: Record<string, string> = {
   mdash: '—',
   ndash: '–',
   middot: '·',
+  copy: '©',
+  reg: '®',
+  trade: '™',
 };
 
 function decodeEntities(text: string): string {
@@ -107,6 +110,9 @@ function numberWordsToDigits(text: string): string {
     'g'
   );
   return text.replace(run, match => {
+    // A lone "one" is a determiner or pronoun ("no one", "one place"), not
+    // a count; inside a compound ("one thousand", "twenty-one") it converts.
+    if (match === 'one') return match;
     let total = 0;
     let current = 0;
     for (const token of match.split(/[\s-]+/).filter(t => t && t !== 'and')) {
@@ -235,64 +241,53 @@ BANNED_CLAIMS.push(
   ]
 );
 
-// ── Quantified outcomes (deny by default) ────────────────────────────────────
+// ── Deny by default: numbers and credentials ────────────────────────────────
 //
-// No verb list. EVERY sentence that contains a quantity and an outcome noun is
-// a finding, whatever the verb ("attracted", "snagged", "pulled in", "won"…),
-// unless the exact sentence is on the reviewed allow-list
-// (public-claims-allowlist.ts) with a reason it is not a factual outcome
-// claim. New phrasings fail until someone reviews them.
+// Two fail-closed classes, with no vocabulary of "outcomes":
+//  - NUMBER: every quantity in public copy — digits, number words, K/M,
+//    %, ×, $, multipliers — is a finding;
+//  - CREDENTIAL: certification, compliance, endorsement and superlative
+//    terms are findings, with or without a number.
+// A finding passes only through an allow-list entry of a kind whose
+// constraint the guard checks mechanically (public-claims-allowlist.ts →
+// checkEntry). Hard patterns (money-back, world's first…) never pass.
 
 export const QUANTITY =
-  /(?:\b(?:doubl(?:e[ds]?|ing)|tripl(?:e[ds]?|ing)|quadrupl(?:e[ds]?|ing)|twice|halved)\b(?!-)|\$\s?\d[\d.]*(?:k|m|b)?|\b\d[\d.]*(?:k|m|b)?\+?\s?(?:%|percent\b|x\b|×|times\b|fold\b)?|\b(?:millions?|billions?|thousands?|hundreds?|dozens?)\b)/;
-
-export const OUTCOME_NOUN =
-  /\b(?:followers?|following|subscribers?|fans?|audiences?|reach|impressions?|engagements?|likes?|views?|viewers?|clicks?|traffic|visitors?|visits|leads?|customers?|clients?|users?|businesses|business owners|members?|memberships?|sign-?ups?|registrations?|sales|orders?|purchases?|conversions?|revenue|profits?|income|earnings|roi|returns?|costs?|savings?|saving|hours?|hrs|time|minutes?|mins|growth|rates?|uplift|increases?|results?|claims?|re-?inspections?|bookings?|reservations?|enquiries|inquiries|shares|comments|downloads|installs|retention|churn|rankings?|donors?|donations?|pipeline|waitlist|footfall|foot traffic|deals?|signups|uptime|availability|accuracy|satisfaction)\b/;
-
+  /(?:\b(?:doubl(?:e[ds]?|ing)|tripl(?:e[ds]?|ing)|quadrupl(?:e[ds]?|ing)|twice|halved)\b(?![-\s]tap)(?!-)|\$\s?\d[\d.,]*(?:[kmb](?![a-z]))?|\b\d[\d.,]*(?:[kmb](?![a-z]))?\+?(?:\s?(?:%|percent\b|x\b|×|times\b|fold\b))?|\b(?:millions?|billions?|thousands?|hundreds?|dozens?)\b)/;
 const QUANTITY_ALL = new RegExp(QUANTITY.source, 'g');
 
-// A quantity that cannot be an outcome on its own: a bare 0 or 1 ("one
-// dashboard", "1 click"), or a calendar year used as a date ("July 2026",
-// "in 2024", "2010–2024"). With a unit (1%, $1, 1x, 1m) they still count, and
-// a year-like number anywhere else ("grew to 2000 followers") still counts.
-function countsAsQuantity(text: string, match: RegExpMatchArray): boolean {
-  const q = match[0].trim().replace(/\.+$/, '');
-  if (/^[01]$/.test(q)) return false;
-  // A list index is a position, not a quantity: "3: social proof",
-  // "step 2: …", "pillar 4", "#1".
-  const at0 = match.index ?? 0;
-  const tail = text.slice(at0 + match[0].length, at0 + match[0].length + 2);
-  const head = text.slice(Math.max(0, at0 - 10), at0);
-  if (/^\d+$/.test(q) && /^\s?:/.test(tail)) return false;
-  if (
-    /^\d+$/.test(q) &&
-    /(?:step|pillar|mistake|tip|part|scene|figure|phase|option|stage|rule|#)\s*$/.test(
-      head
-    )
-  ) {
-    return false;
-  }
-  // A year-like number counts only when an outcome noun follows it
-  // ("2000 followers"); otherwise it is a date ("the 2024 inquiry").
-  if (/^(?:19|20)\d\d$/.test(q)) {
-    const rest = text.slice(at0 + match[0].length, at0 + match[0].length + 40);
-    return new RegExp(
-      String.raw`^\+?\s?(?:[a-z-]+\s){0,2}` +
-        OUTCOME_NOUN.source.replace(/^\\b/, '')
-    ).test(rest);
-  }
-  return true;
+export interface QuantityToken {
+  text: string;
+  index: number;
 }
 
-export function isQuantifiedOutcome(normalisedSentence: string): boolean {
-  if (!OUTCOME_NOUN.test(normalisedSentence)) return false;
-  return [...normalisedSentence.matchAll(QUANTITY_ALL)].some(m =>
-    countsAsQuantity(normalisedSentence, m)
+export function quantityTokens(normalised: string): QuantityToken[] {
+  return (
+    [...normalised.matchAll(QUANTITY_ALL)]
+      // "two-factor" / "2fa" name a security method, not a quantity.
+      .filter(
+        m =>
+          !/^[\s-]?(?:factor|fa\b)/.test(
+            normalised.slice((m.index ?? 0) + m[0].length)
+          )
+      )
+      .map(m => ({ text: m[0].trim(), index: m.index ?? 0 }))
   );
 }
 
-// Allow-list keys compare without whitespace, so the same sentence matches
-// whether its fragments were joined with '' or ' '.
+export const CREDENTIAL =
+  /\b(?:certifi(?:ed|cation|cations|cate|cates)|compliant|compliance|accredit\w*|iso\s?\d*|soc\s?[12]?|gdpr|ccpa|hipaa|pci(?:[\s-]dss)?|award(?:s|ed|-winning)?|trusted by|used by|loved by|chosen by|relied (?:on|upon) by|preferred by|backed by|endorsed|endorsement|audited|independently (?:verified|tested|reviewed)|third[\s-]party (?:verified|tested|reviewed)|verified by|verified|leading|leader in|market leader|#1|number one|no\.\s?1|best|fastest|easiest|cheapest|most (?:trusted|popular|advanced|powerful|accurate|chosen|used|loved|reliable|secure|complete)|world'?s|australia'?s|guarantee[ds]?|guaranteed|proven|industry[\s-]standard|enterprise[\s-]grade|bank[\s-]grade|military[\s-]grade|world[\s-]class|best[\s-]in[\s-]class|top[\s-]rated|state[\s-]of[\s-]the[\s-]art|unmatched|unrivalled|unrivaled)\b|#1(?![\da-f])/;
+
+export const FIRST_PARTY =
+  /\b(?:we|we're|we've|our|ours|us|synthex|restoreassist)\b/;
+
+export interface ClaimHit {
+  /** Normalised sentence that triggered the finding. */
+  sentence: string;
+  /** 'number', 'credential', or a hard pattern label. */
+  rule: string;
+}
+
 export const sentenceKey = (normalised: string) =>
   normalised.replace(/\s+/g, '');
 
@@ -303,29 +298,39 @@ export function splitSentences(normalised: string): string[] {
     .filter(Boolean);
 }
 
-export interface ClaimHit {
-  /** Normalised sentence that triggered the finding. */
-  sentence: string;
-  /** Hard pattern label, or 'quantified outcome'. */
-  rule: string;
+export interface AllowIndex {
+  number: Set<string>;
+  credential: Set<string>;
 }
+export const NO_ALLOW: AllowIndex = {
+  number: new Set(),
+  credential: new Set(),
+};
 
 /**
- * Findings in plain text, sentence by sentence. Hard patterns are never
- * allow-listable; a quantified outcome is, by exact sentence.
+ * Findings in plain text, sentence by sentence. A sentence with a quantity
+ * needs a number entry; a sentence with a credential term needs a
+ * credential entry; a hard pattern is always a finding.
  */
-export function claimHits(raw: string, allow: Set<string>): ClaimHit[] {
+export function claimHits(
+  raw: string,
+  allow: AllowIndex = NO_ALLOW
+): ClaimHit[] {
   const hits: ClaimHit[] = [];
   const sentences = raw
     .replace(/https?:\/\/[^\s"'<>)]+/g, ' ') // URLs are addresses, not prose
     .split(/\n+/)
     .flatMap(line => splitSentences(normaliseCopy(line)));
   for (const sentence of sentences) {
+    const key = sentenceKey(sentence);
     for (const [label, pattern] of BANNED_CLAIMS) {
       if (pattern.test(sentence)) hits.push({ sentence, rule: label });
     }
-    if (isQuantifiedOutcome(sentence) && !allow.has(sentenceKey(sentence))) {
-      hits.push({ sentence, rule: 'quantified outcome' });
+    if (quantityTokens(sentence).length > 0 && !allow.number.has(key)) {
+      hits.push({ sentence, rule: 'number' });
+    }
+    if (CREDENTIAL.test(sentence) && !allow.credential.has(key)) {
+      hits.push({ sentence, rule: 'credential' });
     }
   }
   return hits;
@@ -333,9 +338,459 @@ export function claimHits(raw: string, allow: Set<string>): ClaimHit[] {
 
 export function findClaims(
   raw: string,
-  allow: Set<string> = new Set()
+  allow: AllowIndex = NO_ALLOW
 ): string[] {
   return claimHits(raw, allow).map(h => `${h.rule} — "${h.sentence}"`);
+}
+
+// ── Mechanical kind checks ──────────────────────────────────────────────────
+
+const MONTH =
+  '(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+const before = (s: string, t: QuantityToken, n = 14) =>
+  s.slice(Math.max(0, t.index - n), t.index);
+const after = (s: string, t: QuantityToken, n = 14) =>
+  s.slice(t.index + t.text.length, t.index + t.text.length + n);
+const digitsOf = (t: QuantityToken) => t.text.replace(/[^\d.]/g, '');
+
+export function isDateTime(raw: string, t: QuantityToken): boolean {
+  // "#" is a digit run the dynamic suites masked as data: "10/#/2026".
+  const s = raw.replace(/#/g, '1');
+  const b = before(s, t);
+  const a = after(s, t);
+  const q = t.text.replace(/\.$/, '');
+  // Calendar date or time shapes around the token.
+  const window = s.slice(
+    Math.max(0, t.index - 12),
+    t.index + t.text.length + 12
+  );
+  if (
+    /\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2}(?:t\d{2}:\d{2})?/.test(window)
+  )
+    return true;
+  if (/^\d{1,2}$/.test(q) && (/^:\d{2}/.test(a) || /\d{1,2}:$/.test(b)))
+    return true;
+  // An ISO timestamp, whole: "2026-10-14t00:00:00.000z".
+  for (const m of s.matchAll(
+    /\d{4}-\d{2}-\d{2}t\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?z?/g
+  )) {
+    if (t.index >= (m.index ?? 0) && t.index < (m.index ?? 0) + m[0].length)
+      return true;
+  }
+  if (
+    /^\d+$/.test(q) &&
+    /^(?:d|w|h|mo|m|y)$/.test(a.trim()) &&
+    s.trim() === `${q}${a.trim()}`
+  )
+    return true; // "30d" range label
+  if (/^\d{1,2}(?::\d{2})?$/.test(q) && /^\s?(?:am|pm)\b/.test(a)) return true;
+  if (new RegExp(`(?:${MONTH})\\.?\\s$`).test(b)) return true;
+  if (/^\d{1,2}$/.test(q) && new RegExp(`^\\s(?:${MONTH})\\b`).test(a))
+    return true;
+  if (
+    /^\d{1,2}\/\d{2}$/.test(q) ||
+    (/^\d{2}$/.test(q) && /(?:^|[^\d/])\d{1,2}\/$/.test(b)) ||
+    (/^\d{1,2}$/.test(q) && /^\/\d{2}\b/.test(a))
+  )
+    return true; // mm/yy, never a score "/100"
+  if (/^(?:19|20)\d\d$/.test(q)) {
+    // A year used as a date: "in 2024", "the 2024 inquiry", "2010–2024".
+    if (
+      /(?:\bin|\bsince|\bof|\bthe|©|\bfrom|\buntil|\bby|\bbefore|\bafter|updated|\bfy|q[1-4]|\b(?:inquiry|report|census|act|edition)|–|-)\s?$/.test(
+        b
+      )
+    )
+      return true;
+    if (/^\s?(?:[–-]|[)(·])/.test(a)) return true;
+    if (/·\s?$/.test(b) && a.trim() === '') return true; // footer "Synthex · 2026"
+    if (/,\s?$/.test(b) && /^\s?(?:[.·(]|$)/.test(a)) return true; // "(Cartwright inquiry), 2020"
+  }
+  // A duration used as a time frame — "last 7 days", "up to 90 days",
+  // "within 90 days", "the previous 12 months", "rolling 90-day window", a
+  // bare "7 day" option — never next to a saving or speed-up.
+  if (
+    /^\d+$/.test(q) &&
+    /^[\s-]?(?:(?:business|working|calendar)\s)?(?:seconds?|minutes?|mins?|hours?|hrs?|days?|weeks?|months?|years?)\b/.test(
+      a
+    ) &&
+    (/(?:previous|prior|last|next|within|up to|for|every|rolling|after|past|over|across)\s$/.test(
+      b
+    ) ||
+      s.trim() === `${q} ${a.trim()}`.trim() ||
+      /^\d+[\s-]?(?:day|week|month)s?$/.test(s.trim())) &&
+    !/\b(?:sav(?:e|ed|es|ing)|faster|quicker|cut|reduc\w*|shorter|less)\b/.test(
+      s
+    )
+  ) {
+    return true;
+  }
+  // Second half of a year range ("2010–11", "2019–20").
+  if (/^\d{2}$/.test(q) && /(?:19|20)\d\d\s?[–-]\s?$/.test(b)) return true;
+  return false;
+}
+
+export function isOrdinalStepVersion(s: string, t: QuantityToken): boolean {
+  const b = before(s, t, 18);
+  const a = after(s, t);
+  const q = t.text.replace(/\.$/, '');
+  if (/^0\d$/.test(q)) return true; // 01, 02 … step labels
+  if (/^\d+$/.test(q) && new RegExp(`^${q}\\.?$`).test(s.trim())) return true; // "4." section
+  if (
+    /^\d{1,2}$/.test(q) &&
+    b.trim() === '' &&
+    (/^\.\s?[a-z]/.test(a) || (t.text.endsWith('.') && /^\s?[a-z]/.test(a)))
+  )
+    return true; // "1. Connect…" list item
+  if (/\bq$/.test(b)) return true; // Q1 … Q4
+  // Scale denominators ("/100", "out of 5 stars") and HTTP status codes.
+  if (/(?:\/\s?|out of\s)$/.test(b)) return true;
+  if (
+    /^(?:400|401|403|404|429|500|502|503)$/.test(q) &&
+    /\b(?:error|page|not found|status|http)\b/.test(s)
+  )
+    return true;
+  if (/^\d+$/.test(q) && /^\s?[:)]/.test(a) && b.trim() === '') return true; // "3:" "2)" opening a sentence
+  if (/^\d+$/.test(q) && /^(?:st|nd|rd|th)\b/.test(a)) return true; // 2nd
+  if (
+    /^\d+(?:\.\d+){1,3}[a-z]?$/.test(q) &&
+    /(?:\bv|version|oauth|tls|ssl|http|node|next\.js|react|ios|android|api|wcag|html|es)\s?$/.test(
+      b
+    )
+  )
+    return true;
+  if (/^\d+\.\d+\.\d+$/.test(q)) return true; // semver
+  // The whole token run around the number: v1.1, twitter2.0, nodejs2.0.1.
+  const runStart = s.slice(0, t.index).search(/[a-z0-9.]*$/);
+  const runEnd =
+    t.index +
+    t.text.length +
+    (s.slice(t.index + t.text.length).match(/^[a-z0-9.]*/)?.[0].length ?? 0);
+  const run = s.slice(runStart, runEnd).replace(/\.$/, '');
+  if (
+    /^v\d+(?:\.\d+)+$/.test(run) ||
+    /^[a-z]{2,}\d+(?:\.\d+)+$/.test(run) ||
+    /^\d+\.\d+\.\d+$/.test(run)
+  )
+    return true;
+  if (
+    /^\d+[a-z]{2,}s?$/.test(run) &&
+    !/^\d+(?:mb|kb|gb|tb|ms|px|fps|mo|yrs?|mins?|hrs?|secs?|days?)$/.test(run)
+  )
+    return true; // 3PA-style abbreviations, not units
+  // Part of a file path or file name: positioning/ra-2026-05.md.
+  const pathRun =
+    s.slice(0, t.index).match(/[\w./-]*$/)?.[0] +
+    t.text +
+    (s.slice(t.index + t.text.length).match(/^[\w./-]*/)?.[0] ?? '');
+  if (/\/[\w.-]+|\.(?:md|ts|tsx|json|txt|pdf)\b/.test(pathRun)) return true;
+  if (/(?:as\/nzs|nzs|as)\s?$/.test(b)) return true; // AS/NZS 4849.1
+  if (
+    /(?:\bstep|\bphase|\bstage|\bpart|\bscene|\bfigure|\bfig\.|\bchapter|\bwave|\btier|\blevel|\blane|\boption|\bsection|§|\bitem|\bpage|\bday|\brule|\bpillar|\bmistake|\btip|\bslide|\bepisode|\bround|\bcat|\bdirection|#|\bt\+|\bt-|[a-z]{2,}-)\s?$/.test(
+      b
+    )
+  )
+    return true;
+  return false;
+}
+
+export function isContactLegal(s: string, t: QuantityToken): boolean {
+  const window = s.slice(
+    Math.max(0, t.index - 18),
+    t.index + t.text.length + 18
+  );
+  // An input mask for a phone number ("+61 4xx xxx xxx").
+  if (/\+\d{2}\s?\d?x{2}/.test(window)) return true;
+  if (
+    /\+?\d[\d ()-]{7,}\d/.test(window) &&
+    /\d[\d ()-]{7,}\d/.test(s.slice(Math.max(0, t.index - 18), t.index + 22))
+  ) {
+    return (
+      /\+\d|\(0\d\)|\b0\d[\d ]{7,}|\b1[38]00\b/.test(window) ||
+      /\babn\b/.test(window)
+    );
+  }
+  if (
+    /\b(?:nsw|vic|qld|wa|sa|tas|act|nt)\s?$/.test(before(s, t, 6)) &&
+    /^\d{4}$/.test(t.text)
+  )
+    return true;
+  if (
+    /^\d{1,5}$/.test(t.text) &&
+    /^\s(?:[a-z]+\s){1,2}(?:street|st|road|rd|avenue|ave|lane|ln|drive|dr|place|pl|parade|pde|highway|hwy|way|crescent|cres|court|ct)\b/.test(
+      after(s, t, 30)
+    )
+  )
+    return true;
+  return false;
+}
+
+export const isHypotheticalExample = (s: string) =>
+  /\b(?:for example|e\.g\.|imagine|if you)\b/.test(s);
+
+const PRICE_SOURCE_FILES = [
+  'lib/stripe/config.ts',
+  'app/(landing)/restoreassist/pricing/plan-data.ts',
+  'app/add-ons/mcp-app-development/page.tsx',
+];
+const LIMIT_SOURCE_FILES = [
+  'lib/stripe/config.ts',
+  'app/api/stripe/checkout/route.ts', // trial_period_days
+  'lib/stripe/subscription-service.ts',
+  'app/(landing)/restoreassist/pricing/plan-data.ts',
+];
+const toNumbers = (list: string[]) =>
+  new Set(list.map(v => String(Number(v.replace(/,/g, '')))));
+
+/** Amounts declared in the pricing sources of truth. */
+export function priceValues(): Set<string> {
+  const values: string[] = [];
+  for (const file of PRICE_SOURCE_FILES) {
+    const src = readFileSync(path.join(ROOT, file), 'utf8');
+    for (const m of src.matchAll(
+      /\b(?:price|priceAud|PRICE_AUD|amount)\s*[:=]\s*(\d[\d,]*)/gi
+    ))
+      values.push(m[1]);
+    // The add-on page's tier table states its quotes as strings.
+    for (const m of src.matchAll(/indicative:\s*['"`]([^'"`]+)['"`]/g)) {
+      for (const n of m[1].matchAll(/\d[\d,]*/g)) values.push(n[0]);
+    }
+  }
+  // A pack's per-unit rate is its price over its size: "$1.67 per report".
+  for (const file of PRICE_SOURCE_FILES) {
+    const src = readFileSync(path.join(ROOT, file), 'utf8');
+    for (const m of src.matchAll(/\breports:\s*(\d+),\s*priceAud:\s*(\d+)/g)) {
+      values.push((Number(m[2]) / Number(m[1])).toFixed(2));
+    }
+  }
+  // A source that declares a trial declares a free price: "$0".
+  if (
+    PRICE_SOURCE_FILES.some(f =>
+      /TRIAL_DAYS|trial_period_days/.test(
+        readFileSync(path.join(ROOT, f), 'utf8')
+      )
+    )
+  ) {
+    values.push('0');
+  }
+  return toNumbers(values);
+}
+
+/** Limits declared in plan configuration, each with the words of its key. */
+const GENERIC_KEY_WORDS = new Set([
+  'max',
+  'min',
+  'limit',
+  'per',
+  'included',
+  'first',
+  'total',
+  'count',
+  'size',
+  'value',
+  'period',
+  'bonus',
+]);
+const keyWords = (key: string) =>
+  key
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .toLowerCase()
+    .split(/[\s_]+/)
+    .map(w => w.replace(/s$/, ''))
+    .filter(w => w && !GENERIC_KEY_WORDS.has(w));
+
+export function limitValues(): Map<string, Set<string>> {
+  const values = new Map<string, Set<string>>();
+  for (const file of LIMIT_SOURCE_FILES) {
+    const src = readFileSync(path.join(ROOT, file), 'utf8');
+    for (const m of src.matchAll(
+      /\b((?:max\w*|\w*Accounts|aiPosts|personas|aiVoiceSamples|reports|\w*_PER_\w+|\w*_DAYS|\w*_CREDITS|\w*_REPORTS|limit\w*|trial_period_days))\s*[:=]\s*(\d[\d,]*)/g
+    )) {
+      const v = String(Number(m[2].replace(/,/g, '')));
+      const words = values.get(v) ?? new Set<string>();
+      keyWords(m[1]).forEach(w => words.add(w));
+      values.set(v, words);
+    }
+  }
+  return values;
+}
+
+/** The plan limit matches when a word of its key is next to the number. */
+export function limitMatches(
+  sentence: string,
+  token: QuantityToken,
+  limits: Map<string, Set<string>>,
+  before = 3
+): boolean {
+  const v = String(Number(token.text.replace(/[^\d.]/g, '')));
+  const words = limits.get(v);
+  if (!words) return false;
+  const near = [
+    ...sentence
+      .slice(token.index + token.text.length)
+      .split(/[\s-]+/)
+      .slice(0, 4),
+    ...sentence
+      .slice(0, token.index)
+      .split(/[\s-]+/)
+      .slice(-before),
+  ].map(w => w.replace(/[^a-z]/g, '').replace(/s$/, ''));
+  return near.some(w => words.has(w));
+}
+
+/** A validation bound matches when its unit or name is next to the number. */
+export function boundMatches(
+  sentence: string,
+  token: QuantityToken,
+  bounds: Map<string, Set<string>>
+): boolean {
+  // A counter against an enforced bound: "0 / 2000".
+  const end = token.index + token.text.length;
+  const denominator = sentence.slice(end).match(/^\s?\/\s?(\d+)\b/)?.[1];
+  if (denominator && bounds.has(String(Number(denominator)))) return true;
+  if (
+    /\d\s?\/\s?$/.test(sentence.slice(0, token.index)) &&
+    bounds.has(String(Number(token.text)))
+  )
+    return true;
+  return limitMatches(sentence, token, bounds, 5);
+}
+
+/**
+ * Product constants that public copy may state, each bound to the subject it
+ * counts. The value is read from the module the product itself uses, so copy
+ * and behaviour cannot drift apart.
+ */
+export const PRODUCT_CONSTANTS: Array<{
+  module: string;
+  name: string;
+  subject: RegExp;
+}> = [
+  {
+    module: 'lib/opportunity-map/index.ts',
+    name: 'OPPORTUNITY_DIRECTION_COUNT',
+    subject: /\b(?:ranked (?:growth )?directions?|growth directions?)\b/,
+  },
+  {
+    module: 'lib/analytics/public-benchmarks.ts',
+    name: 'MIN_SAMPLE_SIZE',
+    subject: /\b(?:accounts?|cohort)\b/,
+  },
+];
+
+/**
+ * Self-counts in a file that cannot be edited on this branch (pricing): the
+ * number must equal the length of the named array literal in that file, and
+ * the sentence must name its subject.
+ */
+export const SELF_COUNTS: Array<{
+  file: string;
+  array: string;
+  subject: RegExp;
+}> = [
+  { file: 'app/pricing/page.tsx', array: 'pilotSteps', subject: /\bphases?\b/ },
+  {
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    array: 'flowSteps',
+    subject: /\bsteps?\b/,
+  },
+];
+
+function arrayLength(file: string, name: string): number | null {
+  const src = readFileSync(path.join(ROOT, file), 'utf8');
+  const sf = ts.createSourceFile(
+    file,
+    src,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX
+  );
+  let length: number | null = null;
+  const visit = (n: ts.Node) => {
+    if (
+      ts.isVariableDeclaration(n) &&
+      n.name.getText(sf) === name &&
+      n.initializer &&
+      ts.isArrayLiteralExpression(n.initializer)
+    ) {
+      length = n.initializer.elements.length;
+    }
+    ts.forEachChild(n, visit);
+  };
+  visit(sf);
+  return length;
+}
+
+export function selfCountMatches(
+  file: string,
+  sentence: string,
+  value: string
+): boolean {
+  return SELF_COUNTS.some(
+    c =>
+      c.file === file &&
+      c.subject.test(sentence) &&
+      String(arrayLength(c.file, c.array)) === value
+  );
+}
+
+/** Value of a registered product constant whose subject the sentence names. */
+export function productConstantMatches(
+  sentence: string,
+  value: string
+): boolean {
+  return PRODUCT_CONSTANTS.some(c => {
+    const v = (require(path.join(ROOT, c.module)) as Record<string, unknown>)[
+      c.name
+    ];
+    return String(v) === value && c.subject.test(sentence);
+  });
+}
+
+const UNIT_WORDS = [
+  'character',
+  'char',
+  'mb',
+  'kb',
+  'gb',
+  'byte',
+  'digit',
+  'word',
+  'letter',
+  'item',
+  'file',
+  'photo',
+  'image',
+];
+
+/**
+ * Validation bounds a file enforces — zod .min()/.max()/.length(), maxLength,
+ * N * 1024 * 1024 sizes, .length comparisons, MAX_* constants — plus those of
+ * the same-origin API routes it submits to, where an upload or field limit
+ * is actually enforced. Each value carries the words that may name it: a
+ * unit for generic bounds, the constant's own words for MAX_PHOTOS etc.
+ */
+export function validationBounds(file: string): Map<string, Set<string>> {
+  const bounds = new Map<string, Set<string>>();
+  if (!file || !existsSync(path.join(ROOT, file))) return bounds;
+  const own = readFileSync(path.join(ROOT, file), 'utf8');
+  const routeSources = referencedApiRoutes(own, apiRoutes()).map(r =>
+    readFileSync(r, 'utf8')
+  );
+  const src = [own, ...routeSources].join('\n');
+  const add = (v: string, words: string[]) => {
+    const key = String(Number(v));
+    const set = bounds.get(key) ?? new Set<string>();
+    words.forEach(w => set.add(w));
+    bounds.set(key, set);
+  };
+  for (const m of src.matchAll(
+    /\.(?:min|max|length)\(\s*(\d+)|maxLength=\{?\s*(\d+)|(\d+)\s*\*\s*1024\s*\*\s*1024|\.length\s*[<>]=?\s*(\d+)/g
+  )) {
+    add(m[1] ?? m[2] ?? m[3] ?? m[4], UNIT_WORDS);
+  }
+  for (const m of src.matchAll(/\b(MAX_\w+|MIN_\w+)\s*=\s*(\d+)\b/g))
+    add(m[2], keyWords(m[1]));
+  return bounds;
 }
 
 // Every claim removed on this branch, verbatim, plus spelled-out and
@@ -418,16 +873,44 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   '99.99% Uptime SLA',
 ];
 
-// Copy that must NOT be flagged at all: no quantity, a list index, a date,
-// or a bare "one". (Anything with a quantity and an outcome noun is flagged
-// and must be neutralised or allow-listed — see public-claims-allowlist.ts.)
+// Copy with no quantity and no credential term: never a finding. (A list
+// index, a date or a price is still a finding — it needs an allow-list entry
+// whose kind the guard checks.)
 export const NOT_CLAIMS: string[] = [
   'Reply to every comment quickly — it boosts your ranking.',
-  'Step 2: define your audience.',
-  'The 2024 Senate inquiry documented systemic failures in claim handling.',
   'One dashboard for all your platforms.',
   'Removing double-handling and eliminating re-inspections.',
   'Instagram, Facebook and LinkedIn in one place.',
+  'Turn on two-factor authentication in settings.',
+];
+
+// Round-5 review mutants and the claims removed from /security and support:
+// permanent positive controls.
+export const ROUND_5_SEEDS: Array<[string, 'number' | 'credential']> = [
+  ['The campaign delivered 8,200 qualified prospects.', 'number'],
+  ['Synthex delivered 8,200 qualified leads.', 'number'],
+  ['The campaign harvested 9,000 qualified leads.', 'number'],
+  ['Cafés using Synthex netted 4,300 new regulars.', 'number'],
+  ['ISO 27001 certified.', 'credential'],
+  ['Synthex is independently audited for security.', 'credential'],
+  ['Trusted by leading Australian brands.', 'credential'],
+  ['SOC 2 Type II Certified', 'credential'],
+  ['99.99% Uptime SLA', 'number'],
+  [
+    'Full compliance with GDPR, CCPA, and international data protection regulations.',
+    'credential',
+  ],
+  ['GDPR Compliant', 'credential'],
+  ['CCPA Compliant', 'credential'],
+  ['ISO 27001 In Progress', 'credential'],
+  ["We're SOC 2 compliant.", 'credential'],
+  ['Enterprise-grade infrastructure baked into every plan.', 'credential'],
+  [
+    'Built on industry-leading platforms with multiple layers of security and redundancy.',
+    'credential',
+  ],
+  ['The most advanced AI-powered social media platform', 'credential'],
+  ["Australia's best restoration training.", 'credential'],
 ];
 
 // ── Inventory ────────────────────────────────────────────────────────────────
@@ -462,12 +945,20 @@ function walk(dir: string): string[] {
 const ROUTE_FILES =
   /^(page|layout|template|loading|error|global-error|not-found|default|sitemap|robots|manifest|opengraph-image|twitter-image|icon|apple-icon)\.(tsx|ts|jsx|js|mjs)$/;
 
+/**
+ * A route that opens with this gate answers 404 in production: a local
+ * review preview, not a public page (the rendered suite proves the gate).
+ */
+export const PRODUCTION_GATE =
+  /if \(process\.env\.NODE_ENV === 'production'\) notFound\(\);/;
+
 export function publicAppFiles(): string[] {
   const blocked = protectedPrefixes();
   return walk(APP).filter(file => {
     if (!ROUTE_FILES.test(path.basename(file))) return false;
     const route = routeOf(file);
     if (route === '/api' || route.startsWith('/api/')) return false;
+    if (PRODUCTION_GATE.test(readFileSync(file, 'utf8'))) return false;
     return !blocked.some(p => route === p || route.startsWith(`${p}/`));
   });
 }
@@ -510,7 +1001,13 @@ const IMPORT_RE =
 
 const NON_COPY_JSX_ATTRIBUTE =
   /^(?:class(?:Name)?|style|href|src|srcSet|id|key|type|variant|size|name|role|rel|target|method|action|htmlFor|width|height|viewBox|d|fill|stroke|xmlns|loading|sizes|data-[\w-]+|aria-(?!label)[\w-]+|as|icon|route|path|gradientVariant)$/i;
+const COPY_ATTRIBUTE =
+  /^(?:alt|title|aria-label|placeholder|label|description|copy|content|heading|subheading|subtitle|eyebrow|text|body|caption|summary|message|cta\w*|value|tooltip|hint|note|badge|tagline|headline|name)$/i;
 const SILENT_CALLEE = /^(?:logger|console|log)\b/;
+const WIRING_CALL =
+  /^(?:padStart|padEnd|split|replace|replaceAll|toLocaleString|toLocaleDateString|toLocaleTimeString|startsWith|endsWith|includes|indexOf|lastIndexOf|getItem|setItem|removeItem|querySelector|querySelectorAll|getElementById|addEventListener|removeEventListener|matchMedia|get|set|has|delete|append|match|test|search|toFixed|charAt|localeCompare|format)$/;
+const WIRING_KEY =
+  /^(?:user-agent|content-type|cache-control|accept|authorization|x-[\w-]+|weight|style|display|subsets?|variable|range|limit|offset|unit|units|format|type|method|mode|cache|revalidate|runtime|preload|fallback|dateRange|period|interval|ttl|port|host|size|sizes|media|colou?r|background|gradient|icon|href|src|path|id|key|slug|value|status|platform|model|provider|role|variant|kind|locale|currency|timezone|\w*version|env|level|severity|code|duration|delay|timeout|max\w*|min\w*|width|height|top|left|right|bottom|x|y|z|cx|cy|r)$/i;
 const MAX_WINDOW = 4;
 
 function constantText(node: ts.Node): string | null {
@@ -569,6 +1066,9 @@ const HEADER_OR_IDENT =
 
 export function isWiring(fragment: string): boolean {
   const text = fragment.trim();
+  if (/^\d{1,2}[.)]$/.test(text)) return true; // list marker "3." "2)"
+  if (text === '0') return true; // zero-padding before a step index: 0{n}
+  if (/^(?:19|20)\d\d(?:[–-]\d{2,4})?$/.test(text)) return true; // a bare year label is a date
   if (PURE_QUANTITY.test(text)) return false;
   const tokens = text.split(/\s+/);
   if (tokens.length === 1) {
@@ -581,22 +1081,110 @@ export function isWiring(fragment: string): boolean {
   const wiring = tokens.filter(
     t => !PURE_QUANTITY.test(t) && (WIRING_TOKEN.test(t) || /-/.test(t))
   ).length;
+  // CSS values and media queries ("rgba(34, 211, 238, 0.45)", "(max-width: 767px)").
+  if (
+    /^(?:rgba?|hsla?|calc|var|url|linear-gradient|radial-gradient)\(|^\((?:max|min)-(?:width|height)|\b\d+px\b/.test(
+      text
+    )
+  )
+    return true;
+  // A list of utility classes ("h-6 w-6", "bg-black/40 backdrop-blur-xl").
+  const classLike = tokens.every(
+    t => /^[a-z0-9:[\]./%()#_,-]+$/.test(t) && /[-:/[\]]/.test(t)
+  );
+  if (tokens.length >= 2 && classLike) return true;
   return tokens.length >= 3 && wiring / tokens.length >= 0.6;
 }
 
+export interface Fragment {
+  text: string;
+  /** Rendered through JSX (text, child expression, copy attribute). */
+  jsx: boolean;
+}
+
+// AI prompt text is sent to a model, never served; what the model returns
+// is judged by the API-response scan.
+const PROMPT_PROPERTY =
+  /^(?:content|prompt|system|systemPrompt|instructions?|userPrompt)$/;
+const PROMPT_CONTAINER = /^(?:messages|contents|parts)$/;
+const PROMPT_VARIABLE = /prompt|instruction/i;
+
+function isPromptText(node: ts.Node, sf: ts.SourceFile): boolean {
+  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
+    if (ts.isPropertyAssignment(n)) {
+      const key = n.name.getText(sf).replace(/['"]/g, '');
+      if (key === 'text' || PROMPT_PROPERTY.test(key)) {
+        // …inside messages[] / contents[].parts[]…
+        for (let m: ts.Node | undefined = n.parent; m; m = m.parent) {
+          if (ts.isPropertyAssignment(m)) {
+            const k = m.name.getText(sf).replace(/['"]/g, '');
+            if (PROMPT_CONTAINER.test(k)) return true;
+          }
+          if (ts.isSourceFile(m)) break;
+        }
+        // …or a top-level system / prompt / instructions field.
+        if (key !== 'content' && key !== 'text') return true;
+      }
+    }
+    if (ts.isVariableDeclaration(n) && PROMPT_VARIABLE.test(n.name.getText(sf)))
+      return true;
+    if (
+      ts.isFunctionDeclaration(n) &&
+      n.name &&
+      PROMPT_VARIABLE.test(n.name.text)
+    )
+      return true;
+    if (ts.isSourceFile(n)) break;
+  }
+  return false;
+}
+
+function isInJsx(node: ts.Node): boolean {
+  for (let n: ts.Node | undefined = node.parent; n; n = n.parent) {
+    if (
+      ts.isJsxExpression(n) ||
+      ts.isJsxAttribute(n) ||
+      ts.isJsxElement(n) ||
+      ts.isJsxFragment(n)
+    )
+      return true;
+    if (ts.isSourceFile(n)) break;
+  }
+  return false;
+}
+
 export function extractFragments(source: string, fileName: string): string[] {
-  if (!SOURCE_EXT.includes(path.extname(fileName))) return [source];
+  return extractCopyFragments(source, fileName).map(f => f.text);
+}
+
+export function extractCopyFragments(
+  source: string,
+  fileName: string
+): Fragment[] {
+  if (!SOURCE_EXT.includes(path.extname(fileName))) {
+    // Of non-source files, only text copy (llms.txt) is judged; CSS is not.
+    return /\.txt$/.test(fileName) ? [{ text: source, jsx: true }] : [];
+  }
   const sf = ts.createSourceFile(
     fileName,
     source,
     ts.ScriptTarget.Latest,
-    false,
+    true, // parent pointers: prompt, JSX and wiring-key checks walk up
     fileName.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   );
-  const fragments: string[] = [];
+  const fragments: Fragment[] = [];
+  let current: ts.Node = sf;
   const push = (text: string) => {
-    const t = text.replace(/\s*\n\s*/g, ' ');
-    if (t.trim() && !isWiring(t)) fragments.push(t);
+    // A leading list marker ("1. Access") is a position, not a quantity.
+    const t = text
+      .replace(/\s*\n\s*/g, ' ')
+      .replace(/^\s*\d{1,2}[.)]\s+(?=[A-Za-z])/, '');
+    if (t.trim() && !isWiring(t)) {
+      fragments.push({
+        text: t,
+        jsx: ts.isJsxText(current) || isInJsx(current),
+      });
+    }
   };
   const visit = (node: ts.Node): void => {
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) return;
@@ -610,7 +1198,25 @@ export function extractFragments(source: string, fileName: string): string[] {
     }
     if (ts.isLiteralTypeNode(node) || ts.isTypeNode(node)) return;
     if (ts.isJsxAttribute(node)) {
-      if (NON_COPY_JSX_ATTRIBUTE.test(node.name.getText(sf))) return;
+      const name = node.name.getText(sf);
+      if (NON_COPY_JSX_ATTRIBUTE.test(name)) return;
+      // Other attributes count when they carry copy: a copy-bearing name, or
+      // a value with two or more words. Geometry and settings
+      // (offset="75%", strokeWidth="1.5") are not copy.
+      const init = node.initializer;
+      const literal =
+        init && ts.isStringLiteral(init)
+          ? init.text
+          : init && ts.isJsxExpression(init) && init.expression
+            ? constantText(init.expression)
+            : null;
+      if (
+        literal !== null &&
+        !COPY_ATTRIBUTE.test(name) &&
+        !/[a-z]{2,}\s+[a-z]{2,}/i.test(literal)
+      ) {
+        return;
+      }
     }
     if (
       ts.isCallExpression(node) &&
@@ -618,7 +1224,89 @@ export function extractFragments(source: string, fileName: string): string[] {
     ) {
       return;
     }
+    // throw new Error('…'): production serves a generic error page.
+    if (ts.isThrowStatement(node)) return;
+    // sql`…` and other tagged templates are code.
+    if (ts.isTaggedTemplateExpression(node)) return;
+    // case '12m': / status === 'published' — a value being matched, not copy.
+    if (ts.isCaseClause(node)) {
+      node.statements.forEach(visit);
+      return;
+    }
+    if (
+      ts.isBinaryExpression(node) &&
+      [
+        ts.SyntaxKind.EqualsEqualsEqualsToken,
+        ts.SyntaxKind.ExclamationEqualsEqualsToken,
+        ts.SyntaxKind.EqualsEqualsToken,
+        ts.SyntaxKind.ExclamationEqualsToken,
+      ].includes(node.operatorToken.kind)
+    ) {
+      return;
+    }
+    // obj['500'] — an element-access key.
+    if (ts.isElementAccessExpression(node)) {
+      visit(node.expression);
+      return;
+    }
+    // parseInt(x || '0'), Number('…'), z.enum(['7d', '12m']) — code values.
+    if (
+      ts.isCallExpression(node) &&
+      ((ts.isIdentifier(node.expression) &&
+        /^(?:parseInt|parseFloat|Number|BigInt)$/.test(node.expression.text)) ||
+        (ts.isPropertyAccessExpression(node.expression) &&
+          /^(?:enum|literal|nativeEnum)$/.test(node.expression.name.text)))
+    ) {
+      return;
+    }
+    // cond ? x : '0' — a numeric fallback value, not copy.
+    if (
+      (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) &&
+      /^[\d.,]+$/.test(node.text) &&
+      node.parent &&
+      (ts.isConditionalExpression(node.parent) ||
+        (ts.isBinaryExpression(node.parent) &&
+          [
+            ts.SyntaxKind.BarBarToken,
+            ts.SyntaxKind.QuestionQuestionToken,
+          ].includes(node.parent.operatorToken.kind)))
+    ) {
+      return;
+    }
+    // Arguments to string and DOM utilities are wiring, not copy:
+    // padStart(2, '0'), split('/'), replace(/x/, '$1'), toLocaleString('en-AU').
+    if (
+      (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) &&
+      node.parent &&
+      ts.isCallExpression(node.parent) &&
+      node.parent.arguments.includes(node as ts.Expression) &&
+      ts.isPropertyAccessExpression(node.parent.expression) &&
+      WIRING_CALL.test(node.parent.expression.name.text)
+    ) {
+      return;
+    }
+    current = node;
+    if (
+      (ts.isStringLiteral(node) ||
+        ts.isNoSubstitutionTemplateLiteral(node) ||
+        ts.isTemplateExpression(node)) &&
+      isPromptText(node, sf)
+    ) {
+      return;
+    }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      // A config value under a wiring key ({ weight: '400' }, { range:
+      // '12m' }) is not copy unless it reads as prose.
+      const parent = node.parent;
+      if (
+        parent &&
+        ts.isPropertyAssignment(parent) &&
+        parent.initializer === node &&
+        WIRING_KEY.test(parent.name.getText(sf).replace(/['"]/g, '')) &&
+        !/[a-z]{2,}\s+[a-z]{2,}/i.test(node.text)
+      ) {
+        return;
+      }
       push(node.text);
       return;
     }
@@ -652,16 +1340,30 @@ export const extractCopy = extractFragments;
 export function claimHitsInSource(
   source: string,
   fileName: string,
-  allow: Set<string>
+  allow: AllowIndex = NO_ALLOW
 ): ClaimHit[] {
-  const fragments = extractFragments(source, fileName);
+  const copy = extractCopyFragments(source, fileName);
+  const fragments = copy.map(f => f.text);
   const found = new Map<string, { hit: ClaimHit; from: number; to: number }>();
   for (const sep of ['', ' ']) {
     for (let len = 1; len <= MAX_WINDOW; len++) {
       for (let i = 0; i + len <= fragments.length; i++) {
         // A fragment that ends a sentence never glues onto the next one.
-        const text = fragments
-          .slice(i, i + len)
+        const window = fragments.slice(i, i + len);
+        // A window is copy when it holds JSX-rendered words or prose; bare
+        // numbers and single code words ('normal', 'localhost') are not.
+        if (
+          !copy
+            .slice(i, i + len)
+            .some(
+              f =>
+                (f.jsx && /[a-z]{2,}/i.test(f.text)) ||
+                /[a-z]{2,}\s+[a-z]{2,}/i.test(f.text)
+            )
+        ) {
+          continue;
+        }
+        const text = window
           .map(f => (/[.!?]\s*$/.test(f) ? `${f} ` : f))
           .join(sep);
         for (const hit of claimHits(text, allow)) {
@@ -691,7 +1393,7 @@ export function claimHitsInSource(
 export function findClaimsInSource(
   source: string,
   fileName: string,
-  allow: Set<string> = new Set()
+  allow: AllowIndex = NO_ALLOW
 ): string[] {
   return claimHitsInSource(source, fileName, allow).map(
     h => `${h.rule} — "${h.sentence}"`
@@ -701,7 +1403,9 @@ export function findClaimsInSource(
 // Rendered markup → sentences: block-level tags end a sentence, inline tags
 // (<strong>, <span>…) do not.
 const BLOCK_TAG =
-  /<\/?(?:p|div|li|ul|ol|h[1-6]|section|article|header|footer|nav|main|aside|td|th|tr|table|br|hr|button|label|option|select|figcaption|blockquote|dd|dt|form|input|textarea|text|tspan|svg|g)\b[^>]*>/gi;
+  /<\/?(?:p|div|li|ul|ol|h[1-6]|section|article|header|footer|nav|main|aside|td|th|tr|table|br|hr|button|label|option|select|figcaption|blockquote|dd|dt|form|input|textarea|text|tspan|svg|g)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
+// A tag, with quoted attributes that may contain ">" ("[&>svg]:pl-7").
+const ANY_TAG = /<(?:[^>"']|"[^"]*"|'[^']*')*>/g;
 
 export function renderedSentencesText(markup: string): string {
   const attributes = [
@@ -728,9 +1432,65 @@ export function renderedSentencesText(markup: string): string {
     .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, (_m, body: string) =>
       jsonStrings(body)
     )
+    // Style sheets are presentation, not copy a visitor reads.
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '\n')
     .replace(BLOCK_TAG, '\n')
-    .replace(/<[^>]+>/g, '');
+    .replace(ANY_TAG, '');
   return `${text}\n${attributes.join('\n')}`;
+}
+
+// ── Data-bound numbers ───────────────────────────────────────────────────────
+// A visitor's own data is not copy. Both dynamic suites render or call twice,
+// the second time with every input number moved, and mask as "#" each digit
+// run that moved with it; a number that stays put is copy.
+
+// Fixture numbers changed so data-bound numbers move: n → 2n + 1. Status
+// codes and calendar fields are left alone; they steer branches, not copy.
+const FIXED_KEYS = /status|code|year|month|day|hour|minute|port|version/i;
+export function perturb(value: unknown, key = ''): unknown {
+  if (typeof value === 'number') {
+    return FIXED_KEYS.test(key) ? value : value * 2 + 1;
+  }
+  if (typeof value === 'function') {
+    return (args: unknown) =>
+      perturb((value as (a: unknown) => unknown)(args), key);
+  }
+  if (Array.isArray(value)) return value.map(v => perturb(v, key));
+  if (value && typeof value === 'object' && !(value instanceof Date)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k, perturb(v, k)])
+    );
+  }
+  return value;
+}
+
+const DIGITS = /\d[\d.,]*/g;
+const sentencesOf = (text: string) =>
+  text.split(/\n+/).flatMap(line => splitSentences(normaliseCopy(line)));
+
+/**
+ * The sentences of render A with every digit run that differs from the
+ * matching sentence of render B (same words, other digits) masked as "#".
+ */
+export function maskData(a: string, b: string): string {
+  const skeleton = (s: string) => s.replace(DIGITS, '§');
+  const others = new Map<string, string[]>();
+  for (const s of sentencesOf(b)) {
+    const k = skeleton(s);
+    others.set(k, [...(others.get(k) ?? []), s]);
+  }
+  return sentencesOf(a)
+    .map(s => {
+      const runs = s.match(DIGITS) ?? [];
+      const match = (others.get(skeleton(s)) ?? []).find(o =>
+        (o.match(DIGITS) ?? []).some((r, i) => r !== runs[i])
+      );
+      if (!match) return s;
+      const moved = match.match(DIGITS) ?? [];
+      let i = 0;
+      return s.replace(DIGITS, run => (run === moved[i++] ? run : '#'));
+    })
+    .join('\n');
 }
 
 // ── Same-origin API routes ───────────────────────────────────────────────────
@@ -799,7 +1559,11 @@ const API_PATH_RE = /\/api\/[\w\-./[\]${}]*/g;
 
 function referencedApiRoutes(source: string, routes: ApiRoute[]): string[] {
   const files = new Set<string>();
-  for (const [raw] of source.matchAll(API_PATH_RE)) {
+  // A route named in a comment is not called.
+  const code = source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
+  for (const [raw] of code.matchAll(API_PATH_RE)) {
     const pathname = raw
       .replace(/\$\{[^}]*\}/g, 'x')
       .replace(/[?#].*$/, '')
@@ -815,8 +1579,11 @@ function referencedApiRoutes(source: string, routes: ApiRoute[]): string[] {
  * they import, the same-origin API routes any of those reference, and what
  * those routes import — followed to a fixpoint.
  */
-export function publicSourceInventory(): string[] {
-  const routes = apiRoutes();
+export function publicSourceInventory({
+  followApi = true,
+}: { followApi?: boolean } = {}): string[] {
+  const routes = followApi ? apiRoutes() : [];
+  const routeFiles = new Set(routes.map(r => r.file));
   const seen = new Set<string>();
   const queue = publicAppFiles();
   while (queue.length) {
@@ -825,13 +1592,30 @@ export function publicSourceInventory(): string[] {
     seen.add(file);
     if (!SOURCE_EXT.includes(path.extname(file))) continue;
     const source = readFileSync(file, 'utf8');
-    for (const m of source.matchAll(IMPORT_RE)) {
-      const resolved = resolveImport(file, m[1] ?? m[2] ?? m[3]);
-      if (resolved && !seen.has(resolved)) queue.push(resolved);
+    // An API route's own literals are judged (every branch it can return);
+    // the server modules it imports reach a visitor only through its
+    // response, which the API-response scan judges field by field.
+    if (!routeFiles.has(file)) {
+      for (const m of source.matchAll(IMPORT_RE)) {
+        const resolved = resolveImport(file, m[1] ?? m[2] ?? m[3]);
+        if (resolved && !seen.has(resolved)) queue.push(resolved);
+      }
     }
     for (const routeFile of referencedApiRoutes(source, routes)) {
       if (!seen.has(routeFile)) queue.push(routeFile);
     }
   }
   return [...seen, path.join(ROOT, 'public/llms.txt')].sort();
+}
+
+/** Same-origin API route files that public code references. */
+export function publicApiRouteFiles(): string[] {
+  const routes = apiRoutes();
+  const files = new Set<string>();
+  for (const file of publicSourceInventory({ followApi: false })) {
+    if (!/\.(tsx?|jsx?|mjs)$/.test(file)) continue;
+    for (const r of referencedApiRoutes(readFileSync(file, 'utf8'), routes))
+      files.add(r);
+  }
+  return [...files].sort();
 }

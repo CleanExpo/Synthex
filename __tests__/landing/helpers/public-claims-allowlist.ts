@@ -1,1310 +1,3089 @@
 /**
- * Reviewed allow-list for the deny-by-default quantified-outcome rule
- * (SYN-1226). Each entry is one exact normalised sentence that contains a
- * quantity and an outcome noun but is NOT a factual outcome claim, with the
- * reason. Allowed reasons only:
- *  - advice:     guidance to the reader ("post 3 to 5 times per week")
- *  - definition: what a metric or term means
- *  - formula:    a worked formula with obviously hypothetical inputs
- *  - target:     a goal to aim for, not a result achieved
- *  - product-ui: describes the product or service (limits, steps, timings,
- *                labels), not a result anyone achieved
- * An unsupported factual claim is never allow-listed; it is removed instead.
- * `layer` says where the sentence is seen; unused entries fail the suites.
+ * Allow-list for the deny-by-default public-claims guard (SYN-1226).
+ *
+ * Every quantity and every credential/superlative term in public copy is a
+ * finding. A finding passes only through an entry here, and an entry passes
+ * only if its kind's constraint holds — checked by checkEntry(), not by a
+ * reason anyone wrote. Kinds:
+ *
+ *  NUMBER class — every quantity in the sentence must satisfy one kind:
+ *   - price:                currency amount equal to a value in the pricing
+ *                           sources of truth (priceValues)
+ *   - date-time:            calendar date, time, year used as a date, or a
+ *                           time frame ("last 7 days") never next to a saving
+ *   - product-limit:        equal to a plan-config limit or a validation bound
+ *                           in the same file, in a sentence stating a limit;
+ *                           or a registered product constant / self-count
+ *                           bound to its subject
+ *   - ordinal-step-version: step/figure/scene/wave label, list index,
+ *                           version, ordinal, identifier, scale denominator
+ *   - contact-legal:        phone (or its input mask), ABN, postcode, street
+ *                           number
+ *   - hypothetical-example: the sentence says "for example", "e.g.",
+ *                           "imagine" or "if you"
+ *   - evidence:             needs source (repo path or URL), retrieved
+ *                           (YYYY-MM-DD) and approvedBy: 'founder' — none yet
+ *  CREDENTIAL class — every term must satisfy one kind:
+ *   - neutral:  no first-party subject (we/our/us/Synthex/RestoreAssist)
+ *               within 8 words of the term
+ *   - evidence: as above
+ *
+ * Entries are generated from the guard's own findings and reviewed; an entry
+ * that stops being needed fails the suite as stale.
  */
 
-export type AllowReason =
-  | 'advice'
-  | 'definition'
-  | 'formula'
-  | 'target'
-  | 'product-ui';
+import { existsSync } from 'fs';
+import path from 'path';
+import {
+  CREDENTIAL,
+  FIRST_PARTY,
+  ROOT,
+  type AllowIndex,
+  isContactLegal,
+  isDateTime,
+  isHypotheticalExample,
+  isOrdinalStepVersion,
+  boundMatches,
+  limitMatches,
+  limitValues,
+  priceValues,
+  productConstantMatches,
+  quantityTokens,
+  selfCountMatches,
+  sentenceKey,
+  validationBounds,
+} from './public-claims';
 
-export interface AllowEntry {
+export type NumberKind =
+  | 'price'
+  | 'date-time'
+  | 'product-limit'
+  | 'ordinal-step-version'
+  | 'contact-legal'
+  | 'hypothetical-example'
+  | 'evidence';
+export type CredentialKind = 'neutral' | 'evidence';
+
+interface EntryBase {
+  /** Exact normalised sentence (whitespace is ignored when matching). */
   sentence: string;
-  reason: AllowReason;
-  layer: 'source' | 'rendered';
-  note?: string;
+  layer: 'source' | 'rendered' | 'api';
+  /** File the copy comes from (source), page (rendered) or route (api). */
+  file: string;
+  source?: string;
+  retrieved?: string;
+  approvedBy?: 'founder';
+}
+export type AllowEntry =
+  | (EntryBase & { class: 'number'; kinds: NumberKind[] })
+  | (EntryBase & { class: 'credential'; kinds: CredentialKind[] });
+
+let prices: Set<string> | null = null;
+let limits: Map<string, Set<string>> | null = null;
+const numberValue = (text: string) =>
+  String(Number(text.replace(/[^\d.]/g, '')));
+
+function hasEvidence(e: EntryBase): boolean {
+  const sourceOk =
+    !!e.source &&
+    (/^https?:\/\//.test(e.source) || existsSync(path.join(ROOT, e.source)));
+  return (
+    sourceOk &&
+    /^\d{4}-\d{2}-\d{2}$/.test(e.retrieved ?? '') &&
+    e.approvedBy === 'founder'
+  );
+}
+
+// The quantity itself is a currency amount: "$49", "AUD 2,500", "2,500 AUD",
+// or the far end of a currency range ("AUD 12,000–35,000").
+function isCurrency(s: string, t: { text: string; index: number }): boolean {
+  if (t.text.startsWith('$')) return true;
+  const before = s.slice(Math.max(0, t.index - 8), t.index);
+  const after = s.slice(t.index + t.text.length, t.index + t.text.length + 5);
+  if (/(?:\baud|\busd|a\$)\s?$/.test(before) || /^\s?(?:aud|usd)\b/.test(after))
+    return true;
+  return /(?:\$|aud\s?|usd\s?)[\d.,]+\s?[–-]\s?$/.test(
+    s.slice(Math.max(0, t.index - 20), t.index)
+  );
+}
+
+/**
+ * Non-claim roles a credential term may play, each checked on the text
+ * around the term. Deny by default: any use not listed here needs evidence.
+ *  - a format or a reader's own result: "valid ISO date", "your best posts",
+ *    "best time", "best practices", "personal best";
+ *  - another body's credential, named: "IICRC certification";
+ *  - a regulation named as a topic or keyword, never with compliant/certified;
+ *  - a review gate or pass the product runs: "brand, compliance and SEO passes";
+ *  - a retention or legal ground: "required for legal or security compliance";
+ *  - awards as a tracked topic: "award submission deadlines";
+ *  - a condition, not a result: "when the gates are proven";
+ *  - a workflow state among its siblings: "verified · staged";
+ *  - an account step: "email verified", "not yet verified".
+ */
+export const NEUTRAL_USES: RegExp[] = [
+  /\biso (?:date|8601|format|string|timestamp)/,
+  /\b(?:your|personal|next) best\b|\bbest (?:practices?|times?|streak|posts?|metric)\b|\bremembered best\b/,
+  /\b(?:iicrc|carsi)\b[^.]{0,80}certif|\bcertif\w*[^.]{0,40}\(iicrc\)|\byour certification\b/,
+  /\b(?:gdpr|ccpa)\b(?![^.]{0,20}(?:complian|certif|approved|ready))/,
+  /\b(?:brand|voice|evidence|consent|licensing|creative|contrarian),? (?:and )?compliance\b|\bcompliance(?:,| and) (?:licensing|contrarian|publish|seo|evidence)/,
+  /\b(?:legal|regulatory|security) compliance\b/,
+  /\b(?:industry )?awards? (?:nominations?|submissions?|deadlines?|&)|\bindustry award\b|\bawards deadlines\b/,
+  /\b(?:when|once|until|if)\b[^.]{0,40}\bproven\b/,
+  /\bverified (?:staged|grounded|queued|draft|approved|published)\b|\b(?:staged|grounded|queued|draft|approved|intake) verified\b/,
+  /\bemail\b[^.]{0,30}\bverified\b|\bverified email\b|\bonce verified\b|\b(?:not|not yet|already) verified\b/,
+];
+
+/** Why an entry fails its kinds, or null when every constraint holds. */
+export function checkEntry(e: AllowEntry): string | null {
+  const s = e.sentence;
+  if (e.class === 'number') {
+    prices ??= priceValues();
+    limits ??= limitValues();
+    const tokens = quantityTokens(s);
+    if (tokens.length === 0) return 'no quantity in the sentence';
+    for (const t of tokens) {
+      const v = numberValue(t.text);
+      const ok = e.kinds.some(kind => {
+        switch (kind) {
+          case 'date-time':
+            return isDateTime(s, t);
+          case 'ordinal-step-version':
+            return isOrdinalStepVersion(s, t);
+          case 'contact-legal':
+            return isContactLegal(s, t);
+          case 'hypothetical-example':
+            return isHypotheticalExample(s);
+          case 'price':
+            return isCurrency(s, t) && prices!.has(v);
+          case 'product-limit':
+            return (
+              limitMatches(s, t, limits!) ||
+              boundMatches(s, t, validationBounds(e.file)) ||
+              productConstantMatches(s, v) ||
+              selfCountMatches(e.file, s, v)
+            );
+          case 'evidence':
+            return hasEvidence(e);
+        }
+      });
+      if (!ok) return `"${t.text}" satisfies none of ${e.kinds.join(', ')}`;
+    }
+    return null;
+  }
+  const terms = [...s.matchAll(new RegExp(CREDENTIAL.source, 'g'))];
+  if (terms.length === 0) return 'no credential term in the sentence';
+  for (const term of terms) {
+    const ok = e.kinds.some(kind => {
+      if (kind === 'evidence') return hasEvidence(e);
+      // neutral: no first-party subject within 8 words of the term, and
+      // the term is in a recognised non-claim role. A bare badge such as
+      // "ISO 27001 certified." has no role, so it never passes.
+      const at = term.index ?? 0;
+      const before = s.slice(0, at).split(/\s+/).slice(-8).join(' ');
+      const after = s
+        .slice(at + term[0].length)
+        .split(/\s+/)
+        .slice(0, 9)
+        .join(' ');
+      if (FIRST_PARTY.test(`${before} ${after}`)) return false;
+      return NEUTRAL_USES.some(use =>
+        use.test(s.slice(Math.max(0, at - 60), at + term[0].length + 60))
+      );
+    });
+    if (!ok) return `"${term[0]}" satisfies none of ${e.kinds.join(', ')}`;
+  }
+  return null;
+}
+
+export function allowIndex(layer: EntryBase['layer']): AllowIndex {
+  const index: AllowIndex = { number: new Set(), credential: new Set() };
+  for (const e of ALLOW_LIST) {
+    if (e.layer === layer) index[e.class].add(sentenceKey(e.sentence));
+  }
+  return index;
 }
 
 export const ALLOW_LIST: AllowEntry[] = [
+  // ── source ─────────────────────────────────────────────
+  // app/(landing)/restoreassist/insurers/page.tsx
   {
-    sentence: '1 claim, 5 steps, the same report at the end.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/(landing)/restoreassist/insurers/page.tsx — describes the product, a limit, a step, a timing or a label',
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'one claim, 5 steps, the same report at the end.',
+  },
+  // app/(landing)/restoreassist/pricing/page.tsx
+  {
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$0',
   },
   {
-    sentence: 'an mcp app stack has 4 cost layers.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/add-ons/mcp-app-development/page.tsx — describes the product, a limit, a step, a timing or a label',
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$0 report credits across',
   },
   {
-    sentence: 'start with a 30-minute discovery conversation.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/add-ons/mcp-app-development/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
     sentence:
-      'anonymised aggregate across 30 active synthex client accounts over the prior 90 days.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: "app/benchmark/page.tsx — renders the fixture data a populated page shows (the visitor's own or live cohort figures)",
+      'a 15-day free trial with no credit card, one paid plan at $99 a month including gst, and report packs for the months that run long.',
   },
   {
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
     sentence:
-      'based on 30 anonymised synthex client accounts, 17/07/2026–15/10/2026.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: "app/benchmark/page.tsx — renders the fixture data a populated page shows (the visitor's own or live cohort figures)",
+      'restoreassist pricing in plain australian dollars: a 15-day free trial with 50 report credits and no credit card, one paid plan at $99 a month including gst, and report packs if a month runs long.',
   },
   {
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
+    sentence: 'restoreassist pricing | $99 a month, 50 reports, gst included',
+  },
+  {
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
+    sentence: 'restoreassist pricing — $99 a month, 50 reports, gst included',
+  },
+  {
+    layer: 'source',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'the plan includes 50 reports a month.',
+  },
+  // app/add-ons/mcp-app-development/page.tsx
+  {
+    layer: 'source',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'alpic does not publish public pricing as of may 2026.',
+  },
+  {
+    layer: 'source',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'ordinal-step-version'],
     sentence:
-      'based on 30 anonymised synthex client accounts, distinct active platforms as of 15/10/2026.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: "app/benchmark/page.tsx — renders the fixture data a populated page shows (the visitor's own or live cohort figures)",
+      "alpic's skybridge framework (mit-licensed, v1.0 released may 2026) is the stack we build on.",
   },
   {
+    layer: 'source',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'from aud 1200/month (recurring)',
+  },
+  {
+    layer: 'source',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: 'from aud 2500 (one-off)',
+  },
+  {
+    layer: 'source',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: 'scoped from discovery — typical aud 12000–35000',
+  },
+  // app/analytics/AnalyticsClient.tsx
+  {
+    layer: 'source',
+    file: 'app/analytics/AnalyticsClient.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'your best posts based on engagement',
+  },
+  {
+    layer: 'source',
+    file: 'app/analytics/AnalyticsClient.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last 30 days',
+  },
+  {
+    layer: 'source',
+    file: 'app/analytics/AnalyticsClient.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last 7 days',
+  },
+  {
+    layer: 'source',
+    file: 'app/analytics/AnalyticsClient.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last 90 days',
+  },
+  // app/api-reference/page.tsx
+  {
+    layer: 'source',
+    file: 'app/api-reference/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      'secure authentication with rotating api keys and oauth 2.0 support.',
+  },
+  // app/api/analytics/performance/route.ts
+  {
+    layer: 'source',
+    file: 'app/api/analytics/performance/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'enddate must be a valid iso date string',
+  },
+  {
+    layer: 'source',
+    file: 'app/api/analytics/performance/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'startdate must be a valid iso date string',
+  },
+  // app/api/auth/oauth/google/callback/route.ts
+  {
+    layer: 'source',
+    file: 'app/api/auth/oauth/google/callback/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'google account email is not verified',
+  },
+  // app/api/auth/resend-verification/route.ts
+  {
+    layer: 'source',
+    file: 'app/api/auth/resend-verification/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'email is already verified',
+  },
+  // app/api/auth/reset-password/route.ts
+  {
+    layer: 'source',
+    file: 'app/api/auth/reset-password/route.ts',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'password must be at least 8 characters',
+  },
+  // app/api/demo/caption/route.ts
+  {
+    layer: 'source',
+    file: 'app/api/demo/caption/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'another day, another personal best waiting to happen.',
+  },
+  {
+    layer: 'source',
+    file: 'app/api/demo/caption/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'because you deserve to look and feel your best.',
+  },
+  {
+    layer: 'source',
+    file: 'app/api/demo/caption/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      "whether you're new to the industry or levelling up your certification, carsi has the course for you.",
+  },
+  {
+    layer: 'source',
+    file: 'app/api/demo/caption/route.ts',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '2023-06-01bearer invalid json',
+  },
+  {
+    layer: 'source',
+    file: 'app/api/demo/caption/route.ts',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'synthex demoanthropic-version2023-06-01',
+  },
+  // app/api/public/testimonials/[token]/route.ts
+  {
+    layer: 'source',
+    file: 'app/api/public/testimonials/[token]/route.ts',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: ': file too large (max 10 mb).',
+  },
+  {
+    layer: 'source',
+    file: 'app/api/public/testimonials/[token]/route.ts',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'video: file too large (max 100 mb).',
+  },
+  // app/auth/reset-password/page.tsx
+  {
+    layer: 'source',
+    file: 'app/auth/reset-password/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'must be at least 8 characters',
+  },
+  {
+    layer: 'source',
+    file: 'app/auth/reset-password/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'password must be at least 8 characters long',
+  },
+  {
+    layer: 'source',
+    file: 'app/auth/reset-password/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'your new password must be at least 8 characters long',
+  },
+  // app/auth/verify-email/page.tsx
+  {
+    layer: 'source',
+    file: 'app/auth/verify-email/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'email verified successfully!',
+  },
+  {
+    layer: 'source',
+    file: 'app/auth/verify-email/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'email verified!',
+  },
+  {
+    layer: 'source',
+    file: 'app/auth/verify-email/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'your email has been successfully verified',
+  },
+  // app/benchmark/opengraph-image.tsx
+  {
+    layer: 'source',
+    file: 'app/benchmark/opengraph-image.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'updated every 10 min',
+  },
+  // app/benchmark/page.tsx
+  {
+    layer: 'source',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
     sentence:
       'claims are computed over the rolling 90-day window ending at the time the page was last rendered.',
-    reason: 'definition',
-    layer: 'rendered',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
   },
   {
+    layer: 'source',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'start your 14-day trial and see what synthex can do for your local marketing — with the same transparent measurement we use on this page.',
+  },
+  {
+    layer: 'source',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
     sentence:
       'the page revalidates every 10 minutes, so figures refresh throughout the day without changing mid-visit.',
-    reason: 'definition',
-    layer: 'rendered',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
   },
   {
+    layer: 'source',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'the synthex client cohort has not yet reached our minimum disclosure threshold of 25 accounts.',
-    reason: 'definition',
-    layer: 'rendered',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
   },
   {
+    layer: 'source',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'we only publish a claim once the cohort contains at least 25 active client accounts.',
-    reason: 'definition',
-    layer: 'rendered',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
+  },
+  // app/changelog/page.tsx
+  {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'content scheduling improvementsnovember 2024',
   },
   {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'december 2024ai enhancements',
+  },
+  {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'enhanced analytics dashboarddecember 2024',
+  },
+  {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'january 2025major platform redesign',
+  },
+  {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'november 2024security updates',
+  },
+  {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'october 2024analytics & insightsreal-time analytics dashboard',
+  },
+  {
+    layer: 'source',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'privacy request handling improvementsoctober 2024',
+  },
+  // app/clients/[slug]/page.tsx
+  {
+    layer: 'source',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'composite · v1.1',
+  },
+  {
+    layer: 'source',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'out of 100',
+  },
+  {
+    layer: 'source',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'out of 5 stars',
+  },
+  // app/contact/ContactForm.tsx
+  {
+    layer: 'source',
+    file: 'app/contact/ContactForm.tsx',
+    class: 'number',
+    kinds: ['date-time'],
     sentence:
-      '4+ years product design -figma expertise -saas experience -user research skills',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/careers/page.tsx — job listing title or role requirement',
+      'routes to support@synthex.social for human follow-up within 1 business day.',
   },
+  // app/data-deletion/page.tsx
   {
+    layer: 'source',
+    file: 'app/data-deletion/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
     sentence:
-      '5+ years growth marketing -b2b saas experience -analytics expertise -content marketing',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/careers/page.tsx — job listing title or role requirement',
+      'a limited set of records may be retained where required for legal or security compliance, then permanently deleted.',
   },
   {
-    sentence:
-      'you can reach fixture business name by phone at +61 2 1111 1111 or visit their website at',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: "app/clients/[slug]/page.tsx — renders the fixture data a populated page shows (the visitor's own or live cohort figures)",
-  },
-  {
-    sentence: '2.click "connect" on any platform below to enter your api keys',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/demo/integrations/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      '01resolve buyer uncertainty first78%incomplete comparison and usage proof prevents qualified buyers from resolving uncertainty before purchase.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/intentscape/page.tsx — confidence figure in the sample output of the interactive demo (components/intentscape/demo-data.ts)',
-  },
-  {
-    sentence:
-      '02repair offer-to-audience fit69%the active audience prioritises a different outcome, so polished creative attracts attention without intent.target buyer · product owner',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/intentscape/page.tsx — confidence figure in the sample output of the interactive demo (components/intentscape/demo-data.ts)',
-  },
-  {
-    sentence:
-      '03build a creative learning system73%disconnected asset production prevents the team from learning which proof, format and audience combination changes behaviour.marketing operator · creative team',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/intentscape/page.tsx — confidence figure in the sample output of the interactive demo (components/intentscape/demo-data.ts)',
-  },
-  {
-    sentence: 'direction 02repair offer-to-audience fit69% confidence',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/intentscape/page.tsx — confidence figure in the sample output of the interactive demo (components/intentscape/demo-data.ts)',
-  },
-  {
-    sentence:
-      'synthex turns them into 3 ranked growth directions, showing what it found, what it inferred and what it still needs to learn.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/opportunity-map/page.tsx — describes what the Opportunity Map returns',
-  },
-  {
-    sentence:
-      'it returns 3 ranked growth directions, the evidence used, and the gaps still unknown.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/page.tsx — describes what the Opportunity Map returns',
-  },
-  {
-    sentence:
-      'synthex returns 3 ranked growth directions, the sources used, and the gaps still unknown.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/page.tsx — describes what the Opportunity Map returns',
-  },
-  {
-    sentence:
-      'pilot for the entire training-video system · 4 scenes · ~45 min recording time',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/quick-access-preview/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      't+1 origin · t+30 reflection · founder voice tag · placeholder claims need verifying',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/quick-access-preview/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: 'things only you can do · most under 30 minutes',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/quick-access-preview/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: '⏱ 3 minone-time',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/quick-access-preview/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      '12 pieces: 1 founder origin · 1 nir explainer · 3 product scenes · 1 carousel comparison · 6 customer-quote placeholders.',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/vision-board-preview/ra-launch-2026-05/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'mirrors linear comments tagged [decision] into ~/synthex-brain-2/04-decisions/',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/vision-board-preview/ra-launch-2026-05/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'synthex ↔ brain-2 ↔ pi-ceo ↔ linear ↔ supabase wiring · checked at request time',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/vision-board-preview/ra-launch-2026-05/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'verify the re-inspection figure used in the linkedin drumbeat t+9 carousel and founder post t+1',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: 'app/vision-board-preview/ra-launch-2026-05/page.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: '8 posts · 1234 reach',
-    reason: 'product-ui',
-    layer: 'rendered',
-    note: "app/welcome/page.tsx — renders the fixture data a populated page shows (the visitor's own or live cohort figures)",
-  },
-  {
-    sentence: '1 claim, 5 steps, the same report at the end.',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/(landing)/restoreassist/insurers/page.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/data-deletion/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'gdpr data',
   },
   {
-    sentence: 'an mcp app stack has 4 cost layers.',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/add-ons/mcp-app-development/page.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/data-deletion/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'revoke access gdpr',
   },
   {
-    sentence:
-      'cost model: framework (free) vs hosting (alpic or self-host) vs ongoing opsgo/no-go recommendation — no obligation to proceed to buildbuild + launchscoped from discovery — typical aud 12000–35000',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/add-ons/mcp-app-development/page.tsx — indicative service quote for the add-on; an offer term, not a result (pricing out of scope)',
+    file: 'app/data-deletion/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last updated: july 2026',
   },
   {
-    sentence: 'start with a 30-minute discovery conversation.',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/add-ons/mcp-app-development/page.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/data-deletion/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'up to 90 days:',
   },
   {
-    sentence: '9 platforms, 1 brand voice📊no time to analyse what works',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/agencies/page.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/data-deletion/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'within 30 days:',
   },
+  // app/demo/integrations/page.tsx
   {
-    sentence: 'track your social media performance and engagement last 7 days',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/analytics/AnalyticsClient.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/demo/integrations/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'some features may require re-authentication after 30 days',
   },
+  // app/demo/settings/page.tsx
   {
-    sentence:
-      "this is an oauth 1.0a api key; synthex needs the oauth 2.0 client id — copy it from the app's keys-and-tokens 'oauth 2.0 client id and client secret' section",
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/api/admin/platform-credentials/route.ts — describes the product, a limit, a step, a timing or a label',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$249 unlimited social accounts',
   },
   {
-    sentence:
-      'return a json object with: { "optimized": "the optimized content", "suggestions": ["improvement 1", "improvement 2", ...], "changes": ["change 1", "change 2", ...] } keep the core message but enhance engagement.',
-    reason: 'advice',
     layer: 'source',
-    note: 'app/api/ai-content/optimize/route.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'expires 12/25',
   },
   {
-    sentence: '2023-06-01 user',
-    reason: 'advice',
     layer: 'source',
-    note: 'app/api/demo/caption/route.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'image size must be less than 5mb',
   },
   {
-    sentence:
-      'bearer user write a single instagram caption (2-3 sentences, 1-2 hashtags) for a business called "',
-    reason: 'advice',
     layer: 'source',
-    note: 'app/api/demo/caption/route.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'max size 5mb.',
   },
   {
-    sentence:
-      'user write a single instagram caption (2-3 sentences, 1-2 hashtags) for a business called "',
-    reason: 'advice',
     layer: 'source',
-    note: 'app/api/demo/caption/route.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence: '60 rate limit exceeded',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/internal/sign-lead/route.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: 'lead capture temporarily unavailable post 60',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/internal/sign-lead/route.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'adding a 5-second preview clip would let the reviewer hear what the launch will sound like.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/internal/vision-board/ai-commentary/route.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'have pi-ceo research lead pull pricing + installed-base data for the 3 competitors.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/internal/vision-board/ai-commentary/route.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: 'scene 4 carries the entire 5-step claim in 18s.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/internal/vision-board/ai-commentary/route.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: '1.0x engagement',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/stats/route.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: 'users 1.0x',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/api/stats/route.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'claims are computed over the rolling 90-day window ending at the time the page was last rendered.',
-    reason: 'definition',
-    layer: 'source',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
-  },
-  {
-    sentence:
-      'the page revalidates every 10 minutes, so figures refresh throughout the day without changing mid-visit.',
-    reason: 'definition',
-    layer: 'source',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
-  },
-  {
-    sentence:
-      'the synthex client cohort has not yet reached our minimum disclosure threshold of 25 accounts.',
-    reason: 'definition',
-    layer: 'source',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
-  },
-  {
-    sentence:
-      'we only publish a claim once the cohort contains at least 25 active client accounts.',
-    reason: 'definition',
-    layer: 'source',
-    note: 'app/benchmark/page.tsx — benchmark methodology and disclosure rule (threshold and window are set in code)',
-  },
-  {
-    sentence: '2machine learning engineerremotefull-time',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/careers/CareersClient.tsx — job listing title or role requirement',
-  },
-  {
-    sentence: '4 customer success manager',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/careers/CareersClient.tsx — job listing title or role requirement',
-  },
-  {
-    sentence:
-      '4+ years product design figma expertise saas experience user research skills',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/careers/CareersClient.tsx — job listing title or role requirement',
-  },
-  {
-    sentence: '5 growth marketing manager',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/careers/CareersClient.tsx — job listing title or role requirement',
-  },
-  {
-    sentence: '5+ years growth marketing',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/careers/CareersClient.tsx — job listing title or role requirement',
-  },
-  {
-    sentence: 'user research skills 4',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/careers/CareersClient.tsx — job listing title or role requirement',
-  },
-  {
-    sentence: '2-factor authentication supportimproved api rate limiting',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/changelog/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'improved api rate limitingsecurity audit compliance updatesgdpr compliance enhancements1.3.0',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/changelog/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: 'response rate review quality social proof 30',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/clients/[slug]/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'synthex ↔ brain-2 ↔ pi-ceo ↔ linear ↔ supabase wiring · checked at request time',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/ConnectionStatusPanel.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      '12 pieces: 1 founder origin · 1 nir explainer · 3 product scenes · 1 carousel comparison · 6 customer-quote placeholders.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      '2 distinct types — building restoration services vs professional restoration services (iicrc) scope correctly documented · paid in full for work performed customer',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'customer policyholder property habitable · communication · predictability figure 2 — the 3-layer commercial chain in australian insurance restoration',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'pull the senate inquiry "flood failure to future fairness" final report — extract specific cycle-time and complaint-volume figurespull the afca fy24 annual review — extract top-3 complaint reasons and percentages for general insurance',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'verify the re-inspection figure used in the linkedin drumbeat t+9 carousel and founder post t+1',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: 'click "connect" on any platform below to enter your api keys 3.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/demo/integrations/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'each user connects their own social media accounts using their own api credentials 2.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/demo/integrations/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'you can revoke access at any time from this page some features may require re-authentication after 30 days',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/demo/integrations/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['price'],
     sentence: 'perfect for growing businesses $249',
-    reason: 'product-ui',
-    layer: 'source',
-    note: "app/demo/settings/page.tsx — plan price shown in the settings demo; pricing is out of this branch's scope",
   },
   {
-    sentence: '$24500active users',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/design-system/DesignSystemClient.tsx — component specimen with placeholder values on the design-system reference page',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: 'san francisco, ca+1 (555) 123-4567',
+  },
+  // app/docs/page.tsx
+  {
+    layer: 'source',
+    file: 'app/docs/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'best practices for multi-platform posting',
   },
   {
-    sentence: '8420bounce rate',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/design-system/DesignSystemClient.tsx — component specimen with placeholder values on the design-system reference page',
+    file: 'app/docs/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'security best practices',
+  },
+  // app/features/ai-content/page.tsx
+  {
+    layer: 'source',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01paste your website url',
   },
   {
-    sentence: 'active users 8420',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/design-system/DesignSystemClient.tsx — component specimen with placeholder values on the design-system reference page',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02',
   },
   {
-    sentence: 'bounce rate 32.4%',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/design-system/DesignSystemClient.tsx — component specimen with placeholder values on the design-system reference page',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02ai builds your brand dna',
   },
   {
-    sentence: 'last updated 2 hours ago - 1.2000 views - 45 shares',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/design-system/DesignSystemClient.tsx — component specimen with placeholder values on the design-system reference page',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03',
   },
   {
-    sentence: 'total revenue$24500',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/design-system/DesignSystemClient.tsx — component specimen with placeholder values on the design-system reference page',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03content generated for each platform',
   },
   {
+    layer: 'source',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04',
+  },
+  {
+    layer: 'source',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      '02ai builds your brand dnawithin seconds, a complete brand profile is built: your unique tone, values, visual identity, and audience signals.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/features/ai-content/page.tsx — describes the product, a limit, a step, a timing or a label',
+      '04review, approve, publishevery post goes through your approval queue.',
   },
   {
+    layer: 'source',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'brand voice ai 01',
+  },
+  // app/integrations/page.tsx
+  {
+    layer: 'source',
+    file: 'app/integrations/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'gpt-4o for fast drafting, summarisation, and creative writing.',
+  },
+  // app/not-found.tsx
+  {
+    layer: 'source',
+    file: 'app/not-found.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      'community-focused posts with engagement promptsseo-optimised descriptions with timestampsx (twitter)punchy threads and single posts under 280 chars',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/features/ai-content/page.tsx — describes the product, a limit, a step, a timing or a label',
+      '404 the page you are looking for might have been removed, had its name changed, or is temporarily unavailable.',
   },
   {
-    sentence:
-      'content that sounds like you,written by ai synthex learns your brand voice and generates platform-native content for all 9 platforms.',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/features/ai-content/page.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/not-found.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'page not found 404',
   },
+  // app/opengraph-image.tsx
   {
-    sentence:
-      'features should feel like cards, not a maze synthex is easiest to understand as 5 steps: capture the idea, ground the plan, choose assets, approve production and learn from the outcome.',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'app/features/page.tsx — describes the product, a limit, a step, a timing or a label',
-  },
-  {
+    file: 'app/opengraph-image.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence: '3 ranked growth directions from your public evidence.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/opengraph-image.tsx — describes what the Opportunity Map returns',
   },
+  // app/opportunity-map/page.tsx
   {
+    layer: 'source',
+    file: 'app/opportunity-map/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
-      'turn your website, social links and rough context into 3 evidence-backed growth directions and 1 clear next move.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/opportunity-map/page.tsx — describes what the Opportunity Map returns',
+      'turn your website, social links and rough context into 3 evidence-backed growth directions and one clear next move.',
   },
+  // app/page.tsx
   {
+    layer: 'source',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'turn your website and public evidence into 3 ranked growth directions.',
-    reason: 'product-ui',
+  },
+  // app/pricing/page.tsx
+  {
     layer: 'source',
-    note: 'app/page.tsx — describes what the Opportunity Map returns',
+    file: 'app/pricing/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'scale when the gates are proven',
   },
   {
+    layer: 'source',
+    file: 'app/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '3 phases.',
+  },
+  // app/privacy/page.tsx
+  {
+    layer: 'source',
+    file: 'app/privacy/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last updated: march 2026',
+  },
+  {
+    layer: 'source',
+    file: 'app/privacy/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: 'synthex pty ltd · abn 62 580 077 456 · brisbane, qld, australia',
+  },
+  // app/roadmap/page.tsx
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'content generation v1q2 2025',
+  },
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'enterprise security featuresq4 2025',
+  },
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q1 2025ai persona learning',
+  },
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q2 2025advanced viral pattern analysis',
+  },
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q3 2025ai video content generation',
+  },
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q4 2025white-label solution',
+  },
+  {
+    layer: 'source',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'team collaboration featuresq3 2025',
+  },
+  // app/security/page.tsx
+  {
+    layer: 'source',
+    file: 'app/security/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      'encrypted api calls, no data retention jwt tokens with secure httponly cookies oauth 2.0 support (google, github, linkedin)',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'app/security/page.tsx — describes the product, a limit, a step, a timing or a label',
+      'jwt tokens with secure httponly cookiesoauth 2.0 support (google, github, linkedin)',
   },
   {
+    layer: 'source',
+    file: 'app/security/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      'copy all 4 values to synthexvisit linkedin.com/developerscreate a new app or select existinggo to "auth" tab for client id & secret',
-    reason: 'product-ui',
+      'oauth 2.0 support (google, github, linkedin)role-based access control (rbac)',
+  },
+  // app/terms/page.tsx
+  {
     layer: 'source',
-    note: 'components/IntegrationModal.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'effective: march 2026',
   },
   {
+    layer: 'source',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
     sentence:
-      'go to "auth" tab for client id & secretuse oauth 2.0 tools to generate access token',
-    reason: 'product-ui',
+      'other liability is limited to the fees paid for the service in the previous 12 months, where the law allows.',
+  },
+  // app/testimonial/[token]/TestimonialForm.tsx
+  {
     layer: 'source',
-    note: 'components/IntegrationModal.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/testimonial/[token]/TestimonialForm.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '/ 2000',
   },
   {
-    sentence: '3 3 date likes',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'components/analytics/EngagementTrendsChart.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'app/testimonial/[token]/TestimonialForm.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'photos (optional, up to 3)',
   },
   {
+    layer: 'source',
+    file: 'app/testimonial/[token]/TestimonialForm.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'please write at least 10 characters.',
+  },
+  {
+    layer: 'source',
+    file: 'app/testimonial/[token]/TestimonialForm.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '— or upload an mp4 file (max 100 mb) —',
+  },
+  // app/welcome/page.tsx
+  {
+    layer: 'source',
+    file: 'app/welcome/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'no posts scheduled for the next 7 days.',
+  },
+  // components/StreakCounter.tsx
+  {
+    layer: 'source',
+    file: 'components/StreakCounter.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'best streak',
+  },
+  // components/command-palette/commands.ts
+  {
+    layer: 'source',
+    file: 'components/command-palette/commands.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'ai indexing awards & directories — tracker',
+  },
+  {
+    layer: 'source',
+    file: 'components/command-palette/commands.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'awards deadlines submission due date',
+  },
+  {
+    layer: 'source',
+    file: 'components/command-palette/commands.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'best time',
+  },
+  {
+    layer: 'source',
+    file: 'components/command-palette/commands.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'industry award',
+  },
+  {
+    layer: 'source',
+    file: 'components/command-palette/commands.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      'track award nominations and directory listings for e-e-a-t and backlinks',
+  },
+  {
+    layer: 'source',
+    file: 'components/command-palette/commands.ts',
+    class: 'credential',
+    kinds: ['neutral'],
     sentence: 'view upcoming award submission deadlines within 90 days',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'components/command-palette/commands.ts — describes the product, a limit, a step, a timing or a label',
   },
   {
-    sentence: 'synthex returns 3 researched directions and a brief you control',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'components/intentscape/IntentScapeProductTour.tsx — describes what the Opportunity Map returns',
+    file: 'components/command-palette/commands.ts',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'view upcoming award submission deadlines within 90 days',
+  },
+  // components/intentscape/demo-data.ts
+  {
+    layer: 'source',
+    file: 'components/intentscape/demo-data.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'is not yet verified.',
+  },
+  // components/intentscape/presentation.ts
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01signal separation',
   },
   {
-    sentence: '3 sources linked · confidence high plan audience',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'components/landing/premium/hero-product-mock.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02upstream causes',
   },
   {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03downstream effects',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04stakeholder shifts',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '05outside analogies',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '07adjacent value',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'downstream effects stakeholder-shifts 04',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'outside analogies 06',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'signal separation upstream-causes 02',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'stakeholder shifts outside-analogies 05',
+  },
+  {
+    layer: 'source',
+    file: 'components/intentscape/presentation.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'upstream causes downstream-effects 03',
+  },
+  // components/landing/footer-section.tsx
+  {
+    layer: 'source',
+    file: 'components/landing/footer-section.tsx',
+    class: 'number',
+    kinds: ['date-time', 'contact-legal'],
+    sentence:
+      '© 2026 synthex pty ltd · abn: 62 580 077 456 · brisbane, qld, australia',
+  },
+  // components/landing/premium/audience-lanes.tsx
+  {
+    layer: 'source',
+    file: 'components/landing/premium/audience-lanes.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'get 3 ranked directions, the gaps still unknown, and a brief you can take into a planning session.',
+  },
+  // components/landing/premium/enterprise-features.tsx
+  {
+    layer: 'source',
+    file: 'components/landing/premium/enterprise-features.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'voice, compliance and licensing gates enforced per workspace.',
+  },
+  // components/landing/premium/hero-product-mock.tsx
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01capturevoice transcript ingested',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02researchevidence bundle assembled',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03strategycampaign plan drafted',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04creativeassets staged for review',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '05approvalawaiting human sign-off',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '06publishqueued for distribution',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'assets staged for review 05',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'awaiting human sign-off 06',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'campaign plan drafted 04',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'evidence bundle assembled 03',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'thu 14:00',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'transcript · 02:14',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'tue 09:00',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'voice transcript ingested 02',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-product-mock.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'wed 10:30',
+  },
+  // components/landing/premium/hero-section.tsx
+  {
+    layer: 'source',
+    file: 'components/landing/premium/hero-section.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'synthex returns 3 ranked growth directions, the sources used, and the gaps still unknown.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'components/landing/premium/hero-section.tsx — describes what the Opportunity Map returns',
   },
+  // components/landing/premium/landing-faq-data.ts
   {
+    layer: 'source',
+    file: 'components/landing/premium/landing-faq-data.ts',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'it returns 3 ranked growth directions, the evidence used, and the gaps still unknown.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'components/landing/premium/landing-faq-data.ts — describes what the Opportunity Map returns',
   },
+  // components/landing/premium/product-walkthrough.tsx
   {
+    layer: 'source',
+    file: 'components/landing/premium/product-walkthrough.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
-      '03 studiocampaign buildsynthex turns the approved direction into storyboards, posts, thumbnails, emails, lead magnets and gen media briefs.',
-    reason: 'product-ui',
+      '3 ranked directions come back with sources and gaps still unknown.',
+  },
+  // components/landing/premium/workflow-timeline.tsx
+  {
     layer: 'source',
-    note: 'components/landing/public-v2.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'components/landing/premium/workflow-timeline.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'public website, social links and notes become 3 ranked directions.',
+  },
+  // components/landing/public-v2.tsx
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      'brand, creative, compliance, seo/aeo/geo, video and qa passes produce the next best campaign route.',
   },
   {
-    sentence: '04 learn roi feedback',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'components/landing/public-v2.tsx — describes the product, a limit, a step, a timing or a label',
+    file: 'components/landing/public-v2.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'brand, evidence and compliance gates',
   },
   {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      'consent, evidence, licensing, brand, compliance, publish and spend gates stay explicit.',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      'researcher, architect, brand, compliance and contrarian passes produce a decision packet with risks and open questions.',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01 researchevidence bundle',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02 council',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02 councilagency-grade review',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03 studiocampaign build',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04 learn',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04 learnroi feedback',
+  },
+  {
+    layer: 'source',
+    file: 'components/landing/public-v2.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '© 2026 synthex pty ltd.',
+  },
+  // components/marketing/BenchmarkTrialForm.tsx
+  {
+    layer: 'source',
+    file: 'components/marketing/BenchmarkTrialForm.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: '+61 4xx xxx xxx',
+  },
+  {
+    layer: 'source',
+    file: 'components/marketing/BenchmarkTrialForm.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '14-day trial · no credit card required · cancel anytime',
+  },
+  // components/marketing/MarketingLayout.tsx
+  {
+    layer: 'source',
+    file: 'components/marketing/MarketingLayout.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '© 2026 synthex.',
+  },
+  // components/opportunity-map/OpportunityMapExperience.tsx
+  {
+    layer: 'source',
+    file: 'components/opportunity-map/OpportunityMapExperience.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01 · sources stay visible',
+  },
+  {
+    layer: 'source',
+    file: 'components/opportunity-map/OpportunityMapExperience.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02 · unknowns stay unknown',
+  },
+  {
+    layer: 'source',
+    file: 'components/opportunity-map/OpportunityMapExperience.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03 · no account connection',
+  },
+  {
+    layer: 'source',
+    file: 'components/opportunity-map/OpportunityMapExperience.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'commercial fit / 100',
+  },
+  {
+    layer: 'source',
+    file: 'components/opportunity-map/OpportunityMapExperience.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'synthex turns them into 3 ranked growth directions, showing what it found, what it inferred and what it still needs to learn.',
-    reason: 'product-ui',
+  },
+  // components/seo/SynthexStructuredData.tsx
+  {
     layer: 'source',
-    note: 'components/opportunity-map/OpportunityMapExperience.tsx — describes what the Opportunity Map returns',
+    file: 'components/seo/SynthexStructuredData.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '2026-05-19',
   },
   {
-    sentence: '**audience resonance**: [how target audience will perceive] 5.',
-    reason: 'advice',
     layer: 'source',
-    note: 'lib/ai/agents/strategic-marketing/agent-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
+    file: 'components/seo/SynthexStructuredData.tsx',
+    class: 'number',
+    kinds: ['date-time'],
     sentence:
-      '**competitive differentiation**: [how it stands out psychologically] ## quality filters: - pronunciation ease (avoid cognitive load) - cultural sensitivity check - trademark likelihood assessment - domain availability consideration - social media handle viability ## input: - psychological strategy: {psychology_analysis} - business category: {business_type} - target audience: {demographics} - brand personality: {desired_traits} generate 5 strategically different names, each optimized for different psychological pathways.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/agents/strategic-marketing/agent-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
+      '2026-05-19organizationsynthexhow synthex plans an approval-gated campaign',
   },
+  // components/strategic-marketing/PsychologyBrandGenerator.tsx
   {
-    sentence:
-      '**memorability enhancers**: [linguistic devices used] ## optimization criteria: - length: 3-7 words (optimal cognitive processing) - clarity: instantly understandable - uniqueness: psychologically distinctive - scalability: works across platforms ## input: - brand name: {selected_brand_name} - psychology strategy: {identified_triggers} - audience profile: {target_demographics} - brand values: {core_values} create 5 taglines, each emphasizing different psychological pathways.',
-    reason: 'advice',
     layer: 'source',
-    note: 'lib/ai/agents/strategic-marketing/agent-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
+    file: 'components/strategic-marketing/PsychologyBrandGenerator.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'first items remembered best',
   },
+  // components/ui/status-pill.tsx
   {
-    sentence:
-      '**motivation & emotion** (1 principle) ## analysis framework: for each client request, identify: ### primary triggers (3-5 most relevant): - **principle name**: [specific psychological effect] - **relevance score**: [1-10 based on audience/product fit] - **implementation strategy**: [how to embed in branding] - **expected impact**: [predicted consumer response] ### supporting triggers (2-3 complementary): - **secondary effects**: [principles that enhance primary triggers] - **amplification methods**: [how to compound psychological impact] ### avoid conflicts: - **contradictory biases**: [principles that would cancel each other] - **audience misalignment**: [effects that might backfire] ## input: business type: {business_type} target demographic: {target_audience} brand goals: {brand_objectives} market position: {competitive_landscape} ## output: provide psychological strategy blueprint in json format for other agents to execute.',
-    reason: 'advice',
     layer: 'source',
-    note: 'lib/ai/agents/strategic-marketing/agent-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
+    file: 'components/ui/status-pill.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'verified staged awaiting approval',
   },
+  // lib/analytics/public-benchmarks.ts
   {
-    sentence: "analyze the client's input for implicit psychological needs 2.",
-    reason: 'advice',
     layer: 'source',
-    note: 'lib/ai/agents/strategic-marketing/agent-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      '"according to the abs, ...") - end with a 3-column summary table: topic | key point | source - write in a factual, authoritative tone — optimise for 0-click answers',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-generator.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      'content structure — comparison: - h1: "[option a] vs [option b]: which is right for you?" - summary table at the top (at least 5 comparison rows) - h2 for each option with pros and cons - conclusion recommending based on use case content structure — case study: - h1: "how [business] helped [client type] [achieve result]" - sections: the challenge | our approach | the results | client testimonial - include specific metrics (numbers, percentages, timeframes) - end with cta to book a consultation',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-generator.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      'content structure — listicle: - h1: "[number] best [thing] in [suburb/area] ([year])" - each item as a numbered h2 - include the business as 1 of the items (not first) - end with a comparison summary table (3 columns: provider | specialty | contact) content structure — news item: - h1: newsy headline with location and date - lead paragraph: who, what, when, where, why (inverted pyramid) - include 1 quote from a named source - end with "about [business name]" boilerplate paragraph',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-generator.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      'content structure — news item: - h1: newsy headline with location and date - lead paragraph: who, what, when, where, why (inverted pyramid) - include 1 quote from a named source - end with "about [business name]" boilerplate paragraphcomparison content structure — comparison: - h1: "[option a] vs [option b]: which is right for you?" - summary table at the top (at least 5 comparison rows) - h2 for each option with pros and cons - conclusion recommending based on use case',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-generator.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence: 'add 1-2 relevant emojis to increase visual appeal and reach',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-scorer.ts — content-improvement suggestion shown to the user',
-  },
-  {
-    sentence:
-      'emojis boost twitter engagement and expand visual presenceinstagraminstagram posts without hashtags have lower discoveryadd 5-15 relevant hashtags for instagram discoverability',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-scorer.ts — content-improvement suggestion shown to the user',
-  },
-  {
-    sentence:
-      'facebook posts with 250-500 characters tend to get better organic reach',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-scorer.ts — content-improvement suggestion shown to the user',
-  },
-  {
-    sentence:
-      "linkedin posts without paragraph breaks have lower reach add blank lines between paragraphs for linkedin's algorithm too many hashtags for linkedin (optimal: 2-5)",
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/content-scorer.ts — content-improvement suggestion shown to the user',
-  },
-  {
-    sentence: '% engagement no published posts yet **7-day activity:**',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/context-builder.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence: '· response rate (90d):',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/context-builder.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      '## expected format { "actionitems": [ { "title": "short action title", "description": "brief description of what to do", "priority": "high" | "medium" | "low" } ], "suggestions": [ { "type": "content" | "growth" | "optimization" | "feature", "title": "short suggestion title", "description": "brief explanation", "actionurl": "/dashboard/..." (optional path to relevant feature) } ] } rules: - extract only items explicitly mentioned or strongly implied in the response - maximum 3 action items and 3 suggestions - if none found, return empty arrays - priority: "high" = do today, "medium" = this week, "low" = when convenient',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/system-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      "**competitor intel**: alert them to competitor moves and opportunities ## response format - keep responses concise (under 300 words unless asked to elaborate) - use markdown for structure when helpful - when suggesting actions, include the specific dashboard section or url path - always extract actionable items and tag them (you'll see instructions for structured data below) ## structured data extraction after each response, mentally identify: - **action items**: specific tasks the user should do (with priority: high/medium/low) - **suggestions**: feature recommendations or strategy tips (with type: content/growth/optimization/feature) these will be extracted programmatically — write naturally and the system handles parsing.",
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/system-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      '**growth coaching**: provide actionable tips to grow their audience 7.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/system-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      "**opportunities** (1-2 items): growth opportunities based on trends ## tone - energetic and positive — start their week right - data-backed — reference specific numbers - forward-looking — focus on what's ahead, not just what happened - brief — the whole digest should be readable in 2 minutes ## rules - lead with the most exciting metric or win - if it was a tough week (declining metrics), frame it constructively with clear recovery steps - always end with an encouraging forward-looking statement - include specific synthex features that could help with each action item",
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/system-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      '**reputation** (1-2 sentences): review response rate, average rating, any unreplied reviews needing attention 4.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/project-manager/system-prompts.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      '>", "suggestedpersonaname": " ", "confidence": <0-100 integer — how confident you are in these results> } rules: - industry must be 1 of the exact values listed above - suggestedtone must be 1 of the exact values listed above - teamsize must be 1 of the exact values listed above - socialhandles should map detected social links to platform keys (twitter, instagram, linkedin, facebook, youtube, tiktok, pinterest, reddit, threads) - if you cannot determine a value, make your best guess and lower the confidence score - return only valid json, no markdown fences or explanation',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/website-analyzer.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
-    sentence:
-      '— best guess based on signals>", "brandcolors": { "primary": " ", "secondary": " ", "accent": " " }, "socialhandles": { " ": " " }, "keytopics": [" ", " ", " "], "targetaudience": "<1-2 sentence description of target audience>", "suggestedtone": "<1 of:',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/ai/website-analyzer.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
+    file: 'lib/analytics/public-benchmarks.ts',
+    class: 'number',
+    kinds: ['date-time'],
     sentence: 'active synthex client accounts over the prior 90 days.',
-    reason: 'definition',
-    layer: 'source',
-    note: 'lib/analytics/public-benchmarks.ts — benchmark methodology and disclosure rule (threshold and window are set in code)',
   },
   {
-    sentence:
-      'anonymised synthex client accounts, –posts published in the last 90 days',
-    reason: 'definition',
     layer: 'source',
-    note: 'lib/analytics/public-benchmarks.ts — benchmark methodology and disclosure rule (threshold and window are set in code)',
+    file: 'lib/analytics/public-benchmarks.ts',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'posts published in the last 90 days',
   },
   {
-    sentence: 'posts published in the last 90 daysactive client accounts',
-    reason: 'definition',
     layer: 'source',
-    note: 'lib/analytics/public-benchmarks.ts — benchmark methodology and disclosure rule (threshold and window are set in code)',
+    file: 'lib/analytics/public-benchmarks.ts',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'public figures publish once the cohort exceeds 25 accounts.',
   },
+  // lib/observability/health-dashboard.ts
   {
-    sentence: '100 rate limit exceeded.',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'lib/config/scaling.config.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: '2000 rate limit exceeded.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/config/scaling.config.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: '500 rate limit exceeded.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/config/scaling.config.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: '" style="font-size:0.875em;color:;" rel="noopener">view',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/content/layout-renderer.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence: 'this link will expire in 24 hours.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/email/email-service.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      '" style="display:inline-block;background:#f59e0b;color:#050508;font-size:12px;font-weight:500;padding:10px 20px;border-radius:3px;text-decoration:none;"> learn more about synthex <!-- footer --> center you received this email because you joined the synthex waitlist.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/email/waitlist-email.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
-    sentence:
-      'of 2 , previous_gate_rejections: none return a visionmap that satisfies the structured schema and the system policy.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/intentscape/model-adapters.ts — instruction inside an AI prompt; tells the model what to produce, never shown as a claim',
-  },
-  {
+    file: 'lib/observability/health-dashboard.ts',
+    class: 'number',
+    kinds: ['date-time'],
     sentence: 'critical errors in last 5 minutes',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/observability/health-dashboard.ts — describes the product, a limit, a step, a timing or a label',
   },
   {
+    layer: 'source',
+    file: 'lib/observability/health-dashboard.ts',
+    class: 'number',
+    kinds: ['date-time'],
     sentence: 'errors in last 5 minutes',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/observability/health-dashboard.ts — describes the product, a limit, a step, a timing or a label',
   },
+  // lib/opportunity-map/index.ts
   {
-    sentence: 'target audience social channels business identifier $1',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'lib/opportunity-map/index.ts — describes the product, a limit, a step, a timing or a label',
-  },
-  {
+    file: 'lib/opportunity-map/index.ts',
+    class: 'credential',
+    kinds: ['neutral'],
     sentence:
-      'brain-2 ↔ pi-ceo (read)vault sees pi-ceo content for obsidian graph view',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/connection-status.ts — internal operator dashboard label, task item or storyboard note',
+      'this was not verified from the supplied evidence and remains editable context.',
   },
   {
+    layer: 'source',
+    file: 'lib/opportunity-map/index.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '/100 ()## brand context',
+  },
+  {
+    layer: 'source',
+    file: 'lib/opportunity-map/index.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '/100 across available tests.',
+  },
+  {
+    layer: 'source',
+    file: 'lib/opportunity-map/index.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'commercial fit: /100 (',
+  },
+  // lib/remotion/help-videos.ts
+  {
+    layer: 'source',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: "once verified, you'll be taken straight into",
+  },
+  {
+    layer: 'source',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      'mirrors linear comments tagged [decision] into ~/synthex-brain-2/04-decisions/',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/connection-status.ts — internal operator dashboard label, task item or storyboard note',
+      'connecting your social media accounts is step 2 of your activation checklist.',
   },
   {
+    layer: 'source',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      '"flood failure to future fairness" oct 2024 · pull cycle-time + complaint-volume dataraevidence-base §1.1',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
+      'step 2 of activation: connect instagram, facebook, linkedin, and your other platforms to unlock ai-powered publishing.',
   },
   {
+    layer: 'source',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      'evidence-base §4.2changes-requiredverificationre-inspection rate figure',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
+      'step 3 of activation: connect your google business profile to sync reviews, insights, and local search data.',
   },
   {
+    layer: 'source',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'step 4 of activation is connecting your ai provider.',
+  },
+  {
+    layer: 'source',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
     sentence:
-      'land clips at 00-inbox/clips/ with the right template portfolio 1-time',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
+      'step 4 of activation: connect your ai provider (openai, anthropic, gemini, or openrouter) to unlock the full content studio.',
   },
   {
-    sentence:
-      'land clips at 00-inbox/clips/ with the right templateportfolioone-time',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
+    file: 'lib/remotion/help-videos.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'your google business profile is step 3 of activation.',
+  },
+  // lib/seo/metadata.ts
+  {
+    layer: 'source',
+    file: 'lib/seo/metadata.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'data protection gdpr',
   },
   {
-    sentence:
-      'open synthex-brain-2 in obsidian 1-time vault setup · adds graph view across portfolio operations',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
+    file: 'lib/seo/metadata.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'gdpr terms of service',
   },
   {
-    sentence:
-      'open synthex-brain-2 in obsidianone-time vault setup · adds graph view across portfolio operations',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'pilot for the entire training-video system · 4 scenes · ~45 min recording time',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      're-inspection rate figuresource it or replace with the structural argument (already drafted)ralinkedin t+4 carousel',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      't+1 origin · t+30 reflection · founder voice tag · placeholder claims need verifying',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: 'things only you can do · most under 30 minutes',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence:
-      'unlocks 39 more videoschanges-requiredverificationsenate inquiry · cycle-time figures',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/quick-access/items.ts — internal operator dashboard label, task item or storyboard note',
-  },
-  {
-    sentence: '"1000 engaged followers beat 100000 passive ones" | synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '"1000 engaged followers will always beat 100000 passive ones."',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '4 to 6 weeks allows enough time for momentum to build.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '5 linkedin best practices for business growth | synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '5 linkedin best practices for business growth.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '5 social media mistakes killing your growth | synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '5 social media mistakes that are silently killing your growth.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '6 instagram growth tactics that work in 2026 | synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '6 instagram growth tactics that work in 2026.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '7 ways to increase social media engagement | synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: '7 ways to increase your social media engagement.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'a strong content strategy has 4 pillars: clear goals tied to business outcomes, deep audience understanding, a defined content mix across education, entertainment, and promotion,',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'book a 20-minute live demo with the synthex team.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — describes a Synthex feature or offer in a how-to video',
-  },
-  {
-    sentence:
-      'choosing 3 to 5 tone descriptors like friendly, expert, or bold,',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'competitive analysis tip: spend 30 minutes a month studying your top 3 competitors.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'conversion social media synthex 3 cta formulas that drive action.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'defining your brand voice takes 3 things: knowing your audience,',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'divided by total reach, multiplied by 100.',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence: 'engagement synthex 3 secrets behind viral social media content.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'example: 10 sign-ups from 500 link clicks equals a 2 percent conversion rate.',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence:
-      'example: 100 interactions on a post seen by 2000 people equals a 5 percent engagement rate.',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence:
-      'example: a post seen by 3000 people without any boosting has a reach of 3000.',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence:
-      'example: a skincare brand partnering with a dermatologist who has 200000 instagram followers.',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence:
-      'example: posting the same content with 2 different opening lines to 2 audience segments,',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence: 'follower count alone means nothing without these 5.',
-    reason: 'definition',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — defines a social media metric',
-  },
-  {
-    sentence:
-      'formula: conversions divided by total visitors, multiplied by 100.',
-    reason: 'formula',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — worked formula or example with hypothetical inputs',
-  },
-  {
-    sentence:
-      'grow your instagram following with these 6 tactics that work right now.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'here are 7 proven content types that build audiences.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'how to build a linkedin presence that attracts clients — 5 steps.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'how to run a social media campaign that delivers real results — 5 steps.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'how to write a brand voice guide in 30 minutes | synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'how to write a brand voice guide in 30 minutes — 5 steps.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'how to write social media captions that drive real engagement — 5 steps.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'in days 61 to 90: scale what works, experiment with video, and start growing your following intentionally.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'in this explainer: • the 4 pillars of a content strategy • how to choose your content mix • why strategy beats volume every time start free: #contentstrategy #socialmediamarketing #digitalmarketing #synthex',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'like "100 new leads" or "500 link clicks."',
-    reason: 'target',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — example goal to aim for, not a result',
-  },
-  {
-    sentence:
-      'mistake 3: only promoting, never educating or entertaining — the 3 to 1 rule keeps audiences engaged.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'most businesses operate with 3 to 5 pillars.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'open campaign planner, enter your campaign goal and target audience, and synthex generates a 30-day content calendar — 1 post per day, across all your connected',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — describes a Synthex feature or offer in a how-to video',
-  },
-  {
-    sentence:
-      'scheduling a month of content in minutes | synthexdiscover how the synthex campaign planner generates a 30-day content calendar across all your platforms — then schedules everything automatically.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — describes a Synthex feature or offer in a how-to video',
-  },
-  {
-    sentence:
-      'see synthex create real content for your business in a live 20-minute demo.',
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — describes a Synthex feature or offer in a how-to video',
-  },
-  {
-    sentence:
-      'set aside 2 hours once a week to create all your social posts at once.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'social media growth small business 90 day plan',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'spend 15 minutes engaging with accounts in your niche',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence: 'step 4: reply to every comment in the first 60 minutes.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
-    sentence:
-      'the 90-day roadmap every small business should follow for social media growth.',
-    reason: 'advice',
-    layer: 'source',
-    note: 'lib/remotion/educational-content.ts — marketing advice or a listicle title in an educational video script',
-  },
-  {
+    file: 'lib/seo/metadata.ts',
+    class: 'number',
+    kinds: ['product-limit'],
     sentence:
       'turn your website and public evidence into 3 ranked growth directions, then run approval-gated campaigns.',
-    reason: 'product-ui',
+  },
+  // lib/videos/featuredProgramme.ts
+  {
     layer: 'source',
-    note: 'lib/seo/metadata.ts — describes what the Opportunity Map returns',
+    file: 'lib/videos/featuredProgramme.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'best metric:',
+  },
+  // public/llms.txt
+  {
+    layer: 'source',
+    file: 'public/llms.txt',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '- last updated: 2026-05-25',
   },
   {
-    sentence:
-      'x oauth 2.0 client credentials (twitter_client_id/secret) not configured',
-    reason: 'product-ui',
     layer: 'source',
-    note: 'lib/social/twitter-sync-service.ts — describes the product, a limit, a step, a timing or a label',
+    file: 'public/llms.txt',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      '- support: contact form, with human follow-up within 1 business day',
+  },
+  // ── rendered ─────────────────────────────────────────────
+  // app/(landing)/restoreassist/insurers/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'one claim, 5 steps, the same report at the end.',
   },
   {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'step 1',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'step 2',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'step 3',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'step 4',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/insurers/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'step 5',
+  },
+  // app/(landing)/restoreassist/pricing/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$0',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$1.67 per report',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$100',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$2.00 per report',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$2.50 per report',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$20',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$50',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$99',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
+    sentence: '$99 a month, gst included, 50 inspection reports.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$99 aud',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '$99/month',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '15 days, no credit card',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '25 extra reports',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '30 credits',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '30 quick fill credits',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '50',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '50 credits over 15 days',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '50 every month',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '50 inspection report credits',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '50 inspection reports a month',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '50 report credits across 15 days',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
     sentence:
-      "built for users who don't want to hire an agency but want agency-quality output 24/7.",
-    reason: 'product-ui',
-    layer: 'source',
-    note: 'public/llms.txt — describes who the product is built for',
+      '50 report credits over 15 days is enough to run a real water-damage job from the site photos through to the finished report — and to decide, on your own evidence, whether what comes out the other end is worth $99 a month.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '50 reports a month.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '60 extra reports',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
+    sentence: '60 reports for $100 · 25 reports for $50 · 8 reports for $20.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '8 extra reports',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price', 'product-limit'],
+    sentence:
+      'a report pack tops that up for the month it is needed — 60 reports for $100, 25 reports for $50, 8 reports for $20.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'first month adds 10 reports on top',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence:
+      'it is a separate usage-based amount on top of the $99, and it moves with how much gets written.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: 'monthly · $99',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'pricing as published at on 06/08/2026.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'start the 15-day trial',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'that sits exactly on the 50 reports the plan already includes.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'the 15-day trial needs no credit card.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'the plan includes 50 reports a month.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/(landing)/restoreassist/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'what happens when the 15 days are up?',
+  },
+  // app/about/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/about/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/about/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/about/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/about/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '2026-05-19',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/about/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '© 2026 synthex pty ltd.',
+  },
+  // app/add-ons/mcp-app-development/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'alpic does not publish public pricing as of may 2026.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'ordinal-step-version'],
+    sentence:
+      "alpic's skybridge framework (mit-licensed, v1.0 released may 2026) is the stack we build on.",
+  },
+  {
+    layer: 'rendered',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'from aud 1200/month (recurring)',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: 'from aud 2500 (one-off)',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/add-ons/mcp-app-development/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: 'scoped from discovery — typical aud 12000–35000',
+  },
+  // app/agencies/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/agencies/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'contact-legal'],
+    sentence:
+      '© 2026 synthex pty ltd · abn: 62 580 077 456 · brisbane, qld, australia',
+  },
+  // app/analytics/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/analytics/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'your best posts based on engagement',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/analytics/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '0',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/analytics/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last 7 days',
+  },
+  // app/api-reference/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/api-reference/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      'secure authentication with rotating api keys and oauth 2.0 support.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/api-reference/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '© 2026 synthex.',
+  },
+  // app/auth/reset-password/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/auth/reset-password/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'must be at least 8 characters',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/auth/reset-password/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'your new password must be at least 8 characters long',
+  },
+  // app/benchmark/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: '+61 4xx xxx xxx',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '14-day trial · no credit card required · cancel anytime',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'anonymised aggregate across # active synthex client accounts over the prior 90 days.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'based on # anonymised synthex client accounts, 16/07/2026–14/10/2026.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'based on # anonymised synthex client accounts, distinct active platforms as of 14/10/2026.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'claims are computed over the rolling 90-day window ending at the time the page was last rendered.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'posts published in the last 90 days',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'start your 14-day trial and see what synthex can do for your local marketing — with the same transparent measurement we use on this page.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'the page revalidates every 10 minutes, so figures refresh throughout the day without changing mid-visit.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'the synthex client cohort has not yet reached our minimum disclosure threshold of 25 accounts.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/benchmark/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'we only publish a claim once the cohort contains at least 25 active client accounts.',
+  },
+  // app/bio/[slug]/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/bio/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '404',
+  },
+  // app/blog/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/blog/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '# min read14 october 2026',
+  },
+  // app/brand-generator/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/brand-generator/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '1',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/brand-generator/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '2',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/brand-generator/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '3',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/brand-generator/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '4',
+  },
+  // app/changelog/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'ordinal-step-version'],
+    sentence: '1.3.0featureoctober 2024',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'ordinal-step-version'],
+    sentence: '1.4.0securitynovember 2024',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'ordinal-step-version'],
+    sentence: '1.5.0featuredecember 2024',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/changelog/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'ordinal-step-version'],
+    sentence: '2.0.0majorjanuary 2025',
+  },
+  // app/clients/[slug]/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '# out of 5 stars',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '#/20',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '#:00',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: '+61 2 1111 1111',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: '1 fixture street',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'authority score: # out of 100',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'composite · v1.1',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['date-time', 'contact-legal'],
+    sentence:
+      'fixture business name is located at 1 fixture street, fixtureville, nsw, 2000.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'fixtureville, nsw, 2000',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'oct 2026',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'powered by synthexauthority hub · 2026',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/clients/[slug]/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence:
+      'you can reach fixture business name by phone at +61 2 1111 1111 or visit their website at',
+  },
+  // app/credential-intake/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/credential-intake/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'link expires 10/#/2026, #:#:# am.',
+  },
+  // app/data-deletion/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/data-deletion/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      'up to 90 days: a limited set of records may be retained where required for legal or security compliance, then permanently deleted.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/data-deletion/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last updated: july 2026',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/data-deletion/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'up to 90 days: a limited set of records may be retained where required for legal or security compliance, then permanently deleted.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/data-deletion/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'within 30 days: account deletion and email requests are actioned, and personal data is permanently removed from our active systems.',
+  },
+  // app/demo/integrations/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/demo/integrations/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      '1.each user connects their own social media accounts using their own api credentials',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/integrations/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '2.click "connect" on any platform below to enter your api keys',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/integrations/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      '3.your credentials are encrypted and stored securely in your account',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/integrations/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '4.posts go directly from synthex to your social media accounts',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/integrations/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'some features may require re-authentication after 30 days',
+  },
+  // app/demo/settings/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['price'],
+    sentence: '$249',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: '+1 (555) 123-4567',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '30',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'expires 12/25',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/demo/settings/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'max size 5mb.',
+  },
+  // app/design-system/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '#22c55e',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '100',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '200',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '300',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '400',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '500',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '600',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '700',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '800',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '900',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '950',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/design-system/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'synthex design systemv4.0',
+  },
+  // app/docs/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/docs/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'best practices for multi-platform posting',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/docs/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'security best practices',
+  },
+  // app/features/ai-content/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/features/ai-content/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04',
+  },
+  // app/features/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/features/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '05',
+  },
+  // app/integrations/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/integrations/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'gpt-4o for fast drafting, summarisation, and creative writing.',
+  },
+  // app/intentscape/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01 / signal separation',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      '01resolve buyer uncertainty first78%incomplete comparison and usage proof prevents qualified buyers from resolving uncertainty before purchase.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02 / upstream causes',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      '02repair offer-to-audience fit69%the active audience prioritises a different outcome, so polished creative attracts attention without intent.target buyer · product owner',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03 / downstream effects',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      '03build a creative learning system73%disconnected asset production prevents the team from learning which proof, format and audience combination changes behaviour.marketing operator · creative team',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04 / stakeholder shifts',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '05 / outside analogies',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '06',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '06 / counterfactuals',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '07',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '07 / adjacent value',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '1.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '2.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '3.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'direction 01resolve buyer uncertainty first78% confidence',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'direction 02repair offer-to-audience fit69% confidence',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/intentscape/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'direction 03build a creative learning system73% confidence',
+  },
+  // app/opportunity-map/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/opportunity-map/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence:
+      '01 · sources stay visible02 · unknowns stay unknown03 · no account connection',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/opportunity-map/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'direction 1',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/opportunity-map/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'direction 2',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/opportunity-map/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'direction 3',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/opportunity-map/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'synthex turns them into 3 ranked growth directions, showing what it found, what it inferred and what it still needs to learn.',
+  },
+  // app/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'voice, compliance and licensing gates enforced per workspace.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '01capture',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '02research',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '03strategy',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '04creative',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '05approval',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '06publish',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '08',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      '3 ranked directions come back with sources and gaps still unknown.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'get 3 ranked directions, the gaps still unknown, and a brief you can take into a planning session.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'go to stage 1',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'go to stage 2',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'go to stage 3',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'go to stage 4',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'go to stage 5',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'go to stage 6',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'it returns 3 ranked growth directions, the evidence used, and the gaps still unknown.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'public website, social links and notes become 3 ranked directions.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'rule 01',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'rule 02',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'rule 03',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'stage 01 · capture',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence:
+      'synthex returns 3 ranked growth directions, the sources used, and the gaps still unknown.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'transcript · 02:14',
+  },
+  // app/pricing/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/pricing/page.tsx',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'scale when the gates are proven',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/pricing/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '3 phases.',
+  },
+  // app/privacy/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/privacy/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'last updated: march 2026',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/privacy/page.tsx',
+    class: 'number',
+    kinds: ['contact-legal'],
+    sentence: 'synthex pty ltd · abn 62 580 077 456 · brisbane, qld, australia',
+  },
+  // app/roadmap/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q1 2025',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q2 2025',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q3 2025',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/roadmap/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'q4 2025',
+  },
+  // app/security/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/security/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'jwt + oauth 2.0',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/security/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: 'oauth 2.0 support (google, github, linkedin)',
+  },
+  // app/terms/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '4.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '5.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '6.',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'effective: march 2026',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/terms/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence:
+      'other liability is limited to the fees paid for the service in the previous 12 months, where the law allows.',
+  },
+  // app/testimonial/[token]/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/testimonial/[token]/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '0 / 2000',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/testimonial/[token]/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: 'photos (optional, up to 3)',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/testimonial/[token]/page.tsx',
+    class: 'number',
+    kinds: ['product-limit'],
+    sentence: '— or upload an mp4 file (max 100 mb) —',
+  },
+  // app/welcome/page.tsx
+  {
+    layer: 'rendered',
+    file: 'app/welcome/page.tsx',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '#/100',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/welcome/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'fri, 16 oct, 09:00 am',
+  },
+  {
+    layer: 'rendered',
+    file: 'app/welcome/page.tsx',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: 'no posts scheduled for the next 7 days.',
+  },
+  // ── api ─────────────────────────────────────────────
+  // app/api/analytics/performance/route.ts
+  {
+    layer: 'api',
+    file: 'app/api/analytics/performance/route.ts',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '9:00',
+  },
+  // app/api/analytics/route.ts
+  {
+    layer: 'api',
+    file: 'app/api/analytics/route.ts',
+    class: 'number',
+    kinds: ['date-time'],
+    sentence: '30d',
+  },
+  // app/api/auth/resend-verification/route.ts
+  {
+    layer: 'api',
+    file: 'app/api/auth/resend-verification/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence: 'email is already verified',
+  },
+  // app/api/opportunity-map/route.ts
+  {
+    layer: 'api',
+    file: 'app/api/opportunity-map/route.ts',
+    class: 'credential',
+    kinds: ['neutral'],
+    sentence:
+      'this was not verified from the supplied evidence and remains editable context.',
+  },
+  {
+    layer: 'api',
+    file: 'app/api/opportunity-map/route.ts',
+    class: 'number',
+    kinds: ['ordinal-step-version'],
+    sentence: '#/100',
   },
 ];
-
-export const allowKeys = (layer: AllowEntry['layer']) =>
-  new Set(
-    ALLOW_LIST.filter(e => e.layer === layer).map(e =>
-      e.sentence.replace(/\s+/g, '')
-    )
-  );
