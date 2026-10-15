@@ -38,7 +38,6 @@ import {
   EMPTY_SEEDS,
   GENERATED_SEEDS,
   NOT_CLAIMS,
-  PUBLISHED_OFF_SITE,
   ROOT,
   REVIEWER_MUTANTS,
   ROUND_5_REMOVED,
@@ -55,16 +54,12 @@ import {
   seedWords,
   tripwireHits,
   tripwireHitsInSource,
+  tripwireSourceInventory,
 } from './helpers/public-claims';
 
 const inventory = publicSourceInventory();
 // The tripwire also reads what API routes import, and off-site published copy.
-const tripwireInventory = [
-  ...new Set([
-    ...publicSourceInventory({ followRouteImports: true }),
-    ...PUBLISHED_OFF_SITE.map(f => path.join(ROOT, f)),
-  ]),
-];
+const tripwireInventory = tripwireSourceInventory();
 
 describe('public copy — inventory', () => {
   it.each([

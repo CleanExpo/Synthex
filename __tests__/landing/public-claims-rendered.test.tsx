@@ -62,6 +62,7 @@ import {
   rel,
   renderedSentencesText,
   routeOf,
+  isGovernedUnchanged,
   tripwireHits,
 } from './helpers/public-claims';
 
@@ -997,9 +998,9 @@ describe('public copy — unsupported claims (rendered)', () => {
       for (const marker of fixture?.markers ?? []) {
         expect(text).toContain(marker);
       }
-      const findings = tripwireHits(text).map(
-        hit => `${hit.rule} — "${hit.sentence}"`
-      );
+      const findings = tripwireHits(text, undefined, {
+        governed: isGovernedUnchanged(relative),
+      }).map(hit => `${hit.rule} — "${hit.sentence}"`);
       expect(findings).toEqual([]);
     },
     60_000

@@ -1097,58 +1097,100 @@ export const TRIPWIRE_SEEDS: string[] = [
     ),
   ]),
 ];
-const SEED_KEYS = TRIPWIRE_SEEDS.map(seed => ({
-  seed,
-  key: seedKeyOf(seed),
-  short: seedWords(seed) < SHORT_SEED_WORDS,
-}));
+/**
+ * Seeds retired with a reason. They stay in the tripwire: a retired text that
+ * is live anywhere is a finding, except inside GOVERNED_UNCHANGED_PATHS.
+ */
+export const RETIRED_SEEDS: RetiredSeed[] = (() => {
+  try {
+    return (
+      JSON.parse(readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8'))
+        .retired ?? []
+    );
+  } catch {
+    return [];
+  }
+})();
 
-/** Seeds whose plain text is empty (markup only): they could never match. */
-export const EMPTY_SEEDS = SEED_KEYS.filter(s => !s.key).map(s => s.seed);
+/**
+ * The only paths where a retired seed's text may stay live: files this branch
+ * must leave byte-identical to base 83243588 (pricing pages are governed
+ * separately, docs/governance/CLAUDE.md:20). public-claims-seeds.test.ts
+ * fails if any of them differs from base, so the exception holds only while
+ * they are unchanged.
+ */
+export const GOVERNED_UNCHANGED_PATHS = [
+  'app/(landing)/restoreassist/pricing/page.tsx',
+  'app/(landing)/restoreassist/pricing/plan-data.ts',
+  'app/(landing)/restoreassist/pricing/report-volume-picker.tsx',
+];
+export const isGovernedUnchanged = (file: string) =>
+  GOVERNED_UNCHANGED_PATHS.includes(
+    path.isAbsolute(file) ? path.relative(ROOT, file) : file
+  );
 
 // Short seeds (under SHORT_SEED_WORDS words) match only an exact whole
 // segment; longer ones match anywhere in the stream, found through an index
 // of their first 8 characters so a stream is scanned once.
-const SHORT_SEED_KEYS = new Map(
-  SEED_KEYS.filter(s => s.short && s.key).map(s => [s.key, s.seed])
-);
 const PREFIX = 8;
-const SEED_INDEX = new Map<string, typeof SEED_KEYS>();
-for (const entry of SEED_KEYS) {
-  if (entry.short || entry.key.length < PREFIX) continue;
-  const head = entry.key.slice(0, PREFIX);
-  SEED_INDEX.set(head, [...(SEED_INDEX.get(head) ?? []), entry]);
-}
-/** Long seeds whose key is under 8 characters (checked one by one). */
-const UNINDEXED_SEEDS = SEED_KEYS.filter(
-  s => !s.short && s.key && s.key.length < PREFIX
-);
-
-function seedsIn(stream: string, segments: string[]): string[] {
-  const found = new Set<string>();
-  for (let i = 0; i + PREFIX <= stream.length; i++) {
-    const bucket = SEED_INDEX.get(stream.slice(i, i + PREFIX));
-    for (const { seed, key } of bucket ?? []) {
-      if (stream.startsWith(key, i)) found.add(seed);
+function seedMatcher(seeds: string[]) {
+  const entries = seeds.map(seed => ({
+    seed,
+    key: seedKeyOf(seed),
+    short: seedWords(seed) < SHORT_SEED_WORDS,
+  }));
+  const short = new Map(
+    entries.filter(s => s.short && s.key).map(s => [s.key, s.seed])
+  );
+  const index = new Map<string, typeof entries>();
+  for (const entry of entries) {
+    if (entry.short || entry.key.length < PREFIX) continue;
+    const head = entry.key.slice(0, PREFIX);
+    index.set(head, [...(index.get(head) ?? []), entry]);
+  }
+  // Long seeds whose key is under 8 characters (checked one by one).
+  const unindexed = entries.filter(
+    s => !s.short && s.key && s.key.length < PREFIX
+  );
+  const match = (stream: string, segments: string[]): string[] => {
+    const found = new Set<string>();
+    for (let i = 0; i + PREFIX <= stream.length; i++) {
+      const bucket = index.get(stream.slice(i, i + PREFIX));
+      for (const { seed, key } of bucket ?? []) {
+        if (stream.startsWith(key, i)) found.add(seed);
+      }
     }
-  }
-  for (const { seed, key } of UNINDEXED_SEEDS) {
-    if (stream.includes(key)) found.add(seed);
-  }
-  for (const segment of segments) {
-    const seed = SHORT_SEED_KEYS.get(seedKeyOf(segment));
-    if (seed !== undefined) found.add(seed);
-  }
-  return [...found];
+    for (const { seed, key } of unindexed) {
+      if (stream.includes(key)) found.add(seed);
+    }
+    for (const segment of segments) {
+      const seed = short.get(seedKeyOf(segment));
+      if (seed !== undefined) found.add(seed);
+    }
+    return [...found];
+  };
+  return { entries, match };
 }
+
+const ACTIVE = seedMatcher(TRIPWIRE_SEEDS);
+const RETIRED = seedMatcher(RETIRED_SEEDS.map(r => r.text));
+
+/** Seeds whose plain text is empty (markup only): they could never match. */
+export const EMPTY_SEEDS = ACTIVE.entries.filter(s => !s.key).map(s => s.seed);
 
 /**
  * Blocking tripwire over plain text, one line per segment source (a rendered
  * block, an API string): a long seed anywhere in the text (whitespace and
  * markup splits ignored), a short seed as a whole segment, or a
- * high-precision pattern in a sentence. Nothing is allow-listed.
+ * high-precision pattern in a sentence. Nothing is allow-listed. Retired
+ * seeds are matched too ('retired-seed'), unless the text comes from a
+ * governed unchanged path.
  */
-export function tripwireHits(raw: string, segments?: string[]): ClaimHit[] {
+export function tripwireHits(
+  raw: string,
+  segments?: string[],
+  { governed = false }: { governed?: boolean } = {}
+): ClaimHit[] {
   const text = raw.replace(/https?:\/\/[^\s"'<>)]+/g, ' ');
   const hits: ClaimHit[] = [];
   for (const sentence of text
@@ -1159,11 +1201,14 @@ export function tripwireHits(raw: string, segments?: string[]): ClaimHit[] {
     }
   }
   const stream = streamKeyOf([text]);
-  for (const seed of seedsIn(
-    stream,
-    segments ?? segmentTexts(text.split(/\n+/))
-  )) {
+  const segs = segments ?? segmentTexts(text.split(/\n+/));
+  for (const seed of ACTIVE.match(stream, segs)) {
     hits.push({ sentence: seed, rule: 'seed' });
+  }
+  if (!governed) {
+    for (const seed of RETIRED.match(stream, segs)) {
+      hits.push({ sentence: seed, rule: 'retired-seed' });
+    }
   }
   return hits;
 }
@@ -1685,16 +1730,19 @@ export function tripwireHitsInSource(
   source: string,
   fileName: string
 ): ClaimHit[] {
+  const governed = isGovernedUnchanged(fileName);
+  const isSeed = (h: ClaimHit) =>
+    h.rule === 'seed' || h.rule === 'retired-seed';
   const patterns = scanSource(source, fileName, text =>
-    tripwireHits(text).filter(h => h.rule !== 'seed')
+    tripwireHits(text).filter(h => !isSeed(h))
   );
   // Seeds are long exact phrases no class list or identifier can produce, so
   // their stream keeps every fragment, wiring-looking ones included.
   const copy = extractCopyFragments(source, fileName, { keepWiring: true });
   const texts = copy.map(f => f.text);
-  const seeds = tripwireHits(texts.join('\n'), segmentTexts(texts)).filter(
-    h => h.rule === 'seed'
-  );
+  const seeds = tripwireHits(texts.join('\n'), segmentTexts(texts), {
+    governed,
+  }).filter(isSeed);
   return [...patterns, ...seeds];
 }
 
@@ -1859,6 +1907,16 @@ export function publicSourceInventory({
     }
   }
   return [...seen, path.join(ROOT, 'public/llms.txt')].sort();
+}
+
+/** Every file the source tripwire reads (also the retired-seed liveness scope). */
+export function tripwireSourceInventory(): string[] {
+  return [
+    ...new Set([
+      ...publicSourceInventory({ followRouteImports: true }),
+      ...PUBLISHED_OFF_SITE.map(f => path.join(ROOT, f)),
+    ]),
+  ].filter(f => existsSync(f));
 }
 
 /** Same-origin API route files that public code references. */

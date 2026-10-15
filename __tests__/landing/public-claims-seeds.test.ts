@@ -10,6 +10,13 @@
  * history is shorter, so regeneration yields a subset and main stays green.
  * Duplicate committed seeds fail.
  *
+ * Retirement is mechanical: a retired seed stays in the tripwire, and its
+ * text must not be live in any current in-scope public file, render or API
+ * response, except inside GOVERNED_UNCHANGED_PATHS — which this suite pins
+ * byte-identical to base (Git blob hash). A retired seed whose text is live
+ * outside those paths satisfies neither completeness nor the append-only
+ * check.
+ *
  * Needs the full Git history back to 83243588 (CI checks out with
  * fetch-depth: 0). Without it the test fails, and says so: an unavailable
  * check must not pass.
@@ -23,8 +30,12 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import {
   GENERATED_SEEDS_FILE,
+  GOVERNED_UNCHANGED_PATHS,
   ROOT,
+  isGovernedUnchanged,
   seedKeyOf,
+  tripwireHitsInSource,
+  tripwireSourceInventory,
   type GeneratedSeed,
   type RetiredSeed,
 } from './helpers/public-claims';
@@ -43,10 +54,48 @@ const seedFile = (json: string) =>
 const current = () =>
   seedFile(readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8'));
 const committedSeeds = () => current().seeds;
+/**
+ * Retired seeds whose text is live in a current in-scope public file outside
+ * GOVERNED_UNCHANGED_PATHS. Such a retirement accounts for nothing: it
+ * neither satisfies completeness nor the append-only check (and the tripwire
+ * itself reports the live text as a 'retired-seed' finding).
+ */
+let liveRetired: Set<string> | null = null;
+const liveRetiredKeys = () => {
+  liveRetired ??= new Set(
+    tripwireSourceInventory()
+      .filter(file => !isGovernedUnchanged(file))
+      .flatMap(file => tripwireHitsInSource(readFileSync(file, 'utf8'), file))
+      .filter(hit => hit.rule === 'retired-seed')
+      .map(hit => seedKeyOf(hit.sentence))
+  );
+  return liveRetired;
+};
 const retiredKeys = () =>
-  new Set((current().retired ?? []).map(r => seedKeyOf(r.text)));
+  new Set(
+    (current().retired ?? [])
+      .map(r => seedKeyOf(r.text))
+      .filter(key => !liveRetiredKeys().has(key))
+  );
 
 describe('public copy — committed tripwire seeds cover the Git-history generator', () => {
+  // The governed exception holds only while those files are exactly base.
+  it.each(GOVERNED_UNCHANGED_PATHS)(
+    'keeps governed path %s byte-identical to base 83243588',
+    file => {
+      const at = (args: string[]) =>
+        execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
+      expect({ file, blob: at(['hash-object', file]) }).toEqual({
+        file,
+        blob: at(['rev-parse', `${BASE}:${file}`]),
+      });
+    }
+  );
+
+  it('has no retired seed live outside governed paths', () => {
+    expect([...liveRetiredKeys()]).toEqual([]);
+  });
+
   it('has the history the generator reads', () => {
     let reachable = false;
     try {
