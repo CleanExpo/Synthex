@@ -1746,43 +1746,119 @@ export function tripwireHitsInSource(
   return [...patterns, ...seeds];
 }
 
-// Rendered markup → sentences: block-level tags end a sentence, inline tags
-// (<strong>, <span>…) do not.
-const BLOCK_TAG =
-  /<\/?(?:p|div|li|ul|ol|h[1-6]|section|article|header|footer|nav|main|aside|td|th|tr|table|br|hr|button|label|option|select|figcaption|blockquote|dd|dt|form|input|textarea|text|tspan|svg|g)\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
-// A tag, with quoted attributes that may contain ">" ("[&>svg]:pl-7").
-const ANY_TAG = /<(?:[^>"']|"[^"]*"|'[^']*')*>/g;
+// Rendered markup → sentences: block-level elements end a sentence, inline
+// elements (<strong>, <span>…) do not. The markup is parsed by the DOM of the
+// jsdom test environment (not by regexes), so scripts and styles are
+// recognised by element type.
+const BLOCK_ELEMENTS = new Set([
+  'p',
+  'div',
+  'li',
+  'ul',
+  'ol',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'section',
+  'article',
+  'header',
+  'footer',
+  'nav',
+  'main',
+  'aside',
+  'td',
+  'th',
+  'tr',
+  'table',
+  'br',
+  'hr',
+  'button',
+  'label',
+  'option',
+  'select',
+  'figcaption',
+  'blockquote',
+  'dd',
+  'dt',
+  'form',
+  'input',
+  'textarea',
+  'text',
+  'tspan',
+  'svg',
+  'g',
+]);
+const COPY_ATTRIBUTES = [
+  'alt',
+  'title',
+  'aria-label',
+  'placeholder',
+  'content',
+  'value',
+];
+
+// JSON-LD: crawlers read each string value, so each becomes its own line.
+function jsonStrings(json: string): string {
+  try {
+    const out: string[] = [];
+    const walkJson = (v: unknown): void => {
+      if (typeof v === 'string') out.push(v);
+      else if (Array.isArray(v)) v.forEach(walkJson);
+      else if (v && typeof v === 'object') Object.values(v).forEach(walkJson);
+    };
+    walkJson(JSON.parse(json));
+    return `\n${out.join('\n')}\n`;
+  } catch {
+    return `\n${json}\n`;
+  }
+}
 
 export function renderedSentencesText(markup: string): string {
-  const attributes = [
-    ...markup.matchAll(
-      /\s(?:alt|title|aria-label|placeholder|content|value)="([^"]*)"/g
-    ),
-  ].map(m => m[1]);
-  // JSON-LD: crawlers read each string value, so each becomes its own line.
-  const jsonStrings = (json: string) => {
-    try {
-      const out: string[] = [];
-      const walk = (v: unknown): void => {
-        if (typeof v === 'string') out.push(v);
-        else if (Array.isArray(v)) v.forEach(walk);
-        else if (v && typeof v === 'object') Object.values(v).forEach(walk);
-      };
-      walk(JSON.parse(json));
-      return `\n${out.join('\n')}\n`;
-    } catch {
-      return `\n${json}\n`;
+  if (typeof document === 'undefined') {
+    throw new Error(
+      'renderedSentencesText needs a DOM: run it under the jsdom test environment'
+    );
+  }
+  // A <template>'s content is parsed but inert: no script runs, no resource loads.
+  const template = document.createElement('template');
+  template.innerHTML = markup;
+  const root = template.content;
+  const parts: string[] = [];
+  const attributes: string[] = [];
+  const visit = (node: Node): void => {
+    if (node.nodeType === 3 /* text */) {
+      parts.push(node.nodeValue ?? '');
+      return;
     }
-  };
-  const text = markup
-    .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, (_m, body: string) =>
-      jsonStrings(body)
-    )
+    if (node.nodeType !== 1 /* element */) {
+      node.childNodes.forEach(visit); // the fragment itself
+      return;
+    }
+    const element = node as Element;
+    for (const name of COPY_ATTRIBUTES) {
+      const value = element.getAttribute(name);
+      if (value !== null) attributes.push(value);
+    }
+    const tag = element.localName.toLowerCase();
+    if (tag === 'script') {
+      parts.push(jsonStrings(element.textContent ?? ''));
+      return;
+    }
     // Style sheets are presentation, not copy a visitor reads.
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '\n')
-    .replace(BLOCK_TAG, '\n')
-    .replace(ANY_TAG, '');
-  return `${text}\n${attributes.join('\n')}`;
+    if (tag === 'style') {
+      parts.push('\n');
+      return;
+    }
+    const block = BLOCK_ELEMENTS.has(tag);
+    if (block) parts.push('\n');
+    element.childNodes.forEach(visit);
+    if (block) parts.push('\n');
+  };
+  visit(root);
+  return `${parts.join('')}\n${attributes.join('\n')}`;
 }
 
 // ── Same-origin API routes ───────────────────────────────────────────────────
