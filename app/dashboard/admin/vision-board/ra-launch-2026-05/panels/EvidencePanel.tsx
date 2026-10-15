@@ -212,7 +212,7 @@ function FigureThreeLayerChain() {
     {
       title: 'CONTRACTOR',
       subtitle:
-        'Two distinct types — Building Restoration Services vs Professional Restoration Services (IICRC)',
+        'Distinct types — Building Restoration Services vs Professional Restoration Services (IICRC)',
       incentive: 'Scope correctly documented · paid in full for work performed',
     },
     {
@@ -236,8 +236,7 @@ function FigureThreeLayerChain() {
         className="w-full h-auto"
       >
         <title id="fig2-title">
-          Figure 2 — The three-layer commercial chain in Australian insurance
-          restoration
+          Figure 2 — The commercial chain in Australian insurance restoration
         </title>
         <rect x={0} y={0} width={W} height={H} fill={NEUTRAL_50} />
         <text
@@ -248,7 +247,7 @@ function FigureThreeLayerChain() {
           fill={BRAND_SLATE}
           fontFamily="Inter, system-ui"
         >
-          Figure 2 · The three-layer commercial chain
+          Figure 2 · The commercial chain
         </text>
         <text
           x={padX}
@@ -852,7 +851,7 @@ const CITATION_READY_FACTS = [
   },
   {
     claim:
-      'The Institute of Inspection, Cleaning and Restoration Certification (IICRC) maintains five standards covering professional restoration: S500 (water), S520 (mould), S540 (trauma/biohazard), S700 (fire and smoke), and S210 (drinking-water systems).',
+      'The Institute of Inspection, Cleaning and Restoration Certification (IICRC) maintains standards covering professional restoration: S500 (water), S520 (mould), S540 (trauma/biohazard), S700 (fire and smoke), and S210 (drinking-water systems).',
     sourceNote: 'IICRC Standards · iicrc.org/standards · publicly published.',
     type: 'verified-public',
   },
@@ -993,9 +992,9 @@ export function EvidencePanel() {
               Evidence base — submissible-grade AU + NZ data
             </CardTitle>
             <CardDescription>
-              Hard-strict sourcing · 6 verified-public primary sources · 4
-              inline figures rendered as native SVG · SEO/AEO/GEO/E-E-A-T
-              compliant
+              Hard-strict sourcing · verified-public primary sources · inline
+              figures rendered as native SVG · written to SEO/AEO/GEO/E-E-A-T
+              guidance
             </CardDescription>
           </div>
           <Badge variant="outline" className="font-mono text-[10px]">
@@ -1206,7 +1205,7 @@ export function EvidencePanel() {
               _meta/seo-aeo-geo-eeat-discipline.md
             </code>
             . Every public-facing version of the evidence base must clear the
-            21-item audit checklist (Appendix B) before it ships. Insurance,
+            audit checklist (Appendix B) before it ships. Insurance,
             restoration, and claims content sit in YMYL territory under
             Google&apos;s quality framework — the E-E-A-T author byline + sameAs
             schema + named-source attribution above are the non-negotiables.

@@ -46,8 +46,7 @@ export const INTENTSCAPE_DEMO_MAP: VisionMap = {
     weakenSignals: [
       'The customer outcome remains unchanged when the condition is removed.',
     ],
-    stopCondition:
-      'Stop when two independent sources agree or directly conflict.',
+    stopCondition: 'Stop when independent sources agree or directly conflict.',
   })),
   hypotheses: [
     {
@@ -122,5 +121,5 @@ export const INTENTSCAPE_DEMO_MAP: VisionMap = {
     },
   ],
   synthesis:
-    'The original request points to creative production, but the decision could sit at three different layers: buyer evidence, offer relevance, or the learning system around creative work.',
+    'The original request points to creative production, but the decision could sit at different layers: buyer evidence, offer relevance, or the learning system around creative work.',
 };

@@ -1219,11 +1219,11 @@ export function buildCommands(push: (path: string) => void): CommandItem[] {
     {
       id: 'forecasting-predict',
       title: 'Generate Forecast',
-      description: 'Generate a 7-90 day forecast from a trained model',
+      description: 'Generate a forecast from a trained model',
       icon: TrendingUp,
       action: () => push('/dashboard/forecasting'),
       category: 'actions',
-      keywords: ['forecast', 'generate', '7 day', '30 day', '90 day'],
+      keywords: ['forecast', 'generate', '7d', '30d', '90d'],
     },
     // Citation Performance Dashboard (Phase 99)
     {
@@ -1268,7 +1268,7 @@ export function buildCommands(push: (path: string) => void): CommandItem[] {
       id: 'geo-optimiser',
       title: 'GEO Content Optimiser',
       description:
-        'Score content with Princeton 9-tactic GEO framework and get AI rewrites',
+        'Score content with the Princeton GEO framework and get AI rewrites',
       icon: Zap,
       action: () => push('/dashboard/geo/optimiser'),
       category: 'navigation',

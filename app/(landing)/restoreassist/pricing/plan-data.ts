@@ -37,8 +37,8 @@ export interface ReportPack {
 
 /** Ordered largest-first: the per-report rate improves as the pack grows. */
 export const REPORT_PACKS: readonly ReportPack[] = [
-  { reports: 60, priceAud: 100, badge: 'Best value' },
-  { reports: 25, priceAud: 50, badge: 'Most chosen' },
+  { reports: 60, priceAud: 100, badge: 'Lowest per-report rate' },
+  { reports: 25, priceAud: 50, badge: null },
   { reports: 8, priceAud: 20, badge: null },
 ] as const;
 

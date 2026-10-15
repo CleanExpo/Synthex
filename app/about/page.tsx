@@ -104,7 +104,7 @@ export default function AboutPage() {
                 to see.
               </p>
               <p className="mt-4 text-sm leading-7 text-sx-text-muted">
-                Synthex is an internal-grade command center being proven through
+                Synthex is an internal-grade command center being tested through
                 controlled pilots — evidence-backed planning, approval-gated
                 execution and learning loops that compound over time.
               </p>

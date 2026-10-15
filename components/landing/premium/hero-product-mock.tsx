@@ -49,7 +49,7 @@ const stages: WorkflowStage[] = [
     step: '02',
     label: 'Research',
     title: 'Evidence bundle assembled',
-    status: 'verified',
+    status: 'grounded',
     icon: Search,
   },
   {
@@ -125,8 +125,8 @@ function StagePreview({ stageId }: { stageId: StageId }) {
       return (
         <div className="space-y-2">
           {[
-            { source: 'Search Console', ref: '12 keywords · rising' },
-            { source: 'Competitor SERP', ref: '3 gaps identified' },
+            { source: 'Search Console', ref: 'Keywords · rising' },
+            { source: 'Competitor SERP', ref: 'Gaps identified' },
             { source: 'Product wiki', ref: 'Offer tier linked' },
           ].map(row => (
             <div
@@ -142,7 +142,7 @@ function StagePreview({ stageId }: { stageId: StageId }) {
             </div>
           ))}
           <p className="pt-1 text-xs text-sx-text-muted">
-            3 sources linked · confidence high
+            Sources linked · confidence high
           </p>
         </div>
       );
@@ -187,7 +187,7 @@ function StagePreview({ stageId }: { stageId: StageId }) {
               Review required before publish
             </p>
             <p className="mt-1 text-[11px] text-sx-text-muted">
-              4 assets · 1 comment · version 2
+              Assets · comments · versions
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ function StagePreview({ stageId }: { stageId: StageId }) {
               ))}
             </div>
             <span className="text-xs text-sx-text-muted">
-              2 reviewers assigned
+              Reviewers assigned
             </span>
           </div>
           <div className="flex gap-2">
@@ -404,9 +404,9 @@ export function HeroProductMock() {
             {/* Metrics strip */}
             <div className="mt-4 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-4">
               {[
-                { label: 'Pending', value: '3', tone: 'text-sx-warning' },
-                { label: 'Staged', value: '8', tone: 'text-sx-info' },
-                { label: 'Approved', value: '12', tone: 'text-sx-success' },
+                { label: 'Pending', value: '·', tone: 'text-sx-warning' },
+                { label: 'Staged', value: '·', tone: 'text-sx-info' },
+                { label: 'Approved', value: '·', tone: 'text-sx-success' },
               ].map(metric => (
                 <div
                   key={metric.label}

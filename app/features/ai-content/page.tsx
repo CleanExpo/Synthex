@@ -33,7 +33,7 @@ const STEPS = [
   },
   {
     n: '03',
-    title: 'Content generated across 9 platforms',
+    title: 'Content generated for each platform',
     body: 'Instagram captions, LinkedIn posts, TikTok hooks, YouTube descriptions — all formatted natively for each platform.',
   },
   {
@@ -81,8 +81,7 @@ export default function AiContentPage() {
           </h1>
           <p className="text-lg text-white/50 max-w-2xl mx-auto leading-relaxed mb-10">
             Synthex learns your brand voice and generates platform-native
-            content for all 9 platforms. Your tone, your style, zero manual
-            effort.
+            content for each platform. Your tone, your style, no manual effort.
           </p>
           <Link
             href="/signup"
@@ -150,7 +149,8 @@ export default function AiContentPage() {
               },
               {
                 platform: 'X (Twitter)',
-                format: 'Punchy threads and single posts under 280 chars',
+                format:
+                  "Punchy threads and single posts within X's character limit",
               },
               {
                 platform: 'Pinterest',
@@ -197,7 +197,7 @@ export default function AiContentPage() {
               href="/features/platforms"
               className="hover:text-orange-400 transition-colors"
             >
-              All 9 platforms →
+              All platforms →
             </Link>
             <Link
               href="/agencies"

@@ -145,7 +145,7 @@ export function VisionCanvas({
             id="vision-canvas-title"
             className="font-[var(--font-space-grotesk)] text-lg font-medium text-sx-text-primary"
           >
-            Seven ways out of the obvious answer
+            Ways out of the obvious answer
           </h2>
         </div>
         <div className="flex items-center gap-2 text-xs text-sx-text-muted">
@@ -263,9 +263,9 @@ export function VisionCanvas({
                   <p className="text-[11px] leading-4 text-sx-text-muted">
                     {finding?.findings[0] ?? detail.prompt}
                   </p>
-                  {finding && (
+                  {finding && finding.evidenceRefs.length > 0 && (
                     <p className="mt-2 font-mono text-xs uppercase tracking-wider text-emerald-300/70">
-                      {finding.evidenceRefs.length} evidence links
+                      Evidence linked
                     </p>
                   )}
                 </div>

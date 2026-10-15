@@ -30,7 +30,7 @@ const deliveryTiers = [
   {
     name: 'Discovery + Spec',
     indicative: 'From AUD 2,500 (one-off)',
-    timeframe: '1–2 weeks',
+    timeframe: 'Agreed at kick-off',
     copy: 'We run the Skybridge phased discovery workflow against your business. You get a locked SPEC.md, UX flow, and a concrete go/no-go decision before any code is written.',
     inclusions: [
       'Discovery sessions covering value-prop, "why LLM", UI overview, product context',
@@ -43,7 +43,7 @@ const deliveryTiers = [
   {
     name: 'Build + Launch',
     indicative: 'Scoped from discovery — typical AUD 12,000–35,000',
-    timeframe: '3–8 weeks from locked spec',
+    timeframe: 'Agreed from the locked spec',
     copy: 'Full Skybridge MCP App built against the spec. Production-grade tool handlers, type-safe React views, OAuth where needed, deployed on Alpic (or self-hosted) and submitted to the Claude + ChatGPT app stores.',
     inclusions: [
       'Skybridge project scaffold + repo handover (you own the code)',
@@ -100,7 +100,7 @@ const costModel = [
   {
     layer: 'Alpic hosting (optional)',
     cost: 'Quoted per app — pricing on application',
-    note: 'Includes MCP-specific analytics, app-store compliance auditing, permanent tunnelling. Self-host alternative on any Node.js platform.',
+    note: 'Includes MCP-specific analytics, app-store review tooling, permanent tunnelling. Self-host alternative on any Node.js platform.',
     link: 'https://alpic.ai',
     linkLabel: 'alpic.ai',
   },
@@ -134,12 +134,12 @@ const faqs = [
   {
     question: "What's the relationship between Skybridge and Alpic?",
     answer:
-      'Alpic is the company that builds Skybridge (open-source framework, MIT) AND offers paid hosting + analytics + app-store-submission help. You can use Skybridge without Alpic hosting — self-host on any Node.js platform. We recommend Alpic for revenue-critical apps because the compliance-auditing alone is worth the cost.',
+      'Alpic is the company that builds Skybridge (open-source framework, MIT) AND offers paid hosting + analytics + app-store-submission help. You can use Skybridge without Alpic hosting — self-host on any Node.js platform. We recommend Alpic for revenue-critical apps for its app-store review tooling.',
   },
   {
     question: 'How long until our MCP App is live in Claude / ChatGPT?',
     answer:
-      'Discovery + Spec is 1–2 weeks. Build + Launch is 3–8 weeks from locked spec depending on integration complexity. App-store review by Anthropic and OpenAI typically adds 2–4 weeks. Realistic end-to-end: 6–14 weeks from kick-off to live in the stores.',
+      'Discovery + Spec comes first. Build + Launch follows the locked spec, and its length depends on integration complexity. App-store review by Anthropic and OpenAI adds time before the app is live. The timeline is agreed once discovery is done.',
   },
   {
     question: 'What auth provider should we use?',
@@ -246,8 +246,8 @@ export default function Page() {
             How we deliver
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">
-            Three independent stages. Each is independently scoped — you can
-            stop after any stage and own what's been delivered.
+            Independent stages. Each is independently scoped — you can stop
+            after any stage and own what's been delivered.
           </p>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {deliveryTiers.map(
@@ -298,9 +298,9 @@ export default function Page() {
             Cost breakdown — what you actually pay for
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-white/55">
-            An MCP App stack has four cost layers. The framework itself is free.
-            Hosting is optional. Auth depends on volume. Our delivery fee is the
-            only mandatory line item once you proceed past Discovery.
+            An MCP App stack has several cost layers. The framework itself is
+            free. Hosting is optional. Auth depends on volume. Our delivery fee
+            is the only mandatory line item once you proceed past Discovery.
           </p>
           <div className="mt-10 overflow-hidden border border-white/[0.08] bg-[#0d0f12]">
             <table className="w-full text-left text-sm">
@@ -380,9 +380,9 @@ export default function Page() {
             Ready to talk?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/55">
-            Start with a 30-minute Discovery conversation. We'll work out
-            whether your business fits the MCP App pattern, what tier you'd
-            need, and what the realistic timeline + cost looks like — before any
+            Start with a short Discovery conversation. We'll work out whether
+            your business fits the MCP App pattern, what tier you'd need, and
+            what the realistic timeline + cost looks like — before any
             commitment.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

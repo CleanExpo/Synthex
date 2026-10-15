@@ -433,16 +433,18 @@ export async function POST(request: NextRequest) {
     // Check for poor performance
     const warnings: string[] = [];
     if (metrics.lcp && metrics.lcp > 2500) {
-      warnings.push(`LCP is ${metrics.lcp}ms (should be < 2500ms)`);
+      warnings.push(`LCP is ${metrics.lcp}ms, above the recommended threshold`);
     }
     if (metrics.fid && metrics.fid > 100) {
-      warnings.push(`FID is ${metrics.fid}ms (should be < 100ms)`);
+      warnings.push(`FID is ${metrics.fid}ms, above the recommended threshold`);
     }
     if (metrics.cls && metrics.cls > 0.1) {
-      warnings.push(`CLS is ${metrics.cls} (should be < 0.1)`);
+      warnings.push(`CLS is ${metrics.cls}, above the recommended threshold`);
     }
     if (metrics.ttfb && metrics.ttfb > 600) {
-      warnings.push(`TTFB is ${metrics.ttfb}ms (should be < 600ms)`);
+      warnings.push(
+        `TTFB is ${metrics.ttfb}ms, above the recommended threshold`
+      );
     }
 
     if (warnings.length > 0) {

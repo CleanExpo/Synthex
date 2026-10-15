@@ -192,9 +192,9 @@ export default function InsurersLandingPage() {
               style={{ color: RA.n100 }}
             >
               RestoreAssist gives every contractor in your network one
-              IICRC-grounded inspection report — built to the same industry
-              standard every time — so a water-damage claim reads the same
-              whether it comes from Cairns or Perth.
+              IICRC-grounded inspection report — laid out the same way every
+              time — so a water-damage claim reads the same whether it comes
+              from Cairns or Perth.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <a
@@ -244,7 +244,7 @@ export default function InsurersLandingPage() {
           >
             <Image
               src="/marketing-agency/restoreassist-authority/assets/restoreassist-report-readiness-diorama.webp"
-              alt="A miniature diorama of one claim. On the left a restoration technician photographs a water-damaged wall beside a moisture meter and a drying fan; on the right an office worker reads the finished inspection report on screen and on paper. Five steps run along the front: camera, moisture meter, notes, report, filed record."
+              alt="A miniature diorama of one claim. On the left a restoration technician photographs a water-damaged wall beside a moisture meter and a drying fan; on the right an office worker reads the finished inspection report on screen and on paper. Along the front run the steps: camera, moisture meter, notes, report, filed record."
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 640px"
@@ -268,10 +268,10 @@ export default function InsurersLandingPage() {
             className="mt-5 max-w-3xl text-lg leading-relaxed"
             style={{ color: RA.n500 }}
           >
-            When each trade files its own layout, an adjuster reads fifty
-            versions of the same job. A missing moisture reading or an
-            unlabelled photo sends the claim back for a second inspection — and
-            the cycle starts again.
+            When each trade files its own layout, an adjuster reads a different
+            version of the same job from every trade. A missing moisture reading
+            or an unlabelled photo sends the claim back for a second inspection
+            — and the cycle starts again.
           </p>
 
           <div className="mt-12 grid gap-6 sm:grid-cols-3">

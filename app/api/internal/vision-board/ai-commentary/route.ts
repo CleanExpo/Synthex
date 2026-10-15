@@ -24,7 +24,14 @@ export const runtime = 'nodejs';
 export const maxDuration = 60;
 
 const RequestSchema = z.object({
-  panel: z.enum(['brand', 'storyboard', 'motion', 'copy', 'competitive', 'runbook']),
+  panel: z.enum([
+    'brand',
+    'storyboard',
+    'motion',
+    'copy',
+    'competitive',
+    'runbook',
+  ]),
   payload: z.unknown().optional(),
 });
 
@@ -102,7 +109,7 @@ function panelData(panel: string): unknown {
     case 'competitive':
       return {
         competitors: ['Encircle', 'Xactimate', 'Restorers Connect'],
-        ourEdge: '5-step CRM with IICRC-grounded NIR, AU-designed',
+        ourEdge: 'End-to-end CRM with IICRC-grounded NIR, AU-designed',
       };
     case 'runbook':
       return {
@@ -115,37 +122,44 @@ function panelData(panel: string): unknown {
   }
 }
 
-function stubCommentary(panel: AICommentaryResponse['panel']): AICommentaryResponse {
+function stubCommentary(
+  panel: AICommentaryResponse['panel']
+): AICommentaryResponse {
   // Deterministic fallback when ANTHROPIC_API_KEY is missing. The user still sees
   // a structured response with sensible content — they just don't get a fresh model run.
-  const map: Record<AICommentaryResponse['panel'], Omit<AICommentaryResponse, 'panel' | 'generatedAt'>> = {
+  const map: Record<
+    AICommentaryResponse['panel'],
+    Omit<AICommentaryResponse, 'panel' | 'generatedAt'>
+  > = {
     brand: {
       driftRisk: 'low',
       missingPieces: [
-        'No live ElevenLabs voice sample — only the voiceId. Adding a 5-second preview clip would let the reviewer hear what the launch will sound like.',
+        'No live ElevenLabs voice sample — only the voiceId. Adding a short preview clip would let the reviewer hear what the launch will sound like.',
       ],
       surprisingObservations: [
         'The dark variant flips primary from candy orange (#E55A2B) to teal (#16B5B3). Anyone designing a dark-mode landing page needs to know that.',
       ],
       recommendedNextStep:
-        'Render a 5-second ElevenLabs Sarah preview clip and embed it in the Brand panel.',
+        'Render a short ElevenLabs Sarah preview clip and embed it in the Brand panel.',
     },
     storyboard: {
       driftRisk: 'low',
       missingPieces: [
-        'No B-roll callouts for scenes 1 and 3 — the visual notes describe outcomes, not specific shots.',
+        'Some scenes have no B-roll callouts — the visual notes describe outcomes, not specific shots.',
       ],
       surprisingObservations: [
-        'Scene 4 carries the entire 5-step claim in 18s. That is the only scene where the operational benefit ("no double-handling") appears verbatim.',
+        'Scene 4 carries the entire end-to-end claim. That is the only scene where the operational benefit ("no double-handling") appears verbatim.',
       ],
       recommendedNextStep:
         'Confirm scene 4 visual treatment with the designer skill before queueing the render.',
     },
     motion: {
       driftRisk: 'low',
-      missingPieces: ['Spring-physics demo not implemented — only the sweep is previewed.'],
+      missingPieces: [
+        'Spring-physics demo not implemented — only the sweep is previewed.',
+      ],
       surprisingObservations: [
-        'Transition is 14 frames but base scene reveal is 18 frames — transitions are tighter than scenes by design.',
+        'Transitions are shorter than the base scene reveal by design.',
       ],
       recommendedNextStep:
         'Add a spring-physics preview alongside the sweep so the designer can compare both.',
@@ -156,8 +170,8 @@ function stubCommentary(panel: AICommentaryResponse['panel']): AICommentaryRespo
         'Positioning markdown',
         'ICP markdown',
         'Insurer landing copy',
-        '5-touch email sequence',
-        '12-piece LinkedIn drumbeat',
+        'Email sequence',
+        'LinkedIn drumbeat',
       ],
       surprisingObservations: [
         'The Vision Board page exists before any copy artefact — the eyes layer is ahead of the brain layer.',
@@ -173,10 +187,10 @@ function stubCommentary(panel: AICommentaryResponse['panel']): AICommentaryRespo
         'No insurer-network coverage comparison',
       ],
       surprisingObservations: [
-        'RestoreAssist is the only competitor with a 5-step workflow — every other tool is a single slice.',
+        'Compare which workflow steps each tool reviewed here covers.',
       ],
       recommendedNextStep:
-        'Have Pi-CEO research lead pull pricing + installed-base data for the three competitors.',
+        'Have Pi-CEO research lead pull pricing + installed-base data for the competitors.',
     },
     runbook: {
       driftRisk: 'high',
@@ -191,7 +205,7 @@ function stubCommentary(panel: AICommentaryResponse['panel']): AICommentaryRespo
         'T+0 is today (2026-05-08) — the App Store work shipped before the marketing runbook was written. T-30→T-0 is retroactive.',
       ],
       recommendedNextStep:
-        'Generate the runbook in Wave 4 against the locked Standard tier (LinkedIn organic + email + 2 industry pitches).',
+        'Generate the runbook in Wave 4 against the locked Standard tier (LinkedIn organic + email + industry pitches).',
     },
   };
   return {

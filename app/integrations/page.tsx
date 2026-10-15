@@ -21,11 +21,11 @@ import MarketingLayout from '@/components/marketing/MarketingLayout';
 export const metadata: Metadata = {
   title: { absolute: 'Integrations | Synthex' },
   description:
-    'Connect Synthex with 9 social media platforms, AI providers, and business tools. Publish, schedule, and analyse content everywhere from one dashboard.',
+    'Connect Synthex with social media platforms, AI providers, and business tools. Publish, schedule, and analyse content everywhere from one dashboard.',
   openGraph: {
     title: 'Integrations | Synthex',
     description:
-      'Connect Synthex with 9 social media platforms, AI providers, and business tools.',
+      'Connect Synthex with social media platforms, AI providers, and business tools.',
   },
 };
 
@@ -108,7 +108,7 @@ const AI_PROVIDERS = [
   {
     name: 'OpenRouter',
     description:
-      'Access 200+ AI models for content generation, analysis, and optimisation.',
+      'Access a wide range of AI models for content generation, analysis, and optimisation.',
   },
   {
     name: 'Anthropic Claude',
@@ -172,7 +172,7 @@ export default function IntegrationsPage() {
             </span>
           </h1>
           <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
-            Synthex integrates with 9 social platforms, 4 AI providers, and the
+            Synthex integrates with social platforms, AI providers, and the
             tools your business already uses — all from one dashboard.
           </p>
           <Link href="/signup">
@@ -189,7 +189,7 @@ export default function IntegrationsPage() {
         <div className="container mx-auto">
           <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-sm mb-4">
-              <Globe className="h-4 w-4" /> 9 Platforms
+              <Globe className="h-4 w-4" /> Platforms
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">
               Social Media Platforms
@@ -265,7 +265,7 @@ export default function IntegrationsPage() {
               Business Tools
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Enterprise-grade infrastructure baked into every plan.
+              Infrastructure included in every plan.
             </p>
           </div>
 

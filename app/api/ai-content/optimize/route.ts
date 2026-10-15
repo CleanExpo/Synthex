@@ -15,9 +15,15 @@ import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import crypto from 'crypto';
-import { resolveAIProvider, hasAIAccess } from '@/lib/ai/api-credential-injector';
+import {
+  resolveAIProvider,
+  hasAIAccess,
+} from '@/lib/ai/api-credential-injector';
 import { logger } from '@/lib/logger';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { aiGeneration } from '@/lib/middleware/api-rate-limit';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
@@ -25,9 +31,22 @@ import { requireApiKey } from '@/lib/middleware/require-api-key';
 // Validation schema
 const OptimizeRequestSchema = z.object({
   content: z.string().min(1).max(10000).describe('The content to optimize'),
-  platform: z.enum(['twitter', 'linkedin', 'instagram', 'tiktok', 'facebook', 'youtube']).default('twitter'),
-  goal: z.enum(['engagement', 'reach', 'conversions', 'brand_awareness', 'traffic']).default('engagement'),
-  tone: z.enum(['professional', 'casual', 'humorous', 'inspirational', 'educational', 'urgent']).optional(),
+  platform: z
+    .enum(['twitter', 'linkedin', 'instagram', 'tiktok', 'facebook', 'youtube'])
+    .default('twitter'),
+  goal: z
+    .enum(['engagement', 'reach', 'conversions', 'brand_awareness', 'traffic'])
+    .default('engagement'),
+  tone: z
+    .enum([
+      'professional',
+      'casual',
+      'humorous',
+      'inspirational',
+      'educational',
+      'urgent',
+    ])
+    .optional(),
   targetAudience: z.string().max(200).optional(),
   includeEmojis: z.boolean().default(true),
   includeHashtags: z.boolean().default(true),
@@ -53,7 +72,7 @@ const PLATFORM_LIMITS: Record<string, number> = {
 function deterministicIndex(content: string, arrayLength: number): number {
   let hash = 0;
   for (let i = 0; i < content.length; i++) {
-    hash = ((hash << 5) - hash) + content.charCodeAt(i);
+    hash = (hash << 5) - hash + content.charCodeAt(i);
     hash |= 0; // Convert to 32-bit integer
   }
   return Math.abs(hash) % arrayLength;
@@ -96,105 +115,116 @@ const CTA_TEMPLATES: Record<string, string[]> = {
 
 // Engagement-boosting hooks — default optimization templates, can be overridden per-user in database
 const HOOK_STARTERS: string[] = [
-  'Here\'s what nobody tells you about',
+  "Here's what nobody tells you about",
   'The truth about',
   'Stop doing this if you want',
-  'I made this mistake so you don\'t have to:',
+  "I made this mistake so you don't have to:",
   'Unpopular opinion:',
   'Hot take:',
   'This changed everything for me:',
   'The secret to',
-  'Most people don\'t realize',
-  '3 things I wish I knew about',
+  "Most people don't realize",
+  'Things I wish I knew about',
 ];
 
 async function _handlePost(request: NextRequest) {
-  return requireApiKey(request, async () => {
-  // Distributed rate limiting via Upstash Redis
-  return aiGeneration(request, async () => {
-  try {
-    // Security check
-    const security = await APISecurityChecker.check(
-      request,
-      DEFAULT_POLICIES.AUTHENTICATED_WRITE
-    );
+  return requireApiKey(
+    request,
+    async () => {
+      // Distributed rate limiting via Upstash Redis
+      return aiGeneration(request, async () => {
+        try {
+          // Security check
+          const security = await APISecurityChecker.check(
+            request,
+            DEFAULT_POLICIES.AUTHENTICATED_WRITE
+          );
 
-    if (!security.allowed) {
-      return APISecurityChecker.createSecureResponse(
-        { error: security.error },
-        403
-      );
-    }
+          if (!security.allowed) {
+            return APISecurityChecker.createSecureResponse(
+              { error: security.error },
+              403
+            );
+          }
 
-    // Get requesting user ID
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
+          // Get requesting user ID
+          const userId = await getUserIdFromRequestOrCookies(request);
+          if (!userId) {
+            return NextResponse.json(
+              { error: 'Authentication required' },
+              { status: 401 }
+            );
+          }
 
-    // Parse and validate body
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: 'Invalid JSON body' },
-        { status: 400 }
-      );
-    }
+          // Parse and validate body
+          let body: unknown;
+          try {
+            body = await request.json();
+          } catch {
+            return NextResponse.json(
+              { error: 'Invalid JSON body' },
+              { status: 400 }
+            );
+          }
 
-    const parseResult = OptimizeRequestSchema.safeParse(body);
-    if (!parseResult.success) {
-      return NextResponse.json(
-        { error: 'Validation error', details: parseResult.error.flatten() },
-        { status: 400 }
-      );
-    }
+          const parseResult = OptimizeRequestSchema.safeParse(body);
+          if (!parseResult.success) {
+            return NextResponse.json(
+              {
+                error: 'Validation error',
+                details: parseResult.error.flatten(),
+              },
+              { status: 400 }
+            );
+          }
 
-    const {
-      content,
-      platform,
-      goal,
-      tone,
-      targetAudience,
-      includeEmojis,
-      includeHashtags,
-      includeCTA,
-      maxLength
-    } = parseResult.data;
+          const {
+            content,
+            platform,
+            goal,
+            tone,
+            targetAudience,
+            includeEmojis,
+            includeHashtags,
+            includeCTA,
+            maxLength,
+          } = parseResult.data;
 
-    const platformLimit = maxLength || PLATFORM_LIMITS[platform] || 2000;
+          const platformLimit = maxLength || PLATFORM_LIMITS[platform] || 2000;
 
-    let optimizedContent: string;
-    let suggestions: string[] = [];
-    let source: 'ai' | 'rules' = 'rules';
-    let aiMetadata: { model?: string; tokensUsed?: number; responseTime?: number; usage?: Record<string, unknown>; changes?: string[] } | null = null;
+          let optimizedContent: string;
+          let suggestions: string[] = [];
+          let source: 'ai' | 'rules' = 'rules';
+          let aiMetadata: {
+            model?: string;
+            tokensUsed?: number;
+            responseTime?: number;
+            usage?: Record<string, unknown>;
+            changes?: string[];
+          } | null = null;
 
-    // Try AI optimization first (uses user's own API key if stored, else platform key)
-    try {
-      if (await hasAIAccess(userId)) {
-        const ai = await resolveAIProvider(userId);
-        const prompt = buildOptimizationPrompt(
-          content,
-          platform,
-          goal,
-          tone,
-          targetAudience,
-          includeEmojis,
-          includeHashtags,
-          includeCTA,
-          platformLimit
-        );
+          // Try AI optimization first (uses user's own API key if stored, else platform key)
+          try {
+            if (await hasAIAccess(userId)) {
+              const ai = await resolveAIProvider(userId);
+              const prompt = buildOptimizationPrompt(
+                content,
+                platform,
+                goal,
+                tone,
+                targetAudience,
+                includeEmojis,
+                includeHashtags,
+                includeCTA,
+                platformLimit
+              );
 
-        const response = await ai.complete({
-          model: ai.models.creative,
-          messages: [
-            {
-              role: 'system',
-              content: `You are an expert social media content optimizer. Your task is to improve content for maximum ${goal} on ${platform}.
+              const response = await ai.complete({
+                model: ai.models.creative,
+                messages: [
+                  {
+                    role: 'system',
+                    content: `You are an expert social media content optimizer. Your task is to improve content for maximum ${goal} on ${platform}.
 
 Return a JSON object with:
 {
@@ -203,100 +233,126 @@ Return a JSON object with:
   "changes": ["change 1", "change 2", ...]
 }
 
-Keep the core message but enhance engagement. Follow platform best practices.`
-            },
-            {
-              role: 'user',
-              content: prompt
+Keep the core message but enhance engagement. Follow platform best practices.`,
+                  },
+                  {
+                    role: 'user',
+                    content: prompt,
+                  },
+                ],
+                temperature: 0.8,
+                max_tokens: 1000,
+              });
+
+              const aiContent = response.choices[0]?.message?.content || '';
+              const parsed = parseAIResponse(aiContent);
+
+              if (parsed) {
+                optimizedContent = parsed.optimized;
+                suggestions = parsed.suggestions || [];
+                source = 'ai';
+                aiMetadata = {
+                  model: ai.models.creative,
+                  usage: response.usage,
+                  changes: parsed.changes || [],
+                };
+              } else {
+                // Fallback if AI response couldn't be parsed
+                const rulesBased = applyRulesOptimization(
+                  content,
+                  platform,
+                  goal,
+                  includeEmojis,
+                  includeHashtags,
+                  includeCTA,
+                  platformLimit
+                );
+                optimizedContent = rulesBased.content;
+                suggestions = rulesBased.suggestions;
+              }
+            } else {
+              // No API key available (neither user nor platform), use rules-based optimization
+              const rulesBased = applyRulesOptimization(
+                content,
+                platform,
+                goal,
+                includeEmojis,
+                includeHashtags,
+                includeCTA,
+                platformLimit
+              );
+              optimizedContent = rulesBased.content;
+              suggestions = rulesBased.suggestions;
             }
-          ],
-          temperature: 0.8,
-          max_tokens: 1000
-        });
+          } catch (error) {
+            logger.error('AI optimization failed, using rules-based', {
+              error,
+            });
+            const rulesBased = applyRulesOptimization(
+              content,
+              platform,
+              goal,
+              includeEmojis,
+              includeHashtags,
+              includeCTA,
+              platformLimit
+            );
+            optimizedContent = rulesBased.content;
+            suggestions = rulesBased.suggestions;
+          }
 
-        const aiContent = response.choices[0]?.message?.content || '';
-        const parsed = parseAIResponse(aiContent);
-
-        if (parsed) {
-          optimizedContent = parsed.optimized;
-          suggestions = parsed.suggestions || [];
-          source = 'ai';
-          aiMetadata = {
-            model: ai.models.creative,
-            usage: response.usage,
-            changes: parsed.changes || []
-          };
-        } else {
-          // Fallback if AI response couldn't be parsed
-          const rulesBased = applyRulesOptimization(
-            content, platform, goal, includeEmojis, includeHashtags, includeCTA, platformLimit
+          // Calculate optimization score
+          const score = calculateOptimizationScore(
+            optimizedContent,
+            platform,
+            goal
           );
-          optimizedContent = rulesBased.content;
-          suggestions = rulesBased.suggestions;
+
+          // Audit log
+          await auditLogger.log({
+            userId,
+            action: 'ai.content_optimized',
+            resource: 'ai_content',
+            resourceId: crypto.randomUUID(),
+            category: 'api',
+            severity: 'low',
+            outcome: 'success',
+            details: {
+              platform,
+              goal,
+              source,
+              originalLength: content.length,
+              optimizedLength: optimizedContent.length,
+              scoreImprovement: score.overall,
+            },
+          });
+
+          return NextResponse.json({
+            success: true,
+            original: content,
+            optimized: optimizedContent,
+            suggestions,
+            score,
+            metadata: {
+              platform,
+              goal,
+              characterCount: optimizedContent.length,
+              characterLimit: platformLimit,
+              source,
+              aiMetadata,
+            },
+          });
+        } catch (error) {
+          logger.error('Content optimization failed', { error });
+          return NextResponse.json(
+            { error: 'Failed to optimize content' },
+            { status: 500 }
+          );
         }
-      } else {
-        // No API key available (neither user nor platform), use rules-based optimization
-        const rulesBased = applyRulesOptimization(
-          content, platform, goal, includeEmojis, includeHashtags, includeCTA, platformLimit
-        );
-        optimizedContent = rulesBased.content;
-        suggestions = rulesBased.suggestions;
-      }
-    } catch (error) {
-      logger.error('AI optimization failed, using rules-based', { error });
-      const rulesBased = applyRulesOptimization(
-        content, platform, goal, includeEmojis, includeHashtags, includeCTA, platformLimit
-      );
-      optimizedContent = rulesBased.content;
-      suggestions = rulesBased.suggestions;
-    }
-
-    // Calculate optimization score
-    const score = calculateOptimizationScore(optimizedContent, platform, goal);
-
-    // Audit log
-    await auditLogger.log({
-      userId,
-      action: 'ai.content_optimized',
-      resource: 'ai_content',
-      resourceId: crypto.randomUUID(),
-      category: 'api',
-      severity: 'low',
-      outcome: 'success',
-      details: {
-        platform,
-        goal,
-        source,
-        originalLength: content.length,
-        optimizedLength: optimizedContent.length,
-        scoreImprovement: score.overall
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      original: content,
-      optimized: optimizedContent,
-      suggestions,
-      score,
-      metadata: {
-        platform,
-        goal,
-        characterCount: optimizedContent.length,
-        characterLimit: platformLimit,
-        source,
-        aiMetadata
-      }
-    });
-  } catch (error) {
-    logger.error('Content optimization failed', { error });
-    return NextResponse.json(
-      { error: 'Failed to optimize content' },
-      { status: 500 }
-    );
-  }
-  });
-  }, { allowWithoutKey: true });
+      });
+    },
+    { allowWithoutKey: true }
+  );
 }
 
 // Build optimization prompt
@@ -344,7 +400,9 @@ function buildOptimizationPrompt(
 }
 
 // Parse AI response
-function parseAIResponse(content: string): { optimized: string; suggestions: string[]; changes: string[] } | null {
+function parseAIResponse(
+  content: string
+): { optimized: string; suggestions: string[]; changes: string[] } | null {
   try {
     // Try to parse as JSON
     const jsonMatch = content.match(/\{[\s\S]*\}/);
@@ -354,7 +412,7 @@ function parseAIResponse(content: string): { optimized: string; suggestions: str
         return {
           optimized: parsed.optimized,
           suggestions: parsed.suggestions || [],
-          changes: parsed.changes || []
+          changes: parsed.changes || [],
         };
       }
     }
@@ -364,7 +422,7 @@ function parseAIResponse(content: string): { optimized: string; suggestions: str
       return {
         optimized: content.trim(),
         suggestions: ['AI-generated optimization applied'],
-        changes: []
+        changes: [],
       };
     }
 
@@ -389,7 +447,8 @@ function applyRulesOptimization(
 
   // Add hook if content doesn't start with one
   if (!startsWithHook(optimized)) {
-    const hook = HOOK_STARTERS[deterministicIndex(optimized, HOOK_STARTERS.length)];
+    const hook =
+      HOOK_STARTERS[deterministicIndex(optimized, HOOK_STARTERS.length)];
     if (optimized.length + hook.length + 5 < maxLength) {
       // Don't prepend hook, just suggest it
       suggestions.push(`Consider starting with a hook like: "${hook}"`);
@@ -450,7 +509,9 @@ function applyRulesOptimization(
   // Truncate if too long
   if (optimized.length > maxLength) {
     optimized = truncateSmart(optimized, maxLength);
-    suggestions.push(`Truncated to ${maxLength} characters for platform limits`);
+    suggestions.push(
+      `Truncated to ${maxLength} characters for platform limits`
+    );
   }
 
   // Add general suggestions
@@ -475,7 +536,11 @@ interface OptimizationScore {
   breakdown: Record<string, number>;
 }
 
-function calculateOptimizationScore(content: string, platform: string, goal: string): OptimizationScore {
+function calculateOptimizationScore(
+  content: string,
+  platform: string,
+  goal: string
+): OptimizationScore {
   let engagement = 50;
   let readability = 50;
   let platformFit = 50;
@@ -502,11 +567,17 @@ function calculateOptimizationScore(content: string, platform: string, goal: str
 
   // CTA score
   if (hasCTA(content)) cta += 30;
-  if (content.toLowerCase().includes('comment') || content.toLowerCase().includes('share')) cta += 10;
+  if (
+    content.toLowerCase().includes('comment') ||
+    content.toLowerCase().includes('share')
+  )
+    cta += 10;
   if (content.includes('👇') || content.includes('⬇️')) cta += 10;
 
   // Calculate overall
-  const overall = Math.round((engagement + readability + platformFit + cta) / 4);
+  const overall = Math.round(
+    (engagement + readability + platformFit + cta) / 4
+  );
 
   return {
     overall: Math.min(overall, 100),
@@ -520,8 +591,8 @@ function calculateOptimizationScore(content: string, platform: string, goal: str
       hasHashtags: hasHashtags(content) ? 1 : 0,
       hasCTA: hasCTA(content) ? 1 : 0,
       hasHook: startsWithHook(content) ? 1 : 0,
-      optimalLength: lengthRatio >= 0.3 && lengthRatio <= 0.8 ? 1 : 0
-    }
+      optimalLength: lengthRatio >= 0.3 && lengthRatio <= 0.8 ? 1 : 0,
+    },
   };
 }
 
@@ -538,7 +609,7 @@ function hasCTA(content: string): boolean {
   const ctaPatterns = [
     /comment|share|follow|like|save|click|tap|swipe|link|dm|message/i,
     /👇|⬇️|🔗|📲|💬|🙋/,
-    /what do you think|let me know|tell me|your thoughts/i
+    /what do you think|let me know|tell me|your thoughts/i,
   ];
   return ctaPatterns.some(pattern => pattern.test(content));
 }
@@ -547,7 +618,7 @@ function startsWithHook(content: string): boolean {
   const hookPatterns = [
     /^(here's|the truth|stop|i made|unpopular|hot take|this changed|the secret|most people|3 things)/i,
     /^[\u{1F300}-\u{1F9FF}]/u, // Starts with emoji
-    /^\d+ (things|tips|ways|reasons|mistakes)/i
+    /^\d+ (things|tips|ways|reasons|mistakes)/i,
   ];
   return hookPatterns.some(pattern => pattern.test(content.trim()));
 }
@@ -561,16 +632,22 @@ function getRelevantEmoji(content: string, goal: string): string {
     reach: ['📢', '🚀', '🔥', '⚡', '🌟'],
     conversions: ['🎯', '💰', '📈', '✅', '🏆'],
     brand_awareness: ['✨', '🌟', '💡', '🎨', '👋'],
-    traffic: ['🔗', '👆', '📲', '🖱️', '➡️']
+    traffic: ['🔗', '👆', '📲', '🖱️', '➡️'],
   };
 
   // Content-based emoji selection
-  if (contentLower.includes('success') || contentLower.includes('win')) return '🏆';
-  if (contentLower.includes('money') || contentLower.includes('revenue')) return '💰';
-  if (contentLower.includes('grow') || contentLower.includes('scale')) return '📈';
-  if (contentLower.includes('tip') || contentLower.includes('advice')) return '💡';
-  if (contentLower.includes('mistake') || contentLower.includes('error')) return '⚠️';
-  if (contentLower.includes('love') || contentLower.includes('passion')) return '❤️';
+  if (contentLower.includes('success') || contentLower.includes('win'))
+    return '🏆';
+  if (contentLower.includes('money') || contentLower.includes('revenue'))
+    return '💰';
+  if (contentLower.includes('grow') || contentLower.includes('scale'))
+    return '📈';
+  if (contentLower.includes('tip') || contentLower.includes('advice'))
+    return '💡';
+  if (contentLower.includes('mistake') || contentLower.includes('error'))
+    return '⚠️';
+  if (contentLower.includes('love') || contentLower.includes('passion'))
+    return '❤️';
 
   const emojis = goalEmojis[goal] || goalEmojis.engagement;
   return emojis[deterministicIndex(content + goal, emojis.length)];
@@ -583,7 +660,7 @@ function generateBasicHashtags(content: string, platform: string): string {
     instagram: ['#instagood', '#motivation', '#lifestyle'],
     tiktok: ['#fyp', '#viral', '#trending'],
     facebook: ['#community', '#inspiration', '#life'],
-    youtube: ['#subscribe', '#content', '#creator']
+    youtube: ['#subscribe', '#content', '#creator'],
   };
 
   const tags = platformHashtags[platform] || platformHashtags.twitter;

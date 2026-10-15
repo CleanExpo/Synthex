@@ -4,7 +4,7 @@ import { IntentScapeProductTour } from '@/components/intentscape/IntentScapeProd
 export const metadata: Metadata = {
   title: { absolute: 'Synthex Idea Explorer' },
   description:
-    'Turn a rough business or marketing idea into three researched directions, choose one with clear limits, and keep the resulting brief.',
+    'Turn a rough business or marketing idea into researched directions, choose one with clear limits, and keep the resulting brief.',
 };
 
 export default function IntentScapeProductTourPage() {

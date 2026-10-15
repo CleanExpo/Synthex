@@ -151,8 +151,8 @@ export function DecisionDock({
               Your decision comes after the research
             </p>
             <p className="mt-1 text-xs leading-5 text-sx-text-muted">
-              Synthex will show the evidence and three different directions
-              before asking you to choose.
+              Synthex will show the evidence and different directions before
+              asking you to choose.
             </p>
           </div>
         </div>

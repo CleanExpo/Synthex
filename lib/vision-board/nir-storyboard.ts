@@ -52,7 +52,7 @@ export const NIR_STORYBOARD: NIRStoryboard = {
       voiceover:
         'The National Inspection Report is one format, grounded in IICRC standards.',
       visualNote:
-        'NIR icon revealed via the locked sweep signature. Three IICRC chips slide in from the right.',
+        'NIR icon revealed via the locked sweep signature. IICRC chips slide in from the right.',
     },
     {
       index: 4,
@@ -64,7 +64,7 @@ export const NIR_STORYBOARD: NIRStoryboard = {
       voiceover:
         'Field tech captures it once. The system does the rest. No double-handling.',
       visualNote:
-        '5-step horizontal sweep. Each step pops in on its own beat. Field-tech icon transitions into office-report icon.',
+        'Horizontal step-by-step sweep. Each step pops in on its own beat. Field-tech icon transitions into office-report icon.',
     },
     {
       index: 5,

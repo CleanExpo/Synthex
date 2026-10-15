@@ -131,7 +131,7 @@ export function IntentScapeProductTour() {
           <div>
             <div className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.24em] text-sx-intelligence">
               <Sparkles className="h-4 w-4" />
-              Turn one rough idea into three directions
+              Turn one rough idea into different directions
             </div>
             <h1 className="mt-4 max-w-4xl text-balance font-[var(--font-space-grotesk)] text-4xl font-medium tracking-[-0.045em] text-sx-text-primary md:text-6xl md:leading-[1.05]">
               See the options around a rough idea{' '}
@@ -141,8 +141,8 @@ export function IntentScapeProductTour() {
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-sx-text-muted md:text-lg md:leading-8">
               Describe what is happening in your own words. Synthex researches
-              different explanations, shows three directions and waits for you
-              to choose. Nothing is published, purchased or sent without your
+              different explanations, shows the directions and waits for you to
+              choose. Nothing is published, purchased or sent without your
               approval.
             </p>
           </div>
@@ -164,7 +164,7 @@ export function IntentScapeProductTour() {
                     Synthex returns
                   </p>
                   <p className="mt-1 text-sm leading-6 text-sx-text-primary">
-                    Three researched directions and a brief you control
+                    Researched directions and a brief you control
                   </p>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export function IntentScapeProductTour() {
             <ol className="mt-4 space-y-4 text-sm text-sx-text-secondary">
               <li>
                 <strong className="text-sx-text-primary">1. Compare:</strong>{' '}
-                Synthex shows three genuinely different directions.
+                Synthex shows genuinely different directions.
               </li>
               <li>
                 <strong className="text-sx-text-primary">2. Decide:</strong> you
@@ -268,12 +268,12 @@ export function IntentScapeProductTour() {
                 id="loop-title"
                 className="mt-1 font-[var(--font-space-grotesk)] text-xl text-sx-text-primary"
               >
-                Five visible stages, with you making the decision
+                Visible stages, with you making the decision
               </h2>
             </div>
             <p className="hidden text-xs text-sx-text-muted md:block">
-              Move the lens cards below, compare three directions and choose
-              only what you mean.
+              Move the lens cards below, compare the directions and choose only
+              what you mean.
             </p>
           </div>
           <ol className="grid overflow-hidden rounded-[16px] border border-white/[0.1] bg-white/[0.025] sm:grid-cols-2 lg:grid-cols-5">
@@ -299,8 +299,8 @@ export function IntentScapeProductTour() {
 
         <div className="rounded-btn border border-sx-accent/15 bg-sx-accent/[0.04] px-4 py-3 text-sm text-sx-text-secondary">
           <strong className="font-medium text-sx-accent">Try it here:</strong>{' '}
-          move the seven lenses, compare the three directions, then approve one
-          below. This sample takes no external action.
+          move the lenses, compare the directions, then approve one below. This
+          sample takes no external action.
         </div>
 
         <div className="mt-5">

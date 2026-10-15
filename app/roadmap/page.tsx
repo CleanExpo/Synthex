@@ -100,8 +100,7 @@ export default function RoadmapPage() {
               </span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Our commitment to continuous innovation and delivering the most
-              advanced AI-powered social media platform
+              Our commitment to continuous improvement of the platform
             </p>
           </div>
 

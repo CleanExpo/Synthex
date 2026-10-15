@@ -832,7 +832,7 @@ export default function DemoSettingsPage() {
                         </div>
                         <div>
                           <p className="font-medium text-white">
-                            •••• •••• •••• 4242
+                            •••• •••• •••• ••••
                           </p>
                           <p className="text-sm text-gray-400">Expires 12/25</p>
                         </div>

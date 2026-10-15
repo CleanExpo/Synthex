@@ -243,7 +243,9 @@ export default function AnalyticsDashboard() {
                 <span
                   className={`text-sm ${trends?.trending === 'up' ? 'text-green-500' : 'text-red-500'}`}
                 >
-                  {trends?.growthRate ?? 0}%
+                  {typeof trends?.growthRate === 'number'
+                    ? `${trends.growthRate}%`
+                    : '—'}
                 </span>
                 <span className="text-sm text-gray-500 ml-1">vs last week</span>
               </div>
@@ -280,7 +282,9 @@ export default function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {overview?.averageEngagementRate ?? 0}%
+                {typeof overview?.averageEngagementRate === 'number'
+                  ? `${overview.averageEngagementRate}%`
+                  : '—'}
               </div>
               <Progress
                 value={(overview?.averageEngagementRate ?? 0) * 10}
@@ -459,8 +463,10 @@ export default function AnalyticsDashboard() {
                   <div className="space-y-3">
                     <div className="p-3 bg-green-900/20 border border-green-500/20 rounded">
                       <p className="text-sm">
-                        <strong>Growth Trend:</strong> Your engagement has
-                        increased by {trends?.growthRate ?? 0}% this week
+                        <strong>Growth Trend:</strong>{' '}
+                        {typeof trends?.growthRate === 'number'
+                          ? `Your engagement changed by ${trends.growthRate}% this week`
+                          : 'No trend data yet.'}
                       </p>
                     </div>
                   </div>

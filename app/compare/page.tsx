@@ -24,7 +24,7 @@ const comparisons = [
   {
     href: '/compare/hootsuite',
     title: 'Synthex vs Hootsuite',
-    copy: 'Side-by-side comparison of Synthex and Hootsuite.',
+    copy: 'What Synthex does, for teams considering Hootsuite.',
   },
 ];
 

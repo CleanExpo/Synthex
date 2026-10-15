@@ -14,7 +14,7 @@
 
 SYNTHEX is a single platform that does the work of a social-media agency: campaign research, brand-voice content generation, image + video production via integrated Gen-Media models, scheduled publishing across all major channels, post-hoc ROI attribution and a feedback loop that learns which posts convert.
 
-Built for users who don't want to hire an agency but want agency-quality output 24/7.
+Built for users who don't want to hire an agency but want agency-quality output.
 
 ## Who It's For
 
@@ -31,7 +31,6 @@ Built for users who don't want to hire an agency but want agency-quality output 
 - Cross-channel publishing: Facebook, Instagram, X/Twitter, LinkedIn, YouTube, TikTok, Pinterest
 - Campaign scheduler with approval workflow + version history
 - ROI attribution per post + per campaign with audience-segment learning
-- Audit log + GDPR/Privacy compliance built in
 
 ## Pricing
 
@@ -40,10 +39,9 @@ Built for users who don't want to hire an agency but want agency-quality output 
 
 ## Trust Signals
 
-- Powered by Next.js 15 (verifiable via signed source manifests)
 - Status page with public uptime monitoring (Better Stack)
 - Parent organisation: Unite-Group (Australia-based, ABN on request)
-- Support response target: 1 business day (contact form), instant (in-app chat for paid plans)
+- Support: contact form, with human follow-up within 1 business day
 
 ## Agent Capabilities (WebMCP)
 

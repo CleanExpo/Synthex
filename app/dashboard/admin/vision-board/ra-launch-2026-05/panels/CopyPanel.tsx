@@ -6,7 +6,13 @@
  * hydrate from the symlinked Pi-CEO research dir as artefacts arrive.
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 interface CopyPanelProps {
@@ -38,7 +44,8 @@ export function CopyPanel({
       <CardHeader>
         <CardTitle>Copy</CardTitle>
         <CardDescription>
-          Positioning · ICP (Wave 1) — Insurer landing · Email sequence · LinkedIn drumbeat (Wave 3)
+          Positioning · ICP (Wave 1) — Insurer landing · Email sequence ·
+          LinkedIn drumbeat (Wave 3)
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
@@ -47,7 +54,10 @@ export function CopyPanel({
             <h3 className="text-sm font-semibold">Positioning · SYN-916</h3>
             <div className="flex items-center gap-2">
               {positioningSource && (
-                <Badge variant="outline" className="font-mono text-[10px] capitalize">
+                <Badge
+                  variant="outline"
+                  className="font-mono text-[10px] capitalize"
+                >
                   source: {positioningSource}
                 </Badge>
               )}
@@ -79,13 +89,15 @@ export function CopyPanel({
           ) : (
             <PendingState
               wave={1}
-              what="3 segments × triggers/vocab/watering-holes. Same blocker — Pi-CEO Wave 1 needs spawn approval."
+              what="Segments × triggers/vocab/watering-holes. Same blocker — Pi-CEO Wave 1 needs spawn approval."
             />
           )}
         </section>
 
         <section className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold">Insurer landing page · SYN-918</h3>
+          <h3 className="text-sm font-semibold">
+            Insurer landing page · SYN-918
+          </h3>
           <PendingState
             wave={3}
             what="Will render at /restoreassist/insurers and embed the NIR explainer video as hero. Synthex page, RA tokens (no Synthex token leak)."
@@ -96,7 +108,7 @@ export function CopyPanel({
           <h3 className="text-sm font-semibold">Email sequence · SYN-919</h3>
           <PendingState
             wave={3}
-            what="5 touches: D0 welcome → D2 quick-start → D5 NIR demo → D10 case study → D20 referral ask. Grade ≤6, brand voice."
+            what="Day-by-day touches: welcome → quick-start → NIR demo → case study → referral ask. Plain reading level, brand voice."
           />
         </section>
 
@@ -104,7 +116,7 @@ export function CopyPanel({
           <h3 className="text-sm font-semibold">LinkedIn drumbeat · SYN-920</h3>
           <PendingState
             wave={3}
-            what="12 pieces: 1 founder origin · 1 NIR explainer · 3 product scenes · 1 carousel comparison · 6 customer-quote placeholders."
+            what="Pieces: founder origin · NIR explainer · product scenes · carousel comparison · customer-quote placeholders."
           />
         </section>
       </CardContent>

@@ -203,7 +203,7 @@ export default function DocsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1 h-1 bg-orange-400 rounded-full" />
-                    GDPR compliance
+                    Data export and deletion
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="w-1 h-1 bg-orange-400 rounded-full" />

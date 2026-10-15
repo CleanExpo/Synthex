@@ -24,7 +24,7 @@ const modules = [
     icon: Search,
     title: 'SEO intelligence',
     copy: 'Keywords, SERP and competitor signal linked to evidence refs.',
-    status: 'verified' as const,
+    status: 'grounded' as const,
   },
   {
     icon: Globe,

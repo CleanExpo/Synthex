@@ -77,7 +77,7 @@ export function NextActionGuide({
         : evidenceCount > 0
           ? {
               stage: 'Ready to compare',
-              title: 'Research three different directions',
+              title: 'Research different directions',
               detail:
                 'Seven viewpoints will test different causes, risks and paths forward.',
               label: 'Research directions',

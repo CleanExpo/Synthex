@@ -57,7 +57,7 @@ const faqs: FAQItem[] = [
   {
     question: 'Is my data secure with Synthex?',
     answer:
-      "Yes, we use enterprise-grade encryption for all data. Your content and analytics are stored securely and never shared with third parties. We're SOC 2 compliant.",
+      'Platform credentials are encrypted before they are saved, and your content is stored with access controls. You can request an export or deletion of your data at any time.',
     category: 'Security',
   },
   {
@@ -341,20 +341,13 @@ export default function SupportPage() {
                   Still Need Help?
                 </h2>
                 <p className="text-gray-300 mb-6">
-                  Our support team is available 24/7 to help you get the most
-                  out of Synthex.
+                  Our support team will help you get the most out of Synthex.
                 </p>
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Mail className="w-5 h-5 text-orange-400" />
                     <span className="text-gray-300">
                       support@synthex.social
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-5 h-5 text-orange-400" />
-                    <span className="text-gray-300">
-                      Live chat available 24/7
                     </span>
                   </div>
                 </div>

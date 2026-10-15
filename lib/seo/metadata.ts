@@ -236,7 +236,7 @@ export const PAGE_METADATA = {
   pricing: generateProductMetadata({
     title: 'Pricing',
     description:
-      'Affordable AI marketing from $199/month. Use your own API keys to dramatically reduce costs. Enterprise plans with custom rates available.',
+      'AI marketing with your own API keys. Enterprise plans with custom rates available.',
     path: '/pricing',
     keywords: [
       'pricing plans',
@@ -353,15 +353,9 @@ export const PAGE_METADATA = {
   security: generateMetadata({
     title: 'Security',
     description:
-      "Learn about Synthex's security practices, data protection measures, and compliance certifications.",
+      "Learn about Synthex's security practices and data protection measures.",
     path: '/security',
-    keywords: [
-      'security',
-      'data protection',
-      'compliance',
-      'SOC 2',
-      'encryption',
-    ],
+    keywords: ['security', 'data protection', 'encryption'],
   }),
 
   support: generateMetadata({

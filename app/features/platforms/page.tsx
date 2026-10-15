@@ -8,12 +8,12 @@ import { FooterSection } from '@/components/landing/footer-section';
 export const revalidate = 3600;
 
 export const metadata: Metadata = genMeta({
-  title: '9 Social Media Platforms, 1 Dashboard | Synthex',
+  title: 'Social Media Platforms, One Dashboard | Synthex',
   description:
     'Manage Instagram, Facebook, TikTok, YouTube, LinkedIn, Pinterest, Reddit, Threads, and X from one AI-powered dashboard. Publish everywhere, manage nothing.',
   path: '/features/platforms',
   keywords: [
-    'social media management 9 platforms',
+    'social media management platforms',
     'multi-platform social media tool',
     'social media dashboard Australia',
     'publish to all social media at once',
@@ -50,7 +50,7 @@ const PLATFORMS = [
     name: 'X (Twitter)',
     icon: '/icons/3d/platforms/twitter.svg',
     description:
-      'Punchy single posts and thread formats. Under 280 characters with maximum impact.',
+      "Punchy single posts and thread formats, within X's character limit.",
   },
   {
     name: 'LinkedIn',
@@ -88,7 +88,7 @@ export default function PlatformsPage() {
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-6">
             <span className="text-[11px] font-semibold tracking-[0.15em] uppercase text-orange-400">
-              9 platforms · 1 dashboard
+              Your platforms · one dashboard
             </span>
           </div>
           <h1 className="text-5xl sm:text-6xl font-black tracking-tight text-white leading-[1.05] mb-6">
@@ -96,7 +96,7 @@ export default function PlatformsPage() {
             <em className="text-orange-500 not-italic">One place.</em>
           </h1>
           <p className="text-lg text-white/50 max-w-2xl mx-auto leading-relaxed mb-10">
-            Stop switching between apps. Synthex connects all 9 major social
+            Stop switching between apps. Synthex connects the major social
             platforms and publishes platform-native content to each — from a
             single AI-powered dashboard.
           </p>
@@ -117,7 +117,7 @@ export default function PlatformsPage() {
             href="/signup"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
           >
-            Connect all 9 platforms free →
+            Connect your platforms free →
           </Link>
         </div>
       </section>
@@ -155,37 +155,13 @@ export default function PlatformsPage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-16 px-6 border-y border-white/[0.04]">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: '9', label: 'Platforms supported' },
-              { value: '1', label: 'Dashboard for everything' },
-              { value: '∞', label: 'Scheduling capacity' },
-            ].map(({ value, label }) => (
-              <div key={label}>
-                <p className="text-4xl font-black text-orange-500 mb-1">
-                  {value}
-                </p>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/40">
-                  {label}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-white mb-4">
-            Publish to all 9 platforms today
+            Publish to your platforms today
           </h2>
-          <p className="text-white/50 mb-8">
-            No card required. Takes 60 seconds to set up.
-          </p>
+          <p className="text-white/50 mb-8">No card required.</p>
           <Link
             href="/signup"
             className="inline-flex items-center justify-center px-10 py-4 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-base"

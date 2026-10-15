@@ -24,7 +24,7 @@ const stages = [
     icon: Search,
     title: 'Research',
     copy: 'Market signal, competitors and product context tied to sources.',
-    status: 'verified' as const,
+    status: 'grounded' as const,
   },
   {
     icon: Target,

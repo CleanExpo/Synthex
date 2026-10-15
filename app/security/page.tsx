@@ -2,9 +2,7 @@ import { generateMetadata } from '@/lib/seo/metadata';
 import Link from 'next/link';
 import {
   ArrowRight,
-  Award,
   CheckCircle,
-  CheckCircle2,
   Database,
   Eye,
   Globe,
@@ -12,7 +10,6 @@ import {
   Lock,
   Mail,
   Server,
-  Shield,
   Users,
 } from '@/components/icons';
 import { Button } from '@/components/ui/button';
@@ -28,20 +25,20 @@ import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
 
 const securityHighlights = [
-  { value: '256-bit', label: 'Encryption' },
-  { value: 'GDPR', label: 'Compliant' },
+  { value: 'Encrypted', label: 'Stored platform credentials' },
+  { value: 'On request', label: 'Data export and deletion' },
 ];
 
 const securityFeatures = [
   {
     icon: Lock,
-    title: 'End-to-End Encryption',
-    copy: 'All data is encrypted in transit (TLS 1.3) and at rest (AES-256) to ensure your content and credentials remain secure.',
+    title: 'Encryption in transit and at rest',
+    copy: 'Connections use HTTPS, and stored platform credentials are encrypted with authenticated encryption before they are saved.',
   },
   {
     icon: CheckCircle,
-    title: 'GDPR & Privacy Compliant',
-    copy: 'Full compliance with GDPR, CCPA, and international data protection regulations. Your data, your rights.',
+    title: 'Export and deletion on request',
+    copy: 'You can request an export of your data or deletion of your account at any time through the contact page.',
   },
 ];
 
@@ -54,7 +51,7 @@ const dataProtectionPrinciples = [
   {
     icon: Users,
     title: 'User Control',
-    copy: 'You own your data. Export, delete, or modify your information at any time through your account settings.',
+    copy: 'You own your data. Request an export, correction or deletion of your information at any time.',
   },
   {
     icon: Eye,
@@ -64,7 +61,7 @@ const dataProtectionPrinciples = [
   {
     icon: Lock,
     title: 'Secure Storage',
-    copy: 'Data stored in SOC 2 certified data centres with encrypted backups and strict access controls.',
+    copy: 'Data is held with our hosting and database providers, with backups and restricted access.',
   },
 ];
 
@@ -73,7 +70,7 @@ const infrastructureDetails = [
     icon: Globe,
     title: 'Hosting Platform',
     provider: 'Vercel (AWS)',
-    copy: 'SOC 2, ISO 27001, PCI DSS',
+    copy: 'Hosting and edge network',
   },
   {
     icon: Database,
@@ -106,33 +103,12 @@ const authenticationFeatures = [
   'Rate limiting and brute-force protection',
 ];
 
-const certifications = [
-  {
-    icon: Shield,
-    name: 'GDPR',
-    description: 'General Data Protection Regulation',
-    status: 'Compliant',
-  },
-  {
-    icon: CheckCircle2,
-    name: 'CCPA',
-    description: 'California Consumer Privacy Act',
-    status: 'Compliant',
-  },
-  {
-    icon: Award,
-    name: 'ISO 27001',
-    description: 'Information Security Management',
-    status: 'In Progress',
-  },
-];
-
 export const metadata = generateMetadata({
   title: 'Security',
   description:
-    'How Synthex protects your data — encryption, access controls, compliance, and security practices.',
+    'How Synthex protects your data — encryption, access controls and security practices.',
   path: '/security',
-  keywords: ['security', 'data security', 'encryption', 'compliance'],
+  keywords: ['security', 'data security', 'encryption'],
 });
 
 export default function SecurityPage() {
@@ -163,7 +139,7 @@ export default function SecurityPage() {
 
         <PublicPageSection
           className="bg-sx-bg-secondary"
-          eyebrow="Enterprise-grade"
+          eyebrow="Security"
           title="Security built into the operating model"
           description="Protection is not a bolt-on checkbox — it is part of how Synthex handles intake, planning, approval and production."
         >
@@ -204,7 +180,7 @@ export default function SecurityPage() {
           className="bg-sx-bg-secondary"
           eyebrow="Infrastructure"
           title="Secure infrastructure stack"
-          description="Built on industry-leading platforms with multiple layers of security and redundancy."
+          description="Built on established hosting and database platforms with layered security."
         >
           <div className="grid gap-4 md:grid-cols-2">
             {infrastructureDetails.map(detail => (
@@ -256,34 +232,6 @@ export default function SecurityPage() {
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-sx-accent/10 via-transparent to-sx-intelligence/10" />
               <Key className="relative mx-auto h-40 w-40 text-sx-accent/25" />
             </div>
-          </div>
-        </PublicPageSection>
-
-        <PublicPageSection
-          className="bg-sx-bg-secondary"
-          eyebrow="Compliance"
-          title="Certifications and standards"
-        >
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {certifications.map(cert => (
-              <article
-                key={cert.name}
-                className="h-full min-w-0 rounded-card border border-white/[0.08] bg-sx-bg-elevated p-6 text-center"
-              >
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-sx-accent/20 bg-sx-accent/[0.08]">
-                  <cert.icon className="h-7 w-7 text-sx-accent" />
-                </div>
-                <h3 className="text-xl font-semibold text-sx-text-primary">
-                  {cert.name}
-                </h3>
-                <p className="mt-1 text-sm text-sx-text-muted">
-                  {cert.description}
-                </p>
-                <span className="mt-4 inline-flex rounded-full border border-sx-accent/20 bg-sx-accent/[0.08] px-3 py-1 text-xs font-medium text-sx-accent">
-                  {cert.status}
-                </span>
-              </article>
-            ))}
           </div>
         </PublicPageSection>
 

@@ -129,7 +129,7 @@ export default function TermsPage() {
         <PublicPageSection
           className="bg-sx-bg-secondary"
           eyebrow="Summary"
-          title="The rules in four cards"
+          title="The rules, card by card"
         >
           <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
             {sections.map((section, index) => (

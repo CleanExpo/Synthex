@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import type { PipelineResult } from '@/lib/ai/onboarding-pipeline';
 
+/** How many ranked growth directions an Opportunity Map returns. */
+export const OPPORTUNITY_DIRECTION_COUNT = 3;
+
 const URL_PATTERN = /(?:https?:\/\/|www\.)[^\s<>()\[\]{}"']+/gi;
 const SOCIAL_HOSTS: Record<string, string> = {
   'instagram.com': 'Instagram',
@@ -248,15 +251,19 @@ function buildCandidates(
       title: 'Capture existing search demand',
       direction:
         'Build one evidence-led search cluster around the strongest customer problem, then connect each page to a clear service path.',
-      whyNow:
-        analysis.seoScore < 70
+      // An unread page has no score: say so rather than report a measured 0.
+      whyNow: !seo
+        ? 'The primary page could not be read, so no on-page search score was measured.'
+        : analysis.seoScore < 70
           ? `The observed on-page search foundation scored ${analysis.seoScore}/100.`
           : 'The site has a workable technical base; the next leverage is topic depth and conversion intent.',
       score: Math.round(Math.max(54, 92 - analysis.seoScore * 0.42)),
       value: 'high',
       effort: analysis.seoScore < 40 ? 'medium' : 'low',
       evidence: [
-        `Observed SEO foundation: ${analysis.seoScore}/100`,
+        seo
+          ? `Observed SEO foundation: ${analysis.seoScore}/100`
+          : 'No on-page search score was measured',
         seo?.h1
           ? `Primary page heading observed: “${seo.h1.slice(0, 90)}”`
           : 'No primary page heading was observed',
@@ -390,7 +397,7 @@ export function buildOpportunityMap(
 ): OpportunityMap {
   const candidates = buildCandidates(input, analysis)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+    .slice(0, OPPORTUNITY_DIRECTION_COUNT)
     .map((candidate, index) => ({ ...candidate, rank: index + 1 }));
 
   const socialCount = new Set([
@@ -451,7 +458,9 @@ export function buildOpportunityMap(
     signals: [
       {
         label: 'Search foundation',
-        value: `${analysis.seoScore}/100`,
+        value: analysis.seoSignals
+          ? `${analysis.seoScore}/100`
+          : 'Not measured',
         state: analysis.seoSignals ? 'observed' : 'missing',
       },
       {
