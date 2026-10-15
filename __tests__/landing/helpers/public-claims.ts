@@ -1075,6 +1075,16 @@ export const GENERATED_SEEDS: GeneratedSeed[] = (() => {
 })();
 
 /**
+ * Seeds retired on purpose (text + reason), e.g. copy a governance decision
+ * restored. Not matched by the tripwire; the completeness and append-only
+ * checks count them as accounted for. Retiring is a visible, reviewed edit.
+ */
+export interface RetiredSeed {
+  text: string;
+  reason: string;
+}
+
+/**
  * The exact-seed half of the blocking tripwire: the generated set, plus the
  * drafted seeds it does not contain (mutants, and copy outside its scope).
  */

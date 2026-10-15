@@ -26,6 +26,7 @@ import {
   ROOT,
   seedKeyOf,
   type GeneratedSeed,
+  type RetiredSeed,
 } from './helpers/public-claims';
 
 const BASE = '83243588f2505c556a215dee6f275dcd10626caa';
@@ -34,9 +35,16 @@ const BASE = '83243588f2505c556a215dee6f275dcd10626caa';
 // read from the file.
 const keys = (seeds: GeneratedSeed[]) =>
   seeds.map(s => seedKeyOf(s.text)).sort();
-const committedSeeds = () =>
-  JSON.parse(readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8'))
-    .seeds as Array<GeneratedSeed & { key?: string }>;
+const seedFile = (json: string) =>
+  JSON.parse(json) as {
+    seeds: Array<GeneratedSeed & { key?: string }>;
+    retired?: RetiredSeed[];
+  };
+const current = () =>
+  seedFile(readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8'));
+const committedSeeds = () => current().seeds;
+const retiredKeys = () =>
+  new Set((current().retired ?? []).map(r => seedKeyOf(r.text)));
 
 describe('public copy — committed tripwire seeds cover the Git-history generator', () => {
   it('has the history the generator reads', () => {
@@ -92,7 +100,7 @@ describe('public copy — committed tripwire seeds cover the Git-history generat
       stderr: '',
     });
     const regenerated = JSON.parse(run.stdout).seeds as GeneratedSeed[];
-    const have = new Set(keys(committedSeeds()));
+    const have = new Set([...keys(committedSeeds()), ...retiredKeys()]);
     // Regenerated (text, key) pairs the committed file omits, keys derived
     // from text on both sides. An edited seed text derives a different key,
     // so the original segment shows up here. (Extra committed seeds pass.)
@@ -102,4 +110,39 @@ describe('public copy — committed tripwire seeds cover the Git-history generat
         .filter(pair => !have.has(pair.key)),
     }).toEqual({ missingFromCommitted: [] });
   }, 300_000);
+
+  // Append-only: every seed any earlier commit since base carried must still
+  // be a seed, or be retired with a reason. Editing a seed's text removes the
+  // old text, so it fails here even when the same change restores the claim
+  // (which would make the generator stop listing it). After a squash merge
+  // there are no earlier versions to compare.
+  it('keeps every seed earlier commits carried, unless retired with a reason', () => {
+    const shas = execFileSync(
+      'git',
+      ['log', '--format=%H', `${BASE}..HEAD`, '--', GENERATED_SEEDS_FILE],
+      { cwd: ROOT, encoding: 'utf8' }
+    )
+      .split('\n')
+      .filter(Boolean);
+    const have = new Set([...keys(committedSeeds()), ...retiredKeys()]);
+    const dropped = new Map<string, string>();
+    for (const sha of shas) {
+      for (const seed of seedFile(
+        execFileSync('git', ['show', `${sha}:${GENERATED_SEEDS_FILE}`], {
+          cwd: ROOT,
+          encoding: 'utf8',
+          maxBuffer: 1 << 28,
+        })
+      ).seeds) {
+        const key = seedKeyOf(seed.text);
+        if (!have.has(key))
+          dropped.set(key, `${seed.text} (in ${sha.slice(0, 8)})`);
+      }
+    }
+    expect({ dropped: [...dropped.values()] }).toEqual({ dropped: [] });
+    const unexplained = (current().retired ?? []).filter(
+      r => !r.text || !r.reason || r.reason.trim().length < 10
+    );
+    expect(unexplained).toEqual([]);
+  });
 });

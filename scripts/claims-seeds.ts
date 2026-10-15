@@ -263,25 +263,36 @@ async function generate(): Promise<{ snapshots: string[]; seeds: Seed[] }> {
 }
 
 const { snapshots, seeds } = await generate();
-const render = (list: Seed[]) =>
+/** A seed retired on purpose, with the reason a reviewer can read. */
+export interface RetiredSeed {
+  text: string;
+  reason: string;
+}
+
+const render = (list: Seed[], retired: RetiredSeed[] = []) =>
   `${JSON.stringify(
     {
       generator: 'scripts/claims-seeds.ts',
       base: BASE.slice(0, 8),
       count: list.length,
       seeds: list,
+      retired,
     },
     null,
     2
   )}\n`;
 if (process.argv.includes('--write')) {
   // Merge, never drop: committed seeds are kept (a squash merge removes the
-  // snapshots that produced some of them) and only new ones are added.
-  const committed: Seed[] = realFs.existsSync(OUT)
-    ? JSON.parse(realFs.readFileSync(OUT, 'utf8') as string).seeds
-    : [];
+  // snapshots that produced some of them) and only new ones are added. A
+  // retired seed stays retired and is not re-added.
+  const file = realFs.existsSync(OUT)
+    ? JSON.parse(realFs.readFileSync(OUT, 'utf8') as string)
+    : { seeds: [], retired: [] };
+  const committed: Seed[] = file.seeds;
+  const retired: RetiredSeed[] = file.retired ?? [];
   const keyOf = (await import('../__tests__/landing/helpers/public-claims'))
     .seedKeyOf;
+  const retiredKeys = new Set(retired.map(r => keyOf(r.text)));
   // Stored keys from older files are dropped: the key is derived from text.
   const byKey = new Map(
     committed.map(({ text, file, firstSeen }) => [
@@ -291,15 +302,16 @@ if (process.argv.includes('--write')) {
   );
   let added = 0;
   for (const seed of seeds) {
-    if (!byKey.has(keyOf(seed.text))) {
-      byKey.set(keyOf(seed.text), seed);
+    const key = keyOf(seed.text);
+    if (!byKey.has(key) && !retiredKeys.has(key)) {
+      byKey.set(key, seed);
       added++;
     }
   }
   const merged = sortSeeds([...byKey.values()], keyOf);
-  fs.writeFileSync(OUT, render(merged));
+  fs.writeFileSync(OUT, render(merged, retired));
   process.stderr.write(
-    `kept ${committed.length}, added ${added}: ${merged.length} seeds (${seeds.length} regenerated from ${snapshots.length} snapshots)\n`
+    `kept ${committed.length}, added ${added}: ${merged.length} seeds, ${retired.length} retired (${seeds.length} regenerated from ${snapshots.length} snapshots)\n`
   );
 } else {
   process.stdout.write(render(seeds));
