@@ -27,16 +27,21 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { act, cleanup, render } from '@testing-library/react';
 import { NextRequest } from 'next/server';
+import { SWRConfig } from 'swr';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { createCredentialIntakeToken } from '@/lib/credential-intake/tokens';
+import path from 'path';
 import {
+  ROOT,
   apiRoutes,
-  findClaims,
+  claimHits,
   matchApiRoute,
   publicPageFiles,
   rel,
+  renderedSentencesText,
   routeOf,
 } from './helpers/public-claims';
+import { allowKeys } from './helpers/public-claims-allowlist';
 
 // ── Fixture registry (read by the Prisma mock) ──────────────────────────────
 
@@ -45,8 +50,10 @@ type PrismaFixtures = Record<string, Record<string, FixtureValue>>;
 
 declare global {
   var __copyFixtures: PrismaFixtures;
+  var __copyReads: number;
 }
 globalThis.__copyFixtures = {};
+globalThis.__copyReads = 0;
 
 jest.mock('@/lib/prisma', () => {
   const empty = (method: string) => {
@@ -60,6 +67,7 @@ jest.mock('@/lib/prisma', () => {
       {},
       {
         get: (_t, method: string) => async (args: unknown) => {
+          globalThis.__copyReads = (globalThis.__copyReads ?? 0) + 1;
           const fixture = globalThis.__copyFixtures[name]?.[String(method)];
           if (fixture === undefined) return empty(String(method));
           return typeof fixture === 'function'
@@ -302,6 +310,68 @@ const PAGE_FIXTURES: Record<string, PageFixture> = {
     ],
   },
 
+  'app/blog/page.tsx': {
+    prisma: {
+      blogPost: {
+        findMany: [
+          {
+            id: 'post-1',
+            slug: 'fixture-post',
+            title: 'Fixture Listed Post Title',
+            excerpt: 'Fixture listed post excerpt.',
+            author: 'Fixture Author',
+            category: 'Fixture Category',
+            tags: ['fixture-tag'],
+            ogImage: null,
+            readTime: 4,
+            publishedAt: NOW.toISOString(),
+            aiGenerated: false,
+          },
+        ],
+        count: 1,
+      },
+    },
+    markers: ['Fixture Listed Post Title'],
+  },
+
+  'app/benchmark/page.tsx': {
+    prisma: {
+      platformConnection: {
+        count: 30,
+        findMany: [{ platform: 'instagram' }, { platform: 'linkedin' }],
+      },
+      platformPost: { count: 120 },
+    },
+    markers: ['Based on 30 anonymised Synthex client accounts'],
+  },
+
+  'app/analytics/page.tsx': {
+    prisma: {
+      campaign: { findMany: [{ id: 'campaign-1' }] },
+      post: {
+        findMany: [
+          {
+            id: 'post-a1',
+            platform: 'instagram',
+            status: 'published',
+            analytics: {
+              reach: 900,
+              engagement: 45,
+              impressions: 1500,
+              clicks: 30,
+            },
+            publishedAt: NOW,
+            createdAt: NOW,
+          },
+        ],
+      },
+      apiUsage: {
+        findMany: [{ endpoint: '/api/fixture', status: 200, createdAt: NOW }],
+      },
+    },
+    markers: [],
+  },
+
   'app/credential-intake/page.tsx': {
     url: () =>
       `/credential-intake?token=${encodeURIComponent(
@@ -385,6 +455,148 @@ const PAGE_FIXTURES: Record<string, PageFixture> = {
   },
 };
 
+// Each data-dependent page renders in every state listed here, as well as
+// its default state (no fixture rows at all). Variants cover the empty and
+// other visible branches: no links, no reviews, an expired link…
+type Rows = Record<string, unknown>;
+const row = (page: string, model: string, method: string) =>
+  PAGE_FIXTURES[page].prisma[model][method] as Rows;
+function variant(
+  page: string,
+  prisma: PrismaFixtures,
+  markers: string[]
+): PageFixture {
+  const base = PAGE_FIXTURES[page];
+  const merged: PrismaFixtures = { ...base.prisma };
+  for (const [model, methods] of Object.entries(prisma)) {
+    merged[model] = { ...base.prisma[model], ...methods };
+  }
+  return { ...base, prisma: merged, markers };
+}
+
+const BIO = 'app/bio/[slug]/page.tsx';
+const CLIENT = 'app/clients/[slug]/page.tsx';
+const POST = 'app/blog/[slug]/page.tsx';
+const INTAKE = 'app/credential-intake/page.tsx';
+const TESTIMONIAL = 'app/testimonial/[token]/page.tsx';
+const WELCOME = 'app/welcome/page.tsx';
+
+const PAGE_VARIANTS: Record<string, Record<string, PageFixture>> = {
+  'app/blog/page.tsx': { populated: PAGE_FIXTURES['app/blog/page.tsx'] },
+  'app/benchmark/page.tsx': {
+    populated: PAGE_FIXTURES['app/benchmark/page.tsx'],
+  },
+  'app/analytics/page.tsx': {
+    populated: PAGE_FIXTURES['app/analytics/page.tsx'],
+  },
+  [BIO]: {
+    populated: PAGE_FIXTURES[BIO],
+    'no links, no bio, no branding': variant(
+      BIO,
+      {
+        linkBioPage: {
+          findUnique: {
+            ...row(BIO, 'linkBioPage', 'findUnique'),
+            bio: null,
+            avatarUrl: null,
+            coverUrl: null,
+            socialLinks: [],
+            showBranding: false,
+            links: [],
+          },
+        },
+      },
+      ['Fixture Bio Title', 'No links yet']
+    ),
+  },
+  [CLIENT]: {
+    populated: PAGE_FIXTURES[CLIENT],
+    'no reviews, location, contact or score': variant(
+      CLIENT,
+      {
+        organization: {
+          findUnique: {
+            ...row(CLIENT, 'organization', 'findUnique'),
+            description: null,
+            website: null,
+            industry: null,
+            phoneNumber: null,
+            logo: null,
+            brandDna: null,
+            gbpLocations: [],
+          },
+        },
+        authorityScore: { findFirst: null },
+      },
+      ['Fixture Organisation']
+    ),
+  },
+  [POST]: {
+    populated: PAGE_FIXTURES[POST],
+    'minimal post': variant(
+      POST,
+      {
+        blogPost: {
+          findFirst: {
+            ...row(POST, 'blogPost', 'findFirst'),
+            excerpt: '',
+            category: null,
+            tags: [],
+            readTime: null,
+            wordCount: null,
+            publishedAt: null,
+          },
+        },
+      },
+      ['Fixture Post Title']
+    ),
+  },
+  [INTAKE]: {
+    populated: PAGE_FIXTURES[INTAKE],
+    'inactive organisation': variant(
+      INTAKE,
+      {
+        organization: {
+          findUnique: {
+            ...row(INTAKE, 'organization', 'findUnique'),
+            status: 'suspended',
+          },
+        },
+      },
+      ['Organisation is not available']
+    ),
+  },
+  [TESTIMONIAL]: {
+    populated: PAGE_FIXTURES[TESTIMONIAL],
+    'expired link': variant(
+      TESTIMONIAL,
+      {
+        testimonialRequest: {
+          findUnique: {
+            ...row(TESTIMONIAL, 'testimonialRequest', 'findUnique'),
+            expiresAt: new Date('2026-01-01T00:00:00.000Z'),
+          },
+        },
+      },
+      ['This link has expired.']
+    ),
+  },
+  [WELCOME]: {
+    populated: PAGE_FIXTURES[WELCOME],
+    'no score, story or upcoming posts': variant(
+      WELCOME,
+      {
+        authorityScore: { findFirst: null },
+        monthlyStory: { findFirst: null },
+        publishQueueItem: { findMany: [] },
+      },
+      ['Fixture Welcome Organisation']
+    ),
+  },
+};
+
+const DEFAULT_STATE = 'default (no rows)';
+
 // ── Same-origin fetch → real route handlers ─────────────────────────────────
 
 const ROUTES = apiRoutes();
@@ -427,6 +639,7 @@ async function routedFetch(
   }
   const hit = matchApiRoute(ROUTES, url.pathname);
   if (!hit) return plainResponse(404, { error: 'No such route' });
+  globalThis.__copyReads = (globalThis.__copyReads ?? 0) + 1;
   const method = (init.method ?? 'GET').toUpperCase();
 
   const handler = (require(hit.route.file) as Record<string, unknown>)[method];
@@ -533,18 +746,6 @@ async function resolveServerTree(
   );
 }
 
-// What a visitor reads: text content plus the attributes that surface as copy.
-function visibleCopy(markup: string): string {
-  const attributes = [
-    ...markup.matchAll(
-      /\s(?:alt|title|aria-label|placeholder|content|value)="([^"]*)"/g
-    ),
-  ].map(m => m[1]);
-  // Tags drop out; script bodies (JSON-LD) stay, since crawlers read them.
-  const text = markup.replace(/<[^>]+>/g, ' ');
-  return `${text} ${attributes.join(' ')}`;
-}
-
 async function pageTree(
   file: string,
   fixture?: PageFixture
@@ -566,7 +767,12 @@ async function pageTree(
 
 // Mount in jsdom and wait until effects and same-origin fetches settle.
 async function clientMarkup(tree: React.ReactNode): Promise<string> {
-  const { container } = render(<>{tree}</>);
+  // A fresh SWR cache per render: states must not reuse each other's data.
+  const { container } = render(
+    <SWRConfig value={{ provider: () => new Map(), dedupingInterval: 0 }}>
+      {tree}
+    </SWRConfig>
+  );
   let last = '';
   let stable = 0;
   // Data libraries (SWR) start requests on a later frame, so each step is a
@@ -622,53 +828,96 @@ describe('public copy — unsupported claims (rendered)', () => {
         'app/add-ons/page.tsx',
         'app/(auth)/signup/page.tsx',
         'app/vision-board-preview/ra-launch-2026-05/page.tsx',
-        ...Object.keys(PAGE_FIXTURES),
+        ...Object.keys(PAGE_VARIANTS),
       ])
     );
   });
 
   it('has fixtures only for real pages', () => {
     const known = new Set(pages.map(rel));
-    expect(Object.keys(PAGE_FIXTURES).filter(f => !known.has(f))).toEqual([]);
+    expect(Object.keys(PAGE_VARIANTS).filter(f => !known.has(f))).toEqual([]);
   });
 
-  it.each(pages.map(file => [rel(file), file]))(
-    '%s',
-    async (relative, file) => {
-      const fixture = PAGE_FIXTURES[relative];
+  const cases: Array<[string, string, string]> = pages.flatMap(file => {
+    const relative = rel(file);
+    const states = [
+      DEFAULT_STATE,
+      ...Object.keys(PAGE_VARIANTS[relative] ?? {}),
+    ];
+    return states.map(
+      state => [relative, state, file] as [string, string, string]
+    );
+  });
+  const readsData = new Set<string>();
+  const allow = allowKeys('rendered');
+  const usedAllowKeys = new Set<string>();
+  const keyOf = (sentence: string) => sentence.replace(/\s+/g, '');
+
+  it.each(cases)(
+    '%s — %s',
+    async (relative, state, file) => {
+      const fixture =
+        state === DEFAULT_STATE ? undefined : PAGE_VARIANTS[relative][state];
       globalThis.__copyFixtures = fixture?.prisma ?? {};
+      globalThis.__copyReads = 0;
       const route = routeOf(file);
       const params = paramsFor(route, fixture);
-      const path =
+      const urlPath =
         fixture?.url?.() ??
         route.replace(
           /\[(?:\.\.\.)?([^\]]+)\]/g,
           (_m, name: string) => params[name]
         );
-      window.history.replaceState({}, '', path);
+      window.history.replaceState({}, '', urlPath);
 
-      let served: string;
-      let hydrated: string;
+      let markup: string;
       try {
         const tree = await pageTree(file, fixture);
-        served = renderToStaticMarkup(<>{tree}</>);
-        hydrated = await clientMarkup(tree);
+        markup = renderToStaticMarkup(<>{tree}</>);
+        markup += `\n${await clientMarkup(tree)}`;
       } catch (error) {
         cleanup();
+        const message = String((error as Error).message);
         // A redirect-only page serves no body, so there is no copy to judge.
-        if (String((error as Error).message).startsWith('NEXT_REDIRECT ')) {
-          return;
+        if (message.startsWith('NEXT_REDIRECT ')) return;
+        // notFound(): the visitor gets app/not-found.tsx; judge that instead.
+        if (message === 'NEXT_NOT_FOUND' && !fixture) {
+          const notFound = await pageTree(path.join(ROOT, 'app/not-found.tsx'));
+          markup = renderToStaticMarkup(<>{notFound}</>);
+        } else {
+          throw error;
         }
-        throw error;
       }
-      const copy = visibleCopy(`${served}\n${hydrated}`);
+      if (state === DEFAULT_STATE && globalThis.__copyReads > 0) {
+        readsData.add(relative);
+      }
 
-      expect(copy.replace(/\s+/g, '').length).toBeGreaterThan(0);
+      const text = renderedSentencesText(markup);
+      expect(text.replace(/\s+/g, '').length).toBeGreaterThan(0);
       for (const marker of fixture?.markers ?? []) {
-        expect(copy).toContain(marker);
+        expect(text).toContain(marker);
       }
-      expect(findClaims(copy)).toEqual([]);
+      const hits = claimHits(text, new Set());
+      const allowed = (h: { rule: string; sentence: string }) =>
+        h.rule === 'quantified outcome' && allow.has(keyOf(h.sentence));
+      for (const hit of hits.filter(allowed)) {
+        usedAllowKeys.add(keyOf(hit.sentence));
+      }
+      const findings = hits.filter(h => !allowed(h));
+      expect(findings.map(h => `${h.rule} — "${h.sentence}"`)).toEqual([]);
     },
     60_000
   );
+
+  // A page that reads data in its default state must also be rendered with a
+  // populated fixture, or its data-driven copy is never judged.
+  it('gives every data-reading page a populated fixture', () => {
+    const missing = [...readsData].filter(f => !PAGE_VARIANTS[f]?.populated);
+    expect(missing).toEqual([]);
+  });
+
+  // Every rendered allow-list entry must still be needed.
+  it('has no stale rendered allow-list entries', () => {
+    expect([...allow].filter(k => !usedAllowKeys.has(k))).toEqual([]);
+  });
 });

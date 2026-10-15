@@ -235,59 +235,107 @@ BANNED_CLAIMS.push(
   ]
 );
 
-// Growth claims, by class rather than by phrasing: a growth verb, a quantity
-// and a growth object inside one short window of a single sentence, in any
-// order — "grew by 10000 followers", "followers jumped 300%", "revenue rose
-// 23%", "sales doubled", "saved 15 hours a week".
+// ── Quantified outcomes (deny by default) ────────────────────────────────────
 //
-// The quantity must read as an outcome: a measure (N%, N×, $N), a number
-// directly counting a growth object ("10000 instagram followers"), or a
-// doubling verb. A number counting something else ("add 1-2 emojis", "7 ways
-// to increase engagement") or a list index ("4: follower growth") is not one.
-const GROWTH_VERB =
-  /\b(?:gr[eo]w(?:s|n|ing)?|increas(?:e[ds]?|ing)|boost(?:s|ed|ing)?|gain(?:s|ed|ing)?|add(?:s|ed|ing)?|jump(?:s|ed|ing)?|doubl(?:e[ds]?|ing)|tripl(?:e[ds]?|ing)|quadrupl(?:e[ds]?|ing)|went from|r[io]se[ns]?|rising|climb(?:s|ed|ing)?|up|surg(?:e[ds]?|ing)|soar(?:s|ed|ing)?|skyrocket(?:s|ed|ing)?|spik(?:e[ds]?|ing)|sav(?:e[ds]?|ings?)|lift(?:s|ed)?)\b/g;
-const DOUBLING_VERB = /^(?:doubl|tripl|quadrupl)/;
-const GROWTH_OBJECT_WORD = String.raw`(?:followers?|subscribers?|fans|likes|views|leads?|customers?|clients?|sales|orders?|bookings?|enquiries|inquiries|revenue|profit|income|engagement|reach|traffic|visitors?|impressions|conversions?|sign-?ups|roi|hours?)`;
-const GROWTH_OBJECT = new RegExp(String.raw`\b${GROWTH_OBJECT_WORD}\b`);
-const MEASURE =
-  /(?:\$\s?\d+(?:\.\d+)?(?:k|m)?|\b\d+(?:\.\d+)?\s?(?:%|percent\b|x\b|times\b|fold\b))/;
-const COUNTED_OBJECT = new RegExp(
-  String.raw`\b\d+(?:\.\d+)?(?:k|m)?\+? (?:[a-z-]+ ){0,2}${GROWTH_OBJECT_WORD}\b`
-);
-const GROWTH_WINDOW = 60; // characters either side of the verb
+// No verb list. EVERY sentence that contains a quantity and an outcome noun is
+// a finding, whatever the verb ("attracted", "snagged", "pulled in", "won"…),
+// unless the exact sentence is on the reviewed allow-list
+// (public-claims-allowlist.ts) with a reason it is not a factual outcome
+// claim. New phrasings fail until someone reviews them.
 
-export function findGrowthClaims(normalised: string): string[] {
-  const hits: string[] = [];
-  for (const verb of normalised.matchAll(GROWTH_VERB)) {
-    const at = verb.index ?? 0;
-    // Stay inside the verb's sentence: a full stop followed by a space ends it.
-    const before = normalised.slice(Math.max(0, at - GROWTH_WINDOW), at);
-    const after = normalised.slice(at, at + verb[0].length + GROWTH_WINDOW);
-    const window =
-      (before.split(/[.!?;](?:\s|$)/).pop() ?? '') +
-      (after.split(/[.!?;](?:\s|$)/)[0] ?? '');
-    // "saving $140,000 a year" needs no growth object: the money is the result.
-    if (/^sav/.test(verb[0]) && /\$\s?\d/.test(window)) {
-      hits.push(`growth claim — "${window.trim()}"`);
-      continue;
+export const QUANTITY =
+  /(?:\b(?:doubl(?:e[ds]?|ing)|tripl(?:e[ds]?|ing)|quadrupl(?:e[ds]?|ing)|twice|halved)\b(?!-)|\$\s?\d[\d.]*(?:k|m|b)?|\b\d[\d.]*(?:k|m|b)?\+?\s?(?:%|percent\b|x\b|×|times\b|fold\b)?|\b(?:millions?|billions?|thousands?|hundreds?|dozens?)\b)/;
+
+export const OUTCOME_NOUN =
+  /\b(?:followers?|following|subscribers?|fans?|audiences?|reach|impressions?|engagements?|likes?|views?|viewers?|clicks?|traffic|visitors?|visits|leads?|customers?|clients?|users?|businesses|business owners|members?|memberships?|sign-?ups?|registrations?|sales|orders?|purchases?|conversions?|revenue|profits?|income|earnings|roi|returns?|costs?|savings?|saving|hours?|hrs|time|minutes?|mins|growth|rates?|uplift|increases?|results?|claims?|re-?inspections?|bookings?|reservations?|enquiries|inquiries|shares|comments|downloads|installs|retention|churn|rankings?|donors?|donations?|pipeline|waitlist|footfall|foot traffic|deals?|signups|uptime|availability|accuracy|satisfaction)\b/;
+
+const QUANTITY_ALL = new RegExp(QUANTITY.source, 'g');
+
+// A quantity that cannot be an outcome on its own: a bare 0 or 1 ("one
+// dashboard", "1 click"), or a calendar year used as a date ("July 2026",
+// "in 2024", "2010–2024"). With a unit (1%, $1, 1x, 1m) they still count, and
+// a year-like number anywhere else ("grew to 2000 followers") still counts.
+function countsAsQuantity(text: string, match: RegExpMatchArray): boolean {
+  const q = match[0].trim().replace(/\.+$/, '');
+  if (/^[01]$/.test(q)) return false;
+  // A list index is a position, not a quantity: "3: social proof",
+  // "step 2: …", "pillar 4", "#1".
+  const at0 = match.index ?? 0;
+  const tail = text.slice(at0 + match[0].length, at0 + match[0].length + 2);
+  const head = text.slice(Math.max(0, at0 - 10), at0);
+  if (/^\d+$/.test(q) && /^\s?:/.test(tail)) return false;
+  if (
+    /^\d+$/.test(q) &&
+    /(?:step|pillar|mistake|tip|part|scene|figure|phase|option|stage|rule|#)\s*$/.test(
+      head
+    )
+  ) {
+    return false;
+  }
+  // A year-like number counts only when an outcome noun follows it
+  // ("2000 followers"); otherwise it is a date ("the 2024 inquiry").
+  if (/^(?:19|20)\d\d$/.test(q)) {
+    const rest = text.slice(at0 + match[0].length, at0 + match[0].length + 40);
+    return new RegExp(
+      String.raw`^\+?\s?(?:[a-z-]+\s){0,2}` +
+        OUTCOME_NOUN.source.replace(/^\\b/, '')
+    ).test(rest);
+  }
+  return true;
+}
+
+export function isQuantifiedOutcome(normalisedSentence: string): boolean {
+  if (!OUTCOME_NOUN.test(normalisedSentence)) return false;
+  return [...normalisedSentence.matchAll(QUANTITY_ALL)].some(m =>
+    countsAsQuantity(normalisedSentence, m)
+  );
+}
+
+// Allow-list keys compare without whitespace, so the same sentence matches
+// whether its fragments were joined with '' or ' '.
+export const sentenceKey = (normalised: string) =>
+  normalised.replace(/\s+/g, '');
+
+export function splitSentences(normalised: string): string[] {
+  return normalised
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(sentence => sentence.trim())
+    .filter(Boolean);
+}
+
+export interface ClaimHit {
+  /** Normalised sentence that triggered the finding. */
+  sentence: string;
+  /** Hard pattern label, or 'quantified outcome'. */
+  rule: string;
+}
+
+/**
+ * Findings in plain text, sentence by sentence. Hard patterns are never
+ * allow-listable; a quantified outcome is, by exact sentence.
+ */
+export function claimHits(raw: string, allow: Set<string>): ClaimHit[] {
+  const hits: ClaimHit[] = [];
+  const sentences = raw
+    .replace(/https?:\/\/[^\s"'<>)]+/g, ' ') // URLs are addresses, not prose
+    .split(/\n+/)
+    .flatMap(line => splitSentences(normaliseCopy(line)));
+  for (const sentence of sentences) {
+    for (const [label, pattern] of BANNED_CLAIMS) {
+      if (pattern.test(sentence)) hits.push({ sentence, rule: label });
     }
-    if (!GROWTH_OBJECT.test(window)) continue;
-    const quantified =
-      MEASURE.test(window) ||
-      COUNTED_OBJECT.test(window) ||
-      DOUBLING_VERB.test(verb[0]);
-    if (quantified) hits.push(`growth claim — "${window.trim()}"`);
+    if (isQuantifiedOutcome(sentence) && !allow.has(sentenceKey(sentence))) {
+      hits.push({ sentence, rule: 'quantified outcome' });
+    }
   }
   return hits;
 }
 
-export function findClaims(raw: string): string[] {
-  const text = normaliseCopy(raw);
-  const patternHits = BANNED_CLAIMS.flatMap(([label, pattern]) => {
-    const match = text.match(pattern);
-    return match ? [`${label} — "${match[0]}"`] : [];
-  });
-  return [...patternHits, ...findGrowthClaims(text)];
+export function findClaims(
+  raw: string,
+  allow: Set<string> = new Set()
+): string[] {
+  return claimHits(raw, allow).map(h => `${h.rule} — "${h.sentence}"`);
 }
 
 // Every claim removed on this branch, verbatim, plus spelled-out and
@@ -296,8 +344,7 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   'Join 5,000+ Australian businesses posting to 9 platforms automatically.',
   '5,000+ businesses across every industry trust Synthex to handle their social media.',
   'Join 5,000+ businesses that have replaced manual posting with an automated AI marketing team that works 24/7.',
-  `Join <span className="text-amber-400 font-medium">5,000+</span>{' '}
-        businesses automating their content`,
+  `Join <span className="text-amber-400 font-medium">5,000+</span>{' '} businesses automating their content`,
   'Example: "Join 10,000 businesses using Synthex" is social proof.',
   'Join 5,000+ Business Owners Using Synthex | Community',
   'Three: social proof — "join 5,000 businesses already using Synthex."',
@@ -356,21 +403,31 @@ export const REMOVED_CLAIM_SEEDS: string[] = [
   '$140,436/year savings vs traditional agencies',
   '2.2x engagement boost with AI optimization',
   'Posting at peak times doubles your organic reach.',
+  // Deny by default: verbs the guard was never written for (round-4 review).
+  'The account attracted 20,000 new followers',
+  'The bakery snagged 3,000 subscribers in a month',
+  'Synthex pulled in 450 qualified leads',
+  'The shop won 120 new customers',
+  'Clients netted twelve thousand new followers',
+  // RestoreAssist storyboard figures removed on this branch.
+  'Re-inspections run 20–30%.',
+  'Each one costs $2,000–$5,000.',
+  'That fragmentation costs the industry millions every year in re-inspections alone.',
+  'Insurance claims teams read 50+ contractor report formats a week.',
+  'Average response time: 2 hours',
+  '99.99% Uptime SLA',
 ];
 
-// Copy that must NOT be flagged: advice, formulas and counts of things that
-// are not outcomes. Keeps the growth rule honest about false positives.
+// Copy that must NOT be flagged at all: no quantity, a list index, a date,
+// or a bare "one". (Anything with a quantity and an outcome noun is flagged
+// and must be neutralised or allow-listed — see public-claims-allowlist.ts.)
 export const NOT_CLAIMS: string[] = [
-  'Add 1-2 relevant emojis to increase visual appeal and reach',
-  '7 ways to increase your social media engagement',
-  'Four: follower growth rate — are you growing, stagnating, or declining?',
-  'Formula: conversions divided by total visitors, multiplied by 100.',
-  'Each re-inspection costs $2,000–$5,000.',
-  'A post seen by 3,000 people without any boosting has a reach of 3,000.',
-  'Instagram: aim for three percent or above. LinkedIn: above two percent is strong.',
-  'Reply to every comment within the first hour — it boosts your ranking.',
-  'Body text body-lg - 18px - gray 300 Generate viral content with AI, analyze engagement patterns',
-  'Set up your account and add 3 team members.',
+  'Reply to every comment quickly — it boosts your ranking.',
+  'Step 2: define your audience.',
+  'The 2024 Senate inquiry documented systemic failures in claim handling.',
+  'One dashboard for all your platforms.',
+  'Removing double-handling and eliminating re-inspections.',
+  'Instagram, Facebook and LinkedIn in one place.',
 ];
 
 // ── Inventory ────────────────────────────────────────────────────────────────
@@ -439,19 +496,22 @@ const IMPORT_RE =
 
 // ── Copy extraction ──────────────────────────────────────────────────────────
 //
-// Source files are judged on their copy, not their code: the strings and JSX
-// text that can reach a visitor. Parsed with the TypeScript compiler, so
-// comments, identifiers and object keys never count, while copy split across
-// literals is reassembled the way a visitor reads it:
-//   'Join 5,' + '000+'            → constant-folded
-//   `${'45'}% more`              → template with literal spans folded
-//   <p>{'Synthex gets 45'}{'% more'}</p>, <p>Join <b>5,000+</b> firms</p>
-//                                 → one JSX text run per element
-// A non-constant expression contributes a space, so unrelated values are not
-// glued together.
+// Every string fragment a file holds, in source order, read with the
+// TypeScript compiler: JSX text, string and template literals, array
+// elements, both arms of conditionals, and constant-folded literal joins.
+// What can never reach a visitor is skipped: comments, type literals, module
+// specifiers, logger/console arguments and styling/wiring JSX attributes.
+//
+// Fragments are judged in two streams — joined with '' and with ' ' — over
+// windows of up to MAX_WINDOW adjacent fragments, so a claim split across
+// .join(''), a ternary, an array or adjacent JSX expressions is contiguous in
+// at least one of them. A finding is reported for the smallest window that
+// produces it; its allow-list key is that window's sentence.
 
 const NON_COPY_JSX_ATTRIBUTE =
   /^(?:class(?:Name)?|style|href|src|srcSet|id|key|type|variant|size|name|role|rel|target|method|action|htmlFor|width|height|viewBox|d|fill|stroke|xmlns|loading|sizes|data-[\w-]+|aria-(?!label)[\w-]+|as|icon|route|path|gradientVariant)$/i;
+const SILENT_CALLEE = /^(?:logger|console|log)\b/;
+const MAX_WINDOW = 4;
 
 function constantText(node: ts.Node): string | null {
   if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
@@ -476,38 +536,55 @@ function constantText(node: ts.Node): string | null {
     const right = constantText(node.right);
     return left !== null && right !== null ? left + right : null;
   }
+  // ['a', 'b'].join('') and friends.
+  if (
+    ts.isCallExpression(node) &&
+    ts.isPropertyAccessExpression(node.expression) &&
+    node.expression.name.text === 'join' &&
+    ts.isArrayLiteralExpression(node.expression.expression)
+  ) {
+    const parts = node.expression.expression.elements.map(constantText);
+    const sep = node.arguments[0] ? constantText(node.arguments[0]) : ',';
+    if (sep !== null && parts.every(p => p !== null)) return parts.join(sep);
+  }
+  // A conditional whose condition is a literal resolves to one arm.
+  if (ts.isConditionalExpression(node)) {
+    const k = node.condition.kind;
+    if (k === ts.SyntaxKind.TrueKeyword) return constantText(node.whenTrue);
+    if (k === ts.SyntaxKind.FalseKeyword) return constantText(node.whenFalse);
+  }
   return null;
 }
 
-// Template text with non-constant spans replaced by a space.
-function templateText(node: ts.TemplateExpression): string {
-  return [
-    node.head.text,
-    ...node.templateSpans.map(
-      span => (constantText(span.expression) ?? ' ') + span.literal.text
-    ),
-  ].join('');
+// Wiring, not copy: identifiers, URLs, paths, MIME types, model ids, CSS
+// class lists. A pure quantity ("45", "2.5x", "$5,000") or a plain word
+// ("engagement") is always copy, so a claim split into ['…boosted', '2.5x']
+// still joins up in the stream.
+const PURE_QUANTITY = /^[$]?\d[\d.,–-]*(?:k|m|b|x|%)?\+?$/i;
+const WIRING_TOKEN = /[/:._#@=?&{}<>[\]\\]|\d[a-z]|[a-z]\d|-\d|\d-/i;
+
+// HTTP header names and multi-hyphen identifiers (x-rate-limit-remaining).
+const HEADER_OR_IDENT =
+  /^(?:x-[\w-]+|[a-z]+(?:-[a-z]+){2,}|content-type|user-agent|cache-control|content-length|accept-[a-z]+|set-cookie|retry-after)$/i;
+
+export function isWiring(fragment: string): boolean {
+  const text = fragment.trim();
+  if (PURE_QUANTITY.test(text)) return false;
+  const tokens = text.split(/\s+/);
+  if (tokens.length === 1) {
+    return (
+      WIRING_TOKEN.test(text) ||
+      HEADER_OR_IDENT.test(text) ||
+      /^[A-Z][a-z]+[A-Z]\w*$/.test(text) // CamelCase identifier (TipCard)
+    );
+  }
+  const wiring = tokens.filter(
+    t => !PURE_QUANTITY.test(t) && (WIRING_TOKEN.test(t) || /-/.test(t))
+  ).length;
+  return tokens.length >= 3 && wiring / tokens.length >= 0.6;
 }
 
-// JSX text collapses whitespace runs that contain a line break.
-const jsxText = (raw: string) => raw.replace(/\s*\n\s*/g, ' ');
-
-function jsxChildrenText(children: ts.NodeArray<ts.JsxChild>): string {
-  return children
-    .map(child => {
-      if (ts.isJsxText(child)) return jsxText(child.text);
-      if (ts.isJsxExpression(child)) {
-        if (!child.expression) return '';
-        return constantText(child.expression) ?? ' ';
-      }
-      if (ts.isJsxElement(child)) return jsxChildrenText(child.children);
-      if (ts.isJsxFragment(child)) return jsxChildrenText(child.children);
-      return ' ';
-    })
-    .join('');
-}
-
-export function extractCopy(source: string, fileName: string): string[] {
+export function extractFragments(source: string, fileName: string): string[] {
   if (!SOURCE_EXT.includes(path.extname(fileName))) return [source];
   const sf = ts.createSourceFile(
     fileName,
@@ -516,33 +593,144 @@ export function extractCopy(source: string, fileName: string): string[] {
     false,
     fileName.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
   );
-  const copy: string[] = [];
+  const fragments: string[] = [];
+  const push = (text: string) => {
+    const t = text.replace(/\s*\n\s*/g, ' ');
+    if (t.trim() && !isWiring(t)) fragments.push(t);
+  };
   const visit = (node: ts.Node): void => {
-    // Module specifiers are wiring, not copy.
     if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) return;
-    if (ts.isJsxElement(node) || ts.isJsxFragment(node)) {
-      const text = jsxChildrenText(node.children).trim();
-      if (text) copy.push(text);
-    } else if (ts.isJsxAttribute(node)) {
-      const name = node.name.getText(sf);
-      if (NON_COPY_JSX_ATTRIBUTE.test(name)) return;
-    } else {
-      const folded = constantText(node);
-      if (folded !== null) {
-        copy.push(folded);
-        return; // parts of a folded constant are already in it
+    // 'use client' / 'use server' directives.
+    if (
+      ts.isExpressionStatement(node) &&
+      ts.isStringLiteral(node.expression) &&
+      /^use (client|server)$/.test(node.expression.text)
+    ) {
+      return;
+    }
+    if (ts.isLiteralTypeNode(node) || ts.isTypeNode(node)) return;
+    if (ts.isJsxAttribute(node)) {
+      if (NON_COPY_JSX_ATTRIBUTE.test(node.name.getText(sf))) return;
+    }
+    if (
+      ts.isCallExpression(node) &&
+      SILENT_CALLEE.test(node.expression.getText(sf))
+    ) {
+      return;
+    }
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
+      push(node.text);
+      return;
+    }
+    if (ts.isJsxText(node)) {
+      push(node.text);
+      return;
+    }
+    if (ts.isTemplateExpression(node)) {
+      push(node.head.text);
+      for (const span of node.templateSpans) {
+        visit(span.expression);
+        push(span.literal.text);
       }
-      if (ts.isTemplateExpression(node)) copy.push(templateText(node));
+      return;
     }
     ts.forEachChild(node, visit);
+    // After its parts: the folded value of a literal join / conditional.
+    if (ts.isCallExpression(node) || ts.isConditionalExpression(node)) {
+      const folded = constantText(node);
+      if (folded !== null) push(folded);
+    }
   };
   visit(sf);
-  return copy.filter(text => /[a-z]/i.test(text));
+  return fragments;
 }
 
-/** Claims in a source file's copy, each tagged with the text it came from. */
-export function findClaimsInSource(source: string, fileName: string): string[] {
-  return extractCopy(source, fileName).flatMap(findClaims);
+/** Back-compat name used by older call sites. */
+export const extractCopy = extractFragments;
+
+/** Findings in a source file's copy streams (see the section comment). */
+export function claimHitsInSource(
+  source: string,
+  fileName: string,
+  allow: Set<string>
+): ClaimHit[] {
+  const fragments = extractFragments(source, fileName);
+  const found = new Map<string, { hit: ClaimHit; from: number; to: number }>();
+  for (const sep of ['', ' ']) {
+    for (let len = 1; len <= MAX_WINDOW; len++) {
+      for (let i = 0; i + len <= fragments.length; i++) {
+        // A fragment that ends a sentence never glues onto the next one.
+        const text = fragments
+          .slice(i, i + len)
+          .map(f => (/[.!?]\s*$/.test(f) ? `${f} ` : f))
+          .join(sep);
+        for (const hit of claimHits(text, allow)) {
+          const key = `${hit.rule}|${sentenceKey(hit.sentence)}`;
+          if (!found.has(key)) found.set(key, { hit, from: i, to: i + len });
+        }
+      }
+    }
+  }
+  // Keep the smallest windows: drop a finding whose window strictly contains
+  // another finding's window.
+  const all = [...found.values()];
+  return all
+    .filter(
+      a =>
+        !all.some(
+          b =>
+            b !== a &&
+            b.from >= a.from &&
+            b.to <= a.to &&
+            b.to - b.from < a.to - a.from
+        )
+    )
+    .map(x => x.hit);
+}
+
+export function findClaimsInSource(
+  source: string,
+  fileName: string,
+  allow: Set<string> = new Set()
+): string[] {
+  return claimHitsInSource(source, fileName, allow).map(
+    h => `${h.rule} — "${h.sentence}"`
+  );
+}
+
+// Rendered markup → sentences: block-level tags end a sentence, inline tags
+// (<strong>, <span>…) do not.
+const BLOCK_TAG =
+  /<\/?(?:p|div|li|ul|ol|h[1-6]|section|article|header|footer|nav|main|aside|td|th|tr|table|br|hr|button|label|option|select|figcaption|blockquote|dd|dt|form|input|textarea|text|tspan|svg|g)\b[^>]*>/gi;
+
+export function renderedSentencesText(markup: string): string {
+  const attributes = [
+    ...markup.matchAll(
+      /\s(?:alt|title|aria-label|placeholder|content|value)="([^"]*)"/g
+    ),
+  ].map(m => m[1]);
+  // JSON-LD: crawlers read each string value, so each becomes its own line.
+  const jsonStrings = (json: string) => {
+    try {
+      const out: string[] = [];
+      const walk = (v: unknown): void => {
+        if (typeof v === 'string') out.push(v);
+        else if (Array.isArray(v)) v.forEach(walk);
+        else if (v && typeof v === 'object') Object.values(v).forEach(walk);
+      };
+      walk(JSON.parse(json));
+      return `\n${out.join('\n')}\n`;
+    } catch {
+      return `\n${json}\n`;
+    }
+  };
+  const text = markup
+    .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, (_m, body: string) =>
+      jsonStrings(body)
+    )
+    .replace(BLOCK_TAG, '\n')
+    .replace(/<[^>]+>/g, '');
+  return `${text}\n${attributes.join('\n')}`;
 }
 
 // ── Same-origin API routes ───────────────────────────────────────────────────

@@ -18,9 +18,11 @@
  */
 
 import { readFileSync } from 'fs';
+import { ALLOW_LIST, allowKeys } from './helpers/public-claims-allowlist';
 import {
   BANNED_CLAIMS,
   NOT_CLAIMS,
+  claimHitsInSource,
   REMOVED_CLAIM_SEEDS,
   findClaims,
   findClaimsInSource,
@@ -94,6 +96,26 @@ describe('public copy — normalisation', () => {
     expect(findClaims(text)).toEqual([]);
   });
 
+  // False-positive probe: neutral product copy with a number is still a
+  // finding, and passes only through an explicit allow-list entry.
+  it('passes neutral product copy with a number only via the allow-list', () => {
+    const probe = 'Up to 3 users on Starter';
+    expect(findClaims(probe)).not.toEqual([]);
+    expect(findClaims(probe, new Set(['upto3usersonstarter']))).toEqual([]);
+  });
+
+  it('allow-lists only with an approved reason and a note', () => {
+    const reasons = new Set([
+      'advice',
+      'definition',
+      'formula',
+      'target',
+      'product-ui',
+    ]);
+    expect(ALLOW_LIST.filter(e => !reasons.has(e.reason))).toEqual([]);
+    expect(ALLOW_LIST.filter(e => !e.note || !e.sentence)).toEqual([]);
+  });
+
   it('every pattern is exercised by at least one seed', () => {
     const unused = BANNED_CLAIMS.filter(
       ([, pattern]) =>
@@ -117,6 +139,16 @@ describe('public copy — source extraction', () => {
       "<Hero description={'The bakery grew by ' + '10,000 followers'} />",
       'x.tsx',
     ],
+    // Round-4 review mutant: a claim joined from an array in a ternary arm.
+    [
+      "<p>{true ? ['Synthex gets 45', '% more engagement.'].join('') : 'No links yet'}</p>",
+      'x.tsx',
+    ],
+    // …and the other arm of a non-literal condition.
+    [
+      "<p>{links.length ? 'Links' : ['We pulled in 4', '50 leads'].join('')}</p>",
+      'x.tsx',
+    ],
   ])('flags %s', (source, file) => {
     expect(findClaimsInSource(source, file)).not.toEqual([]);
   });
@@ -129,12 +161,27 @@ describe('public copy — source extraction', () => {
 });
 
 describe('public copy — unsupported claims (source)', () => {
+  const allow = allowKeys('source');
+  const used = new Set<string>();
+
   it('no public page or anything it imports carries a banned claim', () => {
     const hits = inventory.flatMap(file =>
-      findClaimsInSource(readFileSync(file, 'utf8'), file).map(
-        hit => `${rel(file)}: ${hit}`
+      claimHitsInSource(readFileSync(file, 'utf8'), file, new Set()).flatMap(
+        hit => {
+          const key = hit.sentence.replace(/\s+/g, '');
+          if (hit.rule === 'quantified outcome' && allow.has(key)) {
+            used.add(key);
+            return [];
+          }
+          return [`${rel(file)}: ${hit.rule} — "${hit.sentence}"`];
+        }
       )
     );
     expect(hits).toEqual([]);
+  });
+
+  // Every source allow-list entry must still be needed.
+  it('has no stale source allow-list entries', () => {
+    expect([...allow].filter(k => !used.has(k))).toEqual([]);
   });
 });
