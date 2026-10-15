@@ -1046,9 +1046,13 @@ export const DRAFTED_SEEDS: string[] = [
   ]),
 ];
 
+/**
+ * A committed seed. It carries no key: the guard matches on
+ * seedKeyOf(text), and the completeness test derives keys the same way, so
+ * an edited text can never keep an old key alive.
+ */
 export interface GeneratedSeed {
   text: string;
-  key: string;
   file: string;
   firstSeen: string;
 }

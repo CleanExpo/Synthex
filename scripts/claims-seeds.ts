@@ -163,9 +163,15 @@ function install() {
 
 // ── Generation ──────────────────────────────────────────────────────────────
 
+const sortSeeds = (list: Seed[], keyOf: (t: string) => string) =>
+  [...list].sort(
+    (a, b) =>
+      keyOf(a.text).localeCompare(keyOf(b.text)) || a.text.localeCompare(b.text)
+  );
+
+/** A seed's matching key is never stored: it is seedKeyOf(text), always. */
 export interface Seed {
   text: string;
-  key: string;
   file: string;
   /** First snapshot (short SHA, or "base") that carries the segment. */
   firstSeen: string;
@@ -220,7 +226,6 @@ async function generate(): Promise<{ snapshots: string[]; seeds: Seed[] }> {
         if (!key || candidates.has(key)) continue; // nothing left to match
         candidates.set(key, {
           text,
-          key,
           file: rel,
           firstSeen: sha === BASE ? 'base' : sha.slice(0, 8),
         });
@@ -248,12 +253,12 @@ async function generate(): Promise<{ snapshots: string[]; seeds: Seed[] }> {
   }
   const seeds = [...candidates.values()].filter(seed =>
     h.seedWords(seed.text) < h.SHORT_SEED_WORDS
-      ? !headSegments.has(seed.key)
-      : !headStreams.some(stream => stream.includes(seed.key))
+      ? !headSegments.has(h.seedKeyOf(seed.text))
+      : !headStreams.some(stream => stream.includes(h.seedKeyOf(seed.text)))
   );
   return {
     snapshots: commits.map(c => c.slice(0, 8)),
-    seeds: seeds.sort((a, b) => a.key.localeCompare(b.key)),
+    seeds: sortSeeds(seeds, h.seedKeyOf),
   };
 }
 
@@ -275,15 +280,23 @@ if (process.argv.includes('--write')) {
   const committed: Seed[] = realFs.existsSync(OUT)
     ? JSON.parse(realFs.readFileSync(OUT, 'utf8') as string).seeds
     : [];
-  const byKey = new Map(committed.map(seed => [seed.key, seed]));
+  const keyOf = (await import('../__tests__/landing/helpers/public-claims'))
+    .seedKeyOf;
+  // Stored keys from older files are dropped: the key is derived from text.
+  const byKey = new Map(
+    committed.map(({ text, file, firstSeen }) => [
+      keyOf(text),
+      { text, file, firstSeen },
+    ])
+  );
   let added = 0;
   for (const seed of seeds) {
-    if (!byKey.has(seed.key)) {
-      byKey.set(seed.key, seed);
+    if (!byKey.has(keyOf(seed.text))) {
+      byKey.set(keyOf(seed.text), seed);
       added++;
     }
   }
-  const merged = [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  const merged = sortSeeds([...byKey.values()], keyOf);
   fs.writeFileSync(OUT, render(merged));
   process.stderr.write(
     `kept ${committed.length}, added ${added}: ${merged.length} seeds (${seeds.length} regenerated from ${snapshots.length} snapshots)\n`

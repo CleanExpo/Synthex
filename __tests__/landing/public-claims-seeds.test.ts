@@ -24,12 +24,19 @@ import path from 'path';
 import {
   GENERATED_SEEDS_FILE,
   ROOT,
+  seedKeyOf,
   type GeneratedSeed,
 } from './helpers/public-claims';
 
 const BASE = '83243588f2505c556a215dee6f275dcd10626caa';
 
-const keys = (seeds: GeneratedSeed[]) => seeds.map(s => s.key).sort();
+// Keys are always derived from text — the text the guard matches on — never
+// read from the file.
+const keys = (seeds: GeneratedSeed[]) =>
+  seeds.map(s => seedKeyOf(s.text)).sort();
+const committedSeeds = () =>
+  JSON.parse(readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8'))
+    .seeds as Array<GeneratedSeed & { key?: string }>;
 
 describe('public copy — committed tripwire seeds cover the Git-history generator', () => {
   it('has the history the generator reads', () => {
@@ -48,10 +55,20 @@ describe('public copy — committed tripwire seeds cover the Git-history generat
     });
   });
 
+  // A stored key could disagree with the text the guard matches on; none may
+  // be stored, and any that is must equal seedKeyOf(text).
+  it('stores no key that diverges from its seed text', () => {
+    const diverging = committedSeeds()
+      .filter(s => s.key !== undefined && s.key !== seedKeyOf(s.text))
+      .map(s => ({ text: s.text, storedKey: s.key }));
+    expect({
+      storedKeys: committedSeeds().filter(s => s.key !== undefined).length,
+      diverging,
+    }).toEqual({ storedKeys: 0, diverging: [] });
+  });
+
   it('has no duplicate committed seed', () => {
-    const committed = JSON.parse(
-      readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8')
-    ).seeds as GeneratedSeed[];
+    const committed = committedSeeds();
     const seen = new Set<string>();
     const duplicates = keys(committed).filter(k => {
       const dup = seen.has(k);
@@ -75,14 +92,14 @@ describe('public copy — committed tripwire seeds cover the Git-history generat
       stderr: '',
     });
     const regenerated = JSON.parse(run.stdout).seeds as GeneratedSeed[];
-    const committed = JSON.parse(
-      readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8')
-    ).seeds as GeneratedSeed[];
-
-    const have = new Set(keys(committed));
-    // Removed copy the committed file omits. (Extra committed seeds pass.)
+    const have = new Set(keys(committedSeeds()));
+    // Regenerated (text, key) pairs the committed file omits, keys derived
+    // from text on both sides. An edited seed text derives a different key,
+    // so the original segment shows up here. (Extra committed seeds pass.)
     expect({
-      missingFromCommitted: keys(regenerated).filter(k => !have.has(k)),
+      missingFromCommitted: regenerated
+        .map(s => ({ text: s.text, key: seedKeyOf(s.text) }))
+        .filter(pair => !have.has(pair.key)),
     }).toEqual({ missingFromCommitted: [] });
   }, 300_000);
 });
