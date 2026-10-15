@@ -19,10 +19,12 @@ import ts from 'typescript';
 
 // Under Jest (CommonJS) from this file; under `npm run copy:audit` (ESM, run
 // from the package root) from the working directory.
+// CLAIMS_ROOT lets the seed generator serve a Git snapshot as the tree.
 export const ROOT =
-  typeof __dirname === 'string'
+  process.env.CLAIMS_ROOT ??
+  (typeof __dirname === 'string'
     ? path.join(__dirname, '../../..')
-    : process.cwd();
+    : process.cwd());
 const requireFromRoot = createRequire(path.join(ROOT, 'package.json'));
 const APP = path.join(ROOT, 'app');
 const SOURCE_EXT = ['.ts', '.tsx', '.js', '.jsx', '.mjs'];
@@ -979,19 +981,63 @@ export const ROUND_5_REMOVED: string[] = [
 ];
 
 /** Plain text of a seed: markup and JSX spacers dropped. */
-const seedText = (seed: string) =>
+export const seedPlainText = (seed: string) =>
   decodeEntities(seed)
+    .replace(/https?:\/\/[^\s"'<>)]+/g, ' ') // matching ignores URLs too
     .replace(/\{\s*(['"`])\s*\1\s*\}/g, ' ')
     .replace(/<[^>]*>/g, ' ')
     .replace(/[{}]/g, ' ');
-const seedKey = (seed: string) =>
-  sentenceKey(normaliseCopy(seedText(seed))).replace(/[.!?:]+$/, '');
+/** Normalised, whitespace-free key of a segment or seed (as the stream is). */
+export const seedKeyOf = (seed: string) =>
+  sentenceKey(
+    normaliseCopy(seed.replace(/https?:\/\/[^\s"'<>)]+/g, ' '))
+  ).replace(/[.!?:]+$/, '');
+
+/** Normalised copy stream of a file or text: what long seeds are found in. */
+export const streamKeyOf = (texts: string[]) =>
+  sentenceKey(
+    normaliseCopy(
+      texts
+        .join('\n')
+        .replace(/https?:\/\/[^\s"'<>)]+/g, ' ')
+        .replace(/\n+/g, ' ')
+    )
+  );
+
+/** Seeds under this many words match only as an exact whole segment. */
+export const SHORT_SEED_WORDS = 4;
+export const seedWords = (seed: string) =>
+  normaliseCopy(seed.replace(/https?:\/\/[^\s"'<>)]+/g, ' '))
+    .split(/\s+/)
+    .filter(Boolean).length;
 
 /**
- * Every claim this branch removed or neutralised, and every reviewer mutant:
- * the exact-seed half of the blocking tripwire.
+ * Segments of a copy stream — shared by the seed generator and the matcher,
+ * so "absent at head" and "present now" mean the same thing: each sentence
+ * of each fragment, plus each adjacent pair where one side is a short stat
+ * value (≤ 4 words with a digit or an acronym: "99.99%" + "Uptime SLA",
+ * "GDPR" + "Compliant").
  */
-export const TRIPWIRE_SEEDS: string[] = [
+export function segmentTexts(fragments: string[]): string[] {
+  const words = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
+  const statValue = (t: string) => words(t) <= 4 && /\d|\b[A-Z]{2,}\b/.test(t);
+  const pairs = fragments
+    .slice(1)
+    .flatMap((next, i) =>
+      statValue(fragments[i]) || statValue(next)
+        ? [`${fragments[i]} ${next}`]
+        : []
+    );
+  return [...fragments, ...pairs].flatMap(f =>
+    f
+      .split(/(?<=[.!?])\s+|\n+/)
+      .map(t => t.replace(/\s+/g, ' ').trim())
+      .filter(Boolean)
+  );
+}
+
+/** Hand-drafted seeds: removed claims, reviewer mutants and siblings. */
+export const DRAFTED_SEEDS: string[] = [
   ...new Set([
     ...REMOVED_CLAIM_SEEDS,
     ...ROUND_5_SEEDS.map(([seed]) => seed),
@@ -999,17 +1045,96 @@ export const TRIPWIRE_SEEDS: string[] = [
     ...ROUND_5_REMOVED,
   ]),
 ];
-const SEED_KEYS = TRIPWIRE_SEEDS.map(seed => ({ seed, key: seedKey(seed) }));
+
+export interface GeneratedSeed {
+  text: string;
+  key: string;
+  file: string;
+  firstSeen: string;
+}
+export const GENERATED_SEEDS_FILE =
+  '__tests__/landing/helpers/tripwire-seeds.generated.json';
+
+/**
+ * Seeds generated from Git history by scripts/claims-seeds.ts: every
+ * claim-bearing public-copy segment removed or rewritten since 83243588.
+ * (Empty while the generator itself serves a virtual snapshot.)
+ */
+export const GENERATED_SEEDS: GeneratedSeed[] = (() => {
+  try {
+    return JSON.parse(
+      readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8')
+    ).seeds;
+  } catch {
+    return [];
+  }
+})();
+
+/**
+ * The exact-seed half of the blocking tripwire: the generated set, plus the
+ * drafted seeds it does not contain (mutants, and copy outside its scope).
+ */
+export const TRIPWIRE_SEEDS: string[] = [
+  ...new Set([
+    ...GENERATED_SEEDS.map(s => s.text),
+    // Drafted seeds may be written as markup; they are matched as plain text.
+    ...DRAFTED_SEEDS.map(seed =>
+      seedPlainText(seed).replace(/\s+/g, ' ').trim()
+    ),
+  ]),
+];
+const SEED_KEYS = TRIPWIRE_SEEDS.map(seed => ({
+  seed,
+  key: seedKeyOf(seed),
+  short: seedWords(seed) < SHORT_SEED_WORDS,
+}));
 
 /** Seeds whose plain text is empty (markup only): they could never match. */
 export const EMPTY_SEEDS = SEED_KEYS.filter(s => !s.key).map(s => s.seed);
 
+// Short seeds (under SHORT_SEED_WORDS words) match only an exact whole
+// segment; longer ones match anywhere in the stream, found through an index
+// of their first 8 characters so a stream is scanned once.
+const SHORT_SEED_KEYS = new Map(
+  SEED_KEYS.filter(s => s.short && s.key).map(s => [s.key, s.seed])
+);
+const PREFIX = 8;
+const SEED_INDEX = new Map<string, typeof SEED_KEYS>();
+for (const entry of SEED_KEYS) {
+  if (entry.short || entry.key.length < PREFIX) continue;
+  const head = entry.key.slice(0, PREFIX);
+  SEED_INDEX.set(head, [...(SEED_INDEX.get(head) ?? []), entry]);
+}
+/** Long seeds whose key is under 8 characters (checked one by one). */
+const UNINDEXED_SEEDS = SEED_KEYS.filter(
+  s => !s.short && s.key && s.key.length < PREFIX
+);
+
+function seedsIn(stream: string, segments: string[]): string[] {
+  const found = new Set<string>();
+  for (let i = 0; i + PREFIX <= stream.length; i++) {
+    const bucket = SEED_INDEX.get(stream.slice(i, i + PREFIX));
+    for (const { seed, key } of bucket ?? []) {
+      if (stream.startsWith(key, i)) found.add(seed);
+    }
+  }
+  for (const { seed, key } of UNINDEXED_SEEDS) {
+    if (stream.includes(key)) found.add(seed);
+  }
+  for (const segment of segments) {
+    const seed = SHORT_SEED_KEYS.get(seedKeyOf(segment));
+    if (seed !== undefined) found.add(seed);
+  }
+  return [...found];
+}
+
 /**
- * Blocking tripwire over plain text: a restored seed anywhere in the text
- * (whitespace and markup splits ignored), or a high-precision pattern in a
- * sentence. Nothing is allow-listed.
+ * Blocking tripwire over plain text, one line per segment source (a rendered
+ * block, an API string): a long seed anywhere in the text (whitespace and
+ * markup splits ignored), a short seed as a whole segment, or a
+ * high-precision pattern in a sentence. Nothing is allow-listed.
  */
-export function tripwireHits(raw: string): ClaimHit[] {
+export function tripwireHits(raw: string, segments?: string[]): ClaimHit[] {
   const text = raw.replace(/https?:\/\/[^\s"'<>)]+/g, ' ');
   const hits: ClaimHit[] = [];
   for (const sentence of text
@@ -1019,10 +1144,12 @@ export function tripwireHits(raw: string): ClaimHit[] {
       if (pattern.test(sentence)) hits.push({ sentence, rule: label });
     }
   }
-  const stream = sentenceKey(normaliseCopy(text.replace(/\n+/g, ' ')));
-  for (const { seed, key } of SEED_KEYS) {
-    if (key && stream.includes(key))
-      hits.push({ sentence: seed, rule: 'seed' });
+  const stream = streamKeyOf([text]);
+  for (const seed of seedsIn(
+    stream,
+    segments ?? segmentTexts(text.split(/\n+/))
+  )) {
+    hits.push({ sentence: seed, rule: 'seed' });
   }
   return hits;
 }
@@ -1420,8 +1547,11 @@ export function extractCopyFragments(
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
       // A config value under a wiring key ({ weight: '400' }, { range:
       // '12m' }) is not copy unless it reads as prose.
+      // (Kept in the seed stream, where a stat value such as
+      // { value: '99.99%', label: 'Uptime SLA' } is part of the claim.)
       const parent = node.parent;
       if (
+        !keepWiring &&
         parent &&
         ts.isPropertyAssignment(parent) &&
         parent.initializer === node &&
@@ -1547,7 +1677,8 @@ export function tripwireHitsInSource(
   // Seeds are long exact phrases no class list or identifier can produce, so
   // their stream keeps every fragment, wiring-looking ones included.
   const copy = extractCopyFragments(source, fileName, { keepWiring: true });
-  const seeds = tripwireHits(copy.map(f => f.text).join('\n')).filter(
+  const texts = copy.map(f => f.text);
+  const seeds = tripwireHits(texts.join('\n'), segmentTexts(texts)).filter(
     h => h.rule === 'seed'
   );
   return [...patterns, ...seeds];

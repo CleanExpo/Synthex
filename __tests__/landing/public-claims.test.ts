@@ -5,9 +5,13 @@
  * Orchestrator decision (round 5): a mechanical rule cannot establish that
  * natural-language copy is true, so the blocking guard is a tripwire, not a
  * fact-checker. It fails on:
- *  - an EXACT SEED: every claim this branch removed or neutralised and every
- *    reviewer mutant from rounds 1–5 (TRIPWIRE_SEEDS), matched in the whole
- *    normalised copy stream, so markup, joins and spacing cannot hide it;
+ *  - an EXACT SEED (TRIPWIRE_SEEDS), matched in the whole normalised copy
+ *    stream so markup, joins and spacing cannot hide it. The seeds are
+ *    generated from Git history by scripts/claims-seeds.ts — every
+ *    claim-bearing public-copy segment removed or rewritten since base
+ *    83243588 (helpers/tripwire-seeds.generated.json; equality enforced by
+ *    public-claims-seeds.test.ts) — plus the drafted seeds the generator
+ *    does not produce (reviewer mutants, copy outside its scope);
  *  - a HIGH-PRECISION PATTERN (TRIPWIRE_PATTERNS): SOC 2, ISO 27001,
  *    GDPR/CCPA compliance, Synthex "certified", money-back, world's first,
  *    customer counts, "N% more engagement", "saves N hours", uptime %,
@@ -24,7 +28,9 @@
 import { readFileSync } from 'fs';
 import path from 'path';
 import {
+  DRAFTED_SEEDS,
   EMPTY_SEEDS,
+  GENERATED_SEEDS,
   NOT_CLAIMS,
   PUBLISHED_OFF_SITE,
   ROOT,
@@ -38,6 +44,9 @@ import {
   publicAppFiles,
   publicSourceInventory,
   rel,
+  SHORT_SEED_WORDS,
+  seedPlainText,
+  seedWords,
   tripwireHits,
   tripwireHitsInSource,
 } from './helpers/public-claims';
@@ -113,13 +122,20 @@ describe('public copy — normalisation', () => {
 });
 
 describe('public copy — tripwire positive controls', () => {
-  it('seeds every removed claim and every reviewer mutant', () => {
+  it('seeds the generated set and every drafted seed', () => {
+    expect(GENERATED_SEEDS.length).toBeGreaterThan(0);
+    const plain = (seed: string) =>
+      seedPlainText(seed).replace(/\s+/g, ' ').trim();
     expect(TRIPWIRE_SEEDS).toEqual(
       expect.arrayContaining([
-        ...REMOVED_CLAIM_SEEDS,
-        ...ROUND_5_SEEDS.map(([seed]) => seed),
-        ...REVIEWER_MUTANTS,
-        ...ROUND_5_REMOVED,
+        ...GENERATED_SEEDS.map(seed => seed.text),
+        ...[
+          ...DRAFTED_SEEDS,
+          ...REMOVED_CLAIM_SEEDS,
+          ...ROUND_5_SEEDS.map(([seed]) => seed),
+          ...REVIEWER_MUTANTS,
+          ...ROUND_5_REMOVED,
+        ].map(plain),
       ])
     );
   });
@@ -128,20 +144,40 @@ describe('public copy — tripwire positive controls', () => {
     expect(EMPTY_SEEDS).toEqual([]);
   });
 
-  it.each(TRIPWIRE_SEEDS)('catches the seed %j as text', seed => {
-    expect(tripwireHits(seed).length).toBeGreaterThan(0);
+  // One test over all seeds (there are over a thousand): each must trip
+  // as plain text, restored as a source literal, and — where it is plain
+  // prose — restored in JSX split across two elements.
+  it('catches every seed as text', () => {
+    expect(
+      TRIPWIRE_SEEDS.filter(seed => tripwireHits(seed).length === 0)
+    ).toEqual([]);
   });
 
-  // Restored into a page exactly as written, split across elements.
-  it.each(TRIPWIRE_SEEDS)('catches the seed %j restored in JSX', seed => {
-    const words = seed
-      .replace(/<[^>]*>|\{\s*'\s*'\s*\}/g, ' ')
-      .replace(/[{}<>`]/g, ' ')
-      .split(/\s+/)
-      .filter(Boolean);
-    const half = Math.ceil(words.length / 2);
-    const jsx = `export const P = () => <p>${words.slice(0, half).join(' ')} <strong>${words.slice(half).join(' ')}</strong></p>;`;
-    expect(tripwireHitsInSource(jsx, 'x.tsx').length).toBeGreaterThan(0);
+  it('catches every seed restored as a source literal', () => {
+    const missed = TRIPWIRE_SEEDS.filter(
+      seed =>
+        tripwireHitsInSource(
+          `export const copy = ${JSON.stringify(seed)};`,
+          'x.ts'
+        ).length === 0
+    );
+    expect(missed).toEqual([]);
+  });
+
+  // A seed of SHORT_SEED_WORDS+ words matches as a substring, so it must
+  // also survive being split across elements. (A shorter seed matches only
+  // as one whole segment — the rule that keeps false positives at zero.)
+  it('catches every long prose seed restored in JSX across two elements', () => {
+    const missed = TRIPWIRE_SEEDS.filter(seed => {
+      const text = seed;
+      if (seedWords(text) < SHORT_SEED_WORDS) return false;
+      if (/[{}<>`]/.test(text)) return false; // not JSX text as written
+      const words = text.split(/\s+/).filter(Boolean);
+      const half = Math.ceil(words.length / 2);
+      const jsx = `export const P = () => <p>${words.slice(0, half).join(' ')} <strong>${words.slice(half).join(' ')}</strong></p>;`;
+      return tripwireHitsInSource(jsx, 'x.tsx').length === 0;
+    });
+    expect(missed).toEqual([]);
   });
 
   it.each([

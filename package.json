@@ -14,6 +14,7 @@
     "test": "jest --config config/jest/jest.worktree.cjs",
     "type-check": "tsc --noEmit",
     "ai:eval": "tsx lib/ai/eval/cli.ts",
+    "claims:seeds": "tsx scripts/claims-seeds.ts",
     "copy:audit": "tsx scripts/copy-audit.ts",
     "dev:next": "next dev --port 3008",
     "validate:env": "node scripts/validate-env.js",
