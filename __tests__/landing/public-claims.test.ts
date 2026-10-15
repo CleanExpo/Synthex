@@ -8,9 +8,9 @@
  *  - an EXACT SEED (TRIPWIRE_SEEDS), matched in the whole normalised copy
  *    stream so markup, joins and spacing cannot hide it. The seeds are
  *    generated from Git history by scripts/claims-seeds.ts — every
- *    claim-bearing public-copy segment removed or rewritten since base
- *    83243588 (helpers/tripwire-seeds.generated.json; equality enforced by
- *    public-claims-seeds.test.ts) — plus the drafted seeds the generator
+ *    public-copy segment removed or rewritten since base 83243588
+ *    (helpers/tripwire-seeds.generated.json; completeness enforced as a
+ *    subset rule by public-claims-seeds.test.ts) — plus the drafted seeds the generator
  *    does not produce (reviewer mutants, copy outside its scope);
  *  - a HIGH-PRECISION PATTERN (TRIPWIRE_PATTERNS): SOC 2, ISO 27001,
  *    GDPR/CCPA compliance, Synthex "certified", money-back, world's first,

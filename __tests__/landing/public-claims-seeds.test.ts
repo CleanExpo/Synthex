@@ -1,18 +1,21 @@
 /**
- * The committed tripwire seed set must equal what the Git-history generator
- * produces now (SYN-1226).
+ * Every removed public-copy segment must be a committed tripwire seed —
+ * completeness check, a SUBSET rule (SYN-1226).
  *
  * scripts/claims-seeds.ts enumerates public-copy segments at base 83243588
- * and at every snapshot since, and lists every claim-bearing segment the
- * working tree no longer carries. A claim removed without regenerating the
- * seed file — or a seed deleted by hand — fails here, so the tripwire can
- * never silently omit a removed claim.
+ * and at every snapshot since, and lists every segment the working tree no
+ * longer carries. This fails when a regenerated seed is missing from the
+ * committed seed file: copy removed without regenerating, or a seed deleted
+ * by hand. Extra committed seeds are allowed — after a squash merge the
+ * history is shorter, so regeneration yields a subset and main stays green.
+ * Duplicate committed seeds fail.
  *
  * Needs the full Git history back to 83243588 (CI checks out with
  * fetch-depth: 0). Without it the test fails, and says so: an unavailable
  * check must not pass.
  *
- * Fix a failure with: npm run claims:seeds -- --write
+ * Fix a failure with: npm run claims:seeds -- --write (it keeps every
+ * committed seed and only adds new ones).
  */
 
 import { execFileSync, spawnSync } from 'child_process';
@@ -28,7 +31,7 @@ const BASE = '83243588f2505c556a215dee6f275dcd10626caa';
 
 const keys = (seeds: GeneratedSeed[]) => seeds.map(s => s.key).sort();
 
-describe('public copy — tripwire seeds equal the Git-history generator', () => {
+describe('public copy — committed tripwire seeds cover the Git-history generator', () => {
   it('has the history the generator reads', () => {
     let reachable = false;
     try {
@@ -45,7 +48,20 @@ describe('public copy — tripwire seeds equal the Git-history generator', () =>
     });
   });
 
-  it('regenerates exactly the committed seed set', () => {
+  it('has no duplicate committed seed', () => {
+    const committed = JSON.parse(
+      readFileSync(path.join(ROOT, GENERATED_SEEDS_FILE), 'utf8')
+    ).seeds as GeneratedSeed[];
+    const seen = new Set<string>();
+    const duplicates = keys(committed).filter(k => {
+      const dup = seen.has(k);
+      seen.add(k);
+      return dup;
+    });
+    expect(duplicates).toEqual([]);
+  });
+
+  it('commits every seed the history regenerates', () => {
     const run = spawnSync(
       process.execPath,
       [
@@ -64,13 +80,9 @@ describe('public copy — tripwire seeds equal the Git-history generator', () =>
     ).seeds as GeneratedSeed[];
 
     const have = new Set(keys(committed));
-    const want = new Set(keys(regenerated));
-    // Removed claims the committed file omits, and seeds it has that the
-    // generator does not produce.
+    // Removed copy the committed file omits. (Extra committed seeds pass.)
     expect({
-      missingFromCommitted: [...want].filter(k => !have.has(k)),
-      notGenerated: [...have].filter(k => !want.has(k)),
-    }).toEqual({ missingFromCommitted: [], notGenerated: [] });
-    expect(committed).toEqual(regenerated);
+      missingFromCommitted: keys(regenerated).filter(k => !have.has(k)),
+    }).toEqual({ missingFromCommitted: [] });
   }, 300_000);
 });

@@ -3,7 +3,12 @@
  * removed or rewrote, derived from Git history.
  *
  *   npm run claims:seeds            # print the set as JSON
- *   npm run claims:seeds -- --write # write __tests__/landing/helpers/tripwire-seeds.generated.json
+ *   npm run claims:seeds -- --write # add new seeds to __tests__/landing/helpers/tripwire-seeds.generated.json
+ *
+ * --write preserves every committed seed and only adds new ones. The
+ * completeness test is a subset check: every regenerated seed must be
+ * committed; extra committed seeds are allowed (after a squash merge the
+ * history is shorter, so regeneration yields a subset).
  *
  * Deterministic: the result depends only on the Git objects and the working
  * tree, read through the current extraction code.
@@ -24,7 +29,7 @@
  * single words included ("Certified"). Only a segment whose normalised key
  * is empty (a bare URL or punctuation) is skipped — it has nothing to match.
  * Completeness is then true by construction, and public-claims-seeds.test.ts
- * proves the committed set is this set.
+ * proves every regenerated seed is committed (a subset rule).
  *
  * Matching (helpers/public-claims.ts): a seed under 4 words matches only an
  * exact whole normalised segment; a seed of 4+ words matches as a normalised
@@ -253,21 +258,36 @@ async function generate(): Promise<{ snapshots: string[]; seeds: Seed[] }> {
 }
 
 const { snapshots, seeds } = await generate();
-const json = `${JSON.stringify(
-  {
-    generator: 'scripts/claims-seeds.ts',
-    base: BASE.slice(0, 8),
-    count: seeds.length,
-    seeds,
-  },
-  null,
-  2
-)}\n`;
+const render = (list: Seed[]) =>
+  `${JSON.stringify(
+    {
+      generator: 'scripts/claims-seeds.ts',
+      base: BASE.slice(0, 8),
+      count: list.length,
+      seeds: list,
+    },
+    null,
+    2
+  )}\n`;
 if (process.argv.includes('--write')) {
-  fs.writeFileSync(OUT, json);
+  // Merge, never drop: committed seeds are kept (a squash merge removes the
+  // snapshots that produced some of them) and only new ones are added.
+  const committed: Seed[] = realFs.existsSync(OUT)
+    ? JSON.parse(realFs.readFileSync(OUT, 'utf8') as string).seeds
+    : [];
+  const byKey = new Map(committed.map(seed => [seed.key, seed]));
+  let added = 0;
+  for (const seed of seeds) {
+    if (!byKey.has(seed.key)) {
+      byKey.set(seed.key, seed);
+      added++;
+    }
+  }
+  const merged = [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key));
+  fs.writeFileSync(OUT, render(merged));
   process.stderr.write(
-    `wrote ${seeds.length} seeds from ${snapshots.length} snapshots\n`
+    `kept ${committed.length}, added ${added}: ${merged.length} seeds (${seeds.length} regenerated from ${snapshots.length} snapshots)\n`
   );
 } else {
-  process.stdout.write(json);
+  process.stdout.write(render(seeds));
 }
