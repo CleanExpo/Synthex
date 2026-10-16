@@ -2,9 +2,10 @@
  * lib/algorithm/algorithm-context.ts
  *
  * Provides a concise algorithm intelligence context block for injection into
- * the AI Advisor synthesis prompt. Summarises the top-weighted, CONFIRMED or
- * LEAKED signals per platform so the Advisor can ground its recommendations
- * in verified algorithm intelligence without an extra DB round-trip.
+ * the AI Advisor synthesis prompt. Summarises the top-weighted signals per
+ * platform. Only CONFIRMED signals are platform-confirmed; LEAKED (2024 leaked
+ * API documentation) and INFERRED signals are labelled as unconfirmed
+ * hypotheses so the Advisor never presents them as verified fact.
  *
  * Plain-English translations are used throughout — raw signal names (NavBoost,
  * sends_per_reach, etc.) are NEVER returned to client-facing output.
@@ -30,28 +31,36 @@ const PLATFORM_SIGNALS: PlatformSignalSummary[] = [
     surface: 'web',
     topSignals: [
       {
-        plainEnglish: 'Google tracks whether visitors stay on your page or go back to search',
+        plainEnglish:
+          'Google tracks whether visitors stay on your page or go back to search',
         confidenceLevel: 'LEAKED',
         weightTier: 'critical',
-        implication: 'Page titles and descriptions that accurately match intent reduce bounce-backs',
+        implication:
+          'Page titles and descriptions that accurately match intent reduce bounce-backs',
       },
       {
-        plainEnglish: 'Whether your content adds something not found on competing pages',
+        plainEnglish:
+          'Whether your content adds something not found on competing pages',
         confidenceLevel: 'LEAKED',
         weightTier: 'strong',
-        implication: 'Add original data, case studies, or first-person insights',
+        implication:
+          'Add original data, case studies, or first-person insights',
       },
       {
-        plainEnglish: 'How fast your website loads and responds for real visitors',
+        plainEnglish:
+          'How fast your website loads and responds for real visitors',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'strong',
-        implication: 'LCP < 2.5s, INP < 200ms — failing these on mobile is a ranking penalty',
+        implication:
+          'Aim for LCP within 2.5s and INP under 200ms; Google says good Core Web Vitals align with what its ranking systems reward, so never promise a ranking gain',
       },
       {
-        plainEnglish: 'Whether your content is seen as written by someone with real expertise',
+        plainEnglish:
+          'Whether your content is seen as written by someone with real expertise',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'strong',
-        implication: 'Named authors, credentials, and cited sources improve trust signals',
+        implication:
+          'Named authors, credentials and cited sources help readers trust the page (Google says E-E-A-T is not a specific ranking factor)',
       },
     ],
   },
@@ -60,22 +69,26 @@ const PLATFORM_SIGNALS: PlatformSignalSummary[] = [
     surface: 'reels',
     topSignals: [
       {
-        plainEnglish: 'How often people share your Reels in direct messages to friends',
+        plainEnglish:
+          'How often people share your Reels in direct messages to friends',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'critical',
-        implication: 'Content designed to make people say "send this to someone" outperforms content that only gets likes',
+        implication:
+          'Content designed to make people say "send this to someone" outperforms content that only gets likes',
       },
       {
         plainEnglish: 'How long people watch your video before stopping',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'critical',
-        implication: 'Hook in first 3 seconds; under 30s videos achieve higher completion rates',
+        implication:
+          'Open with the payoff fast; test video length rather than assuming shorter always wins',
       },
       {
         plainEnglish: 'When people save your post to come back to later',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'strong',
-        implication: 'Educational, reference, or aspirational content earns saves',
+        implication:
+          'Educational, reference, or aspirational content earns saves',
       },
     ],
   },
@@ -84,16 +97,20 @@ const PLATFORM_SIGNALS: PlatformSignalSummary[] = [
     surface: 'feed',
     topSignals: [
       {
-        plainEnglish: 'History of interactions between this account and each follower',
+        plainEnglish:
+          'History of interactions between this account and each follower',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'critical',
-        implication: 'Reply to every comment — each reply strengthens the relationship signal',
+        implication:
+          'Reply to every comment — each reply strengthens the relationship signal',
       },
       {
-        plainEnglish: 'How relevant the content is to each individual user\'s interests',
+        plainEnglish:
+          "How relevant the content is to each individual user's interests",
         confidenceLevel: 'CONFIRMED',
         weightTier: 'critical',
-        implication: 'Consistent topic focus helps Instagram learn who to show your posts to',
+        implication:
+          'Consistent topic focus helps Instagram learn who to show your posts to',
       },
     ],
   },
@@ -105,19 +122,24 @@ const PLATFORM_SIGNALS: PlatformSignalSummary[] = [
         plainEnglish: 'Whether people click "see more" to read your full post',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'critical',
-        implication: 'First 2–3 lines visible in feed must be compelling enough to earn the expand click',
+        implication:
+          'First 2–3 lines visible in feed must be compelling enough to earn the expand click',
       },
       {
-        plainEnglish: 'How much engagement your post gets in the first 60–90 minutes',
+        plainEnglish:
+          'How much engagement your post gets in the first 60–90 minutes',
         confidenceLevel: 'CONFIRMED',
         weightTier: 'critical',
-        implication: 'Post when your audience is most active; reply to comments immediately after publishing',
+        implication:
+          'Post when your audience is most active; reply to comments immediately after publishing',
       },
       {
-        plainEnglish: 'Posts containing links to external websites get reduced reach',
+        plainEnglish:
+          'Posts containing links to external websites get reduced reach',
         confidenceLevel: 'INFERRED',
         weightTier: 'strong',
-        implication: 'Put external links in the first comment, not the post body',
+        implication:
+          'Put external links in the first comment, not the post body',
       },
     ],
   },
@@ -136,21 +158,27 @@ export function getAlgorithmContextBlock(platforms?: string[]): string {
 
   const lines: string[] = [
     '--- ALGORITHM INTELLIGENCE CONTEXT ---',
-    'Use these verified platform algorithm signals when making content recommendations.',
+    'Use these platform signals when making content recommendations. Only "platform confirmed" signals may be stated as fact;',
+    'present every unconfirmed signal as a hypothesis to test, never as verified or guaranteed.',
     'CRITICAL: All algorithm signals in client-facing recommendations MUST use plain-English',
     'descriptions — never expose raw signal names (NavBoost, sends_per_reach, CrUX, etc.).',
     '',
   ];
 
   for (const platform of filtered) {
-    lines.push(`${platform.platform.replace('_', ' ').toUpperCase()} — ${platform.surface}:`);
+    lines.push(
+      `${platform.platform.replace('_', ' ').toUpperCase()} — ${platform.surface}:`
+    );
     for (const signal of platform.topSignals) {
-      const confidence = signal.confidenceLevel === 'CONFIRMED'
-        ? 'platform confirmed'
-        : signal.confidenceLevel === 'LEAKED'
-          ? 'from verified platform documents'
-          : 'based on observed patterns';
-      lines.push(`  • ${signal.plainEnglish} (${confidence}, ${signal.weightTier} impact)`);
+      const confidence =
+        signal.confidenceLevel === 'CONFIRMED'
+          ? 'platform confirmed'
+          : signal.confidenceLevel === 'LEAKED'
+            ? 'unconfirmed: reported in a 2024 leak, not confirmed by the platform'
+            : 'unconfirmed: inferred from observed patterns';
+      lines.push(
+        `  • ${signal.plainEnglish} (${confidence}, ${signal.weightTier} impact)`
+      );
       lines.push(`    → ${signal.implication}`);
     }
     lines.push('');
@@ -165,13 +193,16 @@ export function getAlgorithmContextBlock(platforms?: string[]): string {
  * Returns the plain-English translation for a given raw signal name.
  * Returns the signal name unchanged if no translation is found.
  */
-export function translateSignal(rawSignalName: string, platform: string): string {
+export function translateSignal(
+  rawSignalName: string,
+  platform: string
+): string {
   // Find matching signal across all platforms
   const platformData = PLATFORM_SIGNALS.find(p => p.platform === platform);
   if (!platformData) return rawSignalName;
 
-  const signal = platformData.topSignals.find(
-    s => s.plainEnglish.toLowerCase().includes(rawSignalName.toLowerCase())
+  const signal = platformData.topSignals.find(s =>
+    s.plainEnglish.toLowerCase().includes(rawSignalName.toLowerCase())
   );
 
   return signal?.plainEnglish ?? rawSignalName;

@@ -131,6 +131,10 @@ describe('POST /api/marketing/platform-score', () => {
     expect(invokeSkillMock.mock.calls[0][0].prompt).toContain(
       'Source artefact ref: senior-copywriter Post 06 LinkedIn adaptation'
     );
+    // Reference files are not bundled: the model must not claim it loaded them.
+    expect(invokeSkillMock.mock.calls[0][0].prompt).toContain(
+      'not loaded in this runtime'
+    );
     expect(createDraft).toHaveBeenCalledWith({
       data: expect.objectContaining({
         userId: 'user-1',
