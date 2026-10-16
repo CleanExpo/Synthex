@@ -8,6 +8,7 @@
  */
 
 import { getOAuthAccessToken } from '@/lib/google/google-auth';
+import { notObserved } from '@/lib/ree/evidence-state';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
@@ -485,8 +486,6 @@ export async function getInsights(
   locationName: string,
   dateRange?: { startDate: string; endDate: string }
 ): Promise<GBPInsights> {
-  const accessToken = await getOAuthAccessToken(connectionId);
-
   // Use Performance API for daily metrics
   const now = new Date();
   const thirtyDaysAgo = new Date(now);
@@ -495,9 +494,6 @@ export async function getInsights(
   const startDate =
     dateRange?.startDate || thirtyDaysAgo.toISOString().split('T')[0];
   const endDate = dateRange?.endDate || now.toISOString().split('T')[0];
-
-  const [startYear, startMonth, startDay] = startDate.split('-').map(Number);
-  const [endYear, endMonth, endDay] = endDate.split('-').map(Number);
 
   const metrics = [
     'BUSINESS_IMPRESSIONS_DESKTOP_MAPS',
@@ -510,69 +506,89 @@ export async function getInsights(
   ];
 
   try {
+    const accessToken = await getOAuthAccessToken(connectionId);
+    const resource = locationName.match(/(?:^|\/)(locations\/[^/]+)$/)?.[1];
+    if (!resource) throw new Error('Invalid location');
+    const query = new URLSearchParams(
+      metrics.map(metric => ['dailyMetrics', metric])
+    );
+    for (const [boundary, date] of [
+      ['start_date', startDate],
+      ['end_date', endDate],
+    ]) {
+      date
+        .split('-')
+        .forEach((value, i) =>
+          query.set(
+            `dailyRange.${boundary}.${['year', 'month', 'day'][i]}`,
+            String(Number(value))
+          )
+        );
+    }
     const response = await fetch(
-      `https://businessprofileperformance.googleapis.com/v1/${locationName}:fetchMultiDailyMetricsTimeSeries`,
+      `https://businessprofileperformance.googleapis.com/v1/${resource}:fetchMultiDailyMetricsTimeSeries?${query}`,
       {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          dailyMetrics: metrics,
-          dailyRange: {
-            startDate: { year: startYear, month: startMonth, day: startDay },
-            endDate: { year: endYear, month: endMonth, day: endDay },
-          },
-        }),
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
         signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
       }
     );
-
-    if (!response.ok) {
-      logger.warn(
-        `GBP getInsights failed (${response.status}), returning empty insights`
-      );
-      return {};
-    }
-
+    if (!response.ok) throw new Error('Performance read failed');
     const data = await response.json();
-    const results = data.multiDailyMetricTimeSeries || [];
-
-    // Aggregate metrics across the date range
-    let searchViews = 0;
-    let mapsViews = 0;
-    let websiteClicks = 0;
-    let phoneClicks = 0;
-    let directionClicks = 0;
-
-    for (const series of results) {
-      const metric = series.dailyMetric;
-      const total = (
-        series.dailyMetricTimeSeries?.timeSeries?.datedValues || []
-      ).reduce(
-        (sum: number, v: { value?: string }) =>
-          sum + parseInt(v.value || '0', 10),
-        0
-      );
-
-      if (metric?.includes('SEARCH')) searchViews += total;
-      if (metric?.includes('MAPS')) mapsViews += total;
-      if (metric === 'WEBSITE_CLICKS') websiteClicks = total;
-      if (metric === 'CALL_CLICKS') phoneClicks = total;
-      if (metric === 'BUSINESS_DIRECTION_REQUESTS') directionClicks = total;
+    const values = new Map<string, number>();
+    for (const group of data.multiDailyMetricTimeSeries) {
+      for (const series of group.dailyMetricTimeSeries) {
+        if (!metrics.includes(series.dailyMetric))
+          throw new Error('Unknown metric');
+        const dated = series.timeSeries.datedValues;
+        if (!Array.isArray(dated)) throw new Error('Invalid series');
+        const days = new Set<string>();
+        let total = 0;
+        for (const entry of dated) {
+          const date = `${entry.date.year}-${String(entry.date.month).padStart(2, '0')}-${String(entry.date.day).padStart(2, '0')}`;
+          if (
+            !/^\d+$/.test(entry.value) ||
+            typeof entry.value !== 'string' ||
+            !Number.isSafeInteger(Number(entry.value)) ||
+            date < startDate ||
+            date > endDate ||
+            days.has(date)
+          )
+            throw new Error('Invalid daily value');
+          days.add(date);
+          total += Number(entry.value);
+        }
+        if (
+          days.size !==
+            (Date.parse(endDate) - Date.parse(startDate)) / 86400000 + 1 ||
+          values.has(series.dailyMetric)
+        )
+          throw new Error('Incomplete or ambiguous series');
+        if (!Number.isSafeInteger(total)) throw new Error('Invalid total');
+        values.set(series.dailyMetric, total);
+      }
     }
-
+    if (!values.size) throw new Error('Missing metrics');
+    const sum = (...names: string[]) =>
+      names.every(name => values.has(name))
+        ? names.reduce((total, name) => total + values.get(name)!, 0)
+        : undefined;
     return {
-      searchViews,
-      mapsViews,
-      websiteClicks,
-      phoneClicks,
-      directionClicks,
+      searchViews: sum(metrics[1], metrics[3]),
+      mapsViews: sum(metrics[0], metrics[2]),
+      websiteClicks: sum('WEBSITE_CLICKS'),
+      phoneClicks: sum('CALL_CLICKS'),
+      directionClicks: sum('BUSINESS_DIRECTION_REQUESTS'),
     };
-  } catch (error) {
-    logger.error('GBP getInsights error:', error);
-    return {};
+  } catch {
+    throw Object.assign(
+      new Error('GBP Performance unavailable'),
+      notObserved(
+        'UNAVAILABLE',
+        'gbp-performance',
+        'Performance read failed or incomplete'
+      )
+    );
   }
 }
 

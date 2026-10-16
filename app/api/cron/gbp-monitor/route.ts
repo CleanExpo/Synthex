@@ -148,7 +148,9 @@ export async function GET(request: NextRequest) {
 
   const startTime = Date.now();
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setUTCDate(today.getUTCDate() - 2);
+  today.setUTCHours(0, 0, 0, 0);
+  const date = today.toISOString().split('T')[0];
 
   logger.info('cron:gbp-monitor:start', {
     timestamp: new Date().toISOString(),
@@ -183,7 +185,20 @@ export async function GET(request: NextRequest) {
 
       // 1. Fetch and snapshot insights
       try {
-        const insights = await getInsights(connectionId, location.locationId);
+        const insights = await getInsights(connectionId, location.locationId, {
+          startDate: date,
+          endDate: date,
+        });
+        if (
+          ![
+            insights.searchViews,
+            insights.mapsViews,
+            insights.websiteClicks,
+            insights.phoneClicks,
+            insights.directionClicks,
+          ].every(value => typeof value === 'number' && Number.isFinite(value))
+        )
+          throw new Error('GBP Performance incomplete');
 
         await prisma.gBPSnapshot.upsert({
           where: {
