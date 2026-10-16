@@ -204,11 +204,11 @@ function SearchPerformanceSection({
           {/* Summary Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <MetricCard
-              label="Total Clicks"
+              label="Clicks (returned rows only)"
               value={analytics.totals.clicks.toLocaleString()}
             />
             <MetricCard
-              label="Total Impressions"
+              label="Impressions (returned rows only)"
               value={analytics.totals.impressions.toLocaleString()}
             />
             <MetricCard
