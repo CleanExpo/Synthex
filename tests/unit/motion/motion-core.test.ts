@@ -84,6 +84,8 @@ describe('fact guard', () => {
     const r = checkFigures(['13.9% booked'], SOURCE, [invented]);
     expect(r.ok).toBe(false);
     expect(r.unsupported).toContain('conversion: inputs not found in source');
+    // The figure itself must be blocked too, not only the declaration.
+    expect(r.unsupported).toContain('13.9%');
   });
 });
 
