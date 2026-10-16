@@ -15,9 +15,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getScoreTrends } from '@/lib/seo/geo-readiness-service';
+import { notObserved } from '@/lib/ree/evidence-state';
 import { logger } from '@/lib/logger';
 
 /**
@@ -48,7 +52,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     // Check if user has SEO access
     if (subscription.plan === 'free') {
@@ -66,24 +71,20 @@ export async function GET(request: NextRequest) {
     // Parse optional days param
     const { searchParams } = new URL(request.url);
     const daysParam = searchParams.get('days');
-    const days = daysParam ? Math.min(Math.max(parseInt(daysParam, 10) || 30, 1), 90) : 30;
+    const days = daysParam
+      ? Math.min(Math.max(parseInt(daysParam, 10) || 30, 1), 90)
+      : 30;
 
     // Get trends
-    const { trends, period, isDemo } = await getScoreTrends(userId, days);
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      trends,
-      period,
-      isDemo,
-      message: isDemo
-        ? 'Showing demo data. Run your first analysis to see real trends.'
-        : undefined,
-    });
+    const reading = await getScoreTrends(userId, days);
+    return APISecurityChecker.createSecureResponse(
+      reading,
+      reading.state === 'OBSERVED' ? 200 : 503
+    );
   } catch (error) {
     logger.error('GEO Readiness Trends API error:', error);
     return APISecurityChecker.createSecureResponse(
-      { error: 'Failed to fetch GEO score trends' },
+      notObserved('UNAVAILABLE', 'GEOAnalysis:personal', 'Trends read failed'),
       500
     );
   }

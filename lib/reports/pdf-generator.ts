@@ -120,6 +120,7 @@ const PLATFORM_COLORS: Record<string, string> = {
  * Format number for display
  */
 function formatNumber(value: number, type?: string): string {
+  if (!Number.isFinite(value)) return 'Unavailable';
   if (type === 'currency' || type === 'revenue' || type === 'cost') {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -358,7 +359,7 @@ export class PDFReportGenerator {
     const headers = ['Platform', ...metrics.map(m => METRIC_LABELS[m] || m)];
     const rows = platforms.map(platform => [
       platform.charAt(0).toUpperCase() + platform.slice(1),
-      ...metrics.map(m => formatNumber(byPlatform[platform][m] || 0, m)),
+      ...metrics.map(m => formatNumber(byPlatform[platform][m], m)),
     ]);
 
     this.doc.autoTable({
@@ -402,7 +403,7 @@ export class PDFReportGenerator {
 
     const rows = recentDays.map(day => [
       formatDate(day.date),
-      ...metrics.map(m => formatNumber(day.metrics[m] || 0, m)),
+      ...metrics.map(m => formatNumber(day.metrics[m], m)),
     ]);
 
     this.doc.autoTable({

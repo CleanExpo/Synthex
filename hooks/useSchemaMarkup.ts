@@ -5,7 +5,7 @@
  * - validateSchema: Validate a JSON-LD schema object against schema.org rules
  * - extractFromUrl: Extract existing schema markup from any URL
  * - loadTemplates: Fetch predefined schema templates by category
- * - generatePreview: Generate a SERP-like rich results preview
+ * - generatePreview: Generate an illustrative structured data preview
  */
 
 'use client';
@@ -214,7 +214,7 @@ export function useSchemaMarkup() {
   }, [templatesEnabled, mutateTemplates]);
 
   /**
-   * Generate a SERP-like rich results preview for the given schema.
+   * Generate an illustrative structured data preview for the given schema.
    * Calls the service function client-side (no API call needed).
    */
   const generatePreview = useCallback((schema: object): RichPreviewResult => {

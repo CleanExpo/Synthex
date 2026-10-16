@@ -7,7 +7,7 @@ description: >-
   updates.
 metadata:
   author: synthex
-  version: '1.0'
+  version: '1.1'
   engine: synthex-ai-agency
   type: reference-skill
   triggers:
@@ -37,18 +37,18 @@ diagnose algorithm impacts, and execute recovery strategies.
 
 ## Sentinel Architecture
 
-| Layer          | File                                                             | Exports / Purpose                                                                                                                                     |
-| -------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Orchestrator   | `lib/sentinel/sentinel-agent.ts`                                 | `runSentinelCheck(userId, orgId)` — full check: seed updates, resolve site URL, check health, run alerts                                              |
-|                |                                                                  | `runSentinelCheckForAllUsers()` — batch check for cron (limit 100 users)                                                                              |
-| Algorithm Feed | `lib/sentinel/algorithm-feed.ts`                                 | `KNOWN_ALGORITHM_UPDATES` (12 known updates, 2024-2026), `seedAlgorithmUpdates()`, `getRecentUpdates(days)`, `getActiveRollouts()`, `getAllUpdates()` |
-| Health Checker | `lib/sentinel/health-checker.ts`                                 | `checkSiteHealth(siteUrl, userId, orgId)` — score 0-100 from GSC + PSI data                                                                           |
-|                |                                                                  | `getSnapshotHistory(userId, siteUrl, days)`, `getLatestSnapshot(userId, siteUrl)`                                                                     |
-| Alert Engine   | `lib/sentinel/alert-engine.ts`                                   | `runAlertEngine(current, previous, recentUpdates, thresholds)` — compares snapshots, emits alerts                                                     |
-| Types          | `lib/sentinel/types.ts`                                          | `CoreWebVitals`, `SiteHealthReport`, `AlertThresholds`, `DEFAULT_THRESHOLDS`, `AlertType`, `AlertSeverity`                                            |
-| Cron           | `app/api/cron/sentinel/route.ts`                                 | Runs `runSentinelCheckForAllUsers()` on schedule                                                                                                      |
-| Manual trigger | `POST /api/sentinel/check`                                       | Triggers sentinel check for the authenticated user                                                                                                    |
-| Models         | Prisma: `AlgorithmUpdate`, `SiteHealthSnapshot`, `SentinelAlert` | Persistent storage for updates, snapshots, and alerts                                                                                                 |
+| Layer          | File                                                             | Exports / Purpose                                                                                                                                                                                                                                                                              |
+| -------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Orchestrator   | `lib/sentinel/sentinel-agent.ts`                                 | `runSentinelCheck(userId, orgId)` — full check: seed updates, resolve site URL, check health, run alerts                                                                                                                                                                                       |
+|                |                                                                  | `runSentinelCheckForAllUsers()` — batch check for cron (limit 100 users)                                                                                                                                                                                                                       |
+| Algorithm Feed | `lib/sentinel/algorithm-feed.ts`                                 | `KNOWN_ALGORITHM_UPDATES` (18 official updates since March 2024, offline fallback), `syncLiveAlgorithmUpdates()` (Google Search Status Dashboard feed, 6 h throttle), `getAlgorithmFeedStatus()`, `seedAlgorithmUpdates()`, `getRecentUpdates(days)`, `getActiveRollouts()`, `getAllUpdates()` |
+| Health Checker | `lib/sentinel/health-checker.ts`                                 | `checkSiteHealth(siteUrl, userId, orgId)` — score 0-100 from GSC + PSI data                                                                                                                                                                                                                    |
+|                |                                                                  | `getSnapshotHistory(userId, siteUrl, days)`, `getLatestSnapshot(userId, siteUrl)`                                                                                                                                                                                                              |
+| Alert Engine   | `lib/sentinel/alert-engine.ts`                                   | `runAlertEngine(current, previous, recentUpdates, thresholds)` — compares snapshots, emits alerts                                                                                                                                                                                              |
+| Types          | `lib/sentinel/types.ts`                                          | `CoreWebVitals`, `SiteHealthReport`, `AlertThresholds`, `DEFAULT_THRESHOLDS`, `AlertType`, `AlertSeverity`                                                                                                                                                                                     |
+| Cron           | `app/api/cron/sentinel/route.ts`                                 | Runs `runSentinelCheckForAllUsers()` on schedule                                                                                                                                                                                                                                               |
+| Manual trigger | `POST /api/sentinel/check`                                       | Triggers sentinel check for the authenticated user                                                                                                                                                                                                                                             |
+| Models         | Prisma: `AlgorithmUpdate`, `SiteHealthSnapshot`, `SentinelAlert` | Persistent storage for updates, snapshots, and alerts                                                                                                                                                                                                                                          |
 
 ## Alert Types and Thresholds
 
@@ -76,7 +76,7 @@ From `DEFAULT_THRESHOLDS` in `lib/sentinel/types.ts`:
 - **Diagnosis**: compare GSC analytics 28 days before vs after rollout start; check page-level changes
 - **Recovery**: improve content quality, demonstrate E-E-A-T, add original research; recovery typically occurs at next core update (3-6 months)
 - **Timeline**: rollout 2-4 weeks; recovery at next core update cycle
-- **Known updates in feed**: March 2024, August 2024, November 2024, March 2025, August 2025, November 2025, March 2026
+- **Known updates in fallback**: March 2024, August 2024, November 2024, December 2024, March 2025, June 2025, December 2025, March 2026, May 2026
 
 ### Spam Updates
 
@@ -85,16 +85,15 @@ From `DEFAULT_THRESHOLDS` in `lib/sentinel/types.ts`:
 - **Diagnosis**: check for manual actions in GSC; review content for auto-generated or scraped patterns
 - **Recovery**: remove or substantially rewrite flagged content; submit reconsideration request
 - **Timeline**: rollout 1-2 weeks; recovery after reconsideration (weeks to months)
-- **Known updates in feed**: March 2024, December 2024, June 2025
+- **Known updates in fallback**: March 2024, June 2024, December 2024, August 2025, March 2026, June 2026, August 2026, September 2026
+- **Policy**: site reputation abuse policy updated 28/08/2026; scaled content abuse covers mass generation without added value, AI-assisted or not `[VERIFIED]`
 
-### Helpful Content Updates
+### Helpful content (no longer a separate update)
 
-- **What it targets**: content created primarily for search engines rather than people
-- **Symptoms**: site-wide classifier applied; entire domain affected, not just individual pages
-- **Diagnosis**: audit for pages that add no unique value, are thin, or target keywords without genuine expertise
-- **Recovery**: remove or significantly improve unhelpful pages; focus on demonstrating firsthand experience
-- **Timeline**: classifier is site-wide and persistent; recovery when classifier is lifted (next HCU or core update)
-- **Known updates in feed**: February 2026
+- **Status**: since the March 2024 core update Google assesses helpfulness inside its core ranking systems: "There's no longer one signal or system used to do this" `[VERIFIED: developers.google.com/search/blog/2024/03/core-update-spam-policies]`. There are no standalone helpful content updates to wait for.
+- **Diagnosis**: treat helpfulness drops as core-update impact; audit for pages that add no unique value, are thin, or target keywords without genuine expertise
+- **Recovery**: improve or remove unhelpful pages; show firsthand experience; E-E-A-T is guidance, not a specific ranking factor `[VERIFIED]`
+- **Retracted**: an earlier fallback list carried an invented "February 2026 helpful content update"; it never existed and is hidden by `RETRACTED_SEED_IDS`
 
 ### Link Spam Updates
 
@@ -103,7 +102,11 @@ From `DEFAULT_THRESHOLDS` in `lib/sentinel/types.ts`:
 - **Diagnosis**: audit backlink profile for unnatural patterns; check for sudden loss of referring domains
 - **Recovery**: disavow toxic backlinks; focus on earning editorial links through quality content
 - **Timeline**: rollout 1-2 weeks; recovery gradual as new editorial links are earned
-- **Known updates in feed**: December 2025
+- **Known updates in fallback**: none as a separate named update since March 2024 (link spam is handled by spam updates; an invented "December 2025 link spam update" was retracted)
+
+### Other dashboard incidents
+
+- `February 2026 Discover update` is in the fallback as `other`; the live feed maps non-ranking incidents (crawling, indexing, serving) to `gssd-<id>` rows with low impact
 
 ### Product Reviews / Local Updates
 
@@ -204,18 +207,19 @@ Computed by `computeHealthScore()` in `lib/sentinel/health-checker.ts`:
 
 ## Monitoring Cadence
 
-| Frequency                | Mechanism                            | Purpose                                                                        |
-| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------ |
-| Daily (automated)        | Sentinel cron (`/api/cron/sentinel`) | Full health check + alert generation for all users with websites               |
-| Real-time (event-driven) | `SentinelAlert` table                | Persisted alerts with severity, type, and related update ID                    |
-| On-demand                | `POST /api/sentinel/check`           | Manual trigger for immediate health check                                      |
-| Manual curation          | `KNOWN_ALGORITHM_UPDATES` array      | New updates added to `lib/sentinel/algorithm-feed.ts` as Google announces them |
+| Frequency                | Mechanism                            | Purpose                                                                                                |
+| ------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Daily (automated)        | Sentinel cron (`/api/cron/sentinel`) | Full health check + alert generation for all users with websites                                       |
+| Real-time (event-driven) | `SentinelAlert` table                | Persisted alerts with severity, type, and related update ID                                            |
+| On-demand                | `POST /api/sentinel/check`           | Manual trigger for immediate health check                                                              |
+| Every 6 h (when checked) | `syncLiveAlgorithmUpdates()`         | Reads `status.search.google.com/incidents.json`; failures return `unavailable`, never an empty success |
+| Fallback curation        | `KNOWN_ALGORITHM_UPDATES` array      | Offline fallback only; must match the dashboard's exact UTC times and incident URLs                    |
 
 ### Adding New Algorithm Updates
 
-When Google announces a new algorithm update:
+The live feed picks up new Google Search Status Dashboard incidents automatically. Only update the offline fallback, and only from the dashboard itself (never from a blog or memory):
 
-1. Add entry to `KNOWN_ALGORITHM_UPDATES` in `lib/sentinel/algorithm-feed.ts`
+1. Add entry to `KNOWN_ALGORITHM_UPDATES` in `lib/sentinel/algorithm-feed.ts` with the dashboard's UTC begin/end and `status.search.google.com/incidents/<id>` URL
 2. Include: `name`, `updateType`, `announcedAt`, `rolloutStart`, `rolloutEnd` (null if ongoing), `impactLevel`, `description`, `sourceUrl`
 3. The `seedAlgorithmUpdates()` function will upsert it on next cron run
 4. Set `rolloutEnd` once Google confirms the rollout is complete

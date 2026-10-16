@@ -5,7 +5,7 @@ import {
 } from '@/hooks/useSearchConsole';
 
 describe('Google dashboard data normalization', () => {
-  it('fills missing GBP insight totals with zeroes', () => {
+  it('preserves missing GBP totals without fabricating zeroes', () => {
     expect(
       normalizeGBPInsightsTotals({
         searchViews: 12,
@@ -13,14 +13,14 @@ describe('Google dashboard data normalization', () => {
       })
     ).toEqual({
       searchViews: 12,
-      mapsViews: 0,
-      websiteClicks: 0,
-      phoneClicks: 0,
-      directionClicks: 0,
+      mapsViews: null,
+      websiteClicks: null,
+      phoneClicks: null,
+      directionClicks: null,
     });
   });
 
-  it('fills missing Search Console totals and rows with safe numbers', () => {
+  it('withholds incomplete Search Console totals and rows', () => {
     expect(
       normalizeSearchAnalyticsData({
         totals: {
@@ -33,22 +33,25 @@ describe('Google dashboard data normalization', () => {
           } as unknown as SearchAnalyticsData['rows'][number],
         ],
       })
-    ).toEqual({
-      totals: {
-        clicks: 4,
-        impressions: 0,
-        ctr: 0,
-        position: 0,
-      },
-      rows: [
-        {
-          keys: ['restore assist'],
-          clicks: 0,
-          impressions: 99,
-          ctr: 0,
-          position: 0,
-        },
-      ],
+    ).toBeNull();
+  });
+
+  it('withholds non-finite GBP numbers instead of displaying them', () => {
+    const totals = normalizeGBPInsightsTotals({
+      searchViews: NaN,
+      mapsViews: Infinity,
+      websiteClicks: -Infinity,
     });
+    expect(totals.searchViews).toBeNull();
+    expect(totals.mapsViews).toBeNull();
+    expect(totals.websiteClicks).toBeNull();
+  });
+
+  it('preserves measured zero', () => {
+    expect(normalizeGBPInsightsTotals({ phoneClicks: 0 }).phoneClicks).toBe(0);
+    const totals = { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+    expect(normalizeSearchAnalyticsData({ totals, rows: [] })?.totals).toEqual(
+      totals
+    );
   });
 });

@@ -226,6 +226,7 @@ export default function GoogleBusinessPage() {
     error: locationsError,
   } = useGBPLocations();
   const {
+    message,
     totals,
     totalReviews,
     averageRating,
@@ -338,31 +339,32 @@ export default function GoogleBusinessPage() {
             </Card>
           )}
 
+          {message && <p role="status">{message}</p>}
           {/* Metrics Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <MetricCard
               label="Search Views"
-              value={totals.searchViews.toLocaleString()}
+              value={totals.searchViews?.toLocaleString() ?? 'Incomplete'}
               icon={Eye}
             />
             <MetricCard
               label="Maps Views"
-              value={totals.mapsViews.toLocaleString()}
+              value={totals.mapsViews?.toLocaleString() ?? 'Incomplete'}
               icon={Map}
             />
             <MetricCard
               label="Website Clicks"
-              value={totals.websiteClicks.toLocaleString()}
+              value={totals.websiteClicks?.toLocaleString() ?? 'Incomplete'}
               icon={Globe}
             />
             <MetricCard
               label="Phone Clicks"
-              value={totals.phoneClicks.toLocaleString()}
+              value={totals.phoneClicks?.toLocaleString() ?? 'Incomplete'}
               icon={Phone}
             />
             <MetricCard
               label="Directions"
-              value={totals.directionClicks.toLocaleString()}
+              value={totals.directionClicks?.toLocaleString() ?? 'Incomplete'}
               icon={TrendingUp}
             />
           </div>
@@ -380,14 +382,17 @@ export default function GoogleBusinessPage() {
                 </h2>
                 <div className="flex items-baseline gap-3 mb-2">
                   <span className="text-5xl font-bold text-white">
-                    {averageRating ? averageRating.toFixed(1) : '--'}
+                    {averageRating !== null
+                      ? averageRating.toFixed(1)
+                      : 'Incomplete'}
                   </span>
                   <div className="flex">
                     {[1, 2, 3, 4, 5].map(star => (
                       <Star
                         key={star}
                         className={`w-5 h-5 ${
-                          star <= Math.round(averageRating || 0)
+                          averageRating !== null &&
+                          star <= Math.round(averageRating)
                             ? 'text-orange-400'
                             : 'text-gray-600'
                         }`}
@@ -396,7 +401,7 @@ export default function GoogleBusinessPage() {
                   </div>
                 </div>
                 <p className="text-sm text-gray-300">
-                  Based on {totalReviews} reviews
+                  Based on {totalReviews ?? 'unavailable'} reviews
                 </p>
               </CardContent>
             </Card>

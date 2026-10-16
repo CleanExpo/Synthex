@@ -57,7 +57,7 @@ function buildPlatformScorePrompt(
     request.content,
     '---',
     '',
-    'Return the complete PlatformContentOptimiserScore contract: score_0_100, signal_breakdown with plain-English signal names only (never raw algorithm jargon), top_3_lift_recommendations with falsifying post-publish checks, kill_threshold, post_publish_verification_path, considered_and_rejected (≥2), and prose_summary. Cite algorithm-knowledge-base reference + signal-translations version. Low scores (<60) must recommend source rewrite, not micro-tweaks.',
+    'Return the complete PlatformContentOptimiserScore contract: score_0_100, signal_breakdown with plain-English signal names only (never raw algorithm jargon), top_3_lift_recommendations with falsifying post-publish checks, kill_threshold, post_publish_verification_path, considered_and_rejected (≥2), and prose_summary. Cite the algorithm-knowledge-base reference and signal-translations version only if their text is in your context; otherwise write "not loaded in this runtime" and mark the affected weights [hypothesised]. Never invent a load time, version or verification date. Low scores (<60) must recommend source rewrite, not micro-tweaks.',
   ].join('\n');
 }
 

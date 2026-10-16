@@ -18,6 +18,7 @@ export const runtime = 'nodejs';
  * FAILURE MODE: Returns error response with details
  */
 
+import { notObserved } from '@/lib/ree/evidence-state';
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
@@ -28,6 +29,17 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import { clientManagement } from '@/lib/services/client-management';
 import { logger } from '@/lib/logger';
 import { createClient } from '@/lib/platform/noop-client';
+
+function unsupported() {
+  return APISecurityChecker.createSecureResponse(
+    notObserved(
+      'UNSUPPORTED',
+      'legacy-clients',
+      'Legacy client workspaces are not available'
+    ),
+    501
+  );
+}
 
 let _platform: any = null;
 function getSupabase() {
@@ -132,6 +144,8 @@ export async function GET(request: NextRequest) {
       403
     );
   }
+
+  if (security.allowed) return unsupported();
 
   const userId = security.context.userId!;
   const { searchParams } = new URL(request.url);
@@ -243,6 +257,8 @@ export async function POST(request: NextRequest) {
       403
     );
   }
+
+  if (security.allowed) return unsupported();
 
   const userId = security.context.userId!;
   const { searchParams } = new URL(request.url);
@@ -372,6 +388,8 @@ export async function PUT(request: NextRequest) {
     );
   }
 
+  if (security.allowed) return unsupported();
+
   const userId = security.context.userId!;
   const { searchParams } = new URL(request.url);
 
@@ -467,6 +485,8 @@ export async function DELETE(request: NextRequest) {
       403
     );
   }
+
+  if (security.allowed) return unsupported();
 
   const userId = security.context.userId!;
   const { searchParams } = new URL(request.url);

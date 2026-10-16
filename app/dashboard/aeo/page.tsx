@@ -8,7 +8,13 @@ import {
   isTier2Snapshot,
   TIER2_REPORT_TYPE,
 } from '@/lib/agency/tier2-snapshot';
-import { UNITE_WORKSPACE_SLUG } from '@/lib/agency/portfolio-brand-configs';
+import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  observed,
+  notObserved,
+  type EvidenceReading,
+} from '@/lib/ree/evidence-state';
 
 export const metadata: Metadata = {
   title: { absolute: 'AEO Snapshot · Synthex' },
@@ -22,58 +28,30 @@ interface BrandSurfaceSummary {
   passRate: number;
 }
 
+// AeoGateRun has no organisation field; global aggregates cannot be tenant-scoped.
 async function loadTier1Summary(): Promise<BrandSurfaceSummary[]> {
-  try {
-    const { PrismaClient } = await import('@prisma/client');
-    const prisma = new PrismaClient();
-    const rows = await prisma.aeoGateRun.groupBy({
-      by: ['brand', 'surface'],
-      _count: { _all: true },
-      where: {
-        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-      },
-    });
-    const passed = await prisma.aeoGateRun.groupBy({
-      by: ['brand', 'surface'],
-      _count: { _all: true },
-      where: {
-        pass: true,
-        createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-      },
-    });
-    const passedByKey = new Map(
-      passed.map(p => [`${p.brand}|${p.surface}`, p._count._all])
-    );
-    return rows.map(r => {
-      const passedCount = passedByKey.get(`${r.brand}|${r.surface}`) ?? 0;
-      return {
-        brand: r.brand,
-        surface: r.surface,
-        total: r._count._all,
-        passed: passedCount,
-        passRate: r._count._all === 0 ? 0 : passedCount / r._count._all,
-      };
-    });
-  } catch (err) {
-    // DB unavailable / empty / migration not yet applied — render empty state.
-    return [];
-  }
+  return [];
 }
 
 async function loadOrgReportSnapshot<T>(
   reportType: string,
   guard: (value: unknown) => value is T
-): Promise<T | null> {
+): Promise<EvidenceReading<T>> {
   try {
-    const workspace = await prisma.organization.findUnique({
-      where: { slug: UNITE_WORKSPACE_SLUG },
-      select: { id: true },
-    });
-    if (!workspace) return null;
+    const userId = await getUserIdFromCookies();
+    const organizationId = userId
+      ? await getEffectiveOrganizationId(userId)
+      : null;
+    if (!organizationId)
+      return notObserved(
+        'UNAUTHORISED',
+        reportType,
+        'Organisation context not available.'
+      );
 
     const report = await prisma.report.findFirst({
       where: {
-        organizationId: workspace.id,
+        organizationId,
         type: reportType,
         status: 'completed',
       },
@@ -81,20 +59,31 @@ async function loadOrgReportSnapshot<T>(
       select: { data: true },
     });
 
-    if (!report || !guard(report.data)) return null;
-    return report.data;
+    if (!report || !guard(report.data))
+      return notObserved(
+        'UNAVAILABLE',
+        reportType,
+        'Snapshot unavailable: missing or invalid data.'
+      );
+    return observed(report.data, reportType);
   } catch {
-    return null;
+    return notObserved(
+      'UNAVAILABLE',
+      reportType,
+      'Snapshot unavailable: read failed.'
+    );
   }
 }
 
 export default async function AeoSnapshotPage() {
-  const [tier1, hyperCare, tier2] = await Promise.all([
+  const [tier1, hyperCareReading, tier2Reading] = await Promise.all([
     loadTier1Summary(),
     loadOrgReportSnapshot(HYPERCARE_REPORT_TYPE, isHyperCareSnapshot),
     loadOrgReportSnapshot(TIER2_REPORT_TYPE, isTier2Snapshot),
   ]);
 
+  const hyperCare = hyperCareReading.value;
+  const tier2 = tier2Reading.value;
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-2">AEO Snapshot</h1>
@@ -109,9 +98,7 @@ export default async function AeoSnapshotPage() {
           Hyper-Care — Daily Launch Watch (AT-006)
         </h2>
         {!hyperCare ? (
-          <p className="text-gray-500 italic">
-            No Hyper-Care daily snapshot has been generated yet.
-          </p>
+          <p className="text-gray-500 italic">{hyperCareReading.reason}</p>
         ) : (
           <>
             <p className="text-sm text-gray-600 mb-4">
@@ -156,8 +143,7 @@ export default async function AeoSnapshotPage() {
         </h2>
         {tier1.length === 0 ? (
           <p className="text-gray-500 italic">
-            No gate runs in the last 7 days. Either the migration has not been
-            applied, or no surfaces have hit the gate yet.
+            Not available until brand-to-organisation mapping is approved.
           </p>
         ) : (
           <table className="w-full border-collapse">
@@ -195,9 +181,7 @@ export default async function AeoSnapshotPage() {
           Tier 2 — Monthly gate failure breakdown
         </h2>
         {!tier2 ? (
-          <p className="text-gray-500 italic">
-            No monthly Tier 2 snapshot has been generated yet.
-          </p>
+          <p className="text-gray-500 italic">{tier2Reading.reason}</p>
         ) : (
           <>
             <p className="text-sm text-gray-600 mb-4">

@@ -7,7 +7,7 @@ description: >-
   local search visibility.
 metadata:
   author: synthex
-  version: '1.0'
+  version: '1.1'
   engine: synthex-ai-agency
   type: reference-skill
   triggers:
@@ -66,13 +66,13 @@ Run through this 12-point checklist for every connected GBP location:
 2. **Primary category** — most specific match available; use `getCategories('query', 'AU')` to search
 3. **Additional categories** — 3-5 categories covering secondary services (max 9 allowed)
 4. **Address** — complete Australian format: "Suite X, 123 Street Name, Suburb STATE POSTCODE"
-5. **Phone** — verified, local number preferred over 1300/1800 for local SEO
+5. **Phone** — verified and answered; a local number versus 1300/1800 as a ranking factor is `[UNCONFIRMED]`
 6. **Website** — HTTPS URL matching the business; tracked via `websiteUri` field
 7. **Hours** — all 7 days set via `regularHours`; accurate and current
 8. **Special hours** — public holidays and seasonal changes updated proactively
 9. **Description** — 750 characters maximum; include primary services and location; natural language
 10. **Services/menu items** — list all distinct services with descriptions
-11. **Opening date** — set correctly; established businesses benefit from tenure signals
+11. **Opening date** — set correctly (a tenure ranking benefit is `[UNCONFIRMED]`)
 12. **Attributes** — gender-neutral restrooms, wheelchair accessible, etc. as applicable
 
 ## Review Response Strategy
@@ -116,15 +116,15 @@ Matches the `gbp-monitor` cron's AI reply suggestion logic:
 
 ### Post Types
 
-| Type       | Expiry           | Best For                    |
-| ---------- | ---------------- | --------------------------- |
-| What's New | 7 days           | Regular updates, news, tips |
-| Event      | After event date | Workshops, sales, open days |
-| Offer      | After end date   | Promotions, discounts       |
+| Type   | Expiry                                             | Best For                     |
+| ------ | -------------------------------------------------- | ---------------------------- |
+| Update | Archived after 6 months unless a date range is set | Real job updates, news, tips |
+| Event  | After event date                                   | Workshops, sales, open days  |
+| Offer  | After end date                                     | Promotions, discounts        |
 
 ### Publishing Guidelines
 
-- Frequency: 1-2 posts per week (minimum to stay active in local pack)
+- Frequency: Google gives no recommended posting frequency and does not list posts as a ranking factor `[VERIFIED: support.google.com/business/answer/7342169, answer/7091, 16/10/2026]`. Post when there is a real job, offer or event; recurring posts can run weekly or monthly. Never promise a ranking effect from posting.
 - Length: 150-300 words with a clear value proposition
 - Image: 400x300px minimum, JPEG format, relevant to content
 - CTA options: Book, Order Online, Learn More, Sign Up, Call Now
@@ -153,19 +153,31 @@ How well your listing matches the search query:
 
 How close your business is to the searcher:
 
-- Address accuracy is critical — use exact coordinates
+- Distance is how far the business is from the searcher; it cannot be optimised beyond an accurate address
 - Service-area configuration for businesses that travel to customers
-- Geo-tagged photos strengthen location association
+- Do not geotag photos for ranking: Google's photo help does not mention geotags or EXIF location `[VERIFIED: answer/6103862, 16/10/2026]`
 
 ### Prominence
 
 How well-known and trusted your business is:
 
-- **Review quantity and quality** — more reviews with higher ratings
-- **Review response rate** — 100% target; competitors average <50%
-- **Citation consistency** — NAP identical across all directories
-- **Website authority** — domain rating, backlinks, content quality
-- **Behavioural signals** — tracked in `GBPSnapshot`: searchViews, mapsViews, websiteClicks, phoneClicks, directionClicks
+Google: prominence is how well-known a business is, based on info like how many websites link to it and how many reviews it has; more reviews and positive ratings can help; there is no way to pay for or request a better local ranking `[VERIFIED: answer/7091, 16/10/2026]`.
+
+- **Reviews** — genuine volume and rating; reply to every review (Google says replies show you value feedback; replies as a direct ranking factor are `[UNCONFIRMED]`)
+- **Links and mentions** — websites and directories that link to the business; keep NAP consistent
+- **Not ranking factors on Google's page:** photos, posts, geotags and business-name keywords. `GBPSnapshot` views and clicks are outcomes to measure, not levers Google lists
+
+## Verified platform changes 2025–2026
+
+Re-opened 16/10/2026; full ledger: `docs/ree/sources/platform-changes-2025-2026.md`.
+
+- The My Business Q&A API was discontinued on 03/11/2025: Q&A can no longer be read or posted through the API `[VERIFIED]`.
+- 2026 API changelog: review reply state, recurring posts, review media and reply policy-violation fields `[VERIFIED]`.
+- API policy requires the business's express consent and forbids automatically reverting Google's edits `[VERIFIED]`.
+- Google's Maps policy forbids incentivised reviews, review gating, discouraging negative reviews and asking for specific review content `[VERIFIED]`.
+- Video verification needs one continuous, unedited recording showing location, operations and management access `[VERIFIED]`.
+- Ask Maps (conversational Maps) is rolling out in Australia (announced 07/08/2026) `[VERIFIED]`; its ranking inputs are not published.
+- Performance API: `fetchMultiDailyMetricsTimeSeries` is a GET with repeated `dailyMetrics` query parameters and nested `multiDailyMetricTimeSeries[].dailyMetricTimeSeries[]` results (REE Phase 2 scope, SCOPE §7b).
 
 ## Category Selection Guide
 
@@ -254,10 +266,9 @@ the Railway media worker is the corpus-growth path for fresh monthly photos. See
 
 ### Photo Requirements
 
-- Minimum 720px on the longest edge
-- JPEG format preferred (smaller file size than PNG)
-- Geotag photos with business coordinates
-- Upload 2-3 fresh photos monthly to signal an active listing
+- JPG or PNG, 10 KB–5 MB; recommended 720 × 720 px, minimum 250 × 250 px `[VERIFIED: answer/6103862, 16/10/2026]`
+- Real job photos only, with customer consent (`.claude/rules/real-images-only.md`); no geotagging for ranking
+- Add photos as real work happens; photo freshness as a ranking signal is `[UNCONFIRMED]`
 - Use `listPhotos(connectionId, locationName)` to audit current photo inventory
 
 ## Insights Interpretation
@@ -279,7 +290,8 @@ the Railway media worker is the corpus-growth path for fresh monthly photos. See
 ```
 Conversion Rate = (websiteClicks + phoneClicks + directionClicks) / (searchViews + mapsViews) * 100
 
-Target: >5% for service businesses, >8% for retail/hospitality
+Internal heuristic targets `[UNCONFIRMED]`: >5% for service businesses, >8% for retail/hospitality.
+A missing or failed metric is UNAVAILABLE, never 0 (`docs/ree/REE-SPEC.md` §6); do not compute a rate from it.
 ```
 
 ### Trend Analysis

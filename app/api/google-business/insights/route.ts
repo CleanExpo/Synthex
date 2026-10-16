@@ -11,6 +11,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
+import { notObserved } from '@/lib/ree/evidence-state';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
@@ -34,7 +35,6 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const locationId = searchParams.get('locationId');
-  const days = parseInt(searchParams.get('days') || '30', 10);
 
   if (!locationId) {
     return NextResponse.json(
@@ -56,59 +56,21 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get snapshots for trend
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-
-    const snapshots = await prisma.gBPSnapshot.findMany({
-      where: {
-        organizationId,
-        locationId: location.id,
-        date: { gte: since },
-      },
-      orderBy: { date: 'asc' },
-    });
-
-    // Calculate totals from snapshots
-    const totals = snapshots.reduce(
-      (acc, s) => ({
-        searchViews: acc.searchViews + (s.searchViews ?? 0),
-        mapsViews: acc.mapsViews + (s.mapsViews ?? 0),
-        websiteClicks: acc.websiteClicks + (s.websiteClicks ?? 0),
-        phoneClicks: acc.phoneClicks + (s.phoneClicks ?? 0),
-        directionClicks: acc.directionClicks + (s.directionClicks ?? 0),
-      }),
-      {
-        searchViews: 0,
-        mapsViews: 0,
-        websiteClicks: 0,
-        phoneClicks: 0,
-        directionClicks: 0,
-      }
-    );
-
-    // Latest review stats
-    const latestSnapshot =
-      snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
-
     return NextResponse.json({
-      success: true,
-      totals,
-      totalReviews: latestSnapshot?.totalReviews,
-      averageRating: latestSnapshot?.averageRating,
-      trend: snapshots.map(s => ({
-        date: s.date.toISOString().split('T')[0],
-        searchViews: s.searchViews,
-        mapsViews: s.mapsViews,
-        websiteClicks: s.websiteClicks,
-        phoneClicks: s.phoneClicks,
-        directionClicks: s.directionClicks,
-      })),
+      ...notObserved(
+        'PARTIAL',
+        'gbp-snapshots',
+        'Historical performance withheld: snapshot grain and provenance unresolved'
+      ),
+      data: null,
     });
   } catch (error) {
     logger.error('GBP insights error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch insights' },
+      {
+        ...notObserved('UNAVAILABLE', 'gbp-snapshots', 'Insights unavailable'),
+        data: null,
+      },
       { status: 500 }
     );
   }

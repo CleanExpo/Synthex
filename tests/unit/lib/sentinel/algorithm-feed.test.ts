@@ -270,6 +270,32 @@ describe('verified fallback list and retracted seeds', () => {
   );
 });
 
+describe('seedAlgorithmUpdates', () => {
+  it('creates missing fallback rows but never overwrites a stored row', async () => {
+    // A named ranking update from the live feed is stored under the same seed
+    // id as its fallback entry. A cold process must not replace those live
+    // dates and descriptions with the fallback's; it may only fill gaps.
+    const feed = loadFeed();
+    await feed.seedAlgorithmUpdates();
+
+    const calls = mockPrisma.algorithmUpdate.upsert.mock.calls.map(
+      ([arg]) => arg
+    );
+    // The live read is offline here, so every write is a seed write.
+    expect(offlineFetch).toHaveBeenCalledTimes(1);
+    expect(calls).toHaveLength(feed.KNOWN_ALGORITHM_UPDATES.length);
+    for (const call of calls) {
+      expect(call.update).toEqual({});
+      expect(call.create).toMatchObject({
+        id: call.where.id,
+        name: expect.any(String),
+        announcedAt: expect.any(Date),
+        impactLevel: expect.any(String),
+      });
+    }
+  });
+});
+
 const liveIt = process.env.LIVE_SENTINEL === '1' ? it : it.skip;
 
 describe('live dashboard (LIVE_SENTINEL=1)', () => {

@@ -11,6 +11,8 @@
 
 import { useState } from 'react';
 import useSWR from 'swr';
+import type { EvidenceReading, EvidenceState } from '@/lib/ree/evidence-state';
+import { EVIDENCE_STATE_LABELS } from '@/lib/ree/evidence-state';
 import { fetchJson } from '@/lib/fetcher';
 
 interface CitationRow {
@@ -21,13 +23,15 @@ interface CitationRow {
   queryVariant: number;
   searchEngine: string;
   queryDate: string;
-  brandMentioned: boolean;
+  brandMentioned: boolean | null;
+  state: EvidenceState;
   mentionPosition: number | null;
   rawSnippet: string | null;
   errorReason: string | null;
 }
 
 interface CitationsData {
+  provider: EvidenceReading<boolean>;
   page: number;
   pageSize: number;
   total: number;
@@ -90,6 +94,10 @@ export default function GeoCitationsPage() {
           checks. Internal, admin-only — not shown to clients.
         </p>
       </div>
+
+      {data?.provider.state === 'UNSUPPORTED' && (
+        <p role="status">AI Overview provider not connected.</p>
+      )}
 
       {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -162,8 +170,8 @@ export default function GeoCitationsPage() {
       ) : !data ? null : (
         <>
           <div className="text-xs text-gray-500">
-            {data.total} event{data.total === 1 ? '' : 's'} · page {data.page} of{' '}
-            {Math.max(1, data.totalPages)}
+            {data.total} event{data.total === 1 ? '' : 's'} · page {data.page}{' '}
+            of {Math.max(1, data.totalPages)}
           </div>
 
           <div className="overflow-x-auto rounded-lg border border-white/10">
@@ -202,12 +210,14 @@ export default function GeoCitationsPage() {
                       <td className="px-3 py-2">
                         {row.brandMentioned ? (
                           <span className="text-green-400">Yes</span>
-                        ) : row.errorReason ? (
+                        ) : row.brandMentioned === null ? (
                           <span
                             className="text-amber-400"
-                            title={row.errorReason}
+                            title={row.errorReason ?? undefined}
                           >
-                            —
+                            {row.state === 'OBSERVED'
+                              ? 'Unavailable'
+                              : EVIDENCE_STATE_LABELS[row.state]}
                           </span>
                         ) : (
                           <span className="text-gray-500">No</span>

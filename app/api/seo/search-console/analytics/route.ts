@@ -20,10 +20,14 @@ import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { findOAuthConnection } from '@/lib/google/google-auth';
 import { getSearchAnalytics as getSearchAnalyticsOAuth } from '@/lib/google/search-console-oauth';
 import { getSearchAnalytics as getSearchAnalyticsLegacy } from '@/lib/google/search-console';
+import { searchType } from '@/lib/google/search-console-oauth';
+import { notObserved, observed } from '@/lib/ree/evidence-state';
 import { logger } from '@/lib/logger';
 
 // Request validation schema
 const AnalyticsRequestSchema = z.object({
+  type: z.string().optional(),
+  startRow: z.number().int().min(0).optional(),
   siteUrl: z.string().url('Invalid site URL'),
   startDate: z
     .string()
@@ -34,7 +38,7 @@ const AnalyticsRequestSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
     .optional(),
   dimensions: z
-    .array(z.enum(['query', 'page', 'country', 'device']))
+    .array(z.enum(['query', 'page', 'country', 'device', 'date']))
     .optional()
     .default(['query']),
   rowLimit: z.number().min(1).max(1000).optional().default(25),
@@ -78,8 +82,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { siteUrl, startDate, endDate, dimensions, rowLimit } =
+    const { siteUrl, startDate, endDate, dimensions, rowLimit, startRow } =
       validationResult.data;
+
+    const type = searchType(validationResult.data.type);
 
     // Try OAuth first, fall back to service account
     const organizationId = await getEffectiveOrganizationId(userId);
@@ -93,7 +99,7 @@ export async function POST(request: NextRequest) {
       // Per-org OAuth path
       analytics = await getSearchAnalyticsOAuth(
         siteUrl,
-        { startDate, endDate, dimensions, rowLimit },
+        { startDate, endDate, dimensions, rowLimit, startRow, type },
         { connectionId }
       );
     } else {
@@ -104,6 +110,8 @@ export async function POST(request: NextRequest) {
         endDate,
         dimensions,
         rowLimit,
+        startRow,
+        type,
       });
 
       // No OAuth connection AND no service account → surface DATA_REQUIRED so the
@@ -112,6 +120,8 @@ export async function POST(request: NextRequest) {
         return APISecurityChecker.createSecureResponse(
           {
             success: false,
+            ...notObserved('UNAUTHORISED', 'gsc', 'No Search Console grant'),
+            data: null,
             dataRequired: true,
             error: 'SEARCH_CONSOLE_NOT_CONFIGURED',
             message:
@@ -124,13 +134,28 @@ export async function POST(request: NextRequest) {
 
     return APISecurityChecker.createSecureResponse({
       success: true,
+      ...observed(analytics, 'gsc'),
       analytics,
+      type,
+      totalsLabel: dimensions.length ? 'Returned rows only' : 'Property total',
       source: connectionId ? 'oauth' : 'service_account',
     });
   } catch (error) {
     logger.error('Search Console Analytics API error:', error);
     return APISecurityChecker.createSecureResponse(
-      { error: 'Failed to fetch search analytics' },
+      {
+        ...notObserved(
+          error instanceof Error &&
+            'state' in error &&
+            error.state === 'UNSUPPORTED'
+            ? 'UNSUPPORTED'
+            : 'UNAVAILABLE',
+          'gsc',
+          'Search analytics unavailable'
+        ),
+        data: null,
+        error: 'Search analytics unavailable',
+      },
       500
     );
   }

@@ -79,7 +79,7 @@ export default function ClientsPage() {
       {error && !isLoading && (
         <Card>
           <CardContent className="py-8 text-center text-sm text-red-600">
-            Couldn&apos;t load clients. {error.message}
+            Clients unavailable. Legacy client workspaces are not available.
           </CardContent>
         </Card>
       )}

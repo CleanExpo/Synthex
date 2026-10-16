@@ -51,7 +51,7 @@ export default function GBPInsightsPage() {
   const { locations, primaryLocation, connected, syncLocations } =
     useGBPLocations();
   const [days, setDays] = useState(30);
-  const { totals, trend, isLoading } = useGBPInsights(
+  const { totals, trend, isLoading, message } = useGBPInsights(
     primaryLocation?.id,
     days
   );
@@ -109,31 +109,34 @@ export default function GBPInsightsPage() {
             </div>
           ) : (
             <>
+              {message && <p role="status">{message}</p>}
               {/* Metrics Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 <MetricCard
                   label="Search Views"
-                  value={totals.searchViews.toLocaleString()}
+                  value={totals.searchViews?.toLocaleString() ?? 'Incomplete'}
                   icon={Eye}
                 />
                 <MetricCard
                   label="Maps Views"
-                  value={totals.mapsViews.toLocaleString()}
+                  value={totals.mapsViews?.toLocaleString() ?? 'Incomplete'}
                   icon={Map}
                 />
                 <MetricCard
                   label="Website Clicks"
-                  value={totals.websiteClicks.toLocaleString()}
+                  value={totals.websiteClicks?.toLocaleString() ?? 'Incomplete'}
                   icon={Globe}
                 />
                 <MetricCard
                   label="Phone Clicks"
-                  value={totals.phoneClicks.toLocaleString()}
+                  value={totals.phoneClicks?.toLocaleString() ?? 'Incomplete'}
                   icon={Phone}
                 />
                 <MetricCard
                   label="Directions"
-                  value={totals.directionClicks.toLocaleString()}
+                  value={
+                    totals.directionClicks?.toLocaleString() ?? 'Incomplete'
+                  }
                   icon={TrendingUp}
                 />
               </div>

@@ -18,6 +18,8 @@
 // TYPES
 // ============================================================================
 
+import { searchType, type SearchType } from './search-console-oauth';
+
 interface ServiceAccountCredentials {
   type: string;
   project_id: string;
@@ -55,9 +57,11 @@ export interface SearchAnalyticsResult {
 }
 
 export interface SearchAnalyticsOptions {
+  type?: SearchType;
+  startRow?: number;
   startDate?: string;
   endDate?: string;
-  dimensions?: ('query' | 'page' | 'country' | 'device')[];
+  dimensions?: ('query' | 'page' | 'country' | 'device' | 'date')[];
   rowLimit?: number;
 }
 
@@ -194,6 +198,7 @@ export async function getSearchAnalytics(
   siteUrl: string,
   options: SearchAnalyticsOptions = {}
 ): Promise<SearchAnalyticsResult> {
+  searchType(options.type);
   const {
     startDate = getDateDaysAgo(28),
     endDate = getDateDaysAgo(0),
@@ -231,7 +236,8 @@ export async function getSearchAnalytics(
         endDate,
         dimensions,
         rowLimit,
-        type: 'web',
+        type: searchType(options.type),
+        startRow: options.startRow,
       }),
       signal: AbortSignal.timeout(30000),
     });
@@ -270,7 +276,21 @@ export async function getSearchAnalytics(
         ? rows.reduce((sum, r) => sum + r.position, 0) / rows.length
         : 0;
 
-    return { rows, totals, configured: true };
+    if (
+      !rows.length ||
+      rows.some(
+        row =>
+          ![row.clicks, row.impressions, row.ctr, row.position].every(
+            Number.isFinite
+          )
+      )
+    )
+      throw new Error('GSC metrics unavailable');
+    return {
+      rows,
+      totals: dimensions.length === 0 ? rows[0] : totals,
+      configured: true,
+    };
   } catch (error) {
     console.error('Search Console Analytics error:', error);
     throw error;

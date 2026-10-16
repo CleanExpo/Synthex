@@ -1,13 +1,17 @@
 'use client';
 
 import useSWR from 'swr';
+import {
+  type EvidenceState,
+  EVIDENCE_STATE_LABELS,
+} from '@/lib/ree/evidence-state';
 
 interface GBPInsightsTotals {
-  searchViews: number;
-  mapsViews: number;
-  websiteClicks: number;
-  phoneClicks: number;
-  directionClicks: number;
+  searchViews: number | null;
+  mapsViews: number | null;
+  websiteClicks: number | null;
+  phoneClicks: number | null;
+  directionClicks: number | null;
 }
 
 interface GBPInsightsTrend {
@@ -19,16 +23,8 @@ interface GBPInsightsTrend {
   directionClicks: number | null;
 }
 
-const EMPTY_TOTALS: GBPInsightsTotals = {
-  searchViews: 0,
-  mapsViews: 0,
-  websiteClicks: 0,
-  phoneClicks: 0,
-  directionClicks: 0,
-};
-
-function safeNumber(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+function safeNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
 export function normalizeGBPInsightsTotals(
@@ -55,20 +51,36 @@ export function useGBPInsights(locationId?: string, days: number = 30) {
     : null;
 
   const { data, error, isLoading, mutate } = useSWR<{
-    success: boolean;
+    state: EvidenceState;
+    reason?: string;
     totals: GBPInsightsTotals;
     totalReviews: number | null;
     averageRating: number | null;
     trend: GBPInsightsTrend[];
   }>(url, fetchJson);
 
+  const totals = normalizeGBPInsightsTotals(data?.totals);
+  const complete = (values: GBPInsightsTotals) =>
+    Object.values(normalizeGBPInsightsTotals(values)).every(
+      value => value !== null
+    );
+  const available =
+    !error &&
+    data?.state === 'OBSERVED' &&
+    complete(totals) &&
+    Array.isArray(data.trend) &&
+    data.trend.every(complete);
   return {
-    totals: data?.totals
-      ? normalizeGBPInsightsTotals(data.totals)
-      : EMPTY_TOTALS,
-    totalReviews: data?.totalReviews ?? 0,
-    averageRating: data?.averageRating ?? 0,
-    trend: data?.trend ?? [],
+    message: available
+      ? null
+      : `${error ? EVIDENCE_STATE_LABELS.UNAVAILABLE : EVIDENCE_STATE_LABELS.PARTIAL}: historical performance withheld pending snapshot grain and provenance review`,
+    totals:
+      available && data?.totals
+        ? normalizeGBPInsightsTotals(data.totals)
+        : normalizeGBPInsightsTotals(null),
+    totalReviews: available ? (data?.totalReviews ?? null) : null,
+    averageRating: available ? (data?.averageRating ?? null) : null,
+    trend: available ? (data?.trend ?? []) : [],
     isLoading,
     error: error?.message,
     refresh: mutate,

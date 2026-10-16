@@ -27,7 +27,6 @@ import {
 } from './query-generator';
 import {
   defaultAiOverviewFetcher,
-  isAiOverviewProviderConfigured,
   type AiOverviewFetcher,
   type AiOverviewFetchResult,
 } from './ai-overview-adapter';
@@ -89,7 +88,11 @@ export function detectBrandMention(
   const snippet = rawText.slice(0, MAX_SNIPPET_CHARS);
   const needle = businessName.trim().toLowerCase();
   if (!needle) {
-    return { brandMentioned: false, mentionPosition: null, rawSnippet: snippet };
+    return {
+      brandMentioned: false,
+      mentionPosition: null,
+      rawSnippet: snippet,
+    };
   }
   const idx = rawText.toLowerCase().indexOf(needle);
   return idx >= 0
@@ -126,8 +129,6 @@ export async function runWeeklyGeoCitationMonitor(
   const fetcher = opts.fetcher ?? defaultAiOverviewFetcher;
   const sleep = opts.sleep ?? realSleep;
   const runId = randomUUID();
-  const providerConfigured =
-    opts.fetcher !== undefined ? true : isAiOverviewProviderConfigured();
 
   const summary: RunSummary = {
     runId,
@@ -137,7 +138,7 @@ export async function runWeeklyGeoCitationMonitor(
     mentions: 0,
     rateLimited: 0,
     errors: 0,
-    providerConfigured,
+    providerConfigured: false,
     estimatedCostAud: 0,
     costAlertSent: false,
   };
@@ -158,7 +159,9 @@ export async function runWeeklyGeoCitationMonitor(
   }
 
   const orgIds = [
-    ...new Set(users.map(u => u.organizationId).filter((v): v is string => !!v)),
+    ...new Set(
+      users.map(u => u.organizationId).filter((v): v is string => !!v)
+    ),
   ];
 
   // One GBP location per org (primary preferred). Dark-run scale is small.
@@ -225,6 +228,7 @@ export async function runWeeklyGeoCitationMonitor(
         continue;
       }
 
+      summary.providerConfigured ||= result.configured;
       let errorReason: string | null = null;
       let detection: BrandDetection = {
         brandMentioned: false,
@@ -236,7 +240,7 @@ export async function runWeeklyGeoCitationMonitor(
         errorReason = 'rate_limited';
         summary.rateLimited += 1;
       } else if (!result.configured || result.errorReason) {
-        errorReason = result.errorReason ?? 'provider_error';
+        errorReason = result.errorReason ?? 'provider_not_connected';
       } else {
         detection = detectBrandMention(businessName, result.rawText);
         if (detection.brandMentioned) summary.mentions += 1;
@@ -250,15 +254,21 @@ export async function runWeeklyGeoCitationMonitor(
 
   // Cost tracking (SYN-518) — reuse the shared ledger.
   try {
-    await trackPipelineCost({
-      pipeline_name: 'geo_citation_monitor',
-      client_id: null,
-      run_id: runId,
-      model: 'serp:google_ai_overview',
-      input_tokens: 0,
-      output_tokens: 0,
-      cost_usd: summary.estimatedCostAud,
-    });
+    if (summary.estimatedCostAud > 0) {
+      logger.warn(
+        'geo-citation: ledger write withheld pending approved AUD/USD currency contract',
+        { runId }
+      );
+    } else
+      await trackPipelineCost({
+        pipeline_name: 'geo_citation_monitor',
+        client_id: null,
+        run_id: runId,
+        model: 'serp:google_ai_overview',
+        input_tokens: 0,
+        output_tokens: 0,
+        cost_usd: 0,
+      });
   } catch (err) {
     logger.error('geo-citation: cost tracking failed', err, { runId });
   }
@@ -303,6 +313,7 @@ async function writeEvent(
       queryText: query.text,
       searchEngine: SEARCH_ENGINE,
       queryVariant: query.variant,
+      // Legacy Boolean storage sentinel only; reads derive evidence from errorReason.
       brandMentioned: data.brandMentioned,
       mentionPosition: data.mentionPosition,
       rawSnippet: data.rawSnippet,

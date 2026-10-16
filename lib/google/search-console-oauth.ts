@@ -13,11 +13,30 @@ import {
   findOAuthConnection,
   hasServiceAccountCredentials,
 } from '@/lib/google/google-auth';
+import { notObserved } from '@/lib/ree/evidence-state';
 import { logger } from '@/lib/logger';
 
 // ============================================================================
 // Types
 // ============================================================================
+
+export const SEARCH_TYPES = [
+  'web',
+  'image',
+  'video',
+  'news',
+  'discover',
+  'googleNews',
+] as const;
+export type SearchType = (typeof SEARCH_TYPES)[number];
+export function searchType(value: unknown = 'web'): SearchType {
+  if (!SEARCH_TYPES.includes(value as SearchType))
+    throw Object.assign(
+      new Error('Unsupported search type'),
+      notObserved('UNSUPPORTED', 'gsc', 'Unsupported search type')
+    );
+  return value as SearchType;
+}
 
 export interface GSCSite {
   siteUrl: string;
@@ -25,6 +44,7 @@ export interface GSCSite {
 }
 
 export interface GSCSearchAnalyticsOptions {
+  type?: SearchType;
   startDate?: string;
   endDate?: string;
   dimensions?: ('query' | 'page' | 'country' | 'device' | 'date')[];
@@ -178,6 +198,7 @@ export async function getSearchAnalytics(
   options: GSCSearchAnalyticsOptions = {},
   auth?: { connectionId?: string; organizationId?: string }
 ): Promise<GSCSearchAnalyticsResult> {
+  searchType(options.type);
   const {
     startDate = getDateDaysAgo(28),
     endDate = getDateDaysAgo(0),
@@ -200,7 +221,7 @@ export async function getSearchAnalytics(
     endDate,
     dimensions,
     rowLimit,
-    type: 'web',
+    type: searchType(options.type),
   };
 
   if (startRow !== undefined) body.startRow = startRow;
@@ -249,7 +270,17 @@ export async function getSearchAnalytics(
       ? rows.reduce((sum, r) => sum + r.position, 0) / rows.length
       : 0;
 
-  return { rows, totals };
+  if (
+    !rows.length ||
+    rows.some(
+      row =>
+        ![row.clicks, row.impressions, row.ctr, row.position].every(
+          Number.isFinite
+        )
+    )
+  )
+    throw new Error('GSC metrics unavailable');
+  return { rows, totals: dimensions.length === 0 ? rows[0] : totals };
 }
 
 // ============================================================================

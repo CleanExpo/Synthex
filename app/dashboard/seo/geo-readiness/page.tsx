@@ -816,8 +816,8 @@ export default function GeoReadinessPage() {
   const tabs = [
     { id: 'check' as const, label: 'Readiness Check' },
     { id: 'passages' as const, label: 'Passages' },
-    { id: 'trends' as const, label: 'Trends' },
-    { id: 'history' as const, label: 'History' },
+    { id: 'trends' as const, label: 'Trends · DIAGNOSTIC' },
+    { id: 'history' as const, label: 'History · DIAGNOSTIC' },
   ];
 
   return (
@@ -837,8 +837,8 @@ export default function GeoReadinessPage() {
             GEO Readiness
           </h1>
           <p className="text-gray-300 mt-2">
-            Assess content readiness for AI search engines and track
-            optimization progress
+            Personal DIAGNOSTIC — content heuristics, not search visibility or
+            organisation-scoped history.
           </p>
         </div>
       </div>
@@ -876,12 +876,24 @@ export default function GeoReadinessPage() {
           />
         )}
         {activeTab === 'passages' && <PassagesTab result={result} />}
-        {activeTab === 'trends' && (
-          <TrendsTab trends={trends} loading={trendsLoading} />
-        )}
-        {activeTab === 'history' && (
-          <HistoryTab history={history} loading={historyLoading} />
-        )}
+        {activeTab === 'trends' &&
+          (trends.state !== 'OBSERVED' && !trendsLoading ? (
+            <p role="status">Personal diagnostic trends unavailable.</p>
+          ) : (
+            <TrendsTab
+              trends={trends.value?.trends ?? []}
+              loading={trendsLoading}
+            />
+          ))}
+        {activeTab === 'history' &&
+          (history.state !== 'OBSERVED' && !historyLoading ? (
+            <p role="status">Personal diagnostic history unavailable.</p>
+          ) : (
+            <HistoryTab
+              history={history.value?.analyses ?? []}
+              loading={historyLoading}
+            />
+          ))}
       </SEOFeatureGate>
     </div>
   );

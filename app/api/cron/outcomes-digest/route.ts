@@ -23,6 +23,7 @@ import { logger } from '@/lib/logger';
 import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
 import {
   aggregateWeeklyOutcomes,
+  buildOutcomesEvent,
   commitWikiOutcomesNote,
   isoWeekLabel,
   renderOutcomesNote,
@@ -51,15 +52,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // Witness: one event per org, settled before the instance freezes.
   await Promise.allSettled(
-    outcomes.map(org =>
-      pushUniteGroupEvent({
-        type: 'content.outcomes',
-        orgSlug: org.orgSlug,
-        isoWeek,
-        postsPublished: org.postsPublished,
-        byPlatform: org.byPlatform,
-      })
-    )
+    outcomes.map(org => pushUniteGroupEvent(buildOutcomesEvent(org, isoWeek)))
   );
 
   // Compound: write the note back to the brain-1 wiki.

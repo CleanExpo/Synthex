@@ -351,7 +351,7 @@ export default function SEODashboardPage() {
             />
             <SEOToolCard
               title="Schema Markup Manager"
-              description="Create, validate, and manage JSON-LD structured data. Extract schemas from URLs, browse templates, and preview rich results."
+              description="Create, validate, and manage JSON-LD structured data. Extract schemas from URLs, browse templates, and preview structured data."
               href="/dashboard/seo/schema"
               icon={Code}
             />

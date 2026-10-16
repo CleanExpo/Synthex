@@ -12,6 +12,7 @@
  */
 
 import useSWR from 'swr';
+import type { EvidenceState } from '@/lib/ree/evidence-state';
 import { CommandLine, RefreshCw } from '@/components/icons';
 import { CitationScoreGauge } from '@/components/citation/CitationScoreGauge';
 import { AgentActivityFeed } from '@/components/citation/AgentActivityFeed';
@@ -35,18 +36,18 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ─── Response envelopes ──────────────────────────────────────────────────────
 
 interface OverviewResponse {
-  success: boolean;
-  data: OverviewStats;
+  state: EvidenceState;
+  data: OverviewStats | null;
 }
 
 interface TimelineResponse {
-  success: boolean;
-  data: TimelinePoint[];
+  state: EvidenceState;
+  data: TimelinePoint[] | null;
 }
 
 interface OpportunitiesResponse {
-  success: boolean;
-  data: OpportunityItem[];
+  state: EvidenceState;
+  data: OpportunityItem[] | null;
 }
 
 // ─── Last updated helper ─────────────────────────────────────────────────────
@@ -88,38 +89,56 @@ export default function CitationDashboardPage() {
 
   const {
     data: overviewRes,
+    error: overviewError,
     isLoading: overviewLoading,
     isValidating: overviewValidating,
   } = useSWR<OverviewResponse>('/api/citation/overview', fetchJson, SWR_OPTS);
 
-  const { data: timelineRes, isLoading: timelineLoading } =
-    useSWR<TimelineResponse>(
-      '/api/citation/timeline?days=30',
-      fetchJson,
-      SWR_OPTS
-    );
+  const {
+    data: timelineRes,
+    error: timelineError,
+    isLoading: timelineLoading,
+  } = useSWR<TimelineResponse>(
+    '/api/citation/timeline?days=30',
+    fetchJson,
+    SWR_OPTS
+  );
 
-  const { data: opportunitiesRes, isLoading: opportunitiesLoading } =
-    useSWR<OpportunitiesResponse>(
-      '/api/citation/opportunities',
-      fetchJson,
-      SWR_OPTS
-    );
+  const {
+    data: opportunitiesRes,
+    error: opportunitiesError,
+    isLoading: opportunitiesLoading,
+  } = useSWR<OpportunitiesResponse>(
+    '/api/citation/opportunities',
+    fetchJson,
+    SWR_OPTS
+  );
 
-  const overview = overviewRes?.data;
-  const timeline = timelineRes?.data ?? [];
-  const opportunities = opportunitiesRes?.data ?? [];
+  const overview =
+    !overviewError && overviewRes?.state === 'OBSERVED'
+      ? overviewRes.data
+      : null;
+  const timeline =
+    !timelineError && timelineRes?.state === 'OBSERVED'
+      ? timelineRes.data
+      : null;
+  const opportunities =
+    !opportunitiesError && opportunitiesRes?.state === 'OBSERVED'
+      ? opportunitiesRes.data
+      : null;
 
   const lastUpdated = useLastUpdated(overviewValidating);
 
-  // Derive sub-scores for gauge (0 when no data)
-  const geoScore = overview?.geoSummary.avgScore ?? 0;
-  const qualityScore = overview?.qualitySummary.avgQualityScore ?? 0;
-  const eeatScore = overview?.qualitySummary.avgEeatScore ?? 0;
+  // Missing diagnostic inputs remain absent.
+  const geoScore = overview?.geoSummary.avgScore ?? null;
+  const qualityScore = overview?.qualitySummary.avgQualityScore ?? null;
+  const eeatScore = overview?.qualitySummary.avgEeatScore ?? null;
   // Authority: use entity coherence as proxy
-  const authorityScore = overview?.entitySummary.avgCoherenceScore ?? 0;
-  const promptCoverage = overview?.promptSummary.coverageRate ?? 0;
+  const authorityScore = overview?.entitySummary.avgCoherenceScore ?? null;
+  const promptCoverage = overview?.promptSummary.coverageRate ?? null;
 
+  // Preserve layout indentation while gating each section independently.
+  // prettier-ignore
   return (
     <div className="min-h-screen text-white px-4 py-8 md:px-8 max-w-screen-2xl mx-auto">
       {/* ── Page Header ─────────────────────────────────────────────────── */}
@@ -134,8 +153,7 @@ export default function CitationDashboardPage() {
                 Citation Performance Command Centre
               </h1>
               <p className="text-sm text-gray-300 mt-0.5">
-                Unified GEO + AI Citation Intelligence — all v5.0 modules in one
-                view
+                Personal diagnostic view — organisation ownership unverified
               </p>
             </div>
           </div>
@@ -143,7 +161,7 @@ export default function CitationDashboardPage() {
           {/* Last updated badge */}
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>{lastUpdated}</span>
+            <span>{!overview ? 'Overview unavailable' : lastUpdated}</span>
             <span className="text-gray-700">· auto-refreshes every 60s</span>
           </div>
         </div>
@@ -153,6 +171,7 @@ export default function CitationDashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
         {/* Citation Score Gauge — 1 col */}
         <SectionCard className="flex flex-col items-center justify-center">
+          {overview ? (
           <CitationScoreGauge
             geoScore={geoScore}
             qualityScore={qualityScore}
@@ -161,33 +180,42 @@ export default function CitationDashboardPage() {
             promptCoverage={promptCoverage}
             loading={overviewLoading}
           />
+          ) : <p>{overviewLoading ? 'Loading…' : 'Unavailable — overview results withheld'}</p>}
         </SectionCard>
 
         {/* Score Trend Chart — 2 cols */}
         <SectionCard title="30-Day Score Trends" className="lg:col-span-2">
+          {timeline ? (
           <ScoreTrendChart data={timeline} loading={timelineLoading} />
+          ) : <p>{timelineLoading ? 'Loading…' : 'Unavailable — timeline results withheld'}</p>}
         </SectionCard>
       </div>
 
       {/* ── Row 2: Module Score Grid ────────────────────────────────────── */}
       <SectionCard title="Module Status" className="mb-5">
+        {overview ? (
         <ModuleScoreGrid overview={overview} loading={overviewLoading} />
+          ) : <p>{overviewLoading ? 'Loading…' : 'Unavailable — overview results withheld'}</p>}
       </SectionCard>
 
       {/* ── Row 3: Agent Activity + Opportunity Pipeline ─────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <SectionCard title="Agent Activity">
+          {overview ? (
           <AgentActivityFeed
-            activities={overview?.agentActivity ?? []}
+            activities={overview.agentActivity}
             loading={overviewLoading}
           />
+          ) : <p>{overviewLoading ? 'Loading…' : 'Unavailable — overview results withheld'}</p>}
         </SectionCard>
 
         <SectionCard title="Opportunity Pipeline">
+          {opportunities ? (
           <OpportunityPipeline
             items={opportunities}
             loading={opportunitiesLoading}
           />
+          ) : <p>{opportunitiesLoading ? 'Loading…' : 'Unavailable — opportunities results withheld'}</p>}
         </SectionCard>
       </div>
     </div>

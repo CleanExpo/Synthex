@@ -182,6 +182,7 @@ export default function LocalPage() {
   const hasGbp = locations.length > 0;
 
   const {
+    message,
     totals: insightsTotals,
     totalReviews,
     averageRating,
@@ -428,15 +429,19 @@ export default function LocalPage() {
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4">
                       <div className="text-4xl font-bold text-white">
-                        {averageRating > 0 ? averageRating.toFixed(1) : '—'}
+                        {averageRating !== null
+                          ? averageRating.toFixed(1)
+                          : '—'}
                       </div>
                       <div>
-                        <StarRating
-                          rating={Math.round(averageRating)}
-                          size="md"
-                        />
+                        {averageRating !== null && (
+                          <StarRating
+                            rating={Math.round(averageRating)}
+                            size="md"
+                          />
+                        )}
                         <p className="text-sm text-gray-300 mt-1">
-                          Based on {totalReviews} review
+                          Based on {totalReviews ?? 'unavailable'} review
                           {totalReviews !== 1 ? 's' : ''}
                         </p>
                       </div>
@@ -444,50 +449,63 @@ export default function LocalPage() {
                   </CardContent>
                 </Card>
 
+                {message && <p role="status">{message}</p>}
                 {/* Metrics Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <MetricCard
                     icon={Eye}
                     label="Views this month"
-                    value={(
-                      insightsTotals.searchViews + insightsTotals.mapsViews
-                    ).toLocaleString()}
+                    value={
+                      insightsTotals.searchViews !== null &&
+                      insightsTotals.mapsViews !== null
+                        ? (
+                            insightsTotals.searchViews +
+                            insightsTotals.mapsViews
+                          ).toLocaleString()
+                        : 'Incomplete'
+                    }
                     subtext="Profile views on Google"
                   />
                   <MetricCard
                     icon={Globe}
                     label="Website clicks"
-                    value={insightsTotals.websiteClicks.toLocaleString()}
+                    value={
+                      insightsTotals.websiteClicks?.toLocaleString() ??
+                      'Incomplete'
+                    }
                     subtext="Clicks to your website"
                   />
                   <MetricCard
                     icon={Phone}
                     label="Phone calls"
-                    value={insightsTotals.phoneClicks}
+                    value={insightsTotals.phoneClicks ?? 'Incomplete'}
                     subtext="Calls from your listing"
                     iconColour="text-emerald-400"
                   />
                   <MetricCard
                     icon={MapPin}
                     label="Direction requests"
-                    value={insightsTotals.directionClicks}
+                    value={insightsTotals.directionClicks ?? 'Incomplete'}
                     subtext="Get directions taps"
                     iconColour="text-orange-400"
                   />
                   <MetricCard
                     icon={Search}
                     label="Search views"
-                    value={insightsTotals.searchViews.toLocaleString()}
+                    value={
+                      insightsTotals.searchViews?.toLocaleString() ??
+                      'Incomplete'
+                    }
                     subtext="Seen in Google Search"
                   />
                   <MetricCard
                     icon={MessageSquare}
                     label="Total reviews"
-                    value={totalReviews}
+                    value={totalReviews ?? 'Incomplete'}
                     subtext={
-                      averageRating > 0
+                      averageRating !== null
                         ? `${averageRating.toFixed(1)} average rating`
-                        : 'No reviews yet'
+                        : 'Rating unavailable'
                     }
                     iconColour="text-orange-400"
                   />
@@ -749,10 +767,7 @@ export default function LocalPage() {
               <Card className="bg-surface-base/80 border border-orange-500/10">
                 <CardContent className="p-12 text-center text-gray-300">
                   <TrendingUp className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                  <p>
-                    No insights data yet — check back once your listing has
-                    activity
-                  </p>
+                  <p>{message}</p>
                 </CardContent>
               </Card>
             ) : (

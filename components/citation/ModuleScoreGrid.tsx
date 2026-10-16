@@ -19,7 +19,7 @@ interface ModuleScoreGridProps {
 interface ModuleConfig {
   label: string;
   href: string;
-  getValue: (o: OverviewStats) => { display: string; numeric: number };
+  getValue: (o: OverviewStats) => { display: string; numeric: number | null };
   description: string;
 }
 
@@ -28,7 +28,7 @@ const MODULES: ModuleConfig[] = [
     label: 'GEO Analysis',
     href: '/dashboard/geo',
     getValue: o => ({
-      display: o.geoSummary.count > 0 ? `${o.geoSummary.avgScore}` : '—',
+      display: `${o.geoSummary.avgScore ?? '—'}`,
       numeric: o.geoSummary.avgScore,
     }),
     description: 'Avg GEO score',
@@ -37,10 +37,7 @@ const MODULES: ModuleConfig[] = [
     label: 'Entity Coherence',
     href: '/dashboard/geo',
     getValue: o => ({
-      display:
-        o.entitySummary.avgCoherenceScore > 0
-          ? `${o.entitySummary.avgCoherenceScore}`
-          : '—',
+      display: `${o.entitySummary.avgCoherenceScore ?? '—'}`,
       numeric: o.entitySummary.avgCoherenceScore,
     }),
     description: 'Avg coherence',
@@ -49,7 +46,7 @@ const MODULES: ModuleConfig[] = [
     label: 'Authority Engine',
     href: '/dashboard/authority',
     getValue: o => ({
-      display: o.geoSummary.count > 0 ? `${o.geoSummary.avgScore}` : '—',
+      display: `${o.geoSummary.avgScore ?? '—'}`,
       numeric: o.geoSummary.avgScore,
     }),
     description: 'Avg authority',
@@ -58,10 +55,7 @@ const MODULES: ModuleConfig[] = [
     label: 'Writing Quality',
     href: '/dashboard/quality',
     getValue: o => ({
-      display:
-        o.qualitySummary.avgQualityScore > 0
-          ? `${o.qualitySummary.avgQualityScore}`
-          : '—',
+      display: `${o.qualitySummary.avgQualityScore ?? '—'}`,
       numeric: o.qualitySummary.avgQualityScore,
     }),
     description: 'Avg humaness score',
@@ -82,10 +76,7 @@ const MODULES: ModuleConfig[] = [
     label: 'E-E-A-T Builder',
     href: '/dashboard/eeat',
     getValue: o => ({
-      display:
-        o.qualitySummary.avgEeatScore > 0
-          ? `${o.qualitySummary.avgEeatScore}`
-          : '—',
+      display: `${o.qualitySummary.avgEeatScore ?? '—'}`,
       numeric: o.qualitySummary.avgEeatScore,
     }),
     description: 'Avg E-E-A-T score',
@@ -131,7 +122,9 @@ const MODULES: ModuleConfig[] = [
     href: '/dashboard/prompts',
     getValue: o => ({
       display:
-        o.promptSummary.tracked > 0 ? `${o.promptSummary.coverageRate}%` : '—',
+        o.promptSummary.coverageRate !== null
+          ? `${o.promptSummary.coverageRate}%`
+          : '—',
       numeric: o.promptSummary.coverageRate,
     }),
     description: 'AI mention rate',
@@ -150,7 +143,8 @@ const MODULES: ModuleConfig[] = [
   },
 ];
 
-function ScoreColour(numeric: number, module: string): string {
+function ScoreColour(numeric: number | null, module: string): string {
+  if (numeric === null) return 'text-gray-500';
   // Sentinel: lower is better
   if (module === 'Algorithm Sentinel') {
     if (numeric === 0) return 'text-emerald-400';
@@ -213,7 +207,7 @@ export function ModuleScoreGrid({
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
       {MODULES.map(module => {
         const { display, numeric } = module.getValue(overview);
-        const hasData = numeric > 0 || display === 'All clear';
+        const hasData = numeric !== null && display !== '—';
         const scoreColour = ScoreColour(numeric, module.label);
 
         return (

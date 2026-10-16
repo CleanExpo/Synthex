@@ -14,7 +14,10 @@ const GEO_REQUIRED_SCHEMAS = [
   { type: 'FAQPage', description: 'FAQ schema for question-based content' },
   { type: 'HowTo', description: 'HowTo schema for process content' },
   { type: 'Dataset', description: 'Dataset schema for first-party data' },
-  { type: 'SpeakableSpecification', description: 'Speakable schema for voice search' },
+  {
+    type: 'SpeakableSpecification',
+    description: 'Speakable schema for voice search',
+  },
   { type: 'ClaimReview', description: 'ClaimReview for fact-checking content' },
 ];
 
@@ -22,25 +25,33 @@ export function analyzeSchema(content: string, url?: string): SchemaIssue[] {
   const issues: SchemaIssue[] = [];
 
   // Check if any JSON-LD exists
-  const hasJsonLd = /application\/ld\+json/i.test(content) || /"@context"\s*:\s*"https?:\/\/schema\.org"/i.test(content);
+  const hasJsonLd =
+    /application\/ld\+json/i.test(content) ||
+    /"@context"\s*:\s*"https?:\/\/schema\.org"/i.test(content);
 
   if (!hasJsonLd) {
     issues.push({
       type: 'missing_schema',
       severity: 'error',
       message: 'No JSON-LD schema markup detected',
-      recommendation: 'Add Article schema with author attribution as minimum for GEO compliance',
+      recommendation:
+        'Add structured data that matches the page type (for articles, Article with author attribution). It describes the page; it does not guarantee search features or AI citations.',
     });
     return issues; // No point checking further
   }
 
   // Check for Article schema
-  if (!/"@type"\s*:\s*"Article"/i.test(content) && !/"@type"\s*:\s*"NewsArticle"/i.test(content) && !/"@type"\s*:\s*"BlogPosting"/i.test(content)) {
+  if (
+    !/"@type"\s*:\s*"Article"/i.test(content) &&
+    !/"@type"\s*:\s*"NewsArticle"/i.test(content) &&
+    !/"@type"\s*:\s*"BlogPosting"/i.test(content)
+  ) {
     issues.push({
       type: 'missing_article_schema',
       severity: 'error',
       message: 'No Article/BlogPosting schema detected',
-      recommendation: 'Add Article schema with author, datePublished, and dateModified',
+      recommendation:
+        'Add Article schema with author, datePublished, and dateModified',
     });
   }
 
@@ -59,19 +70,22 @@ export function analyzeSchema(content: string, url?: string): SchemaIssue[] {
     issues.push({
       type: 'missing_speakable',
       severity: 'info',
-      message: 'No SpeakableSpecification schema — reduces voice search/AI reading eligibility',
-      recommendation: 'Add SpeakableSpecification pointing to key passages for AI voice extraction',
+      message: 'No SpeakableSpecification schema (optional)',
+      recommendation:
+        'Optional: SpeakableSpecification can mark key passages. It does not guarantee voice or AI reading.',
     });
   }
 
   // Check for Dataset schema if content has data
-  const hasDataContent = /\d+%|\d+\.\d+|survey|benchmark|report|study|findings/i.test(content);
+  const hasDataContent =
+    /\d+%|\d+\.\d+|survey|benchmark|report|study|findings/i.test(content);
   if (hasDataContent && !/"Dataset"/i.test(content)) {
     issues.push({
       type: 'missing_dataset',
       severity: 'info',
       message: 'Content appears data-rich but lacks Dataset schema',
-      recommendation: 'Add Dataset schema for Google Dataset Search discoverability',
+      recommendation:
+        'Add Dataset schema for Google Dataset Search discoverability',
     });
   }
 
@@ -82,7 +96,8 @@ export function analyzeSchema(content: string, url?: string): SchemaIssue[] {
       type: 'missing_faq',
       severity: 'warning',
       message: `Content has ${questionCount} questions but no FAQPage schema`,
-      recommendation: 'Add FAQPage schema for each Q&A pair',
+      recommendation:
+        'Optional: FAQPage markup can describe visible Q&A. Google no longer shows FAQ rich results, so expect no change in search appearance.',
     });
   }
 

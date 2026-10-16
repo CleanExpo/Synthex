@@ -11,6 +11,9 @@
 
 'use client';
 
+import type { SearchType } from '@/lib/google/search-console-oauth';
+import type { EvidenceState } from '@/lib/ree/evidence-state';
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 // ============================================================================
@@ -63,6 +66,7 @@ export interface SitemapInfo {
 }
 
 interface AnalyticsResponse {
+  state: EvidenceState;
   success: boolean;
   analytics?: SearchAnalyticsData;
   error?: string;
@@ -80,38 +84,19 @@ interface SitemapsResponse {
   error?: string;
 }
 
-const EMPTY_ANALYTICS_TOTALS: SearchAnalyticsTotals = {
-  clicks: 0,
-  impressions: 0,
-  ctr: 0,
-  position: 0,
-};
-
-function safeNumber(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
-}
-
 export function normalizeSearchAnalyticsData(
   analytics: Partial<SearchAnalyticsData> | null | undefined
 ): SearchAnalyticsData | null {
-  if (!analytics) return null;
-
-  return {
-    rows: (analytics.rows ?? []).map(row => ({
-      keys: Array.isArray(row.keys) ? row.keys : [],
-      clicks: safeNumber(row.clicks),
-      impressions: safeNumber(row.impressions),
-      ctr: safeNumber(row.ctr),
-      position: safeNumber(row.position),
-    })),
-    totals: {
-      ...EMPTY_ANALYTICS_TOTALS,
-      clicks: safeNumber(analytics.totals?.clicks),
-      impressions: safeNumber(analytics.totals?.impressions),
-      ctr: safeNumber(analytics.totals?.ctr),
-      position: safeNumber(analytics.totals?.position),
-    },
-  };
+  const valid = (row: SearchAnalyticsTotals | undefined) =>
+    row &&
+    [row.clicks, row.impressions, row.ctr, row.position].every(
+      value => typeof value === 'number' && Number.isFinite(value)
+    );
+  return analytics?.rows &&
+    valid(analytics.totals) &&
+    analytics.rows.every(valid)
+    ? (analytics as SearchAnalyticsData)
+    : null;
 }
 
 // ============================================================================
@@ -120,12 +105,14 @@ export function normalizeSearchAnalyticsData(
 
 export function useSearchConsole() {
   // Search Analytics state
-  const [searchAnalytics, setSearchAnalytics] = useState<SearchAnalyticsData | null>(null);
+  const [searchAnalytics, setSearchAnalytics] =
+    useState<SearchAnalyticsData | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
   // Indexing Status state
-  const [indexingResult, setIndexingResult] = useState<IndexingInspection | null>(null);
+  const [indexingResult, setIndexingResult] =
+    useState<IndexingInspection | null>(null);
   const [indexingLoading, setIndexingLoading] = useState(false);
   const [indexingError, setIndexingError] = useState<string | null>(null);
 
@@ -144,6 +131,8 @@ export function useSearchConsole() {
     async (
       siteUrl: string,
       options?: {
+        type?: SearchType;
+        startRow?: number;
         startDate?: string;
         endDate?: string;
         dimensions?: string[];
@@ -161,6 +150,7 @@ export function useSearchConsole() {
       if (!mountedRef.current) return null;
       setAnalyticsLoading(true);
       setAnalyticsError(null);
+      setSearchAnalytics(null);
 
       try {
         const response = await fetch('/api/seo/search-console/analytics', {
@@ -176,12 +166,16 @@ export function useSearchConsole() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
         }
 
         const data: AnalyticsResponse = await response.json();
         const analytics = normalizeSearchAnalyticsData(data.analytics);
 
+        if (data.state !== 'OBSERVED' || !analytics)
+          throw new Error('Search analytics unavailable');
         if (mountedRef.current && analytics) {
           setSearchAnalytics(analytics);
         }
@@ -208,23 +202,31 @@ export function useSearchConsole() {
    * Check indexing status for a specific URL
    */
   const checkIndexingStatus = useCallback(
-    async (siteUrl: string, inspectionUrl: string): Promise<IndexingInspection | null> => {
+    async (
+      siteUrl: string,
+      inspectionUrl: string
+    ): Promise<IndexingInspection | null> => {
       if (!mountedRef.current) return null;
       setIndexingLoading(true);
       setIndexingError(null);
       setIndexingResult(null);
 
       try {
-        const response = await fetch('/api/seo/search-console/indexing-status', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ siteUrl, inspectionUrl }),
-        });
+        const response = await fetch(
+          '/api/seo/search-console/indexing-status',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ siteUrl, inspectionUrl }),
+          }
+        );
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
         }
 
         const data: IndexingResponse = await response.json();
@@ -251,40 +253,48 @@ export function useSearchConsole() {
   /**
    * Fetch sitemap status
    */
-  const fetchSitemaps = useCallback(async (siteUrl: string): Promise<SitemapInfo[]> => {
-    if (!mountedRef.current) return [];
-    setSitemapLoading(true);
-    setSitemapError(null);
+  const fetchSitemaps = useCallback(
+    async (siteUrl: string): Promise<SitemapInfo[]> => {
+      if (!mountedRef.current) return [];
+      setSitemapLoading(true);
+      setSitemapError(null);
 
-    try {
-      const params = new URLSearchParams({ siteUrl });
-      const response = await fetch(`/api/seo/search-console/sitemaps?${params.toString()}`, {
-        credentials: 'include',
-      });
+      try {
+        const params = new URLSearchParams({ siteUrl });
+        const response = await fetch(
+          `/api/seo/search-console/sitemaps?${params.toString()}`,
+          {
+            credentials: 'include',
+          }
+        );
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(
+            errorData.error || `HTTP ${response.status}: ${response.statusText}`
+          );
+        }
+
+        const data: SitemapsResponse = await response.json();
+
+        if (mountedRef.current) {
+          setSitemapStatus(data.sitemaps || []);
+        }
+
+        return data.sitemaps || [];
+      } catch (err) {
+        if (mountedRef.current) {
+          setSitemapError(err instanceof Error ? err.message : String(err));
+        }
+        return [];
+      } finally {
+        if (mountedRef.current) {
+          setSitemapLoading(false);
+        }
       }
-
-      const data: SitemapsResponse = await response.json();
-
-      if (mountedRef.current) {
-        setSitemapStatus(data.sitemaps || []);
-      }
-
-      return data.sitemaps || [];
-    } catch (err) {
-      if (mountedRef.current) {
-        setSitemapError(err instanceof Error ? err.message : String(err));
-      }
-      return [];
-    } finally {
-      if (mountedRef.current) {
-        setSitemapLoading(false);
-      }
-    }
-  }, []);
+    },
+    []
+  );
 
   /**
    * Clear indexing results

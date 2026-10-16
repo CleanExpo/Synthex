@@ -33,7 +33,9 @@ function build(scope: { userId: string; organizationId?: string | null }) {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockFindMany.mockResolvedValue([]);
+  mockFindMany.mockResolvedValue([
+    { recordedAt: new Date('2026-01-01'), impressions: 0 },
+  ]);
 });
 
 describe('ReportBuilder tenant scope', () => {

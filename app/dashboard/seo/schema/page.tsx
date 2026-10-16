@@ -1025,10 +1025,10 @@ export default function SchemaMarkupManagerPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-white font-medium">
-                      Rich Results Preview
+                      Structured Data Preview
                     </h3>
                     <p className="text-sm text-gray-300 mt-0.5">
-                      How your schema may appear in Google Search results
+                      Illustrative only — search engines decide what to show
                     </p>
                   </div>
                   {generatedSchema && (
@@ -1070,9 +1070,8 @@ export default function SchemaMarkupManagerPage() {
                     </div>
 
                     <p className="text-xs text-gray-500 italic">
-                      Note: Actual search appearance may vary. Rich results
-                      eligibility depends on Google's indexing and schema
-                      quality.
+                      Note: Structured data does not guarantee rich results or
+                      AI citations. Google no longer shows FAQ rich results.
                     </p>
                   </div>
                 ) : (

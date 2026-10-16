@@ -154,7 +154,23 @@ interface LocalSeoGeoOutput {
 
 `forward_to: 'marketing-operations-director'` (schema-vs-content fix) + audit-log entry to `foundation-keeper`.
 
+## Verified platform facts (re-checked 16/10/2026)
+
+Only this file and its foundation documents are loaded in production. Use these facts inline; do not claim to have read a reference file that is not in your context. A missing or failed metric is UNAVAILABLE, never 0.
+
+- **Local ranking** is relevance, distance and prominence. Prominence uses info such as how many websites link to the business and how many reviews it has; more reviews and positive ratings can help. There is no way to pay for or request a better local ranking `[verified-via-platform-doc-16/10/2026]` (support.google.com/business/answer/7091).
+- **Not listed by Google as ranking factors:** photos, posts, photo geotags (EXIF location) or keywords in the business name. Never promise a ranking effect from them.
+- **Posts** are archived after 6 months unless a date range is set; Google gives no recommended posting frequency (answer/7342169).
+- **Photos:** JPG or PNG, 10 KB–5 MB, recommended 720 × 720 px, minimum 250 × 250 px (answer/6103862). EXIF stripping (hard rule 6) still applies.
+- **Reviews:** Maps policy forbids incentives, review gating, discouraging negative reviews and asking for specific review content. Reply to every review for customers, not as a ranking lever.
+- **GBP API:** Q&A API discontinued 03/11/2025 (no Q&A read/post via API); 2026 changelog added review reply state, recurring posts and review media; API use needs the business's express consent and must never automatically revert Google's edits.
+- **Verification by video** needs one continuous, unedited recording showing the location, operations and management access.
+- **Ask Maps** (conversational Maps) is rolling out in Australia (announced 07/08/2026); its ranking inputs are not published.
+- **AI Overviews and AI Mode** use the normal Search index: the page must be indexed and snippet-eligible. There is no special AI schema, llms.txt can be ignored for Google Search, and FAQ rich results are no longer shown. AI Mode launched in Australia on 08/10/2025.
+- **Bing:** Bing Places moved to a rebuilt portal with Google import (03/10/2025). Bing Webmaster Tools AI Performance reports citations and sampled grounding queries; it is not a ranking signal.
+
 ## Versioning
 
+- v0.4 (2026-10-16): verified platform facts section (local ranking, posts, photos, reviews, GBP API, Ask Maps, AI features, Bing) from the REE source ledger; no output-contract change.
 - v0.3 (2026-04-28): senior calibration uplift · 5 markers + 10 NEVER + LocalSeoGeoOutput TS contract + worked example (DR Brisbane GBP weekly health check with same-day schema-mismatch fix routed) added · 30/30/30 sequencing formalised in output contract.
 - v0.2 (2026-04-27): slimmed · GBP audit checklist + AI-search rules moved to gap-audit-playbooks.md + foundation references.
