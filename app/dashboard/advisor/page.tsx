@@ -227,7 +227,7 @@ export default function AdvisorPage() {
     brief: AdvisorBrief | null;
   }>(ADVISOR_ENABLED ? '/api/advisor/brief' : null, fetchJson);
 
-  const { data: geoData } = useSWR<{ score: number | null }>(
+  const { data: geoData, error: geoError } = useSWR<{ score: number | null }>(
     ADVISOR_ENABLED ? '/api/dashboard/geo-score' : null,
     fetchJson,
     { revalidateOnFocus: false, refreshInterval: 86_400_000 }
@@ -386,7 +386,11 @@ export default function AdvisorPage() {
               <p className="text-sm text-white/70 leading-relaxed mb-3">
                 {brief.geoTeaserText}
               </p>
-              <GeoScoreMiniWidget score={geoScore} />
+              {geoError || geoScore === null ? (
+                <p>GEO score not available.</p>
+              ) : (
+                <GeoScoreMiniWidget score={geoScore} />
+              )}
             </div>
           )}
         </>

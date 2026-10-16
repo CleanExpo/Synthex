@@ -13,24 +13,28 @@
  */
 
 import useSWR from 'swr';
-import { GeoScorePanel, type GeoScoreData } from '@/components/geo/GeoScorePanel';
+import {
+  GeoScorePanel,
+  type GeoScoreData,
+} from '@/components/geo/GeoScorePanel';
 import { GeoScoreSkeleton } from '@/components/geo/GeoScoreSkeleton';
 
 const fetchJson = (url: string) =>
-  fetch(url, { credentials: 'include' }).then(r => r.json());
+  fetch(url, { credentials: 'include' }).then(r => {
+    if (!r.ok) throw new Error('GEO score not available');
+    return r.json();
+  });
 
-type GeoScoreResponse =
-  | ({ score: null })
-  | GeoScoreData;
+type GeoScoreResponse = { score: null } | GeoScoreData;
 
 export default function GeoScorePage() {
   const { data, error, isLoading } = useSWR<GeoScoreResponse>(
     '/api/dashboard/geo-score',
     fetchJson,
     {
-      revalidateOnFocus:    false,
-      refreshInterval:      86_400_000, // 24h
-      dedupingInterval:     60_000,
+      revalidateOnFocus: false,
+      refreshInterval: 86_400_000, // 24h
+      dedupingInterval: 60_000,
     }
   );
 
@@ -42,11 +46,11 @@ export default function GeoScorePage() {
     );
   }
 
-  if (error) {
+  if (error || (!isLoading && (!data || data.score == null))) {
     return (
       <div className="max-w-xl mx-auto px-4 py-8 text-center">
         <p className="text-sm text-white/40">
-          Score temporarily unavailable — we&apos;re working on it
+          GEO score not available. Legacy score storage is unsupported.
         </p>
       </div>
     );

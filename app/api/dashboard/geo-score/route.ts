@@ -7,6 +7,7 @@
  * SYN-657
  */
 
+import { notObserved } from '@/lib/ree/evidence-state';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
@@ -28,6 +29,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Retired storage: keep authentication, withhold the unsupported read.
+  if (userId)
+    return NextResponse.json(
+      notObserved(
+        'UNSUPPORTED',
+        'client_geo_scores',
+        'Legacy GEO score storage is not available'
+      ),
+      { status: 501 }
+    );
+
   try {
     const admin = getAdmin() as ReturnType<typeof createClient<any>>;
 
@@ -41,7 +53,10 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('[geo-score] Supabase error:', error);
-      return NextResponse.json({ error: 'Failed to fetch GEO score' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to fetch GEO score' },
+        { status: 500 }
+      );
     }
 
     // No row yet — cold start
@@ -50,14 +65,17 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      score:               data.score ?? 0,
-      components:          data.components ?? {},
-      trend_data:          data.trend_data ?? [],
+      score: data.score ?? 0,
+      components: data.components ?? {},
+      trend_data: data.trend_data ?? [],
       recommended_actions: data.recommended_actions ?? [],
-      computed_at:         data.computed_at,
+      computed_at: data.computed_at,
     });
   } catch (err) {
     console.error('[geo-score] Unexpected error:', err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

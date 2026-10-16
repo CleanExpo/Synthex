@@ -34,8 +34,13 @@ jest.mock('@/hooks/use-user', () => ({
 }));
 import { GET as history } from '@/app/api/seo/geo-readiness/history/route';
 import { GET as trends } from '@/app/api/seo/geo-readiness/trends/route';
+import { GET as score } from '@/app/api/dashboard/geo-score/route';
+import * as clients from '@/app/api/clients/route';
 import { useGeoReadiness } from '@/hooks/useGeoReadiness';
 import ReadinessPage from '@/app/dashboard/seo/geo-readiness/page';
+import ScorePage from '@/app/dashboard/geo-score/page';
+import AdvisorPage from '@/app/dashboard/advisor/page';
+import ClientsPage from '@/app/dashboard/clients/page';
 const unavailable = notObserved('UNAVAILABLE', SOURCE, 'Read failed');
 const unsupported = {
   ...notObserved('UNSUPPORTED', 'legacy', 'Not available'),
@@ -118,6 +123,29 @@ test.each([history, trends])('personal read states', async route => {
     value: null,
   });
 });
+test.each([
+  ['score', score],
+  ['GET', clients.GET],
+  ['POST', clients.POST],
+  ['PUT', clients.PUT],
+  ['DELETE', clients.DELETE],
+] as const)('%s: auth then unsupported (real noop)', async (verb, route) => {
+  const res = await route(request());
+  expect(res.status).toBe(501);
+  expect(await res.json()).toMatchObject({
+    state: 'UNSUPPORTED',
+    value: null,
+    reason: expect.any(String),
+  });
+  if (verb !== 'score')
+    expect(security.mock.lastCall[1]).toBe(verb === 'GET' ? 'read' : 'write');
+  auth.mockResolvedValue(null);
+  security.mockResolvedValue({
+    allowed: false,
+    error: 'Authentication required',
+  });
+  expect((await route(request())).status).toBe(verb === 'score' ? 401 : 403);
+});
 test('failed refresh', async () => {
   const data = observed(
     { analyses: [zero], trends: [{ overall: 0 }], total: 1 },
@@ -160,4 +188,28 @@ test.each([false, true])('readiness UI (%s)', async failed => {
       failed ? /trends unavailable/ : 'No trend data yet'
     )
   ).toBeVisible();
+});
+test.each([ScorePage, AdvisorPage, ClientsPage])('legacy UI', async Page => {
+  fetchMock.mockImplementation(url =>
+    String(url).includes('/advisor/brief')
+      ? response({
+          brief: {
+            id: 'brief',
+            weekStart: '2026-10-12',
+            actions: [],
+            geoTeaserText: 'Legacy score',
+            dollarAttribution: '',
+          },
+        })
+      : response(unsupported, 501)
+  );
+  ui.render(<Page />, { wrapper });
+  expect(
+    await ui.screen.findByText(
+      /GEO score not available|Clients unavailable/,
+      {},
+      { timeout: 10000 }
+    )
+  ).toBeVisible();
+  expect(ui.screen.queryByText(/calculating|No clients yet/i)).toBeNull();
 });
