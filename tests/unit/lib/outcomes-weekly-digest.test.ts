@@ -17,6 +17,8 @@ const OUTCOMES: OrgOutcomes[] = [
     postsPublished: 3,
     byPlatform: {
       linkedin: {
+        state: 'OBSERVED',
+        source: 'PlatformMetrics',
         posts: 2,
         likes: 41,
         comments: 6,
@@ -24,6 +26,8 @@ const OUTCOMES: OrgOutcomes[] = [
         impressions: 2100,
       },
       facebook: {
+        state: 'OBSERVED',
+        source: 'PlatformMetrics',
         posts: 1,
         likes: 12,
         comments: 1,

@@ -13,12 +13,52 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  * - REDIS_URL: Caching for report data (optional)
  *
- * FAILURE MODE: Returns cached data on DB failure
+ * FAILURE MODE: Withholds failed or incomplete reports
  */
 
 import { prisma } from '@/lib/prisma';
 import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
+import { notObserved, type NonObservedState } from '@/lib/ree/evidence-state';
+
+export class ReportEvidenceError extends Error {
+  constructor(
+    public state: NonObservedState,
+    reason: string
+  ) {
+    super(reason);
+  }
+  reading() {
+    return notObserved(this.state, 'PlatformMetrics', this.message);
+  }
+}
+
+export function assertSupportedMetrics(metrics: MetricType[]) {
+  const supported = [
+    'impressions',
+    'engagements',
+    'likes',
+    'comments',
+    'shares',
+    'clicks',
+    'reach',
+  ];
+  if (metrics.some(m => !supported.includes(m))) {
+    throw new ReportEvidenceError(
+      'UNSUPPORTED',
+      'Metrics not collected per post'
+    );
+  }
+}
+
+function assertComplete(data: ReportDataPoint[], metrics: MetricType[]) {
+  if (
+    !data.length ||
+    data.some(p => metrics.some(m => !Number.isFinite(p.metrics[m])))
+  ) {
+    throw new ReportEvidenceError('PARTIAL', 'Measurements are missing');
+  }
+}
 
 // ============================================================================
 // TYPES
@@ -107,7 +147,7 @@ export interface ReportSummary {
 
 export interface TrendInfo {
   direction: 'up' | 'down' | 'stable';
-  changePercent: number;
+  changePercent: number | null;
   changeAbsolute: number;
 }
 
@@ -250,15 +290,9 @@ export class ReportBuilder {
     const startTime = Date.now();
     const config = this.validateConfig();
 
-    // Check cache
+    // Always read the source: a cached success cannot conceal a failed refresh.
     const cacheKey = this.getCacheKey(config);
     const cache = getCache();
-    const cached = await cache.get<ReportData>(cacheKey);
-
-    if (cached) {
-      cached.metadata.cacheHit = true;
-      return cached;
-    }
 
     // Fetch data
     const data = await this.fetchData(config);
@@ -329,6 +363,7 @@ export class ReportBuilder {
       this.config.granularity = 'day';
     }
 
+    assertSupportedMetrics(this.config.metrics);
     return this.config as ReportConfig;
   }
 
@@ -375,23 +410,20 @@ export class ReportBuilder {
           date: row.recordedAt.toISOString().split('T')[0],
           platform: row.post?.connection?.platform || 'unknown',
         },
-        metrics: {
-          impressions: row.impressions || 0,
-          engagements:
-            (row.likes || 0) + (row.comments || 0) + (row.shares || 0),
-          likes: row.likes || 0,
-          comments: row.comments || 0,
-          shares: row.shares || 0,
-          clicks: row.clicks || 0,
-          followers: 0, // Not tracked per-post
-          reach: row.reach || 0,
-          conversions: 0,
-          revenue: 0,
-        },
+        metrics: Object.fromEntries(
+          config.metrics.map(metric => [
+            metric,
+            metric === 'engagements'
+              ? [row.likes, row.comments, row.shares].every(Number.isFinite)
+                ? row.likes + row.comments + row.shares
+                : undefined
+              : row[metric as keyof typeof row],
+          ])
+        ) as Record<MetricType, number>,
       }));
     } catch (error) {
       logger.error('Failed to fetch report data', { error, config });
-      return [];
+      throw error;
     }
   }
 
@@ -406,10 +438,14 @@ export class ReportBuilder {
     const peaks: Record<MetricType, { value: number; timestamp: Date }> =
       {} as Record<MetricType, { value: number; timestamp: Date }>;
 
+    assertComplete(data, metrics);
     // Initialize
     for (const metric of metrics) {
       totals[metric] = 0;
-      peaks[metric] = { value: 0, timestamp: new Date() };
+      peaks[metric] = {
+        value: data[0].metrics[metric],
+        timestamp: data[0].timestamp,
+      };
     }
 
     // Calculate totals and peaks
@@ -442,7 +478,7 @@ export class ReportBuilder {
     const firstHalf = data.slice(0, midpoint);
     const secondHalf = data.slice(midpoint);
 
-    for (const metric of metrics) {
+    for (const metric of firstHalf.length ? metrics : []) {
       const firstSum = firstHalf.reduce(
         (sum, p) => sum + (p.metrics[metric] || 0),
         0
@@ -454,12 +490,13 @@ export class ReportBuilder {
 
       const changeAbsolute = secondSum - firstSum;
       const changePercent =
-        firstSum > 0 ? (changeAbsolute / firstSum) * 100 : 0;
+        firstSum !== 0 ? (changeAbsolute / firstSum) * 100 : null;
 
       trends[metric] = {
         direction:
           changeAbsolute > 0 ? 'up' : changeAbsolute < 0 ? 'down' : 'stable',
-        changePercent: Math.round(changePercent * 100) / 100,
+        changePercent:
+          changePercent === null ? null : Math.round(changePercent * 100) / 100,
         changeAbsolute,
       };
     }
@@ -485,12 +522,13 @@ export class ReportBuilder {
       const previousValue = previous[metric] || 0;
       const changeAbsolute = currentValue - previousValue;
       const changePercent =
-        previousValue > 0 ? (changeAbsolute / previousValue) * 100 : 0;
+        previousValue !== 0 ? (changeAbsolute / previousValue) * 100 : null;
 
       changes[metric] = {
         direction:
           changeAbsolute > 0 ? 'up' : changeAbsolute < 0 ? 'down' : 'stable',
-        changePercent: Math.round(changePercent * 100) / 100,
+        changePercent:
+          changePercent === null ? null : Math.round(changePercent * 100) / 100,
         changeAbsolute,
       };
     }
@@ -527,13 +565,18 @@ export class ReportExporter {
     report: ReportData,
     format: ExportFormat
   ): Promise<{ content: string | Buffer; mimeType: string; filename: string }> {
+    assertSupportedMetrics(report.config.metrics);
+    assertComplete(report.data, report.config.metrics);
     switch (format) {
       case 'json':
         return this.toJSON(report);
       case 'csv':
         return this.toCSV(report);
       case 'pdf':
-        return this.toPDF(report);
+        throw new ReportEvidenceError(
+          'UNSUPPORTED',
+          'PDF export is unsupported'
+        );
       default:
         throw new Error(`Unsupported export format: ${format}`);
     }
@@ -574,7 +617,7 @@ export class ReportExporter {
       const row = [
         point.timestamp.toISOString(),
         ...dimensions.map(d => point.dimensions[d] || ''),
-        ...metrics.map(m => point.metrics[m]?.toString() || '0'),
+        ...metrics.map(m => point.metrics[m]?.toString() ?? 'Unavailable'),
       ];
       rows.push(row.join(','));
     }

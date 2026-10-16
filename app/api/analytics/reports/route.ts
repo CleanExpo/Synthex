@@ -9,7 +9,7 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  * - JWT_SECRET: For validating auth tokens (CRITICAL)
  *
- * FAILURE MODE: Returns cached data on failure
+ * FAILURE MODE: Withholds failed or incomplete reports
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,6 +25,8 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import {
   ReportBuilder,
+  ReportEvidenceError,
+  assertSupportedMetrics,
   ReportExporter,
   PRESET_REPORTS,
   type ReportConfig,
@@ -170,6 +172,10 @@ export async function POST(request: NextRequest) {
       builder.sortBy(sortBy.field, sortBy.direction || 'desc');
     }
 
+    if (exportFormat === 'pdf') {
+      throw new ReportEvidenceError('UNSUPPORTED', 'PDF export is unsupported');
+    }
+
     // Execute report
     const report = await builder.execute();
 
@@ -236,15 +242,24 @@ export async function POST(request: NextRequest) {
     return ResponseOptimizer.createResponse(
       {
         success: true,
+        state: 'OBSERVED',
+        source: 'PlatformMetrics',
         report,
       },
-      { cacheType: 'api', cacheDuration: 300 }
+      { cacheType: 'none' }
     );
   } catch (error) {
     logger.error('Failed to generate report', { error });
-    return ResponseOptimizer.createErrorResponse(
-      'Failed to generate report',
-      500
+    const failure =
+      error instanceof ReportEvidenceError
+        ? error
+        : new ReportEvidenceError(
+            'UNAVAILABLE',
+            'Report source could not be read'
+          );
+    return NextResponse.json(
+      { ...failure.reading(), data: null, report: null },
+      { status: failure.state === 'UNAVAILABLE' ? 503 : 422 }
     );
   }
 }
@@ -290,6 +305,7 @@ export async function GET(request: NextRequest) {
         );
       }
 
+      assertSupportedMetrics(presetConfig.metrics ?? []);
       await auditLogger.log({
         userId,
         action: 'analytics.preset_viewed',
@@ -336,18 +352,20 @@ export async function GET(request: NextRequest) {
             'comments',
             'shares',
             'clicks',
-            'followers',
             'reach',
-            'conversions',
-            'revenue',
           ],
           granularities: ['hour', 'day', 'week', 'month', 'quarter', 'year'],
-          exportFormats: ['json', 'csv', 'pdf'],
+          exportFormats: ['json', 'csv'],
         },
       },
       { cacheType: 'api', cacheDuration: 3600 }
     );
   } catch (error) {
+    if (error instanceof ReportEvidenceError)
+      return NextResponse.json(
+        { ...error.reading(), data: null },
+        { status: 422 }
+      );
     logger.error('Failed to list reports', { error });
     return ResponseOptimizer.createErrorResponse('Failed to list reports', 500);
   }

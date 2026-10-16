@@ -13,13 +13,18 @@
  */
 
 import { prisma } from '@/lib/prisma';
+import { observedNumber, type EvidenceState } from '@/lib/ree/evidence-state';
 
 export interface PlatformOutcomes {
+  state: EvidenceState;
+  source: string;
+  reason?: string;
+  value?: null;
   posts: number;
-  likes: number;
-  comments: number;
-  shares: number;
-  impressions: number;
+  likes: number | null;
+  comments: number | null;
+  shares: number | null;
+  impressions: number | null;
 }
 
 export interface OrgOutcomes {
@@ -82,7 +87,9 @@ export async function aggregateWeeklyOutcomes(
       byPlatform: {},
     };
     const platform = post.connection.platform;
-    const bucket = org.byPlatform[platform] ?? {
+    const bucket: PlatformOutcomes = org.byPlatform[platform] ?? {
+      state: 'OBSERVED',
+      source: 'PlatformMetrics',
       posts: 0,
       likes: 0,
       comments: 0,
@@ -92,10 +99,21 @@ export async function aggregateWeeklyOutcomes(
 
     const metrics = post.metrics[0];
     bucket.posts += 1;
-    bucket.likes += metrics?.likes ?? 0;
-    bucket.comments += metrics?.comments ?? 0;
-    bucket.shares += metrics?.shares ?? 0;
-    bucket.impressions += metrics?.impressions ?? 0;
+    const fields = ['likes', 'comments', 'shares', 'impressions'] as const;
+    if (
+      fields.some(
+        key =>
+          observedNumber(metrics?.[key], bucket.source).state !== 'OBSERVED'
+      )
+    ) {
+      bucket.state = 'PARTIAL';
+      bucket.reason = 'Some published posts have missing measurements';
+      bucket.value = null;
+    }
+    for (const key of fields) {
+      bucket[key] =
+        bucket.state === 'OBSERVED' ? bucket[key]! + metrics[key] : null;
+    }
 
     org.byPlatform[platform] = bucket;
     org.postsPublished += 1;
@@ -103,6 +121,10 @@ export async function aggregateWeeklyOutcomes(
   }
 
   return [...byOrg.values()].sort((a, b) => a.orgSlug.localeCompare(b.orgSlug));
+}
+
+export function buildOutcomesEvent(org: OrgOutcomes, isoWeek: string) {
+  return { type: 'content.outcomes' as const, isoWeek, ...org };
 }
 
 /** Render the wiki note (brain-1 content rules: dated, sourced, no filler). */
@@ -133,7 +155,9 @@ export function renderOutcomesNote(
     lines.push(`## ${org.orgSlug} — ${org.postsPublished} post(s)`);
     for (const [platform, m] of Object.entries(org.byPlatform)) {
       lines.push(
-        `- ${platform}: ${m.posts} post(s), ${m.likes} likes, ${m.comments} comments, ${m.shares} shares, ${m.impressions} impressions`
+        m.state !== 'OBSERVED'
+          ? `- ${platform}: ${m.posts} post(s), ${m.state}: ${m.reason}`
+          : `- ${platform}: ${m.posts} post(s), ${m.likes} likes, ${m.comments} comments, ${m.shares} shares, ${m.impressions} impressions`
       );
     }
     lines.push('');
