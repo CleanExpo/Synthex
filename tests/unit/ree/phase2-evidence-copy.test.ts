@@ -137,3 +137,22 @@ describe('schema copy makes no search-appearance promises', () => {
     );
   });
 });
+
+describe('schema templates make no retired search-feature promises', () => {
+  it('no template promises FAQ answers in results or a sitelinks search box', () => {
+    // Google retired FAQ rich results and removed the sitelinks search box
+    // (21 Nov 2024); a template must describe the markup, not a SERP feature.
+
+    const { getSchemaTemplates } = require('@/lib/seo/schema-markup-service');
+    const templates: { id: string; name: string; description: string }[] =
+      getSchemaTemplates();
+    expect(templates.map(t => t.id)).toEqual(
+      expect.arrayContaining(['faq-standard'])
+    );
+    for (const t of templates) {
+      expect(`${t.name} ${t.description}`).not.toMatch(
+        /in search results|sitelinks search/i
+      );
+    }
+  });
+});

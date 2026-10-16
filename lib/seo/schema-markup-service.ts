@@ -723,7 +723,7 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       type: 'FAQ',
       name: 'FAQ Page',
       description:
-        'Frequently asked questions with expandable answers in search results',
+        'FAQPage markup for questions and answers visible on the page',
       category: 'content',
       popularity: 5,
       fields: {
@@ -1001,9 +1001,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
     {
       id: 'website-with-search',
       type: 'WebSite',
-      name: 'Website with Sitelinks Search',
-      description:
-        'Website schema that enables the sitelinks search box in Google',
+      name: 'Website with SearchAction',
+      description: 'WebSite markup naming the site and its on-site search URL',
       category: 'navigation',
       popularity: 4,
       fields: {
@@ -1026,7 +1025,7 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'breadcrumb-standard',
       type: 'BreadcrumbList',
       name: 'Breadcrumb Navigation',
-      description: 'Page hierarchy breadcrumbs shown in search results',
+      description: 'BreadcrumbList markup describing the page hierarchy',
       category: 'navigation',
       popularity: 4,
       fields: {

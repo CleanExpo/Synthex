@@ -244,10 +244,13 @@ function seedId(name: string): string {
 /**
  * Upsert one update. A matching row gets Google's name, dates, text and source;
  * its impact level and Sentinel review columns are left as they are.
+ * With overwrite false (the fallback seed) an existing row is left untouched:
+ * the live feed may already have stored newer dates under the same seed id.
  */
 async function upsertUpdate(
   id: string,
-  update: AlgorithmUpdateInfo
+  update: AlgorithmUpdateInfo,
+  overwrite = true
 ): Promise<void> {
   const facts = {
     name: update.name,
@@ -260,7 +263,7 @@ async function upsertUpdate(
   };
   await prisma.algorithmUpdate.upsert({
     where: { id },
-    update: facts,
+    update: overwrite ? facts : {},
     create: { id, ...facts, impactLevel: update.impactLevel },
   });
 }
@@ -430,7 +433,7 @@ export async function seedAlgorithmUpdates(): Promise<void> {
   if (!seeded) {
     try {
       for (const update of KNOWN_ALGORITHM_UPDATES) {
-        await upsertUpdate(seedId(update.name), update);
+        await upsertUpdate(seedId(update.name), update, false);
       }
       seeded = true;
       logger.info('[AlgorithmFeed] Seeded algorithm updates to DB');

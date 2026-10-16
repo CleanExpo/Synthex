@@ -546,17 +546,20 @@ export async function getInsights(
         let total = 0;
         for (const entry of dated) {
           const date = `${entry.date.year}-${String(entry.date.month).padStart(2, '0')}-${String(entry.date.day).padStart(2, '0')}`;
+          // Google omits `value` on zero days (TimeSeries reference); only an
+          // absent key means zero. A present null or bad string still fails.
+          const value = 'value' in entry ? entry.value : '0';
           if (
-            !/^\d+$/.test(entry.value) ||
-            typeof entry.value !== 'string' ||
-            !Number.isSafeInteger(Number(entry.value)) ||
+            !/^\d+$/.test(value) ||
+            typeof value !== 'string' ||
+            !Number.isSafeInteger(Number(value)) ||
             date < startDate ||
             date > endDate ||
             days.has(date)
           )
             throw new Error('Invalid daily value');
           days.add(date);
-          total += Number(entry.value);
+          total += Number(value);
         }
         if (
           days.size !==

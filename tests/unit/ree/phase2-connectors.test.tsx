@@ -104,6 +104,29 @@ it('uses the published GET query, both nested arrays, explicit zero and absent m
         value
       );
 });
+it('reads an omitted value as a measured zero, as Google encodes zero days', async () => {
+  // Google's TimeSeries reference: DatedValue.value "will not be present when
+  // the value is zero". Real zero days arrive with no value key, not '0'.
+  const data = fixture(['WEBSITE_CLICKS', 'CALL_CLICKS']);
+  const calls = data.multiDailyMetricTimeSeries[0].dailyMetricTimeSeries[1]
+    .timeSeries.datedValues[0] as { value?: string };
+  delete calls.value;
+  respond(data);
+  expect(
+    await getInsights('conn', 'accounts/1/locations/2', range)
+  ).toMatchObject({ websiteClicks: 7, phoneClicks: 0 });
+});
+it('still rejects a value key that is present but null', async () => {
+  const data = fixture();
+  (
+    data.multiDailyMetricTimeSeries[0].dailyMetricTimeSeries[0].timeSeries
+      .datedValues[0] as { value: unknown }
+  ).value = null;
+  respond(data);
+  await expect(getInsights('conn', 'locations/2', range)).rejects.toMatchObject(
+    { state: 'UNAVAILABLE' }
+  );
+});
 it.each([
   {},
   { multiDailyMetricTimeSeries: [] },
