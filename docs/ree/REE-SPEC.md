@@ -22,7 +22,7 @@ Source ledgers:
 
 ## 1. Finish line
 
-**Done when** Synthex runs a durable weekly loop for a founder-approved pilot: Disaster Recovery plus one contrasting brand. The loop then extends to each further Unite Group brand (CleanExpo, CARSI, RestoreAssist, NRPG) and client business that passes its eligibility, access and outcome checks.
+**Done when** Synthex runs a durable weekly loop for a founder-approved pilot: Disaster Recovery plus one contrasting brand. The loop then extends to each further brand that passes its eligibility, access and outcome checks: the foundation's other front doors (CCW, CARSI, RestoreAssist, NRPG), CleanExpo if the founder confirms it is in scope (open question 1), and client businesses.
 
 Each week the loop must:
 
@@ -375,7 +375,7 @@ Each pilot has an AUD ceiling that covers review labour, data, models, execution
 
 ## 15. Open questions
 
-1. **Pilot brands and owners.** DR plus which contrasting brand? Who owns each outcome metric, and what AUD ceiling applies?
+1. **Pilot brands and owners.** DR plus which contrasting brand? Who owns each outcome metric, and what AUD ceiling applies? `.claude/memory/ceo-foundation.md` names five front doors: CCW, CARSI, RestoreAssist, DR and NRPG. CleanExpo is the group and expo brand. Does CleanExpo get its own outcome contract?
 2. **Observation provider.** Semrush AI toolkit, a SERP/AI API, or official reports and exports only? The AI Overview adapter stays "not connected" until this is decided.
 3. **Access and rights matrix.** Does Synthex hold GSC, GBP, Bing Webmaster (OAuth) and GA4 access, consent and retention rights for the pilot sites?
 4. **Durability spike.** Approve Vercel Workflow and Inngest as spike candidates (a new dependency and cost), or keep manual operation?
@@ -442,7 +442,7 @@ These are simulated reasoning styles, not statements by those people.
 
 | Board change                                                                                                          | Where applied       |
 | --------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| 1. Define winning and scope; restore CleanExpo; outcome contracts                                                     | §1, §3, §11, §15    |
+| 1. Define winning and scope; reconcile CleanExpo vs CCW; outcome contracts                                            | §1, §3, §11, §15    |
 | 2. Honest evidence end to end (states, metadata, diagnostics labelled)                                                | §6, §8, §12, §14    |
 | 3. Experimental design earlier; the calendar never clears confounds; variance-sized windows; non-winners; replication | §6, §8 A09–A10, §11 |
 | 4. Shrink to three roles plus an Executor; reorder phases                                                             | §2, §9, §11         |
