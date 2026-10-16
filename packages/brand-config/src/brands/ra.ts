@@ -98,7 +98,7 @@ export const ra = {
     transitionFrames: 14,
   },
   voiceover: {
-    elevenLabsVoiceId: 'phill-elevenlabs-pro', // Phill's cloned voice — audience trusts a tradie, not a corporate narrator
+    elevenLabsVoiceId: 'tAtHhBlA3E0eKZJKNSKE', // Margot — founder decision 16/10/2026 (replaces placeholder 'phill-elevenlabs-pro')
     style: 'narration',
     locale: 'en-AU',
   },
