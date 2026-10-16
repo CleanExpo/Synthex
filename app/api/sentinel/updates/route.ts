@@ -9,8 +9,16 @@
  */
 
 import { NextRequest } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
-import { getRecentUpdates, getAllUpdates, seedAlgorithmUpdates } from '@/lib/sentinel/algorithm-feed';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
+import {
+  getRecentUpdates,
+  getAllUpdates,
+  seedAlgorithmUpdates,
+  getAlgorithmFeedStatus,
+} from '@/lib/sentinel/algorithm-feed';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
@@ -36,7 +44,12 @@ export async function GET(request: NextRequest) {
 
     const updates = all ? await getAllUpdates() : await getRecentUpdates(days);
 
-    return APISecurityChecker.createSecureResponse({ updates });
+    // `feed` says whether the list was refreshed from Google's dashboard or is
+    // being served from storage after a failed read.
+    return APISecurityChecker.createSecureResponse({
+      updates,
+      feed: getAlgorithmFeedStatus(),
+    });
   } catch (error) {
     logger.error('[Sentinel Updates] Error:', error);
     return APISecurityChecker.createSecureResponse(
