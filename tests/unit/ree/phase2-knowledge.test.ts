@@ -77,6 +77,15 @@ describe('skills knowledge', () => {
     );
   });
 
+  it('agent-ready-content follows Google: no special AI writing style', () => {
+    const arc = skill('agent-ready-content');
+    expect(arc).toContain(
+      "You don't need to write in a specific way just for generative AI search."
+    );
+    expect(arc).toContain('accessibility tree');
+    expect(arc).not.toMatch(/write in (Argon|Gemini)['’]?s? style/i);
+  });
+
   it('Search Console skill documents the 2026 AI and multimodal reports', () => {
     const gsc = skill('google-search-console');
     expect(gsc).toContain('generative-AI performance');
@@ -102,7 +111,7 @@ describe('skills knowledge', () => {
     }
   );
 
-  it.each(['ree-diagnostic', 'ree-content-teardown'])(
+  it.each(['ree-diagnostic', 'ree-content-teardown', 'agent-ready-content'])(
     '%s exists as an IDE-only operator skill',
     slug => {
       expect(skill(slug)).toMatch(new RegExp(`^---\\nname: ${slug}\\n`));
