@@ -122,8 +122,8 @@ Greg rhythm inside `agent-ready-content`: question-led H2s, short paragraphs, a 
 
 **Newsletter opener (C):**
 
-> I spent today going through every Google update since March 2024.
-> Eighteen of them. One thing jumped out.
+> [I spent today going through] every named ranking update on Google's Search Status Dashboard since March 2024.
+> Eighteen of them. [One thing jumped out.]
 > The sites that win aren't the ones that post the most. They're the ones that say something only they could say.
 
-(Check: "eighteen named ranking updates since March 2024" is verified in the Synthex sentinel; every other bracket needs Phill's real fact.)
+(Check: only "eighteen named ranking updates on the Search Status Dashboard since March 2024" is verified, in the Synthex sentinel. It is not every Google update. The bracketed review claim and the takeaway need Phill's real fact before use.)

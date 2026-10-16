@@ -64,7 +64,7 @@ Any frontier model writes well only after it has learned the voice. For each bra
 
 Agents read a page through screenshots, the HTML/DOM and the **accessibility tree**.
 
-- Semantic HTML: `<button>`, `<a>`, `<label for>`; otherwise `role` and `tabindex`.
+- Semantic HTML: `<button>`, `<a>`, `<label for>`. A custom control needs `role`, `tabindex` **and** keyboard activation (Enter, plus Space for buttons); focusable is not operable.
 - No transparent overlays over controls; `cursor: pointer` on actions; interactive targets larger than 8 square pixels.
 - Stable layouts: the same action in the same place on every page; no shifting layouts on money pages.
 - Core content server-rendered and crawlable; Googlebot reads only the first 2 MB of a page.
