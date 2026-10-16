@@ -27,8 +27,8 @@ interface SuggestionRule {
 const SUGGESTION_RULES: SuggestionRule[] = [
   // Rule 1: Low GEO score — add entity name to H1
   {
-    condition: (m) => (m.geoScore ?? 100) < 70,
-    build: (m) => ({
+    condition: m => (m.geoScore ?? 100) < 70,
+    build: m => ({
       experimentType: 'h1' as ExperimentType,
       title: 'Add entity name to H1 for GEO visibility',
       hypothesis:
@@ -45,8 +45,8 @@ const SUGGESTION_RULES: SuggestionRule[] = [
 
   // Rule 2: Short title — expand with primary keyword
   {
-    condition: (m) => typeof m.title === 'string' && m.title.length < 50,
-    build: (m) => ({
+    condition: m => typeof m.title === 'string' && m.title.length < 50,
+    build: m => ({
       experimentType: 'title-tag' as ExperimentType,
       title: 'Expand title tag with primary keyword',
       hypothesis:
@@ -61,9 +61,8 @@ const SUGGESTION_RULES: SuggestionRule[] = [
 
   // Rule 3: Short or missing meta description
   {
-    condition: (m) =>
-      !m.metaDescription || m.metaDescription.length < 100,
-    build: (m) => ({
+    condition: m => !m.metaDescription || m.metaDescription.length < 100,
+    build: m => ({
       experimentType: 'meta-description' as ExperimentType,
       title: 'Improve meta description for CTR',
       hypothesis:
@@ -72,36 +71,35 @@ const SUGGESTION_RULES: SuggestionRule[] = [
       variantValue:
         '[Write 150-character description that leads with the primary benefit and ends with a CTA like "Learn more" or "Get started"]',
       metricToTrack: 'clicks' as MetricToTrack,
-      rationale:
-        !m.metaDescription
-          ? 'No meta description found. Search engines will auto-generate one, which is typically suboptimal.'
-          : `Meta description is only ${m.metaDescription.length} characters. Aim for 150-160 characters.`,
+      rationale: !m.metaDescription
+        ? 'No meta description found. Search engines will auto-generate one, which is typically suboptimal.'
+        : `Meta description is only ${m.metaDescription.length} characters. Aim for 150-160 characters.`,
       priority: !m.metaDescription ? 'high' : 'medium',
     }),
   },
 
   // Rule 4: No schema markup
   {
-    condition: (m) => m.hasSchema === false,
-    build: (m) => ({
+    condition: m => m.hasSchema === false,
+    build: m => ({
       experimentType: 'schema' as ExperimentType,
       title: 'Add Article/Organization schema markup',
       hypothesis:
-        'Adding JSON-LD schema markup (Article + Organization) will improve rich result eligibility and AI search citability scores.',
+        'Adding accurate JSON-LD (Article + Organization) that matches visible content will raise the diagnostic GEO readiness score. Structured data does not guarantee rich results or AI citations.',
       originalValue: 'No structured data',
       variantValue:
         '{"@type": "Article", "headline": "[title]", "author": {"@type": "Organization", "name": "[brand]"}, "datePublished": "[date]"}',
       metricToTrack: 'geo-score' as MetricToTrack,
       rationale:
-        'Schema markup is a strong GEO and E-E-A-T signal. Pages without schema miss rich result opportunities.',
+        'Structured data helps search engines identify the page entities. Treat a GEO score change as a diagnostic, not proof of search visibility.',
       priority: 'high' as const,
     }),
   },
 
   // Rule 5: Low E-E-A-T score — add author byline
   {
-    condition: (m) => (m.eeaScore ?? 100) < 65,
-    build: (m) => ({
+    condition: m => (m.eeaScore ?? 100) < 65,
+    build: m => ({
       experimentType: 'content-structure' as ExperimentType,
       title: 'Add author byline and credentials section',
       hypothesis:
@@ -117,8 +115,8 @@ const SUGGESTION_RULES: SuggestionRule[] = [
 
   // Rule 6: Low quality score — add internal links
   {
-    condition: (m) => (m.qualityScore ?? 100) < 60,
-    build: (_m) => ({
+    condition: m => (m.qualityScore ?? 100) < 60,
+    build: _m => ({
       experimentType: 'internal-links' as ExperimentType,
       title: 'Add contextual internal links to improve content depth',
       hypothesis:
@@ -143,12 +141,12 @@ const SUGGESTION_RULES: SuggestionRule[] = [
  * Used for BO-informed tie-breaking within equal-priority tiers.
  */
 const TYPE_TO_WEIGHT_KEY: Record<string, keyof ExperimentSamplingWeights> = {
-  'title-tag':        'titleTag',
+  'title-tag': 'titleTag',
   'meta-description': 'metaDescription',
-  'h1':               'h1',
-  'schema':           'schema',
+  h1: 'h1',
+  schema: 'schema',
   'content-structure': 'contentStructure',
-  'internal-links':   'internalLinks',
+  'internal-links': 'internalLinks',
 };
 
 /**
@@ -168,7 +166,7 @@ const TYPE_TO_WEIGHT_KEY: Record<string, keyof ExperimentSamplingWeights> = {
 export function suggestExperiments(
   _url: string,
   currentMetrics: CurrentMetrics,
-  samplingWeights?: ExperimentSamplingWeights,
+  samplingWeights?: ExperimentSamplingWeights
 ): ExperimentSuggestion[] {
   const suggestions: ExperimentSuggestion[] = [];
 
@@ -189,9 +187,9 @@ export function suggestExperiments(
     if (baseDiff !== 0) return baseDiff;
     const weightKey = TYPE_TO_WEIGHT_KEY[a.experimentType];
     const weightKeyB = TYPE_TO_WEIGHT_KEY[b.experimentType];
-    const weightA = weightKey  ? (samplingWeights[weightKey]  ?? 0) : 0;
+    const weightA = weightKey ? (samplingWeights[weightKey] ?? 0) : 0;
     const weightB = weightKeyB ? (samplingWeights[weightKeyB] ?? 0) : 0;
-    return weightB - weightA;  // descending weight = ascending sort position
+    return weightB - weightA; // descending weight = ascending sort position
   });
 }
 

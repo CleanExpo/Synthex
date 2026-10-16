@@ -88,7 +88,8 @@ const EXPERIMENT_TYPES: Array<{
   {
     value: 'schema',
     label: 'Schema Markup',
-    description: 'Test structured data additions for rich results eligibility',
+    description:
+      'Test structured data additions (no guaranteed search appearance)',
     icon: Code,
     colour: 'border-green-500/40 text-green-400 hover:bg-green-500/10',
   },

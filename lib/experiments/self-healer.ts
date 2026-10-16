@@ -28,13 +28,13 @@ interface PageMetadata {
 
 // Mapping from HealingIssueType string values to SelfHealingPriorityWeights keys
 const ISSUE_TO_WEIGHT: Record<string, keyof SelfHealingPriorityWeights> = {
-  'missing-meta':          'missingMetaPriority',
-  'broken-schema':         'brokenSchemaPriority',
-  'low-geo-score':         'lowGeoScorePriority',
-  'low-quality-score':     'lowQualityScorePriority',
-  'missing-entity':        'missingEntityPriority',
-  'short-title':           'shortTitlePriority',
-  'missing-h1':            'missingH1Priority',
+  'missing-meta': 'missingMetaPriority',
+  'broken-schema': 'brokenSchemaPriority',
+  'low-geo-score': 'lowGeoScorePriority',
+  'low-quality-score': 'lowQualityScorePriority',
+  'missing-entity': 'missingEntityPriority',
+  'short-title': 'shortTitlePriority',
+  'missing-h1': 'missingH1Priority',
   'weak-meta-description': 'weakMetaDescPriority',
 };
 
@@ -45,7 +45,10 @@ const ISSUE_TO_WEIGHT: Record<string, keyof SelfHealingPriorityWeights> = {
  * When priorityWeights are provided (via BO), the issues list is sorted
  * descending by the BO priority weight for each issue type.
  */
-function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityWeights): HealingIssue[] {
+function detectIssues(
+  meta: PageMetadata,
+  priorityWeights?: SelfHealingPriorityWeights
+): HealingIssue[] {
   const issues: HealingIssue[] = [];
 
   // Missing title
@@ -57,7 +60,8 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
       currentValue: undefined,
       suggestedFix:
         'Add a descriptive <title> tag (50-60 characters) that includes the primary keyword and brand name. Example: "Your Primary Topic — Brand Name".',
-      estimatedImpact: 'Critical for SEO — missing titles severely hurt rankings and CTR.',
+      estimatedImpact:
+        'Critical for SEO — missing titles severely hurt rankings and CTR.',
     });
   }
 
@@ -69,7 +73,8 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
       description: `Title tag is too short (${meta.title.length} characters). Optimal is 50-60 characters.`,
       currentValue: meta.title,
       suggestedFix: `Expand the current title "${meta.title}" to include the primary keyword and brand name. Aim for 50-60 characters total.`,
-      estimatedImpact: 'Short titles miss keyword opportunities and look thin in SERPs.',
+      estimatedImpact:
+        'Short titles miss keyword opportunities and look thin in SERPs.',
     });
   }
 
@@ -82,7 +87,8 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
       currentValue: undefined,
       suggestedFix:
         'Add a compelling meta description of 150-160 characters. Lead with the primary benefit, include the target keyword, and end with a call-to-action such as "Learn more" or "Get started today".',
-      estimatedImpact: 'Meta descriptions directly affect click-through rate from search results.',
+      estimatedImpact:
+        'Meta descriptions directly affect click-through rate from search results.',
     });
   }
 
@@ -94,7 +100,8 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
       description: `Meta description is only ${meta.metaDescription.length} characters. Aim for 150-160 characters.`,
       currentValue: meta.metaDescription,
       suggestedFix: `Expand the current description: "${meta.metaDescription}" — add more detail about the value proposition and include a call-to-action. Target 150-160 characters.`,
-      estimatedImpact: 'Longer, more descriptive meta descriptions improve CTR.',
+      estimatedImpact:
+        'Longer, more descriptive meta descriptions improve CTR.',
     });
   }
 
@@ -120,7 +127,8 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
       currentValue: 'No schema',
       suggestedFix:
         'Add JSON-LD schema markup appropriate to the page type. For an article: {"@type": "Article"} with headline, author, datePublished. For an organisation landing page: {"@type": "Organization"} with name, url, logo. Use Google\'s Schema Markup Validator to verify.',
-      estimatedImpact: 'Schema markup improves rich results eligibility and AI citability.',
+      estimatedImpact:
+        'Structured data helps search engines understand the page. It does not guarantee rich results or AI citations.',
     });
   }
 
@@ -129,11 +137,12 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
     issues.push({
       issueType: 'low-geo-score' as HealingIssueType,
       severity: meta.geoScore < 40 ? 'critical' : 'warning',
-      description: `GEO citability score is ${meta.geoScore}/100 — below the 60-point threshold for AI search visibility.`,
+      description: `GEO readiness score (diagnostic heuristic) is ${meta.geoScore}/100 — below the 60-point internal threshold.`,
       currentValue: String(meta.geoScore),
       suggestedFix:
-        'Improve GEO score by: (1) Adding entity name consistently in H1, first paragraph, and conclusion. (2) Using structured "passage" format — clear question + concise answer blocks that AI can extract. (3) Adding relevant statistics with source citations. (4) Including FAQ schema for common questions.',
-      estimatedImpact: 'Low GEO score means the page is rarely cited by AI search engines.',
+        'Improve GEO score by: (1) Adding entity name consistently in H1, first paragraph, and conclusion. (2) Using structured "passage" format — clear question + concise answer blocks that AI can extract. (3) Adding relevant statistics with source citations. (4) Answering common questions in visible Q&A on the page (optional FAQPage markup can describe it; Google no longer shows FAQ rich results).',
+      estimatedImpact:
+        'Diagnostic only: the score is a content heuristic and does not measure whether AI search engines cite the page.',
     });
   }
 
@@ -146,20 +155,28 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
       currentValue: String(meta.qualityScore),
       suggestedFix:
         'Improve quality score by: (1) Removing AI slop phrases ("In conclusion", "It\'s worth noting", "Delve into"). (2) Adding specific examples, case studies, or data points. (3) Replacing passive voice with active voice. (4) Breaking up long paragraphs into focused, scannable sections.',
-      estimatedImpact: 'Low quality scores hurt E-E-A-T, user engagement, and rankings.',
+      estimatedImpact:
+        'Low quality scores hurt E-E-A-T, user engagement, and rankings.',
     });
   }
 
   // Missing entity references
-  if (meta.geoScore !== undefined && meta.geoScore < 70 && meta.title && !meta.h1) {
+  if (
+    meta.geoScore !== undefined &&
+    meta.geoScore < 70 &&
+    meta.title &&
+    !meta.h1
+  ) {
     issues.push({
       issueType: 'missing-entity' as HealingIssueType,
       severity: 'warning' as HealingSeverity,
-      description: 'Entity name may not be consistently referenced across key heading and body elements.',
+      description:
+        'Entity name may not be consistently referenced across key heading and body elements.',
       currentValue: undefined,
       suggestedFix:
         'Ensure the primary entity name (brand, product, or topic) appears: in the H1, in the first 100 words, and in at least one subheading. Consistent entity references improve Knowledge Graph association and AI citability.',
-      estimatedImpact: 'Entity consistency is a primary GEO and Knowledge Graph signal.',
+      estimatedImpact:
+        'Entity consistency is a primary GEO and Knowledge Graph signal.',
     });
   }
 
@@ -168,8 +185,8 @@ function detectIssues(meta: PageMetadata, priorityWeights?: SelfHealingPriorityW
     issues.sort((a, b) => {
       const wKeyA = ISSUE_TO_WEIGHT[a.issueType];
       const wKeyB = ISSUE_TO_WEIGHT[b.issueType];
-      const wA    = wKeyA ? (priorityWeights[wKeyA] ?? 0.10) : 0.10;
-      const wB    = wKeyB ? (priorityWeights[wKeyB] ?? 0.10) : 0.10;
+      const wA = wKeyA ? (priorityWeights[wKeyA] ?? 0.1) : 0.1;
+      const wB = wKeyB ? (priorityWeights[wKeyB] ?? 0.1) : 0.1;
       return wB - wA; // descending — higher weight first
     });
   }
@@ -191,7 +208,7 @@ export async function analyzeForHealing(
   userId: string,
   orgId: string,
   pageMetadata?: PageMetadata,
-  priorityWeights?: SelfHealingPriorityWeights,
+  priorityWeights?: SelfHealingPriorityWeights
 ): Promise<HealingIssue[]> {
   // Use provided metadata or fall back to minimal defaults for offline analysis
   const meta: PageMetadata = pageMetadata ?? {
@@ -208,7 +225,7 @@ export async function analyzeForHealing(
   // Persist each issue as a HealingAction
   if (issues.length > 0) {
     await prisma.healingAction.createMany({
-      data: issues.map((issue) => ({
+      data: issues.map(issue => ({
         userId,
         orgId,
         targetUrl: url,

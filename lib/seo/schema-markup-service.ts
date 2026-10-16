@@ -8,7 +8,7 @@
  * - Validate JSON-LD structure and required fields per schema type
  * - Extract existing schema markup from any URL
  * - Template library for all 14 supported schema types
- * - Rich results preview showing how Google would display the data
+ * - Illustrative structured data preview (not a guarantee of search appearance)
  *
  * ENVIRONMENT VARIABLES: None required (no external API calls for validation/templates)
  */
@@ -124,11 +124,19 @@ const VALIDATION_RULES: Record<string, Record<string, FieldRule>> = {
     description: { required: false, type: 'string' },
   },
   FAQ: {
-    mainEntity: { required: true, type: 'array', message: 'FAQ schema requires a mainEntity array of Question items' },
+    mainEntity: {
+      required: true,
+      type: 'array',
+      message: 'FAQ schema requires a mainEntity array of Question items',
+    },
   },
   HowTo: {
     name: { required: true, type: 'string' },
-    step: { required: true, type: 'array', message: 'HowTo schema requires a step array of HowToStep items' },
+    step: {
+      required: true,
+      type: 'array',
+      message: 'HowTo schema requires a step array of HowToStep items',
+    },
     description: { required: false, type: 'string' },
     totalTime: { required: false, type: 'string' },
     estimatedCost: { required: false, type: 'object' },
@@ -156,7 +164,11 @@ const VALIDATION_RULES: Record<string, Record<string, FieldRule>> = {
     description: { required: false, type: 'string' },
   },
   BreadcrumbList: {
-    itemListElement: { required: true, type: 'array', message: 'BreadcrumbList requires an itemListElement array' },
+    itemListElement: {
+      required: true,
+      type: 'array',
+      message: 'BreadcrumbList requires an itemListElement array',
+    },
   },
   VideoObject: {
     name: { required: true, type: 'string' },
@@ -206,7 +218,8 @@ function isValidUrl(value: unknown): boolean {
 function isValidISODate(value: unknown): boolean {
   if (typeof value !== 'string') return false;
   // Accept ISO 8601 date or datetime strings
-  const dateRegex = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
+  const dateRegex =
+    /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?)?$/;
   if (!dateRegex.test(value)) return false;
   const d = new Date(value);
   return !isNaN(d.getTime());
@@ -222,32 +235,60 @@ function validateFieldType(
   switch (expectedType) {
     case 'string':
       if (typeof value !== 'string') {
-        return { field: fieldName, message: `${fieldName} should be a string`, severity: 'warning' };
+        return {
+          field: fieldName,
+          message: `${fieldName} should be a string`,
+          severity: 'warning',
+        };
       }
       break;
     case 'url':
       if (typeof value === 'string' && value.length > 0 && !isValidUrl(value)) {
-        return { field: fieldName, message: `${fieldName} should be a valid URL`, severity: 'warning' };
+        return {
+          field: fieldName,
+          message: `${fieldName} should be a valid URL`,
+          severity: 'warning',
+        };
       }
       break;
     case 'date':
-      if (typeof value === 'string' && value.length > 0 && !isValidISODate(value)) {
-        return { field: fieldName, message: `${fieldName} should be a valid ISO date (e.g. 2024-01-15)`, severity: 'warning' };
+      if (
+        typeof value === 'string' &&
+        value.length > 0 &&
+        !isValidISODate(value)
+      ) {
+        return {
+          field: fieldName,
+          message: `${fieldName} should be a valid ISO date (e.g. 2024-01-15)`,
+          severity: 'warning',
+        };
       }
       break;
     case 'number':
       if (typeof value !== 'number' && isNaN(Number(value))) {
-        return { field: fieldName, message: `${fieldName} should be numeric`, severity: 'warning' };
+        return {
+          field: fieldName,
+          message: `${fieldName} should be numeric`,
+          severity: 'warning',
+        };
       }
       break;
     case 'array':
       if (!Array.isArray(value)) {
-        return { field: fieldName, message: `${fieldName} should be an array`, severity: 'warning' };
+        return {
+          field: fieldName,
+          message: `${fieldName} should be an array`,
+          severity: 'warning',
+        };
       }
       break;
     case 'object':
       if (typeof value !== 'object' || Array.isArray(value)) {
-        return { field: fieldName, message: `${fieldName} should be an object`, severity: 'warning' };
+        return {
+          field: fieldName,
+          message: `${fieldName} should be an object`,
+          severity: 'warning',
+        };
       }
       break;
   }
@@ -263,7 +304,9 @@ function validateFieldType(
  * Validate a JSON-LD schema object.
  * Checks structure, required fields, and field types per @type.
  */
-export function validateSchema(schema: Record<string, unknown>): SchemaValidationResult {
+export function validateSchema(
+  schema: Record<string, unknown>
+): SchemaValidationResult {
   const errors: ValidationError[] = [];
   const warnings: ValidationError[] = [];
 
@@ -303,10 +346,14 @@ export function validateSchema(schema: Record<string, unknown>): SchemaValidatio
       const value = schema[fieldName];
 
       // Check required fields
-      if (rule.required && (value === undefined || value === null || value === '')) {
+      if (
+        rule.required &&
+        (value === undefined || value === null || value === '')
+      ) {
         errors.push({
           field: fieldName,
-          message: rule.message || `${fieldName} is required for ${schemaType} schema`,
+          message:
+            rule.message || `${fieldName} is required for ${schemaType} schema`,
           severity: 'error',
         });
         continue;
@@ -354,7 +401,8 @@ function getDemoExtractionResult(url: string): SchemaExtractionResult {
     name: 'Example Corp',
     url: 'https://example.com',
     logo: 'https://example.com/logo.png',
-    description: 'A leading technology company specializing in innovative solutions.',
+    description:
+      'A leading technology company specializing in innovative solutions.',
     sameAs: [
       'https://twitter.com/examplecorp',
       'https://linkedin.com/company/examplecorp',
@@ -421,7 +469,9 @@ function getDemoExtractionResult(url: string): SchemaExtractionResult {
  * Fetches the page HTML and parses all <script type="application/ld+json"> tags.
  * Falls back to demo data if fetch fails.
  */
-export async function extractSchemaFromUrl(url: string): Promise<SchemaExtractionResult> {
+export async function extractSchemaFromUrl(
+  url: string
+): Promise<SchemaExtractionResult> {
   try {
     // Validate URL
     new URL(url);
@@ -435,7 +485,9 @@ export async function extractSchemaFromUrl(url: string): Promise<SchemaExtractio
     });
 
     if (!response.ok) {
-      console.warn(`Schema extraction: URL returned ${response.status} for ${url}`);
+      console.warn(
+        `Schema extraction: URL returned ${response.status} for ${url}`
+      );
       return getDemoExtractionResult(url);
     }
 
@@ -454,7 +506,9 @@ export async function extractSchemaFromUrl(url: string): Promise<SchemaExtractio
         const parsed = JSON.parse(jsonContent) as Record<string, unknown>;
 
         // Handle both single objects and arrays of objects
-        const items: Record<string, unknown>[] = Array.isArray(parsed) ? parsed : [parsed];
+        const items: Record<string, unknown>[] = Array.isArray(parsed)
+          ? parsed
+          : [parsed];
 
         for (const item of items) {
           if (item['@context'] && item['@type']) {
@@ -501,7 +555,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'organization-standard',
       type: 'Organization',
       name: 'Organization',
-      description: 'Company or organization with contact info and social profiles',
+      description:
+        'Company or organization with contact info and social profiles',
       category: 'business',
       popularity: 5,
       fields: {
@@ -510,7 +565,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
         name: 'Acme Corporation',
         url: 'https://www.acme.com',
         logo: 'https://www.acme.com/logo.png',
-        description: 'Leading provider of innovative business solutions since 2010.',
+        description:
+          'Leading provider of innovative business solutions since 2010.',
         sameAs: [
           'https://twitter.com/acmecorp',
           'https://linkedin.com/company/acmecorp',
@@ -527,7 +583,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'local-business-standard',
       type: 'LocalBusiness',
       name: 'Local Business',
-      description: 'Physical business location with address, hours, and contact details',
+      description:
+        'Physical business location with address, hours, and contact details',
       category: 'business',
       popularity: 5,
       fields: {
@@ -572,7 +629,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'person-professional',
       type: 'Person',
       name: 'Person / Professional Profile',
-      description: 'Individual person with job title, employer, and social links',
+      description:
+        'Individual person with job title, employer, and social links',
       category: 'business',
       popularity: 3,
       fields: {
@@ -601,14 +659,16 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'article-standard',
       type: 'Article',
       name: 'Article',
-      description: 'News or informational article with author and publication details',
+      description:
+        'News or informational article with author and publication details',
       category: 'content',
       popularity: 5,
       fields: {
         '@context': 'https://schema.org',
         '@type': 'Article',
         headline: 'How to Improve Your Website Performance in 2024',
-        description: 'A comprehensive guide to optimizing your website for speed and user experience.',
+        description:
+          'A comprehensive guide to optimizing your website for speed and user experience.',
         image: 'https://www.example.com/article-hero.jpg',
         datePublished: '2024-03-15T08:00:00Z',
         dateModified: '2024-03-20T10:30:00Z',
@@ -638,7 +698,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
         headline: '10 Tips for Better Content Marketing',
-        description: 'Learn proven strategies to boost your content marketing results.',
+        description:
+          'Learn proven strategies to boost your content marketing results.',
         image: 'https://www.myblog.com/post-image.jpg',
         datePublished: '2024-06-01T09:00:00Z',
         dateModified: '2024-06-05T14:00:00Z',
@@ -661,7 +722,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'faq-standard',
       type: 'FAQ',
       name: 'FAQ Page',
-      description: 'Frequently asked questions with expandable answers in search results',
+      description:
+        'Frequently asked questions with expandable answers in search results',
       category: 'content',
       popularity: 5,
       fields: {
@@ -699,14 +761,16 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'howto-standard',
       type: 'HowTo',
       name: 'How-To Guide',
-      description: 'Step-by-step instructions that can appear as rich results in Google',
+      description:
+        'Step-by-step instructions marked up as HowTo structured data',
       category: 'content',
       popularity: 3,
       fields: {
         '@context': 'https://schema.org',
         '@type': 'HowTo',
         name: 'How to Set Up a Home Office',
-        description: 'A complete guide to creating a productive home office workspace.',
+        description:
+          'A complete guide to creating a productive home office workspace.',
         totalTime: 'PT2H',
         estimatedCost: {
           '@type': 'MonetaryAmount',
@@ -741,14 +805,16 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'product-standard',
       type: 'Product',
       name: 'Product',
-      description: 'Physical or digital product with price, availability, and reviews',
+      description:
+        'Physical or digital product with price, availability, and reviews',
       category: 'commerce',
       popularity: 5,
       fields: {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: 'Wireless Noise-Canceling Headphones',
-        description: 'Premium wireless headphones with active noise cancellation and 30-hour battery life.',
+        description:
+          'Premium wireless headphones with active noise cancellation and 30-hour battery life.',
         image: 'https://www.store.com/headphones.jpg',
         sku: 'WNC-PRO-2024',
         brand: {
@@ -773,7 +839,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'review-standard',
       type: 'Review',
       name: 'Review',
-      description: 'Product or service review with rating and author information',
+      description:
+        'Product or service review with rating and author information',
       category: 'commerce',
       popularity: 4,
       fields: {
@@ -793,7 +860,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
           ratingValue: 5,
           bestRating: 5,
         },
-        reviewBody: 'Excellent sound quality and the noise cancellation is top-notch. Battery lasts all day.',
+        reviewBody:
+          'Excellent sound quality and the noise cancellation is top-notch. Battery lasts all day.',
         datePublished: '2024-05-10',
       },
     },
@@ -803,14 +871,16 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'video-standard',
       type: 'VideoObject',
       name: 'Video',
-      description: 'Video content with thumbnail, duration, and upload date for video rich results',
+      description:
+        'Video content with thumbnail, duration, and upload date for video rich results',
       category: 'media',
       popularity: 4,
       fields: {
         '@context': 'https://schema.org',
         '@type': 'VideoObject',
         name: 'Getting Started with Schema Markup',
-        description: 'Learn how to implement JSON-LD structured data on your website for better SEO.',
+        description:
+          'Learn how to implement JSON-LD structured data on your website for better SEO.',
         thumbnailUrl: 'https://www.example.com/video-thumb.jpg',
         uploadDate: '2024-04-01T12:00:00Z',
         duration: 'PT12M30S',
@@ -830,7 +900,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'recipe-standard',
       type: 'Recipe',
       name: 'Recipe',
-      description: 'Cooking recipe with ingredients, steps, time, and nutritional info',
+      description:
+        'Cooking recipe with ingredients, steps, time, and nutritional info',
       category: 'media',
       popularity: 4,
       fields: {
@@ -886,14 +957,16 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'event-standard',
       type: 'Event',
       name: 'Event',
-      description: 'Conference, concert, or meetup with date, location, and ticket info',
+      description:
+        'Conference, concert, or meetup with date, location, and ticket info',
       category: 'media',
       popularity: 3,
       fields: {
         '@context': 'https://schema.org',
         '@type': 'Event',
         name: 'Annual Tech Conference 2024',
-        description: 'Join 5000+ developers for three days of talks, workshops, and networking.',
+        description:
+          'Join 5000+ developers for three days of talks, workshops, and networking.',
         startDate: '2024-09-15T09:00:00-07:00',
         endDate: '2024-09-17T18:00:00-07:00',
         location: {
@@ -929,7 +1002,8 @@ export function getSchemaTemplates(): SchemaTemplate[] {
       id: 'website-with-search',
       type: 'WebSite',
       name: 'Website with Sitelinks Search',
-      description: 'Website schema that enables the sitelinks search box in Google',
+      description:
+        'Website schema that enables the sitelinks search box in Google',
       category: 'navigation',
       popularity: 4,
       fields: {
@@ -988,10 +1062,12 @@ export function getSchemaTemplates(): SchemaTemplate[] {
 // ============================================================================
 
 /**
- * Generate a SERP-like rich results preview based on schema @type.
- * Returns structured data describing how Google would display the rich result.
+ * Generate an illustrative structured data preview based on schema @type.
+ * It is not a promise of how Google will display the page; FAQ rich results are retired.
  */
-export function generateRichPreview(schema: Record<string, unknown>): RichPreviewResult {
+export function generateRichPreview(
+  schema: Record<string, unknown>
+): RichPreviewResult {
   const schemaType = (schema['@type'] as string) || 'Unknown';
 
   switch (schemaType) {
@@ -1004,7 +1080,9 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
           description: (schema.description as string) || '',
           logo: (schema.logo as string) || '',
           url: (schema.url as string) || '',
-          socialLinks: Array.isArray(schema.sameAs) ? (schema.sameAs as string[]) : [],
+          socialLinks: Array.isArray(schema.sameAs)
+            ? (schema.sameAs as string[])
+            : [],
           hasContactInfo: !!schema.contactPoint,
         },
       };
@@ -1028,7 +1106,9 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
 
     case 'Product': {
       const offers = schema.offers as Record<string, unknown> | undefined;
-      const rating = schema.aggregateRating as Record<string, unknown> | undefined;
+      const rating = schema.aggregateRating as
+        | Record<string, unknown>
+        | undefined;
       return {
         type: schemaType,
         previewType: 'product-card',
@@ -1039,8 +1119,10 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
           availability: offers?.availability
             ? (offers.availability as string).replace('https://schema.org/', '')
             : 'Unknown',
-          rating: rating?.ratingValue !== undefined ? Number(rating.ratingValue) : 0,
-          reviewCount: rating?.reviewCount !== undefined ? Number(rating.reviewCount) : 0,
+          rating:
+            rating?.ratingValue !== undefined ? Number(rating.ratingValue) : 0,
+          reviewCount:
+            rating?.reviewCount !== undefined ? Number(rating.reviewCount) : 0,
           image: (schema.image as string) || '',
           hasRating: !!rating,
         },
@@ -1072,15 +1154,13 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
         previewType: 'faq',
         previewData: {
           questionCount: questions.length,
-          questions: questions
-            .slice(0, 5)
-            .map((q) => (q.name as string) || ''),
-          answers: questions
-            .slice(0, 5)
-            .map((q) => {
-              const answer = q.acceptedAnswer as Record<string, unknown> | undefined;
-              return (answer?.text as string) || '';
-            }),
+          questions: questions.slice(0, 5).map(q => (q.name as string) || ''),
+          answers: questions.slice(0, 5).map(q => {
+            const answer = q.acceptedAnswer as
+              | Record<string, unknown>
+              | undefined;
+            return (answer?.text as string) || '';
+          }),
           hasExpandableAnswers: true,
         },
       };
@@ -1103,7 +1183,8 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
                 ? location.address
                 : formatAddress(location.address as Record<string, unknown>)
               : '',
-          ticketPrice: eventOffers?.price !== undefined ? String(eventOffers.price) : '',
+          ticketPrice:
+            eventOffers?.price !== undefined ? String(eventOffers.price) : '',
           ticketCurrency: (eventOffers?.priceCurrency as string) || 'USD',
           image: (schema.image as string) || '',
           hasTickets: !!eventOffers,
@@ -1126,7 +1207,9 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
       };
 
     case 'Recipe': {
-      const recipeRating = schema.aggregateRating as Record<string, unknown> | undefined;
+      const recipeRating = schema.aggregateRating as
+        | Record<string, unknown>
+        | undefined;
       const nutrition = schema.nutrition as Record<string, unknown> | undefined;
       return {
         type: schemaType,
@@ -1134,10 +1217,17 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
         previewData: {
           name: (schema.name as string) || 'Recipe Name',
           image: (schema.image as string) || '',
-          rating: recipeRating?.ratingValue !== undefined ? Number(recipeRating.ratingValue) : 0,
-          reviewCount: recipeRating?.reviewCount !== undefined ? Number(recipeRating.reviewCount) : 0,
+          rating:
+            recipeRating?.ratingValue !== undefined
+              ? Number(recipeRating.ratingValue)
+              : 0,
+          reviewCount:
+            recipeRating?.reviewCount !== undefined
+              ? Number(recipeRating.reviewCount)
+              : 0,
           totalTime: (schema.totalTime as string) || '',
-          calories: nutrition?.calories !== undefined ? String(nutrition.calories) : '',
+          calories:
+            nutrition?.calories !== undefined ? String(nutrition.calories) : '',
           recipeYield: (schema.recipeYield as string) || '',
           hasNutrition: !!nutrition,
         },
@@ -1145,15 +1235,25 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
     }
 
     case 'Review': {
-      const reviewRating = schema.reviewRating as Record<string, unknown> | undefined;
+      const reviewRating = schema.reviewRating as
+        | Record<string, unknown>
+        | undefined;
       const reviewAuthor = schema.author as Record<string, unknown> | undefined;
-      const reviewed = schema.itemReviewed as Record<string, unknown> | undefined;
+      const reviewed = schema.itemReviewed as
+        | Record<string, unknown>
+        | undefined;
       return {
         type: schemaType,
         previewType: 'review',
         previewData: {
-          rating: reviewRating?.ratingValue !== undefined ? Number(reviewRating.ratingValue) : 0,
-          bestRating: reviewRating?.bestRating !== undefined ? Number(reviewRating.bestRating) : 5,
+          rating:
+            reviewRating?.ratingValue !== undefined
+              ? Number(reviewRating.ratingValue)
+              : 0,
+          bestRating:
+            reviewRating?.bestRating !== undefined
+              ? Number(reviewRating.bestRating)
+              : 5,
           author: (reviewAuthor?.name as string) || 'Anonymous',
           reviewBody: (schema.reviewBody as string) || '',
           itemReviewed: (reviewed?.name as string) || 'Unknown Item',
@@ -1167,7 +1267,10 @@ export function generateRichPreview(schema: Record<string, unknown>): RichPrevie
         type: schemaType,
         previewType: 'generic',
         previewData: {
-          title: (schema.name as string) || (schema.headline as string) || schemaType,
+          title:
+            (schema.name as string) ||
+            (schema.headline as string) ||
+            schemaType,
           description: (schema.description as string) || '',
           url: (schema.url as string) || '',
         },
