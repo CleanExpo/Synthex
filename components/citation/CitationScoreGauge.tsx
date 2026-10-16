@@ -13,11 +13,11 @@
  */
 
 interface CitationScoreGaugeProps {
-  geoScore: number;
-  qualityScore: number;
-  eeatScore: number;
-  authorityScore: number;
-  promptCoverage: number; // 0-100
+  geoScore: number | null;
+  qualityScore: number | null;
+  eeatScore: number | null;
+  authorityScore: number | null;
+  promptCoverage: number | null; // 0-100
   loading?: boolean;
 }
 
@@ -60,6 +60,15 @@ export function CitationScoreGauge({
   promptCoverage,
   loading = false,
 }: CitationScoreGaugeProps) {
+  if (
+    geoScore == null ||
+    qualityScore == null ||
+    eeatScore == null ||
+    authorityScore == null ||
+    promptCoverage == null
+  ) {
+    return <p>Incomplete — diagnostic inputs not collected</p>;
+  }
   const overall = Math.round(
     geoScore * 0.25 +
       qualityScore * 0.2 +
@@ -106,7 +115,7 @@ export function CitationScoreGauge({
           width="192"
           height="192"
           viewBox="0 0 192 192"
-          aria-label={`Citation Readiness Score: ${overall} out of 100`}
+          aria-label={`DIAGNOSTIC Citation Readiness Score: ${overall} out of 100`}
         >
           {/* Background track */}
           <circle
@@ -149,7 +158,7 @@ export function CitationScoreGauge({
 
       {/* Label */}
       <p className="text-xs text-gray-300 font-medium tracking-wide text-center">
-        Citation Readiness Score
+        DIAGNOSTIC Citation Readiness Score
       </p>
 
       {/* Sub-score pills */}

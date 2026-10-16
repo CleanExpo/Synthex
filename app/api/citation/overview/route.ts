@@ -9,27 +9,21 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { getOverviewStats } from '@/lib/citation/aggregator';
+import { getOverviewStats, reading } from '@/lib/citation/aggregator';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+      return NextResponse.json(reading(null, 'UNAUTHORISED'), { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const orgId = searchParams.get('orgId') ?? userId;
+    const data = await getOverviewStats(userId);
 
-    const data = await getOverviewStats(userId, orgId);
-
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json(reading(data));
   } catch (error) {
     logger.error('[citation/overview] Unexpected error', { error });
-    return NextResponse.json(
-      { error: 'Failed to load citation overview' },
-      { status: 500 }
-    );
+    return NextResponse.json(reading(null, 'UNAVAILABLE'), { status: 500 });
   }
 }

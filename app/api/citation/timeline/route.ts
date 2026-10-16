@@ -10,31 +10,27 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { getTimeline } from '@/lib/citation/aggregator';
+import { getTimeline, reading } from '@/lib/citation/aggregator';
 import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+      return NextResponse.json(reading(null, 'UNAUTHORISED'), { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const orgId = searchParams.get('orgId') ?? userId;
     const days = Math.min(
       90,
       Math.max(7, parseInt(searchParams.get('days') ?? '30', 10))
     );
 
-    const data = await getTimeline(userId, orgId, days);
+    const data = await getTimeline(userId, days);
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json(reading(data));
   } catch (error) {
     logger.error('[citation/timeline] Unexpected error', { error });
-    return NextResponse.json(
-      { error: 'Failed to load citation timeline' },
-      { status: 500 }
-    );
+    return NextResponse.json(reading(null, 'UNAVAILABLE'), { status: 500 });
   }
 }
