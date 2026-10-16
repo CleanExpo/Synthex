@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
         {
           startDate: dateStr,
           endDate: dateStr,
-          dimensions: ['query'],
-          rowLimit: 1,
+          dimensions: [],
+          type: 'web',
         },
         { connectionId: property.connectionId }
       );
