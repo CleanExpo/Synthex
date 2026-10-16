@@ -12,6 +12,7 @@
  * - DATABASE_URL: PostgreSQL connection (CRITICAL)
  */
 
+import { observed, notObserved } from '@/lib/ree/evidence-state';
 import { prisma } from '@/lib/prisma';
 import { analyzeGEO } from '@/lib/geo/geo-analyzer';
 import type { GEOAnalysisResult, GEOPlatform } from '@/lib/geo/types';
@@ -79,7 +80,14 @@ function getReadinessTier(score: number): ReadinessTier {
 }
 
 function getScoreSummary(dimension: string, score: number): string {
-  const label = score >= 80 ? 'strong' : score >= 60 ? 'good' : score >= 40 ? 'needs improvement' : 'weak';
+  const label =
+    score >= 80
+      ? 'strong'
+      : score >= 60
+        ? 'good'
+        : score >= 40
+          ? 'needs improvement'
+          : 'weak';
   return `Your ${dimension} score is ${label} at ${score}/100`;
 }
 
@@ -100,7 +108,9 @@ function getDemoHistory(): GeoAnalysisHistoryItem[] {
       multiModalScore: 60,
       authorityScore: 85,
       technicalScore: 72,
-      createdAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(
+        now.getTime() - 1 * 24 * 60 * 60 * 1000
+      ).toISOString(),
     },
     {
       id: 2,
@@ -112,7 +122,9 @@ function getDemoHistory(): GeoAnalysisHistoryItem[] {
       multiModalScore: 75,
       authorityScore: 90,
       technicalScore: 80,
-      createdAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(
+        now.getTime() - 3 * 24 * 60 * 60 * 1000
+      ).toISOString(),
     },
     {
       id: 3,
@@ -124,7 +136,9 @@ function getDemoHistory(): GeoAnalysisHistoryItem[] {
       multiModalScore: 40,
       authorityScore: 72,
       technicalScore: 60,
-      createdAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(
+        now.getTime() - 5 * 24 * 60 * 60 * 1000
+      ).toISOString(),
     },
     {
       id: 4,
@@ -136,7 +150,9 @@ function getDemoHistory(): GeoAnalysisHistoryItem[] {
       multiModalScore: 55,
       authorityScore: 80,
       technicalScore: 68,
-      createdAt: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(
+        now.getTime() - 7 * 24 * 60 * 60 * 1000
+      ).toISOString(),
     },
   ];
 }
@@ -224,12 +240,16 @@ export async function analyzeReadiness(
 /**
  * Get GEO analysis history for a user.
  * Returns recent analyses ordered by createdAt DESC.
- * Falls back to demo data if no records exist.
+ * Personal DIAGNOSTIC; not organisation-scoped search visibility.
  */
-export async function getAnalysisHistory(
+async function readAnalysisHistory(
   userId: string,
   limit: number = 20
-): Promise<{ analyses: GeoAnalysisHistoryItem[]; total: number; isDemo: boolean }> {
+): Promise<{
+  analyses: GeoAnalysisHistoryItem[];
+  total: number;
+  isDemo: boolean;
+}> {
   const analyses = await prisma.gEOAnalysis.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
@@ -248,16 +268,7 @@ export async function getAnalysisHistory(
     take: Math.min(limit, 100),
   });
 
-  if (analyses.length === 0) {
-    const demoData = getDemoHistory();
-    return {
-      analyses: demoData,
-      total: demoData.length,
-      isDemo: true,
-    };
-  }
-
-  const formattedAnalyses: GeoAnalysisHistoryItem[] = analyses.map((a) => ({
+  const formattedAnalyses: GeoAnalysisHistoryItem[] = analyses.map(a => ({
     id: a.id,
     contentUrl: a.contentUrl,
     platform: a.platform,
@@ -284,12 +295,16 @@ export async function getAnalysisHistory(
 /**
  * Get GEO score trends aggregated by date.
  * Returns daily average scores for all dimensions.
- * Falls back to demo data if no records exist.
+ * Personal DIAGNOSTIC; not organisation-scoped search visibility.
  */
-export async function getScoreTrends(
+async function readScoreTrends(
   userId: string,
   days: number = 30
-): Promise<{ trends: GeoScoreTrend[]; period: { start: string; end: string; days: number }; isDemo: boolean }> {
+): Promise<{
+  trends: GeoScoreTrend[];
+  period: { start: string; end: string; days: number };
+  isDemo: boolean;
+}> {
   const actualDays = Math.min(Math.max(days, 1), 90);
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - actualDays);
@@ -312,29 +327,19 @@ export async function getScoreTrends(
     },
   });
 
-  if (analyses.length === 0) {
-    const demoTrends = getDemoTrends(actualDays);
-    return {
-      trends: demoTrends,
-      period: {
-        start: startDate.toISOString().split('T')[0],
-        end: endDate.toISOString().split('T')[0],
-        days: actualDays,
-      },
-      isDemo: true,
-    };
-  }
-
   // Group by date and calculate averages
-  const byDate = new Map<string, {
-    count: number;
-    overall: number;
-    citability: number;
-    structure: number;
-    multiModal: number;
-    authority: number;
-    technical: number;
-  }>();
+  const byDate = new Map<
+    string,
+    {
+      count: number;
+      overall: number;
+      citability: number;
+      structure: number;
+      multiModal: number;
+      authority: number;
+      technical: number;
+    }
+  >();
 
   for (const a of analyses) {
     const dateKey = a.createdAt.toISOString().split('T')[0];
@@ -384,4 +389,23 @@ export async function getScoreTrends(
     },
     isDemo: false,
   };
+}
+
+const SOURCE = 'GEOAnalysis:personal';
+
+// GEOAnalysis belongs to the operator, regardless of their active organisation.
+export async function getAnalysisHistory(userId: string, limit = 20) {
+  try {
+    return observed(await readAnalysisHistory(userId, limit), SOURCE);
+  } catch {
+    return notObserved('UNAVAILABLE', SOURCE, 'History read failed');
+  }
+}
+
+export async function getScoreTrends(userId: string, days = 30) {
+  try {
+    return observed(await readScoreTrends(userId, days), SOURCE);
+  } catch {
+    return notObserved('UNAVAILABLE', SOURCE, 'Trends read failed');
+  }
 }

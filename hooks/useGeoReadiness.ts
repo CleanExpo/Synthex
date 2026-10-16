@@ -11,6 +11,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import useSWR from 'swr';
+import { notObserved, type EvidenceReading } from '@/lib/ree/evidence-state';
 import type {
   GEOScore,
   CitablePassage,
@@ -98,28 +99,35 @@ async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, { credentials: 'include' });
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(
-      (errorData as { error?: string }).error ||
-        `HTTP ${res.status}: ${res.statusText}`
+    throw Object.assign(
+      new Error(
+        (errorData as { error?: string }).error ||
+          `HTTP ${res.status}: ${res.statusText}`
+      ),
+      { reading: errorData }
     );
   }
   const data = await res.json();
   return data as T;
 }
 
-async function fetchHistory(url: string): Promise<GeoAnalysisHistoryItem[]> {
-  const data = await fetchJson<{
-    success: boolean;
-    analyses?: GeoAnalysisHistoryItem[];
-  }>(url);
-  return data.analyses || [];
-}
+type HistoryReading = EvidenceReading<{
+  analyses: GeoAnalysisHistoryItem[];
+  total: number;
+}>;
+type TrendsReading = EvidenceReading<{ trends: GeoScoreTrend[] }>;
 
-async function fetchTrends(url: string): Promise<GeoScoreTrend[]> {
-  const data = await fetchJson<{ success: boolean; trends?: GeoScoreTrend[] }>(
-    url
-  );
-  return data.trends || [];
+function currentReading<T>(
+  data: EvidenceReading<T> | undefined,
+  error: { reading?: EvidenceReading<T> } | undefined
+): EvidenceReading<T> {
+  if (error)
+    return error.reading?.state && error.reading.state !== 'OBSERVED'
+      ? error.reading
+      : notObserved('UNAVAILABLE', 'GEOAnalysis:personal', 'Read failed');
+  return data?.state
+    ? data
+    : notObserved('UNAVAILABLE', 'GEOAnalysis:personal', 'No reading');
 }
 
 // ============================================================================
@@ -136,21 +144,21 @@ export function useGeoReadiness() {
 
   // History via SWR
   const {
-    data: history = [],
+    data: historyData,
+    error: historyError,
     isLoading: historyLoading,
     mutate: mutateHistory,
-  } = useSWR<GeoAnalysisHistoryItem[]>(
-    '/api/seo/geo-readiness/history',
-    fetchHistory,
-    { revalidateOnFocus: false }
-  );
+  } = useSWR<HistoryReading>('/api/seo/geo-readiness/history', fetchJson, {
+    revalidateOnFocus: false,
+  });
 
   // Trends via SWR
   const {
-    data: trends = [],
+    data: trendsData,
+    error: trendsError,
     isLoading: trendsLoading,
     mutate: mutateTrends,
-  } = useSWR<GeoScoreTrend[]>('/api/seo/geo-readiness/trends', fetchTrends, {
+  } = useSWR<TrendsReading>('/api/seo/geo-readiness/trends', fetchJson, {
     revalidateOnFocus: false,
   });
 
@@ -268,12 +276,14 @@ export function useGeoReadiness() {
     clearResult,
 
     // History
-    history,
+    history: currentReading(historyData, historyError),
+    historyError,
     historyLoading,
     loadHistory,
 
     // Trends
-    trends,
+    trends: currentReading(trendsData, trendsError),
+    trendsError,
     trendsLoading,
     loadTrends,
 

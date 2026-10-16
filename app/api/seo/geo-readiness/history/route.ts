@@ -15,9 +15,13 @@
  */
 
 import { NextRequest } from 'next/server';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { getAnalysisHistory } from '@/lib/seo/geo-readiness-service';
+import { notObserved } from '@/lib/ree/evidence-state';
 import { logger } from '@/lib/logger';
 
 /**
@@ -48,7 +52,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get subscription
-    const subscription = await subscriptionService.getOrCreateSubscription(userId);
+    const subscription =
+      await subscriptionService.getOrCreateSubscription(userId);
 
     // Check if user has SEO access
     if (subscription.plan === 'free') {
@@ -66,26 +71,20 @@ export async function GET(request: NextRequest) {
     // Parse optional limit param
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
-    const limit = limitParam ? Math.min(Math.max(parseInt(limitParam, 10) || 20, 1), 100) : 20;
+    const limit = limitParam
+      ? Math.min(Math.max(parseInt(limitParam, 10) || 20, 1), 100)
+      : 20;
 
     // Get history
-    const { analyses, total, isDemo } = await getAnalysisHistory(userId, limit);
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      analyses,
-      total,
-      isDemo,
-      message: analyses.length === 0
-        ? 'No GEO analyses have been run yet. Run your first analysis to start tracking readiness.'
-        : isDemo
-        ? 'Showing demo data. Run your first analysis to see real results.'
-        : undefined,
-    });
+    const reading = await getAnalysisHistory(userId, limit);
+    return APISecurityChecker.createSecureResponse(
+      reading,
+      reading.state === 'OBSERVED' ? 200 : 503
+    );
   } catch (error) {
     logger.error('GEO Readiness History API error:', error);
     return APISecurityChecker.createSecureResponse(
-      { error: 'Failed to fetch GEO analysis history' },
+      notObserved('UNAVAILABLE', 'GEOAnalysis:personal', 'History read failed'),
       500
     );
   }
