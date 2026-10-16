@@ -111,12 +111,14 @@ describe('skills knowledge', () => {
     }
   );
 
-  it.each(['ree-diagnostic', 'ree-content-teardown', 'agent-ready-content'])(
-    '%s exists as an IDE-only operator skill',
-    slug => {
-      expect(skill(slug)).toMatch(new RegExp(`^---\\nname: ${slug}\\n`));
-      expect(PRODUCT_INVOCABLE_SKILLS as readonly string[]).not.toContain(slug);
-      expect(read('next.config.mjs')).not.toContain(`.claude/skills/${slug}/`);
-    }
-  );
+  it.each([
+    'ree-diagnostic',
+    'ree-content-teardown',
+    'agent-ready-content',
+    'greg-style-writer',
+  ])('%s exists as an IDE-only operator skill', slug => {
+    expect(skill(slug)).toMatch(new RegExp(`^---\\nname: ${slug}\\n`));
+    expect(PRODUCT_INVOCABLE_SKILLS as readonly string[]).not.toContain(slug);
+    expect(read('next.config.mjs')).not.toContain(`.claude/skills/${slug}/`);
+  });
 });
