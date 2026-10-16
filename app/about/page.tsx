@@ -23,7 +23,7 @@ import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
 
 export const metadata: Metadata = {
-  title: 'About Synthex | Synthex',
+  title: { absolute: 'About Synthex' },
   description:
     'Synthex is a controlled pilot marketing command center for turning business context, research and ideas into approval-gated campaign production.',
 };
@@ -104,7 +104,7 @@ export default function AboutPage() {
                 to see.
               </p>
               <p className="mt-4 text-sm leading-7 text-sx-text-muted">
-                Synthex is an internal-grade command center being proven through
+                Synthex is an internal-grade command center being tested through
                 controlled pilots — evidence-backed planning, approval-gated
                 execution and learning loops that compound over time.
               </p>

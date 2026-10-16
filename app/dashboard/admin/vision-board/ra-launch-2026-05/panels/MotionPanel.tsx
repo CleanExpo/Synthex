@@ -10,7 +10,13 @@
 
 import { useEffect, useRef } from 'react';
 import { ra } from '@unite-group/brand-config';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const FPS = 30;
@@ -26,7 +32,7 @@ export function MotionPanel() {
     if (!el) return;
     const interval = setInterval(() => {
       el.classList.remove('vb-sweep-run');
-      void el.offsetWidth;            // force reflow
+      void el.offsetWidth; // force reflow
       el.classList.add('vb-sweep-run');
     }, 3500);
     el.classList.add('vb-sweep-run');
@@ -40,7 +46,8 @@ export function MotionPanel() {
           <div>
             <CardTitle>Motion — sweep signature</CardTitle>
             <CardDescription>
-              {ra.motion.durations.base} frames @ 30fps · {ra.motion.transitionFrames}f transition · expo curves
+              {ra.motion.durations.base} frames · {ra.motion.transitionFrames}f
+              transition · expo curves
             </CardDescription>
           </div>
           <Badge variant="outline" className="font-mono text-[10px] capitalize">
@@ -92,16 +99,32 @@ export function MotionPanel() {
         {/* Easing + duration table */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="rounded-lg border border-border p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Durations</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Durations
+            </p>
             <ul className="mt-2 flex flex-col gap-1 font-mono text-xs">
-              <li>fast · {ra.motion.durations.fast}f · {Math.round((ra.motion.durations.fast / FPS) * 1000)}ms</li>
-              <li>base · {ra.motion.durations.base}f · {Math.round(baseDurationMs)}ms</li>
-              <li>slow · {ra.motion.durations.slow}f · {Math.round((ra.motion.durations.slow / FPS) * 1000)}ms</li>
-              <li>transition · {ra.motion.transitionFrames}f · {Math.round(transitionMs)}ms</li>
+              <li>
+                fast · {ra.motion.durations.fast}f ·{' '}
+                {Math.round((ra.motion.durations.fast / FPS) * 1000)}ms
+              </li>
+              <li>
+                base · {ra.motion.durations.base}f ·{' '}
+                {Math.round(baseDurationMs)}ms
+              </li>
+              <li>
+                slow · {ra.motion.durations.slow}f ·{' '}
+                {Math.round((ra.motion.durations.slow / FPS) * 1000)}ms
+              </li>
+              <li>
+                transition · {ra.motion.transitionFrames}f ·{' '}
+                {Math.round(transitionMs)}ms
+              </li>
             </ul>
           </div>
           <div className="rounded-lg border border-border p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Easing</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Easing
+            </p>
             <ul className="mt-2 flex flex-col gap-1 font-mono text-xs">
               <li>in · expo-out</li>
               <li>out · expo-in</li>
@@ -109,7 +132,9 @@ export function MotionPanel() {
             </ul>
           </div>
           <div className="rounded-lg border border-border p-4">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Easing curves (raw)</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Easing curves (raw)
+            </p>
             <ul className="mt-2 flex flex-col gap-1 font-mono text-[10px] text-muted-foreground">
               <li>{ra.motion.easing.in}</li>
               <li>{ra.motion.easing.out}</li>

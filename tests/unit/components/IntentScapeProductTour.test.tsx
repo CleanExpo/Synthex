@@ -18,12 +18,12 @@ describe('IntentScapeProductTour', () => {
       screen.getByText(/one rough idea, concern or situation/i)
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/three researched directions and a brief you control/i)
+      screen.getByText(/researched directions and a brief you control/i)
     ).toBeInTheDocument();
     expect(document.querySelector('video')).not.toBeInTheDocument();
     expect(screen.getByText(/starting point only/i)).toBeInTheDocument();
     expect(
-      screen.getByRole('heading', { name: /seven ways out/i })
+      screen.getByRole('heading', { name: /ways out of the obvious answer/i })
     ).toBeInTheDocument();
 
     fireEvent.click(

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { MediaLibraryBrowser } from '@/components/media/MediaLibraryBrowser';
 
 export const metadata: Metadata = {
-  title: 'Media Library | Synthex',
+  title: { absolute: 'Media Library | Synthex' },
   description:
     'Browse every image, video and audio file you have uploaded or generated.',
 };

@@ -36,7 +36,10 @@ const PI_CEO_RESEARCH_ROOT = path.join(
   '.research'
 );
 
-async function safeRead(roots: string[], relPath: string): Promise<{ content: string; rootUsed: string } | null> {
+async function safeRead(
+  roots: string[],
+  relPath: string
+): Promise<{ content: string; rootUsed: string } | null> {
   for (const root of roots) {
     try {
       const abs = path.join(root, relPath);
@@ -77,14 +80,27 @@ export async function readPositioning(): Promise<ReadResult | null> {
   );
   if (!result) {
     // Try the legacy Pi-CEO file naming
-    const legacy = await safeRead([PI_CEO_RESEARCH_ROOT], 'positioning/ra-2026-05.md');
+    const legacy = await safeRead(
+      [PI_CEO_RESEARCH_ROOT],
+      'positioning/ra-2026-05.md'
+    );
     if (!legacy) return null;
-    const updatedAt = await safeStat(path.join(legacy.rootUsed, 'positioning/ra-2026-05.md'));
-    return { markdown: legacy.content, updatedAt: updatedAt ?? new Date(0), source: 'pi-ceo' };
+    const updatedAt = await safeStat(
+      path.join(legacy.rootUsed, 'positioning/ra-2026-05.md')
+    );
+    return {
+      markdown: legacy.content,
+      updatedAt: updatedAt ?? new Date(0),
+      source: 'pi-ceo',
+    };
   }
   const filePath = path.join(result.rootUsed, 'positioning.md');
   const updatedAt = await safeStat(filePath);
-  return { markdown: result.content, updatedAt: updatedAt ?? new Date(0), source: classifySource(result.rootUsed) };
+  return {
+    markdown: result.content,
+    updatedAt: updatedAt ?? new Date(0),
+    source: classifySource(result.rootUsed),
+  };
 }
 
 export async function readICP(): Promise<ReadResult | null> {
@@ -95,12 +111,22 @@ export async function readICP(): Promise<ReadResult | null> {
   if (!result) {
     const legacy = await safeRead([PI_CEO_RESEARCH_ROOT], 'icp/ra-2026-05.md');
     if (!legacy) return null;
-    const updatedAt = await safeStat(path.join(legacy.rootUsed, 'icp/ra-2026-05.md'));
-    return { markdown: legacy.content, updatedAt: updatedAt ?? new Date(0), source: 'pi-ceo' };
+    const updatedAt = await safeStat(
+      path.join(legacy.rootUsed, 'icp/ra-2026-05.md')
+    );
+    return {
+      markdown: legacy.content,
+      updatedAt: updatedAt ?? new Date(0),
+      source: 'pi-ceo',
+    };
   }
   const filePath = path.join(result.rootUsed, 'icp.md');
   const updatedAt = await safeStat(filePath);
-  return { markdown: result.content, updatedAt: updatedAt ?? new Date(0), source: classifySource(result.rootUsed) };
+  return {
+    markdown: result.content,
+    updatedAt: updatedAt ?? new Date(0),
+    source: classifySource(result.rootUsed),
+  };
 }
 
 export async function readChannelPlan(): Promise<unknown | null> {
@@ -141,7 +167,8 @@ export async function getWaveStates(): Promise<WaveState[]> {
     {
       wave: 1,
       status: positioning && icp ? 'ready' : 'pending',
-      artefactPath: 'research/positioning.md + research/icp.md (in Brain-2 vault)',
+      artefactPath:
+        'research/positioning.md + research/icp.md (in Brain-2 vault)',
       lastUpdated: positioning?.updatedAt.toISOString(),
       note:
         positioning && icp
@@ -157,7 +184,7 @@ export async function getWaveStates(): Promise<WaveState[]> {
     {
       wave: 3,
       status: 'pending',
-      note: 'Insurer landing copy + 5 emails + 12 LinkedIn pieces.',
+      note: 'Insurer landing copy + emails + LinkedIn pieces.',
     },
     {
       wave: 4,
@@ -174,8 +201,14 @@ export interface BridgeStatus {
 
 export async function getBridgeStatus(): Promise<BridgeStatus> {
   const [vault, piCeo] = await Promise.all([
-    fs.stat(VAULT_PROJECT_ROOT).then(() => true).catch(() => false),
-    fs.stat(PI_CEO_RESEARCH_ROOT).then(() => true).catch(() => false),
+    fs
+      .stat(VAULT_PROJECT_ROOT)
+      .then(() => true)
+      .catch(() => false),
+    fs
+      .stat(PI_CEO_RESEARCH_ROOT)
+      .then(() => true)
+      .catch(() => false),
   ]);
   return { vault, piCeo };
 }

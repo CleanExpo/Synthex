@@ -64,7 +64,7 @@ export async function generateMetadata({
   const title = `${client.businessName} | Synthex Authority Hub`;
   const description =
     client.description ??
-    `Verified authority profile for ${client.businessName}. Powered by Synthex.`;
+    `Authority profile for ${client.businessName}. Powered by Synthex.`;
 
   return {
     title,
@@ -359,7 +359,7 @@ export default async function AuthorityHubPage({
                       className="w-1.5 h-1.5 rounded-full bg-emerald-400"
                       aria-hidden="true"
                     />
-                    Verified by Synthex
+                    Published on Synthex
                   </span>
                   {/* SYN-508: shows only when featured_programme_status === 'published' */}
                   <FeaturedBadge status={client.featuredProgrammeStatus} />

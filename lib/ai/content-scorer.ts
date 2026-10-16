@@ -75,18 +75,35 @@ const PLATFORM_LIMITS: Record<string, number> = {
 /** Scoring dimension weights — must sum to 1.0 */
 const DIMENSION_WEIGHTS = {
   engagement: 0.25,
-  readability: 0.20,
+  readability: 0.2,
   platformFit: 0.15,
   clarity: 0.15,
-  emotional: 0.10,
+  emotional: 0.1,
   writingQuality: 0.15,
 } as const;
 
 /** Words that suggest vagueness or lack of specificity */
 const VAGUE_WORDS = [
-  'things', 'stuff', 'nice', 'good', 'bad', 'great', 'very', 'really',
-  'basically', 'literally', 'actually', 'kind of', 'sort of', 'a lot',
-  'many', 'some', 'various', 'several', 'etc', 'and so on',
+  'things',
+  'stuff',
+  'nice',
+  'good',
+  'bad',
+  'great',
+  'very',
+  'really',
+  'basically',
+  'literally',
+  'actually',
+  'kind of',
+  'sort of',
+  'a lot',
+  'many',
+  'some',
+  'various',
+  'several',
+  'etc',
+  'and so on',
 ];
 
 /** Common jargon patterns */
@@ -102,10 +119,31 @@ const PASSIVE_VOICE_PATTERNS = [
 
 /** Power words that drive emotional response */
 const POWER_WORDS = [
-  'secret', 'proven', 'exclusive', 'guaranteed', 'instantly', 'free',
-  'new', 'now', 'announcing', 'discover', 'results', 'easy', 'save',
-  'transform', 'breakthrough', 'ultimate', 'powerful', 'massive', 'critical',
-  'urgent', 'limited', 'rare', 'revolutionary', 'shocking', 'incredible',
+  'secret',
+  'proven',
+  'exclusive',
+  'guaranteed',
+  'instantly',
+  'free',
+  'new',
+  'now',
+  'announcing',
+  'discover',
+  'results',
+  'easy',
+  'save',
+  'transform',
+  'breakthrough',
+  'ultimate',
+  'powerful',
+  'massive',
+  'critical',
+  'urgent',
+  'limited',
+  'rare',
+  'revolutionary',
+  'shocking',
+  'incredible',
 ];
 
 /** Urgency cues */
@@ -148,28 +186,31 @@ function hasHashtags(content: string): boolean {
 
 /** Returns true if the content contains a recognizable CTA. */
 function hasCTA(content: string): boolean {
-  return CTA_PATTERNS.some((pattern) => pattern.test(content));
+  return CTA_PATTERNS.some(pattern => pattern.test(content));
 }
 
 /** Returns true if the content starts with a recognised hook pattern. */
 function startsWithHook(content: string): boolean {
-  return HOOK_PATTERNS.some((pattern) => pattern.test(content.trim()));
+  return HOOK_PATTERNS.some(pattern => pattern.test(content.trim()));
 }
 
 /** Counts pattern matches in text, handling global flags correctly. */
 function countMatches(text: string, pattern: RegExp): number {
-  const re = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+  const re = new RegExp(
+    pattern.source,
+    pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g'
+  );
   return (text.match(re) ?? []).length;
 }
 
 /** Splits text into sentences using common delimiters. */
 function splitSentences(text: string): string[] {
-  return text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
+  return text.split(/[.!?]+/).filter(s => s.trim().length > 0);
 }
 
 /** Splits text into words. */
 function splitWords(text: string): string[] {
-  return text.split(/\s+/).filter((w) => w.trim().length > 0);
+  return text.split(/\s+/).filter(w => w.trim().length > 0);
 }
 
 /** Clamps a value to [0, 100]. */
@@ -201,7 +242,9 @@ function scoreReadability(content: string): DimensionScore {
   if (avgSentenceLength > 25) {
     score -= 15;
     issues.push('Sentences are too long on average');
-    suggestions.push('Break long sentences into shorter ones (aim for under 20 words per sentence)');
+    suggestions.push(
+      'Break long sentences into shorter ones (aim for under 20 words per sentence)'
+    );
   } else if (avgSentenceLength > 15) {
     score -= 5;
     suggestions.push('Consider shortening some sentences for easier scanning');
@@ -210,13 +253,15 @@ function scoreReadability(content: string): DimensionScore {
   }
 
   // Average word length (chars per word, excluding punctuation)
-  const cleanWords = words.map((w) => w.replace(/[^a-zA-Z]/g, ''));
+  const cleanWords = words.map(w => w.replace(/[^a-zA-Z]/g, ''));
   const totalWordChars = cleanWords.reduce((sum, w) => sum + w.length, 0);
   const avgWordLength = wordCount > 0 ? totalWordChars / wordCount : 0;
   if (avgWordLength > 6) {
     score -= 10;
     issues.push('Word complexity is high');
-    suggestions.push('Replace complex words with simpler alternatives for better readability');
+    suggestions.push(
+      'Replace complex words with simpler alternatives for better readability'
+    );
   } else if (avgWordLength <= 4.5) {
     score += 5;
   }
@@ -227,7 +272,9 @@ function scoreReadability(content: string): DimensionScore {
     score += Math.min(paragraphCount * 5, 15);
   } else if (wordCount > 60) {
     issues.push('No paragraph breaks found');
-    suggestions.push('Add blank lines between paragraphs to improve readability');
+    suggestions.push(
+      'Add blank lines between paragraphs to improve readability'
+    );
   }
 
   // List usage (lines starting with - or * or numbers)
@@ -261,7 +308,9 @@ function scoreEngagement(content: string): DimensionScore {
     score += 20;
   } else {
     issues.push('Content does not start with an engaging hook');
-    suggestions.push('Open with a hook: a bold claim, surprising statistic, or compelling question');
+    suggestions.push(
+      'Open with a hook: a bold claim, surprising statistic, or compelling question'
+    );
   }
 
   // Question usage
@@ -269,14 +318,18 @@ function scoreEngagement(content: string): DimensionScore {
   if (questionCount >= 1) {
     score += 15;
   } else {
-    suggestions.push('Add a question to invite audience interaction and boost comments');
+    suggestions.push(
+      'Add a question to invite audience interaction and boost comments'
+    );
   }
 
   // Emoji usage
   if (hasEmojis(content)) {
     score += 10;
   } else {
-    suggestions.push('Add 1-2 relevant emojis to increase visual appeal and reach');
+    suggestions.push(
+      'Consider 1-2 relevant emojis if they suit your brand voice'
+    );
   }
 
   // CTA presence
@@ -284,11 +337,14 @@ function scoreEngagement(content: string): DimensionScore {
     score += 15;
   } else {
     issues.push('No clear call-to-action detected');
-    suggestions.push('Include a CTA (e.g., "What do you think?", "Share this with someone who needs it")');
+    suggestions.push(
+      'Include a CTA (e.g., "What do you think?", "Share this with someone who needs it")'
+    );
   }
 
   // Conversation starter words
-  const conversationWords = /\b(agree|disagree|thoughts|opinion|experience|ever|you|your|we|our)\b/gi;
+  const conversationWords =
+    /\b(agree|disagree|thoughts|opinion|experience|ever|you|your|we|our)\b/gi;
   const conversationCount = countMatches(content, conversationWords);
   if (conversationCount >= 3) {
     score += 10;
@@ -326,17 +382,25 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
 
   if (length > limit) {
     score -= 30;
-    issues.push(`Content exceeds ${platform} character limit (${length}/${limit})`);
-    suggestions.push(`Trim content to under ${limit} characters for ${platform}`);
+    issues.push(
+      `Content exceeds ${platform} character limit (${length}/${limit})`
+    );
+    suggestions.push(
+      `Trim content to under ${limit} characters for ${platform}`
+    );
   } else if (lengthRatio < 0.1) {
     score -= 10;
     issues.push('Content is very short for this platform');
-    suggestions.push(`Expand content — ${platform} posts perform better with more substance`);
+    suggestions.push(
+      `Expand content — ${platform} posts perform better with more substance`
+    );
   } else if (lengthRatio >= 0.3 && lengthRatio <= 0.8) {
     score += 20; // Sweet spot
   } else if (lengthRatio > 0.9 && lengthRatio <= 1.0) {
     score += 5;
-    suggestions.push('Content is near the character limit — verify it stays within bounds after edits');
+    suggestions.push(
+      'Content is near the character limit — verify it stays within bounds after edits'
+    );
   }
 
   // Platform-specific formatting checks
@@ -347,15 +411,19 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
       if (hasLineBreaks) {
         score += 15;
       } else if (length > 300) {
-        issues.push('LinkedIn posts without paragraph breaks have lower reach');
-        suggestions.push('Add blank lines between paragraphs for LinkedIn\'s algorithm');
+        issues.push('Long LinkedIn post with no paragraph breaks');
+        suggestions.push(
+          'Add blank lines between paragraphs to make it easier to read'
+        );
       }
       // LinkedIn rewards low hashtag counts (2-5 optimal)
       const hashtagCount = (content.match(/#\w+/g) ?? []).length;
       if (hashtagCount > 10) {
         score -= 10;
         issues.push('Too many hashtags for LinkedIn (optimal: 2-5)');
-        suggestions.push('Reduce hashtags to 2-5 highly relevant ones for LinkedIn');
+        suggestions.push(
+          'Reduce hashtags to 2-5 highly relevant ones for LinkedIn'
+        );
       } else if (hashtagCount >= 2 && hashtagCount <= 5) {
         score += 5;
       }
@@ -371,7 +439,9 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
       }
       // Twitter-specific: emojis and short punchy sentences
       if (!hasEmojis(content) && platform === 'twitter') {
-        suggestions.push('Emojis boost Twitter engagement and expand visual presence');
+        suggestions.push(
+          'Emojis boost Twitter engagement and expand visual presence'
+        );
       }
       break;
     }
@@ -383,10 +453,14 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
         score += 10;
       } else if (igHashtags === 0) {
         issues.push('Instagram posts without hashtags have lower discovery');
-        suggestions.push('Add 5-15 relevant hashtags for Instagram discoverability');
+        suggestions.push(
+          'Add 5-15 relevant hashtags for Instagram discoverability'
+        );
       } else if (igHashtags > 20) {
         score -= 5;
-        issues.push('Too many hashtags on Instagram can appear spammy (optimal: 5-15)');
+        issues.push(
+          'Too many hashtags on Instagram can appear spammy (optimal: 5-15)'
+        );
       }
       break;
     }
@@ -394,11 +468,15 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
     case 'tiktok': {
       // TikTok short-form — rewards hooks and trending references
       if (!startsWithHook(content)) {
-        suggestions.push('TikTok captions convert better with a strong first line hook');
+        suggestions.push(
+          'TikTok captions convert better with a strong first line hook'
+        );
       }
       const tiktokTags = (content.match(/#\w+/g) ?? []).length;
       if (tiktokTags < 3) {
-        suggestions.push('Use 3-5 trending hashtags on TikTok (#fyp, #foryou, plus niche tags)');
+        suggestions.push(
+          'Use 3-5 trending hashtags on TikTok (#fyp, #foryou, plus niche tags)'
+        );
       }
       break;
     }
@@ -406,8 +484,12 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
     case 'youtube': {
       // YouTube descriptions benefit from keyword-rich paragraphs
       if (length < 200) {
-        issues.push('YouTube descriptions work best with at least 200 characters');
-        suggestions.push('Expand the YouTube description with keywords and links');
+        issues.push(
+          'YouTube descriptions work best with at least 200 characters'
+        );
+        suggestions.push(
+          'Expand the YouTube description with keywords and links'
+        );
       }
       break;
     }
@@ -423,7 +505,9 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
     case 'reddit': {
       // Reddit rewards longer, substantive posts
       if (length < 100) {
-        suggestions.push('Reddit posts with more context and detail receive more upvotes');
+        suggestions.push(
+          'Reddit posts with more context and detail receive more upvotes'
+        );
       }
       break;
     }
@@ -431,7 +515,9 @@ function scorePlatformFit(content: string, platform: string): DimensionScore {
     case 'facebook': {
       // Facebook: mid-length storytelling performs well
       if (lengthRatio < 0.005 && length < 250) {
-        suggestions.push('Facebook posts with 250-500 characters tend to get better organic reach');
+        suggestions.push(
+          'Facebook post is under 250 characters; consider adding detail'
+        );
       }
       break;
     }
@@ -453,20 +539,30 @@ function scoreClarity(content: string): DimensionScore {
   const wordCount = Math.max(words.length, 1);
 
   // Jargon detection
-  const jargonMatches = JARGON_PATTERNS.flatMap((pattern) => {
-    const re = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+  const jargonMatches = JARGON_PATTERNS.flatMap(pattern => {
+    const re = new RegExp(
+      pattern.source,
+      pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g'
+    );
     return content.match(re) ?? [];
   });
   const jargonCount = jargonMatches.length;
   if (jargonCount > 0) {
     score -= Math.min(jargonCount * 5, 25);
-    issues.push(`${jargonCount} jargon word(s) detected: ${[...new Set(jargonMatches.map((m) => m.toLowerCase()))].slice(0, 3).join(', ')}`);
-    suggestions.push('Replace jargon with plain language that everyone can understand');
+    issues.push(
+      `${jargonCount} jargon word(s) detected: ${[...new Set(jargonMatches.map(m => m.toLowerCase()))].slice(0, 3).join(', ')}`
+    );
+    suggestions.push(
+      'Replace jargon with plain language that everyone can understand'
+    );
   }
 
   // Passive voice ratio
-  const passiveMatches = PASSIVE_VOICE_PATTERNS.flatMap((pattern) => {
-    const re = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+  const passiveMatches = PASSIVE_VOICE_PATTERNS.flatMap(pattern => {
+    const re = new RegExp(
+      pattern.source,
+      pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g'
+    );
     return content.match(re) ?? [];
   });
   const passiveCount = passiveMatches.length;
@@ -477,7 +573,9 @@ function scoreClarity(content: string): DimensionScore {
   if (passiveRatio > 0.4) {
     score -= 20;
     issues.push('High passive voice ratio — content feels indirect');
-    suggestions.push('Rewrite passive sentences in active voice for stronger impact');
+    suggestions.push(
+      'Rewrite passive sentences in active voice for stronger impact'
+    );
   } else if (passiveRatio > 0.2) {
     score -= 10;
     suggestions.push('Reduce passive voice for a more direct, engaging tone');
@@ -485,7 +583,7 @@ function scoreClarity(content: string): DimensionScore {
 
   // Vague word detection
   const contentLower = content.toLowerCase();
-  const vagueFound = VAGUE_WORDS.filter((word) => {
+  const vagueFound = VAGUE_WORDS.filter(word => {
     const pattern = new RegExp(`\\b${word.replace(' ', '\\s+')}\\b`, 'i');
     return pattern.test(contentLower);
   });
@@ -493,19 +591,31 @@ function scoreClarity(content: string): DimensionScore {
 
   if (vagueCount > 3) {
     score -= 15;
-    issues.push(`${vagueCount} vague words found: ${vagueFound.slice(0, 3).join(', ')}...`);
-    suggestions.push('Replace vague words (things, stuff, nice) with specific, concrete language');
+    issues.push(
+      `${vagueCount} vague words found: ${vagueFound.slice(0, 3).join(', ')}...`
+    );
+    suggestions.push(
+      'Replace vague words (things, stuff, nice) with specific, concrete language'
+    );
   } else if (vagueCount > 1) {
     score -= 5;
-    suggestions.push(`Replace vague words like "${vagueFound[0]}" with more specific alternatives`);
+    suggestions.push(
+      `Replace vague words like "${vagueFound[0]}" with more specific alternatives`
+    );
   }
 
   // Specificity bonus — numbers and data points signal precision
-  const numberCount = (content.match(/\b\d+([.,]\d+)?(%|\s*(x|times|percent|million|billion|thousand))?\b/g) ?? []).length;
+  const numberCount = (
+    content.match(
+      /\b\d+([.,]\d+)?(%|\s*(x|times|percent|million|billion|thousand))?\b/g
+    ) ?? []
+  ).length;
   if (numberCount >= 2) {
     score += 10;
   } else if (numberCount === 0 && wordCount > 30) {
-    suggestions.push('Include specific numbers or data points to increase credibility');
+    suggestions.push(
+      'Include specific numbers or data points to increase credibility'
+    );
   }
 
   return { score: clamp(score), issues, suggestions };
@@ -522,7 +632,9 @@ function scoreEmotional(content: string): DimensionScore {
 
   // Power words presence
   const contentLower = content.toLowerCase();
-  const powerWordsFound = POWER_WORDS.filter((word) => contentLower.includes(word));
+  const powerWordsFound = POWER_WORDS.filter(word =>
+    contentLower.includes(word)
+  );
   const powerWordCount = powerWordsFound.length;
 
   if (powerWordCount >= 3) {
@@ -530,21 +642,25 @@ function scoreEmotional(content: string): DimensionScore {
   } else if (powerWordCount >= 1) {
     score += 10;
   } else {
-    suggestions.push('Add power words (proven, discover, transform, breakthrough) to increase emotional impact');
+    suggestions.push(
+      'Add power words (proven, discover, transform, breakthrough) to increase emotional impact'
+    );
   }
 
   // Urgency cues
-  if (URGENCY_PATTERNS.some((p) => p.test(content))) {
+  if (URGENCY_PATTERNS.some(p => p.test(content))) {
     score += 15;
   } else {
     suggestions.push('Add a sense of urgency or timeliness to motivate action');
   }
 
   // Storytelling elements
-  if (STORYTELLING_PATTERNS.some((p) => p.test(content))) {
+  if (STORYTELLING_PATTERNS.some(p => p.test(content))) {
     score += 20;
   } else {
-    suggestions.push('Open with a personal story or experience to build emotional connection');
+    suggestions.push(
+      'Open with a personal story or experience to build emotional connection'
+    );
   }
 
   // Sentiment strength — exclamation points and strong adjectives
@@ -558,14 +674,16 @@ function scoreEmotional(content: string): DimensionScore {
   }
 
   // Negative emotional hooks (frustration, problem-aware content)
-  const negativeHooks = /\b(frustrat|struggling|problem|challenge|mistake|fail|wrong|stop|warning)\b/gi;
+  const negativeHooks =
+    /\b(frustrat|struggling|problem|challenge|mistake|fail|wrong|stop|warning)\b/gi;
   const negativeCount = countMatches(content, negativeHooks);
   if (negativeCount >= 1) {
     score += 5; // Pain-aware content resonates
   }
 
   // Positive outcome references
-  const positiveOutcome = /\b(success|result|growth|win|achieve|transform|improve|better|breakthrough)\b/gi;
+  const positiveOutcome =
+    /\b(success|result|growth|win|achieve|transform|improve|better|breakthrough)\b/gi;
   const positiveCount = countMatches(content, positiveOutcome);
   if (positiveCount >= 1) {
     score += 5;
@@ -624,29 +742,47 @@ export class ContentScorer {
     // Weighted overall score
     const overall = clamp(
       engagement.score * DIMENSION_WEIGHTS.engagement +
-      readability.score * DIMENSION_WEIGHTS.readability +
-      platformFit.score * DIMENSION_WEIGHTS.platformFit +
-      clarity.score * DIMENSION_WEIGHTS.clarity +
-      emotional.score * DIMENSION_WEIGHTS.emotional +
-      writingQuality.score * DIMENSION_WEIGHTS.writingQuality
+        readability.score * DIMENSION_WEIGHTS.readability +
+        platformFit.score * DIMENSION_WEIGHTS.platformFit +
+        clarity.score * DIMENSION_WEIGHTS.clarity +
+        emotional.score * DIMENSION_WEIGHTS.emotional +
+        writingQuality.score * DIMENSION_WEIGHTS.writingQuality
     );
 
     // Collect all suggestions with their dimension scores for prioritization
     type SuggestionEntry = { text: string; dimensionScore: number };
     const allSuggestions: SuggestionEntry[] = [
-      ...engagement.suggestions.map((text) => ({ text, dimensionScore: engagement.score })),
-      ...readability.suggestions.map((text) => ({ text, dimensionScore: readability.score })),
-      ...platformFit.suggestions.map((text) => ({ text, dimensionScore: platformFit.score })),
-      ...clarity.suggestions.map((text) => ({ text, dimensionScore: clarity.score })),
-      ...emotional.suggestions.map((text) => ({ text, dimensionScore: emotional.score })),
-      ...writingQuality.suggestions.map((text) => ({ text, dimensionScore: writingQuality.score })),
+      ...engagement.suggestions.map(text => ({
+        text,
+        dimensionScore: engagement.score,
+      })),
+      ...readability.suggestions.map(text => ({
+        text,
+        dimensionScore: readability.score,
+      })),
+      ...platformFit.suggestions.map(text => ({
+        text,
+        dimensionScore: platformFit.score,
+      })),
+      ...clarity.suggestions.map(text => ({
+        text,
+        dimensionScore: clarity.score,
+      })),
+      ...emotional.suggestions.map(text => ({
+        text,
+        dimensionScore: emotional.score,
+      })),
+      ...writingQuality.suggestions.map(text => ({
+        text,
+        dimensionScore: writingQuality.score,
+      })),
     ];
 
     // Prioritize suggestions from lowest-scoring dimensions (most impact)
     const topSuggestions = allSuggestions
       .sort((a, b) => a.dimensionScore - b.dimensionScore)
       .slice(0, 3)
-      .map((s) => s.text);
+      .map(s => s.text);
 
     return {
       overall,

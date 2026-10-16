@@ -39,8 +39,8 @@ const changelogEntries = [
       'Enhanced OAuth security',
       'Two-factor authentication support',
       'Improved API rate limiting',
-      'Security audit compliance updates',
-      'GDPR compliance enhancements',
+      'Security updates',
+      'Privacy request handling improvements',
     ],
   },
   {

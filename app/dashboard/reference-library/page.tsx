@@ -3,7 +3,7 @@ import { listReferenceSets } from '@/lib/services/ai/reference-library';
 import { ReferenceLibraryBrowser } from '@/components/reference-library/ReferenceLibraryBrowser';
 
 export const metadata: Metadata = {
-  title: 'Reference Library | Synthex',
+  title: { absolute: 'Reference Library | Synthex' },
   description:
     'The owned real photos that grounded image generation draws from.',
 };

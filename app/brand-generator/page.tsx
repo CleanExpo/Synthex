@@ -10,6 +10,7 @@ export default function BrandGeneratorPage() {
 }
 
 export const metadata = {
-  title: 'Psychology-Powered Brand Generator | SYNTHEX',
-  description: 'Generate strategic brand identities using 50+ psychological principles for maximum market impact',
+  title: { absolute: 'Psychology-Powered Brand Generator | SYNTHEX' },
+  description:
+    'Generate strategic brand identities using psychological principles.',
 };

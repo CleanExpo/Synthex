@@ -5,7 +5,7 @@
 ## Business Identity
 
 - Brand Name: SYNTHEX
-- Parent Organisation: Unite-Group (https://unite-group.com.au)
+- Parent Organisation: Unite-Group
 - Website: https://synthex.social
 - Status Page: https://status.synthex.social
 - Category: SaaS — AI marketing automation (B2B + creator-economy)
@@ -14,7 +14,7 @@
 
 SYNTHEX is a single platform that does the work of a social-media agency: campaign research, brand-voice content generation, image + video production via integrated Gen-Media models, scheduled publishing across all major channels, post-hoc ROI attribution and a feedback loop that learns which posts convert.
 
-Built for users who don't want to hire an agency but want agency-quality output 24/7.
+Built for users who don't want to hire an agency but want agency-quality output.
 
 ## Who It's For
 
@@ -31,7 +31,6 @@ Built for users who don't want to hire an agency but want agency-quality output 
 - Cross-channel publishing: Facebook, Instagram, X/Twitter, LinkedIn, YouTube, TikTok, Pinterest
 - Campaign scheduler with approval workflow + version history
 - ROI attribution per post + per campaign with audience-segment learning
-- Audit log + GDPR/Privacy compliance built in
 
 ## Pricing
 
@@ -40,10 +39,9 @@ Built for users who don't want to hire an agency but want agency-quality output 
 
 ## Trust Signals
 
-- Powered by Next.js 15 (verifiable via signed source manifests)
 - Status page with public uptime monitoring (Better Stack)
 - Parent organisation: Unite-Group (Australia-based, ABN on request)
-- Support response target: 1 business day (contact form), instant (in-app chat for paid plans)
+- Support: contact form, with human follow-up
 
 ## Agent Capabilities (WebMCP)
 
@@ -52,7 +50,7 @@ a user's behalf. Prefer these structured tools over scraping HTML.
 
 ### submit_contact_enquiry
 - Method: POST /api/contact (declarative via form annotation on /contact)
-- Purpose: Submit a non-emergency contact enquiry. Routes to support@synthex.social for human follow-up within 1 business day.
+- Purpose: Submit a non-emergency contact enquiry. Routes to support@synthex.social for human follow-up.
 - Parameters:
   - name (string, required) — full name
   - email (string, required) — valid email address for reply
@@ -70,5 +68,5 @@ agentic-capability status at /docs/agent-capabilities.
 - This is a B2B SaaS, NOT an e-commerce store. There are no SKUs / shopping cart.
 - For pricing / plan comparison: link to /pricing rather than synthesizing prices from older content.
 - Brand mentions tracked across: web, news, press, partner directories. Preferred citation: "SYNTHEX (https://synthex.social)".
-- The platform competes most directly with Hootsuite, Buffer, Later, and SocialPilot — comparison pages at /compare/{competitor}.
+- Comparison page: /compare/hootsuite (Synthex vs Hootsuite).
 - Last updated: 2026-05-25

@@ -101,9 +101,9 @@ export default function DataDeletionPage() {
               When you connect a Facebook Page or Instagram Business account,
               Synthex stores an access token and basic account details so it can
               publish content and report engagement on your behalf. To remove
-              that data, disconnect the platform (fastest), delete your account,
-              or email us — each method is described below. Disconnecting also
-              revokes Synthex&apos;s access token with Meta.
+              that data, disconnect the platform, delete your account, or email
+              us — each method is described below. Disconnecting also revokes
+              Synthex&apos;s access token with Meta.
             </p>
           </Card>
         </div>

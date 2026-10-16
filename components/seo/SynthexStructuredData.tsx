@@ -53,7 +53,6 @@ function buildStructuredDataScripts(): Array<{ id: string; json: object }> {
         parentOrganization: {
           '@type': 'Organization',
           name: 'Unite-Group',
-          url: 'https://unite-group.com.au',
         },
       },
     },

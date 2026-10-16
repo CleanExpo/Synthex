@@ -11,12 +11,6 @@ const softwareApplication = {
   url: BASE_URL,
   description:
     'Evidence-backed marketing command center: free Opportunity Map, then approval-gated campaign planning and production.',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'AUD',
-    description: 'Controlled pilot access',
-  },
   publisher: {
     '@type': 'Organization',
     name: 'Synthex Pty Ltd',

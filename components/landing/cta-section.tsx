@@ -13,7 +13,10 @@ export function CTASection() {
       <div className="max-w-5xl mx-auto px-6">
         <div className="cta-card relative overflow-hidden rounded-3xl px-8 py-20 md:py-24 text-center backdrop-blur-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
           {/* Single ambient gradient — calmness pass (one layer, lower opacity) */}
-          <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div
+            className="absolute inset-0 pointer-events-none"
+            aria-hidden="true"
+          >
             <div
               className="absolute inset-0 rounded-3xl blur-[80px] opacity-30"
               style={{
@@ -45,8 +48,8 @@ export function CTASection() {
 
             {/* Subtext */}
             <p className="text-white/60 text-lg mb-10 max-w-xl mx-auto font-sans leading-relaxed">
-              Join 5,000+ businesses that have replaced manual posting with an
-              automated AI marketing team that works 24/7.
+              Replace manual posting with an AI marketing workflow — you approve
+              every post before it publishes.
             </p>
 
             {/* CTAs */}

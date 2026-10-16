@@ -476,7 +476,7 @@ class UnifiedEmailService {
             <td style="padding: 40px;">
               <h2 style="margin: 0 0 20px; color: #ffffff; font-size: 24px;">Hi ${name}! 👋</h2>
               <p style="margin: 0 0 30px; color: #a3a3a3; font-size: 16px; line-height: 1.6;">
-                Welcome aboard! You've joined 1000+ businesses saving <strong style="color: #10b981;">$140,000+ per year</strong> while getting better results than traditional agencies.
+                Welcome aboard! Your Synthex workspace is ready.
               </p>
 
               <!-- Features -->

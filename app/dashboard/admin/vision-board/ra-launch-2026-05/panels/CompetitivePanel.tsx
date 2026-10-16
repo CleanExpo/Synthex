@@ -8,7 +8,13 @@
  * positioning analysis on top of this.
  */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const COMPETITORS = [
@@ -17,8 +23,8 @@ const COMPETITORS = [
     slug: 'ra' as const,
     category: 'Full CRM + FMMS — IICRC-grounded NIR',
     geography: 'AU + NZ',
-    flow: '5-step: Inspection → AI Analysis → Scoping → Estimating → Reporting',
-    auCompliance: 'IICRC S500 / S520 / S700 + WHS + AU Building Code inbuilt',
+    flow: 'Inspection → AI Analysis → Scoping → Estimating → Reporting',
+    auCompliance: 'IICRC S500 / S520 / S700 + WHS + AU Building Code',
     aiRole: 'Assistant — records + documents, never decides',
     weakness: 'New brand, no installed base yet (T+0 = today)',
     isUs: true,
@@ -29,9 +35,10 @@ const COMPETITORS = [
     category: 'Field-tech-first inspection app',
     geography: 'Global (US-led)',
     flow: 'Single-step: capture → upload',
-    auCompliance: 'No AU compliance frameworks',
+    auCompliance: 'Not reviewed against AU standards',
     aiRole: 'Photo categorisation only',
-    weakness: 'No estimating, no scoping, no NIR. Forces Xactimate handoff downstream.',
+    weakness:
+      'No estimating, no scoping, no NIR. Forces Xactimate handoff downstream.',
     isUs: false,
   },
   {
@@ -42,7 +49,8 @@ const COMPETITORS = [
     flow: 'One step: estimate from line items',
     auCompliance: 'US-led pricing schemas; AU rates approximated',
     aiRole: 'None disclosed',
-    weakness: 'Price-list product. Not a workflow. Re-keying from inspection app required.',
+    weakness:
+      'Price-list product. Not a workflow. Re-keying from inspection app required.',
     isUs: false,
   },
   {
@@ -50,19 +58,23 @@ const COMPETITORS = [
     slug: 'restorers-connect' as const,
     category: 'Scheduling / job board',
     geography: 'AU',
-    flow: 'Two-step: assign → schedule',
-    auCompliance: 'AU-aware but no compliance framework',
+    flow: 'Assign → schedule',
+    auCompliance: 'Not reviewed against AU standards',
     aiRole: 'None',
-    weakness: 'Coordination layer only. No inspection, no estimating, no report.',
+    weakness:
+      'Coordination layer only. No inspection, no estimating, no report.',
     isUs: false,
   },
 ];
 
-const ROW_DEFS: Array<{ key: keyof (typeof COMPETITORS)[number]; label: string }> = [
+const ROW_DEFS: Array<{
+  key: keyof (typeof COMPETITORS)[number];
+  label: string;
+}> = [
   { key: 'category', label: 'Category claim' },
   { key: 'geography', label: 'Geography' },
   { key: 'flow', label: 'Workflow' },
-  { key: 'auCompliance', label: 'AU compliance' },
+  { key: 'auCompliance', label: 'AU standards coverage' },
   { key: 'aiRole', label: 'AI role' },
   { key: 'weakness', label: 'Weakness vs RestoreAssist' },
 ];
@@ -78,8 +90,8 @@ export function CompetitivePanel() {
           </Badge>
         </div>
         <CardDescription>
-          Seed grid from the AEO audit. RestoreAssist is the only AU-designed full CRM in the
-          category — every competitor solves one slice of the 5-step flow.
+          Seed grid from the AEO audit. Compare which steps of the
+          inspection-to-reporting flow each tool covers.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -87,7 +99,9 @@ export function CompetitivePanel() {
           <table className="w-full min-w-[720px] border-collapse text-xs">
             <thead>
               <tr className="border-b border-border">
-                <th className="p-2 text-left font-medium text-muted-foreground"> </th>
+                <th className="p-2 text-left font-medium text-muted-foreground">
+                  {' '}
+                </th>
                 {COMPETITORS.map(c => (
                   <th
                     key={c.slug}
@@ -116,7 +130,10 @@ export function CompetitivePanel() {
                     <td
                       key={c.slug}
                       className={
-                        'p-2 align-top ' + (c.isUs ? 'font-medium text-foreground' : 'text-muted-foreground')
+                        'p-2 align-top ' +
+                        (c.isUs
+                          ? 'font-medium text-foreground'
+                          : 'text-muted-foreground')
                       }
                     >
                       {c[row.key] as string}

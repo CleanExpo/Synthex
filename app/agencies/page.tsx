@@ -9,7 +9,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = genMeta({
   title: 'Marketing Automation for Small Business & Agencies | Synthex',
   description:
-    'Synthex automates social media for businesses across every industry. 9 platforms, AI brand voice, and zero manual posting — set up in under 60 seconds.',
+    'Synthex automates social media for businesses across every industry: your platforms, an AI brand voice, and no manual posting.',
   path: '/agencies',
   keywords: [
     'marketing automation for agencies',
@@ -24,14 +24,14 @@ const PAIN_POINTS = [
   {
     icon: '⏱️',
     title: 'Manual posting is stealing your time',
-    body: "The average SMB spends 10+ hours per week on social media. That's a part-time employee you're already paying for — just with your own time.",
-    stat: '10+ hrs/week wasted',
+    body: 'Writing, formatting and scheduling every post by hand takes time away from running the business.',
+    stat: 'Less manual posting',
   },
   {
     icon: '🎯',
     title: 'Inconsistent brand voice across platforms',
     body: 'Writing differently for Instagram vs LinkedIn vs TikTok is exhausting. Synthex learns your brand voice once and adapts it perfectly to every platform — automatically.',
-    stat: '9 platforms, 1 brand voice',
+    stat: 'Every platform, one brand voice',
   },
   {
     icon: '📊',
@@ -59,7 +59,7 @@ const INDUSTRIES = [
 const FAQS = [
   {
     q: 'How quickly can I get set up?',
-    a: 'Paste your website URL and Synthex analyses your brand voice, colours, and tone in under 60 seconds. Your first AI-generated post is ready to approve immediately.',
+    a: 'Paste your website URL and Synthex analyses your brand voice, colours, and tone. Your first AI-generated post is then ready to approve.',
   },
   {
     q: 'Do I need to know anything about social media?',
@@ -67,7 +67,7 @@ const FAQS = [
   },
   {
     q: 'Which platforms does Synthex support?',
-    a: 'Instagram, Facebook, TikTok, YouTube, X (Twitter), LinkedIn, Pinterest, Reddit, and Threads. All 9 from one dashboard.',
+    a: 'Instagram, Facebook, TikTok, YouTube, X (Twitter), LinkedIn, Pinterest, Reddit, and Threads, from one dashboard.',
   },
   {
     q: 'Can I manage multiple client accounts?',
@@ -75,7 +75,7 @@ const FAQS = [
   },
   {
     q: 'Is there a free trial?',
-    a: "Yes — no credit card required. Start free and upgrade when you're ready. Every plan includes a 30-day money-back guarantee.",
+    a: "Yes — no credit card required. Start free and upgrade when you're ready.",
   },
 ];
 
@@ -119,7 +119,7 @@ export default function AgenciesPage() {
           <p className="text-lg text-white/50 max-w-2xl mx-auto leading-relaxed mb-10">
             Synthex is the AI platform that replaces manual social media posting
             for SMBs across Australia. Paste your URL, approve your first post,
-            and publish to 9 platforms — in under 60 seconds.
+            and publish to your platforms.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -136,9 +136,6 @@ export default function AgenciesPage() {
               See how it works
             </Link>
           </div>
-          <p className="text-sm text-white/30 mt-3">
-            30-day money-back guarantee · Cancel anytime
-          </p>
         </div>
       </section>
 
@@ -173,8 +170,8 @@ export default function AgenciesPage() {
             Built for every Australian business
           </h2>
           <p className="text-white/50 mb-10">
-            5,000+ businesses across every industry trust Synthex to handle
-            their social media.
+            Synthex learns your brand voice from your own website, whatever your
+            industry.
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {INDUSTRIES.map(industry => (
@@ -216,8 +213,8 @@ export default function AgenciesPage() {
             Ready to automate your social media?
           </h2>
           <p className="text-white/50 mb-8">
-            Join 5,000+ Australian businesses posting to 9 platforms
-            automatically.
+            Publish to your platforms from one dashboard — you approve every
+            post first.
           </p>
           <Link
             href="/signup"

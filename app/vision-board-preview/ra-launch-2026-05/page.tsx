@@ -8,7 +8,14 @@
  */
 
 import { Suspense } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { notFound } from 'next/navigation';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   readPositioning,
@@ -34,21 +41,27 @@ export const dynamic = 'force-dynamic';
 const T_ZERO_ISO = '2026-05-08';
 
 export default async function VisionBoardPreviewPage() {
-  const [positioning, icp, runbook, waveStates, bridge, connectionChecks] = await Promise.all([
-    readPositioning(),
-    readICP(),
-    readRunbook(),
-    getWaveStates(),
-    getBridgeStatus(),
-    getConnectionStatus(),
-  ]);
+  // Local visual review only: production visitors get a 404.
+  if (process.env.NODE_ENV === 'production') notFound();
+  const [positioning, icp, runbook, waveStates, bridge, connectionChecks] =
+    await Promise.all([
+      readPositioning(),
+      readICP(),
+      readRunbook(),
+      getWaveStates(),
+      getBridgeStatus(),
+      getConnectionStatus(),
+    ]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="container mx-auto flex flex-col gap-6 px-6 py-8">
         <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-400">
-          PREVIEW ROUTE · auth bypassed for visual review only · production URL is{' '}
-          <code className="font-mono">/dashboard/admin/vision-board/ra-launch-2026-05</code>
+          PREVIEW ROUTE · auth bypassed for visual review only · production URL
+          is{' '}
+          <code className="font-mono">
+            /dashboard/admin/vision-board/ra-launch-2026-05
+          </code>
         </div>
 
         <header className="flex flex-col gap-2">
@@ -63,11 +76,14 @@ export default async function VisionBoardPreviewPage() {
               T+0 = {T_ZERO_ISO}
             </Badge>
           </div>
-          <h1 className="text-3xl font-bold">RestoreAssist · App Store launch</h1>
+          <h1 className="text-3xl font-bold">
+            RestoreAssist · App Store launch
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Vision Board over Pi-CEO research artefacts. Brain layer (Pi-CEO/Pi-Dev-Ops)
-            writes positioning, ICP, channel plan, copy, runbook. Eyes layer (this page)
-            consolidates the output for review and decision.
+            Vision Board over Pi-CEO research artefacts. Brain layer
+            (Pi-CEO/Pi-Dev-Ops) writes positioning, ICP, channel plan, copy,
+            runbook. Eyes layer (this page) consolidates the output for review
+            and decision.
           </p>
         </header>
 
@@ -82,7 +98,9 @@ export default async function VisionBoardPreviewPage() {
                     connected
                   </span>
                 ) : (
-                  <span className="font-mono text-amber-600 dark:text-amber-400">missing</span>
+                  <span className="font-mono text-amber-600 dark:text-amber-400">
+                    missing
+                  </span>
                 )}
               </span>
               <span>·</span>
@@ -93,7 +111,9 @@ export default async function VisionBoardPreviewPage() {
                     connected
                   </span>
                 ) : (
-                  <span className="font-mono text-amber-600 dark:text-amber-400">missing</span>
+                  <span className="font-mono text-amber-600 dark:text-amber-400">
+                    missing
+                  </span>
                 )}
               </span>
             </CardDescription>
@@ -115,12 +135,18 @@ export default async function VisionBoardPreviewPage() {
                   }
                 >
                   <div className="flex items-baseline justify-between">
-                    <span className="font-mono text-xs font-semibold">Wave {w.wave}</span>
+                    <span className="font-mono text-xs font-semibold">
+                      Wave {w.wave}
+                    </span>
                     <Badge variant="outline" className="text-[9px] capitalize">
                       {w.status}
                     </Badge>
                   </div>
-                  {w.note && <p className="text-[11px] text-muted-foreground">{w.note}</p>}
+                  {w.note && (
+                    <p className="text-[11px] text-muted-foreground">
+                      {w.note}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

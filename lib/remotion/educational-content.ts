@@ -12,19 +12,9 @@
  *   HowToVideo/CaseStudyVideo (40s) ≈ 100 words
  */
 
-export interface EducationalVideo {
-  id: string;
-  title: string;
-  description: string;
-  tags: string[];
-  compositionId: string;
-  voiceoverScript: string;
-  durationInFrames: number;
-  fps: number;
-  width: number;
-  height: number;
-  youtubeVideoId?: string;
-}
+import { HELP_VIDEO_BY_ID, type EducationalVideo } from './help-videos';
+
+export type { EducationalVideo } from './help-videos';
 
 export const EDUCATIONAL_VIDEOS: EducationalVideo[] = [
   // ── ExplainerVideo (16:9 · 900f / 30s · 1920×1080) ─────────────────────────
@@ -56,8 +46,7 @@ Start free: https://synthex.social
       'to businesses of every size. AI marketing automation uses artificial intelligence to ' +
       'create, schedule, and optimise your social media content automatically. ' +
       'Instead of spending hours crafting posts, your AI learns your brand voice and ' +
-      'generates on-brand content around the clock. Early adopters report saving over ' +
-      'ten hours per week while seeing improved engagement across all platforms. ' +
+      'generates on-brand content around the clock. ' +
       'The future of marketing is autonomous. Visit Synthex dot social to get started today.',
     durationInFrames: 900,
     fps: 30,
@@ -89,8 +78,8 @@ Start free: https://synthex.social
     voiceoverScript:
       'Ever wonder how AI generates social media posts that sound exactly like you? ' +
       'It starts with your Business DNA — your tone, vocabulary, values, and audience. ' +
-      'The AI studies thousands of high-performing posts in your industry, then combines ' +
-      'that knowledge with your brand profile to craft content that is both on-brand and ' +
+      'The AI combines ' +
+      'what it knows about your industry with your brand profile to craft content that is both on-brand and ' +
       'optimised for engagement. Every post is scored before it reaches you, ensuring ' +
       'quality and relevance. You review, approve, and publish — the AI handles the rest. ' +
       'Discover how Synthex creates content that sounds authentically you at synthex dot social.',
@@ -162,8 +151,8 @@ Start free: https://synthex.social
       'Without one, you are guessing — and guessing wastes time and budget. ' +
       'A strong content strategy has four pillars: clear goals tied to business outcomes, ' +
       'deep audience understanding, a defined content mix across education, entertainment, and promotion, ' +
-      'and a consistent publishing cadence. Businesses with documented content strategies grow ' +
-      'three times faster than those without one. Synthex helps you build and execute your strategy ' +
+      'and a consistent publishing cadence. ' +
+      'Synthex helps you build and execute your strategy ' +
       'automatically, generating the right content for the right platform at the right time. ' +
       'Start your strategy at synthex dot social.',
     durationInFrames: 900,
@@ -286,12 +275,11 @@ Start free: https://synthex.social
     ],
     compositionId: 'ExplainerVideo',
     voiceoverScript:
-      'Ninety days is all it takes to go from zero to a social media presence that drives real business results. ' +
+      'Here is a ninety-day plan for building a social media presence. ' +
       'In the first thirty days: set up your profiles, define your brand voice, and commit to a content calendar. ' +
       'In days thirty-one to sixty: publish consistently, engage with every comment, and test different content formats. ' +
       'Analyse your top performers and create more like them. ' +
       'In days sixty-one to ninety: scale what works, experiment with video, and start growing your following intentionally. ' +
-      'Ninety days of consistent effort compounds into results that last. ' +
       'Synthex accelerates every stage — start your 90-day journey at synthex dot social.',
     durationInFrames: 900,
     fps: 30,
@@ -320,7 +308,6 @@ Start free: https://synthex.social
       'Personalisation has moved from batch-and-blast to one-to-one content at scale. ' +
       'Autonomous agents now research trends, draft content, and optimise campaigns overnight while you sleep. ' +
       'Video has overtaken static images as the default content format across every platform. ' +
-      'And businesses that adopted AI marketing tools early are outpacing their competitors by a factor of three. ' +
       'The question is no longer whether to use AI in your marketing — it is how fast you can get started. ' +
       'The future is already here at synthex dot social.',
     durationInFrames: 900,
@@ -362,8 +349,8 @@ Start free: https://synthex.social
       'one video becomes ten quote cards. ' +
       'Fourth — let your analytics guide your timing. Post when your audience is most active, ' +
       'not just when it is convenient. ' +
-      'And fifth — use AI to fill the gaps. Synthex can generate a month of on-brand content ' +
-      'in minutes, keeping your calendar full without burning out your team. ' +
+      'And fifth — use AI to fill the gaps. Synthex can draft on-brand content for you to ' +
+      'review, so your calendar stays full. ' +
       'Visit Synthex dot social to build your content calendar today.',
     durationInFrames: 900,
     fps: 30,
@@ -415,7 +402,7 @@ Start free: https://synthex.social
     voiceoverScript:
       'Marketing tip: post at the right time. ' +
       'Instagram: Tuesday 9am. LinkedIn: Wednesday 10am. TikTok: Thursday 7pm. ' +
-      'Facebook: Friday 1pm. Posting at peak times doubles your organic reach. ' +
+      'Facebook: Friday 1pm. Check your own analytics, as your audience may be online at different times. ' +
       'Synthex schedules automatically for each platform.',
     durationInFrames: 450,
     fps: 30,
@@ -508,9 +495,9 @@ Start free: https://synthex.social
     compositionId: 'TipCard',
     voiceoverScript:
       'Three CTA formulas that drive action. ' +
-      'One: benefit-plus-command — "save ten hours a week: start your free trial." ' +
+      'One: benefit-plus-command — "plan your next month of posts: start your free trial." ' +
       'Two: curiosity — "want to know the one thing top brands do differently? Click the link." ' +
-      'Three: social proof — "join 5,000 businesses already using Synthex." ' +
+      'Three: social proof — "join the businesses already using Synthex." ' +
       'Always end your post with a clear next step.',
     durationInFrames: 450,
     fps: 30,
@@ -552,7 +539,7 @@ Start free: https://synthex.social
     ],
     compositionId: 'TipCard',
     voiceoverScript:
-      'Consistency tip: your audience needs to see you seven times before they trust you. ' +
+      'Consistency tip: your audience needs to see you repeatedly before they trust you. ' +
       'Use the same colours, fonts, tone of voice, and posting style every time. ' +
       'Inconsistency signals unreliability — even unconsciously. ' +
       'Synthex keeps your brand perfectly consistent across every platform, every post.',
@@ -612,272 +599,6 @@ Start free: https://synthex.social
     height: 1920,
   },
 
-  // ── StatReveal (16:9 · 600f / 20s · 1920×1080) ──────────────────────────────
-
-  {
-    id: 'stat-ai-content-saves-time',
-    title: 'AI Marketing Saves 10+ Hours Per Week | Synthex',
-    description: `The data is in: AI marketing automation saves serious time.
-
-#AIMarketing #Productivity #MarketingStats #Synthex`,
-    tags: [
-      'productivity',
-      'AI marketing',
-      'time saving',
-      'marketing stats',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Businesses using AI marketing automation save an average of ten hours per week on content creation. ' +
-      'That is over five hundred hours per year — time that can be redirected to strategy, ' +
-      'customer relationships, and growth. ' +
-      'At Synthex, our users report saving up to fifteen hours per week. ' +
-      'What would you do with ten extra hours? Start at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-social-media-roi',
-    title: 'Social Media Delivers 3× ROI When Done Right | Synthex',
-    description: `Social media ROI is real — but only with the right strategy.
-
-#SocialMediaROI #MarketingStats #DigitalMarketing #Synthex`,
-    tags: [
-      'social media ROI',
-      'marketing stats',
-      'digital marketing',
-      'ROI',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Businesses with a documented social media strategy see three times the ROI ' +
-      'of those posting without a plan. ' +
-      'The difference is not budget — it is intentionality. ' +
-      'Consistent posting, audience-aligned content, and data-driven optimisation compound over time ' +
-      'into a social presence that genuinely drives revenue. ' +
-      'Build your strategy with Synthex at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-video-engagement-rate',
-    title: 'Video Gets 49% More Engagement Than Static Posts | Synthex',
-    description: `Video content dominates every platform. The numbers prove it.
-
-#VideoMarketing #SocialMedia #ContentStats #Synthex`,
-    tags: [
-      'video marketing',
-      'engagement',
-      'content stats',
-      'social media',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Video content generates forty-nine percent more engagement than static images across all platforms. ' +
-      'On Instagram, Reels reach three times the audience of standard posts. ' +
-      'On LinkedIn, video gets five times more comments. ' +
-      'If video is not part of your content mix, you are leaving engagement on the table. ' +
-      'Synthex generates video-ready content at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-instagram-reach-2026',
-    title: 'Instagram Has 2 Billion Monthly Users in 2026 | Synthex',
-    description: `Instagram's reach is bigger than ever. Is your business on it?
-
-#Instagram #SocialMediaStats #DigitalMarketing #Synthex`,
-    tags: [
-      'Instagram',
-      'social media stats',
-      'reach',
-      'digital marketing',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Instagram has two billion monthly active users in 2026 — and eighty percent follow at least one business. ' +
-      'That is a direct line to your customers, no advertising spend required. ' +
-      'Yet most small businesses post inconsistently and see minimal results. ' +
-      'Consistency, not size, is what drives Instagram growth. ' +
-      'Let Synthex keep your Instagram consistent at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-email-vs-social-roi',
-    title: 'Email vs Social: Which Has Better ROI? | Synthex',
-    description: `Email marketing and social media both deliver ROI — but in very different ways.
-
-#EmailMarketing #SocialMedia #ROI #MarketingStats #Synthex`,
-    tags: [
-      'email marketing',
-      'social media',
-      'ROI',
-      'marketing stats',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Email marketing delivers an average ROI of thirty-six dollars for every one dollar spent. ' +
-      'Social media delivers awareness, reach, and top-of-funnel traffic that feeds your email list. ' +
-      'The answer is not either-or — it is both. ' +
-      'Use social to attract, email to convert, and AI to run both automatically. ' +
-      'Synthex covers your social strategy at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-brand-consistency-revenue',
-    title: 'Consistent Branding Increases Revenue by 23% | Synthex',
-    description: `Brand consistency is not just about looking good. It drives real revenue.
-
-#BrandConsistency #RevenueGrowth #Branding #Synthex`,
-    tags: [
-      'brand consistency',
-      'revenue growth',
-      'branding',
-      'marketing stats',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Consistent brand presentation across all channels increases revenue by an average of twenty-three percent. ' +
-      'When customers recognise your brand instantly, they trust it more — and trust converts. ' +
-      'Most businesses struggle with brand consistency because they have too many people creating content. ' +
-      'Synthex ensures every post, on every platform, is perfectly on-brand, automatically. ' +
-      'Start at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-mobile-social-traffic',
-    title: '91% of Social Media is Consumed on Mobile | Synthex',
-    description: `Your content is being viewed on a phone. Is it optimised for that?
-
-#MobileMarketing #SocialMedia #ContentDesign #Synthex`,
-    tags: [
-      'mobile marketing',
-      'social media',
-      'content design',
-      'mobile first',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Ninety-one percent of all social media activity happens on mobile devices. ' +
-      'That means your content must stop the thumb scroll, read clearly on a small screen, ' +
-      'and communicate your message in under three seconds. ' +
-      'Short captions, bold visuals, vertical video, and large text are not optional — they are essential. ' +
-      'Synthex creates mobile-first content by default at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-user-generated-content',
-    title: 'UGC Drives 6.9× More Engagement | Synthex',
-    description: `User-generated content outperforms branded content every time. Here's why.
-
-#UGC #UserGeneratedContent #SocialProof #Synthex`,
-    tags: [
-      'UGC',
-      'user generated content',
-      'social proof',
-      'engagement',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'User-generated content — reviews, testimonials, and customer posts — drives ' +
-      'six point nine times more engagement than branded content. ' +
-      'Why? Because people trust people, not brands. ' +
-      'Encourage your customers to share their experiences, then amplify that content across your channels. ' +
-      'The most powerful marketing you will ever create is the kind your customers create for you. ' +
-      'Learn more at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-ai-adoption-marketing',
-    title: '72% of Marketers Now Use AI Tools | Synthex',
-    description: `AI adoption in marketing has hit a tipping point. Are you keeping up?
-
-#AIMarketing #MarketingTrends #DigitalMarketing #Synthex`,
-    tags: [
-      'AI marketing',
-      'marketing trends',
-      'AI adoption',
-      'digital marketing',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Seventy-two percent of marketing professionals now use AI tools in their workflow — ' +
-      'up from just eighteen percent three years ago. ' +
-      'The gap between AI-adopters and laggards is widening rapidly. ' +
-      'Businesses using AI produce four times more content, at lower cost, with higher engagement rates. ' +
-      'The question is not whether to adopt AI — it is how quickly you can do it. ' +
-      'Start today at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'stat-content-frequency-growth',
-    title: 'Posting 5× Per Week Grows Followers 3× Faster | Synthex',
-    description: `Posting frequency has a direct impact on growth. The data shows exactly how much.
-
-#SocialMediaGrowth #ContentFrequency #MarketingStats #Synthex`,
-    tags: [
-      'content frequency',
-      'social media growth',
-      'marketing stats',
-      'posting schedule',
-      'Synthex',
-    ],
-    compositionId: 'StatReveal',
-    voiceoverScript:
-      'Accounts that post five or more times per week grow their follower count three times faster ' +
-      'than accounts posting once or twice. ' +
-      'Frequency signals to algorithms that you are an active, valuable creator — ' +
-      'so they show your content to more people. ' +
-      'The challenge is producing enough quality content to sustain that pace. ' +
-      'Synthex solves that problem automatically at synthex dot social.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
   // ── ComparisonSlide (16:9 · 750f / 25s · 1920×1080) ─────────────────────────
 
   {
@@ -895,11 +616,10 @@ Start free: https://synthex.social
     ],
     compositionId: 'ComparisonSlide',
     voiceoverScript:
-      'Manual social media posting: three to five hours per week writing posts, choosing images, ' +
+      'Manual social media posting: writing posts, choosing images, ' +
       'logging into each platform, and hoping you remembered to schedule everything. ' +
       'AI-powered automation with Synthex: your brand voice is learned once, ' +
-      'content is generated and scheduled automatically, and you spend thirty minutes reviewing instead of five hours creating. ' +
-      'Same results — better content — a fraction of the time. ' +
+      'content is drafted and scheduled for you, and you review and approve every post before it is published. ' +
       'The choice is clear at synthex dot social.',
     durationInFrames: 750,
     fps: 30,
@@ -950,9 +670,9 @@ Start free: https://synthex.social
     ],
     compositionId: 'ComparisonSlide',
     voiceoverScript:
-      'Facebook: average user age thirty-five to fifty-five, stronger for local businesses, ' +
+      'Facebook: strong for local businesses, ' +
       'events, groups, and long-form content. Excellent for community building and retargeting. ' +
-      'Instagram: average user age eighteen to thirty-four, visual-first platform, ' +
+      'Instagram: a visual-first platform, ' +
       'strong for product-based businesses, lifestyle brands, and short-form video. ' +
       'Your choice depends entirely on where your audience spends their time. ' +
       'Synthex publishes to both automatically — learn more at synthex dot social.',
@@ -978,7 +698,7 @@ Start free: https://synthex.social
     compositionId: 'ComparisonSlide',
     voiceoverScript:
       'Short-form content — Reels, TikToks, and quick posts — drives discovery. ' +
-      'Algorithms love it, attention spans are short, and one viral clip can bring thousands of new followers. ' +
+      'Algorithms love it, attention spans are short, and one clip can reach people who have never heard of you. ' +
       'Long-form content — articles, podcasts, and deep-dive videos — builds authority. ' +
       'It converts browsers into believers and establishes you as a genuine expert. ' +
       'Both have a place in your strategy: short-form for reach, long-form for depth. ' +
@@ -991,7 +711,7 @@ Start free: https://synthex.social
 
   {
     id: 'compare-image-vs-video-posts',
-    title: 'Image Posts vs Video Posts: The Data | Synthex',
+    title: 'Image Posts vs Video Posts | Synthex',
     description: `Images or video? The platform-by-platform breakdown.
 
 #VideoMarketing #ImageContent #SocialMedia #Synthex`,
@@ -1006,7 +726,7 @@ Start free: https://synthex.social
     voiceoverScript:
       'Image posts: fast to create, clear and visually impactful, great for product showcases and quotes. ' +
       'Average reach is solid, but engagement has declined on most platforms as video dominates. ' +
-      'Video posts: take longer to produce, but generate forty-nine percent more engagement on average. ' +
+      'Video posts: take longer to produce, but add sound and motion to hold attention. ' +
       'Video is prioritised by every major algorithm in 2026 — Instagram, LinkedIn, and TikTok all push it first. ' +
       'Ideal strategy: video as your lead format, images to fill the gaps. ' +
       'Synthex creates both at synthex dot social.',
@@ -1449,7 +1169,7 @@ Start free: https://synthex.social
     compositionId: 'ListicleVideo',
     voiceoverScript:
       'Five marketing tasks you should automate immediately. ' +
-      'One: social media content creation — AI can generate weeks of posts in minutes. ' +
+      'One: social media content creation — AI can draft posts for you to review. ' +
       'Two: post scheduling — no more logging in at 8am every day. ' +
       'Three: performance reporting — dashboards should update themselves, not require manual pulls. ' +
       'Four: content repurposing — one piece of content should auto-adapt to every platform format. ' +
@@ -1789,339 +1509,6 @@ Start free: https://synthex.social
     height: 1080,
   },
 
-  // ── CaseStudyVideo (16:9 · 1200f / 40s · 1920×1080) ─────────────────────────
-
-  {
-    id: 'case-study-local-bakery-instagram',
-    title: 'How a Local Bakery Grew to 10K Instagram Followers | Synthex',
-    description: `From 200 to 10,000 Instagram followers in 90 days — the Synthex case study.
-
-#InstagramGrowth #LocalBusiness #CaseStudy #Synthex`,
-    tags: [
-      'Instagram growth',
-      'local business',
-      'case study',
-      'small business',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a local bakery with 200 Instagram followers and no consistent content strategy. ' +
-      'The owner was posting sporadically — sometimes daily, sometimes not for two weeks — ' +
-      'and seeing almost zero engagement despite making genuinely beautiful products. ' +
-      'The solution: Synthex generated a thirty-day content calendar mixing product photography, ' +
-      'behind-the-scenes baking content, customer testimonials, and seasonal promotions. ' +
-      'Posts were scheduled at peak engagement times. Captions were optimised with local hashtags. ' +
-      'Every comment received a reply within the hour. ' +
-      'The result: from 200 followers to over 10,000 in ninety days. ' +
-      'Online order enquiries increased by three hundred and forty percent. ' +
-      'One consistent social strategy turned a local favourite into a community institution. ' +
-      'Build your social presence with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-saas-linkedin-growth',
-    title: 'How a SaaS Startup Generated 500 Leads From LinkedIn | Synthex',
-    description: `B2B lead generation through LinkedIn — the strategy that delivered 500 qualified leads.
-
-#LinkedInLeads #B2BMarketing #SaaS #Synthex`,
-    tags: [
-      'LinkedIn leads',
-      'B2B marketing',
-      'SaaS',
-      'lead generation',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a B2B SaaS startup with a great product and zero LinkedIn presence. ' +
-      'Their target buyers — operations directors at mid-sized companies — were active on LinkedIn, ' +
-      'but the startup had no consistent strategy to reach them. ' +
-      'The solution: Synthex built a thought leadership content programme. ' +
-      'The founder posted five times per week — industry insights, process breakdowns, ' +
-      'and contrarian takes on common operational challenges. ' +
-      'No sales posts in the first four weeks. Only value. ' +
-      'In week five, a single case study post went viral within the operations community ' +
-      'and drove twelve hundred profile visits in forty-eight hours. ' +
-      'The result: five hundred qualified leads in ninety days, entirely from organic LinkedIn content. ' +
-      'Cost per lead: zero dollars in ad spend. ' +
-      'Build your LinkedIn authority with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-ecommerce-tiktok',
-    title: 'How an E-Commerce Brand Hit $100K From TikTok | Synthex',
-    description: `From unknown to $100K in revenue — powered by TikTok content strategy.
-
-#TikTokMarketing #Ecommerce #ContentMarketing #Synthex`,
-    tags: [
-      'TikTok marketing',
-      'ecommerce',
-      'content marketing',
-      'case study',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: an e-commerce brand selling sustainable homewares, ' +
-      'with no budget for paid advertising and a niche audience difficult to reach through traditional channels. ' +
-      'The solution: a TikTok-first content strategy built around authentic, educational content. ' +
-      'Synthex identified the top-performing content patterns in the sustainable living niche ' +
-      'and generated a daily posting schedule mixing product demonstrations, ' +
-      'sustainability tips, and honest brand storytelling. ' +
-      'No polished studio production — raw, genuine, mobile-first content. ' +
-      'The result: six videos exceeded one million views in the first sixty days. ' +
-      'One hundred thousand dollars in revenue attributed directly to TikTok traffic. ' +
-      'Follower count grew from eight hundred to forty-two thousand. ' +
-      'Authentic content beats advertising budget every time. ' +
-      'Discover your content strategy with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-gym-facebook-ads',
-    title: 'How a Gym Doubled Memberships With Facebook Content | Synthex',
-    description: `A local gym used organic Facebook content to double memberships in 6 months.
-
-#FacebookMarketing #LocalBusiness #Gym #Synthex`,
-    tags: [
-      'Facebook marketing',
-      'local business',
-      'gym',
-      'memberships',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a mid-sized gym with declining membership numbers and an underperforming Facebook page ' +
-      'that posted promotions people scrolled past without engaging. ' +
-      'The solution: Synthex rebuilt the content strategy around three pillars: ' +
-      'member success stories, daily workout tips, and behind-the-scenes content from trainers. ' +
-      'Promotional posts dropped from eighty percent of content to twenty percent. ' +
-      'The community responded. Engagement tripled. Shares increased dramatically as members started ' +
-      'tagging friends in workout tip posts. ' +
-      'A "member of the month" series generated unprecedented comment activity and word-of-mouth referrals. ' +
-      'The result: a sixty-three percent increase in new memberships over six months, ' +
-      'with social media cited as the primary discovery channel. ' +
-      'Community-first content is the most effective gym marketing strategy available. ' +
-      'Build yours with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-restaurant-social',
-    title: 'How a Restaurant Filled Tables With Social Media | Synthex',
-    description: `From empty weeknight tables to fully booked — the social media turnaround story.
-
-#RestaurantMarketing #FoodAndBev #SocialMedia #Synthex`,
-    tags: [
-      'restaurant marketing',
-      'food and beverage',
-      'social media',
-      'local business',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a family-run restaurant with amazing food and empty tables on weeknights. ' +
-      'Their social media presence consisted of infrequent photos of plated dishes — ' +
-      'beautiful, but not driving reservations. ' +
-      'The solution: Synthex rebuilt their content around the full dining experience. ' +
-      "Chef's process videos. Ingredient sourcing stories. Staff introductions. " +
-      'Tuesday night "secret specials" announced exclusively on Instagram Stories. ' +
-      'Behind-the-scenes prep videos that made viewers hungry before they even checked the menu. ' +
-      'A weekly "table for two" giveaway that generated hundreds of comments and shares each week. ' +
-      'The result: weeknight reservations increased by seventy-eight percent. ' +
-      'The Tuesday special became booked out every week within two months. ' +
-      'Story-driven social content is the most powerful form of restaurant marketing. ' +
-      'Start yours with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-consultant-thought-leadership',
-    title:
-      'How a Consultant Built a 6-Figure Business Through LinkedIn | Synthex',
-    description: `One consultant, LinkedIn, and consistent thought leadership — the path to 6 figures.
-
-#ConsultingBusiness #ThoughtLeadership #LinkedIn #Synthex`,
-    tags: [
-      'consulting business',
-      'thought leadership',
-      'LinkedIn',
-      'case study',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: an independent consultant transitioning from corporate employment to self-employment, ' +
-      'starting with no audience, no network, and no visibility in their new market. ' +
-      'The solution: a daily LinkedIn posting habit, supported by Synthex to maintain consistency. ' +
-      'Content focused on one theme: the costly mistakes organisations make in their domain — ' +
-      'written from hard-won personal experience. ' +
-      'No hard selling. No "hire me" posts. Only insights that proved expertise. ' +
-      'In month three, a post on a common leadership failure went viral within the industry. ' +
-      'Five inbound enquiries arrived in a single week. ' +
-      'The result: six figures in consulting revenue in the first twelve months. ' +
-      'Every client cited LinkedIn as how they discovered and chose to trust this consultant. ' +
-      'Consistency and expertise are the foundation of consultant marketing. ' +
-      'Build yours with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-startup-brand-building',
-    title: 'How a Startup Built Brand Recognition Before Launch | Synthex',
-    description: `Building an audience before your product launches. The pre-launch brand strategy.
-
-#StartupMarketing #PreLaunch #BrandBuilding #Synthex`,
-    tags: [
-      'startup marketing',
-      'pre-launch',
-      'brand building',
-      'audience building',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a tech startup preparing to launch a new product category ' +
-      'with zero brand awareness and a six-month runway before their public launch date. ' +
-      'The solution: a build-in-public content strategy across LinkedIn and Twitter. ' +
-      'Synthex generated daily content documenting the founding journey: ' +
-      'the problem being solved, the product decisions being made, the challenges and setbacks, ' +
-      'and the milestones along the way. ' +
-      'The audience felt invested before a product even existed. ' +
-      'Early followers became early advocates, sharing the journey with their networks organically. ' +
-      'The result: three thousand followers and a five-hundred-person launch waitlist built entirely through content. ' +
-      'On launch day, the product sold out within seventy-two hours. ' +
-      'The best time to build your audience is before you need them. ' +
-      'Start with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-nonprofit-awareness',
-    title: 'How a Nonprofit Raised $50K Through Social Media | Synthex',
-    description: `Social media fundraising done right — a nonprofit case study.
-
-#NonprofitMarketing #Fundraising #SocialMedia #Synthex`,
-    tags: [
-      'nonprofit marketing',
-      'fundraising',
-      'social media',
-      'awareness campaign',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a small nonprofit with a powerful mission but a tiny budget and no social media strategy. ' +
-      'They were posting sporadically, reaching only existing supporters, and struggling to grow their donor base. ' +
-      'The solution: Synthex built a storytelling-first content strategy. ' +
-      'Every week: one beneficiary story, one impact statistic, one behind-the-scenes post, and one direct appeal. ' +
-      'Stories were told with humanity and specificity — real people, real outcomes, real numbers. ' +
-      'A fundraising challenge in month two — a matching donation campaign — ' +
-      'was promoted across all platforms with daily countdown content. ' +
-      'The result: fifty thousand dollars raised in thirty days. ' +
-      'Donor base grew by two hundred and sixty percent. ' +
-      'Social following tripled. All organic — zero advertising spend. ' +
-      'Mission-driven storytelling is the most powerful fundraising tool available. ' +
-      'Tell your story with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-retail-omnichannel',
-    title: 'How a Retail Brand Unified Social and In-Store Sales | Synthex',
-    description: `Connecting online social media to in-store foot traffic — the omnichannel playbook.
-
-#RetailMarketing #OmnichannelMarketing #SocialCommerce #Synthex`,
-    tags: [
-      'retail marketing',
-      'omnichannel',
-      'social commerce',
-      'foot traffic',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a regional retail chain with strong in-store sales but no coherent digital presence. ' +
-      'Each store was managing its own social media inconsistently — different voices, different content, ' +
-      'different quality — undermining the brand at scale. ' +
-      'The solution: Synthex created a centralised content strategy with localised execution. ' +
-      'Brand-level content maintained consistency across all stores. ' +
-      'Location-specific content highlighted individual store events, staff, and community involvement. ' +
-      'An "in-store only" Instagram Stories series drove social followers to physical locations. ' +
-      'The result: a forty-one percent increase in foot traffic attributed to social media referrals. ' +
-      'Online brand sentiment scores improved significantly. ' +
-      'And for the first time, all stores were telling the same brand story in their own local voice. ' +
-      'Omnichannel consistency starts with a unified content strategy. ' +
-      'Build yours at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'case-study-b2b-content-marketing',
-    title: 'How B2B Content Marketing Generated $2M in Pipeline | Synthex',
-    description: `The B2B content marketing strategy that built a $2M sales pipeline — with no cold outreach.
-
-#B2BMarketing #ContentMarketing #SalesStrategy #Synthex`,
-    tags: [
-      'B2B marketing',
-      'content marketing',
-      'sales pipeline',
-      'inbound marketing',
-      'Synthex',
-    ],
-    compositionId: 'CaseStudyVideo',
-    voiceoverScript:
-      'The challenge: a professional services firm relying entirely on referrals and cold outreach ' +
-      'to generate new business — a costly, slow, and unreliable pipeline. ' +
-      'The solution: a content marketing strategy designed to attract ideal clients inbound. ' +
-      "Synthex developed a weekly publishing cadence across LinkedIn and the firm's blog: " +
-      'industry trend analysis, framework-based guides, and honest case studies. ' +
-      'Over twelve months, every piece of content was optimised for the exact search terms and questions ' +
-      'their ideal clients were asking. ' +
-      'The sales team shifted from cold outreach to warm inbound enquiries — ' +
-      'prospects who had already read their content and considered them the obvious expert. ' +
-      'The result: two million dollars in qualified pipeline generated organically ' +
-      'over twelve months, with content as the primary source of discovery. ' +
-      'Cold outreach costs money. Content marketing compounds. ' +
-      'Start compounding with Synthex at synthex dot social.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
   // ── QuoteCard (1:1 · 600f / 20s · 1080×1080) ────────────────────────────────
 
   {
@@ -2177,15 +1564,15 @@ Start free: https://synthex.social
 
   {
     id: 'quote-engagement-over-followers',
-    title: '"1,000 Engaged Followers Beat 100,000 Passive Ones" | Synthex',
+    title: '"Engaged Followers Over Passive Ones" | Synthex',
     description: `Follower count is a vanity metric. Engagement is the real measure of social media success.
 
 #SocialMedia #EngagementRate #Synthex`,
     tags: ['engagement', 'followers', 'social media', 'community', 'Synthex'],
     compositionId: 'QuoteCard',
     voiceoverScript:
-      '"One thousand engaged followers will always beat one hundred thousand passive ones." ' +
-      'An audience that reads, responds, and shares your content is infinitely more valuable ' +
+      '"Build an audience that engages, not just one that is large." ' +
+      'An audience that reads, responds, and shares your content gives you more to build on ' +
       'than a large audience that scrolls past. ' +
       'Build depth before width. Build trust before scale. ' +
       'Synthex helps you build the right audience at synthex dot social.',
@@ -2275,7 +1662,6 @@ Start free: https://synthex.social
     compositionId: 'QuoteCard',
     voiceoverScript:
       '"People trust people — not brands. Your customers\' voices are more powerful than yours." ' +
-      'One genuine testimonial outperforms ten promotional posts. ' +
       'Collect reviews, amplify success stories, and let your customers do your marketing. ' +
       'Social proof is free, authentic, and converts better than any ad. ' +
       'Synthex helps you build it at synthex dot social.',
@@ -2422,7 +1808,7 @@ Book now: https://synthex.social
 
   {
     id: 'cta-join-community',
-    title: 'Join 5,000+ Business Owners Using Synthex | Community',
+    title: 'Join the Synthex Community',
     description: `You're not alone in figuring out AI marketing. Join the Synthex community.
 
 Join free: https://synthex.social
@@ -2437,9 +1823,9 @@ Join free: https://synthex.social
     ],
     compositionId: 'CountdownCTA',
     voiceoverScript:
-      'Five thousand business owners are already using Synthex to automate their social media marketing. ' +
-      'They are saving hours every week, growing their audiences, and generating real business results. ' +
-      'Join them today — it takes sixty seconds to get started. ' +
+      'Synthex helps business owners plan, approve and publish their social media marketing in one place. ' +
+      'You approve every post before it goes live. ' +
+      'Get started today. ' +
       'Visit synthex dot social.',
     durationInFrames: 450,
     fps: 30,
@@ -2532,7 +1918,7 @@ Connect now: https://synthex.social
 
   {
     id: 'cta-schedule-content',
-    title: 'Schedule a Month of Content in Minutes | Synthex',
+    title: 'Plan and Schedule Your Content | Synthex',
     description: `Stop posting manually every day. Let Synthex schedule everything for you.
 
 Start free: https://synthex.social
@@ -2547,10 +1933,9 @@ Start free: https://synthex.social
     ],
     compositionId: 'CountdownCTA',
     voiceoverScript:
-      'What if you could schedule an entire month of social media content in under thirty minutes? ' +
+      'What if you could plan an entire month of social media content in one sitting? ' +
       'Synthex generates your content, adapts it for every platform, ' +
       'and schedules it automatically at the optimal time for each audience. ' +
-      'Thirty minutes of setup, thirty days of automated posting. ' +
       'Start at synthex dot social.',
     durationInFrames: 450,
     fps: 30,
@@ -2577,7 +1962,7 @@ Get yours: https://synthex.social
     voiceoverScript:
       'How does your brand actually look online? ' +
       "Synthex's free AI brand audit scans your social profiles, analyses your content, " +
-      'and tells you exactly what to improve — in minutes. ' +
+      'and suggests what to improve. ' +
       'No charge. No commitment. Just clarity. ' +
       'Get your free audit at synthex dot social.',
     durationInFrames: 450,
@@ -2608,33 +1993,6 @@ Start now: https://synthex.social
       'growth, engagement, top posts, and strategic recommendations for next year. ' +
       'Know what worked, understand what did not, and go into the next year with a clear plan. ' +
       'Get your report at synthex dot social.',
-    durationInFrames: 450,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-
-  {
-    id: 'cta-limited-offer',
-    title: 'Limited: 3 Months of Synthex Pro at Starter Price',
-    description: `This offer won't last. Lock in 3 months of Pro access at the Starter price.
-
-Claim now: https://synthex.social
-
-#LimitedOffer #AIMarketing #Synthex`,
-    tags: [
-      'limited offer',
-      'AI marketing',
-      'Synthex',
-      'discount',
-      'marketing automation',
-    ],
-    compositionId: 'CountdownCTA',
-    voiceoverScript:
-      'For a limited time, get three months of Synthex Pro at the Starter plan price. ' +
-      'Full AI content generation, all platforms, advanced analytics — at a fraction of the regular cost. ' +
-      'This offer expires soon. ' +
-      'Lock it in now at synthex dot social.',
     durationInFrames: 450,
     fps: 30,
     width: 1920,
@@ -2742,7 +2100,7 @@ Claim now: https://synthex.social
       'to determine the correct action in a given situation. ' +
       'In marketing, social proof includes testimonials, reviews, star ratings, follower counts, and case studies. ' +
       'When potential customers see that others trust and value your product, they become more likely to do the same. ' +
-      'Example: "Join 10,000 businesses using Synthex" is social proof. ' +
+      'Example: a verified customer review on your website is social proof. ' +
       'Build yours at synthex dot social.',
     durationInFrames: 600,
     fps: 30,
@@ -2821,7 +2179,6 @@ Claim now: https://synthex.social
     voiceoverScript:
       'Content pillars are the core themes or categories that define what a brand posts about on social media. ' +
       'They give your content strategy structure and ensure variety without losing focus. ' +
-      'Most businesses operate with three to five pillars. ' +
       'Example: a fitness brand might use education, motivation, transformation stories, and nutrition tips as their four pillars. ' +
       'Every piece of content fits into one of these, keeping the feed coherent and purposeful. ' +
       'Define your content pillars with Synthex at synthex dot social.',
@@ -2941,31 +2298,7 @@ Claim now: https://synthex.social
     width: 1920,
     height: 1080,
   },
-  {
-    id: 'how-to-create-content',
-    title: 'How to Create AI Content | Synthex Tutorial',
-    description:
-      'See how to generate on-brand social media content with Synthex AI in seconds.\n\n#ContentCreation #AIMarketing #Synthex',
-    tags: [
-      'content creation',
-      'AI writing',
-      'social media',
-      'Synthex',
-      'tutorial',
-    ],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Creating content with Synthex takes seconds, not hours. ' +
-      'Navigate to Content Drafts and click New Draft. ' +
-      'Enter a topic or let AI suggest one based on your content calendar. ' +
-      'Synthex generates platform-optimised copy for every connected channel simultaneously. ' +
-      'Review, tweak, and approve — or enable auto-publish to go live immediately. ' +
-      'Your brand voice is learned from your existing content, so every post sounds like you.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
+  HELP_VIDEO_BY_ID['how-to-create-content'],
   {
     id: 'feature-tour-analytics',
     title: 'Analytics Feature Tour | Synthex',
@@ -2978,247 +2311,29 @@ Claim now: https://synthex.social
       'Track engagement rate, follower growth, reach, and top-performing content from one screen. ' +
       'Use the campaign selector to compare performance across different time periods. ' +
       'The AI insights panel surfaces actionable recommendations — like the best time to post or which content format resonates most. ' +
-      'Data updates every thirty minutes so you always have a current picture of your social presence.',
+      'Data updates regularly so you always have a current picture of your social presence.',
     durationInFrames: 900,
     fps: 30,
     width: 1920,
     height: 1080,
   },
-  {
-    id: 'feature-tour-brand-voice',
-    title: 'Brand Voice Feature Tour | Synthex',
-    description:
-      'Learn how Synthex captures and maintains your unique brand voice across all AI-generated content.\n\n#BrandVoice #ContentStrategy #Synthex',
-    tags: ['brand voice', 'tone of voice', 'content strategy', 'AI', 'Synthex'],
-    compositionId: 'ExplainerVideo',
-    voiceoverScript:
-      'Your brand voice is what makes your content recognisable. ' +
-      'Synthex learns it from your existing posts, website copy, and the tone guidelines you provide. ' +
-      "In the Brand Voice page, you can review and refine the AI's understanding of your style. " +
-      'Set vocabulary preferences, tone sliders, and content themes. ' +
-      'Every piece of AI-generated content will match this profile — consistent across platforms and over time.',
-    durationInFrames: 900,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-  {
-    id: 'platform-guide-instagram',
-    title: 'Connecting Instagram | Synthex Platform Guide',
-    description:
-      'Step-by-step guide to connecting your Instagram account to Synthex for automated posting.\n\n#Instagram #SocialMediaIntegration #Synthex',
-    tags: [
-      'Instagram',
-      'platform connection',
-      'OAuth',
-      'social media',
-      'Synthex',
-    ],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Connecting Instagram to Synthex takes under a minute. ' +
-      'Go to Integrations, find Instagram in the platform list, and click Connect. ' +
-      "You will be redirected to Instagram's authorisation page. " +
-      'Log in with your business account and approve the Synthex permissions. ' +
-      'Once connected, Synthex can publish posts, reels, and stories on your behalf. ' +
-      'Connect multiple Instagram accounts for different businesses — each managed separately.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-  {
-    id: 'ai-capability-chat',
-    title: 'AI Chat Capabilities | Synthex',
-    description:
-      'Discover what you can do with Synthex AI Chat — strategy, content, research, and more.\n\n#AIChat #MarketingAI #Synthex',
-    tags: [
-      'AI chat',
-      'content strategy',
-      'marketing AI',
-      'Synthex',
-      'tutorial',
-    ],
-    compositionId: 'ExplainerVideo',
-    voiceoverScript:
-      'Synthex AI Chat is your always-on marketing strategist. ' +
-      'Ask it to brainstorm campaign ideas, write captions for specific platforms, or analyse competitor content. ' +
-      'It remembers your brand profile and past conversations, so advice gets more personalised over time. ' +
-      'Use it to draft email subject lines, plan content calendars, or refine your value proposition. ' +
-      'Every response is grounded in your industry context — not generic marketing advice.',
-    durationInFrames: 900,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-  {
-    id: 'feature-tour-research',
-    title: 'Research Feature Tour | Synthex',
-    description:
-      'Explore Synthex Research — AI-powered market intelligence to inform your content strategy.\n\n#ContentResearch #MarketIntelligence #Synthex',
-    tags: [
-      'research',
-      'market intelligence',
-      'content strategy',
-      'AI',
-      'Synthex',
-    ],
-    compositionId: 'ExplainerVideo',
-    voiceoverScript:
-      'The Synthex Research module puts market intelligence at your fingertips. ' +
-      'Search any topic and get a synthesised brief — trends, key players, audience questions, and content angles. ' +
-      'Research reports are saved to your library for future reference. ' +
-      'Use the citation panel to back up your content with credible sources. ' +
-      "The AI identifies gaps in your competitors's content that you can fill — giving you a consistent edge.",
-    durationInFrames: 900,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
-  {
-    id: 'workflow-overview',
-    title: 'Creative Suite Workflow Overview | Synthex',
-    description:
-      'Get an overview of the Synthex Creative Suite — AI content studio, brand tools, and campaign builder.\n\n#CreativeSuite #ContentStudio #Synthex',
-    tags: [
-      'creative suite',
-      'content studio',
-      'brand tools',
-      'campaign builder',
-      'Synthex',
-    ],
-    compositionId: 'ExplainerVideo',
-    voiceoverScript:
-      'The Synthex Creative Suite is where ideas become campaigns. ' +
-      'Start in the AI Content Studio to generate copy, images, and video briefs in minutes. ' +
-      'Move to the Brand Tools section to apply your visual identity — logo, colours, fonts. ' +
-      'Then hand off to the Campaign Builder to schedule and distribute across every platform. ' +
-      'The full workflow from concept to published campaign takes minutes, not days. ' +
-      'Your creative output scales with your ambition.',
-    durationInFrames: 900,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-  },
+  HELP_VIDEO_BY_ID['feature-tour-brand-voice'],
+  HELP_VIDEO_BY_ID['platform-guide-instagram'],
+  HELP_VIDEO_BY_ID['ai-capability-chat'],
+  HELP_VIDEO_BY_ID['feature-tour-research'],
+  HELP_VIDEO_BY_ID['workflow-overview'],
 
   // ── Auth + Onboarding how-tos (UNI-1639) ────────────────────────────────
 
-  {
-    id: 'how-to-sign-up',
-    title: 'How to Create Your Synthex Account',
-    description:
-      'Learn how to create your Synthex account in under two minutes — from the sign-up form to the activation checklist.\n\n#Synthex #GettingStarted #AccountCreation',
-    tags: ['signup', 'getting started', 'account creation', 'Synthex'],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Creating your Synthex account takes under two minutes. Head to synthex dot social ' +
-      'and click Get Started Free. Enter your business name, email address, and a strong ' +
-      "password — then click Create Account. You'll receive a verification email immediately. " +
-      "Open it and click Verify Email Address. Once verified, you'll be taken straight into " +
-      'the five-step activation checklist. This checklist connects your platforms and unlocks ' +
-      'the full automation engine. Complete each step in order — starting with your URL health ' +
-      'check, then connecting your social media accounts. Welcome to Synthex.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-    youtubeVideoId: 'K2QqYXi05Do',
-  },
+  HELP_VIDEO_BY_ID['how-to-sign-up'],
 
-  {
-    id: 'how-to-sign-in',
-    title: 'How to Sign In to Synthex',
-    description:
-      'Signing in to Synthex is simple — email and password, or one-click Google login.\n\n#Synthex #SignIn #GettingStarted',
-    tags: ['login', 'sign in', 'getting started', 'Synthex'],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Signing in to Synthex is simple. Visit synthex dot social and click Sign In. ' +
-      'Enter your email address and password, then click Sign In. You can also sign in ' +
-      "with Google for one-click access. If you've forgotten your password, click Forgot " +
-      "Password and we'll email you a reset link. Once signed in, you'll land directly " +
-      'on your dashboard where all your campaigns, analytics, and tools are waiting.',
-    durationInFrames: 600,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-    youtubeVideoId: 'V6d5bcnJ0z4',
-  },
+  HELP_VIDEO_BY_ID['how-to-sign-in'],
 
-  {
-    id: 'onboarding-connect-social',
-    title: 'Connecting Your Social Media Accounts',
-    description:
-      'Step 2 of activation: connect Instagram, Facebook, LinkedIn, and your other platforms to unlock AI-powered publishing.\n\n#SocialMedia #Onboarding #Synthex',
-    tags: [
-      'social media',
-      'connect accounts',
-      'onboarding',
-      'Instagram',
-      'LinkedIn',
-      'Facebook',
-    ],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Connecting your social media accounts is Step 2 of your activation checklist. ' +
-      'From the dashboard, navigate to Integrations and select the platform you want to connect. ' +
-      'Synthex supports Instagram, Facebook, LinkedIn, X, TikTok, YouTube, Pinterest, and Google ' +
-      "Business Profile. Click Connect, authorise Synthex in the popup, and you're done. " +
-      'Each connected platform unlocks direct posting, engagement tracking, and AI-powered ' +
-      'scheduling. Connect all your active platforms for maximum automation impact. ' +
-      'Once connected, your accounts will appear in the Integrations panel with a green status indicator.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-    youtubeVideoId: 'k6lRhET7QDY',
-  },
+  HELP_VIDEO_BY_ID['onboarding-connect-social'],
 
-  {
-    id: 'onboarding-connect-gmb',
-    title: 'Connecting Google Business Profile',
-    description:
-      'Step 3 of activation: connect your Google Business Profile to sync reviews, insights, and local search data.\n\n#GoogleBusiness #LocalSEO #Onboarding #Synthex',
-    tags: ['Google Business Profile', 'GMB', 'local SEO', 'onboarding'],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Your Google Business Profile is Step 3 of activation. Navigate to Google Business ' +
-      'in your dashboard sidebar. Click Connect Google Business Profile and sign in with ' +
-      'the Google account that manages your listing. Once connected, Synthex automatically ' +
-      'syncs your reviews, insights, and location data. You can respond to reviews with ' +
-      'AI-generated replies, post directly to your listing, and track how customers find ' +
-      'you in local search. The NAP consistency audit also runs automatically, alerting you ' +
-      'if your name, address, or phone number differs across platforms. This is essential ' +
-      'for local search ranking.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-    youtubeVideoId: 'g8YRmVvnBj0',
-  },
+  HELP_VIDEO_BY_ID['onboarding-connect-gmb'],
 
-  {
-    id: 'onboarding-setup-ai',
-    title: 'Setting Up Your AI Integration',
-    description:
-      'Step 4 of activation: connect your AI provider (OpenAI, Anthropic, Gemini, or OpenRouter) to unlock the full Content Studio.\n\n#AI #ContentGeneration #Onboarding #Synthex',
-    tags: ['AI', 'LLM', 'API key', 'onboarding', 'content generation'],
-    compositionId: 'HowToVideo',
-    voiceoverScript:
-      'Step 4 of activation is connecting your AI provider. Navigate to Settings, then ' +
-      'API Keys, and select your preferred AI provider — Synthex supports OpenAI, Anthropic ' +
-      'Claude, Google Gemini, and OpenRouter. Enter your API key and click Save. ' +
-      "If you prefer not to use your own key, Synthex's built-in AI engine activates " +
-      'automatically on any paid plan. Once your AI is connected, the Content Studio ' +
-      'unlocks the full generation toolkit — long-form posts, short reels, campaign briefs, ' +
-      'and competitor analysis all become available. This is the engine that powers ' +
-      'autonomous content creation.',
-    durationInFrames: 1200,
-    fps: 30,
-    width: 1920,
-    height: 1080,
-    youtubeVideoId: 'No4TI4lLIiM',
-  },
+  HELP_VIDEO_BY_ID['onboarding-setup-ai'],
 
   {
     id: 'use-case-content-creation',
@@ -3274,9 +2389,9 @@ Claim now: https://synthex.social
 
   {
     id: 'use-case-campaign-scheduling',
-    title: 'Scheduling a Month of Content in Minutes | Synthex',
+    title: 'Scheduling a Month of Content | Synthex',
     description:
-      'Discover how the Synthex Campaign Planner generates a 30-day content calendar across all your platforms — then schedules everything automatically.\n\n#Scheduling #ContentCalendar #Automation #Synthex',
+      'See how the Synthex Campaign Planner drafts a content calendar across your connected platforms, ready for you to review and schedule.\n\n#Scheduling #ContentCalendar #Automation #Synthex',
     tags: [
       'scheduling',
       'content calendar',
@@ -3286,13 +2401,11 @@ Claim now: https://synthex.social
     ],
     compositionId: 'ExplainerVideo',
     voiceoverScript:
-      'Planning a month of content used to take days. With Synthex, it takes minutes. ' +
       'Open Campaign Planner, enter your campaign goal and target audience, and Synthex ' +
       'generates a 30-day content calendar — one post per day, across all your connected ' +
       'platforms, with themes, hooks, and calls to action pre-planned. Review the calendar, ' +
-      'tweak any posts you want to customise, then click Schedule All. Every post queues ' +
-      'automatically at the optimal posting time for each platform. Your content runs ' +
-      'on autopilot while you focus on the work that actually needs you.',
+      'tweak any posts you want to customise, then schedule the ones you approve. ' +
+      'Each approved post is queued for the time you set on each platform.',
     durationInFrames: 900,
     fps: 30,
     width: 1920,

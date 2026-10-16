@@ -288,7 +288,7 @@ export function StreakCounter({ compact = false }: { compact?: boolean }) {
               <Target className="h-5 w-5 text-orange-400" />
               <span className="font-medium text-white">Today's Challenge</span>
             </div>
-            <span className="text-xs text-orange-400">+10 points</span>
+            <span className="text-xs text-orange-400">Bonus points</span>
           </div>
           <p className="text-sm text-gray-300 mb-3">
             Create and publish at least one piece of content

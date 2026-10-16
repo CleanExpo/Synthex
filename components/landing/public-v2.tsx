@@ -104,7 +104,7 @@ export const commandCenterLanes = [
     label: 'Research',
     title: 'Market signal checked',
     copy: 'Search, YouTube, social, Reddit, competitors, local events and trend signals shape the campaign hypothesis.',
-    state: 'Verified',
+    state: 'Checked',
   },
   {
     icon: Target,
@@ -540,7 +540,7 @@ export function SimpleMarketingModel() {
             Simple model
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-5xl">
-            Three cards. No maze.
+            Cards, not a maze.
           </h2>
           <p className="mt-5 text-base leading-8 text-white/70">
             The product should be obvious from the first screen: input the idea,

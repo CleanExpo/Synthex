@@ -25,7 +25,9 @@ describe('RestoreAssist insurer landing page (SYN-918)', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /Fifty contractor reports/i,
+        // The headline states the problem without the unverified "fifty"
+        // figure (SYN-1226).
+        name: /Every contractor report in a different format/i,
       })
     ).toBeInTheDocument();
     // Two "Book a walkthrough" CTAs (hero + closing band). Both must reach

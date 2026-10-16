@@ -229,13 +229,17 @@ export default function PsychologyBrandGenerator({
               Psychology-Powered Brand Generator
             </h1>
             <p className="text-xl text-gray-300">
-              Leverage 50+ psychological principles to create irresistible brands
+              Apply psychological principles to create memorable brands
             </p>
           </div>
         )}
 
         {/* Progress Steps */}
-        <div className={embedded ? 'mb-8 flex justify-center' : 'mb-12 flex justify-center'}>
+        <div
+          className={
+            embedded ? 'mb-8 flex justify-center' : 'mb-12 flex justify-center'
+          }
+        >
           <div className="flex items-center space-x-4">
             {[1, 2, 3, 4].map(s => (
               <React.Fragment key={s}>

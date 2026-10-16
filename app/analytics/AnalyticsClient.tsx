@@ -26,10 +26,6 @@ import {
   TrendingDown,
   Activity,
   Heart,
-  Share2,
-  MessageCircle,
-  MousePointer,
-  Clock,
   Award,
   Target,
   Zap,
@@ -161,8 +157,8 @@ export default function AnalyticsDashboard() {
     } catch (error) {
       console.error('Error loading analytics:', error);
       toast.error('Failed to load analytics data');
-      // Set demo data
-      setDashboardData(getDemoData());
+      // No invented figures: the page shows its empty state instead.
+      setDashboardData(null);
     } finally {
       setLoading(false);
     }
@@ -178,73 +174,6 @@ export default function AnalyticsDashboard() {
     setRefreshing(false);
     toast.success('Analytics refreshed');
   };
-
-  const getDemoData = () => ({
-    overview: {
-      totalPosts: 247,
-      totalEngagement: 15420,
-      averageEngagementRate: 3.8,
-      contentGenerated: 89,
-    },
-    recentActivity: [
-      {
-        id: '1',
-        content: 'AI is transforming marketing...',
-        platform: 'twitter',
-        status: 'published',
-        createdAt: new Date(),
-      },
-      {
-        id: '2',
-        content: 'Check out our latest insights...',
-        platform: 'linkedin',
-        status: 'published',
-        createdAt: new Date(),
-      },
-    ],
-    platformBreakdown: [
-      { platform: 'twitter', posts: 89 },
-      { platform: 'linkedin', posts: 67 },
-      { platform: 'instagram', posts: 45 },
-      { platform: 'facebook', posts: 31 },
-      { platform: 'tiktok', posts: 15 },
-    ],
-    trends: {
-      postsThisWeek: 32,
-      postsLastWeek: 28,
-      growthRate: 14.3,
-      trending: 'up',
-    },
-    engagementData: [
-      { date: 'Mon', likes: 145, shares: 89, comments: 34 },
-      { date: 'Tue', likes: 167, shares: 92, comments: 41 },
-      { date: 'Wed', likes: 189, shares: 103, comments: 47 },
-      { date: 'Thu', likes: 203, shares: 98, comments: 52 },
-      { date: 'Fri', likes: 234, shares: 112, comments: 58 },
-      { date: 'Sat', likes: 198, shares: 95, comments: 43 },
-      { date: 'Sun', likes: 176, shares: 87, comments: 39 },
-    ],
-    topContent: [
-      {
-        content: '🚀 AI is revolutionizing...',
-        engagement: 1234,
-        platform: 'twitter',
-        viralScore: 8.5,
-      },
-      {
-        content: 'Three lessons from implementing...',
-        engagement: 987,
-        platform: 'linkedin',
-        viralScore: 7.8,
-      },
-      {
-        content: '✨ Transform your marketing...',
-        engagement: 856,
-        platform: 'instagram',
-        viralScore: 7.2,
-      },
-    ],
-  });
 
   if (loading) {
     return (
@@ -314,7 +243,9 @@ export default function AnalyticsDashboard() {
                 <span
                   className={`text-sm ${trends?.trending === 'up' ? 'text-green-500' : 'text-red-500'}`}
                 >
-                  {trends?.growthRate ?? 0}%
+                  {typeof trends?.growthRate === 'number'
+                    ? `${trends.growthRate}%`
+                    : '—'}
                 </span>
                 <span className="text-sm text-gray-500 ml-1">vs last week</span>
               </div>
@@ -351,7 +282,9 @@ export default function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {overview?.averageEngagementRate ?? 0}%
+                {typeof overview?.averageEngagementRate === 'number'
+                  ? `${overview.averageEngagementRate}%`
+                  : '—'}
               </div>
               <Progress
                 value={(overview?.averageEngagementRate ?? 0) * 10}
@@ -400,77 +333,6 @@ export default function AnalyticsDashboard() {
                 <EngagementTrendsChart data={engagementData || []} />
               </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Engagement Breakdown</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Heart className="h-4 w-4 text-red-500" />
-                        <span>Likes</span>
-                      </div>
-                      <span className="font-bold">8,234</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Share2 className="h-4 w-4 text-blue-500" />
-                        <span>Shares</span>
-                      </div>
-                      <span className="font-bold">4,821</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MessageCircle className="h-4 w-4 text-green-500" />
-                        <span>Comments</span>
-                      </div>
-                      <span className="font-bold">2,365</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <MousePointer className="h-4 w-4 text-orange-500" />
-                        <span>Clicks</span>
-                      </div>
-                      <span className="font-bold">12,456</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Best Posting Times</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>9:00 AM</span>
-                      </div>
-                      <Badge>High Engagement</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>12:00 PM</span>
-                      </div>
-                      <Badge>Peak Time</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>6:00 PM</span>
-                      </div>
-                      <Badge>Good Reach</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </TabsContent>
 
           {/* Platforms Tab */}
@@ -601,54 +463,10 @@ export default function AnalyticsDashboard() {
                   <div className="space-y-3">
                     <div className="p-3 bg-green-900/20 border border-green-500/20 rounded">
                       <p className="text-sm">
-                        <strong>Growth Trend:</strong> Your engagement has
-                        increased by {trends?.growthRate ?? 0}% this week
-                      </p>
-                    </div>
-                    <div className="p-3 bg-blue-900/20 border border-blue-500/20 rounded">
-                      <p className="text-sm">
-                        <strong>Best Platform:</strong> Twitter is generating
-                        the highest engagement
-                      </p>
-                    </div>
-                    <div className="p-3 bg-orange-900/20 border border-orange-500/20 rounded">
-                      <p className="text-sm">
-                        <strong>Optimal Time:</strong> Posts at 9 AM get 45%
-                        more engagement
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recommendations</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <span className="text-green-500">✓</span>
-                      <p className="text-sm">
-                        Post more content on Twitter for maximum reach
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-green-500">✓</span>
-                      <p className="text-sm">
-                        Schedule posts for 9 AM and 6 PM
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-green-500">✓</span>
-                      <p className="text-sm">
-                        Use more visual content on Instagram
-                      </p>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-green-500">✓</span>
-                      <p className="text-sm">
-                        Increase posting frequency on LinkedIn
+                        <strong>Growth Trend:</strong>{' '}
+                        {typeof trends?.growthRate === 'number'
+                          ? `Your engagement changed by ${trends.growthRate}% this week`
+                          : 'No trend data yet.'}
                       </p>
                     </div>
                   </div>

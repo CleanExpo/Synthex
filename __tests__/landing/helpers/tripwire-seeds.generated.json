@@ -1,0 +1,5339 @@
+{
+  "generator": "scripts/claims-seeds.ts",
+  "base": "83243588",
+  "count": 1058,
+  "seeds": [
+    {
+      "text": "- Audit log + GDPR/Privacy compliance built in",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": "- Brand Name: SYNTHEX - Parent Organisation: Unite-Group (https://unite-group.com.au)",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": "- Parent Organisation: Unite-Group (https://unite-group.com.au)",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": "- Powered by Next.js 15 (verifiable via signed source manifests)",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": "- Support: contact form, with human follow-up within 1 business day",
+      "file": "public/llms.txt",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "- Support response target: 1 business day (contact form), instant (in-app chat for paid plans)",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": "- The platform competes most directly with Hootsuite, Buffer, Later, and SocialPilot — comparison pages at /compare/{competitor}.",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": ",</h2> <p>Thanks for signing up for SYNTHEX - your AI-powered marketing platform!</p> <p>Please verify your email address by clicking the button below:</p> <div style=\"text-align: center;\"> <a href=\"",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": ",</h2> <p>We received a request to reset your SYNTHEX account password.</p> <p>You can reset your password using one of these methods:</p> <h3>Option 1: Click the button</h3> <div style=\"text-align: center;\"> <a href=\"",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": ";\">Ready to get started?</p> <p style=\"margin:0 0 16px;color:#374151;\">Contact",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": ";border-radius:8px;padding:20px;margin:32px 0;text-align:center;\"> <p style=\"margin:0 0 12px;font-size:1em;font-weight:600;color:",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": ";border:1px solid ;border-radius:8px;padding:20px;margin:32px 0;text-align:center;\"> <p style=\"margin:0 0 12px;font-size:1em;font-weight:600;color:",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "?locale=en-AU /favicon.ico",
+      "file": "app/layout.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\"≈ 10c per inspection\" cost figure",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\"1,000 Engaged Followers Beat 100,000 Passive Ones\" | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\"One thousand engaged followers will always beat one hundred thousand passive ones.\"",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\"20–30% re-inspection\" figure",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\"20–30% re-inspection\" figure Source it OR replace with the structural argument (already drafted)",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" alt=\" \" style=\"width:56px;height:56px;border-radius:50%;object-fit:cover;\" />",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" class=\"button\">Accept Invitation</a> </div> <p style=\"text-align: center; color: #666; font-size: 14px;\"> Or copy this link:",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" class=\"button\">Reset Password</a> </div> <h3>Option 2: Use this code</h3> <div class=\"code-box\"> <p>Enter this code on the password reset page:</p> <div class=\"code\">",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" class=\"button\">Verify Email Address</a> </div> <p>Or copy and paste this link into your browser:</p> <p style=\"word-break: break-all; background: #fff; padding: 10px; border-radius: 5px;\">",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" style=\"display:inline-block;background: ;color:#fff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;\">Call",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" style=\"display:inline-block;background:#f59e0b;color:#050508;font-size:12px;font-weight:500;padding:10px 20px;border-radius:3px;text-decoration:none;\"> Learn more about Synthex </a> </div> </td> </tr> <!-- Footer --> <tr> <td align=\"center\" style=\"padding-top:24px;\"> <p style=\"margin:0;font-size:11px;color:rgba(255,255,255,0.2);line-height:1.6;\"> You received this email because you joined the Synthex waitlist.<br> &copy;",
+      "file": "lib/email/waitlist-email.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" style=\"display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;\"> Verify Email Address </a> </div> <p style=\"margin: 30px 0 10px; color: #666666; font-size: 14px;\">Or copy this link:</p> <p style=\"margin: 0; background: #1a1a1a; padding: 15px; border-radius: 8px; word-break: break-all; color: #f59e0b; font-size: 13px;\">",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" style=\"display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); color: #ffffff; padding: 16px 40px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px;\"> Reset Password </a> </div> <h3 style=\"margin: 0 0 15px; color: #ffffff; font-size: 18px;\">Option 2: Use this code</h3> <div style=\"background: #1a1a1a; padding: 25px; border-radius: 12px; text-align: center; margin: 20px 0;\"> <p style=\"margin: 0 0 10px; color: #666666; font-size: 14px;\">Your reset code:</p> <p style=\"margin: 0; color: #f59e0b; font-size: 36px; font-weight: bold; letter-spacing: 8px;\">",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "\" style=\"font-size:0.875em;color: ;\" rel=\"noopener\">View",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "(should be < 0.1)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "(should be < 0.1) TTFB is",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/100 observed",
+      "file": "lib/opportunity-map/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/100 Primary page heading observed: “",
+      "file": "lib/opportunity-map/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/dashboard\" class=\"button\">Get Started</a> </div> <h3>Quick Start Guide:</h3> <ol> <li>Complete your profile setup</li> <li>Connect your social media accounts</li> <li>Generate your first AI content</li> <li>Schedule or post immediately</li> <li>Track performance in analytics</li> </ol> <p>Need help?",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/dashboard\" style=\"display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 14px 35px; border-radius: 8px; text-decoration: none; font-weight: bold;\"> View Dashboard </a> </div> </td> </tr> <!-- Footer --> <tr> <td style=\"background: #000000; padding: 25px; text-align: center;\"> <p style=\"margin: 0; color: #666666; font-size: 12px;\">© 2026 SYNTHEX.",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/dashboard\" style=\"display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%); color: #ffffff; padding: 18px 50px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px;\"> Go to Dashboard → </a> </div> </td> </tr> <!-- Footer --> <tr> <td style=\"background: #000000; padding: 30px; text-align: center;\"> <p style=\"margin: 0 0 15px; color: #666666; font-size: 12px;\">Need help?",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/dashboard/seo/rankings\" style=\"display:inline-block;background:#7c3aed;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;\">View Opportunities →</a> </div>",
+      "file": "lib/scoring/visibility-score.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/animation-showcase",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/animation-showcase from-orange-600 to-orange-400",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/enhanced-landing",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/enhanced-landing from-orange-500 to-orange-500",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/enhanced-sandbox",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/enhanced-sandbox from-orange-400 to-orange-400",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/ultra-animations",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/demo/ultra-animations from-orange-500 to-orange-500",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/help\">Help Center</a> or reply to this email.</p> <p>Welcome aboard!",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#AIMarketing #MarketingTrends #DigitalMarketing #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#AIMarketing #MarketingTrends #DigitalMarketing #Synthex AI marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#AIMarketing #Productivity #MarketingStats #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#B2BMarketing #ContentMarketing #SalesStrategy #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#B2BMarketing #ContentMarketing #SalesStrategy #Synthex B2B marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#BrandConsistency #RevenueGrowth #Branding #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#ConsultingBusiness #ThoughtLeadership #LinkedIn #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#EmailMarketing #SocialMedia #ROI #MarketingStats #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#FacebookMarketing #LocalBusiness #Gym #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#Instagram #SocialMediaStats #DigitalMarketing #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#InstagramGrowth #LocalBusiness #CaseStudy #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#LinkedInLeads #B2BMarketing #SaaS #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#MobileMarketing #SocialMedia #ContentDesign #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#NonprofitMarketing #Fundraising #SocialMedia #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#RestaurantMarketing #FoodAndBev #SocialMedia #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#RetailMarketing #OmnichannelMarketing #SocialCommerce #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#SocialMediaGrowth #ContentFrequency #MarketingStats #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#SocialMediaROI #MarketingStats #DigitalMarketing #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#SocialMediaROI #MarketingStats #DigitalMarketing #Synthex social media ROI",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#StartupMarketing #PreLaunch #BrandBuilding #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#TikTokMarketing #Ecommerce #ContentMarketing #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#UGC #UserGeneratedContent #SocialProof #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#UGC #UserGeneratedContent #SocialProof #Synthex UGC",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "#VideoMarketing #SocialMedia #ContentStats #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "% AI Content",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "% opacity",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "•••• •••• •••• 4242",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "•••• •••• •••• 4242 Expires 12/25",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "+10 points",
+      "file": "components/StreakCounter.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "+10 points Create and publish at least one piece of content",
+      "file": "components/StreakCounter.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "+5",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "+5 Effects & Animations",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "+ mo",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "</p> <!-- Features --> <div style=\"margin: 30px 0;\"> <div style=\"background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 15px;\"> <p style=\"margin: 0; color: #ffffff;\"><strong>🤖 AI Content Generation</strong></p> <p style=\"margin: 8px 0 0; color: #a3a3a3; font-size: 14px;\">Create viral content for any platform in seconds</p> </div> <div style=\"background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 15px;\"> <p style=\"margin: 0; color: #ffffff;\"><strong>📱 Multi-Platform Posting</strong></p> <p style=\"margin: 8px 0 0; color: #a3a3a3; font-size: 14px;\">Post to all social platforms from one dashboard</p> </div> <div style=\"background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 20px;\"> <p style=\"margin: 0; color: #ffffff;\"><strong>📊 Real-Time Analytics</strong></p> <p style=\"margin: 8px 0 0; color: #a3a3a3; font-size: 14px;\">Track engagement and performance instantly</p> </div> </div> <div style=\"text-align: center; margin: 40px 0;\"> <a href=\"",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "< 3s",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "< 3s Content generation time",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "<a href=\" \" style=\"font-size:0.875em;color:",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "<div class=\"cta-block\" style=\"background: ;border:1px solid",
+      "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "~3,200 words",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "~3,200 words always-on",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "~3,500 words",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "~3,500 words always-on",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "∞",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "≤15 min each",
+      "file": "app/quick-access-preview/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "≤15 min each 🟡",
+      "file": "app/quick-access-preview/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "✨ Transform your marketing...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "🚀 AI is revolutionizing...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "$2,000 annual learning budget",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "$2,000 annual learning budget Flexible Hours",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "$24,500",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "$24,500 Active Users",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "03 Content generated across 9 platforms",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "0 AUD",
+      "file": "components/seo/StructuredData.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1–2 weeks",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1–2 weeks We run the Skybridge phased discovery workflow against your business.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1.0B users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1.0B users Pinterest",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1.5B users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1.5B users YouTube",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "10-scene shot list · per-scene voiceover script · per-scene voice-enforce check",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "10-scene shot list · per-scene voiceover script · per-scene voice-enforce check SYN-925a",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "10+ hrs/week wasted",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "10+ hrs/week wasted 🎯",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "100% covered health, dental, vision",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One hundred thousand dollars in revenue attributed directly to TikTok traffic.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ten hours per week while seeing improved engagement across all platforms.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12-piece LinkedIn drumbeat",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12-piece LinkedIn drumbeat 2 founder + 10 brand · 5 fallbacks specced · 2,365 words",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12-piece LinkedIn drumbeat The Vision Board page exists before any copy artefact — the eyes layer is ahead of the brain layer.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12:00 PM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12:00 PM Peak Time",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12,456",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12,456 Best Posting Times",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12 keywords · rising",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12 keywords · rising Competitor SERP",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12 pieces: 1 founder origin · 1 NIR explainer · 3 product scenes · 1 carousel comparison · 6 customer-quote placeholders.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "12 text-sx-success",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "175M users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "175M users 9 platforms · 1 dashboard",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1 AI is transforming marketing...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "1 Dashboard for everything",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Two-line stat reveal.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Two-step: assign → schedule",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2.3B users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2.3B users Facebook",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2.7B users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2.7B users X (Twitter)",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2+ years CS experience",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2+ years CS experience SaaS background",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "20–30%",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "20–30% of claims re-inspected",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2,365",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2,365 Clicks",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "256-bit",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "256-bit Encryption",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 Check out our latest insights...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Two distinct types — Building Restoration Services vs Professional Restoration Services (IICRC)",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 founder + 10 brand · 5 fallbacks specced · 2,365 words",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 founder + 10 brand · 5 fallbacks specced · 2,365 words SYN-920",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 posts",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 posts obsidian-vault-setup",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 reviewers assigned",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2 reviewers assigned Approve",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3–8 weeks from locked spec",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three: social proof — \"join 5,000 businesses already using Synthex.\"",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3.0B users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3.0B users TikTok",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3+ years ML experience",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3+ years ML experience PyTorch/TensorFlow",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "30-day money-back guarantee · Cancel anytime",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "30 day",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "30 day 90 day",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Thirty minutes of setup, thirty days of automated posting.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "31-day calendar · 17 drops · 5 decision gates · 5 kill criteria",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "31-day calendar · 17 drops · 5 decision gates · 5 kill criteria SYN-922",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "32.4%",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "32.4% Avg.",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3,200 words · 6 verified-public sources · 4 SVG figures · submissible",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3,200 words · 6 verified-public sources · 4 SVG figures · submissible SYN-924",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "35+ platforms but requires manual content for each",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three cards.",
+      "file": "components/landing/public-v2.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three common requests.",
+      "file": "app/contact/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3D Cards",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3D Cards Magnetic Buttons",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3D Preview",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3D Preview Analytics",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3D Spheres",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3D Spheres Particle Fields",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3 gaps identified",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3 gaps identified Product wiki",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three IICRC chips slide in from the right.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three independent stages.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three lessons from implementing...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three researched directions and a brief you control",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3 segments × triggers/vocab/watering-holes.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3 sources linked · confidence high",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3 text-sx-warning",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "3 things I wish I knew about",
+      "file": "app/api/ai-content/optimize/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "three times faster than those without one.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4+ years product design",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4+ years product design Figma expertise",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4,821",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4,821 Comments",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "482M users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "482M users Reddit",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4 assets · 1 comment · version 2",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4 assets · 1 comment · version 2 JR",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4m 32s",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4m 32s Inputs",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4 scenes",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "4 scenes pi-ceo-video-handoff",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-step: Inspection → AI Analysis → Scoping → Estimating → Reporting",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-step CRM with IICRC-grounded NIR, AU-designed",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-step CRM with IICRC-grounded NIR, AU-designed wave-4-pending",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-step horizontal sweep.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-touch email sequence",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-touch email sequence 12-piece LinkedIn drumbeat",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5-touch email sequence D0/D2/D5/D10/D20 · 1,198 words · D10 has hold-or-skip rule",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5+ years experience",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5+ years experience React/Next.js expertise",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5+ years growth marketing",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5+ years growth marketing B2B SaaS experience",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 ⚠ flags pending",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 ⚠ flags pending ra-training-curriculum",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "50+",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "50+ report formats",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5,000+ businesses across every industry trust Synthex to handle their social media.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Five thousand business owners are already using Synthex to automate their social media marketing.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "</p> <p style=\"font-size: 14px; color: #666; margin: 0;\">500 bonus AI credits when you sign up</p> </div> <div style=\"text-align: center;\"> <a href=\"",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Fifty contractor reports a week.",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Fifty different formats.",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "50 formats.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "550M users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "550M users LinkedIn",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Five inbound enquiries arrived in a single week.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 scenes × 18s · sweep transitions · ElevenLabs Sarah · Wave 4 will render this.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/StoryboardPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Five steps.",
+      "file": "app/features/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Five steps run along the front: camera, moisture meter, notes, report, filed record.",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 sub-tickets · 4 brands + BYOK shared",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 templates × 4 brands = 20 renders · 5× efficiency multiplier",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 templates × 4 brands = 20 renders · 5× efficiency multiplier SYN-925e",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "5 touches: D0 welcome → D2 quick-start → D5 NIR demo → D10 case study → D20 referral ask.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Five visible stages, with you making the decision",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "6:00 PM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "6:00 PM Good Reach",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "six point nine times more engagement than branded content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "6 sections · 1,168 words · counter-intuitive segment-1 proof surface",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "6 sections · 1,168 words · counter-intuitive segment-1 proof surface SYN-918",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "72% of Marketers Now Use AI Tools | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Seventy-two percent of marketing professionals now use AI tools in their workflow —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "7 day",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "7 day 30 day",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Seven ways out of the obvious answer",
+      "file": "components/intentscape/VisionCanvas.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8,234",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8,234 Shares",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8,420",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8,420 Bounce Rate",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "850M users",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "850M users Threads",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8 sub-tickets",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8 sub-tickets · launch package",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8 sub-tickets voice-PASS",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "8 text-sx-info",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9:00 AM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9:00 AM High Engagement",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "90 day",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "90 day citation-dashboard",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ninety days is all it takes to go from zero to a social media presence that drives real business results.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ninety days of consistent effort compounds into results that last.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "91% of Social Media is Consumed on Mobile | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ninety-one percent of all social media activity happens on mobile devices.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "99.99%",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "99.99% Uptime Guarantee",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "99.99% Uptime Guarantee Enterprise-grade infrastructure with redundancy, failover, and 24/7 monitoring to keep your marketing running.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "99.99% Uptime SLA",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 Platforms",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 platforms, 1 brand voice",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 platforms, AI brand voice, and zero manual posting — set up in under 60 seconds.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 platforms · 1 dashboard",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 Platforms →",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 Platforms → Pricing →",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 platforms including Threads, Reddit, Pinterest",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 Platforms Social Media Platforms",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 Platforms supported",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 Social Media Platforms, 1 Dashboard | Synthex",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 videos",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 videos · ~38 min total runtime · 3 tiers (Getting Started · Core · Advanced)",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 videos · ~38 min total runtime · 3 tiers (Getting Started · Core · Advanced) SYN-925a",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "9 videos byok-shared-module",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "A \"member of the month\" series generated unprecedented comment activity and word-of-mouth referrals.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "About Synthex | Synthex",
+      "file": "app/about/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Access 200+ AI models for content generation, analysis, and optimisation.",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Accounts that post five or more times per week grow their follower count three times faster",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "across a typical contractor network — every trade files its own way 20–30%",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Active Users 8,420",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Add 1-2 relevant emojis to increase visual appeal and reach",
+      "file": "lib/ai/content-scorer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Add blank lines between paragraphs for LinkedIn's algorithm",
+      "file": "lib/ai/content-scorer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Adding a 5-second preview clip would let the reviewer hear what the launch will sound like.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AFCA FY24 Annual Review Pull top-3 complaint reasons + percentages for general insurance",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Affordable AI marketing from $199/month.",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "A fundraising challenge in month two — a matching donation campaign —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI-powered content creation with 3D visualization",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI adoption",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI adoption digital marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI adoption in marketing has hit a tipping point.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI capabilities AI content generation, scoring, brand DNA extraction",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI Content → 9 Platforms →",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI content generation, scoring, brand DNA extraction",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI Generator",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI Generator Platform Selector",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI is transforming marketing...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI marketing marketing trends",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI Marketing Saves 10+ Hours Per Week | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI marketing time saving",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI Overviews answer 60%+ of US search queries and CTR drops up to 65% where they appear.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI social media vs Hootsuite",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AI writes platform-native content automatically",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Algorithms love it, attention spans are short, and one viral clip can bring thousands of new followers.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "All 9 from one dashboard.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "All 9 platforms →",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "All 9 platforms → For agencies →",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "All data is encrypted in transit (TLS 1.3) and at rest (AES-256) to ensure your content and credentials remain secure.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "All organic — zero advertising spend.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "A local gym used organic Facebook content to double memberships in 6 months.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Alpic's Skybridge framework (MIT-licensed, v1.0 released May 2026) powers ~10% of all apps on the Claude + ChatGPT stores.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AM 2 reviewers assigned",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "An \"in-store only\" Instagram Stories series drove social followers to physical locations.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Analytics refreshed 1",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "An audience that reads, responds, and shares your content is infinitely more valuable",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "And businesses that adopted AI marketing tools early are outpacing their competitors by a factor of three.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and communicate your message in under three seconds.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and contrarian takes on common operational challenges.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and drove twelve hundred profile visits in forty-eight hours.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "And for the first time, all stores were telling the same brand story in their own local voice.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and generated a daily posting schedule mixing product demonstrations,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and seeing almost zero engagement despite making genuinely beautiful products.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and tells you exactly what to improve — in minutes.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "and the milestones along the way.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Animation Gallery",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Animation Showcase",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "An MCP App stack has four cost layers.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "App-store review by Anthropic and OpenAI typically adds 2–4 weeks.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Approval needed ≤15 min each",
+      "file": "app/quick-access-preview/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Approved 12",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Are you keeping up?",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "At Synthex, our users report saving up to fifteen hours per week.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "At Synthex, we believe in building a culture where everyone can do their best work, grow professionally, and have fun along the way.",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AU-aware but no compliance framework",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AU + NZ 5-step: Inspection → AI Analysis → Scoping → Estimating → Reporting",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AU Two-step: assign → schedule",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AU compliance aiRole",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auCompliance AU compliance",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "AUD Controlled pilot access",
+      "file": "components/seo/StructuredData.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Authentic content beats advertising budget every time.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "automatically at the optimal posting time for each platform.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Automatic session expiration and renewal IP-based anomaly detection",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Average response time: 2 hours",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "awareness campaign",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "A weekly \"table for two\" giveaway that generated hundreds of comments and shares each week.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "B2B lead generation through LinkedIn — the strategy that delivered 500 qualified leads.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "B2B marketing content marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "B2B marketing SaaS",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Based on 0 anonymised Synthex client accounts.",
+      "file": "lib/analytics/public-benchmarks.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "beautiful, but not driving reservations.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Because people trust people, not brands.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "behind-the-scenes baking content, customer testimonials, and seasonal promotions.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Behind-the-scenes prep videos that made viewers hungry before they even checked the menu.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Best Platform:",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Best Posting Times",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Best Posting Times 9:00 AM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "better than Hootsuite",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Bounce Rate 32.4%",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Brand-level content maintained consistency across all stores.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Brand consistency is not just about looking good.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Build + Launch is 3–8 weeks from locked spec depending on integration complexity.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Building an audience before your product launches.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Build your LinkedIn authority with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Build your social presence with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Build your strategy with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Build yours with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Built for users who don't want to hire an agency but want agency-quality output 24/7.",
+      "file": "public/llms.txt",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Built on industry-leading platforms with multiple layers of security and redundancy.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Businesses using AI marketing automation save an average of ten hours per week on content creation.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Businesses using AI produce four times more content, at lower cost, with higher engagement rates.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Businesses with a documented social media strategy see three times the ROI",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Businesses with documented content strategies grow",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "but the startup had no consistent strategy to reach them.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "BYOK shared module (cross-brand) 5 templates × 4 brands = 20 renders · 5× efficiency multiplier",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "California Consumer Privacy Act",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Can Synthex replace my Hootsuite subscription?",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Captions were optimised with local hashtags.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-b2b-content-marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-b2b-content-marketing How B2B Content Marketing Generated $2M in Pipeline | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-consultant-thought-leadership",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-ecommerce-tiktok",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-gym-facebook-ads",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-local-bakery-instagram",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-nonprofit-awareness",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-restaurant-social",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-retail-omnichannel",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-saas-linkedin-growth",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case-study-startup-brand-building",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "case study",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "CaseStudyVideo",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "CCPA",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "CCPA California Consumer Privacy Act",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Certifications and standards",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Certified 256-bit",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Certified GDPR",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Check out our <a href=\"",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Check out our latest insights...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Chef's process videos.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Claim now: https://synthex.social #LimitedOffer #AIMarketing #Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Clicks 12,456",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "CLS is (should be < 0.1)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Cold outreach costs money.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Comments 2,365",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Community-first content is the most effective gym marketing strategy available.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Compare Synthex and Hootsuite.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Competitor SERP 3 gaps identified",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "compliance SOC 2",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Compliant",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Compliant CCPA",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Compliant ISO 27001",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Comprehensive collection of reusable animation components",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Confirm the ~470,000 Canterbury claims figure against the most recent EQC / Toka Tū Ake close-of-claims report",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Connect all 9 platforms free →",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Connect all 9 platforms free → Platform-specific AI content",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Connecting Instagram to Synthex takes under a minute.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Connecting online social media to in-store foot traffic — the omnichannel playbook.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Connect Synthex with 9 social media platforms, AI providers, and business tools.",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Consistency, not size, is what drives Instagram growth.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Consistency and expertise are the foundation of consultant marketing.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Consistency tip: your audience needs to see you seven times before they trust you.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Consistent Branding Increases Revenue by 23% | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Consistent brand presentation across all channels increases revenue by an average of twenty-three percent.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Consistent posting, audience-aligned content, and data-driven optimisation compound over time",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "consulting business",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "content design",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Content focused on one theme: the costly mistakes organisations make in their domain —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "content frequency",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Content generated across 9 platforms",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Content generation time",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Content generation time 1",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "content is generated and scheduled automatically, and you spend thirty minutes reviewing instead of five hours creating.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Content marketing compounds.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "content stats",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "CONTRACTOR Two distinct types — Building Restoration Services vs Professional Restoration Services (IICRC)",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "copy 12-piece LinkedIn drumbeat",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "copy 5-touch email sequence",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Cost per lead: zero dollars in ad spend.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Creating content with Synthex takes seconds, not hours.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Creating your Synthex account takes under two minutes.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "credits over",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "cta-limited-offer",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "customer relationships, and growth.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Cutting-edge animations with Matrix rain, holographic cards, and cyberpunk effects",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Cyberpunk UI",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Cyberpunk UI Holographic Cards",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "D0/D2/D5/D10/D20 · 1,198 words · D10 has hold-or-skip rule",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "D0/D2/D5/D10/D20 · 1,198 words · D10 has hold-or-skip rule SYN-919",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Dashboard for everything",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Data stored in SOC 2 certified data centres with encrypted backups and strict access controls.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Data updates every thirty minutes so you always have a current picture of your social presence.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "demo-branch-7 The original request points to creative production, but the decision could sit at three different layers: buyer evidence, offer relevance, or the learning system around creative work.",
+      "file": "components/intentscape/demo-data.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "different quality — undermining the brand at scale.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "digital marketing ROI",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "discount",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Discover how the Synthex Campaign Planner generates a 30-day content calendar across all your platforms — then schedules everything automatically.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Discovery + Spec is 1–2 weeks.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Discover your content strategy with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "DNA Loader",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "DNA Loader Animation Showcase",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Dollar figures count up.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Donor base grew by two hundred and sixty percent.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Each one costs $2,000–$5,000.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Each store was managing its own social media inconsistently — different voices, different content,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Early adopters report saving over",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Early followers became early advocates, sharing the journey with their networks organically.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Edit + post 2 founder LinkedIn drafts",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "email marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Email marketing and social media both deliver ROI — but in very different ways.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Email marketing delivers an average ROI of thirty-six dollars for every one dollar spent.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Email sequence · SYN-919 5 touches: D0 welcome → D2 quick-start → D5 NIR demo → D10 case study → D20 referral ask.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Email vs Social: Which Has Better ROI?",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Encourage your customers to share their experiences, then amplify that content across your channels.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Encrypted API calls, no data retention",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Encryption 99.99%",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Encryption GDPR",
+      "file": "app/security/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "End-to-End Encryption",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Engagement Breakdown",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Engagement tripled.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Enhanced Landing Page",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Enhanced Sandbox",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Enterprise-grade",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Enterprise-grade infrastructure baked into every plan.",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Enterprise-grade infrastructure with redundancy, failover, and 24/7 monitoring to keep your marketing running.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Every client cited LinkedIn as how they discovered and chose to trust this consultant.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Every comment received a reply within the hour.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Every plan includes a 30-day money-back guarantee.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Every post queues",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Every public-facing version of the evidence base must clear the 21-item audit checklist (Appendix B) before it ships.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Every week: one beneficiary story, one impact statistic, one behind-the-scenes post, and one direct appeal.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "evidence links",
+      "file": "components/intentscape/VisionCanvas.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Example: \"Join 10,000 businesses using Synthex\" is social proof.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Explore Demo",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Explore our collection of cutting-edge UI animations, 3D effects, and interactive components",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Export, delete, or modify your information at any time through your account settings.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Facebook: average user age thirty-five to fifty-five, stronger for local businesses,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Facebook marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Facebook posts with 250-500 characters tend to get better organic reach",
+      "file": "lib/ai/content-scorer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Feature comparison",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "FID is ms (should be < 100ms)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Figure 2 — The three-layer commercial chain in Australian insurance restoration",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Figure 2 · The three-layer commercial chain",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Follower count grew from eight hundred to forty-two thousand.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "food and beverage",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "foot traffic",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "For a limited time, get three months of Synthex Pro at the Starter plan price.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "For most SMBs, yes.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "founder voice 2 posts",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "frames @ 30fps ·",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/MotionPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "frames @ 30fps · f transition · expo curves",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/MotionPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Free tier available, no credit card required",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Frequency signals to algorithms that you are an active, valuable creator —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Fri",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-400 to-orange-400",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-400 to-orange-400 AI Generator",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-500 to-orange-500",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-500 to-orange-500 3D Spheres",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-500 to-orange-500 Matrix Rain",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-600 to-orange-400",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "from-orange-600 to-orange-400 3D Cards",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "From 200 to 10,000 Instagram followers in 90 days — the Synthex case study.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "From AUD 2,500 (one-off) 1–2 weeks",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "From empty weeknight tables to fully booked — the social media turnaround story.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "From unknown to $100K in revenue — powered by TikTok content strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Full AI content generation, all platforms, advanced analytics — at a fraction of the regular cost.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Full audit · Waves 0–7 · positioning · ICP · channels · copy · runbook · evidence · E-E-A-T",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Full audit · Waves 0–7 · positioning · ICP · channels · copy · runbook · evidence · E-E-A-T SYN-915",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Full compliance with GDPR, CCPA, and international data protection regulations.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Fully automated with AI-optimal timing",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "fundraising",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Future of AI Marketing We're looking for passionate individuals who want to democratize AI-powered marketing and help millions of creators succeed.",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "g8YRmVvnBj0 onboarding-setup-ai",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR & Privacy Compliant",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR & Privacy Compliant Full compliance with GDPR, CCPA, and international data protection regulations.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR compliance",
+      "file": "app/docs/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR compliance enhancements",
+      "file": "app/changelog/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR compliance enhancements 1.3.0",
+      "file": "app/changelog/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR compliance Security best practices",
+      "file": "app/docs/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR Compliant",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GDPR General Data Protection Regulation",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "General Data Protection Regulation",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "generate 7 day",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Generate a 7-90 day forecast from a trained model",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Generate strategic brand identities using 50+ psychological principles for maximum market impact",
+      "file": "app/brand-generator/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Generate the runbook in Wave 4 against the locked Standard tier (LinkedIn organic + email + 2 industry pitches).",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Generate viral content, automate scheduling, and optimize engagement 24/7.",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "GEO Content Optimiser Score content with Princeton 9-tactic GEO framework and get AI rewrites",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Get Started Free 9 Platforms",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Glassmorphism",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Good Reach",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Grade ≤5",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Grade ≤5 drip",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Grade ≤6, brand voice.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Growth Budget $2,000 annual learning budget",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gym",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hard-strict sourcing · 6 verified-public primary sources · 4 inline figures rendered as native SVG · SEO/AEO/GEO/E-E-A-T compliant",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hard-strict sourcing · 6 verified-public primary sources · 4 inline figures rendered as native SVG · SEO/AEO/GEO/E-E-A-T compliant SYN-915i",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "hard-strict sourcing 5 ⚠ flags pending",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Have Pi-CEO research lead pull pricing + installed-base data for the three competitors.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Help millions of creators and businesses succeed with AI-powered tools.",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Here's why.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "High Engagement",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "High Engagement 12:00 PM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Holographic Cards",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Holographic Cards DNA Loader",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hootsuite",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hootsuite competitor",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hootsuite is a calendar for content you already made.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hootsuite is a scheduling tool — it publishes content you create manually.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hootsuite schedules.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hootsuite starts at $99/month USD with no free tier.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hours of profile setup, manual content library building",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Hours of profile setup, manual content library building AI capabilities",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Consultant Built a 6-Figure Business Through LinkedIn | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Gym Doubled Memberships With Facebook Content | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Local Bakery Grew to 10K Instagram Followers | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How an E-Commerce Brand Hit $100K From TikTok | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Nonprofit Raised $50K Through Social Media | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Restaurant Filled Tables With Social Media | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Retail Brand Unified Social and In-Store Sales | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a SaaS Startup Generated 500 Leads From LinkedIn | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How a Startup Built Brand Recognition Before Launch | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How B2B Content Marketing Generated $2M in Pipeline | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How long does it take to switch from Hootsuite to Synthex?",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "How Synthex protects your data — encryption, access controls, compliance, and security practices.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ICP · SYN-916 3 segments × triggers/vocab/watering-holes.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "If video is not part of your content mix, you are leaving engagement on the table.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "IICRC S500 / S520 / S700 + WHS + AU Building Code inbuilt",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Image Posts vs Video Posts: The Data | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Improved API rate limiting Security audit compliance updates",
+      "file": "app/changelog/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "inbound marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Includes MCP-specific analytics, app-store compliance auditing, permanent tunnelling.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Increase posting frequency on LinkedIn",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "industry trend analysis, framework-based guides, and honest case studies.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Information Security Management",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ingredient sourcing stories.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "in minutes, keeping your calendar full without burning out your team.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "In month three, a post on a common leadership failure went viral within the industry.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Instagram: average user age eighteen to thirty-four, visual-first platform,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Instagram's reach is bigger than ever.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Instagram has two billion monthly active users in 2026 — and eighty percent follow at least one business.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Instagram Has 2 Billion Monthly Users in 2026 | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Insurance claims teams read 50+ contractor report formats a week.",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Insurer landing copy + 5 emails + 12 LinkedIn pieces.",
+      "file": "lib/vision-board/read-research.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Insurer landing copy 5-touch email sequence",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "</p> <div style=\"border-top:0.5px solid rgba(255,255,255,0.06);padding-top:24px;margin-top:8px;\"> <p style=\"margin:0 0 16px;font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6;\"> In the meantime, you can learn more about what we&rsquo;re building: </p> <a href=\"",
+      "file": "lib/email/waitlist-email.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "into a social presence that genuinely drives revenue.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "In week five, a single case study post went viral within the operations community",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "IP-based anomaly detection",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "IP-based anomaly detection Rate limiting and brute-force protection",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Is it optimised for that?",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ISO 27001",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ISO 27001 Information Security Management",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Is Synthex cheaper than Hootsuite?",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Is your business on it?",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "It drives real revenue.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "It follows that the usage is billed at the provider&apos;s own rates with nothing added on top, and the job data goes to an account the business controls, not one held on its behalf.",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "Join 5,000+ Australian businesses posting to 9 platforms automatically.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Join 5,000+ Business Owners Using Synthex | Community",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Join a fast-growing startup with 10x growth trajectory and unlimited potential.",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Join them today — it takes sixty seconds to get started.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "K2QqYXi05Do how-to-sign-in",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "k6lRhET7QDY onboarding-connect-gmb",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Last updated 2 hours ago - 1.2k views - 45 shares",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "LCP is ms (should be < 2500ms)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "lead generation",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Learn about Synthex's security practices, data protection measures, and compliance certifications.",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Learn how to create your Synthex account in under two minutes — from the sign-up form to the activation checklist.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Learns your brand from your website URL in 60s",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Let Synthex keep your Instagram consistent at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Leverage 50+ psychological principles to create irresistible brands",
+      "file": "components/strategic-marketing/PsychologyBrandGenerator.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Likes",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Likes 8,234",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Limited: 3 Months of Synthex Pro at Starter Price",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Limited AI — OwlyWriter generates basic captions only",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "limited offer",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "limited offer AI marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "LinkedIn drumbeat · SYN-920 12 pieces: 1 founder origin · 1 NIR explainer · 3 product scenes · 1 carousel comparison · 6 customer-quote placeholders.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CopyPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "LinkedIn leads",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "LinkedIn leads B2B marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "LinkedIn posts without paragraph breaks have lower reach",
+      "file": "lib/ai/content-scorer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Live chat available 24/7",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Live chat available 24/7 Average response time: 2 hours",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Live chat available 24/7 Your name",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "Location-specific content highlighted individual store events, staff, and community involvement.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Lock in 3 months of Pro access at the Starter price.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Lock it in now at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Lowest per-report rate",
+      "file": "app/(landing)/restoreassist/pricing/plan-data.ts",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "Magnetic Buttons",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Manage your payment information •••• •••• •••• 4242",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Manual scheduling with bulk calendar tools",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Manual social media posting: three to five hours per week writing posts, choosing images,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "marketing stats",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "marketing trends AI adoption",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Matrix Rain",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Matrix Rain Cyberpunk UI",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "memberships",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "member success stories, daily workout tips, and behind-the-scenes content from trainers.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Mission-driven storytelling is the most powerful fundraising tool available.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "mobile first",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "mobile marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Mon",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Months",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Months from event date to claim resolution · selected events 2010–2024",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Morphing Shapes",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Most businesses operate with three to five pillars.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Most businesses struggle with brand consistency because they have too many people creating content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Motion — sweep signature frames @ 30fps ·",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/MotionPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "move the seven lenses, compare the three directions, then approve one below.",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Move the lens cards below, compare three directions and choose only what you mean.",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "MR +5",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ms (should be < 100ms)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ms (should be < 100ms) CLS is",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ms (should be < 2500ms)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ms (should be < 2500ms) FID is",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ms (should be < 600ms)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Multi-factor authentication (MFA) available",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Multi-factor authentication (MFA) available Comprehensive audit logging for all actions",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Multi-network scheduling; you write the content for each network",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "Multi-network scheduling; you write the content for each network AI capabilities",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "NEW Explore Demo",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Next-gen landing page with 3D effects and advanced animations",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No \"hire me\" posts.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No4TI4lLIiM use-case-content-creation",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No AU compliance frameworks",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No AU compliance frameworks Photo categorisation only",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No B-roll callouts for scenes 1 and 3 — the visual notes describe outcomes, not specific shots.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No brand voice feature — copy/paste your own content",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No free tier — plans start at $99/month USD",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No hard selling.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No maze.",
+      "file": "components/landing/public-v2.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "nonprofit marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No polished studio production — raw, genuine, mobile-first content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No sales posts in the first four weeks.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "of claims re-inspected",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Offer 0",
+      "file": "components/seo/StructuredData.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "of those posting without a plan.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "omnichannel",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Omnichannel consistency starts with a unified content strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "on autopilot while you focus on the work that actually needs you.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One: benefit-plus-command — \"save ten hours a week: start your free trial.\"",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One: social media content creation — AI can generate weeks of posts in minutes.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One consistent social strategy turned a local favourite into a community institution.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One consultant, LinkedIn, and consistent thought leadership — the path to 6 figures.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One genuine testimonial outperforms ten promotional posts.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "One operating layer.",
+      "file": "app/features/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "On Instagram, Reels reach three times the audience of standard posts.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "On launch day, the product sold out within seventy-two hours.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Online brand sentiment scores improved significantly.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Online order enquiries increased by three hundred and forty percent.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "On LinkedIn, video gets five times more comments.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Only insights that proved expertise.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Only value.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "OpenRouter API Encrypted API calls, no data retention",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Optimal Time:",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Our AI analyzes millions of posts daily to identify engagement patterns, trending topics, and viral triggers specific to your industry and audience.",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Our commitment to continuous innovation and delivering the most advanced AI-powered social media platform",
+      "file": "app/roadmap/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Our infrastructure and processes undergo regular third-party audits to meet the highest security standards.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Our support team is available 24/7 to help you get the most out of Synthex.",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Over twelve months, every piece of content was optimised for the exact search terms and questions",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "over twelve months, with content as the primary source of discovery.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Parallax",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Particle Fields",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Paste URL → first post ready in under 60 seconds",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Paste your URL, approve your first post, and publish to 9 platforms — in under 60 seconds.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Paste your website URL, connect your platforms, and Synthex generates your first post immediately — no library migration required.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Paste your website URL and get real AI-generated content in under 3 seconds.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Paste your website URL and Synthex analyses your brand voice, colours, and tone in under 60 seconds.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Peak Time",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Peak Time 6:00 PM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pending 3",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pilot for the entire training-video system · 4 scenes · ~45 min recording time",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pilot for the entire training-video system · 4 scenes · ~45 min recording time ~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/screen-capture-pilot.md",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "pilot unlocks 39 more videos",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Planning a month of content used to take days.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platform-specific AI content 9",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platform | Synthex",
+      "file": "app/features/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platform Selector",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platform Selector 3D Preview",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platforms supported",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platforms supported < 3s",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Platforms supported 1",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "Portfolio-wide · 21-item audit checklist · YMYL rules · Google Helpful Content alignment",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Portfolio-wide · 3 length tiers · 12-item pre-render checklist · production runbook",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "portfolio ~3,200 words",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "portfolio ~3,500 words",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Posting 5× Per Week Grows Followers 3× Faster | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Posting at peak times doubles your organic reach.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Posting frequency has a direct impact on growth.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "posting schedule",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Post more content on Twitter for maximum reach",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Posts at 9 AM get 45% more engagement",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Posts were scheduled at peak engagement times.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "pre-launch",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pricing entry point",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Privacy policy GDPR compliance",
+      "file": "app/docs/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "productivity AI marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Profile Cards",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Promotional posts dropped from eighty percent of content to twenty percent.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "prospects who had already read their content and considered them the obvious expert.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "published 2",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Publish to 9 platforms from one dashboard — you approve every post first.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "45f0abf6"
+    },
+    {
+      "text": "Publish to all 9 platforms today",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pull top-3 complaint reasons + percentages for general insurance",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Punchy threads and single posts under 280 chars",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ra 8 sub-tickets",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ra 9 videos",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ra Grade ≤5",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Rapid Growth",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ra T+1 → T+30",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Rate limiting and brute-force protection GDPR",
+      "file": "app/security/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "Rate limiting and brute-force protection SOC 2 Type II",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Re-inspections run 20–30%.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ready to go beyond scheduling?",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Real-time content scoring + SEO + brand signals",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Realistic end-to-end: 6–14 weeks from kick-off to live in the stores.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Recommendations",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Render a 5-second ElevenLabs Sarah preview clip and embed it in the Brand panel.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Repeat fields pre-filled from details already entered, so the same information is not typed again.",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "replaces 50+ fragmented report formats currently used across Australian",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Reports structured to IICRC S500",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "Reports structured to IICRC S500 PDF and Excel export",
+      "file": "app/(landing)/restoreassist/pricing/page.tsx",
+      "firstSeen": "74908118"
+    },
+    {
+      "text": "restaurant marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "restoration — removing double-handling, eliminating re-inspections, and",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "restoration — removing double-handling, eliminating re-inspections, and saving $2,000–5,000 per claim.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "RestoreAssist gives every contractor in your network one IICRC-grounded inspection report — built to the same industry standard every time — so a water-damage claim reads the same whether it comes from Cairns or Perth.",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "RestoreAssist is the only AU-designed full CRM in the category — every competitor solves one slice of the 5-step flow.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "RestoreAssist is the only competitor with a 5-step workflow — every other tool is a single slice.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "retail marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "revenue growth",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ROI marketing stats",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ROI Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Role-based access control (RBAC) Multi-factor authentication (MFA) available",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Routes to support@synthex.social for human follow-up within 1 business day.",
+      "file": "app/contact/ContactForm.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "sales pipeline",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Same results — better content — a fraction of the time.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Sat",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "saving $2,000–5,000 per claim.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Scene 4 carries the entire 5-step claim in 18s.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Schedule a Month of Content in Minutes | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Schedule posts for 9 AM and 6 PM",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Scheduling a Month of Content in Minutes | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Scheduling capacity",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Score content with Princeton 9-tactic GEO framework and get AI rewrites",
+      "file": "components/command-palette/commands.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Search Console 12 keywords · rising",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Security audit compliance updates",
+      "file": "app/changelog/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Security audit compliance updates GDPR compliance enhancements",
+      "file": "app/changelog/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Service Organization Control",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Session 4m 32s",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Setup time",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Shares 4,821",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Shares increased dramatically as members started",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Short captions, bold visuals, vertical video, and large text are not optional — they are essential.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Short content may have lower reach - consider expanding",
+      "file": "app/api/ai-content/optimize/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Side-by-side comparison of Synthex and Hootsuite.",
+      "file": "app/compare/page.tsx",
+      "firstSeen": "d9008101"
+    },
+    {
+      "text": "Single-step: capture → upload No AU compliance frameworks",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/CompetitivePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Slate background, lime accent on the dollar amounts.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2, ISO 27001, PCI DSS",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2 encryption",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2 Security",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2 Type II",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2 Type II Certified",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2 Type II Compliance",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SOC 2 Type II Service Organization Control",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "social commerce",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Social following tripled.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Social Media Delivers 3× ROI When Done Right | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Social media delivers awareness, reach, and top-of-funnel traffic that feeds your email list.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Social media fundraising done right — a nonprofit case study.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "social media management 9 platforms",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "social media ROI",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Social media ROI is real — but only with the right strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "social media ROI marketing stats",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "social media stats",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "so they show your content to more people.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Stack of 50+ scattered report templates falling onto a desk.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Staff introductions.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Staged 8",
+      "file": "components/landing/premium/hero-product-mock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Standard post analytics, no content quality scoring",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start compounding with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start free → All 9 platforms →",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "starting with no audience, no network, and no visibility in their new market.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start in the AI Content Studio to generate copy, images, and video briefs in minutes.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start today at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "startup marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start with a 30-minute Discovery conversation.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start yours with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-ai-adoption-marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-ai-content-saves-time",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-brand-consistency-revenue",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-content-frequency-growth",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-email-vs-social-roi",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-instagram-reach-2026",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-instagram-reach-2026 Instagram Has 2 Billion Monthly Users in 2026 | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-mobile-social-traffic",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-social-media-roi",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-user-generated-content",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "stat-video-engagement-rate",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "StatReveal",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Stop when two independent sources agree or directly conflict.",
+      "file": "components/intentscape/demo-data.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Stories were told with humanity and specificity — real people, real outcomes, real numbers.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Story-driven social content is the most powerful form of restaurant marketing.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Storyboard — NIR explainer (90s LinkedIn)",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/StoryboardPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Sun",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Sun 🚀 AI is revolutionizing...",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "support@synthex.social Live chat available 24/7",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "sustainability tips, and honest brand storytelling.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Switch to the AI that creates your content, not just schedules it.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex &mdash; <a href=\"",
+      "file": "lib/email/waitlist-email.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex AI generates platform-native social media content in under 3 seconds.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex can generate a month of on-brand content",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex connects all 9 major social platforms and publishes platform-native content to each — from a single AI-powered dashboard.",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex covers your social strategy at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex creates.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex creates mobile-first content by default at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex developed a weekly publishing cadence across LinkedIn and the firm's blog:",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex ensures every post, on every platform, is perfectly on-brand, automatically.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex generated daily content documenting the founding journey:",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex generates video-ready content at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex handles everything Hootsuite does (scheduling, multi-platform publishing) plus everything Hootsuite doesn't (AI content creation, brand voice, content scoring).",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex identified the top-performing content patterns in the sustainable living niche",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex integrates with 9 social platforms, 4 AI providers, and the tools your business already uses — all from one dashboard.",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex is an AI content platform that creates, optimises, and publishes content automatically based on your brand voice.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex is an AI that creates, optimises, and publishes content for you — across all 9 platforms, in your brand voice, automatically.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex is an internal-grade command center being proven through controlled pilots — evidence-backed planning, approval-gated execution and learning loops that compound over time.",
+      "file": "app/about/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex is easiest to understand as five steps: capture the idea, ground the plan, choose assets, approve production and learn from the outcome.",
+      "file": "app/features/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex learns your brand voice and generates platform-native content for all 9 platforms.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "Synthex learns your brand voice and generates platform-native content for all 9 platforms — in under 3 seconds.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex offers a free plan with no credit card required.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex researches different explanations, shows three directions and waits for you to choose.",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex shows three genuinely different directions.",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex solves that problem automatically at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "SYNTHEX The world's first fully autonomous AI marketing agency.",
+      "file": "components/marketing/MarketingLayout.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex uses AI to write, schedule, and publish content automatically — Hootsuite just schedules what you write manually.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex vs Hootsuite — Why SMBs Switch | Synthex",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex will show the evidence and three different directions before asking you to choose.",
+      "file": "components/intentscape/DecisionDock.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "T+0 → T+30 launch runbook",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "T+1 → T+30",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "T+1 → T+30 fallbacks ready",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "T+1 origin · T+30 reflection · founder voice tag · placeholder claims need verifying",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "T+1 origin · T+30 reflection · founder voice tag · placeholder claims need verifying ~/Desktop/Synthex-Quick-Access/03-HUMAN-ACTION/linkedin-founder-posts.md",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "tagging friends in workout tip posts.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Takes 60 seconds to set up.",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Tell your story with Synthex at synthex dot social.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "than accounts posting once or twice.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "That's a part-time employee you're already paying for — just with your own time.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "That fragmentation costs the industry millions every year in re-inspections alone.",
+      "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "That is a direct line to your customers, no advertising spend required.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "That is over five hundred hours per year — time that can be redirected to strategy,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "that knowledge with your brand profile to craft content that is both on-brand and",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "That means your content must stop the thumb scroll, read clearly on a small screen,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "that posted promotions people scrolled past without engaging.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The 2010–2011 Canterbury earthquake sequence produced approximately 470,000 insurance claims handled by the New Zealand Earthquake Commission, with some claims remaining open more than ten years post-event.",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "the five-step activation checklist.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The AI studies thousands of high-performing posts in your industry, then combines",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The answer is not either-or — it is both.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The audience felt invested before a product even existed.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The average SMB spends 10+ hours per week on social media.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The B2B content marketing strategy that built a $2M sales pipeline — with no cold outreach.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The best time to build your audience is before you need them.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a B2B SaaS startup with a great product and zero LinkedIn presence.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a family-run restaurant with amazing food and empty tables on weeknights.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a local bakery with 200 Instagram followers and no consistent content strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a mid-sized gym with declining membership numbers and an underperforming Facebook page",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: an e-commerce brand selling sustainable homewares,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: an independent consultant transitioning from corporate employment to self-employment,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a professional services firm relying entirely on referrals and cold outreach",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a regional retail chain with strong in-store sales but no coherent digital presence.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a small nonprofit with a powerful mission but a tiny budget and no social media strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge: a tech startup preparing to launch a new product category",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The challenge is producing enough quality content to sustain that pace.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The community responded.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The data is in: AI marketing automation saves serious time.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The data shows exactly how much.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The difference is not budget — it is intentionality.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The founder posted five times per week — industry insights, process breakdowns,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The full workflow from concept to published campaign takes minutes, not days.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The gap between AI-adopters and laggards is widening rapidly.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The Institute of Inspection, Cleaning and Restoration Certification (IICRC) maintains five standards covering professional restoration: S500 (water), S520 (mould), S540 (trauma/biohazard), S700 (fire and smoke), and S210 (drinking-water systems).",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "their ideal clients were asking.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Their social media presence consisted of infrequent photos of plated dishes —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Their target buyers — operations directors at mid-sized companies — were active on LinkedIn,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The most powerful marketing you will ever create is the kind your customers create for you.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The numbers prove it.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The original request points to creative production, but the decision could sit at three different layers: buyer evidence, offer relevance, or the learning system around creative work.",
+      "file": "components/intentscape/demo-data.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The owner was posting sporadically — sometimes daily, sometimes not for two weeks —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The pre-launch brand strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "the problem being solved, the product decisions being made, the challenges and setbacks,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The question is not whether to adopt AI — it is how quickly you can do it.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: two million dollars in qualified pipeline generated organically",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: three thousand followers and a five-hundred-person launch waitlist built entirely through content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: fifty thousand dollars raised in thirty days.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: five hundred qualified leads in ninety days, entirely from organic LinkedIn content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: six figures in consulting revenue in the first twelve months.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: six videos exceeded one million views in the first sixty days.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: a forty-one percent increase in foot traffic attributed to social media referrals.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: a sixty-three percent increase in new memberships over six months,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: from 200 followers to over 10,000 in ninety days.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The result: weeknight reservations increased by seventy-eight percent.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The rules in four cards",
+      "file": "app/terms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The sales team shifted from cold outreach to warm inbound enquiries —",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: a build-in-public content strategy across LinkedIn and Twitter.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: a content marketing strategy designed to attract ideal clients inbound.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: a daily LinkedIn posting habit, supported by Synthex to maintain consistency.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: a TikTok-first content strategy built around authentic, educational content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: Synthex built a storytelling-first content strategy.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: Synthex built a thought leadership content programme.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: Synthex created a centralised content strategy with localised execution.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: Synthex generated a thirty-day content calendar mixing product photography,",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: Synthex rebuilt the content strategy around three pillars:",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The solution: Synthex rebuilt their content around the full dining experience.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The Tuesday special became booked out every week within two months.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "The world's first fully autonomous AI marketing agency.",
+      "file": "components/marketing/MarketingLayout.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "They are saving hours every week, growing their audiences, and generating real business results.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "They were posting sporadically, reaching only existing supporters, and struggling to grow their donor base.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Things only you can do · most under 30 minutes",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "This offer expires soon.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "This offer won't last.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Thu",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "TikTok marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Today's Challenge +10 points",
+      "file": "components/StreakCounter.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "to generate new business — a costly, slow, and unreliable pipeline.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "To remove that data, disconnect the platform (fastest), delete your account, or email us — each method is described below.",
+      "file": "app/data-deletion/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Total Revenue $24,500",
+      "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Training Australia's best — because clean isn't just a look, it's a health standard.",
+      "file": "app/api/demo/caption/route.ts",
+      "firstSeen": "5cd72d3b"
+    },
+    {
+      "text": "Transition is 14 frames but base scene reveal is 18 frames — transitions are tighter than scenes by design.",
+      "file": "app/api/internal/vision-board/ai-commentary/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Try it free — see your content in 3 seconds",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "TTFB is ms (should be < 600ms)",
+      "file": "app/api/analytics/performance/route.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Tue",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Tuesday night \"secret specials\" announced exclusively on Instagram Stories.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Turn a rough business or marketing idea into three researched directions, choose one with clear limits, and keep the resulting brief.",
+      "file": "app/intentscape/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Turn one rough idea into three directions",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "tweak any posts you want to customise, then click Schedule All.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Twitter is generating the highest engagement",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "UGC",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "UGC Drives 6.9× More Engagement | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "UGC user generated content",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ultra Modern Animations",
+      "file": "app/demo/DemoClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Under 280 characters with maximum impact.",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Under 60 seconds.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "unlocks 39 more videos",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "unlocks 39 more videos verify-senate-inquiry",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "unlocks pilot render 4 scenes",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "up from just eighteen percent three years ago.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Uptime SLA",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Uptime SLA GDPR",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Used by Datadog, Bitmovin, Evaneos.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Use more visual content on Instagram",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Use one of the options below: </p> <h3 style=\"margin: 0 0 15px; color: #ffffff; font-size: 18px;\">Option 1: Click the button</h3> <div style=\"text-align: center; margin: 20px 0 30px;\"> <a href=\"",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "User-generated content — reviews, testimonials, and customer posts — drives",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "User-generated content outperforms branded content every time.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "user generated content",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Use social to attract, email to convert, and AI to run both automatically.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Use your own API keys to dramatically reduce costs.",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "V6d5bcnJ0z4 onboarding-connect-social",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "var(--ra-white) 50+",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Vercel (AWS) SOC 2, ISO 27001, PCI DSS",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "verification \"20–30% re-inspection\" figure",
+      "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Verified authority profile for",
+      "file": "app/clients/[slug]/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Verified by Synthex",
+      "file": "app/clients/[slug]/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "verified GBP management",
+      "file": "components/landing/premium/feature-bento.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Verify the 20–30% re-inspection figure used in the LinkedIn drumbeat T+9 carousel and founder post T+1",
+      "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Video content dominates every platform.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Video content generates forty-nine percent more engagement than static images across all platforms.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Video Gets 49% More Engagement Than Static Posts | Synthex",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "video marketing",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Video posts: take longer to produce, but generate forty-nine percent more engagement on average.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "was promoted across all platforms with daily countdown content.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "We're looking for passionate individuals who want to democratize AI-powered marketing and help millions of creators succeed.",
+      "file": "app/careers/CareersClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "We're SOC 2 compliant.",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "We build on the same stack.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Wed",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "We recommend Alpic for revenue-critical apps because the compliance-auditing alone is worth the cost.",
+      "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "What if you could schedule an entire month of social media content in under thirty minutes?",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "What is the main difference between Synthex and Hootsuite?",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "What would you do with ten extra hours?",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "When customers recognise your brand instantly, they trust it more — and trust converts.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "When each trade files its own layout, an adjuster reads fifty versions of the same job.",
+      "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "with zero brand awareness and a six-month runway before their public launch date.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "with no budget for paid advertising and a niche audience difficult to reach through traditional channels.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "with social media cited as the primary discovery channel.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "With Synthex, it takes minutes.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "written by AI Synthex learns your brand voice and generates platform-native content for all 9 platforms.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "0328e421"
+    },
+    {
+      "text": "written by AI Synthex learns your brand voice and generates platform-native content for all 9 platforms — in under 3 seconds.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "written from hard-won personal experience.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Yes, we use enterprise-grade encryption for all data.",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Yet most small businesses post inconsistently and see minimal results.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "You're now part of a community that's revolutionizing social media marketing with AI.</p> <h3>Here's what you can do with SYNTHEX:</h3> <div class=\"feature\"> <strong>🤖 AI Content Generation</strong> <p>Create viral-worthy content for any platform in seconds</p> </div> <div class=\"feature\"> <strong>📱 Multi-Platform Posting</strong> <p>Post to Twitter, LinkedIn, Instagram, Facebook, and TikTok from one place</p> </div> <div class=\"feature\"> <strong>📊 Analytics Dashboard</strong> <p>Track engagement, growth, and performance across all platforms</p> </div> <div class=\"feature\"> <strong>🎯 Smart Optimization</strong> <p>Get AI-powered recommendations to improve your content strategy</p> </div> <div style=\"text-align: center;\"> <a href=\"",
+      "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "You've joined 1000+ businesses saving <strong style=\"color: #10b981;\">$140,000+ per year</strong> while getting better results than traditional agencies.",
+      "file": "lib/email/index.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your content and analytics are stored securely and never shared with third parties.",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your content is being viewed on a phone.",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your content runs",
+      "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your data, your rights.",
+      "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your engagement has increased by",
+      "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your first AI-generated post is ready to approve immediately.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Your tone, your style, zero manual effort.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "You write everything manually",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    }
+  ],
+  "retired": [
+    {
+      "text": "Basic report type IICRC S500 compliant reports",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Basic, Enhanced and Optimised IICRC S500 compliant reports",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Best value",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "IICRC S500 compliant reports",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "IICRC S500 compliant reports PDF and Excel export",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Most chosen",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Repeat fields pre-filled from details already entered, so the same information is not typed twice.",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "Two things follow from that.",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "for $",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    },
+    {
+      "text": "over",
+      "reason": "RestoreAssist pricing page restored to base 83243588: pricing pages are out of this branch's scope (docs/governance/CLAUDE.md:20); its copy is governed separately and listed in the copy:audit founder review queue."
+    }
+  ]
+}

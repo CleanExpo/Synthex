@@ -19,12 +19,14 @@ import {
 } from '@/components/landing/premium';
 import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
+import { generateMetadata } from '@/lib/seo/metadata';
 
-export const metadata: Metadata = {
-  title: 'Platform | Synthex',
+export const metadata: Metadata = generateMetadata({
+  title: 'Platform',
   description:
     'Explore Synthex command-center features for market research, campaign planning, Gen Media production, approvals and ROI learning.',
-};
+  path: '/features',
+});
 
 const featureCards = [
   {
@@ -84,7 +86,7 @@ export default function FeaturesPage() {
               <PublicGradientText>cards, not a maze</PublicGradientText>.
             </>
           }
-          description="Synthex is easiest to understand as five steps: capture the idea, ground the plan, choose assets, approve production and learn from the outcome."
+          description="Think of Synthex as a sequence: capture the idea, ground the plan, choose assets, approve production and learn from the outcome."
         >
           <Button asChild variant="premium-primary" size="lg">
             <Link href="/opportunity-map">
@@ -101,7 +103,7 @@ export default function FeaturesPage() {
           className="bg-sx-bg-primary"
           gradientVariant="mid"
           eyebrow="Command center"
-          title="Five steps. One operating layer."
+          title="One operating layer, step by step."
           description="Each card carries evidence, approval state and next action — so teams can review before anything goes live."
         >
           <ol className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">

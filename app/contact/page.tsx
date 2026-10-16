@@ -104,7 +104,7 @@ export default function ContactPage() {
         <PublicPageSection
           className="bg-sx-bg-secondary"
           eyebrow="How we respond"
-          title="One intake path. Three common requests."
+          title="One intake path. Common requests."
         >
           <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-3">
             {requestCards.map((item, index) => (

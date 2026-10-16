@@ -21,7 +21,7 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
 /** Minimum sample size for a claim to be shown on the public page. */
-const MIN_SAMPLE_SIZE = 25;
+export const MIN_SAMPLE_SIZE = 25;
 
 /** Claim rendered on the benchmark page. */
 export interface PublicBenchmarkClaim {
@@ -58,7 +58,7 @@ const FALLBACK_CLAIMS: PublicBenchmarkPayload = {
       label: 'Insufficient data',
       value: '—',
       disclosure:
-        'Based on 0 anonymised Synthex client accounts. Public figures publish once the cohort exceeds 25 accounts.',
+        'Based on anonymised Synthex client accounts. Public figures publish once the cohort exceeds 25 accounts.',
       source: 'active_accounts',
     },
   ],

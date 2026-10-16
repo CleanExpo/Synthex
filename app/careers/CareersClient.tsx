@@ -40,7 +40,7 @@ const openPositions: Job[] = [
     description:
       'Build and scale our AI-powered platform using Next.js, TypeScript, and Python.',
     requirements: [
-      '5+ years experience',
+      'Senior engineering experience',
       'React/Next.js expertise',
       'Python/AI experience',
       'Strong system design',
@@ -56,7 +56,7 @@ const openPositions: Job[] = [
     description:
       'Develop and optimize ML models for content generation and pattern analysis.',
     requirements: [
-      '3+ years ML experience',
+      'ML engineering experience',
       'PyTorch/TensorFlow',
       'NLP expertise',
       'Production ML systems',
@@ -72,7 +72,7 @@ const openPositions: Job[] = [
     description:
       'Design intuitive interfaces for our AI-powered marketing platform.',
     requirements: [
-      '4+ years product design',
+      'Product design experience',
       'Figma expertise',
       'SaaS experience',
       'User research skills',
@@ -88,7 +88,7 @@ const openPositions: Job[] = [
     description:
       'Help our customers achieve success with Synthex and drive retention.',
     requirements: [
-      '2+ years CS experience',
+      'Customer success experience',
       'SaaS background',
       'Technical aptitude',
       'Excellent communication',
@@ -104,7 +104,7 @@ const openPositions: Job[] = [
     description:
       'Drive user acquisition and growth through data-driven marketing strategies.',
     requirements: [
-      '5+ years growth marketing',
+      'Growth marketing experience',
       'B2B SaaS experience',
       'Analytics expertise',
       'Content marketing',
@@ -121,7 +121,7 @@ const benefits = [
   {
     icon: Heart,
     title: 'Health & Wellness',
-    description: '100% covered health, dental, vision',
+    description: 'Health, dental and vision cover',
   },
   {
     icon: Globe,
@@ -131,7 +131,7 @@ const benefits = [
   {
     icon: Rocket,
     title: 'Growth Budget',
-    description: '$2,000 annual learning budget',
+    description: 'Annual learning budget',
   },
   {
     icon: Clock,
@@ -180,7 +180,7 @@ export default function CareersPage() {
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             We're looking for passionate individuals who want to democratize
-            AI-powered marketing and help millions of creators succeed.
+            AI-powered marketing and help creators succeed.
           </p>
           <Button
             onClick={() =>
@@ -212,18 +212,16 @@ export default function CareersPage() {
                 Massive Impact
               </h3>
               <p className="text-gray-400">
-                Help millions of creators and businesses succeed with AI-powered
-                tools.
+                Help creators and businesses succeed with AI-powered tools.
               </p>
             </Card>
             <Card className="bg-surface-base/80 border-orange-500/10 p-6 text-center">
               <TrendingUp className="w-12 h-12 text-orange-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">
-                Rapid Growth
+                Room to Grow
               </h3>
               <p className="text-gray-400">
-                Join a fast-growing startup with 10x growth trajectory and
-                unlimited potential.
+                Take on real ownership as the product develops.
               </p>
             </Card>
             <Card className="bg-surface-base/80 border-orange-500/10 p-6 text-center">
@@ -280,8 +278,8 @@ export default function CareersPage() {
                 </h2>
                 <p className="text-gray-300 mb-6">
                   At Synthex, we believe in building a culture where everyone
-                  can do their best work, grow professionally, and have fun
-                  along the way.
+                  can do good work, grow professionally, and have fun along the
+                  way.
                 </p>
                 <ul className="space-y-3">
                   {culture.map((item, index) => (

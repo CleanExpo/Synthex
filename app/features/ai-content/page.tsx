@@ -9,7 +9,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = genMeta({
   title: 'AI Content Generation for Social Media | Synthex',
   description:
-    'Synthex AI generates platform-native social media content in under 3 seconds. Instagram captions, LinkedIn articles, TikTok hooks — all in your brand voice.',
+    'Synthex AI generates platform-native social media content. Instagram captions, LinkedIn articles, TikTok hooks — all in your brand voice.',
   path: '/features/ai-content',
   keywords: [
     'AI content generation platform',
@@ -33,7 +33,7 @@ const STEPS = [
   },
   {
     n: '03',
-    title: 'Content generated across 9 platforms',
+    title: 'Content generated for each platform',
     body: 'Instagram captions, LinkedIn posts, TikTok hooks, YouTube descriptions — all formatted natively for each platform.',
   },
   {
@@ -81,14 +81,13 @@ export default function AiContentPage() {
           </h1>
           <p className="text-lg text-white/50 max-w-2xl mx-auto leading-relaxed mb-10">
             Synthex learns your brand voice and generates platform-native
-            content for all 9 platforms — in under 3 seconds. Your tone, your
-            style, zero manual effort.
+            content for each platform. Your tone, your style, no manual effort.
           </p>
           <Link
             href="/signup"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
           >
-            Try it free — see your content in 3 seconds
+            Try it free
           </Link>
         </div>
       </section>
@@ -150,7 +149,8 @@ export default function AiContentPage() {
               },
               {
                 platform: 'X (Twitter)',
-                format: 'Punchy threads and single posts under 280 chars',
+                format:
+                  "Punchy threads and single posts within X's character limit",
               },
               {
                 platform: 'Pinterest',
@@ -184,8 +184,7 @@ export default function AiContentPage() {
             See Synthex write your content
           </h2>
           <p className="text-white/50 mb-8">
-            Paste your website URL and get real AI-generated content in under 3
-            seconds.
+            Paste your website URL and get real AI-generated content.
           </p>
           <Link
             href="/signup"
@@ -198,7 +197,7 @@ export default function AiContentPage() {
               href="/features/platforms"
               className="hover:text-orange-400 transition-colors"
             >
-              All 9 platforms →
+              All platforms →
             </Link>
             <Link
               href="/agencies"

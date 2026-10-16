@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AutonomousPostLog } from '@/components/autonomous/AutonomousPostLog';
 
 export const metadata: Metadata = {
-  title: 'Activity Log | Synthex',
+  title: { absolute: 'Activity Log | Synthex' },
   description:
     'A complete record of every auto-publish action Synthex has taken on your behalf.',
 };

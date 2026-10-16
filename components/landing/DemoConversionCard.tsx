@@ -57,12 +57,6 @@ export function DemoConversionCard({
         ))}
       </div>
 
-      {/* Social proof */}
-      <p className="text-center text-xs text-white/50">
-        Join <span className="text-amber-400 font-medium">5,000+</span>{' '}
-        businesses automating their content
-      </p>
-
       {/* Primary CTA */}
       <Link
         href="/signup"

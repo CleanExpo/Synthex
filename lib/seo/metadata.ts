@@ -43,7 +43,8 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
   } = config;
 
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title === SITE_NAME ? title : `${title} | ${SITE_NAME}`;
+  // Brand once: titles that already name Synthex are used as-is.
+  const fullTitle = /synthex/i.test(title) ? title : `${title} | ${SITE_NAME}`;
 
   // Use dynamic OG image route; fall back to static only if an explicit image is provided
   const ogImageUrl = image
@@ -68,7 +69,8 @@ export function generateMetadata(config: PageSEOConfig): Metadata {
 
   return {
     metadataBase: new URL(BASE_URL),
-    title: fullTitle,
+    // Absolute, so the root layout's `%s | SYNTHEX` template does not brand it twice.
+    title: { absolute: fullTitle },
     description,
     keywords: [...defaultKeywords, ...keywords].join(', '),
     authors: authors
@@ -210,8 +212,6 @@ export function generateProductMetadata(
 export const PAGE_METADATA = {
   home: generateMetadata({
     title: 'Synthex - AI-Powered Marketing Agency',
-    description:
-      "The world's first fully autonomous AI marketing agency. Generate viral content, automate scheduling, and optimize engagement 24/7.",
     path: '/',
     keywords: [
       'AI marketing agency',
@@ -236,7 +236,7 @@ export const PAGE_METADATA = {
   pricing: generateProductMetadata({
     title: 'Pricing',
     description:
-      'Affordable AI marketing from $199/month. Use your own API keys to dramatically reduce costs. Enterprise plans with custom rates available.',
+      'AI marketing with your own API keys. Enterprise plans with custom rates available.',
     path: '/pricing',
     keywords: [
       'pricing plans',
@@ -353,15 +353,9 @@ export const PAGE_METADATA = {
   security: generateMetadata({
     title: 'Security',
     description:
-      "Learn about Synthex's security practices, data protection measures, and compliance certifications.",
+      "Learn about Synthex's security practices and data protection measures.",
     path: '/security',
-    keywords: [
-      'security',
-      'data protection',
-      'compliance',
-      'SOC 2',
-      'encryption',
-    ],
+    keywords: ['security', 'data protection', 'encryption'],
   }),
 
   support: generateMetadata({

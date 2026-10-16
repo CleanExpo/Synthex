@@ -16,34 +16,32 @@ export const NIR_STORYBOARD: NIRStoryboard = {
   channel: 'linkedin',
   aspectRatio: '1920x1080',
   totalDurationSec: 90,
-  voiceId: 'EXAVITQu4vr4xnSDxMaL',          // Sarah, en-AU narration (matches ra.ts)
+  voiceId: 'EXAVITQu4vr4xnSDxMaL', // Sarah, en-AU narration (matches ra.ts)
   topic:
     'The National Inspection Report is a single IICRC-grounded format that ' +
-    'replaces 50+ fragmented report formats currently used across Australian ' +
-    'restoration — removing double-handling, eliminating re-inspections, and ' +
-    'saving $2,000–5,000 per claim.',
+    'replaces the many fragmented report formats currently used across ' +
+    'Australian restoration — removing double-handling and eliminating re-inspections.',
   scenes: [
     {
       index: 1,
       startSec: 0,
       endSec: 18,
       durationSec: 18,
-      onScreenText: '50 formats. One claim.',
+      onScreenText: 'Many formats. One claim.',
       voiceover:
         'Right now, every restoration job in Australia is documented in a different format.',
       visualNote:
-        'Stack of 50+ scattered report templates falling onto a desk. Sweep transitions in from the left.',
+        'Stack of scattered report templates falling onto a desk. Sweep transitions in from the left.',
     },
     {
       index: 2,
       startSec: 18,
       endSec: 36,
       durationSec: 18,
-      onScreenText: 'Re-inspections run 20–30%.\nEach one costs $2,000–$5,000.',
-      voiceover:
-        'That fragmentation costs the industry millions every year in re-inspections alone.',
+      onScreenText: 'Every missing detail risks a re-inspection.',
+      voiceover: 'That fragmentation sends claims back for re-inspection.',
       visualNote:
-        'Two-line stat reveal. Dollar figures count up. Slate background, lime accent on the dollar amounts.',
+        'Single-line reveal. Slate background, lime accent on "re-inspection".',
     },
     {
       index: 3,
@@ -54,7 +52,7 @@ export const NIR_STORYBOARD: NIRStoryboard = {
       voiceover:
         'The National Inspection Report is one format, grounded in IICRC standards.',
       visualNote:
-        'NIR icon revealed via the locked sweep signature. Three IICRC chips slide in from the right.',
+        'NIR icon revealed via the locked sweep signature. IICRC chips slide in from the right.',
     },
     {
       index: 4,
@@ -66,7 +64,7 @@ export const NIR_STORYBOARD: NIRStoryboard = {
       voiceover:
         'Field tech captures it once. The system does the rest. No double-handling.',
       visualNote:
-        '5-step horizontal sweep. Each step pops in on its own beat. Field-tech icon transitions into office-report icon.',
+        'Horizontal step-by-step sweep. Each step pops in on its own beat. Field-tech icon transitions into office-report icon.',
     },
     {
       index: 5,

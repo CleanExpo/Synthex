@@ -66,7 +66,7 @@ export function ContactForm() {
       className="rounded-card border border-white/[0.1] bg-sx-bg-elevated p-6 shadow-[var(--sx-shadow-elevated)] md:p-8"
       // @ts-expect-error WebMCP attributes are W3C-draft and not yet in React's type defs
       toolname="submit_contact_enquiry"
-      tooldescription="Submit a contact enquiry to SYNTHEX. Routes to support@synthex.social for human follow-up within 1 business day."
+      tooldescription="Submit a contact enquiry to SYNTHEX. Routes to support@synthex.social for human follow-up."
     >
       <div className="grid gap-5">
         <div>

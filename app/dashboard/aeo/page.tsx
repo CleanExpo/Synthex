@@ -11,7 +11,7 @@ import {
 import { UNITE_WORKSPACE_SLUG } from '@/lib/agency/portfolio-brand-configs';
 
 export const metadata: Metadata = {
-  title: 'AEO Snapshot · Synthex',
+  title: { absolute: 'AEO Snapshot · Synthex' },
 };
 
 interface BrandSurfaceSummary {

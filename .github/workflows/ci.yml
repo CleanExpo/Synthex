@@ -51,6 +51,9 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The tripwire seed test re-derives its seeds from Git history.
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -60,6 +63,13 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
           DIRECT_URL: ${{ secrets.DIRECT_URL || 'postgresql://placeholder:***@localhost:5432/placeholder' }}
+      # Blocking public-copy tripwire (SYN-1226): source, rendered, API and
+      # seed-completeness suites in one command; needs the full history above.
+      - name: Claims guard (blocking)
+        run: npm run claims:guard
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-placeholder-anon-key' }}
       - run: npm test -- --coverage --coverageThreshold='{"global":{"statements":5}}'
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}

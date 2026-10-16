@@ -107,8 +107,7 @@ export class SendGridService {
                 Welcome aboard, ${userName}! 🎉
               </h2>
               <p style="margin: 0 0 25px; color: #a3a3a3; font-size: 16px; line-height: 1.6; text-align: center;">
-                You've just joined <strong style="color: #ffffff;">1000+ businesses</strong> who are saving 
-                <strong style="color: #10b981;">$140,000+ per year</strong> while getting better results than traditional agencies.
+                Your Synthex workspace is ready.
               </p>
             </td>
           </tr>
@@ -322,8 +321,7 @@ export class SendGridService {
                 Goodbye, ${userName} 👋
               </h2>
               <p style="margin: 0 0 25px; color: #a3a3a3; font-size: 16px; line-height: 1.6; text-align: center;">
-                Your SYNTHEX account has been successfully cancelled. We're sad to see you leave our community of 
-                <strong style="color: #ffffff;">1000+ businesses</strong> transforming their social media presence.
+                Your SYNTHEX account has been successfully cancelled. We're sad to see you go.
               </p>
             </td>
           </tr>
@@ -336,8 +334,6 @@ export class SendGridService {
                   What You'll Be Missing:
                 </h3>
                 <ul style="margin: 0; padding: 0 0 0 20px; color: #a3a3a3; font-size: 14px; line-height: 1.8;">
-                  <li><strong style="color: #ffffff;">$140,436/year savings</strong> vs traditional agencies</li>
-                  <li><strong style="color: #ffffff;">2.2x engagement boost</strong> with AI optimization</li>
                   <li><strong style="color: #ffffff;">24/7 AI team</strong> working on your social media</li>
                   <li><strong style="color: #ffffff;">Viral pattern analysis</strong> for your content</li>
                   <li><strong style="color: #ffffff;">All platforms</strong> managed from one dashboard</li>

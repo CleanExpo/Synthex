@@ -4,9 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, X } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import {
-  EDUCATIONAL_VIDEOS,
+  HELP_VIDEO_BY_ID,
   type EducationalVideo,
-} from '@/lib/remotion/educational-content';
+} from '@/lib/remotion/help-videos';
 
 interface HelpVideoProps {
   videoId: string;
@@ -35,9 +35,7 @@ export function HelpVideo({ videoId, className }: HelpVideoProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const video: EducationalVideo | undefined = EDUCATIONAL_VIDEOS.find(
-    v => v.id === videoId
-  );
+  const video: EducationalVideo | undefined = HELP_VIDEO_BY_ID[videoId];
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');

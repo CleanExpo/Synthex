@@ -11,7 +11,7 @@
 import { AutopilotPageClient } from './AutopilotPageClient';
 
 export const metadata = {
-  title: 'Autopilot — Synthex',
+  title: { absolute: 'Autopilot — Synthex' },
 };
 
 export default function AutopilotPage() {

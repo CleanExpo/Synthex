@@ -110,10 +110,7 @@ export default function DesignSystemPage() {
                     >
                       <div className="absolute inset-0 backdrop-blur-xl" />
                       <div className="relative">
-                        <p className="text-sm font-medium">
-                          {opacity}% opacity
-                        </p>
-                        <p className="text-xs text-white/60">Glass surface</p>
+                        <p className="text-sm font-medium">Glass surface</p>
                       </div>
                     </div>
                   ))}
@@ -254,7 +251,7 @@ export default function DesignSystemPage() {
                       body-sm - 14px - Gray 500
                     </span>
                     <p className="text-sm leading-normal text-gray-500">
-                      Last updated 2 hours ago - 1.2k views - 45 shares
+                      Last updated recently · views · shares
                     </p>
                   </div>
                 </div>
@@ -440,26 +437,21 @@ export default function DesignSystemPage() {
                 <div className="grid gap-4 md:grid-cols-4">
                   <StatCard
                     label="Total Revenue"
-                    value="$24,500"
-                    change="+12.5%"
+                    value="—"
+                    change="—"
                     positive
                   />
                   <StatCard
                     label="Active Users"
-                    value="8,420"
-                    change="+5.2%"
+                    value="—"
+                    change="—"
                     positive
                   />
-                  <StatCard
-                    label="Bounce Rate"
-                    value="32.4%"
-                    change="-2.1%"
-                    positive
-                  />
+                  <StatCard label="Bounce Rate" value="—" change="—" positive />
                   <StatCard
                     label="Avg. Session"
-                    value="4m 32s"
-                    change="-8.3%"
+                    value="—"
+                    change="—"
                     positive={false}
                   />
                 </div>
@@ -520,7 +512,7 @@ export default function DesignSystemPage() {
                       MR
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-surface-dark bg-orange-500/30 text-xs font-bold">
-                      +5
+                      +…
                     </div>
                   </div>
                 </div>

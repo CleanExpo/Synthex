@@ -102,10 +102,7 @@ export const metadata: Metadata = {
     'AI content generation',
     'marketing automation',
   ],
-  authors: [
-    { name: 'Synthex Team', url: BASE_URL },
-    { name: 'Unite-Group', url: 'https://unite-group.com.au' },
-  ],
+  authors: [{ name: 'Synthex Team', url: BASE_URL }, { name: 'Unite-Group' }],
   creator: 'Synthex',
   publisher: 'Unite-Group',
   applicationName: 'SYNTHEX',
@@ -159,13 +156,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: 'https://synthex.social',
-    languages: {
-      'en-US': BASE_URL,
-      'en-AU': `${BASE_URL}?locale=en-AU`,
-    },
-  },
+  // No root `alternates`: a canonical/hreflang here is inherited by every page
+  // that does not set its own, pointing them all at the homepage. Pages set
+  // their own via generateMetadata() in lib/seo/metadata.ts.
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
