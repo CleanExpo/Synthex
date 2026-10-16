@@ -31,4 +31,10 @@ describe('product voice', () => {
       );
     }
   });
+
+  it('leaves the personal brand on its own voice', () => {
+    expect(brands['john-coutis'].voiceover.elevenLabsVoiceId).toBe(
+      'EXAVITQu4vr4xnSDxMaL'
+    );
+  });
 });
