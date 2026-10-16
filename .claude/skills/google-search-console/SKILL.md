@@ -232,6 +232,9 @@ Clicks declining in GSC analytics?
 - Position values are **averaged across impressions**, not clicks — a page showing at position 3 for 1,000 impressions and position 50 for 10 impressions averages to ~3.5
 - URL Inspection results reflect Google's **last crawl**, not real-time state — the page may have changed since
 - The `getSearchAnalytics` function defaults to `type: 'web'` — this excludes image, video, and news results
+- Published Search Analytics API `type` values: `web`, `image`, `video`, `news`, `discover`, `googleNews` (`searchType` is deprecated); rowLimit 1–25,000 with `startRow` paging; dates are Pacific Time. Query-grouped rows are not exhaustive (anonymised queries are omitted), so never sum top query rows into a property total
+- **New Search Console reports (2026):** generative-AI performance (impression) reports (June 2026), a multimodal search type for Lens, Circle to Search and image inputs (September 2026), and platform properties for Instagram, TikTok, X and YouTube content on Google (global July 2026) `[VERIFIED 16/10/2026: developers.google.com/search/blog]`. API support for these report types is `[UNCONFIRMED]`: use account exports and label them, never fall back to `web` silently
+- A failed or missing Search Console read is UNAVAILABLE, never 0 (`docs/ree/REE-SPEC.md` §6)
 - GSC property URLs must match exactly — `https://example.com` and `https://www.example.com` are different properties
 - OAuth token resolution follows a priority chain: explicit connectionId > org-level OAuth connection > service account fallback
 

@@ -164,7 +164,18 @@ interface PlatformContentOptimiserScore {
 
 `forward_to: 'platform-content-adaptor'` (lift recommendations 1-3 for re-adaptation) · then `marketing-operations-director` for scheduling once re-adapted version passes brand-voice-enforce.
 
+## Provenance in production (2026-10-16)
+
+Production loads only this SKILL.md and its foundation documents. The `algorithm-knowledge-base/references/*` files and `signal-translations.json` are **not** bundled. This amends hard rules 2–3:
+
+- If a reference file or the translations file is not in your context, write `not loaded in this runtime` for that citation, mark every affected weight `[hypothesised]`, and never invent a load time, version or verification date.
+- `[LEAKED]` signals (2024 leaked API documentation) are unconfirmed attribute names. Never mark them `[verified-via-platform-doc]` or describe them as platform documents.
+- Verified Google facts you may use inline `[verified-via-platform-doc-16/10/2026]`: good Core Web Vitals are LCP within 2.5 s, INP under 200 ms and CLS under 0.1, and "align with what our core ranking systems seek to reward" (not a penalty claim); AI Overviews and AI Mode use the normal index with no special AI schema; FAQ rich results are no longer shown; E-E-A-T is not a specific ranking factor; mass-generated content without added value is scaled content abuse, AI-assisted or not.
+- Platform claims not listed here stay `[hypothesised]` until a post-publish measurement supports them.
+
 ## Versioning
+
+- v0.4 (2026-10-16): production provenance rule (unbundled references cited as not loaded; leaked signals never verified) and verified Google facts.
 
 - v0.3 (2026-04-28): senior calibration uplift · 5 markers + 10 NEVER + PlatformContentOptimiserScore TS contract + worked example (CARSI Post 06 LinkedIn score 78/100 with 3 verified-weight recommendations + falsifying post-publish checks) added · plain-English translation discipline formalised · post-publish weight-verification feedback loop documented.
 - v1.0 (legacy): capability-uplift format with manual scoring protocol · superseded by structured contract.
