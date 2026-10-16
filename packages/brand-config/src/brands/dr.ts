@@ -45,7 +45,7 @@ export const dr = {
     transitionFrames: 16,
   },
   voiceover: {
-    elevenLabsVoiceId: 'EXAVITQu4vr4xnSDxMaL',
+    elevenLabsVoiceId: 'tAtHhBlA3E0eKZJKNSKE', // Margot — founder decision 16/10/2026: all Phill's products use Margot
     style: 'narration',
     locale: 'en-AU',
   },
