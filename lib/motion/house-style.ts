@@ -17,7 +17,14 @@ export interface HouseStyle {
     background: string;
     text: string;
   };
-  typography: { display: string; body: string };
+  typography: {
+    display: string;
+    body: string;
+    displaySrc: string;
+    displayWeight: number;
+    bodySrc: string;
+    bodyWeight: number;
+  };
   motion: {
     fastFrames: number;
     baseFrames: number;
@@ -49,6 +56,10 @@ export function resolveHouseStyle(slug: BrandSlug): HouseStyle {
     typography: {
       display: b.typography.display.family,
       body: b.typography.body.family,
+      displaySrc: b.typography.display.src,
+      displayWeight: b.typography.display.weight,
+      bodySrc: b.typography.body.src,
+      bodyWeight: b.typography.body.weight,
     },
     motion: {
       fastFrames: b.motion.durations.fast,

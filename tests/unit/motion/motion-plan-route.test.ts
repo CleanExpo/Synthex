@@ -37,6 +37,7 @@ const good = {
   placement: 'youtube',
   durationSeconds: 20,
   audience: 'Brisbane homeowners',
+  headline: 'Help in under an hour',
   cta: 'Call 24/7',
   source: SOURCE,
   content: {
@@ -76,11 +77,15 @@ describe('POST /api/brand-video/motion-plan', () => {
     const res = await post(good);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.plan.compositionId).toBe('StatReveal');
+    expect(body.plan.compositionId).toBe('MotionStudio');
+    expect(body.plan.props.beats[0]).toMatchObject({
+      kind: 'headline',
+      text: 'Help in under an hour',
+    });
     expect(body.plan.factCheck.ok).toBe(true);
     expect(body.houseStyle.slug).toBe('dr');
     expect(body.claudeMotionBrief).toContain(
-      'Use only what is in the source below.'
+      'Source (the only place facts may come from):'
     );
     expect(body.next).toMatch(/human approves before export/);
     expect(withRateLimit).toHaveBeenCalledTimes(1);
@@ -100,7 +105,11 @@ describe('POST /api/brand-video/motion-plan', () => {
   });
 
   it('reports non-fact problems as PARTIAL with 422', async () => {
-    const res = await post({ ...good, placement: 'feed-portrait' });
+    const res = await post({
+      ...good,
+      placement: 'feed-portrait',
+      headline: 'Our crews arrive fast with every piece of drying gear',
+    });
     expect(res.status).toBe(422);
     expect((await res.json()).state).toBe('PARTIAL');
   });
@@ -109,6 +118,22 @@ describe('POST /api/brand-video/motion-plan', () => {
     const res = await post({ ...good, brand: 'Coca-Cola' });
     expect(res.status).toBe(400);
     expect((await res.json()).error).toBe('Brand preflight failed');
+  });
+
+  it('plans a green-screen overlay for keying over real footage', async () => {
+    const res = await post({ ...good, placement: 'overlay-green' });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.plan.props.style).toMatchObject({
+      background: '#00B140',
+      chromaKey: true,
+    });
+    expect(body.claudeMotionBrief).toContain('solid green #00B140');
+  });
+
+  it('requires a headline', async () => {
+    const { headline: _omit, ...noHeadline } = good;
+    expect((await post(noHeadline)).status).toBe(400);
   });
 
   it('validates the brief', async () => {

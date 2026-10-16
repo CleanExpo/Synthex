@@ -24,6 +24,7 @@ const brief = (over: Partial<MotionBrief> = {}): MotionBrief =>
     placement: 'youtube',
     durationSeconds: 20,
     audience: 'Brisbane homeowners',
+    headline: 'Faster help after a flood',
     cta: 'Call 24/7',
     source: SOURCE,
     content: {
@@ -101,7 +102,7 @@ describe('planner', () => {
         label: 'Average arrival time',
         context: 'Down from 90 minutes',
       },
-      'StatReveal',
+      ['headline', 'stat', 'cta'],
     ],
     [
       'comparison',
@@ -110,7 +111,7 @@ describe('planner', () => {
         oldWay: 'Arrive in 90 minutes',
         newWay: 'Arrive in 38 minutes',
       },
-      'ComparisonSlide',
+      ['headline', 'compare', 'cta'],
     ],
     [
       'case-study',
@@ -118,36 +119,77 @@ describe('planner', () => {
         kind: 'case-study',
         challenge: 'Flooded homes',
         solution: 'Crews on call',
-        result: '42 homes dried',
+        result: 'Homes dried',
         metric: '42',
       },
-      'CaseStudyVideo',
+      ['headline', 'headline', 'headline', 'stat', 'cta'],
     ],
     [
       'how-to',
       { kind: 'how-to', steps: [{ step: 'Call us' }, { step: 'We arrive' }] },
-      'HowToVideo',
+      ['headline', 'item', 'item', 'cta'],
     ],
     [
       'list',
       { kind: 'list', items: ['Fast arrival', 'Drying crews'] },
-      'ListicleVideo',
+      ['headline', 'item', 'item', 'cta'],
     ],
     [
       'explainer',
       { kind: 'explainer', scenes: [{ text: 'Water damage spreads fast' }] },
-      'ExplainerVideo',
+      ['headline', 'headline', 'cta'],
     ],
   ])(
-    '%s maps to %s with brand colour and only source figures',
-    (_k, content, id) => {
+    '%s becomes headline → content beats → CTA in the house style',
+    (_k, content, kinds) => {
       const plan = planMotion(brief({ content: content as never }), style);
-      expect(plan.compositionId).toBe(id);
+      expect(plan.compositionId).toBe('MotionStudio');
       expect(plan.issues).toEqual([]);
-      expect(plan.props?.brandColour).toBe(style.colours.primary);
+      expect(plan.props.beats.map(b => b.kind)).toEqual(kinds);
+      expect(plan.props.beats[0]).toMatchObject({
+        kind: 'headline',
+        text: 'Faster help after a flood',
+      });
+      expect(plan.props.beats.at(-1)).toMatchObject({
+        kind: 'cta',
+        text: 'Call 24/7',
+      });
+      expect(plan.props.style.primary).toBe(style.colours.primary);
+      expect(plan.props.style.signature).toBe(style.motion.signature);
+      expect(plan.props.beats.reduce((n, b) => n + b.durationInFrames, 0)).toBe(
+        plan.durationInFrames
+      );
       expect(plan.factCheck.ok).toBe(true);
     }
   );
+
+  it('uses no placeholder copy: every on-screen line comes from the brief', () => {
+    const plan = planMotion(
+      brief({ content: { kind: 'list', items: ['Fast arrival'] } }),
+      style
+    );
+    expect(plan.onScreen).toEqual([
+      'Faster help after a flood',
+      'Fast arrival',
+      'Call 24/7',
+    ]);
+    expect(JSON.stringify(plan.props)).not.toMatch(/What matters|How it works/);
+  });
+
+  it.each([
+    ['feed-portrait', 'MotionStudioPortrait', 1080, 1920],
+    ['feed-square', 'MotionStudioSquare', 1080, 1080],
+    ['youtube', 'MotionStudio', 1920, 1080],
+  ])('%s renders on %s', (placement, id, w, h) => {
+    const plan = planMotion(brief({ placement: placement as never }), style);
+    expect([plan.compositionId, plan.width, plan.height]).toEqual([id, w, h]);
+  });
+
+  it('runs exactly the length the brief asks for', () => {
+    const plan = planMotion(brief({ durationSeconds: 15 }), style);
+    expect(plan.durationInFrames).toBe(450);
+    expect(plan.props.durationInFrames).toBe(450);
+  });
 
   it('blocks a plan with an invented number', () => {
     const plan = planMotion(
@@ -167,6 +209,24 @@ describe('planner', () => {
     );
   });
 
+  it('list ordinals are not treated as claims', () => {
+    const plan = planMotion(
+      brief({
+        content: {
+          kind: 'list',
+          items: ['Fast arrival', 'Drying crews', 'Clear reports'],
+        },
+      }),
+      style
+    );
+    expect(plan.factCheck.ok).toBe(true);
+    expect(
+      plan.props.beats
+        .filter(b => b.kind === 'item')
+        .map(b => (b as { index: string }).index)
+    ).toEqual(['1', '2', '3']);
+  });
+
   it('enforces the muted-feed word limit but not with sound', () => {
     const long = 'Our certified crews arrive with drying equipment really fast';
     expect(long.split(' ').length).toBeGreaterThan(MAX_WORDS_MUTED);
@@ -182,59 +242,56 @@ describe('planner', () => {
     ).toEqual([]);
   });
 
-  it('refuses a placement with no matching composition instead of guessing', () => {
-    const plan = planMotion(brief({ placement: 'feed-portrait' }), style);
-    expect(plan.compositionId).toBeNull();
-    expect(plan.props).toBeNull();
-    expect(plan.issues[0]).toMatch(/No 9:16 composition exists for "stat"/);
-  });
-
-  it('uses the portrait reel for list content and splits scenes across the runtime', () => {
-    const plan = planMotion(
-      brief({
-        placement: 'feed-portrait',
-        content: { kind: 'list', items: ['Fast arrival', 'Drying crews'] },
-      }),
-      style
-    );
-    expect(plan.compositionId).toBe('SocialReel');
-    const scenes = plan.props?.scenes as { text: string; duration: number }[];
-    expect(scenes.map(s => s.text)).toEqual([
-      'Fast arrival',
-      'Drying crews',
-      'Call 24/7',
-    ]);
-    expect(scenes.reduce((n, s) => n + s.duration, 0)).toBeLessThanOrEqual(
-      plan.durationInFrames
-    );
+  it('refuses to cram too many beats into a short video', () => {
+    const content = {
+      kind: 'explainer' as const,
+      scenes: Array.from({ length: 8 }, (_, i) => ({
+        text: `Point ${'abcdefgh'[i]}`,
+      })),
+    };
+    const plan = planMotion(brief({ durationSeconds: 6, content }), style);
+    expect(plan.issues.join(' ')).toMatch(/Too much for 6s/);
   });
 
   it('plans one critique still per second', () => {
     const plan = planMotion(brief(), style);
-    expect(plan.critiqueFrames.length).toBe(plan.durationInFrames / plan.fps);
-    expect(plan.critiqueFrames[0]).toBe(plan.fps - 1);
+    expect(plan.critiqueFrames.length).toBe(20);
+    expect(plan.critiqueFrames[0]).toBe(29);
   });
 });
 
 describe('Claude Motion hand-off brief', () => {
-  it('carries the brief, source, house style and self-critique', () => {
+  it('follows the guide shape: canvas, look, audience, timed scenes, avoid, done means', () => {
     const b = brief({
       placement: 'feed-portrait',
       content: { kind: 'list', items: ['Fast arrival'] },
     });
     const style = resolveHouseStyle('dr');
-    const text = buildClaudeMotionBrief(b, style, planMotion(b, style));
+    const plan = planMotion(b, style);
+    const text = buildClaudeMotionBrief(b, style, plan);
     expect(text).toMatch(
-      /^Make a 20-second 9:16 animation for Brisbane homeowners/
+      /^Make a 20-second animation for Disaster Recovery\. 1080 x 1920, 30 frames a second\./
     );
+    expect(text).toContain(`The look: ${style.colours.background} background`);
+    expect(text).toContain('Who watches and where: Brisbane homeowners.');
     expect(text).toContain(
       'It plays muted, so every point must read as words on screen.'
     );
-    expect(text).toContain(
-      'Do not add, round or calculate any number that is not listed.'
-    );
+    const scenes = text.split('\n').filter(l => /^Scene \d+ \(/.test(l));
+    expect(scenes).toHaveLength(plan.props.beats.length);
+    expect(scenes[0]).toContain('"Faster help after a flood"');
+    const secs = scenes.map(l => Number(l.match(/\((\d+\.\d) s\)/)![1]));
+    expect(secs.reduce((a, n) => a + n, 0)).toBeCloseTo(20, 0);
+    expect(text).toContain('Avoid: more than 6 words on screen at once');
+    expect(text).toContain('Done means:');
     expect(text).toContain(SOURCE);
-    expect(text).toContain(style.colours.primary);
-    expect(text).toContain('render a still every 1 second');
+    expect(text).not.toContain('#00B140');
+  });
+
+  it('asks for a green background only for the overlay placement', () => {
+    const b = brief({ placement: 'overlay-green' });
+    const style = resolveHouseStyle('dr');
+    const text = buildClaudeMotionBrief(b, style, planMotion(b, style));
+    expect(text).toContain('Background: solid green #00B140');
   });
 });

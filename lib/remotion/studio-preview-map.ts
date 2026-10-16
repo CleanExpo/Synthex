@@ -150,4 +150,19 @@ export const STUDIO_PREVIEW_COMPONENTS: Record<
       default: m.InvisibleLineAnthem,
     }))
   ),
+  MotionStudio: lazyComposition(() =>
+    import('./compositions/MotionStudio').then(m => ({
+      default: m.MotionStudio,
+    }))
+  ),
+  MotionStudioPortrait: lazyComposition(() =>
+    import('./compositions/MotionStudio').then(m => ({
+      default: m.MotionStudio,
+    }))
+  ),
+  MotionStudioSquare: lazyComposition(() =>
+    import('./compositions/MotionStudio').then(m => ({
+      default: m.MotionStudio,
+    }))
+  ),
 };

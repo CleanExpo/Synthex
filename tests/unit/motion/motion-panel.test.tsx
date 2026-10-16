@@ -5,6 +5,9 @@ import {
 } from '@/app/dashboard/brand-video/motion-panel';
 
 const fill = () => {
+  fireEvent.change(screen.getByLabelText('Headline'), {
+    target: { value: 'Help in under an hour' },
+  });
   fireEvent.change(screen.getByLabelText('Audience'), {
     target: { value: 'Homeowners' },
   });
@@ -45,6 +48,13 @@ describe('toContent', () => {
 });
 
 describe('MotionPanel', () => {
+  it('offers the green-screen placement for real footage', () => {
+    render(<MotionPanel brand="dr" />);
+    expect(
+      screen.getByRole('option', { name: /key over our own footage/i })
+    ).toBeInTheDocument();
+  });
+
   it('needs a brand before planning', () => {
     render(<MotionPanel brand="" />);
     expect(
@@ -79,6 +89,7 @@ describe('MotionPanel', () => {
     );
     expect(screen.getByText(/Not rendered yet/)).toBeInTheDocument();
     const sent = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(sent.headline).toBe('Help in under an hour');
     expect(sent.content).toEqual({
       kind: 'stat',
       stat: '38 minutes',

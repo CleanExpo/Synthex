@@ -32,12 +32,13 @@ Plus Synthex-specific: the **fact guard** (every figure from the source or a rec
 
 ## 5. Phased plan
 
-| Phase                | Scope                                                                                                                                                   | Done when                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **M1 (this branch)** | `lib/motion`, `POST /api/brand-video/motion-plan`, Brand Video Studio panel, `motion-studio` skill, this spec                                           | Contract `w_8686427ff6ee` C1–C8 pass                              |
-| M2                   | Portrait/square compositions for stat, comparison and case study; claims-register facts loaded server-side; captions for sound placements               | Each kind renders in 9:16 and 1:1 with legibility checks          |
-| M3                   | Durable execution on the approved substrate (Vercel Workflow or Inngest — REE Phase 4 decision); persisted motion jobs (schema approval); render worker | A job survives restarts; replayed events are no-ops in production |
-| M4                   | Approval + export hand-off to scheduling; usage/cost receipts                                                                                           | Exact-artifact approval recorded; no publish without it           |
+| Phase                | Scope                                                                                                                                                        | Done when                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| **M1 (this branch)** | `lib/motion`, `POST /api/brand-video/motion-plan`, Brand Video Studio panel, `motion-studio` skill, this spec                                                | Contract `w_8686427ff6ee` C1–C8 pass                                    |
+| M1.1 (this branch)   | MotionStudio composition (brand fonts, signature motion, beats, CTA end card, 3 aspects + green screen); guide-shaped Claude Motion brief; required headline | Contract `w_12da3e14b979` C1–C10 pass; DR sample rendered and critiqued |
+| M2                   | Claims-register facts loaded server-side; captions and ElevenLabs narration for sound placements; real-photo beats from the owned library                    | Each placement rendered and critiqued per second                        |
+| M3                   | Durable execution on the approved substrate (Vercel Workflow or Inngest — REE Phase 4 decision); persisted motion jobs (schema approval); render worker      | A job survives restarts; replayed events are no-ops in production       |
+| M4                   | Approval + export hand-off to scheduling; usage/cost receipts                                                                                                | Exact-artifact approval recorded; no publish without it                 |
 
 ## 6. Data model
 
@@ -52,7 +53,7 @@ Auth + rate limit + brand preflight on the API; no DB, network or provider calls
 - `[UNCONFIRMED]` Remotion company licence requirement for Unite Group.
 - `[UNCONFIRMED]` Claude Motion API timing; we assume none.
 - `[INFERENCE]` Deterministic planning plus an LLM-filled brief gives more consistent results than free-form generation; to be proved by side-by-side tests in M2.
-- Portrait coverage: only SocialReel exists for 9:16 today (planner refuses others rather than guessing).
+- Portrait and square: covered since M1.1 by the brand-styled `MotionStudio` composition in 16:9, 9:16 and 1:1, plus a green-screen placement (RoboNuggets guide, 15/10/2026) for keying over real footage.
 - The requested source video "How to use Claude MOTION better than 99% of people (in 3 simple steps)" was not found; the method is built from six other tutorials plus Anthropic's pages.
 
 ## 9. Open questions

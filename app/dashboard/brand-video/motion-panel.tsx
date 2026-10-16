@@ -87,6 +87,7 @@ export function MotionPanel({ brand }: { brand: string }) {
   const [placement, setPlacement] = useState<MotionPlacement>('youtube');
   const [durationSeconds, setDuration] = useState(20);
   const [audience, setAudience] = useState('');
+  const [headline, setHeadline] = useState('');
   const [cta, setCta] = useState('');
   const [source, setSource] = useState('');
   const [points, setPoints] = useState('');
@@ -105,6 +106,7 @@ export function MotionPanel({ brand }: { brand: string }) {
           placement,
           durationSeconds,
           audience,
+          headline,
           cta,
           source,
           content: toContent(kind, points),
@@ -191,6 +193,15 @@ export function MotionPanel({ brand }: { brand: string }) {
           />
         </label>
       </div>
+
+      <input
+        aria-label="Headline"
+        value={headline}
+        onChange={e => setHeadline(e.target.value)}
+        maxLength={60}
+        placeholder="Opening line on screen, in your words (max 6 words for feeds)"
+        className={field}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input

@@ -29,7 +29,21 @@ export const MOTION_PLACEMENTS = {
     muted: false,
     label: 'Presentation / meeting',
   },
-} as const;
+  'overlay-green': {
+    aspect: '16:9',
+    muted: true,
+    label: 'Graphics to key over our own footage (green background)',
+    chromaKey: '#00B140',
+  },
+} as const satisfies Record<
+  string,
+  {
+    aspect: '16:9' | '9:16' | '1:1';
+    muted: boolean;
+    label: string;
+    chromaKey?: string;
+  }
+>;
 
 export type MotionPlacement = keyof typeof MOTION_PLACEMENTS;
 
@@ -101,6 +115,8 @@ export const MotionBriefSchema = z.object({
   ),
   durationSeconds: z.number().int().min(6).max(60),
   audience: line(200),
+  /** Opening line on screen; the brief's own words, never placeholder copy. */
+  headline: line(60),
   cta: line(80),
   /** The brand's own words or data: the only permitted source of facts. */
   source: line(6000),

@@ -32,6 +32,7 @@ import { CaseStudyVideo } from './compositions/CaseStudyVideo';
 import { QuoteCard } from './compositions/QuoteCard';
 import { CountdownCTA } from './compositions/CountdownCTA';
 import { DefinitionCard } from './compositions/DefinitionCard';
+import { MotionStudio } from './compositions/MotionStudio';
 import { COMPOSITION_REGISTRY } from './registry';
 
 export { COMPOSITION_REGISTRY };
@@ -73,7 +74,18 @@ export const COMPOSITION_COMPONENTS: Record<
   // The Invisible Line campaign (SYN-971)
   InvisibleLineOutro,
   InvisibleLineAnthem,
+  // Motion Studio (lib/motion) — one component, three aspect ratios
+  MotionStudio,
+  MotionStudioPortrait: MotionStudio,
+  MotionStudioSquare: MotionStudio,
 };
+
+/** Motion Studio compositions take their length from the planned props. */
+const PROPS_DURATION_IDS = new Set([
+  'MotionStudio',
+  'MotionStudioPortrait',
+  'MotionStudioSquare',
+]);
 
 // ── Root Component ───────────────────────────────────────────────────────────
 
@@ -102,6 +114,17 @@ export function RemotionRoot() {
             height={comp.height}
             defaultProps={
               comp.defaultProps as unknown as Record<string, unknown>
+            }
+            calculateMetadata={
+              PROPS_DURATION_IDS.has(comp.id)
+                ? ({ props }) => ({
+                    durationInFrames:
+                      Number(
+                        (props as { durationInFrames?: number })
+                          .durationInFrames
+                      ) || comp.durationInFrames,
+                  })
+                : undefined
             }
           />
         );

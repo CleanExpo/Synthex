@@ -1,44 +1,36 @@
 /**
  * Motion Studio — planner.
  *
- * Deterministic: turns a validated brief into props for an existing Remotion
- * composition, using only the brief's own words. The language model's job (in
- * the operator skill) is to fill the brief; this module decides what is
- * allowed on screen and refuses what is not.
+ * Deterministic: turns a validated brief into beats for the MotionStudio
+ * composition (16:9, 9:16 or 1:1), using only the brief's own words. The
+ * language model's job (in the operator skill) is to fill the brief; this
+ * module decides what is allowed on screen and refuses what is not.
  */
 import { COMPOSITION_REGISTRY } from '@/lib/remotion/registry';
-import type { SceneProps } from '@/lib/remotion/types';
-import { MOTION_PLACEMENTS, type MotionBrief, type MotionKind } from './brief';
+import type { MotionBeat, MotionStudioProps } from '@/lib/remotion/types';
+import { MOTION_PLACEMENTS, type MotionBrief } from './brief';
 import { checkFigures, type FactCheck } from './fact-guard';
-import type { HouseStyle } from './house-style';
+import { MIN_LABEL_PX, type HouseStyle } from './house-style';
 
-const LANDSCAPE: Record<MotionKind, string> = {
-  stat: 'StatReveal',
-  comparison: 'ComparisonSlide',
-  'case-study': 'CaseStudyVideo',
-  'how-to': 'HowToVideo',
-  list: 'ListicleVideo',
-  explainer: 'ExplainerVideo',
-};
-
-/** Portrait has one scene-based composition today; other kinds need a new one. */
-const PORTRAIT: Partial<Record<MotionKind, string>> = {
-  explainer: 'SocialReel',
-  list: 'SocialReel',
-  'how-to': 'SocialReel',
-};
+const COMPOSITION_FOR_ASPECT = {
+  '16:9': 'MotionStudio',
+  '9:16': 'MotionStudioPortrait',
+  '1:1': 'MotionStudioSquare',
+} as const;
 
 /** Muted feeds are read, not heard: keep each on-screen line short. */
-export const MAX_WORDS_MUTED = 8;
-export const MAX_WORDS_WITH_SOUND = 14;
+/** RoboNuggets guide: never more than 6 words on screen at once in a feed. */
+export const MAX_WORDS_MUTED = 6;
+export const MAX_WORDS_WITH_SOUND = 10;
+export const FPS = 30;
 
 export interface MotionPlan {
-  compositionId: string | null;
+  compositionId: string;
   width: number;
   height: number;
   fps: number;
   durationInFrames: number;
-  props: Record<string, unknown> | null;
+  props: MotionStudioProps;
   onScreen: string[];
   factCheck: FactCheck;
   /** Blocking problems; a plan with issues must not render. */
@@ -49,128 +41,129 @@ export interface MotionPlan {
   critiqueFrames: number[];
 }
 
-function lines(brief: MotionBrief): {
-  title: string;
+type WithoutDuration<T> = T extends unknown
+  ? Omit<T, 'durationInFrames'>
+  : never;
+type Draft = WithoutDuration<MotionBeat> & { weight: number };
+
+/** Content beats in reading order; numbers on list items are ordinals, not claims. */
+function contentBeats(brief: MotionBrief): {
+  beats: Draft[];
   onScreen: string[];
-  props: Record<string, unknown>;
 } {
   const c = brief.content;
   switch (c.kind) {
     case 'stat':
       return {
-        title: c.label,
-        onScreen: [c.stat, c.label, c.context, brief.cta],
-        props: { stat: c.stat, statLabel: c.label, context: c.context },
+        beats: [
+          {
+            kind: 'stat',
+            value: c.stat,
+            label: c.label,
+            context: c.context,
+            weight: 2,
+          },
+        ],
+        onScreen: [c.stat, c.label, c.context],
       };
     case 'comparison':
       return {
-        title: 'Old way vs new way',
-        onScreen: [c.oldWay, c.newWay, brief.cta],
-        props: { oldWay: c.oldWay, newWay: c.newWay },
+        beats: [
+          {
+            kind: 'compare',
+            oldLabel: 'Before',
+            oldText: c.oldWay,
+            newLabel: 'After',
+            newText: c.newWay,
+            weight: 2,
+          },
+        ],
+        onScreen: [c.oldWay, c.newWay],
       };
     case 'case-study':
       return {
-        title: 'Case study',
+        beats: [
+          { kind: 'headline', text: c.challenge, weight: 1 },
+          { kind: 'headline', text: c.solution, weight: 1 },
+          c.metric
+            ? { kind: 'stat', value: c.metric, label: c.result, weight: 1.5 }
+            : { kind: 'headline', text: c.result, weight: 1 },
+        ] as Draft[],
         onScreen: [
           c.challenge,
           c.solution,
           c.result,
           ...(c.metric ? [c.metric] : []),
-          brief.cta,
         ],
-        props: {
-          challenge: c.challenge,
-          solution: c.solution,
-          result: c.result,
-          ...(c.metric ? { metric: c.metric } : {}),
-        },
       };
     case 'how-to':
       return {
-        title: 'How it works',
-        onScreen: [
-          ...c.steps.flatMap(s => [s.step, ...(s.detail ? [s.detail] : [])]),
-          brief.cta,
-        ],
-        props: { steps: c.steps },
+        beats: c.steps.map(
+          (s, i) =>
+            ({
+              kind: 'item',
+              index: String(i + 1),
+              text: s.step,
+              weight: 1,
+            }) as Draft
+        ),
+        onScreen: c.steps.flatMap(s => [
+          s.step,
+          ...(s.detail ? [s.detail] : []),
+        ]),
       };
     case 'list':
       return {
-        title: 'What matters',
-        onScreen: [...c.items, brief.cta],
-        props: { items: c.items },
+        beats: c.items.map(
+          (text, i) =>
+            ({ kind: 'item', index: String(i + 1), text, weight: 1 }) as Draft
+        ),
+        onScreen: c.items,
       };
     case 'explainer':
       return {
-        title: c.scenes[0].text,
-        onScreen: [
-          ...c.scenes.flatMap(s => [
-            s.text,
-            ...(s.subtitle ? [s.subtitle] : []),
-          ]),
-          brief.cta,
-        ],
-        props: {},
+        beats: c.scenes.map(
+          s => ({ kind: 'headline', text: s.text, weight: 1 }) as Draft
+        ),
+        onScreen: c.scenes.flatMap(s => [
+          s.text,
+          ...(s.subtitle ? [s.subtitle] : []),
+        ]),
       };
   }
-}
-
-function sceneList(
-  brief: MotionBrief,
-  fps: number,
-  totalFrames: number
-): SceneProps[] {
-  const c = brief.content;
-  const texts: { text: string; subtitle?: string }[] =
-    c.kind === 'explainer'
-      ? c.scenes.map(s => ({ text: s.text, subtitle: s.subtitle }))
-      : c.kind === 'list'
-        ? c.items.map(text => ({ text }))
-        : c.kind === 'how-to'
-          ? c.steps.map(s => ({ text: s.step, subtitle: s.detail }))
-          : [];
-  const all = [...texts, { text: brief.cta }];
-  const each = Math.max(fps, Math.floor(totalFrames / all.length));
-  return all.map(s => ({
-    text: s.text,
-    ...(s.subtitle ? { subtitle: s.subtitle } : {}),
-    duration: each,
-  }));
 }
 
 export function planMotion(brief: MotionBrief, style: HouseStyle): MotionPlan {
   const placement = MOTION_PLACEMENTS[brief.placement];
-  const kind = brief.content.kind;
   const issues: string[] = [];
   const warnings: string[] = [];
+  const compositionId = COMPOSITION_FOR_ASPECT[placement.aspect];
+  const meta = COMPOSITION_REGISTRY.find(m => m.id === compositionId)!;
+  const durationInFrames = brief.durationSeconds * FPS;
 
-  const compositionId =
-    placement.aspect === '16:9'
-      ? LANDSCAPE[kind]
-      : placement.aspect === '9:16'
-        ? (PORTRAIT[kind] ?? null)
-        : null;
-  if (!compositionId) {
+  const body = contentBeats(brief);
+  const drafts: Draft[] = [
+    { kind: 'headline', text: brief.headline, weight: 1 },
+    ...body.beats,
+    { kind: 'cta', text: brief.cta, weight: 1.2 },
+  ];
+  const onScreen = [brief.headline, ...body.onScreen, brief.cta];
+
+  // Split the runtime by weight; every beat must be on screen long enough to read.
+  const minBeat = Math.max(FPS * 1.5, style.motion.baseFrames * 3);
+  const totalWeight = drafts.reduce((n, d) => n + d.weight, 0);
+  const beats = drafts.map(({ weight, ...beat }) => ({
+    ...beat,
+    durationInFrames: Math.floor((durationInFrames * weight) / totalWeight),
+  })) as MotionBeat[];
+  beats[beats.length - 1].durationInFrames +=
+    durationInFrames - beats.reduce((n, b) => n + b.durationInFrames, 0);
+  if (beats.some(b => b.durationInFrames < minBeat)) {
     issues.push(
-      `No ${placement.aspect} composition exists for "${kind}" yet. Use a 16:9 placement or build one with remotion-composition-builder.`
-    );
-  }
-  const meta = COMPOSITION_REGISTRY.find(m => m.id === compositionId);
-  const fps = meta?.fps ?? 30;
-  const durationInFrames =
-    meta?.durationInFrames ?? brief.durationSeconds * fps;
-  const fixedSeconds = durationInFrames / fps;
-  if (
-    meta &&
-    Math.abs(fixedSeconds - brief.durationSeconds) / brief.durationSeconds >
-      0.25
-  ) {
-    warnings.push(
-      `${meta.id} runs ${fixedSeconds}s; the brief asked for ${brief.durationSeconds}s.`
+      `Too much for ${brief.durationSeconds}s: each beat needs at least ${(minBeat / FPS).toFixed(1)}s. Lengthen the video or cut points.`
     );
   }
 
-  const { title, onScreen, props } = lines(brief);
   const maxWords = placement.muted ? MAX_WORDS_MUTED : MAX_WORDS_WITH_SOUND;
   for (const text of onScreen) {
     const words = text.split(/\s+/).filter(Boolean).length;
@@ -186,29 +179,48 @@ export function planMotion(brief: MotionBrief, style: HouseStyle): MotionPlan {
       `Figures not found in the source: ${factCheck.unsupported.join(', ')}`
     );
 
-  const critiqueFrames = Array.from(
-    { length: Math.floor(durationInFrames / fps) },
-    (_, i) => (i + 1) * fps - 1
-  );
-
   return {
     compositionId,
-    width: meta?.width ?? 1920,
-    height: meta?.height ?? 1080,
-    fps,
+    width: meta.width,
+    height: meta.height,
+    fps: FPS,
     durationInFrames,
-    props: compositionId
-      ? {
-          title,
-          scenes: sceneList(brief, fps, durationInFrames),
-          brandColour: style.colours.primary,
-          ...props,
-        }
-      : null,
+    props: {
+      title: brief.headline,
+      scenes: [],
+      brandName: style.displayName,
+      brandColour: style.colours.primary,
+      durationInFrames,
+      beats,
+      style: {
+        primary: style.colours.primary,
+        accent: style.colours.accent,
+        background:
+          'chromaKey' in placement
+            ? placement.chromaKey
+            : style.colours.background,
+        chromaKey: 'chromaKey' in placement,
+        text: style.colours.text,
+        displayFont: style.typography.display,
+        bodyFont: style.typography.body,
+        displayFontSrc: style.typography.displaySrc,
+        displayWeight: style.typography.displayWeight,
+        bodyFontSrc: style.typography.bodySrc,
+        bodyWeight: style.typography.bodyWeight,
+        easingIn: style.motion.easingIn,
+        signature: style.motion.signature,
+        fastFrames: style.motion.fastFrames,
+        baseFrames: style.motion.baseFrames,
+        minLabelPx: MIN_LABEL_PX,
+      },
+    },
     onScreen,
     factCheck,
     issues,
     warnings,
-    critiqueFrames,
+    critiqueFrames: Array.from(
+      { length: brief.durationSeconds },
+      (_, i) => (i + 1) * FPS - 1
+    ),
   };
 }
