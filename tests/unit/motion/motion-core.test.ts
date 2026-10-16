@@ -88,6 +88,17 @@ describe('fact guard', () => {
     // The figure itself must be blocked too, not only the declaration.
     expect(r.unsupported).toContain('13.9%');
   });
+
+  it('does not accept a figure that appears in the source only inside a URL or email', () => {
+    const linked =
+      'Full breakdown at https://example.com/5/report and www.example.com/2019/p, or write to team2019@example.com.';
+    expect(checkFigures(['5% booked'], linked).ok).toBe(false);
+    expect(checkFigures(['2019 was the year'], linked).ok).toBe(false);
+    // The same figure stated in prose is still allowed.
+    expect(
+      checkFigures(['2019 was the year'], `${linked} Founded in 2019.`).ok
+    ).toBe(true);
+  });
 });
 
 describe('planner', () => {

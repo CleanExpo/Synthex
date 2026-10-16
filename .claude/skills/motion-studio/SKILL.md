@@ -64,5 +64,5 @@ Spec: `docs/ree/MOTION-STUDIO-SPEC.md`. Code: `lib/motion/` (brief, house style,
 - No spend without approval: Claude Motion uses plan usage heavily (one creator reported 90% of monthly org credits); build one, check, then the next. Remotion renders are local by default; no server render is configured.
 - **Remotion licence:** company use may need a paid Remotion company licence — confirm Unite Group's status before client work `[UNCONFIRMED]`.
 - Every on-screen number traces to the source or a recomputed declared derivation. Availability claims ("24/7") must be in the source or the brand's `*.claims.md` approved facts.
-- Muted placements: every point readable as on-screen text (≤ 8 words per line).
+- Muted placements: every point readable as on-screen text (≤ 6 words per line; the planner enforces MAX_WORDS_MUTED).
 - Real images only; no stock; no invented people, quotes or testimonials.

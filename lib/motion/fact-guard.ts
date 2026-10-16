@@ -15,6 +15,7 @@ export interface Figure {
 }
 
 const FIGURE = /(?:\$\s?)?\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b)?/gi;
+const NOT_PROSE = /\b(?:https?:\/\/|www\.)\S+|\S+@\S+\.\S+/gi;
 
 export function extractFigures(text: string): Figure[] {
   return [...text.matchAll(FIGURE)].map(m => {
@@ -59,7 +60,8 @@ export function checkFigures(
   source: string,
   derived: DerivedFigure[] = []
 ): FactCheck {
-  const sourceFigures = extractFigures(source);
+  // Digits inside a link or email address are not claims; only prose counts.
+  const sourceFigures = extractFigures(source.replace(NOT_PROSE, ' '));
   const unsupported: string[] = [];
 
   // A derived figure is only usable if every input is itself in the source.
