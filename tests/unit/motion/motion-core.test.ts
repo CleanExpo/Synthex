@@ -242,6 +242,25 @@ describe('planner', () => {
     ).toEqual([]);
   });
 
+  it('muted feeds allow 6 words per line, not 7', () => {
+    const six = { kind: 'list' as const, items: ['Crews on site in under an'] };
+    const seven = {
+      kind: 'list' as const,
+      items: ['Crews on site in under an hour'],
+    };
+    expect(MAX_WORDS_MUTED).toBe(6);
+    expect(
+      planMotion(brief({ placement: 'feed-square', content: six }), style)
+        .issues
+    ).toEqual([]);
+    expect(
+      planMotion(
+        brief({ placement: 'feed-square', content: seven }),
+        style
+      ).issues.join(' ')
+    ).toMatch(/7 words, max 6/);
+  });
+
   it('refuses to cram too many beats into a short video', () => {
     const content = {
       kind: 'explainer' as const,
