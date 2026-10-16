@@ -18,6 +18,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
+import { observed, notObserved } from '@/lib/ree/evidence-state';
+import { AI_OVERVIEW_NOT_CONFIGURED_REASON } from '@/lib/geo-citation/ai-overview-adapter';
 import type { Prisma } from '@prisma/client';
 
 export const runtime = 'nodejs';
@@ -38,7 +40,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10) || 1);
+    const page = Math.max(
+      1,
+      parseInt(searchParams.get('page') ?? '1', 10) || 1
+    );
     const userId = searchParams.get('userId')?.trim() || undefined;
     const engineParam = searchParams.get('engine')?.trim() || undefined;
     const mentionedParam = searchParams.get('mentioned')?.trim() || undefined;
@@ -47,7 +52,10 @@ export async function GET(request: NextRequest) {
 
     if (engineParam && !VALID_ENGINES.includes(engineParam as never)) {
       return NextResponse.json(
-        { error: 'Invalid engine', details: `Expected one of ${VALID_ENGINES.join(', ')}` },
+        {
+          error: 'Invalid engine',
+          details: `Expected one of ${VALID_ENGINES.join(', ')}`,
+        },
         { status: 400 }
       );
     }
@@ -60,9 +68,9 @@ export async function GET(request: NextRequest) {
       ...(userId ? { userId } : {}),
       ...(engineParam ? { searchEngine: engineParam } : {}),
       ...(mentionedParam === 'true'
-        ? { brandMentioned: true }
+        ? { brandMentioned: true, errorReason: null }
         : mentionedParam === 'false'
-          ? { brandMentioned: false }
+          ? { brandMentioned: false, errorReason: null }
           : {}),
       ...(from || to ? { queryDate } : {}),
     };
@@ -91,6 +99,11 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
+      provider: notObserved(
+        'UNSUPPORTED',
+        'google_ai_overview',
+        'provider_not_connected'
+      ),
       page,
       pageSize: PAGE_SIZE,
       total,
@@ -103,10 +116,9 @@ export async function GET(request: NextRequest) {
         queryVariant: r.queryVariant,
         searchEngine: r.searchEngine,
         queryDate: r.queryDate,
-        brandMentioned: r.brandMentioned,
         mentionPosition: r.mentionPosition,
         rawSnippet: r.rawSnippet,
-        errorReason: r.errorReason,
+        ...mentionReading(r),
       })),
     });
   } catch (error) {
@@ -119,4 +131,29 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Boolean false is a legacy storage sentinel when the collection failed.
+function mentionReading(row: {
+  errorReason: string | null;
+  searchEngine: string;
+  brandMentioned: boolean;
+}) {
+  const reason =
+    row.errorReason === AI_OVERVIEW_NOT_CONFIGURED_REASON
+      ? 'provider_not_connected'
+      : row.errorReason;
+  const reading =
+    reason === null
+      ? observed(row.brandMentioned, row.searchEngine)
+      : notObserved(
+          reason === 'provider_not_connected' ? 'UNSUPPORTED' : 'UNAVAILABLE',
+          row.searchEngine,
+          reason === 'provider_not_connected' ? reason : 'provider_error'
+        );
+  return {
+    ...reading,
+    brandMentioned: reading.value,
+    errorReason: reading.state === 'OBSERVED' ? null : reading.reason,
+  };
 }

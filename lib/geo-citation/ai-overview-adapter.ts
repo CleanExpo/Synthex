@@ -46,11 +46,8 @@ const PROVIDER_ENV_KEYS = [
 ] as const;
 
 export function isAiOverviewProviderConfigured(): boolean {
-  // A real provider needs BOTH DataForSEO credentials, OR a SerpApi key.
-  const hasDataForSeo =
-    !!process.env.DATAFORSEO_LOGIN && !!process.env.DATAFORSEO_PASSWORD;
-  const hasSerpApi = !!process.env.SERPAPI_KEY;
-  return hasDataForSeo || hasSerpApi;
+  // Credentials alone do not connect a provider: no provider I/O is wired.
+  return false;
 }
 
 export const AI_OVERVIEW_NOT_CONFIGURED_REASON =
