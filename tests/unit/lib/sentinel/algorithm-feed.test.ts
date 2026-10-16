@@ -69,14 +69,17 @@ function okFetch(body: unknown): jest.Mock {
 }
 
 const realFetch = global.fetch;
-const offlineFetch = jest
-  .fn()
-  .mockRejectedValue(new Error('network disabled in unit tests'));
+// The Jest config sets resetMocks: true, which strips implementations from
+// mocks created outside a test. Every fetch mock is therefore built per test.
+let offlineFetch: jest.Mock;
 
 beforeEach(() => {
   jest.clearAllMocks();
   mockPrisma.algorithmUpdate.upsert.mockResolvedValue({});
   mockPrisma.algorithmUpdate.findMany.mockResolvedValue([]);
+  offlineFetch = jest
+    .fn()
+    .mockRejectedValue(new Error('network disabled in unit tests'));
   global.fetch = offlineFetch;
 });
 
@@ -180,25 +183,37 @@ describe('syncLiveAlgorithmUpdates', () => {
   it.each([
     [
       'a network failure',
-      jest.fn().mockRejectedValue(new Error('getaddrinfo ENOTFOUND')),
+      () => jest.fn().mockRejectedValue(new Error('getaddrinfo ENOTFOUND')),
+      'getaddrinfo ENOTFOUND',
     ],
     [
       'an HTTP error',
-      jest
-        .fn()
-        .mockResolvedValue({ ok: false, status: 503, json: async () => ({}) }),
+      () =>
+        jest.fn().mockResolvedValue({
+          ok: false,
+          status: 503,
+          json: async () => ({}),
+        }),
+      'HTTP 503',
     ],
-    ['a non-array payload', okFetch({ error: 'nope' })],
-    ['an empty feed', okFetch([])],
+    [
+      'a non-array payload',
+      () => okFetch({ error: 'nope' }),
+      'feed payload is not an array',
+    ],
+    ['an empty feed', () => okFetch([]), 'feed returned no usable incidents'],
   ])(
     'reports %s as unavailable without writing or throwing',
-    async (_label, fetchImpl) => {
+    async (_label, makeFetch, expectedError) => {
       const { syncLiveAlgorithmUpdates, getAlgorithmFeedStatus } = loadFeed();
+      const fetchImpl = makeFetch();
 
       const status = await syncLiveAlgorithmUpdates({ force: true, fetchImpl });
 
+      expect(fetchImpl).toHaveBeenCalledTimes(1);
       expect(status.status).toBe('unavailable');
-      expect(status.error).toEqual(expect.any(String));
+      // The exact reason: an unrelated TypeError must not satisfy this case.
+      expect(status.error).toBe(expectedError);
       expect(status.incidents).toBe(0);
       expect(mockPrisma.algorithmUpdate.upsert).not.toHaveBeenCalled();
       expect(getAlgorithmFeedStatus().status).toBe('unavailable');
@@ -244,7 +259,10 @@ describe('verified fallback list and retracted seeds', () => {
       const [{ where }] = mockPrisma.algorithmUpdate.findMany.mock.calls[0];
       expect(where.id).toEqual({ notIn: feed.RETRACTED_SEED_IDS });
       expect(offlineFetch).toHaveBeenCalledTimes(1);
-      expect(feed.getAlgorithmFeedStatus().status).toBe('unavailable');
+      expect(feed.getAlgorithmFeedStatus()).toMatchObject({
+        status: 'unavailable',
+        error: 'network disabled in unit tests',
+      });
       expect(feed.RETRACTED_SEED_IDS).toContain(
         'seed-february-2026-helpful-content-update'
       );
