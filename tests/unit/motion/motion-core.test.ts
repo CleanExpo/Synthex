@@ -94,6 +94,14 @@ describe('fact guard', () => {
       'Full breakdown at https://example.com/5/report and www.example.com/2019/p, or write to team2019@example.com.';
     expect(checkFigures(['5% booked'], linked).ok).toBe(false);
     expect(checkFigures(['2019 was the year'], linked).ok).toBe(false);
+    // A bare domain with a path is a link too.
+    expect(
+      checkFigures(['7 days'], 'Details on example.com.au/7/terms.').ok
+    ).toBe(false);
+    // Prose figures beside a link still count; decimals are not domains.
+    expect(
+      checkFigures(['3.5 hours'], 'Dried in 3.5 hours (see example.com/x).').ok
+    ).toBe(true);
     // The same figure stated in prose is still allowed.
     expect(
       checkFigures(['2019 was the year'], `${linked} Founded in 2019.`).ok

@@ -15,7 +15,9 @@ export interface Figure {
 }
 
 const FIGURE = /(?:\$\s?)?\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b)?/gi;
-const NOT_PROSE = /\b(?:https?:\/\/|www\.)\S+|\S+@\S+\.\S+/gi;
+// Links (with or without a scheme), bare domains with a path, and email addresses.
+const NOT_PROSE =
+  /\b(?:https?:\/\/|www\.)\S+|\S+@\S+\.\S+|\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}\/\S*/gi;
 
 export function extractFigures(text: string): Figure[] {
   return [...text.matchAll(FIGURE)].map(m => {
