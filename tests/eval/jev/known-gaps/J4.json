@@ -1,0 +1,236 @@
+{
+  "schema": "jev-known-gaps/1",
+  "gaps": {
+    "J4-GAP-M1-stub-backed-data-layer": {
+      "cases": [
+        "J4-m1-approval-workflow-exists",
+        "J4-m1-competitive-intel-exists",
+        "J4-m1-competitive-intel-mcp",
+        "J4-m1-competitive-intel-typed",
+        "J4-m1-email-send-exists",
+        "J4-m1-email-send-mcp",
+        "J4-m1-email-send-typed",
+        "J4-m1-media-library-exists",
+        "J4-m1-media-library-typed",
+        "J4-m1-video-archive-exists",
+        "J4-m1-video-archive-rest",
+        "J4-m1-video-archive-typed"
+      ],
+      "note": "Modules still import lib/platform/noop-client, and the stub-backed reads have no MCP tool or typed result (spec M1)."
+    },
+    "J4-GAP-M2-scoped-machine-credential": {
+      "cases": [
+        "J4-m2-key-caps-exists",
+        "J4-m2-key-caps-mcp",
+        "J4-m2-key-caps-rest",
+        "J4-m2-key-caps-typed",
+        "J4-m2-key-mint-mcp",
+        "J4-m2-key-mint-typed",
+        "J4-m2-key-revoke-mcp",
+        "J4-m2-key-revoke-typed",
+        "J4-m2-oauth-dcr-exists",
+        "J4-m2-oauth-dcr-mcp",
+        "J4-m2-oauth-dcr-rest",
+        "J4-m2-oauth-dcr-typed",
+        "J4-m2-oauth-metadata-exists",
+        "J4-m2-oauth-metadata-mcp",
+        "J4-m2-oauth-metadata-rest",
+        "J4-m2-oauth-metadata-typed",
+        "J4-m2-scoped-rest-key-exists",
+        "J4-m2-scoped-rest-key-mcp",
+        "J4-m2-scoped-rest-key-rest",
+        "J4-m2-scoped-rest-key-typed"
+      ],
+      "note": "No scoped machine principal on REST, no OAuth dynamic client registration or metadata, no per-key caps; key mint/revoke have no MCP tool or typed result (spec M2)."
+    },
+    "J4-GAP-M3-machine-contract": {
+      "cases": [
+        "J4-m3-error-codes-exists",
+        "J4-m3-error-codes-mcp",
+        "J4-m3-error-codes-rest",
+        "J4-m3-error-codes-typed",
+        "J4-m3-llms-index-mcp",
+        "J4-m3-llms-index-rest",
+        "J4-m3-llms-index-typed",
+        "J4-m3-openapi-exists",
+        "J4-m3-openapi-mcp",
+        "J4-m3-openapi-rest",
+        "J4-m3-openapi-typed",
+        "J4-m3-rate-limit-table-exists",
+        "J4-m3-rate-limit-table-mcp",
+        "J4-m3-rate-limit-table-rest",
+        "J4-m3-rate-limit-table-typed"
+      ],
+      "note": "No OpenAPI document, no error-code catalogue, no published rate-limit table; llms.txt is not served by a route or tool (spec M3)."
+    },
+    "J4-GAP-M4-outcome-writer": {
+      "cases": [
+        "J4-m4-booking-outcome-exists",
+        "J4-m4-booking-outcome-mcp",
+        "J4-m4-booking-outcome-rest",
+        "J4-m4-booking-outcome-typed",
+        "J4-m4-call-outcome-exists",
+        "J4-m4-call-outcome-mcp",
+        "J4-m4-call-outcome-rest",
+        "J4-m4-call-outcome-typed",
+        "J4-m4-directions-outcome-exists",
+        "J4-m4-directions-outcome-mcp",
+        "J4-m4-directions-outcome-rest",
+        "J4-m4-directions-outcome-typed",
+        "J4-m4-outcome-dedupe-exists",
+        "J4-m4-outcome-dedupe-mcp",
+        "J4-m4-outcome-dedupe-rest",
+        "J4-m4-outcome-dedupe-typed",
+        "J4-m4-outcome-writer-mcp",
+        "J4-m4-outcome-writer-rest",
+        "J4-m4-outcome-writer-typed"
+      ],
+      "note": "No call, booking or direction outcome writer, no dedupe key, no outcome write route or MCP tool (spec M4)."
+    },
+    "J4-GAP-M5-call-booking-capture": {
+      "cases": [
+        "J4-m5-booking-webhook-exists",
+        "J4-m5-booking-webhook-mcp",
+        "J4-m5-booking-webhook-rest",
+        "J4-m5-booking-webhook-typed",
+        "J4-m5-call-consent-exists",
+        "J4-m5-call-consent-mcp",
+        "J4-m5-call-consent-rest",
+        "J4-m5-call-consent-typed",
+        "J4-m5-inbound-call-webhook-exists",
+        "J4-m5-inbound-call-webhook-mcp",
+        "J4-m5-inbound-call-webhook-rest",
+        "J4-m5-inbound-call-webhook-typed",
+        "J4-m5-signed-lead-intake-mcp",
+        "J4-m5-signed-lead-intake-typed"
+      ],
+      "note": "No inbound call or booking webhook, no call consent/opt-out; the signed lead intake has no MCP tool or typed result (spec M5)."
+    },
+    "J4-GAP-M6-agent-approve-publish": {
+      "cases": [
+        "J4-m6-agent-approve-exists",
+        "J4-m6-agent-approve-mcp",
+        "J4-m6-agent-approve-typed",
+        "J4-m6-agent-publish-exists",
+        "J4-m6-agent-publish-mcp",
+        "J4-m6-agent-publish-rest",
+        "J4-m6-agent-publish-typed",
+        "J4-m6-autonomy-policy-exists",
+        "J4-m6-autonomy-policy-mcp",
+        "J4-m6-autonomy-policy-rest",
+        "J4-m6-autonomy-policy-typed",
+        "J4-m6-kill-switch-mcp",
+        "J4-m6-kill-switch-rest",
+        "J4-m6-kill-switch-typed",
+        "J4-m6-publish-receipt-exists",
+        "J4-m6-publish-receipt-mcp",
+        "J4-m6-publish-receipt-rest",
+        "J4-m6-publish-receipt-typed",
+        "J4-m6-run-id-exists",
+        "J4-m6-run-id-mcp",
+        "J4-m6-run-id-typed"
+      ],
+      "note": "No agent-delegated approve or publish, no autonomy policy, no run-id minter, no publish receipt, kill switch has no route or tool (spec M6)."
+    },
+    "J4-GAP-M7-idempotency-error-codes": {
+      "cases": [
+        "J4-m7-idempotency-campaign-exists",
+        "J4-m7-idempotency-campaign-mcp",
+        "J4-m7-idempotency-campaign-rest",
+        "J4-m7-idempotency-campaign-typed",
+        "J4-m7-idempotency-publish-exists",
+        "J4-m7-idempotency-publish-mcp",
+        "J4-m7-idempotency-publish-rest",
+        "J4-m7-idempotency-publish-typed",
+        "J4-m7-idempotency-spend-exists",
+        "J4-m7-idempotency-spend-rest",
+        "J4-m7-idempotency-spend-typed",
+        "J4-m7-structured-errors-exists",
+        "J4-m7-structured-errors-mcp",
+        "J4-m7-structured-errors-rest",
+        "J4-m7-structured-errors-typed"
+      ],
+      "note": "No idempotency key or structured error codes on publish, campaign and spend routes (spec M7)."
+    },
+    "J4-GAP-M8-release-evidence-surface": {
+      "cases": [
+        "J4-m8-receipt-verifier-mcp",
+        "J4-m8-receipt-verifier-rest",
+        "J4-m8-receipt-verifier-typed"
+      ],
+      "note": "Receipt verifier exists as a script only; no route or tool exposes release evidence (spec M8)."
+    },
+    "J4-GAP-M9-eval-judge-gate": {
+      "cases": [
+        "J4-m9-blocking-gate-exists",
+        "J4-m9-blocking-gate-mcp",
+        "J4-m9-blocking-gate-rest",
+        "J4-m9-blocking-gate-typed",
+        "J4-m9-calibrated-judge-exists",
+        "J4-m9-calibrated-judge-mcp",
+        "J4-m9-calibrated-judge-rest",
+        "J4-m9-calibrated-judge-typed",
+        "J4-m9-golden-set-mcp",
+        "J4-m9-golden-set-rest",
+        "J4-m9-golden-set-typed"
+      ],
+      "note": "Golden set exists, but no calibrated judge, no blocking gate, and nothing exposes eval results (spec M9)."
+    },
+    "J4-GAP-M10-cost-quote-metering": {
+      "cases": [
+        "J4-m10-client-metering-rest",
+        "J4-m10-image-quote-mcp",
+        "J4-m10-image-quote-rest",
+        "J4-m10-image-quote-typed",
+        "J4-m10-video-quote-exists",
+        "J4-m10-video-quote-mcp",
+        "J4-m10-video-quote-rest",
+        "J4-m10-video-quote-typed"
+      ],
+      "note": "No video cost quote, no quote route or tool, no per-client metering route (spec M10)."
+    },
+    "J4-GAP-M11-ops-reads": {
+      "cases": [
+        "J4-m11-cron-outcomes-exists",
+        "J4-m11-cron-outcomes-mcp",
+        "J4-m11-cron-outcomes-typed",
+        "J4-m11-org-spend-mcp",
+        "J4-m11-org-spend-typed",
+        "J4-m11-platform-health-mcp",
+        "J4-m11-platform-health-typed"
+      ],
+      "note": "Health, cron and spend reads have no MCP tool or typed result; no cron outcome reader module (spec M11)."
+    },
+    "J4-GAP-M12-review-tools": {
+      "cases": [
+        "J4-m12-google-review-monitor-mcp",
+        "J4-m12-google-review-monitor-typed",
+        "J4-m12-multi-source-reviews-exists",
+        "J4-m12-multi-source-reviews-mcp",
+        "J4-m12-multi-source-reviews-rest",
+        "J4-m12-multi-source-reviews-typed",
+        "J4-m12-review-reply-mcp",
+        "J4-m12-review-reply-typed",
+        "J4-m12-review-request-mcp",
+        "J4-m12-review-request-typed"
+      ],
+      "note": "Review monitoring, reply and request have no MCP tool or typed result; no source beyond Google (spec M12)."
+    },
+    "J4-GAP-M13-rank-grid": {
+      "cases": [
+        "J4-m13-rank-grid-exists",
+        "J4-m13-rank-grid-mcp",
+        "J4-m13-rank-grid-rest",
+        "J4-m13-rank-grid-typed"
+      ],
+      "note": "No local rank grid (spec M13, deferred)."
+    },
+    "J4-GAP-M14-white-label-portal": {
+      "cases": [
+        "J4-m14-white-label-portal-mcp",
+        "J4-m14-white-label-portal-typed"
+      ],
+      "note": "White-label config has no MCP tool or typed result (spec M14, cut)."
+    }
+  }
+}
