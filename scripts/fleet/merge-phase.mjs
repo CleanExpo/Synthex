@@ -198,6 +198,7 @@ let cr = [];
 try {
   cr = JSON.parse(checks.stdout);
 } catch {}
+if (!Array.isArray(cr)) cr = []; // an unknown head yields null, not a list
 const pending = cr.filter(c => c.status !== 'completed');
 const failed = cr.filter(
   c =>
