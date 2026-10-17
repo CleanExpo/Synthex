@@ -146,21 +146,21 @@ export class WebhookHandler {
 
     // Idempotency check: same as receive() — prevents duplicate processing on
     // Stripe retries in serverless environments (Vercel re-invokes on timeout).
+    // No isConnected gate: nothing calls connect(), and get/set already use
+    // Upstash when configured and the in-process store otherwise.
     const payloadStr =
       typeof payload === 'string' ? payload : payload.toString();
     const payloadHash = createHash('sha256').update(payloadStr).digest('hex');
     const idempotencyKey = `webhook:idem:${platform}:${payloadHash}`;
     try {
       const redis = getRedisClient();
-      if (redis.isConnected) {
-        const existing = await redis.get(idempotencyKey);
-        if (existing) {
-          logger.info('Duplicate webhook delivery detected, skipping', {
-            platform,
-            existingEventId: existing,
-          });
-          return { success: true, eventId: existing };
-        }
+      const existing = await redis.get(idempotencyKey);
+      if (existing) {
+        logger.info('Duplicate webhook delivery detected, skipping', {
+          platform,
+          existingEventId: existing,
+        });
+        return { success: true, eventId: existing };
       }
     } catch (idempotencyError) {
       // Non-fatal: if Redis is down, proceed without idempotency check
@@ -238,9 +238,7 @@ export class WebhookHandler {
     // the idempotency key so a genuine Stripe retry of this event is deduped.
     try {
       const redis = getRedisClient();
-      if (redis.isConnected) {
-        await redis.set(idempotencyKey, eventId, 86400); // 24h TTL
-      }
+      await redis.set(idempotencyKey, eventId, 86400); // 24h TTL
     } catch (idempotencyError) {
       logger.warn('Failed to store idempotency key', { idempotencyError });
     }
@@ -344,15 +342,13 @@ export class WebhookHandler {
 
     try {
       const redis = getRedisClient();
-      if (redis.isConnected) {
-        const existing = await redis.get(idempotencyKey);
-        if (existing) {
-          logger.info('Duplicate webhook delivery detected, skipping', {
-            platform,
-            existingEventId: existing,
-          });
-          return { success: true, eventId: existing };
-        }
+      const existing = await redis.get(idempotencyKey);
+      if (existing) {
+        logger.info('Duplicate webhook delivery detected, skipping', {
+          platform,
+          existingEventId: existing,
+        });
+        return { success: true, eventId: existing };
       }
     } catch (idempotencyError) {
       // Non-fatal: if Redis is down, proceed without idempotency check
@@ -378,9 +374,7 @@ export class WebhookHandler {
     // Store idempotency key with 24h TTL to prevent duplicate processing
     try {
       const redis = getRedisClient();
-      if (redis.isConnected) {
-        await redis.set(idempotencyKey, eventId, 86400); // 24h TTL
-      }
+      await redis.set(idempotencyKey, eventId, 86400); // 24h TTL
     } catch (redisError) {
       logger.warn('Failed to store idempotency key', { redisError, eventId });
     }
