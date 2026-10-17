@@ -41,6 +41,7 @@ import { scanForSecrets, haltOnHit } from './secret-scan.mjs';
 import { spawnUnit, waitForUnits } from './fanout.mjs';
 import {
   existsSync,
+  rmSync,
   readFileSync,
   writeFileSync,
   appendFileSync,
@@ -71,7 +72,8 @@ const NODE_DIR = path.dirname(NODE);
 const sub = cmd =>
   cmd.replaceAll('$NODE_DIR', NODE_DIR).replaceAll('$NODE', NODE);
 const fleetCommit = (msg, files) => {
-  if (files) git(['add', '--', ...files]);
+  if (files)
+    git(['add', '-A', '--', ...files]); // -A stages deletions too
   else git(['add', '-A']);
   return git([
     '-c',
@@ -321,7 +323,7 @@ function retireStaleReceipt() {
         .filter(f => f && !/^release-receipts\//.test(f))
     : ['(unparseable receipt)'];
   if (!extra.length) return;
-  git(['rm', '-q', '--', file]);
+  rmSync(path.join(ROOT, file)); // leave the index entry so `git add -A -- file` stages the deletion
   const sha = fleetCommit(
     `chore(fleet): ${phase} retire stale receipt bound to ${reviewed.slice(0, 12)}\n\n${extra.length} non-receipt file(s) changed after the reviewed commit; the release step rebinds a fresh receipt to the next reviewed head.\n\nFleet-Role: orchestrator\nProtected-Change: retire stale ${file} (A-12)`,
     [file]
