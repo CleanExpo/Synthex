@@ -1,0 +1,76 @@
+{
+  "schema": "synthex-release-receipt/1",
+  "phase": "P-1",
+  "written_at": "2026-10-17T03:11:09.836Z",
+  "reviewed_commit": "c4e2a8657aafa9aed401c51ea7499e1b79c3e263",
+  "tested_tree": "2d0b337331e94d64610ac6f0f211471573b8f1f3",
+  "review_report": "release-receipts/manifests/P-1-review.json",
+  "cost_ledger": {
+    "file": "release-receipts/ledger/fleet.jsonl",
+    "rows": 14
+  },
+  "gate": [
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:496:28) |       at Object.<anonymous> (app/api/ai-content/hashtags/route.ts:26:1) |       at __tests__/landing/public-claims-api.test.ts:408:24"
+    },
+    {
+      "cmd": "$NODE_DIR/npx prisma validate",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Loaded Prisma config from prisma.config.ts. |  | Prisma schema loaded from prisma/schema.prisma."
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS   scripts/truth/check-noop.mjs — bootstrap exemption | PASS   tests/eval/jev/floors.json — bootstrap exemption | verify-protected: 66 changed files, 59 protected, 0 violations (bootstrap exemption active)"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/check-bootstrap.mjs",
+      "kind": "dod",
+      "id": "P-1-C1",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS         check-bootstrap: 9 — protected scripts present, each --control exits 0, contracts generated and locked [missing=none badControl=none contracts=0] | PASS         check-bootstrap: 10 — scheduler: Cloudroom automations nightly, weekly, phase-advance exist [have=fleet-nightly,fleet-weekly,fleet-phase-advance] | check-bootstrap: 10 of 10 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/gen-contracts.mjs --check",
+      "kind": "dod",
+      "id": "P-1-C2",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS gen-contracts: scripts/fleet/contracts/P9.json | PASS gen-contracts: scripts/fleet/contracts/P10.json | gen-contracts: 12 contracts, 0 drift"
+    }
+  ],
+  "human_acts": [],
+  "human_intervention_count": 0,
+  "policy_hash": "4121319bf7a5ef91d845577a65aaad8635004c2be5e6d6cb7b4712e4eaa6127f",
+  "state": "PASS"
+}

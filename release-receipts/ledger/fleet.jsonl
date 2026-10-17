@@ -7,3 +7,9 @@
 {"ts":"2026-10-17T02:27:51.928Z","kind":"gate","phase":"P-1","head":"cade6963afbb793058d2289ed982401cdd81e211","pass":7,"total":7}
 {"ts":"2026-10-17T02:32:14.886Z","kind":"review","phase":"P-1","head":"cade6963afbb793058d2289ed982401cdd81e211","lane":"minimax","verdict":"FAIL"}
 {"ts": "2026-10-17T02:40:00Z", "kind": "review", "phase": "P-1", "head": "cade6963afbb793058d2289ed982401cdd81e211", "lane": "minimax/MiniMax-M3", "verdict": "FAIL", "blocking": 5, "disposition": "B-1 and B-5 fixed; B-2, B-3, B-4 overruled by founder amendments AM-1..AM-3 (DECISIONS.md A-16)", "report": "release-receipts/manifests/P-1-review-r3.json"}
+{"ts":"2026-10-17T02:39:05.363Z","kind":"gate","phase":"P-1","head":"403634a2cb3230d3e80a1847698a26c13dc15fb3","pass":7,"total":7}
+{"ts":"2026-10-17T02:49:18.724Z","kind":"gate","phase":"P-1","head":"776638e1b2409ef183abbf83ab95bcc53a6c0cad","pass":7,"total":7}
+{"ts":"2026-10-17T02:50:21.658Z","kind":"review","phase":"P-1","head":"eadcc161b05b1878ca488067a58dd71e308169f4","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-17T03:01:11.202Z","kind":"review","phase":"P-1","head":"776638e1b2409ef183abbf83ab95bcc53a6c0cad","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-17T03:07:23.813Z","kind":"gate","phase":"P-1","head":"c4e2a8657aafa9aed401c51ea7499e1b79c3e263","pass":7,"total":7}
+{"ts":"2026-10-17T03:11:09.773Z","kind":"review","phase":"P-1","head":"c4e2a8657aafa9aed401c51ea7499e1b79c3e263","lane":"minimax","verdict":"PASS"}
