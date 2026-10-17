@@ -1,0 +1,84 @@
+{
+  "phase": "P0",
+  "head": "9cd50102efd42373a8a38a18618142f6e5934f68",
+  "tree": "e0cb1a9185d99763fa6c4ca3156301aa08d4b854",
+  "at": "2026-10-17T06:55:10.599Z",
+  "results": [
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:496:28) |       at Object.<anonymous> (app/api/ai-content/hashtags/route.ts:26:1) |       at __tests__/landing/public-claims-api.test.ts:408:24"
+    },
+    {
+      "cmd": "$NODE_DIR/npx prisma validate",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Loaded Prisma config from prisma.config.ts. |  | Prisma schema loaded from prisma/schema.prisma."
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS   scripts/fleet/policy.json — orchestrator protected-change declared in 2 commit(s), checked by review + CI + merge-phase | PASS   scripts/fleet/run-phase.mjs — orchestrator protected-change declared in 3 commit(s), checked by review + CI + merge-phase | verify-protected: 13 changed files, 7 protected, 0 violations"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/selftest.mjs",
+      "kind": "dod",
+      "id": "P0-C1",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS         selftest: sandbox — child-thread sandbox isolation probe recorded: a child-written file is absent from the orchestrator [thr_rx5jdbddz6] | PASS         selftest: stop — no real security STOP left behind | selftest: 13 of 13 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/provision.mjs --dry-run",
+      "kind": "dod",
+      "id": "P0-C2",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS         provision --dry-run: env — no .env* file in the worktree | PASS         provision --dry-run: linked — 2 file-linked @unite-group package(s) to build [./packages/brand-config,./packages/control-module] | provision --dry-run: 4 of 4 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "dod",
+      "id": "P0-C3",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS   scripts/fleet/policy.json — orchestrator protected-change declared in 2 commit(s), checked by review + CI + merge-phase | PASS   scripts/fleet/run-phase.mjs — orchestrator protected-change declared in 3 commit(s), checked by review + CI + merge-phase | verify-protected: 13 changed files, 7 protected, 0 violations"
+    },
+    {
+      "cmd": "$NODE scripts/check-repo-controls.mjs",
+      "kind": "dod",
+      "id": "P0-C4",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "  o environment.Production.prevent_self_review: false -> target true  [founder] |   o actions.secret.VERCEL_DEPLOY_HOOK.exists: true -> target false  [founder] |   Founder-executable steps: docs/specs/gruen-standard/phase-0-0-founder-runbook.md"
+    }
+  ]
+}
