@@ -131,8 +131,13 @@ export function verify(head, phase, cwd = ROOT) {
         )
           problems.push('review report names a different head');
         if (!('verdict' in j)) problems.push('review report has no verdict');
-        else if (!/^(PASS|APPROVE|pass|approve)/.test(String(j.verdict)))
+        else if (!/^(pass|approve)$/i.test(String(j.verdict).trim()))
           problems.push(`review verdict ${j.verdict}`);
+        const blocking = j.blocking_findings ?? j.findings ?? [];
+        if (Array.isArray(blocking) ? blocking.length : blocking)
+          problems.push(
+            `review report carries ${Array.isArray(blocking) ? blocking.length : 'some'} blocking finding(s)`
+          );
       } catch {
         problems.push('review report not JSON');
       }
@@ -249,7 +254,7 @@ if (isMain(import.meta.url)) {
   }
   let res;
   try {
-    res = verify(head, opt('--phase'));
+    res = verify(head, opt('--phase'), path.resolve(opt('--repo', ROOT)));
   } catch (e) {
     console.log(`INCONCLUSIVE verify-receipt: ${e.message}`);
     process.exit(2);

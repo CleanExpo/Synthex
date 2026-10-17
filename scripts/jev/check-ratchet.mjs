@@ -20,9 +20,13 @@ export function compare(baseFloors, headFloors) {
       problems.push(`family ${fam} removed`);
       continue;
     }
-    for (const [k, v] of Object.entries(b))
-      if (typeof v === 'number' && typeof h[k] === 'number' && h[k] < v)
+    for (const [k, v] of Object.entries(b)) {
+      if (typeof v !== 'number') continue;
+      if (typeof h[k] !== 'number')
+        problems.push(`floor ${fam}.${k} removed or non-numeric (was ${v})`);
+      else if (h[k] < v)
         problems.push(`floor ${fam}.${k} lowered ${v} -> ${h[k]}`);
+    }
   }
   return problems;
 }

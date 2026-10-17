@@ -48,7 +48,7 @@ const gate = (id, ok, detail) => {
 // --threads <json> = [{ id, disposition: fixed|answered|deferred, reply }]. The reply is posted and
 // the thread resolved; a thread without a disposition refuses the merge and is listed.
 function listThreads() {
-  const q = `query($o:String!,$n:String!,$p:Int!){repository(owner:$o,name:$n){pullRequest(number:$p){reviewThreads(first:100){nodes{id isResolved path line comments(first:1){nodes{author{login} body}}}}}}}`;
+  const q = `query($o:String!,$n:String!,$p:Int!){repository(owner:$o,name:$n){pullRequest(number:$p){reviewThreads(first:100){pageInfo{hasNextPage} nodes{id isResolved path line comments(first:1){nodes{author{login} body}}}}}}}`;
   const repo = (
     run('gh', [
       'repo',
