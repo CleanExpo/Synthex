@@ -1,0 +1,50 @@
+{
+  "schema": "jev-families/1",
+  "families": {
+    "J1": {
+      "name": "Route security matrix",
+      "expected_cases": 640,
+      "hard_gate": true
+    },
+    "J2": {
+      "name": "Honest status on reads",
+      "expected_cases": 180,
+      "hard_gate": true
+    },
+    "J3": {
+      "name": "Agent job scripts",
+      "expected_cases": 150,
+      "hard_gate": false
+    },
+    "J4": {
+      "name": "Gap probes (script part)",
+      "expected_cases": 200,
+      "hard_gate": false
+    },
+    "J7": {
+      "name": "Local outcome loop (script part)",
+      "expected_cases": 160,
+      "hard_gate": false
+    },
+    "J8": {
+      "name": "Publish safety",
+      "expected_cases": 140,
+      "hard_gate": true
+    },
+    "J9": {
+      "name": "Cost and quota",
+      "expected_cases": 120,
+      "hard_gate": true
+    },
+    "J11": {
+      "name": "Attack payloads",
+      "expected_cases": 140,
+      "hard_gate": true
+    },
+    "J12": {
+      "name": "Golden regressions",
+      "expected_cases": 100,
+      "hard_gate": true
+    }
+  }
+}

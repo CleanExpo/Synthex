@@ -1,0 +1,211 @@
+/**
+ * JEV route harness — call an app/api route handler in-process.
+ *
+ * invokeRoute() never throws: an import-time throw, a missing handler or a
+ * handler throw all come back as { status: null, error }. Families record that
+ * as INCONCLUSIVE, never PASS.
+ */
+import fs from 'fs';
+import path from 'path';
+import { createMockNextRequest } from '../../../helpers/mock-request';
+
+const ROOT = path.join(__dirname, '../../../..');
+// Jest injects `jest` into each test module; outside Jest it is undefined.
+declare const jest: { isolateModules(fn: () => void): void } | undefined;
+const HTTP_METHODS = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'HEAD',
+  'OPTIONS',
+] as const;
+
+export interface InvokeOptions {
+  headers?: Record<string, string>;
+  body?: object | string;
+  url?: string;
+  params?: Record<string, string | string[]>;
+}
+
+export interface InvokeResult {
+  status: number | null;
+  json: unknown;
+  error?: string;
+}
+
+export interface RouteInfo {
+  /** Repo-relative path, e.g. app/api/posts/[id]/route.ts */
+  file: string;
+  /** URL path, e.g. /api/posts/[id] */
+  route: string;
+  methods: string[];
+}
+
+function errorText(err: unknown): string {
+  return err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+}
+
+/** /api/... path for a route file, with dynamic segments filled from params when given. */
+function routePath(
+  routeFile: string,
+  params?: InvokeOptions['params']
+): string {
+  const rel = path.relative(
+    path.join(ROOT, 'app'),
+    path.resolve(ROOT, routeFile)
+  );
+  const segments = path
+    .dirname(rel)
+    .split(path.sep)
+    .filter(s => !/^\(.*\)$/.test(s));
+  return (
+    '/' +
+    segments
+      .map(s => {
+        const m = /^\[{1,2}(?:\.\.\.)?([^\]]+)\]{1,2}$/.exec(s);
+        const value = m && params ? params[m[1]] : undefined;
+        if (value === undefined) return s;
+        return Array.isArray(value)
+          ? value.map(encodeURIComponent).join('/')
+          : encodeURIComponent(value);
+      })
+      .join('/')
+  );
+}
+
+function loadModule(abs: string): Record<string, unknown> {
+  let mod: Record<string, unknown> | undefined;
+  if (typeof jest !== 'undefined') {
+    jest.isolateModules(() => {
+      mod = require(abs);
+    });
+  } else {
+    mod = require(abs);
+  }
+  return mod ?? {};
+}
+
+export async function invokeRoute(
+  routeFile: string,
+  method: string,
+  opts: InvokeOptions = {}
+): Promise<InvokeResult> {
+  const abs = path.resolve(ROOT, routeFile);
+  let mod: Record<string, unknown>;
+  try {
+    mod = loadModule(abs);
+  } catch (err) {
+    return {
+      status: null,
+      json: null,
+      error: `import failed: ${errorText(err)}`,
+    };
+  }
+
+  const handler = mod[method.toUpperCase()];
+  if (typeof handler !== 'function') {
+    return {
+      status: null,
+      json: null,
+      error: `no ${method.toUpperCase()} export in ${routeFile}`,
+    };
+  }
+
+  const request = createMockNextRequest({
+    method: method.toUpperCase(),
+    headers: opts.headers,
+    body: opts.body,
+    url:
+      opts.url ?? `http://localhost:3000${routePath(routeFile, opts.params)}`,
+  });
+
+  let response: unknown;
+  try {
+    response = await handler(request, {
+      params: Promise.resolve(opts.params ?? {}),
+    });
+  } catch (err) {
+    return {
+      status: null,
+      json: null,
+      error: `handler threw: ${errorText(err)}`,
+    };
+  }
+
+  const res = response as {
+    status?: unknown;
+    text?: () => Promise<string>;
+  } | null;
+  if (!res || typeof res.status !== 'number') {
+    return {
+      status: null,
+      json: null,
+      error: 'handler did not return a Response',
+    };
+  }
+  let text = '';
+  try {
+    text = typeof res.text === 'function' ? await res.text() : '';
+  } catch (err) {
+    return {
+      status: res.status,
+      json: null,
+      error: `body read failed: ${errorText(err)}`,
+    };
+  }
+  if (!text) return { status: res.status, json: null };
+  try {
+    return { status: res.status, json: JSON.parse(text) };
+  } catch {
+    return {
+      status: res.status,
+      json: null,
+      error: 'response body is not JSON',
+    };
+  }
+}
+
+/** Exported HTTP methods of a route file, read from its source text (no import). */
+function exportedMethods(source: string): string[] {
+  const found = new Set<string>();
+  const direct =
+    /export\s+(?:async\s+)?(?:function\s*\*?|const|let|var)\s+([A-Z]+)\b/g;
+  for (const m of source.matchAll(direct)) found.add(m[1]);
+  const lists = /export\s+(?:const|let|var)?\s*\{([^}]*)\}/g;
+  for (const m of source.matchAll(lists)) {
+    for (const part of m[1].split(',')) {
+      const name = part
+        .trim()
+        .split(/\s+as\s+/)
+        .pop()
+        ?.split(':')
+        .pop()
+        ?.trim();
+      if (name) found.add(name);
+    }
+  }
+  return HTTP_METHODS.filter(verb => found.has(verb));
+}
+
+/** Every app/api/**\/route.ts with its exported HTTP methods, sorted by file. */
+export function listRoutes(): RouteInfo[] {
+  const out: RouteInfo[] = [];
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(abs);
+      else if (entry.name === 'route.ts') {
+        const file = path.relative(ROOT, abs).split(path.sep).join('/');
+        out.push({
+          file,
+          route: routePath(file),
+          methods: exportedMethods(fs.readFileSync(abs, 'utf8')),
+        });
+      }
+    }
+  };
+  walk(path.join(ROOT, 'app/api'));
+  return out.sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
+}
