@@ -43,6 +43,106 @@ const gate = (id, ok, detail) => {
   );
   return ok;
 };
+// Review threads (bots such as CodeRabbit, Bugbot). main requires every conversation resolved. With
+// no human to click, each unresolved thread needs a written disposition from the orchestrator:
+// --threads <json> = [{ id, disposition: fixed|answered|deferred, reply }]. The reply is posted and
+// the thread resolved; a thread without a disposition refuses the merge and is listed.
+function listThreads() {
+  const q = `query($o:String!,$n:String!,$p:Int!){repository(owner:$o,name:$n){pullRequest(number:$p){reviewThreads(first:100){nodes{id isResolved path line comments(first:1){nodes{author{login} body}}}}}}}`;
+  const repo = (
+    run('gh', [
+      'repo',
+      'view',
+      '--json',
+      'nameWithOwner',
+      '--jq',
+      '.nameWithOwner',
+    ]).stdout || ''
+  ).trim();
+  const [o, n] = repo.split('/');
+  const r = run('gh', [
+    'api',
+    'graphql',
+    '-f',
+    `query=${q}`,
+    '-F',
+    `o=${o}`,
+    '-F',
+    `n=${n}`,
+    '-F',
+    `p=${pr}`,
+  ]);
+  try {
+    return JSON.parse(
+      r.stdout
+    ).data.repository.pullRequest.reviewThreads.nodes.filter(
+      t => !t.isResolved
+    );
+  } catch {
+    return null;
+  }
+}
+function resolveThreads() {
+  const file = opt('--threads');
+  const dispositions = file ? readJson(file, []) : [];
+  const open = listThreads();
+  if (open === null)
+    return { ok: false, detail: 'could not list review threads' };
+  let resolved = 0;
+  const left = [];
+  for (const t of open) {
+    const d = dispositions.find(x => x.id === t.id);
+    if (
+      !d ||
+      !d.reply ||
+      !['fixed', 'answered', 'deferred'].includes(d.disposition)
+    ) {
+      left.push(
+        `${t.path}:${t.line} (${t.comments.nodes[0]?.author?.login || '?'}) ${t.id}`
+      );
+      continue;
+    }
+    if (dry) {
+      resolved++;
+      continue;
+    }
+    const body = `[fleet orchestrator, ${d.disposition}] ${d.reply}`;
+    const a = run('gh', [
+      'api',
+      'graphql',
+      '-f',
+      `query=mutation($t:ID!,$b:String!){addPullRequestReviewThreadReply(input:{pullRequestReviewThreadId:$t,body:$b}){comment{id}}}`,
+      '-F',
+      `t=${t.id}`,
+      '-F',
+      `b=${body}`,
+    ]);
+    const r = run('gh', [
+      'api',
+      'graphql',
+      '-f',
+      `query=mutation($t:ID!){resolveReviewThread(input:{threadId:$t}){thread{isResolved}}}`,
+      '-F',
+      `t=${t.id}`,
+    ]);
+    if (a.code === 0 && r.code === 0 && /"isResolved":true/.test(r.stdout))
+      resolved++;
+    else left.push(`${t.path}:${t.line} ${t.id} (reply/resolve failed)`);
+  }
+  ledgerAppend({
+    kind: 'threads',
+    phase,
+    pr,
+    head,
+    resolved,
+    unresolved: left.length,
+  });
+  return {
+    ok: left.length === 0,
+    detail: `${open.length} open, ${resolved} dispositioned${dry ? ' (dry-run)' : ''}, ${left.length} without disposition${left.length ? ': ' + left.slice(0, 5).join('; ') : ''}`,
+  };
+}
+
 const h = haltState();
 gate(
   'halt',
@@ -138,6 +238,11 @@ const at = run(process.execPath, [
   phase,
 ]);
 gate('attest', at.code === 0, at.stdout.trim().split('\n').pop());
+// Only disposition threads once every other gate holds; replies are outward-facing.
+const th = gates.every(g => g.state === 'PASS')
+  ? resolveThreads()
+  : { ok: false, detail: 'skipped: an earlier gate failed' };
+gate('threads', th.ok, th.detail);
 const ok = gates.every(g => g.state === 'PASS');
 if (!ok) {
   ledgerAppend({ kind: 'merge-refused', phase, pr, head, gates });

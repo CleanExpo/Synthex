@@ -5,6 +5,8 @@
  * head AND the same command at base lists at least one (positive control: 88 on 2026-10-17).
  */
 import { git, tryGit, ROOT, isMain } from '../fleet/lib.mjs';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import path from 'node:path';
 const args = process.argv.slice(2);
 const opt = (k, d) => {
   const i = args.indexOf(k);
@@ -25,10 +27,31 @@ export function count(ref) {
 }
 if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
-    const c = count('HEAD');
-    const ok = c > 0;
+    // Positive control independent of HEAD (CodeRabbit on PR #997: it must keep passing after the
+    // migration reaches zero importers): plant one importer in a scratch dir and prove the same
+    // grep finds exactly it.
+    const dir = mkdtempSync(path.join(ROOT, '.noop-control-'));
+    let found = 0;
+    try {
+      writeFileSync(
+        path.join(dir, 'probe.ts'),
+        "import { noop } from '@/lib/platform/noop-client';\n"
+      );
+      const out = tryGit([
+        'grep',
+        '--no-index',
+        '-l',
+        'platform/noop-client',
+        '--',
+        path.relative(ROOT, dir),
+      ]);
+      found = out ? out.split('\n').filter(Boolean).length : 0;
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+    const ok = found === 1;
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} check-noop positive control: grep finds ${c} importer(s) at HEAD (must be > 0 for the control to prove the grep can find one)`
+      `${ok ? 'PASS' : 'FAIL'} check-noop positive control: grep finds ${found} planted importer (expected 1); HEAD currently has ${count('HEAD')}`
     );
     process.exit(ok ? 0 : 1);
   }

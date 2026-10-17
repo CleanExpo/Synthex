@@ -229,7 +229,7 @@ if (isMain(import.meta.url)) {
   }
   let res;
   try {
-    res = check(base, opt('--head', 'HEAD'));
+    res = check(base, opt('--head', 'HEAD'), path.resolve(opt('--repo', ROOT)));
   } catch (e) {
     console.log(`INCONCLUSIVE verify-protected: ${e.message}`);
     process.exit(2);

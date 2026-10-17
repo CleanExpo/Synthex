@@ -34,12 +34,26 @@ jobs:
           if echo '${{ toJson(github.event.pull_request.labels.*.name) }}' | grep -q '"human-required"'; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
       - name: Verify protected paths against the base
         if: steps.label.outputs.present != 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          git fetch --no-tags origin "${{ github.event.pull_request.base.sha }}"
-          git fetch --no-tags origin "${{ github.event.pull_request.head.sha }}"
-          git checkout -q "${{ github.event.pull_request.head.sha }}"
-          git branch -f "${{ github.head_ref }}" HEAD && git checkout -q "${{ github.head_ref }}"
-          node scripts/fleet/verify-protected.mjs --base "${{ github.event.pull_request.base.sha }}" --head HEAD
+          git fetch --no-tags origin "$BASE_SHA"
+          git fetch --no-tags origin "$HEAD_SHA"
+          git checkout -q "$HEAD_SHA"
+          # branch name arrives through the environment, never substituted into shell source
+          git branch -f -- "$HEAD_REF" HEAD && git checkout -q -- "$HEAD_REF"
+          # Run the verifier and policy from the trusted BASE, not from the PR under test; the PR's
+          # own copy is used only while the base has none (bootstrap, exemption in the script).
+          if git cat-file -e "$BASE_SHA:scripts/fleet/verify-protected.mjs" 2>/dev/null; then
+            rm -rf /tmp/trusted && mkdir -p /tmp/trusted
+            git archive "$BASE_SHA" scripts/fleet scripts/release | tar -x -C /tmp/trusted
+            node /tmp/trusted/scripts/fleet/verify-protected.mjs --repo "$PWD" --base "$BASE_SHA" --head HEAD
+          else
+            echo "NOTE bootstrap: base has no verifier; using the PR's copy under the bootstrap exemption"
+            node scripts/fleet/verify-protected.mjs --base "$BASE_SHA" --head HEAD
+          fi
       - name: Label applied by a person
         if: steps.label.outputs.present == 'true'
         run: echo "human-required label present; protected change accepted as a waterline act"

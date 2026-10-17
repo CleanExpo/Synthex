@@ -1,0 +1,67 @@
+[
+  {
+    "id": "PRRT_kwDOPXvspc6tccDd",
+    "disposition": "fixed",
+    "reply": "check-ratchet.mjs now ratchets the committed tests/eval/jev/floors.json against base on every run and checks the proposal overlay separately, so a lowered committed floor behind an unchanged proposal fails."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccDg",
+    "disposition": "fixed",
+    "reply": "check-ratchet.mjs compares against an empty baseline when base has no floors.json (nothing exists to lower; deletions are still checked) and reports NOTE instead of exiting 2. Control still proves lowering exits 1."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccDk",
+    "disposition": "fixed",
+    "reply": "protected-paths.yml now extracts scripts/fleet and scripts/release from the trusted BASE sha with git archive and runs that copy with --repo against the PR checkout; the PR's own verifier is used only while the base has none (bootstrap)."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccDn",
+    "disposition": "fixed",
+    "reply": "Branch name, base and head shas now reach the step through env (BASE_SHA/HEAD_SHA/HEAD_REF) and git gets them after --; nothing from github.head_ref is substituted into shell source."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccDq",
+    "disposition": "fixed",
+    "reply": "receipt-verify.yml now diffs base...head on pull requests and before..head on pushes (HEAD~1 when before is zero/unknown), verifies every receipt in that range at the head, and notes retired receipts."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccDs",
+    "disposition": "fixed",
+    "reply": "Both check-runs calls use ?per_page=100; merge-phase also treats absent required contexts as pending (verified: 49 runs now visible, previously 30)."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccD2",
+    "disposition": "fixed",
+    "reply": "Gate commands run with GITHUB_TOKEN and GH_TOKEN set to empty strings; the orchestrator token is no longer in the environment of builder-written code."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccD5",
+    "disposition": "fixed",
+    "reply": "auto now runs an integrate-all step after spawn: every PASS unit in release-receipts/manifests/<phase>-units.json is integrated from its fleet-unit branch before gate/review/release."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccD8",
+    "disposition": "fixed",
+    "reply": "verify-receipt reads scripts/fleet/contracts/<phase>.json at the head and requires every cumulative_gate and criteria command to appear in the receipt's gate with PASS; an empty gate or missing command fails."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccD-",
+    "disposition": "fixed",
+    "reply": "reviewed_commit must be a commit object (cat-file -t), a failed binding diff is a FAIL, and a null tested_tree or tree lookup is a FAIL."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccEA",
+    "disposition": "fixed",
+    "reply": "The review report's head_sha (or head) is required and compared with reviewed_commit, and a report without a verdict fails."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tccED",
+    "disposition": "fixed",
+    "reply": "check-noop --control now plants one importer in a scratch directory and proves the same grep finds exactly it, independent of HEAD; it also reports the current HEAD count."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6tdOyB",
+    "disposition": "fixed",
+    "reply": "check-bootstrap item 4 takes the newest commit carrying a Fleet-Role trailer regardless of committer and compares that commit's name and email with policy, so a wrong identity on the latest fleet commit fails."
+  }
+]

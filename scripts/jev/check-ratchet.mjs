@@ -80,7 +80,8 @@ if (isMain(import.meta.url)) {
     process.exit(2);
   }
   const prop = opt('--proposal');
-  let headFloors = readJson('tests/eval/jev/floors.json');
+  const committedFloors = readJson('tests/eval/jev/floors.json');
+  let headFloors = committedFloors;
   if (prop) {
     if (!existsSync(path.join(ROOT, prop))) {
       console.log(`INCONCLUSIVE check-ratchet: proposal ${prop} absent`);
@@ -89,7 +90,10 @@ if (isMain(import.meta.url)) {
     headFloors = readJson(prop);
   }
   const problems = [
-    ...compare(baseFloors, headFloors),
+    // The committed floors are ratcheted against base regardless of any proposal overlay
+    // (CodeRabbit on PR #997: a PR could lower a committed floor behind an unchanged proposal).
+    ...compare(baseFloors, committedFloors).map(p => `committed floors: ${p}`),
+    ...(prop ? compare(baseFloors, headFloors).map(p => `proposal: ${p}`) : []),
     ...deletedCases(base, head).map(
       f => `case deleted without tombstone: ${f}`
     ),

@@ -65,15 +65,44 @@ export function verify(head, phase, cwd = ROOT) {
       problems.push(`gate ${g.cmd}: fifth state ${g.state}`);
   if ((r.gate || []).some(g => g.state !== 'PASS' && g.required !== false))
     problems.push('a required gate command is not PASS');
+  // Evidence: every command the phase contract names must appear in the receipt's gate with PASS
+  // (CodeRabbit on PR #997: "gate": [] used to validate).
+  const contractRaw = tryGit(
+    ['show', `${sha}:scripts/fleet/contracts/${p}.json`],
+    { cwd }
+  );
+  if (contractRaw === null)
+    problems.push(
+      `phase contract scripts/fleet/contracts/${p}.json absent at head`
+    );
+  else {
+    let contract = null;
+    try {
+      contract = JSON.parse(contractRaw);
+    } catch {
+      problems.push('phase contract not JSON');
+    }
+    if (contract) {
+      const wanted = [
+        ...(contract.cumulative_gate || []),
+        ...(contract.criteria || []).map(c => c.recipe),
+      ];
+      if (!wanted.length) problems.push('phase contract names no gate command');
+      for (const cmd of wanted)
+        if (!(r.gate || []).some(g => g.cmd === cmd && g.state === 'PASS'))
+          problems.push(`contract command not PASS in receipt gate: ${cmd}`);
+    }
+  }
   if (r.state !== 'PASS') problems.push(`receipt state ${r.state}`);
   // Binding: head differs from reviewed commit by the receipt file alone.
   const reviewed = r.reviewed_commit;
-  if (!reviewed || tryGit(['cat-file', '-e', reviewed], { cwd }) === null)
-    problems.push('reviewed_commit not in repo');
+  if (!reviewed || tryGit(['cat-file', '-t', reviewed], { cwd }) !== 'commit')
+    problems.push('reviewed_commit is not a commit in this repo');
   else {
-    const diff = (tryGit(['diff', '--name-only', reviewed, sha], { cwd }) || '')
-      .split('\n')
-      .filter(Boolean);
+    const diffRaw = tryGit(['diff', '--name-only', reviewed, sha], { cwd });
+    if (diffRaw === null)
+      problems.push('binding diff from reviewed commit failed');
+    const diff = (diffRaw || '').split('\n').filter(Boolean);
     const extra = diff.filter(
       f => f !== file && !/^release-receipts\/(ledger|manifests)\//.test(f)
     );
@@ -82,7 +111,7 @@ export function verify(head, phase, cwd = ROOT) {
         `diff from reviewed commit holds more than the receipt: ${extra.slice(0, 5).join(', ')}`
       );
     const tree = tryGit(['rev-parse', `${reviewed}^{tree}`], { cwd });
-    if (r.tested_tree !== tree)
+    if (!tree || !r.tested_tree || r.tested_tree !== tree)
       problems.push(
         `tested_tree ${String(r.tested_tree).slice(0, 12)} != tree of reviewed commit ${String(tree).slice(0, 12)}`
       );
@@ -94,16 +123,15 @@ export function verify(head, phase, cwd = ROOT) {
     else {
       try {
         const j = JSON.parse(rep);
-        if (
-          j.head &&
-          !String(r.reviewed_commit).startsWith(j.head) &&
-          !String(j.head).startsWith(r.reviewed_commit)
+        const bound = String(j.head_sha || j.head || '');
+        if (!bound) problems.push('review report names no head');
+        else if (
+          !String(r.reviewed_commit).startsWith(bound) &&
+          !bound.startsWith(String(r.reviewed_commit))
         )
           problems.push('review report names a different head');
-        if (
-          j.verdict &&
-          !/^(PASS|APPROVE|pass|approve)/.test(String(j.verdict))
-        )
+        if (!('verdict' in j)) problems.push('review report has no verdict');
+        else if (!/^(PASS|APPROVE|pass|approve)/.test(String(j.verdict)))
           problems.push(`review verdict ${j.verdict}`);
       } catch {
         problems.push('review report not JSON');

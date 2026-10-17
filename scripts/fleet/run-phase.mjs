@@ -243,9 +243,9 @@ async function spawn() {
   );
   return bad ? 1 : 0;
 }
-function integrate() {
-  const unit = opt('--unit');
-  const ref = opt('--branch');
+function integrate(unitArg, refArg) {
+  const unit = unitArg || opt('--unit');
+  const ref = refArg || opt('--branch');
   if (!unit || !ref) {
     log('FAIL', 'need --unit and --branch');
     return 2;
@@ -380,11 +380,11 @@ function gate() {
   for (const c of cmds) {
     const r = sh(sub(c.cmd), {
       timeout: 3600000,
+      // Gate commands run builder-written code; they get no GitHub token (CodeRabbit on PR #997).
       env: {
         FLEET_HALT_DIR: path.join(ROOT, pol.halt_dir),
-        GITHUB_TOKEN:
-          process.env.GITHUB_TOKEN ||
-          run('gh', ['auth', 'token']).stdout.trim(),
+        GITHUB_TOKEN: '',
+        GH_TOKEN: '',
       },
     });
     const state =
@@ -644,6 +644,11 @@ function release() {
     NODE,
     [
       'scripts/fleet/merge-phase.mjs',
+      ...(existsSync(
+        path.join(ROOT, `release-receipts/manifests/${phase}-threads.json`)
+      )
+        ? ['--threads', `release-receipts/manifests/${phase}-threads.json`]
+        : []),
       '--pr',
       num,
       '--head',
@@ -697,10 +702,24 @@ if (step === 'auto') {
     'preflight',
     'prepare',
     'spawn',
+    'integrate-all',
     'gate',
     'review',
     'release',
   ]) {
+    if (s === 'integrate-all') {
+      // Builder work lives on fleet-unit/* branches; bring every PASS unit onto the phase branch
+      // before the gate (CodeRabbit on PR #997: auto had no integrate step).
+      const units = readJson(`release-receipts/manifests/${phase}-units.json`, {
+        results: {},
+      }).results;
+      for (const [id, r] of Object.entries(units)) {
+        if (r.state !== 'PASS') continue;
+        const c = integrate(id, r.branch || `fleet-unit/${phase}/${id}`);
+        if (c !== 0) process.exit(c);
+      }
+      continue;
+    }
     const c = await steps[s]();
     if (c !== 0) process.exit(c);
   }

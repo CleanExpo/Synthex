@@ -99,8 +99,8 @@ const lastFleet = tryGit([
   'log',
   '-1',
   '--format=%cn%x00%ce',
-  `--committer=${pol.committer.email}`,
-]);
+  '--grep=^Fleet-Role:',
+]); // the newest commit that declares a fleet role, whoever committed it (CodeRabbit on PR #997)
 const [cname, cemail] = lastFleet
   ? lastFleet.split('\0')
   : [
