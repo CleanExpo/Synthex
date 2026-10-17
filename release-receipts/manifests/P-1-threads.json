@@ -63,5 +63,30 @@
     "id": "PRRT_kwDOPXvspc6tdOyB",
     "disposition": "fixed",
     "reply": "check-bootstrap item 4 takes the newest commit carrying a Fleet-Role trailer regardless of committer and compares that commit's name and email with policy, so a wrong identity on the latest fleet commit fails."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6td10T",
+    "disposition": "fixed",
+    "reply": "receipt-verify.yml now extracts scripts/fleet and scripts/release from the trusted BASE sha and runs that verify-receipt.mjs with --repo against the checkout; the PR's own copy is used only while the base has none (bootstrap)."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6td10U",
+    "disposition": "fixed",
+    "reply": "DECISIONS.md A-22 corrects the figures: K2.5 USD 0.45/2.25 per M, K3 USD 1.70/8.50 per M, about USD 0.05 and 0.20 per review; K2.5 now leads the lane."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6td10V",
+    "disposition": "fixed",
+    "reply": "listThreads requests pageInfo.hasNextPage and returns null (gate fails closed) when more than one page of review threads exists."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6td10W",
+    "disposition": "fixed",
+    "reply": "compare() now reports any numeric base floor that is missing or non-numeric at head, in addition to lowered values; control still passes."
+  },
+  {
+    "id": "PRRT_kwDOPXvspc6td10Y",
+    "disposition": "fixed",
+    "reply": "verify-receipt now matches the verdict exactly (pass|approve, case-insensitive) and rejects a report whose blocking_findings (or findings) is non-empty."
   }
 ]

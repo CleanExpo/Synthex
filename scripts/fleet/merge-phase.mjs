@@ -73,11 +73,9 @@ function listThreads() {
     `p=${pr}`,
   ]);
   try {
-    return JSON.parse(
-      r.stdout
-    ).data.repository.pullRequest.reviewThreads.nodes.filter(
-      t => !t.isResolved
-    );
+    const rt = JSON.parse(r.stdout).data.repository.pullRequest.reviewThreads;
+    if (rt.pageInfo?.hasNextPage) return null; // more than one page: fail closed rather than miss threads
+    return rt.nodes.filter(t => !t.isResolved);
   } catch {
     return null;
   }
