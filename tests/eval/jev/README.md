@@ -4,17 +4,17 @@ Script-judged JEV families (spec: `docs/superpowers/specs/2026-10-17-vibe-to-lea
 
 ## Layout
 
-| Path                        | What                                                                                     |
-| --------------------------- | ---------------------------------------------------------------------------------------- |
-| `families.json`             | Family table: name, `expected_cases`, `hard_gate` (1,830 cases in total)                 |
-| `known-gaps.json`           | `{"schema":"jev-known-gaps/1","gaps":{"<gap_id>":{"cases":["<case id>"],"note":"..."}}}` |
-| `floors.json`               | Adopted floors (protected; changed only through a proposal)                              |
-| `families/<jN>.jev.test.ts` | One Jest file per family, e.g. `families/j3.jev.test.ts`                                 |
-| `runner/record.ts`          | `recordResults`, `JevResult`, `knownGap`, `classify`                                     |
-| `runner/route-harness.ts`   | `invokeRoute`, `listRoutes`                                                              |
-| `runner/run-det.mjs`        | `npm run jev:det [-- --family J3]`                                                       |
-| `runner/aggregate.mjs`      | The verdict; `--control` runs its planted self-test                                      |
-| `out/` (gitignored)         | `<FAMILY>.jsonl` results and `summary.json`                                              |
+| Path                        | What                                                                                                                                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `families.json`             | Family table: name, `expected_cases`, `hard_gate` (1,830 cases in total)                                                                      |
+| `known-gaps/<FAMILY>.json`  | One file per family: `{"schema":"jev-known-gaps/1","family":"J1","gaps":{"<gap_id>":{"description":"...","cases":["<case id or prefix*>"]}}}` |
+| `floors.json`               | Adopted floors (protected; changed only through a proposal)                                                                                   |
+| `families/<jN>.jev.test.ts` | One Jest file per family, e.g. `families/j3.jev.test.ts`                                                                                      |
+| `runner/record.ts`          | `recordResults`, `JevResult`, `knownGap`, `classify`                                                                                          |
+| `runner/route-harness.ts`   | `invokeRoute`, `listRoutes`                                                                                                                   |
+| `runner/run-det.mjs`        | `npm run jev:det [-- --family J3]`                                                                                                            |
+| `runner/aggregate.mjs`      | The verdict; `--control` runs its planted self-test                                                                                           |
+| `out/` (gitignored)         | `<FAMILY>.jsonl` results and `summary.json`                                                                                                   |
 
 ## Result record
 
@@ -33,7 +33,7 @@ One JSON line per result in `out/<FAMILY>.jsonl`:
 
 - `kind`: `case` or `control`. `state`: `PASS`, `FAIL`, `KNOWN_GAP` or `INCONCLUSIVE`.
 - A control is a planted defect; its `state` is the detector's verdict, so `FAIL` means caught (good).
-- Use `classify(id, passed, detail)` for cases: a failing case listed in `known-gaps.json` or `known-gaps/<FAMILY>.json` (one file per family; an entry ending in `*` is an id prefix) is `KNOWN_GAP`; a listed case that passes is `PASS` with detail `known gap flipped: <gap_id>`.
+- Use `classify(id, passed, detail)` for cases: a failing case listed in any `known-gaps/*.json` (exact id, or a prefix ending in `*`; longest prefix wins) is `KNOWN_GAP`; a listed case that passes is `PASS` with detail `known gap flipped: <gap_id>`.
 - A route that throws at import or in the handler (`invokeRoute` returns `status: null`) is `INCONCLUSIVE`, never `PASS`.
 
 ## Verdict (aggregate.mjs)

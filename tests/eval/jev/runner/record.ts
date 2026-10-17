@@ -24,53 +24,56 @@ export interface JevResult {
 
 const JEV_DIR = path.join(__dirname, '..');
 export const OUT_DIR = path.join(JEV_DIR, 'out');
-const KNOWN_GAPS_FILE = path.join(JEV_DIR, 'known-gaps.json');
-// One file per family (known-gaps/<FAMILY>.json) so parallel family units never conflict.
 const KNOWN_GAPS_DIR = path.join(JEV_DIR, 'known-gaps');
 
+/** tests/eval/jev/known-gaps/<FAMILY>.json — one file per family. */
 interface KnownGaps {
   schema: 'jev-known-gaps/1';
-  gaps: Record<
-    string,
-    { cases: string[]; note?: string; description?: string }
-  >;
+  family: string;
+  /** cases: exact case ids, or id prefixes ending in `*`. */
+  gaps: Record<string, { description: string; cases: string[] }>;
 }
 
 let gapIndex:
   | { exact: Map<string, string>; prefixes: [string, string][] }
   | undefined;
 
-function gapFiles(): string[] {
-  const files = fs.existsSync(KNOWN_GAPS_FILE) ? [KNOWN_GAPS_FILE] : [];
-  if (fs.existsSync(KNOWN_GAPS_DIR))
-    for (const f of fs.readdirSync(KNOWN_GAPS_DIR).sort())
-      if (f.endsWith('.json')) files.push(path.join(KNOWN_GAPS_DIR, f));
-  return files;
-}
-
-/**
- * The known-gap id that covers this case, if any. Reads tests/eval/jev/known-gaps.json and
- * every tests/eval/jev/known-gaps/<FAMILY>.json. A case entry ending in `*` is an id prefix.
- */
-export function knownGap(caseId: string): string | undefined {
-  if (!gapIndex) {
-    gapIndex = { exact: new Map(), prefixes: [] };
-    for (const file of gapFiles()) {
-      const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as KnownGaps;
-      if (parsed.schema !== 'jev-known-gaps/1') {
-        throw new Error(
-          `${path.basename(file)}: unexpected schema ${String(parsed.schema)}`
-        );
-      }
-      for (const [gapId, gap] of Object.entries(parsed.gaps)) {
-        for (const id of gap.cases ?? []) {
-          if (id.endsWith('*'))
-            gapIndex.prefixes.push([id.slice(0, -1), gapId]);
-          else gapIndex.exact.set(id, gapId);
-        }
+function loadGaps(): NonNullable<typeof gapIndex> {
+  const exact = new Map<string, string>();
+  const prefixes: [string, string][] = [];
+  const files = fs.existsSync(KNOWN_GAPS_DIR)
+    ? fs
+        .readdirSync(KNOWN_GAPS_DIR)
+        .filter(f => f.endsWith('.json'))
+        .sort()
+    : [];
+  for (const file of files) {
+    const parsed = JSON.parse(
+      fs.readFileSync(path.join(KNOWN_GAPS_DIR, file), 'utf8')
+    ) as KnownGaps;
+    if (
+      parsed.schema !== 'jev-known-gaps/1' ||
+      `${parsed.family}.json` !== file
+    ) {
+      throw new Error(
+        `known-gaps/${file}: needs schema jev-known-gaps/1 and family ${file.replace(/\.json$/, '')}`
+      );
+    }
+    for (const [gapId, gap] of Object.entries(parsed.gaps)) {
+      for (const id of gap.cases ?? []) {
+        if (id.endsWith('*')) prefixes.push([id.slice(0, -1), gapId]);
+        else exact.set(id, gapId);
       }
     }
   }
+  // Longest prefix wins.
+  prefixes.sort((a, b) => b[0].length - a[0].length);
+  return { exact, prefixes };
+}
+
+/** The known-gap id covering this case, if any (every file in tests/eval/jev/known-gaps/). */
+export function knownGap(caseId: string): string | undefined {
+  gapIndex ??= loadGaps();
   return (
     gapIndex.exact.get(caseId) ??
     gapIndex.prefixes.find(([prefix]) => caseId.startsWith(prefix))?.[1]
