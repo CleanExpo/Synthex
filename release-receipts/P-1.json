@@ -1,13 +1,13 @@
 {
   "schema": "synthex-release-receipt/1",
   "phase": "P-1",
-  "written_at": "2026-10-17T03:36:32.117Z",
-  "reviewed_commit": "147b8f2ffe0cea67d9d660d31f73edb8d0481384",
-  "tested_tree": "23911265903ecfab1560bf05b0433ad6e76864dd",
+  "written_at": "2026-10-17T04:12:08.718Z",
+  "reviewed_commit": "fac696f8d00948ffa5826a1adc001a95800d2669",
+  "tested_tree": "55aa95ac78db2f2f8dc7fd4567e90fd5808ec3f2",
   "review_report": "release-receipts/manifests/P-1-review.json",
   "cost_ledger": {
     "file": "release-receipts/ledger/fleet.jsonl",
-    "rows": 16
+    "rows": 21
   },
   "gate": [
     {
@@ -48,7 +48,7 @@
       "required": true,
       "state": "PASS",
       "exit": 0,
-      "tail": "PASS   scripts/truth/check-noop.mjs — bootstrap exemption | PASS   tests/eval/jev/floors.json — bootstrap exemption | verify-protected: 69 changed files, 63 protected, 0 violations (bootstrap exemption active)"
+      "tail": "PASS   scripts/truth/check-noop.mjs — bootstrap exemption | PASS   tests/eval/jev/floors.json — bootstrap exemption | verify-protected: 70 changed files, 64 protected, 0 violations (bootstrap exemption active)"
     },
     {
       "cmd": "$NODE scripts/fleet/check-bootstrap.mjs",
