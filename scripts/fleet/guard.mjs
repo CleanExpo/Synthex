@@ -66,6 +66,13 @@ export function evaluate(action, pol = policy()) {
       const cmd = String(action.command || '');
       if (role === 'reader' || role === 'judge')
         return deny(`${role} holds no shell`);
+      // The one sanctioned merge path (FD-3): releaser through merge-phase.mjs. Checked before the
+      // forbidden-substring loop so the exemption is reachable (independent review r1, B-3).
+      if (/\bgh pr merge\b/.test(cmd)) {
+        if (role === 'releaser' && action.via === 'merge-phase')
+          return allow('gh pr merge via merge-phase (FD-3)');
+        return deny('direct gh pr merge');
+      }
       for (const f of pol.forbidden_commands)
         if (cmd.includes(f)) return deny(`forbidden command: ${f}`);
       if (
@@ -79,11 +86,6 @@ export function evaluate(action, pol = policy()) {
         !/\bnpm ci\b/.test(cmd)
       )
         return deny('builder may not install');
-      if (
-        /\bgh pr merge\b/.test(cmd) &&
-        !(role === 'releaser' && action.via === 'merge-phase')
-      )
-        return deny('direct gh pr merge');
       return allow('shell permitted for role');
     }
     case 'mcp': {

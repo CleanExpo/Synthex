@@ -15,6 +15,7 @@
  * 10 scheduler       -> Cloudroom automations nightly/weekly/phase-advance exist (room-cli automation list)
  */
 import {
+  ledgerAppend,
   policy,
   policyHash,
   readJson,
@@ -52,11 +53,19 @@ const hashFile = 'release-receipts/manifests/policy-hash.json';
 const recorded = readJson(hashFile, null);
 const h = policyHash();
 if (process.argv.includes('--record')) {
+  const prevHash = recorded ? recorded.sha256 : null;
   writeJson(hashFile, {
     schema: 'policy-hash/1',
     sha256: h,
     recorded_at: new Date().toISOString(),
   });
+  if (prevHash !== h)
+    ledgerAppend({
+      kind: 'policy-hash',
+      previous: prevHash,
+      sha256: h,
+      source: 'check-bootstrap --record',
+    });
 }
 const rec2 = readJson(hashFile, null);
 const halt = haltState();

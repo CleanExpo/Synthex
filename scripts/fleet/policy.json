@@ -42,7 +42,7 @@
     "excluded": ["claude-mythos-5-1", "managed-agents"]
   },
   "review": {
-    "lanes_in_order": ["openrouter", "minimax", "gemini"],
+    "lanes_in_order": ["minimax", "openrouter", "gemini"],
     "never": ["cursor", "codex"],
     "minimax_via": "founder Mac mm-ask lane through room-cli mac run (key lives there only)",
     "openrouter_models": [

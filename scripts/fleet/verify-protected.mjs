@@ -21,7 +21,13 @@ import {
   ROOT,
 } from './lib.mjs';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, mkdirSync, readFileSync } from 'node:fs';
+import {
+  mkdtempSync,
+  writeFileSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -113,85 +119,98 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
 }
 
 function control() {
-  // Negative control: a scratch clone with a planted floors.json edit must exit 1.
-  const dir = mkdtempSync(path.join(tmpdir(), 'vp-control-'));
-  execFileSync('git', ['clone', '-q', '--no-hardlinks', ROOT, dir]);
-  // Seed the scratch clone with the policy and a floors file so the base commit carries both.
-  for (const f of [
-    'scripts/fleet/policy.json',
-    'scripts/fleet/lib.mjs',
-    'tests/eval/jev/floors.json',
-  ]) {
-    mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
-    writeFileSync(path.join(dir, f), readFileSync(path.join(ROOT, f)));
-  }
-  execFileSync(
-    'git',
-    [
-      '-c',
-      'user.name=control',
-      '-c',
-      'user.email=control@example.invalid',
-      'add',
-      '-A',
-    ],
-    { cwd: dir }
-  );
-  execFileSync(
-    'git',
-    [
-      '-c',
-      'user.name=control',
-      '-c',
-      'user.email=control@example.invalid',
-      '-c',
-      'core.hooksPath=/dev/null',
-      'commit',
+  let dir;
+  try {
+    // Negative control: a scratch clone with a planted floors.json edit must exit 1.
+    dir = mkdtempSync(path.join(tmpdir(), 'vp-control-'));
+    execFileSync('git', [
+      'clone',
       '-q',
-      '--allow-empty',
-      '-m',
-      'control base',
-    ],
-    { cwd: dir }
-  );
-  const base = execFileSync('git', ['rev-parse', 'HEAD'], {
-    cwd: dir,
-    encoding: 'utf8',
-  }).trim();
-  execFileSync('git', ['checkout', '-q', '-b', 'feature/fleet-p0-control'], {
-    cwd: dir,
-  });
-  writeFileSync(
-    path.join(dir, 'tests/eval/jev/floors.json'),
-    '{"planted":true}\n'
-  );
-  execFileSync(
-    'git',
-    [
-      '-c',
-      'user.name=control',
-      '-c',
-      'user.email=control@example.invalid',
-      '-c',
-      'core.hooksPath=/dev/null',
-      'commit',
-      '-qam',
-      'planted protected edit',
-    ],
-    { cwd: dir }
-  );
-  const r = run(
-    process.execPath,
-    [
-      path.join(ROOT, 'scripts/fleet/verify-protected.mjs'),
-      '--base',
-      base,
-      '--head',
-      'HEAD',
-    ],
-    { cwd: dir }
-  );
-  return r.code === 1;
+      '--shared',
+      '--no-checkout',
+      ROOT,
+      dir,
+    ]);
+    execFileSync('git', ['checkout', '-q', 'HEAD', '--', '.'], { cwd: dir });
+    // Seed the scratch clone with the policy and a floors file so the base commit carries both.
+    for (const f of [
+      'scripts/fleet/policy.json',
+      'scripts/fleet/lib.mjs',
+      'tests/eval/jev/floors.json',
+    ]) {
+      mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+      writeFileSync(path.join(dir, f), readFileSync(path.join(ROOT, f)));
+    }
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=control',
+        '-c',
+        'user.email=control@example.invalid',
+        'add',
+        '-A',
+      ],
+      { cwd: dir }
+    );
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=control',
+        '-c',
+        'user.email=control@example.invalid',
+        '-c',
+        'core.hooksPath=/dev/null',
+        'commit',
+        '-q',
+        '--allow-empty',
+        '-m',
+        'control base',
+      ],
+      { cwd: dir }
+    );
+    const base = execFileSync('git', ['rev-parse', 'HEAD'], {
+      cwd: dir,
+      encoding: 'utf8',
+    }).trim();
+    execFileSync('git', ['checkout', '-q', '-b', 'feature/fleet-p0-control'], {
+      cwd: dir,
+    });
+    writeFileSync(
+      path.join(dir, 'tests/eval/jev/floors.json'),
+      '{"planted":true}\n'
+    );
+    execFileSync(
+      'git',
+      [
+        '-c',
+        'user.name=control',
+        '-c',
+        'user.email=control@example.invalid',
+        '-c',
+        'core.hooksPath=/dev/null',
+        'commit',
+        '-qam',
+        'planted protected edit',
+      ],
+      { cwd: dir }
+    );
+    const r = run(
+      process.execPath,
+      [
+        path.join(ROOT, 'scripts/fleet/verify-protected.mjs'),
+        '--base',
+        base,
+        '--head',
+        'HEAD',
+      ],
+      { cwd: dir }
+    );
+    return r.code === 1;
+  } finally {
+    if (dir) rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
