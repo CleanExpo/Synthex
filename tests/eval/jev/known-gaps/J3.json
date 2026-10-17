@@ -1,0 +1,131 @@
+{
+  "schema": "jev-known-gaps/1",
+  "gaps": {
+    "J3-GAP-P4-rest-rejects-machine-key": {
+      "cases": [
+        "J3-rest-*",
+        "J3-hybrid-orga-facebook-3-approve",
+        "J3-hybrid-orga-instagram-3-approve",
+        "J3-hybrid-orga-linkedin-3-approve",
+        "J3-hybrid-orga-tiktok-3-approve",
+        "J3-hybrid-orga-youtube-3-approve",
+        "J3-hybrid-orgb-facebook-3-approve",
+        "J3-hybrid-orgb-instagram-3-approve",
+        "J3-hybrid-orgb-linkedin-3-approve",
+        "J3-hybrid-orgb-tiktok-3-approve",
+        "J3-hybrid-orgb-youtube-3-approve",
+        "J3-hybrid-orga-facebook-4-publish",
+        "J3-hybrid-orga-instagram-4-publish",
+        "J3-hybrid-orga-linkedin-4-publish",
+        "J3-hybrid-orga-tiktok-4-publish",
+        "J3-hybrid-orga-youtube-4-publish",
+        "J3-hybrid-orgb-facebook-4-publish",
+        "J3-hybrid-orgb-instagram-4-publish",
+        "J3-hybrid-orgb-linkedin-4-publish",
+        "J3-hybrid-orgb-tiktok-4-publish",
+        "J3-hybrid-orgb-youtube-4-publish",
+        "J3-hybrid-orga-facebook-5-measure",
+        "J3-hybrid-orga-instagram-5-measure",
+        "J3-hybrid-orga-linkedin-5-measure",
+        "J3-hybrid-orga-tiktok-5-measure",
+        "J3-hybrid-orga-youtube-5-measure",
+        "J3-hybrid-orgb-facebook-5-measure",
+        "J3-hybrid-orgb-instagram-5-measure",
+        "J3-hybrid-orgb-linkedin-5-measure",
+        "J3-hybrid-orgb-tiktok-5-measure",
+        "J3-hybrid-orgb-youtube-5-measure"
+      ],
+      "note": "REST routes (marketing/orchestrate, content/generate, approvals/[id], publish-queue/release, analytics) accept only user tokens; a scoped McpApiKey bearer gets 401. Lands with the P4 machine principal (resolveAgentPrincipal)."
+    },
+    "J3-GAP-P4-mcp-brief-tool-absent": {
+      "cases": [
+        "J3-hybrid-orga-facebook-1-brief",
+        "J3-hybrid-orga-instagram-1-brief",
+        "J3-hybrid-orga-linkedin-1-brief",
+        "J3-hybrid-orga-tiktok-1-brief",
+        "J3-hybrid-orga-youtube-1-brief",
+        "J3-hybrid-orgb-facebook-1-brief",
+        "J3-hybrid-orgb-instagram-1-brief",
+        "J3-hybrid-orgb-linkedin-1-brief",
+        "J3-hybrid-orgb-tiktok-1-brief",
+        "J3-hybrid-orgb-youtube-1-brief",
+        "J3-mcp-orga-facebook-1-brief",
+        "J3-mcp-orga-instagram-1-brief",
+        "J3-mcp-orga-linkedin-1-brief",
+        "J3-mcp-orga-tiktok-1-brief",
+        "J3-mcp-orga-youtube-1-brief",
+        "J3-mcp-orgb-facebook-1-brief",
+        "J3-mcp-orgb-instagram-1-brief",
+        "J3-mcp-orgb-linkedin-1-brief",
+        "J3-mcp-orgb-tiktok-1-brief",
+        "J3-mcp-orgb-youtube-1-brief"
+      ],
+      "note": "No MCP tool creates a brief (tools/list for a creative/context/performance key has no *brief* tool); the brief route is REST-only and needs the P4 machine principal. The spec phase table does not name an MCP brief tool explicitly."
+    },
+    "J3-GAP-P7-mcp-approve-tool-absent": {
+      "cases": [
+        "J3-mcp-orga-facebook-3-approve",
+        "J3-mcp-orga-instagram-3-approve",
+        "J3-mcp-orga-linkedin-3-approve",
+        "J3-mcp-orga-tiktok-3-approve",
+        "J3-mcp-orga-youtube-3-approve",
+        "J3-mcp-orgb-facebook-3-approve",
+        "J3-mcp-orgb-instagram-3-approve",
+        "J3-mcp-orgb-linkedin-3-approve",
+        "J3-mcp-orgb-tiktok-3-approve",
+        "J3-mcp-orgb-youtube-3-approve"
+      ],
+      "note": "approvals_decide is machine-enforced absent (lib/services/ai/studio-tools/index.ts assertV1RiskInvariant); an approvals-scoped key sees only approvals_list_pending/approvals_get. Delegated approval lands in P7."
+    },
+    "J3-GAP-P7-mcp-publish-tool-absent-held": {
+      "cases": [
+        "J3-mcp-orga-facebook-4-publish",
+        "J3-mcp-orga-instagram-4-publish",
+        "J3-mcp-orga-linkedin-4-publish",
+        "J3-mcp-orga-tiktok-4-publish",
+        "J3-mcp-orga-youtube-4-publish",
+        "J3-mcp-orgb-facebook-4-publish",
+        "J3-mcp-orgb-instagram-4-publish",
+        "J3-mcp-orgb-linkedin-4-publish",
+        "J3-mcp-orgb-tiktok-4-publish",
+        "J3-mcp-orgb-youtube-4-publish"
+      ],
+      "note": "No publish tool registers over MCP (the load-time invariant throws on publish riskClass) and HOLD_FOR_REVIEW is true. Policy-approved publish to a stub lands in P7."
+    },
+    "J3-GAP-P7-receipt-run-id": {
+      "cases": [
+        "J3-hybrid-orga-facebook-2-content",
+        "J3-hybrid-orga-instagram-2-content",
+        "J3-hybrid-orga-linkedin-2-content",
+        "J3-hybrid-orga-tiktok-2-content",
+        "J3-hybrid-orga-youtube-2-content",
+        "J3-hybrid-orgb-facebook-2-content",
+        "J3-hybrid-orgb-instagram-2-content",
+        "J3-hybrid-orgb-linkedin-2-content",
+        "J3-hybrid-orgb-tiktok-2-content",
+        "J3-hybrid-orgb-youtube-2-content",
+        "J3-mcp-orga-facebook-2-content",
+        "J3-mcp-orga-instagram-2-content",
+        "J3-mcp-orga-linkedin-2-content",
+        "J3-mcp-orga-tiktok-2-content",
+        "J3-mcp-orga-youtube-2-content",
+        "J3-mcp-orgb-facebook-2-content",
+        "J3-mcp-orgb-instagram-2-content",
+        "J3-mcp-orgb-linkedin-2-content",
+        "J3-mcp-orgb-tiktok-2-content",
+        "J3-mcp-orgb-youtube-2-content",
+        "J3-mcp-orga-facebook-5-measure",
+        "J3-mcp-orga-instagram-5-measure",
+        "J3-mcp-orga-linkedin-5-measure",
+        "J3-mcp-orga-tiktok-5-measure",
+        "J3-mcp-orga-youtube-5-measure",
+        "J3-mcp-orgb-facebook-5-measure",
+        "J3-mcp-orgb-instagram-5-measure",
+        "J3-mcp-orgb-linkedin-5-measure",
+        "J3-mcp-orgb-tiktok-5-measure",
+        "J3-mcp-orgb-youtube-5-measure"
+      ],
+      "note": "draft_caption and performance_get_outcomes are reachable and return typed results, but neither the response nor any write carries the run id passed in _meta/X-Run-Id. One run id per receipt lands with P7 (M6) receipts."
+    }
+  }
+}
