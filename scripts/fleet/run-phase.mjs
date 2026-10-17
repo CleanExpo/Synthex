@@ -505,7 +505,14 @@ function review() {
           ],
           {
             timeout: 1800000,
-            env: model ? { PR_GATE_OPENROUTER_MODEL: model } : {},
+            env: model
+              ? {
+                  PR_GATE_OPENROUTER_MODEL: model,
+                  ...(pol.review.openrouter_paid_ok
+                    ? { PR_GATE_OPENROUTER_PAID_OK: '1' }
+                    : {}),
+                }
+              : {},
           }
         );
         if (r.code === 0 && existsSync(path.join(ROOT, out))) break;

@@ -46,11 +46,15 @@
     "never": ["cursor", "codex"],
     "minimax_via": "founder Mac mm-ask lane through room-cli mac run (key lives there only)",
     "openrouter_models": [
+      "moonshotai/kimi-k3",
+      "moonshotai/kimi-k2.5",
       "google/gemma-4-31b-it:free",
       "nvidia/nemotron-3-super-120b-a12b:free",
       "nvidia/nemotron-3-ultra-550b-a55b:free",
       "google/gemma-4-26b-a4b-it:free"
-    ]
+    ],
+    "openrouter_paid_ok": true,
+    "openrouter_note": "Founder 2026-10-17: \"OpenRouter Models Kimi for this project\"; paid Kimi allowed (A-21). MiniMax lane stays first and returns when its balance is topped up."
   },
   "protected_paths": [
     ".claude/settings*.json",
