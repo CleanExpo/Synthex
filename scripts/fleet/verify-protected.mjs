@@ -39,16 +39,22 @@ const opt = (k, d) => {
 };
 
 export function check(base, head = 'HEAD', cwd = ROOT) {
-  const pol = policy();
+  // The policy that decides what is protected comes from the trusted BASE ref, never from the
+  // change under test (Kimi review on PR #997: the PR's policy.json could shrink protected_paths).
+  // Only while the base has no policy (bootstrap) is the local one used.
+  const baseRaw = tryGit(['show', `${base}:scripts/fleet/policy.json`], {
+    cwd,
+  });
+  const policyAtBase = baseRaw !== null;
+  const pol = policyAtBase ? JSON.parse(baseRaw) : policy();
+  if (!pol.protected_paths.includes('scripts/fleet/policy.json'))
+    pol.protected_paths.push('scripts/fleet/policy.json'); // the policy file is protected whatever it says
   const findings = [];
   const files = changedFiles(base, head, cwd);
   const branch =
     tryGit(['rev-parse', '--abbrev-ref', head === 'HEAD' ? 'HEAD' : head], {
       cwd,
     }) || '';
-  const policyAtBase =
-    tryGit(['cat-file', '-e', `${base}:scripts/fleet/policy.json`], { cwd }) !==
-    null;
   const bootstrap = !policyAtBase && /^feature\/fleet-p-1-/.test(branch);
   const ledgerGlobs =
     pol.protected_exemptions.fleet_ledger_rows.map(globToRegExp);
