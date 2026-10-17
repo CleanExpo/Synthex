@@ -55,7 +55,8 @@ interface UpdateQuoteRequest {
 /**
  * GET /api/quotes/[id]
  * Get a specific quote by ID
- * Public quotes are accessible to all, private quotes require ownership
+ * Requires authentication; public quotes are readable by any signed-in user,
+ * private quotes only by their owner
  */
 export async function GET(
   request: NextRequest,
@@ -63,6 +64,17 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    const security = await APISecurityChecker.check(
+      request,
+      DEFAULT_POLICIES.AUTHENTICATED_READ
+    );
+    if (!security.allowed || !security.context?.userId) {
+      return NextResponse.json(
+        { success: false, error: security.error || 'Authentication required' },
+        { status: 401 }
+      );
+    }
 
     if (!id) {
       return NextResponse.json(
@@ -82,30 +94,17 @@ export async function GET(
       );
     }
 
-    // Check if quote is private - require ownership
-    if (!quote.isPublic) {
-      const security = await APISecurityChecker.check(
-        request,
-        DEFAULT_POLICIES.AUTHENTICATED_READ
+    // Private quotes require ownership — return 404 to avoid leaking existence.
+    // A null owner is treated as deny: a private quote with no owner must not
+    // be readable by an arbitrary authenticated caller.
+    if (
+      !quote.isPublic &&
+      (!quote.userId || quote.userId !== security.context.userId)
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Quote not found' },
+        { status: 404 }
       );
-      if (!security.allowed) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Authentication required for private quotes',
-          },
-          { status: 401 }
-        );
-      }
-      // Verify ownership for private quotes — return 404 to avoid leaking existence.
-      // A null owner is treated as deny: a private quote with no owner must not
-      // be readable by an arbitrary authenticated caller.
-      if (!quote.userId || quote.userId !== security.context?.userId) {
-        return NextResponse.json(
-          { success: false, error: 'Quote not found' },
-          { status: 404 }
-        );
-      }
     }
 
     // Check if quote has expired
