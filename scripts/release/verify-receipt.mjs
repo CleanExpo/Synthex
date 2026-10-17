@@ -194,7 +194,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       reviewed,
       reviewReport: opt('--report', null),
       gate,
-      humanActs: readJson(opt('--human-acts', '/dev/null'), []),
+      humanActs: opt('--human-acts') ? readJson(opt('--human-acts')) : [],
     });
     console.log(`wrote release-receipts/${phase}.json state=${r.state}`);
     process.exit(r.state === 'PASS' ? 0 : 1);
