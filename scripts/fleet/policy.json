@@ -61,6 +61,7 @@
     ".mcp.json",
     ".github/**",
     "scripts/fleet/**",
+    "scripts/jev/**",
     "scripts/release/**",
     "scripts/gate/**",
     "scripts/truth/**",
