@@ -43,7 +43,9 @@ jobs:
           git fetch --no-tags origin "$HEAD_SHA"
           git checkout -q "$HEAD_SHA"
           # branch name arrives through the environment, never substituted into shell source
-          git branch -f -- "$HEAD_REF" HEAD && git checkout -q -- "$HEAD_REF"
+          # point HEAD at a local branch of that name (symbolic-ref takes a full ref, so no
+          # option or pathspec parsing of the name; the worktree is already at HEAD_SHA)
+          git branch -f -- "$HEAD_REF" HEAD && git symbolic-ref HEAD "refs/heads/$HEAD_REF"
           # Run the verifier and policy from the trusted BASE, not from the PR under test; the PR's
           # own copy is used only while the base has none (bootstrap, exemption in the script).
           if git cat-file -e "$BASE_SHA:scripts/fleet/verify-protected.mjs" 2>/dev/null; then
