@@ -331,5 +331,13 @@
     "nightly_cron": "0 15 * * *",
     "weekly_cron": "0 16 * * 0",
     "timezone": "UTC"
+  },
+  "mac": {
+    "host": "Phills-Mac-mini.local",
+    "repo": "/Volumes/Mini Mini 2T Storage/code/Synthex",
+    "worktrees": "/Volumes/Mini Mini 2T Storage/worktrees/Synthex",
+    "tmp": "/Volumes/Mini Mini 2T Storage/hot/tmp/fleet",
+    "storage_env": "~/.config/ccw-external-storage.env",
+    "rule": "mac-mini-external-storage skill: no fleet file on the internal volume (founder, 2026-10-17)"
   }
 }

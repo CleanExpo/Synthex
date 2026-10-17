@@ -455,9 +455,11 @@ function review() {
       // branch is pushed before the review names the head (spec: push only after the review report).
       const bundle = path.join(os.tmpdir(), `review-${phase}.bundle`);
       run('git', ['bundle', 'create', bundle, `${base}..HEAD`]);
-      run('room-cli', ['mac', 'push', bundle, '/tmp'], { timeout: 600000 });
-      run('room-cli', ['mac', 'push', brief, '/tmp'], { timeout: 120000 });
-      const macCmd = `cd ~/Synthex && git fetch -q origin main && git fetch -q -f /tmp/${path.basename(bundle)} +${head}:refs/fleet/review-${phase} && rm -f /tmp/review-${phase}.json && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief /tmp/${path.basename(brief)} --base ${base} --head ${head} --repo ~/Synthex --out /tmp/review-${phase}.json --lane minimax; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat /tmp/review-${phase}.json 2>/dev/null`;
+      run('room-cli', ['mac', 'push', bundle, pol.mac.tmp], {
+        timeout: 600000,
+      });
+      run('room-cli', ['mac', 'push', brief, pol.mac.tmp], { timeout: 120000 });
+      const macCmd = `source ${pol.mac.storage_env} 2>/dev/null; cd "${pol.mac.repo}" && git fetch -q origin main && git fetch -q -f "${pol.mac.tmp}/${path.basename(bundle)}" +${head}:refs/fleet/review-${phase} && rm -f "${pol.mac.tmp}/review-${phase}.json" && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief "${pol.mac.tmp}/${path.basename(brief)}" --base ${base} --head ${head} --repo "${pol.mac.repo}" --out "${pol.mac.tmp}/review-${phase}.json" --lane minimax; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat "${pol.mac.tmp}/review-${phase}.json" 2>/dev/null`;
       const m = run('room-cli', ['mac', 'run', macCmd], { timeout: 1800000 });
       const body = m.stdout.includes('REPORT-BEGIN')
         ? m.stdout.slice(m.stdout.indexOf('REPORT-BEGIN') + 12).trim()
