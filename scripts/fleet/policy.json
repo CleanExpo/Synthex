@@ -32,14 +32,15 @@
     "files_per_builder": 8
   },
   "models": {
-    "builder": "claude-opus-5-5",
+    "builder": "claude-sonnet-5-5",
     "verifier": "claude-sonnet-5-5",
-    "reader": "claude-sonnet-5-5",
+    "reader": "claude-haiku-5-5",
     "screen": "claude-haiku-5-5",
     "judge_anthropic": "claude-sonnet-5-5",
     "judge_tiebreak": "claude-opus-5-5",
     "judge_non_anthropic_lane": "openrouter",
-    "excluded": ["claude-mythos-5-1", "managed-agents"]
+    "excluded": ["claude-mythos-5-1", "managed-agents"],
+    "builder_hard": "claude-opus-5-5"
   },
   "review": {
     "lanes_in_order": ["minimax", "openrouter", "gemini"],
@@ -339,5 +340,9 @@
     "tmp": "/Volumes/Mini Mini 2T Storage/hot/tmp/fleet",
     "storage_env": "~/.config/ccw-external-storage.env",
     "rule": "mac-mini-external-storage skill: no fleet file on the internal volume (founder, 2026-10-17)"
+  },
+  "usage": {
+    "plan": "Claude Max (founder)",
+    "note": "last 20 percent of the usage window on 2026-10-17: prefer Haiku for probes and reads, Sonnet for builds and verification, Opus only when a unit carries hard:true; one spawn per unit, no exploratory re-spawns; check room-cli automation list before adding runs"
   }
 }

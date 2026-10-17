@@ -66,3 +66,4 @@
 {"ts":"2026-10-17T06:45:33.773Z","kind":"start","phase":"P0","branch":"feature/fleet-p0-containment","step":"prepare","contract_locked":true,"policy":"cc01809336361fbbb2c63bdb7aae47ecad911a750d0e86f025f67c0ec46e9fcf"}
 {"ts":"2026-10-17T06:47:19.520Z","kind":"start","phase":"P0","branch":"feature/fleet-p0-containment","step":"prepare","contract_locked":true,"policy":"cc01809336361fbbb2c63bdb7aae47ecad911a750d0e86f025f67c0ec46e9fcf"}
 {"ts":"2026-10-17T06:47:24.043Z","kind":"policy-hash","previous":"cc01809336361fbbb2c63bdb7aae47ecad911a750d0e86f025f67c0ec46e9fcf","sha256":"115a187497a8bd16225170a0ed2264806d23709fcbd5f39438699e6efdb902dd","source":"check-bootstrap --record"}
+{"ts":"2026-10-17T06:47:48.812Z","kind":"policy-hash","previous":"115a187497a8bd16225170a0ed2264806d23709fcbd5f39438699e6efdb902dd","sha256":"95a1550a3bca161b606880e9eda806bf9aa3013646527959405ac4a6a81df66e","source":"check-bootstrap --record"}

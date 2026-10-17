@@ -41,7 +41,10 @@ export function spawnUnit({ phase, unit, phaseBranch, model }) {
       '--provider',
       'claude-code',
       '--model',
-      model || pol.models.builder,
+      model ||
+        (unit.hard
+          ? pol.models.builder_hard || pol.models.builder
+          : pol.models.builder),
       '--title',
       `fleet ${phase} ${unit.id}`,
       '--prompt',
