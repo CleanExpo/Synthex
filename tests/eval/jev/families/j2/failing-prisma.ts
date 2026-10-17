@@ -72,6 +72,24 @@ function isAuthSelect(args: unknown, fields: Set<string>): boolean {
   );
 }
 
+/**
+ * Role for the current case (set by the test through globalThis, like the
+ * reject counter): owner swaps in the configured owner email, multiBusinessOwner
+ * sets the flag. Default is a plain org-A member.
+ */
+export function setJ2Role(role: string, email: string): void {
+  Object.assign(globalThis, { __j2Role: role, __j2Email: email });
+}
+
+function userRow(): unknown {
+  const g = globalThis as { __j2Role?: string; __j2Email?: string };
+  return {
+    ...SYNTHETIC_USER,
+    email: g.__j2Email ?? SYNTHETIC_USER.email,
+    isMultiBusinessOwner: g.__j2Role === 'multiBusinessOwner',
+  };
+}
+
 /** Rejected data-layer calls so far; global because each route loads its own mock copy. */
 export function dbRejects(): number {
   return (globalThis as { __j2DbRejects?: number }).__j2DbRejects ?? 0;
@@ -93,7 +111,7 @@ function model(name: string): unknown {
         if (identity && SINGLE_ROW.has(String(method)))
           return (args?: unknown) =>
             isAuthSelect(args, identity.fields)
-              ? Promise.resolve(identity.row)
+              ? Promise.resolve(name === 'user' ? userRow() : identity.row)
               : reject();
         return reject;
       },

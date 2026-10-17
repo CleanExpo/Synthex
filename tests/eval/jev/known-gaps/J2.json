@@ -1,6 +1,10 @@
 {
   "schema": "jev-known-gaps/1",
   "gaps": {
+    "J2-GAP-admin-credentials-empty-on-error": {
+      "cases": ["J2-admin.platform-credentials"],
+      "note": "GET /api/admin/platform-credentials catches any platformOAuthCredential.findMany failure (not only a missing table) and returns 200 {credentials:[]}, so an outage reads as \"no credentials stored\"."
+    },
     "J2-GAP-error-under-2xx": {
       "cases": ["J2-billing.dunning-state", "J2-invoices"],
       "note": "The failed or unconfigured read is reported in the body (error field) under HTTP 200, and dunning-state also asserts state:\"current\". Needs a 5xx/503 or available:false."

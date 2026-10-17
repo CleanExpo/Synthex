@@ -20,7 +20,14 @@ import { invokeRoute, type InvokeResult } from '../runner/route-harness';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { judgeRead } from './j2/detector';
 import { J2_CASE_COUNT, selectRoutes, type J2Route } from './j2/select';
-import { J2_ORG_ID, J2_USER_ID, dbRejects } from './j2/failing-prisma';
+import {
+  J2_DB_ERROR,
+  J2_ORG_ID,
+  J2_USER_ID,
+  dbRejects,
+  setJ2Role,
+} from './j2/failing-prisma';
+import { J2_FIXTURES, ownerEmail, type J2Fixture } from './j2/fixtures';
 
 jest.mock('@/lib/prisma', () =>
   require('./j2/failing-prisma').failingPrismaModule()
@@ -33,10 +40,6 @@ const CONTROL_DIR = 'tests/eval/jev/out/j2-controls';
 const results: JevResult[] = [];
 afterAll(() => recordResults(FAMILY, results));
 
-let token = '';
-beforeAll(() => {
-  token = generateToken({ userId: J2_USER_ID, email: 'member@org-a.test' });
-});
 beforeEach(() => {
   for (const level of ['log', 'info', 'warn', 'error', 'debug'] as const)
     jest.spyOn(console, level).mockImplementation(() => undefined);
@@ -55,7 +58,11 @@ function paramsFor(file: string): Record<string, string | string[]> {
   return params;
 }
 
-function urlFor(file: string, params: Record<string, string | string[]>) {
+function urlFor(
+  file: string,
+  params: Record<string, string | string[]>,
+  query: Record<string, string> = {}
+) {
   const route = path
     .dirname(file)
     .replace(/^app/, '')
@@ -68,11 +75,23 @@ function urlFor(file: string, params: Record<string, string | string[]>) {
       return Array.isArray(v) ? v.join('/') : v;
     })
     .join('/');
-  return `http://localhost:3000${route.startsWith('/') ? '' : '/'}${route}?organizationId=${J2_ORG_ID}&orgId=${J2_ORG_ID}`;
+  const search = new URLSearchParams({
+    organizationId: J2_ORG_ID,
+    orgId: J2_ORG_ID,
+    ...query,
+  });
+  return `http://localhost:3000${route.startsWith('/') ? '' : '/'}${route}?${search}`;
 }
 
-async function invokeRead(file: string): Promise<InvokeResult> {
-  const params = paramsFor(file);
+async function invokeRead(
+  file: string,
+  fixture: J2Fixture = {}
+): Promise<InvokeResult> {
+  const params = { ...paramsFor(file), ...fixture.params };
+  const role = fixture.role ?? 'member';
+  const email = role === 'owner' ? ownerEmail() : 'member@org-a.test';
+  setJ2Role(role, email);
+  const token = generateToken({ userId: J2_USER_ID, email });
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<InvokeResult>(resolve => {
     timer = setTimeout(
@@ -90,7 +109,7 @@ async function invokeRead(file: string): Promise<InvokeResult> {
       invokeRoute(file, 'GET', {
         headers: { authorization: `Bearer ${token}` },
         params,
-        url: urlFor(file, params),
+        url: urlFor(file, params, fixture.query),
       }),
       timeout,
     ]);
@@ -99,12 +118,20 @@ async function invokeRead(file: string): Promise<InvokeResult> {
   }
 }
 
+const UNHANDLED_DATA_THROW = new RegExp(
+  `^handler threw: [^:]*: (${J2_DB_ERROR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}|NOOP_CLIENT_NOT_MIGRATED:)`
+);
+
 /** The one judgement every case and control goes through. */
 function judge(
   r: InvokeResult
 ):
   | { verdict: 'honest' | 'dishonest'; detail: string }
   | { inconclusive: string } {
+  // Next.js turns an unhandled handler throw into HTTP 500: honest, but only
+  // when the throw is the planted data failure or the noop-client stub.
+  if (r.status === null && UNHANDLED_DATA_THROW.test(r.error ?? ''))
+    return { verdict: 'honest', detail: 'unhandled throw -> 500, honest' };
   if (r.status === null)
     return { inconclusive: r.error ?? 'no response status' };
   if (r.error && r.status >= 200 && r.status <= 299)
@@ -125,7 +152,7 @@ describe('J2 cases', () => {
     '%s',
     async (_id, r) => {
       const before = dbRejects();
-      const res = await invokeRead(r.file);
+      const res = await invokeRead(r.file, J2_FIXTURES[r.file]);
       const reached = dbRejects() > before;
       let j = judge(res);
       // A 400/401/403 before any data call means the failing read never ran.
@@ -135,7 +162,7 @@ describe('J2 cases', () => {
         [400, 401, 403].includes(res.status)
       )
         j = {
-          inconclusive: `status ${res.status} before any data-layer call (read not exercised)`,
+          inconclusive: `status ${res.status} before any data-layer call (read not exercised${J2_FIXTURES[r.file] ? ' even with fixture' : ''})`,
         };
       const route = r.route;
       if ('inconclusive' in j) {
@@ -170,6 +197,10 @@ const PLANTS: Record<string, string> = {
   'swallow-empty-array': `
     try { return NextResponse.json(await prisma.post.findMany({ where: { organizationId: 'org-A' } })); }
     catch { return NextResponse.json([]); }`,
+  'catch-planted-throw-empty-array': `
+    const load = async () => prisma.post.findMany({ where: { organizationId: 'org-A' } });
+    try { return NextResponse.json(await load()); }
+    catch (err) { if (!String(err).includes('J2 planted')) throw err; return NextResponse.json([]); }`,
   'swallow-data-null': `
     try { return NextResponse.json({ data: await prisma.post.findFirst({ where: { organizationId: 'org-A' } }) }); }
     catch { return NextResponse.json({ data: null }); }`,
@@ -219,5 +250,26 @@ describe('J2 controls', () => {
   it('honest twin (503 with error body) is not flagged', async () => {
     const j = judge(await invokeRead(plant('honest-503', HONEST)));
     expect('verdict' in j && j.verdict).toBe('honest');
+  });
+
+  it('unhandled planted throw is honest; an unrelated throw stays inconclusive', async () => {
+    const thrown = judge(
+      await invokeRead(
+        plant(
+          'unhandled-throw',
+          `\n    return NextResponse.json(await prisma.post.findMany());`
+        )
+      )
+    );
+    expect(thrown).toEqual({
+      verdict: 'honest',
+      detail: 'unhandled throw -> 500, honest',
+    });
+    const unrelated = judge(
+      await invokeRead(
+        plant('unrelated-throw', `\n    throw new TypeError('x is undefined');`)
+      )
+    );
+    expect('inconclusive' in unrelated).toBe(true);
   });
 });
