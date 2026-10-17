@@ -1,0 +1,335 @@
+{
+  "schema": "synthex-fleet-policy/1",
+  "substrate": "cloudroom",
+  "spec": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md",
+  "decisions": "DECISIONS.md",
+  "node_floor": "22.0.0",
+  "committer": {
+    "name": "Synthex Fleet",
+    "email": "fleet@synthex.local",
+    "trailer": "Fleet-Role"
+  },
+  "branch_pattern": "^feature/fleet-p(-1|[0-9]{1,2})-[a-z0-9-]+$",
+  "receipts_dir": "release-receipts",
+  "halt_dir": "release-receipts/halt",
+  "ledger": "release-receipts/ledger/fleet.jsonl",
+  "jev_ledger": "tests/eval/jev/ledger.jsonl",
+  "backlog_markers": {
+    "begin": "<!-- fleet:begin -->",
+    "end": "<!-- fleet:end -->"
+  },
+  "ceilings_usd": {
+    "jev_daily": 5.0,
+    "jev_abort_line": 4.75,
+    "fleet_daily": 25.0,
+    "fleet_abort_line": 20.0,
+    "per_run": 10.0
+  },
+  "fanout": {
+    "concurrency": 8,
+    "attempts_per_unit": 2,
+    "max_units_per_phase": 64,
+    "files_per_builder": 8
+  },
+  "models": {
+    "builder": "claude-opus-5-5",
+    "verifier": "claude-sonnet-5-5",
+    "reader": "claude-sonnet-5-5",
+    "screen": "claude-haiku-5-5",
+    "judge_anthropic": "claude-sonnet-5-5",
+    "judge_tiebreak": "claude-opus-5-5",
+    "judge_non_anthropic_lane": "openrouter",
+    "excluded": ["claude-mythos-5-1", "managed-agents"]
+  },
+  "review": {
+    "lanes_in_order": ["minimax", "openrouter", "gemini"],
+    "never": ["cursor", "codex"],
+    "minimax_via": "founder Mac mm-ask lane through room-cli mac run (key lives there only)",
+    "openrouter_models": [
+      "moonshotai/kimi-k2.5",
+      "moonshotai/kimi-k3",
+      "google/gemma-4-31b-it:free",
+      "nvidia/nemotron-3-super-120b-a12b:free",
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "google/gemma-4-26b-a4b-it:free"
+    ],
+    "openrouter_paid_ok": true,
+    "openrouter_note": "Founder 2026-10-17: \"OpenRouter Models Kimi for this project\"; paid Kimi allowed (A-21). MiniMax lane stays first and returns when its balance is topped up."
+  },
+  "protected_paths": [
+    ".claude/settings*.json",
+    ".claude/hooks/**",
+    ".claude/done/**",
+    ".claude/rules/**",
+    "CLAUDE.md",
+    ".mcp.json",
+    ".github/**",
+    "scripts/fleet/**",
+    "scripts/jev/**",
+    "scripts/release/**",
+    "scripts/gate/**",
+    "scripts/truth/**",
+    "scripts/jev/**",
+    "scripts/api/exempt-routes.json",
+    "scripts/check-repo-controls.mjs",
+    "release-receipts/**",
+    "tests/eval/jev/floors.json",
+    "vercel.json",
+    "prisma/migrations/**"
+  ],
+  "protected_exemptions": {
+    "own_phase_receipt": "release-receipts/P<n>.json validated by scripts/release/verify-receipt.mjs",
+    "fleet_ledger_rows": [
+      "release-receipts/ledger/**",
+      "release-receipts/manifests/**",
+      "release-receipts/halt/STOP-*"
+    ],
+    "bootstrap": "branch feature/fleet-p-1-* while scripts/fleet/policy.json is absent at the base commit",
+    "orchestrator_protected_change": "every commit touching the file carries trailers Fleet-Role: orchestrator and Protected-Change: <reason>, on a fleet branch; checked by the independent review bound to the head, the CI jobs and merge-phase.mjs (DECISIONS.md A-12)"
+  },
+  "forbidden_commands": [
+    "git push --force",
+    "git push -f",
+    "--no-verify",
+    "gh pr merge",
+    "git reset --hard",
+    "git branch -D",
+    "git push origin --delete",
+    "PR_RELEASE_GATE_HUMAN_OVERRIDE",
+    "prisma migrate deploy",
+    "prisma db push",
+    "vercel --prod",
+    "vercel deploy",
+    "npm install ",
+    "npm i ",
+    "pnpm add",
+    "yarn add",
+    "rm -rf /",
+    "curl -X POST"
+  ],
+  "denied_mcp_tool_classes": [
+    "deploy",
+    "promote",
+    "apply_migration",
+    "execute_sql",
+    "merge_branch",
+    "reset_branch",
+    "create_or_update_file",
+    "send_message",
+    "publish",
+    "post"
+  ],
+  "roles": {
+    "orchestrator": {
+      "may": [
+        "read",
+        "spawn",
+        "integrate",
+        "run-gate",
+        "review",
+        "push",
+        "open-pr",
+        "merge-via-merge-phase"
+      ],
+      "may_not": [
+        "edit-product-source-outside-bootstrap",
+        "--no-verify",
+        "force-push",
+        "gh pr merge (direct)"
+      ]
+    },
+    "reader": {
+      "may": ["read-repo", "read-web-allowlist", "return-json"],
+      "may_not": ["write", "shell-mutation", "spend", "publish"]
+    },
+    "builder": {
+      "may": ["edit-in-own-sandbox", "npm-scripts", "tests"],
+      "may_not": [
+        "install",
+        "git push",
+        "gh",
+        "protected-paths",
+        "secrets",
+        "network-beyond-registry"
+      ]
+    },
+    "verifier": {
+      "may": ["read", "run-dod-fresh-context", "return-receipt-json"],
+      "may_not": ["edit-source", "edit-contracts", "write-receipts-dir"]
+    },
+    "judge": {
+      "may": ["read-case-and-output", "return-schema-verdict"],
+      "may_not": ["tools", "see-generator-identity"]
+    },
+    "releaser": {
+      "may": [
+        "release-gate",
+        "push-feature-fleet-branch",
+        "open-one-pr",
+        "merge-via-merge-phase"
+      ],
+      "may_not": [
+        "direct gh pr merge",
+        "force-push",
+        "--no-verify",
+        "override-variable"
+      ]
+    },
+    "scheduler": {
+      "may": ["cloudroom-automation-start", "read-ledgers"],
+      "may_not": ["edit", "write-connector", "spend-outside-wrapper"]
+    }
+  },
+  "phases": [
+    {
+      "id": "P-1",
+      "slug": "bootstrap",
+      "closes": "every protected file, policy, contracts, CI jobs",
+      "dod": [
+        "node scripts/fleet/check-bootstrap.mjs",
+        "node scripts/fleet/gen-contracts.mjs --check"
+      ],
+      "rollback": "revert the one pull request; delete the three Cloudroom automations"
+    },
+    {
+      "id": "P0",
+      "slug": "containment",
+      "closes": "M8, containment for every later phase",
+      "dod": [
+        "node scripts/fleet/selftest.mjs",
+        "node scripts/fleet/provision.mjs --dry-run",
+        "node scripts/fleet/verify-protected.mjs --base origin/main",
+        "node scripts/check-repo-controls.mjs"
+      ],
+      "rollback": "revert; the orchestrator refuses to start without the policy hash"
+    },
+    {
+      "id": "P1",
+      "slug": "jev-core",
+      "closes": "M9 in part, baseline measurement",
+      "dod": [
+        "npm run jev:det",
+        "node scripts/jev/check-ratchet.mjs --base origin/main --proposal proposals/P1/tests/eval/jev/floors.json"
+      ],
+      "rollback": "revert the PR"
+    },
+    {
+      "id": "P2",
+      "slug": "truth",
+      "closes": "M1, M11 in part",
+      "dod": [
+        "node scripts/truth/check-noop.mjs --base origin/main",
+        "npm run jev:det -- --family J2",
+        "npm run type-check",
+        "npm run lint",
+        "npm test"
+      ],
+      "rollback": "revert per batch commit"
+    },
+    {
+      "id": "P3",
+      "slug": "contract",
+      "closes": "M3, M7 in part",
+      "dod": [
+        "node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json",
+        "npm run jev:det -- --family J1"
+      ],
+      "rollback": "revert; the stale spec file returns"
+    },
+    {
+      "id": "P4",
+      "slug": "machine-principal",
+      "closes": "M2 in part",
+      "dod": [
+        "npm run jev:det -- --family J1",
+        "npm run jev:det -- --family J11",
+        "node scripts/fleet/assert-absent.mjs --pattern SYNTHEX_MCP_LEGACY_KEYS --paths app lib"
+      ],
+      "rollback": "revert; REST goes back to user tokens only"
+    },
+    {
+      "id": "P5",
+      "slug": "receipts-quotes",
+      "closes": "M7, M10, M11",
+      "dod": [
+        "npm run jev:det -- --family J8",
+        "npm run jev:det -- --family J9",
+        "node scripts/mcp/check-tools.mjs",
+        "node scripts/fleet/check-governor-mode.mjs"
+      ],
+      "rollback": "revert; quote routes are additive"
+    },
+    {
+      "id": "P6",
+      "slug": "outcomes",
+      "closes": "M4, M5",
+      "dod": [
+        "npm run jev:det -- --family J7",
+        "node scripts/mcp/call-tool.mjs --tool performance_get_outcomes --org synthetic --expect-count 4"
+      ],
+      "rollback": "revert; webhook route removed"
+    },
+    {
+      "id": "P7",
+      "slug": "delegated-publish",
+      "closes": "M6",
+      "dod": [
+        "npm run jev:det -- --family J8",
+        "node scripts/gate/check-held.mjs",
+        "npm run jev:det -- --family J3"
+      ],
+      "rollback": "revert; production never left the hold"
+    },
+    {
+      "id": "P8",
+      "slug": "content-image-quality",
+      "closes": "M9, M12 in part",
+      "dod": [
+        "npm run jev:judged -- --budget 4.75",
+        "npm run jev:det -- --family J10",
+        "node scripts/images/check-escape-hatch.mjs"
+      ],
+      "rollback": "revert; judged cases advisory until floors exist"
+    },
+    {
+      "id": "P9",
+      "slug": "drills-soak",
+      "closes": "finish-line evidence, governor flip check",
+      "dod": [
+        "node scripts/fleet/drill.mjs --all",
+        "node scripts/fleet/check-soak.mjs --days 14",
+        "node scripts/fleet/check-governor-mode.mjs",
+        "node scripts/fleet/check-ledgers.mjs --days 14",
+        "node scripts/release/verify-waterline.mjs"
+      ],
+      "rollback": "none needed, read-only"
+    },
+    {
+      "id": "P10",
+      "slug": "billing",
+      "closes": "FD-4: ready for payments (Stripe test mode)",
+      "dod": [
+        "npm run jev:det -- --family J13",
+        "node scripts/billing/check-test-mode.mjs",
+        "npm run type-check",
+        "npm run lint",
+        "npm test"
+      ],
+      "rollback": "revert; live keys never set"
+    }
+  ],
+  "tracked_env_allow": {
+    "files": [".env.test"],
+    "condition": "file holds only test placeholders; scripts/fleet/secret-scan.mjs must pass on it"
+  },
+  "ledger_branch": "fleet-ledger",
+  "scheduler": {
+    "nightly": "fleet-nightly",
+    "weekly": "fleet-weekly",
+    "phase_advance": "fleet-phase-advance",
+    "phase_advance_cron": "*/30 * * * *",
+    "nightly_cron": "0 15 * * *",
+    "weekly_cron": "0 16 * * 0",
+    "timezone": "UTC"
+  }
+}

@@ -1,0 +1,29 @@
+name: JEV Ratchet
+
+# Fails any diff that lowers a floor in tests/eval/jev/floors.json or deletes a case file
+# without a tombstone entry. Reads a P1 proposal overlay when present (rule B2).
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  ratchet:
+    name: JEV ratchet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: |
+          git fetch --no-tags origin "${{ github.event.pull_request.base.sha }}"
+          PROP=""
+          if [ -f proposals/P1/tests/eval/jev/floors.json ]; then PROP="--proposal proposals/P1/tests/eval/jev/floors.json"; fi
+          node scripts/jev/check-ratchet.mjs --base "${{ github.event.pull_request.base.sha }}" --head HEAD $PROP

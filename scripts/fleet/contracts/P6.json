@@ -1,0 +1,29 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P6",
+  "slug": "outcomes",
+  "closes": "M4, M5",
+  "rollback": "revert; webhook route removed",
+  "branch": "feature/fleet-p6-outcomes",
+  "criteria": [
+    {
+      "id": "P6-C1",
+      "statement": "npm run jev:det -- --family J7 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J7",
+      "timeout": 3600
+    },
+    {
+      "id": "P6-C2",
+      "statement": "node scripts/mcp/call-tool.mjs --tool performance_get_outcomes --org synthetic --expect-count 4 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/mcp/call-tool.mjs --tool performance_get_outcomes --org synthetic --expect-count 4",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

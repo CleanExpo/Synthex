@@ -1,0 +1,35 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P8",
+  "slug": "content-image-quality",
+  "closes": "M9, M12 in part",
+  "rollback": "revert; judged cases advisory until floors exist",
+  "branch": "feature/fleet-p8-content-image-quality",
+  "criteria": [
+    {
+      "id": "P8-C1",
+      "statement": "npm run jev:judged -- --budget 4.75 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:judged -- --budget 4.75",
+      "timeout": 3600
+    },
+    {
+      "id": "P8-C2",
+      "statement": "npm run jev:det -- --family J10 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J10",
+      "timeout": 3600
+    },
+    {
+      "id": "P8-C3",
+      "statement": "node scripts/images/check-escape-hatch.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/images/check-escape-hatch.mjs",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

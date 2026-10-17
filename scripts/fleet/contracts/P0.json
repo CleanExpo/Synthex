@@ -1,0 +1,41 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P0",
+  "slug": "containment",
+  "closes": "M8, containment for every later phase",
+  "rollback": "revert; the orchestrator refuses to start without the policy hash",
+  "branch": "feature/fleet-p0-containment",
+  "criteria": [
+    {
+      "id": "P0-C1",
+      "statement": "node scripts/fleet/selftest.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/selftest.mjs",
+      "timeout": 3600
+    },
+    {
+      "id": "P0-C2",
+      "statement": "node scripts/fleet/provision.mjs --dry-run exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/provision.mjs --dry-run",
+      "timeout": 3600
+    },
+    {
+      "id": "P0-C3",
+      "statement": "node scripts/fleet/verify-protected.mjs --base origin/main exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "timeout": 3600
+    },
+    {
+      "id": "P0-C4",
+      "statement": "node scripts/check-repo-controls.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/check-repo-controls.mjs",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

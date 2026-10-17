@@ -1,0 +1,29 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P3",
+  "slug": "contract",
+  "closes": "M3, M7 in part",
+  "rollback": "revert; the stale spec file returns",
+  "branch": "feature/fleet-p3-contract",
+  "criteria": [
+    {
+      "id": "P3-C1",
+      "statement": "node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json",
+      "timeout": 3600
+    },
+    {
+      "id": "P3-C2",
+      "statement": "npm run jev:det -- --family J1 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J1",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P4",
+  "slug": "machine-principal",
+  "closes": "M2 in part",
+  "rollback": "revert; REST goes back to user tokens only",
+  "branch": "feature/fleet-p4-machine-principal",
+  "criteria": [
+    {
+      "id": "P4-C1",
+      "statement": "npm run jev:det -- --family J1 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J1",
+      "timeout": 3600
+    },
+    {
+      "id": "P4-C2",
+      "statement": "npm run jev:det -- --family J11 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J11",
+      "timeout": 3600
+    },
+    {
+      "id": "P4-C3",
+      "statement": "node scripts/fleet/assert-absent.mjs --pattern SYNTHEX_MCP_LEGACY_KEYS --paths app lib exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/assert-absent.mjs --pattern SYNTHEX_MCP_LEGACY_KEYS --paths app lib",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "jev-floors/1",
+  "measured_at": null,
+  "note": "zero-valued bootstrap floors; the first measured floors arrive as proposals/P1/tests/eval/jev/floors.json (rule B2)",
+  "families": {}
+}

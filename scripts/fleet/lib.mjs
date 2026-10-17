@@ -1,0 +1,243 @@
+#!/usr/bin/env node
+/**
+ * scripts/fleet/lib.mjs — shared helpers for the Synthex fleet (protected path).
+ *
+ * Rule 5 of the spec: four states, never three. Every result is PASS, FAIL,
+ * INCONCLUSIVE (could not run) or DISABLED (lane or credential missing, run
+ * finished without it). INCONCLUSIVE never counts as a pass.
+ */
+import { execFileSync, spawnSync } from 'node:child_process';
+import {
+  readFileSync,
+  writeFileSync,
+  existsSync,
+  appendFileSync,
+  mkdirSync,
+} from 'node:fs';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+export const STATES = Object.freeze([
+  'PASS',
+  'FAIL',
+  'INCONCLUSIVE',
+  'DISABLED',
+]);
+export const ROOT = findRoot();
+
+function findRoot() {
+  let d = process.cwd();
+  for (let i = 0; i < 8; i++) {
+    if (
+      existsSync(path.join(d, 'scripts/fleet/policy.json')) &&
+      existsSync(path.join(d, 'package.json'))
+    )
+      return d;
+    const p = path.dirname(d);
+    if (p === d) break;
+    d = p;
+  }
+  return process.cwd();
+}
+
+export function policy() {
+  return JSON.parse(
+    readFileSync(path.join(ROOT, 'scripts/fleet/policy.json'), 'utf8')
+  );
+}
+export function policyHash() {
+  return sha256(readFileSync(path.join(ROOT, 'scripts/fleet/policy.json')));
+}
+export function sha256(buf) {
+  return createHash('sha256').update(buf).digest('hex');
+}
+export function readJson(p, fallback) {
+  const f = path.isAbsolute(p) ? p : path.join(ROOT, p);
+  if (!existsSync(f)) {
+    if (fallback !== undefined) return fallback;
+    throw new Error(`missing ${p}`);
+  }
+  return JSON.parse(readFileSync(f, 'utf8'));
+}
+export function writeJson(p, obj) {
+  const f = path.isAbsolute(p) ? p : path.join(ROOT, p);
+  mkdirSync(path.dirname(f), { recursive: true });
+  writeFileSync(f, JSON.stringify(obj, null, 2) + '\n');
+}
+export function git(args, opts = {}) {
+  return execFileSync('git', args, {
+    cwd: opts.cwd || ROOT,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  }).trim();
+}
+export function tryGit(args, opts = {}) {
+  try {
+    return git(args, opts);
+  } catch (e) {
+    return null;
+  }
+}
+export function run(cmd, args, opts = {}) {
+  const r = spawnSync(cmd, args, {
+    cwd: opts.cwd || ROOT,
+    encoding: 'utf8',
+    env: { ...process.env, ...(opts.env || {}) },
+    timeout: opts.timeout,
+    maxBuffer: 64 * 1024 * 1024,
+    shell: false,
+  });
+  return {
+    code: r.status === null ? 124 : r.status,
+    stdout: r.stdout || '',
+    stderr: r.stderr || '',
+    signal: r.signal,
+  };
+}
+export function sh(cmdline, opts = {}) {
+  const r = spawnSync('bash', ['-lc', cmdline], {
+    cwd: opts.cwd || ROOT,
+    encoding: 'utf8',
+    env: { ...process.env, ...(opts.env || {}) },
+    timeout: opts.timeout,
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return {
+    code: r.status === null ? 124 : r.status,
+    stdout: r.stdout || '',
+    stderr: r.stderr || '',
+  };
+}
+
+/** Minimal glob: ** matches any path segment run, * matches within a segment. */
+export function globToRegExp(glob) {
+  let re = '^';
+  for (let i = 0; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === '*') {
+      if (glob[i + 1] === '*') {
+        i++;
+        if (glob[i + 1] === '/') {
+          i++;
+          re += '(?:.*/)?';
+        } else re += '.*';
+      } else re += '[^/]*';
+    } else if ('.+?^${}()|[]\\'.includes(c)) re += '\\' + c;
+    else re += c;
+  }
+  return new RegExp(re + '$');
+}
+export function isProtected(file, pol = policy()) {
+  return pol.protected_paths.some(g => globToRegExp(g).test(file));
+}
+export function changedFiles(base, head = 'HEAD', cwd = ROOT) {
+  const out =
+    tryGit(['diff', '--name-only', `${base}...${head}`], { cwd }) ??
+    git(['diff', '--name-only', base, head], { cwd });
+  return out ? out.split('\n').filter(Boolean) : [];
+}
+export function commitTrailers(sha, cwd = ROOT) {
+  const body = git(['show', '-s', '--format=%B', sha], { cwd });
+  const t = {};
+  for (const line of body.split('\n')) {
+    const m = /^([A-Za-z-]+):\s*(.+)$/.exec(line.trim());
+    if (m) t[m[1]] = m[2];
+  }
+  return t;
+}
+export function isFleetCommit(sha, pol = policy(), cwd = ROOT) {
+  const email = git(['show', '-s', '--format=%ce', sha], { cwd });
+  const t = commitTrailers(sha, cwd);
+  return email === pol.committer.email || Boolean(t[pol.committer.trailer]);
+}
+export function utcDate(d = new Date()) {
+  return d.toISOString().slice(0, 10);
+}
+export function ledgerAppend(row, file) {
+  const pol = policy();
+  const f = path.join(ROOT, file || pol.ledger);
+  mkdirSync(path.dirname(f), { recursive: true });
+  appendFileSync(
+    f,
+    JSON.stringify({ ts: new Date().toISOString(), ...row }) + '\n'
+  );
+}
+export function ledgerRows(file) {
+  const pol = policy();
+  const rel = file || pol.ledger;
+  const f = path.join(ROOT, rel);
+  const parse = txt =>
+    txt
+      .split('\n')
+      .filter(Boolean)
+      .map(l => {
+        try {
+          return JSON.parse(l);
+        } catch {
+          return { kind: 'CORRUPT', raw: l };
+        }
+      });
+  const local = existsSync(f) ? parse(readFileSync(f, 'utf8')) : [];
+  // Rows written by scheduled runs live on the unprotected branch fleet-ledger (see ledger-push.mjs).
+  const remote = tryGit([
+    'show',
+    `origin/${pol.ledger_branch || 'fleet-ledger'}:${rel}`,
+  ]);
+  const rows = remote ? [...parse(remote), ...local] : local;
+  const seen = new Set();
+  return rows
+    .filter(r => {
+      const k = JSON.stringify(r);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    })
+    .sort((x, y) => String(x.ts).localeCompare(String(y.ts)));
+}
+export function haltState() {
+  const pol = policy();
+  const dir = path.join(ROOT, pol.halt_dir);
+  const security = existsSync(path.join(dir, 'STOP'));
+  const daily = existsSync(path.join(dir, `STOP-${utcDate()}`));
+  return { security, daily, halted: security || daily };
+}
+export function assertState(s) {
+  if (!STATES.includes(s)) throw new Error(`fifth state rejected: ${s}`);
+  return s;
+}
+/** Print one PASS/FAIL/INCONCLUSIVE/DISABLED line per item, return overall exit code. */
+export function report(name, items) {
+  let fail = 0,
+    inc = 0,
+    dis = 0;
+  for (const it of items) {
+    assertState(it.state);
+    console.log(
+      `${it.state.padEnd(12)} ${name}: ${it.id} — ${it.text}${it.detail ? ' [' + String(it.detail).replace(/\s+/g, ' ').slice(0, 200) + ']' : ''}`
+    );
+    if (it.state === 'FAIL') fail++;
+    if (it.state === 'INCONCLUSIVE') inc++;
+    if (it.state === 'DISABLED') dis++;
+  }
+  console.log(
+    `${name}: ${items.length - fail - inc - dis} of ${items.length} PASS, ${fail} FAIL, ${inc} INCONCLUSIVE, ${dis} DISABLED`
+  );
+  return fail ? 1 : inc ? 2 : 0;
+}
+export function nodeVersionOk(floor) {
+  const [a, b, c] = process.versions.node.split('.').map(Number);
+  const [x, y, z] = floor.split('.').map(Number);
+  return a > x || (a === x && (b > y || (b === y && c >= z)));
+}
+
+/** True when this module is the entry script. Compares real paths, so a repository path with spaces
+ *  (the Mac Mini SSD) still runs the CLI body (independent review r3, B-1). */
+export function isMain(metaUrl) {
+  if (!process.argv[1]) return false;
+  try {
+    return fileURLToPath(metaUrl) === path.resolve(process.argv[1]);
+  } catch {
+    return false;
+  }
+}

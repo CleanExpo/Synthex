@@ -1,0 +1,35 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P7",
+  "slug": "delegated-publish",
+  "closes": "M6",
+  "rollback": "revert; production never left the hold",
+  "branch": "feature/fleet-p7-delegated-publish",
+  "criteria": [
+    {
+      "id": "P7-C1",
+      "statement": "npm run jev:det -- --family J8 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J8",
+      "timeout": 3600
+    },
+    {
+      "id": "P7-C2",
+      "statement": "node scripts/gate/check-held.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/gate/check-held.mjs",
+      "timeout": 3600
+    },
+    {
+      "id": "P7-C3",
+      "statement": "npm run jev:det -- --family J3 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J3",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

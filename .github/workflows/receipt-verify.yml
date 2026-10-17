@@ -1,0 +1,52 @@
+name: Receipt Verify
+
+# Runs scripts/release/verify-receipt.mjs for any pull request whose head commit adds or
+# changes release-receipts/P<n>.json, and for every push to main after Phase 0.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  receipt:
+    name: Receipt verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          git fetch --no-tags origin "$HEAD_SHA" || true
+          # Look at the whole PR (base...head) or push range, not only the last commit
+          # (CodeRabbit on PR #997). A new-branch push has no usable before; fall back to HEAD~1.
+          if [ -z "$BASE_SHA" ] || echo "$BASE_SHA" | grep -qE '^0+$' || ! git cat-file -e "$BASE_SHA" 2>/dev/null; then BASE_SHA="$HEAD_SHA~1"; fi
+          RECEIPTS=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '^release-receipts/P-?[0-9]+\.json$' || true)
+          if [ -z "$RECEIPTS" ]; then echo "DISABLED receipt-verify: no phase receipt changed in $BASE_SHA..$HEAD_SHA"; exit 0; fi
+          # Run the verifier and its policy from the trusted BASE, with the head passed as data
+          # (CodeRabbit on PR #997); the PR's own copy only while the base has none (bootstrap).
+          V=scripts/release/verify-receipt.mjs
+          if git cat-file -e "$BASE_SHA:scripts/release/verify-receipt.mjs" 2>/dev/null; then
+            rm -rf /tmp/trusted && mkdir -p /tmp/trusted
+            git archive "$BASE_SHA" scripts/fleet scripts/release | tar -x -C /tmp/trusted
+            V=/tmp/trusted/scripts/release/verify-receipt.mjs
+          else
+            echo "NOTE bootstrap: base has no verifier; using the PR's copy"
+          fi
+          rc=0
+          for f in $RECEIPTS; do
+            ph=$(basename "$f" .json)
+            if git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then node "$V" --repo "$PWD" --head "$HEAD_SHA" --phase "$ph" || rc=1; else echo "NOTE $f removed in this range (retired)"; fi
+          done
+          exit $rc
