@@ -33,7 +33,7 @@ One JSON line per result in `out/<FAMILY>.jsonl`:
 
 - `kind`: `case` or `control`. `state`: `PASS`, `FAIL`, `KNOWN_GAP` or `INCONCLUSIVE`.
 - A control is a planted defect; its `state` is the detector's verdict, so `FAIL` means caught (good).
-- Use `classify(id, passed, detail)` for cases: a failing case listed in `known-gaps.json` is `KNOWN_GAP`; a listed case that passes is `PASS` with detail `known gap flipped: <gap_id>`.
+- Use `classify(id, passed, detail)` for cases: a failing case listed in `known-gaps.json` or `known-gaps/<FAMILY>.json` (one file per family; an entry ending in `*` is an id prefix) is `KNOWN_GAP`; a listed case that passes is `PASS` with detail `known gap flipped: <gap_id>`.
 - A route that throws at import or in the handler (`invokeRoute` returns `status: null`) is `INCONCLUSIVE`, never `PASS`.
 
 ## Verdict (aggregate.mjs)

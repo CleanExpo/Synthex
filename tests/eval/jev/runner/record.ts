@@ -25,31 +25,56 @@ export interface JevResult {
 const JEV_DIR = path.join(__dirname, '..');
 export const OUT_DIR = path.join(JEV_DIR, 'out');
 const KNOWN_GAPS_FILE = path.join(JEV_DIR, 'known-gaps.json');
+// One file per family (known-gaps/<FAMILY>.json) so parallel family units never conflict.
+const KNOWN_GAPS_DIR = path.join(JEV_DIR, 'known-gaps');
 
 interface KnownGaps {
   schema: 'jev-known-gaps/1';
-  gaps: Record<string, { cases: string[]; note?: string }>;
+  gaps: Record<
+    string,
+    { cases: string[]; note?: string; description?: string }
+  >;
 }
 
-let gapIndex: Map<string, string> | undefined;
+let gapIndex:
+  | { exact: Map<string, string>; prefixes: [string, string][] }
+  | undefined;
 
-/** The known-gap id that covers this case, if any (tests/eval/jev/known-gaps.json). */
+function gapFiles(): string[] {
+  const files = fs.existsSync(KNOWN_GAPS_FILE) ? [KNOWN_GAPS_FILE] : [];
+  if (fs.existsSync(KNOWN_GAPS_DIR))
+    for (const f of fs.readdirSync(KNOWN_GAPS_DIR).sort())
+      if (f.endsWith('.json')) files.push(path.join(KNOWN_GAPS_DIR, f));
+  return files;
+}
+
+/**
+ * The known-gap id that covers this case, if any. Reads tests/eval/jev/known-gaps.json and
+ * every tests/eval/jev/known-gaps/<FAMILY>.json. A case entry ending in `*` is an id prefix.
+ */
 export function knownGap(caseId: string): string | undefined {
   if (!gapIndex) {
-    const parsed = JSON.parse(
-      fs.readFileSync(KNOWN_GAPS_FILE, 'utf8')
-    ) as KnownGaps;
-    if (parsed.schema !== 'jev-known-gaps/1') {
-      throw new Error(
-        `known-gaps.json: unexpected schema ${String(parsed.schema)}`
-      );
-    }
-    gapIndex = new Map();
-    for (const [gapId, gap] of Object.entries(parsed.gaps)) {
-      for (const id of gap.cases ?? []) gapIndex.set(id, gapId);
+    gapIndex = { exact: new Map(), prefixes: [] };
+    for (const file of gapFiles()) {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as KnownGaps;
+      if (parsed.schema !== 'jev-known-gaps/1') {
+        throw new Error(
+          `${path.basename(file)}: unexpected schema ${String(parsed.schema)}`
+        );
+      }
+      for (const [gapId, gap] of Object.entries(parsed.gaps)) {
+        for (const id of gap.cases ?? []) {
+          if (id.endsWith('*'))
+            gapIndex.prefixes.push([id.slice(0, -1), gapId]);
+          else gapIndex.exact.set(id, gapId);
+        }
+      }
     }
   }
-  return gapIndex.get(caseId);
+  return (
+    gapIndex.exact.get(caseId) ??
+    gapIndex.prefixes.find(([prefix]) => caseId.startsWith(prefix))?.[1]
+  );
 }
 
 /**
