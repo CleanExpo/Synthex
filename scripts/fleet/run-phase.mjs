@@ -614,6 +614,22 @@ function release() {
     log('FAIL', `push: ${p.stderr.trim().slice(0, 200)}`);
     return 1;
   }
+  // Handoff doc for the next orchestrator thread (self-compaction; see docs/fleet/assistance-opportunities.md).
+  writeFileSync(
+    path.join(ROOT, `release-receipts/manifests/${phase}-handoff.md`),
+    `# Handoff ${phase} (${ph.slug})\n\nReviewed commit: ${reviewed}\nReceipt: release-receipts/${phase}.json\nGate manifest: ${gateFile}\nReview: release-receipts/manifests/${phase}-review.json\nUnits: release-receipts/manifests/${phase}-units.json (if any)\n\nNext phase: ${pol.phases[pol.phases.indexOf(ph) + 1]?.id || 'none'} — start with node scripts/fleet/phase-advance.mjs.\nOpen blockers: see BACKLOG.md between the fleet markers.\nSuggested skills: proof-discipline, control-readout, adversarial-review.\nNo secrets in this file.\n`
+  );
+  run('git', ['add', `release-receipts/manifests/${phase}-handoff.md`]);
+  run('git', [
+    '-c',
+    `user.name=${pol.committer.name}`,
+    '-c',
+    `user.email=${pol.committer.email}`,
+    'commit',
+    '-q',
+    '--amend',
+    '--no-edit',
+  ]);
   ledgerAppend({ kind: 'push', phase, head, branch });
   log(
     'PASS',
