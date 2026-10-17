@@ -68,11 +68,13 @@ if (isMain(import.meta.url)) {
   let baseFloors;
   const raw = tryGit(['show', `${base}:tests/eval/jev/floors.json`]);
   if (raw === null) {
-    console.log('INCONCLUSIVE check-ratchet: no floors.json at base');
-    process.exit(2);
+    // No floors at base (the bootstrap PR introduces the file): no floor exists to lower, so the
+    // ratchet compares against an empty baseline; deletions are still checked below.
+    console.log('NOTE check-ratchet: no floors.json at base; empty baseline');
+    baseFloors = { families: {} };
   }
   try {
-    baseFloors = JSON.parse(raw);
+    if (raw !== null) baseFloors = JSON.parse(raw);
   } catch {
     console.log('INCONCLUSIVE check-ratchet: base floors not JSON');
     process.exit(2);

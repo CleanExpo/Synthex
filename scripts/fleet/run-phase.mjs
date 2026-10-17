@@ -572,7 +572,10 @@ function release() {
     '--body',
     body,
   ]);
-  const num = (pr.stdout.match(/\/pull\/(\d+)/) || [])[1];
+  // One coherent PR per phase: gh refuses a second PR for the branch, so reuse the open one.
+  const num =
+    (pr.stdout.match(/\/pull\/(\d+)/) || [])[1] ||
+    ((pr.stderr + pr.stdout).match(/\/pull\/(\d+)/) || [])[1];
   if (!num) {
     log('FAIL', `gh pr create: ${(pr.stderr || pr.stdout).slice(0, 200)}`);
     return 1;
@@ -602,7 +605,7 @@ function waitForChecks(head, timeoutMs) {
   while (Date.now() - t0 < timeoutMs) {
     const r = run('gh', [
       'api',
-      `repos/{owner}/{repo}/commits/${head}/check-runs`,
+      `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
       '--jq',
       '[.check_runs[] | {name, status, conclusion}]',
     ]);
@@ -610,7 +613,12 @@ function waitForChecks(head, timeoutMs) {
     try {
       cr = JSON.parse(r.stdout);
     } catch {}
+    // Required contexts come from the pull_request run, which registers after the push-run
+    // finishes; a head missing any of them is still pending (P-1: merge refused on PR #997).
+    const required = ['Build', 'Lint', 'Protected paths', 'Receipt verify'];
     const pending = cr.filter(c => c.status !== 'completed');
+    for (const name of required)
+      if (!cr.some(c => c.name === name)) pending.push({ name });
     const failed = cr.filter(
       c =>
         c.status === 'completed' &&
