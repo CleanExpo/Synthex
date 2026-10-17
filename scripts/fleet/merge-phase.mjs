@@ -92,13 +92,17 @@ const vr = run(process.execPath, [
 gate('receipt', vr.code === 0, vr.stdout.trim().split('\n').pop());
 const checks = run('gh', [
   'api',
-  `repos/{owner}/{repo}/commits/${head}/check-runs`,
+  `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
   '--jq',
-  '[.check_runs[] | {name, status, conclusion}]',
+  '{total: .total_count, runs: [.check_runs[] | {name, status, conclusion}]}',
 ]);
+// GitHub pages check-runs (30 by default); a partial read is not evidence, so it fails closed.
 let cr = [];
+let partial = true;
 try {
-  cr = JSON.parse(checks.stdout);
+  const j = JSON.parse(checks.stdout);
+  cr = j.runs;
+  partial = j.total !== cr.length;
 } catch {}
 const pending = cr.filter(c => c.status !== 'completed');
 const failed = cr.filter(
@@ -112,8 +116,12 @@ const missingReq = required.filter(
 );
 gate(
   'checks',
-  cr.length > 0 && !pending.length && !failed.length && !missingReq.length,
-  `${cr.length} checks, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
+  cr.length > 0 &&
+    !partial &&
+    !pending.length &&
+    !failed.length &&
+    !missingReq.length,
+  `${cr.length} checks${partial ? ' (partial read)' : ''}, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
 );
 const receipt = readJson(`release-receipts/${phase}.json`, null);
 let rep = null;

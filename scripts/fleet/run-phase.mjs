@@ -602,15 +602,21 @@ function waitForChecks(head, timeoutMs) {
   while (Date.now() - t0 < timeoutMs) {
     const r = run('gh', [
       'api',
-      `repos/{owner}/{repo}/commits/${head}/check-runs`,
+      `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
       '--jq',
-      '[.check_runs[] | {name, status, conclusion}]',
+      '{total: .total_count, runs: [.check_runs[] | {name, status, conclusion}]}',
     ]);
     let cr = [];
+    let partial = true;
     try {
-      cr = JSON.parse(r.stdout);
+      const j = JSON.parse(r.stdout);
+      cr = j.runs;
+      partial = j.total !== cr.length;
     } catch {}
-    const pending = cr.filter(c => c.status !== 'completed');
+    // A partial page counts as still pending, never as all green.
+    const pending = partial
+      ? [{ name: 'unread check-runs' }]
+      : cr.filter(c => c.status !== 'completed');
     const failed = cr.filter(
       c =>
         c.status === 'completed' &&
