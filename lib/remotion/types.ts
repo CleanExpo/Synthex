@@ -301,3 +301,54 @@ export interface CompositionMeta {
   /** Duration in frames. */
   durationInFrames: number;
 }
+
+/** One beat of a Motion Studio video (lib/motion planner output). */
+export type MotionBeat =
+  | { kind: 'headline'; text: string; durationInFrames: number }
+  | {
+      kind: 'stat';
+      value: string;
+      label: string;
+      context?: string;
+      durationInFrames: number;
+    }
+  | {
+      kind: 'compare';
+      oldLabel: string;
+      oldText: string;
+      newLabel: string;
+      newText: string;
+      durationInFrames: number;
+    }
+  | { kind: 'item'; index: string; text: string; durationInFrames: number }
+  | { kind: 'cta'; text: string; durationInFrames: number };
+
+/** House style resolved from BrandConfig (lib/motion/house-style). */
+export interface MotionStudioStyle {
+  primary: string;
+  accent: string;
+  background: string;
+  text: string;
+  displayFont: string;
+  bodyFont: string;
+  /** Font files under public/ (BrandConfig.typography.*.src), loaded before render. */
+  displayFontSrc?: string;
+  displayWeight?: number;
+  bodyFontSrc?: string;
+  bodyWeight?: number;
+  easingIn: string;
+  signature: string;
+  fastFrames: number;
+  baseFrames: number;
+  minLabelPx: number;
+  /** Solid green background for keying over real footage; no glow or bar. */
+  chromaKey: boolean;
+}
+
+/** Props for the MotionStudio compositions (16:9, 9:16, 1:1). */
+export interface MotionStudioProps extends BaseCompositionProps {
+  brandName: string;
+  durationInFrames: number;
+  beats: MotionBeat[];
+  style: MotionStudioStyle;
+}

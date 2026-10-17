@@ -29,6 +29,7 @@ import type {
   QuoteCardProps,
   CountdownCTAProps,
   DefinitionCardProps,
+  MotionStudioProps,
 } from './types';
 import type { InvisibleLineAnthemProps } from './compositions/InvisibleLineAnthem';
 
@@ -291,6 +292,41 @@ const DEFAULT_INVISIBLE_LINE_OUTRO_PROPS: InvisibleLineOutroProps = {
 
 // ── Registry ──────────────────────────────────────────────────────────────────
 
+const DEFAULT_MOTION_STUDIO_PROPS: MotionStudioProps = {
+  title: 'Motion Studio',
+  scenes: [],
+  brandName: 'Your brand',
+  durationInFrames: 300,
+  beats: [
+    {
+      kind: 'headline',
+      text: 'Your headline from the brief',
+      durationInFrames: 90,
+    },
+    {
+      kind: 'stat',
+      value: '24/7',
+      label: 'From your source only',
+      durationInFrames: 120,
+    },
+    { kind: 'cta', text: 'Your call to action', durationInFrames: 90 },
+  ],
+  style: {
+    primary: '#2563EB',
+    accent: '#F59E0B',
+    background: '#0B1726',
+    text: '#F4F6F8',
+    displayFont: 'Inter',
+    bodyFont: 'Inter',
+    easingIn: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    signature: 'rise',
+    fastFrames: 10,
+    baseFrames: 22,
+    minLabelPx: 34,
+    chromaKey: false,
+  },
+};
+
 export const COMPOSITION_REGISTRY: CompositionMeta[] = [
   {
     id: 'SocialReel',
@@ -544,5 +580,36 @@ export const COMPOSITION_REGISTRY: CompositionMeta[] = [
     height: 1080,
     fps: 30,
     durationInFrames: 2030, // ~67.7 seconds
+  },
+  {
+    id: 'MotionStudio',
+    name: 'Motion Studio (16:9)',
+    description:
+      'Claude-Motion-style motion graphics from a fact-checked brief in the brand house style (lib/motion); length from props',
+    defaultProps: DEFAULT_MOTION_STUDIO_PROPS,
+    width: 1920,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 300,
+  },
+  {
+    id: 'MotionStudioPortrait',
+    name: 'Motion Studio (9:16)',
+    description: 'Motion Studio for portrait social feeds',
+    defaultProps: DEFAULT_MOTION_STUDIO_PROPS,
+    width: 1080,
+    height: 1920,
+    fps: 30,
+    durationInFrames: 300,
+  },
+  {
+    id: 'MotionStudioSquare',
+    name: 'Motion Studio (1:1)',
+    description: 'Motion Studio for square social feeds',
+    defaultProps: DEFAULT_MOTION_STUDIO_PROPS,
+    width: 1080,
+    height: 1080,
+    fps: 30,
+    durationInFrames: 300,
   },
 ];

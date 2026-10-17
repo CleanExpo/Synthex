@@ -25,6 +25,7 @@ import {
   BRAND_VIDEO_STYLES,
   DEFAULT_BRAND_VIDEO_STYLE,
 } from '@/lib/brand-video/styles';
+import { MotionPanel } from './motion-panel';
 
 async function fetchJson<T>(url: string): Promise<T> {
   const r = await fetch(url, { credentials: 'include' });
@@ -183,6 +184,9 @@ export default function BrandVideoStudioPage() {
 
         {formError && <p className="text-xs text-red-400">{formError}</p>}
       </div>
+
+      {/* Motion graphics — Claude-Motion-style, plan only */}
+      <MotionPanel brand={brand} />
 
       {/* Recent jobs */}
       <div className="border-[0.5px] border-white/[0.06] bg-white/[0.01] rounded-sm">
