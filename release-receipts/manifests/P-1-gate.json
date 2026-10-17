@@ -1,0 +1,66 @@
+{
+  "phase": "P-1",
+  "head": "ffb2f18ace046a5137cf6d392fb3580c7d9d7c28",
+  "tree": "a1dd336f6d989cf1adea2daf8342e38ba5dd889b",
+  "at": "2026-10-17T01:24:43.944Z",
+  "results": [
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:496:28) |       at Object.<anonymous> (app/api/ai-content/hashtags/route.ts:26:1) |       at __tests__/landing/public-claims-api.test.ts:408:24"
+    },
+    {
+      "cmd": "$NODE_DIR/npx prisma validate",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Loaded Prisma config from prisma.config.ts. |  | Prisma schema loaded from prisma/schema.prisma."
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS   scripts/truth/check-noop.mjs — bootstrap exemption | PASS   tests/eval/jev/floors.json — bootstrap exemption | verify-protected: 64 changed files, 57 protected, 0 violations (bootstrap exemption active)"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/check-bootstrap.mjs",
+      "kind": "dod",
+      "id": "P-1-C1",
+      "required": true,
+      "state": "FAIL",
+      "exit": 1,
+      "tail": "PASS         check-bootstrap: 9 — protected scripts present, each --control exits 0, contracts generated and locked [missing=none badControl=none contracts=0] | PASS         check-bootstrap: 10 — scheduler: Cloudroom automations nightly, weekly, phase-advance exist [have=fleet-nightly,fleet-weekly,fleet-phase-advance] | check-bootstrap: 8 of 10 PASS, 1 FAIL, 0 INCONCLUSIVE, 1 DISABLED"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/gen-contracts.mjs --check",
+      "kind": "dod",
+      "id": "P-1-C2",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS gen-contracts: scripts/fleet/contracts/P9.json | PASS gen-contracts: scripts/fleet/contracts/P10.json | gen-contracts: 12 contracts, 0 drift"
+    }
+  ]
+}

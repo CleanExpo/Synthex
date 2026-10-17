@@ -1,0 +1,29 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P1",
+  "slug": "jev-core",
+  "closes": "M9 in part, baseline measurement",
+  "rollback": "revert the PR",
+  "branch": "feature/fleet-p1-jev-core",
+  "criteria": [
+    {
+      "id": "P1-C1",
+      "statement": "npm run jev:det exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det",
+      "timeout": 3600
+    },
+    {
+      "id": "P1-C2",
+      "statement": "node scripts/jev/check-ratchet.mjs --base origin/main --proposal proposals/P1/tests/eval/jev/floors.json exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/jev/check-ratchet.mjs --base origin/main --proposal proposals/P1/tests/eval/jev/floors.json",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

@@ -1,0 +1,29 @@
+name: JEV PR
+
+# Per-pull-request script cases: J8, J11, J12 and the cases on changed routes. No model spend.
+# Advisory until a required check exists. Before `npm run jev:det` exists (P1) the job records
+# DISABLED and exits 0.
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  jev-pr:
+    name: JEV per-PR cases
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: |
+          if ! node -e "process.exit(require('./package.json').scripts['jev:det'] ? 0 : 1)"; then echo "DISABLED jev-pr: npm run jev:det not yet delivered (P1)"; exit 0; fi
+          npm ci --legacy-peer-deps
+          npx prisma generate
+          npm run jev:det -- --family J8 --family J11 --family J12 --pr

@@ -1,0 +1,31 @@
+name: Receipt Verify
+
+# Runs scripts/release/verify-receipt.mjs for any pull request whose head commit adds or
+# changes release-receipts/P<n>.json, and for every push to main after Phase 0.
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  receipt:
+    name: Receipt verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: |
+          HEAD_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          git fetch --no-tags origin "$HEAD_SHA" || true
+          if ! git show --name-only --format= "$HEAD_SHA" | grep -qE '^release-receipts/P-?[0-9]+\.json$'; then echo "DISABLED receipt-verify: head commit carries no phase receipt"; exit 0; fi
+          node scripts/release/verify-receipt.mjs --head "$HEAD_SHA"

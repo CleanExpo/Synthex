@@ -1,0 +1,4 @@
+{"ts":"2026-10-17T01:18:42.776Z","kind":"start","phase":"P-1","branch":"feature/fleet-p-1-bootstrap","step":"prepare","contract_locked":true,"policy":"21e71877b1b6faeb32a0595c8981d40d3b346b19a0fdc533a51b1256ec99e7b3"}
+{"ts":"2026-10-17T01:22:37.038Z","kind":"review","phase":"P-1","head":"ffb2f18ace046a5137cf6d392fb3580c7d9d7c28","state":"INCONCLUSIVE","detail":"every lane unavailable"}
+{"ts":"2026-10-17T01:24:43.945Z","kind":"gate","phase":"P-1","head":"ffb2f18ace046a5137cf6d392fb3580c7d9d7c28","pass":6,"total":7}
+{"ts":"2026-10-17T01:25:29.843Z","kind":"review","phase":"P-1","head":"fa50161619c3ad90d8a9b3a25c54a1633de7a667","state":"INCONCLUSIVE","detail":"every lane unavailable"}

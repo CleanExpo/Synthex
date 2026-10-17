@@ -1,0 +1,29 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P-1",
+  "slug": "bootstrap",
+  "closes": "every protected file, policy, contracts, CI jobs",
+  "rollback": "revert the one pull request; delete the three Cloudroom automations",
+  "branch": "feature/fleet-p-1-bootstrap",
+  "criteria": [
+    {
+      "id": "P-1-C1",
+      "statement": "node scripts/fleet/check-bootstrap.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/check-bootstrap.mjs",
+      "timeout": 3600
+    },
+    {
+      "id": "P-1-C2",
+      "statement": "node scripts/fleet/gen-contracts.mjs --check exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/gen-contracts.mjs --check",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

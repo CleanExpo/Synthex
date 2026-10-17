@@ -1,0 +1,47 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P2",
+  "slug": "truth",
+  "closes": "M1, M11 in part",
+  "rollback": "revert per batch commit",
+  "branch": "feature/fleet-p2-truth",
+  "criteria": [
+    {
+      "id": "P2-C1",
+      "statement": "node scripts/truth/check-noop.mjs --base origin/main exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/truth/check-noop.mjs --base origin/main",
+      "timeout": 3600
+    },
+    {
+      "id": "P2-C2",
+      "statement": "npm run jev:det -- --family J2 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J2",
+      "timeout": 3600
+    },
+    {
+      "id": "P2-C3",
+      "statement": "npm run type-check exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run type-check",
+      "timeout": 3600
+    },
+    {
+      "id": "P2-C4",
+      "statement": "npm run lint exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run lint",
+      "timeout": 3600
+    },
+    {
+      "id": "P2-C5",
+      "statement": "npm test exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm test",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

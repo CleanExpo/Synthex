@@ -1,0 +1,45 @@
+name: Protected Paths
+
+# Fails any pull request that touches a protected path (scripts/fleet/policy.json) unless:
+#   - the only protected change is the phase's own release-receipts/P<n>.json and
+#     scripts/release/verify-receipt.mjs validates it, or ledger/manifest rows; or
+#   - the PR carries the human-applied label `human-required`; or
+#   - the bootstrap exemption holds (feature/fleet-p-1-* while policy.json is absent at the base).
+# Written in Phase -1 of docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  protected-paths:
+    name: Protected paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - name: Human-required label present?
+        id: label
+        run: |
+          if echo '${{ toJson(github.event.pull_request.labels.*.name) }}' | grep -q '"human-required"'; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Verify protected paths against the base
+        if: steps.label.outputs.present != 'true'
+        run: |
+          git fetch --no-tags origin "${{ github.event.pull_request.base.sha }}"
+          git fetch --no-tags origin "${{ github.event.pull_request.head.sha }}"
+          git checkout -q "${{ github.event.pull_request.head.sha }}"
+          git branch -f "${{ github.head_ref }}" HEAD && git checkout -q "${{ github.head_ref }}"
+          node scripts/fleet/verify-protected.mjs --base "${{ github.event.pull_request.base.sha }}" --head HEAD
+      - name: Label applied by a person
+        if: steps.label.outputs.present == 'true'
+        run: echo "human-required label present; protected change accepted as a waterline act"

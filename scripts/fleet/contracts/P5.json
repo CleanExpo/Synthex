@@ -1,0 +1,41 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P5",
+  "slug": "receipts-quotes",
+  "closes": "M7, M10, M11",
+  "rollback": "revert; quote routes are additive",
+  "branch": "feature/fleet-p5-receipts-quotes",
+  "criteria": [
+    {
+      "id": "P5-C1",
+      "statement": "npm run jev:det -- --family J8 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J8",
+      "timeout": 3600
+    },
+    {
+      "id": "P5-C2",
+      "statement": "npm run jev:det -- --family J9 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE_DIR/npm run jev:det -- --family J9",
+      "timeout": 3600
+    },
+    {
+      "id": "P5-C3",
+      "statement": "node scripts/mcp/check-tools.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/mcp/check-tools.mjs",
+      "timeout": 3600
+    },
+    {
+      "id": "P5-C4",
+      "statement": "node scripts/fleet/check-governor-mode.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/check-governor-mode.mjs",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}

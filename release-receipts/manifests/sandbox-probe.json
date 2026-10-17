@@ -1,0 +1,12 @@
+{
+  "schema": "sandbox-probe/1",
+  "at": "2026-10-17T01:40:00Z",
+  "substrate": "cloudroom",
+  "child_thread": "thr_rx5jdbddz6",
+  "child_root": "/code",
+  "child_saw_orchestrator_clone": false,
+  "child_wrote": "/tmp/probe-marker-from-child",
+  "orchestrator_sees_child_file": false,
+  "conclusion": "A child thread runs in its own sandbox: a file it writes is absent from the orchestrator's sandbox, and the orchestrator's working clone at /code/Synthex was not the child's working directory. Units must therefore clone from origin and share work only through Git (fanout.mjs unitPrompt).",
+  "evidence": "room-cli thread output thr_rx5jdbddz6 (verbatim command output: PROBE-ROOT=/code, scripts/fleet absent); ls -la /tmp/probe-marker-from-child on the orchestrator: No such file"
+}

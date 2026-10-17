@@ -1,0 +1,47 @@
+{
+  "schema": "synthex-phase-contract/1",
+  "phase": "P9",
+  "slug": "drills-soak",
+  "closes": "finish-line evidence, governor flip check",
+  "rollback": "none needed, read-only",
+  "branch": "feature/fleet-p9-drills-soak",
+  "criteria": [
+    {
+      "id": "P9-C1",
+      "statement": "node scripts/fleet/drill.mjs --all exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/drill.mjs --all",
+      "timeout": 3600
+    },
+    {
+      "id": "P9-C2",
+      "statement": "node scripts/fleet/check-soak.mjs --days 14 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/check-soak.mjs --days 14",
+      "timeout": 3600
+    },
+    {
+      "id": "P9-C3",
+      "statement": "node scripts/fleet/check-governor-mode.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/check-governor-mode.mjs",
+      "timeout": 3600
+    },
+    {
+      "id": "P9-C4",
+      "statement": "node scripts/fleet/check-ledgers.mjs --days 14 exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/fleet/check-ledgers.mjs --days 14",
+      "timeout": 3600
+    },
+    {
+      "id": "P9-C5",
+      "statement": "node scripts/release/verify-waterline.mjs exits 0 on the integrated tree in a fresh context",
+      "recipe": "$NODE scripts/release/verify-waterline.mjs",
+      "timeout": 3600
+    }
+  ],
+  "cumulative_gate": [
+    "$NODE_DIR/npm run type-check",
+    "$NODE_DIR/npm run lint",
+    "$NODE_DIR/npm test",
+    "$NODE_DIR/npx prisma validate",
+    "$NODE scripts/fleet/verify-protected.mjs --base origin/main"
+  ]
+}
