@@ -46,3 +46,7 @@
 {"ts":"2026-10-17T05:31:24.759Z","kind":"review","phase":"P-1","head":"f10ccd419deb00cce0f9573b7dc80f3373f8a4c4","lane":"openrouter","verdict":"FAIL"}
 {"ts":"2026-10-17T05:38:06.804Z","kind":"gate","phase":"P-1","head":"6eba976e8747e54ffe6a29230ce64914b907f717","pass":7,"total":7}
 {"ts":"2026-10-17T05:43:14.783Z","kind":"review","phase":"P-1","head":"6eba976e8747e54ffe6a29230ce64914b907f717","lane":"openrouter","verdict":"PASS"}
+{"ts":"2026-10-17T05:43:17.399Z","kind":"push","phase":"P-1","head":"f7b2625bd7df79893722419267356e9333f0fd1c","branch":"feature/fleet-p-1-bootstrap"}
+{"ts":"2026-10-17T05:53:05.758Z","kind":"receipt-retired","phase":"P-1","head":"0fba069ff9f7e0db973f3704ae9d89f88595ea77","reviewed":"6eba976e8747e54ffe6a29230ce64914b907f717","files":["release-receipts/P-1.json","release-receipts/manifests/P-1-review.json","release-receipts/manifests/P-1-gate.json"]}
+{"ts":"2026-10-17T05:59:03.425Z","kind":"gate","phase":"P-1","head":"6c0655191404c8c3642a65ecf95a99b360d6fd03","pass":7,"total":7}
+{"ts":"2026-10-17T06:10:40.570Z","kind":"review","phase":"P-1","head":"6c0655191404c8c3642a65ecf95a99b360d6fd03","lane":"openrouter","model":"moonshotai/kimi-k2.5","verdict":"PASS","source":"orchestrator foreground run of the same lane; in-chain attempt failed with empty detail"}
