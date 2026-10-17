@@ -59,3 +59,4 @@
 {"ts":"2026-10-17T06:23:41.193Z","kind":"receipt-retired","phase":"P-1","head":"65a5bc873e31c6bf5e7e5bb4546e744ff3544d16","reviewed":"6c0655191404c8c3642a65ecf95a99b360d6fd03","files":["release-receipts/P-1.json","release-receipts/manifests/P-1-review.json","release-receipts/manifests/P-1-gate.json"]}
 {"ts":"2026-10-17T06:29:06.896Z","kind":"gate","phase":"P-1","head":"664f496f51380c36606712c0ac49a30f2f89495a","pass":7,"total":7}
 {"ts":"2026-10-17T06:34:48.702Z","kind":"review","phase":"P-1","head":"664f496f51380c36606712c0ac49a30f2f89495a","lane":"openrouter","verdict":"PASS"}
+{"ts":"2026-10-17T06:45:17.474Z","kind":"start","phase":"P0","decision":"START","reason":null,"source":"phase-advance"}
