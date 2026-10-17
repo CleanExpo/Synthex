@@ -308,30 +308,55 @@ function integrate() {
   return 0;
 }
 function retireStaleReceipt() {
-  // A receipt binds one reviewed commit. When fixes land after it (review round-trips), the file
-  // in the tree names a commit that is no longer HEAD's reviewed state; leaving it is the receipt
-  // form of 2xx-with-empty-data (MiniMax r4 on PR #997). Retire it in a declared orchestrator
-  // commit before the gate runs; the release step writes a fresh receipt for the reviewed head.
-  const file = `release-receipts/${phase}.json`;
-  if (!existsSync(path.join(ROOT, file))) return;
-  const rec = readJson(file, null);
+  // A receipt and its review/gate manifests bind one reviewed commit. When fixes land after
+  // them (review round-trips), the tracked files name a commit that is no longer HEAD's reviewed
+  // state; leaving them is the receipt form of 2xx-with-empty-data (MiniMax r4 and r6 on PR
+  // #997). Retire the tracked copies in a declared orchestrator commit before the gate runs;
+  // the gate, review and release steps regenerate and commit fresh ones for the reviewed head.
   const head = git(['rev-parse', 'HEAD']);
-  const reviewed = String(rec?.reviewed_commit || '');
-  const extra = reviewed
-    ? git(['diff', '--name-only', `${reviewed}..HEAD`])
-        .split('\n')
-        .filter(f => f && !/^release-receipts\//.test(f))
-    : ['(unparseable receipt)'];
-  if (!extra.length) return;
-  rmSync(path.join(ROOT, file)); // leave the index entry so `git add -A -- file` stages the deletion
-  const sha = fleetCommit(
-    `chore(fleet): ${phase} retire stale receipt bound to ${reviewed.slice(0, 12)}\n\n${extra.length} non-receipt file(s) changed after the reviewed commit; the release step rebinds a fresh receipt to the next reviewed head.\n\nFleet-Role: orchestrator\nProtected-Change: retire stale ${file} (A-12)`,
-    [file]
+  const candidates = [
+    `release-receipts/${phase}.json`,
+    `release-receipts/manifests/${phase}-review.json`,
+    `release-receipts/manifests/${phase}-gate.json`,
+  ];
+  const stale = [];
+  let reviewed = '';
+  for (const file of candidates) {
+    const raw = tryGit(['show', `HEAD:${file}`]);
+    if (raw === null) continue; // not tracked at HEAD
+    let bound = '';
+    try {
+      const o = JSON.parse(raw);
+      bound = String(o.reviewed_commit || o.head_sha || o.head || '');
+    } catch {
+      bound = '';
+    }
+    const extra = bound
+      ? git(['diff', '--name-only', `${bound}..HEAD`])
+          .split('\n')
+          .filter(f => f && !/^release-receipts\//.test(f))
+      : ['(unparseable)'];
+    if (!extra.length) continue;
+    reviewed = reviewed || bound;
+    stale.push({ file, bound, extra: extra.length });
+  }
+  if (!stale.length) return;
+  for (const s of stale)
+    if (existsSync(path.join(ROOT, s.file))) rmSync(path.join(ROOT, s.file)); // index entry stays; add -A stages the deletion
+  fleetCommit(
+    `chore(fleet): ${phase} retire stale receipt artefacts bound to ${reviewed.slice(0, 12)}\n\n${stale.map(s => `${s.file}: ${s.extra} non-receipt file(s) changed after ${s.bound.slice(0, 12)}`).join('\n')}\n\nThe gate, review and release steps rebind fresh artefacts to the next reviewed head.\n\nFleet-Role: orchestrator\nProtected-Change: retire stale ${phase} receipt artefacts (A-12)`,
+    stale.map(s => s.file)
   );
-  ledgerAppend({ kind: 'receipt-retired', phase, head, reviewed, extra });
+  ledgerAppend({
+    kind: 'receipt-retired',
+    phase,
+    head,
+    reviewed,
+    files: stale.map(s => s.file),
+  });
   log(
     'PASS',
-    `retired stale ${file} (reviewed ${reviewed.slice(0, 12)}, ${extra.length} later changes) in ${git(['rev-parse', '--short', 'HEAD'])}`
+    `retired stale ${stale.map(s => s.file).join(', ')} (bound ${reviewed.slice(0, 12)}) in ${git(['rev-parse', '--short', 'HEAD'])}`
   );
 }
 

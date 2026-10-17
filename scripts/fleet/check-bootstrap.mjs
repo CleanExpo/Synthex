@@ -91,8 +91,22 @@ add(
 );
 // 4
 const gh = run('gh', ['api', 'user', '--jq', '.login']);
-const cname = tryGit(['config', '--get', 'user.name']);
-const cemail = tryGit(['config', '--get', 'user.email']);
+// Fleet commits set the identity per commit (-c user.name/email in fleetCommit), so the host's
+// git config is not the fact being checked (MiniMax r6: it differs on the Mac). The fact is the
+// committer recorded on the branch's latest fleet commit, falling back to host config when the
+// branch has none yet (fresh clone before any fleet commit).
+const lastFleet = tryGit([
+  'log',
+  '-1',
+  '--format=%cn%x00%ce',
+  `--committer=${pol.committer.email}`,
+]);
+const [cname, cemail] = lastFleet
+  ? lastFleet.split('\0')
+  : [
+      tryGit(['config', '--get', 'user.name']),
+      tryGit(['config', '--get', 'user.email']),
+    ];
 const fd2 =
   existsSync(path.join(ROOT, 'DECISIONS.md')) &&
   sh('grep -c "FD-2" DECISIONS.md').stdout.trim() !== '0';
