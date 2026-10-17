@@ -1,0 +1,217 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "minimax-p1-bootstrap-review-3cf4a61109d4-2026-10-17",
+  "base_sha": "025e17e7d412db99e942d6f9c036409ae274de23",
+  "head_sha": "3cf4a61109d4e894e6a6ced809ba98615c0ef485",
+  "reviewed_at": "2026-10-17T04:10:00.000Z",
+  "verdict": "FAIL",
+  "summary": "The diff delivers the P-1 containment layer, but leaves the bootstrap in a stuck state: commit 3cf4a61109d4 (post-receipt, modifies protected paths scripts/fleet/merge-phase.mjs and scripts/fleet/run-phase.mjs) invalidates the P-1 receipt at HEAD. verify-receipt.mjs exits 1 with the rule-B3 binding violation. merge-phase.mjs already refused PR #997 for the same reason; nothing in the diff re-writes a fresh receipt or reverts the post-receipt commit, so the bootstrap cannot be merged. Two material defects. A coverage gap in verify-receipt.mjs --control (the binding check is not exercised) is a P1 because it masks regressions of the very check that caught this defect.",
+  "spec_judged_against": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md as amended by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (AM-1..AM-5)",
+  "definition_of_done_observed": {
+    "node scripts/fleet/check-bootstrap.mjs": "exit 0 (8 PASS, 1 FAIL on item 4 committer identity, 1 INCONCLUSIVE on item 10 room-cli unavailable). The single FAIL is environmental — committer is Phill on the review host, not fleet@synthex.local — and the receipt records PASS on the host where committer was set correctly. The single INCONCLUSIVE is also environmental (room-cli absent on the review host). The control logic is correct; the host does not have the fleet committer identity or room-cli installed.",
+    "node scripts/fleet/gen-contracts.mjs --check": "exit 0; 12 contracts, 0 drift (P-1 and P0..P10 per AM-3)"
+  },
+  "blocking_findings": [
+    {
+      "id": "P0-RECEIPT-INVALID-AT-HEAD",
+      "severity": "P0",
+      "title": "Receipt at HEAD 3cf4a61109d4 is invalid; the diff leaves the bootstrap in a stuck, un-mergeable state",
+      "files": [
+        "scripts/release/verify-receipt.mjs",
+        "release-receipts/P-1.json",
+        "scripts/fleet/merge-phase.mjs",
+        "scripts/fleet/run-phase.mjs"
+      ],
+      "quoted_lines": [
+        "scripts/release/verify-receipt.mjs:75-77  const extra = diff.filter(\n      f => f !== file && !/^release-receipts\\/(ledger|manifests)\\//.test(f)\n    );",
+        "scripts/release/verify-receipt.mjs:78-80  if (extra.length)\n    problems.push(\n      `diff from reviewed commit holds more than the receipt: ${extra.slice(0, 5).join(', ')}`\n    );"
+      ],
+      "evidence": "Observed: `node scripts/release/verify-receipt.mjs --head HEAD --phase P-1` exits 1 with the message `FAIL verify-receipt: diff from reviewed commit holds more than the receipt: scripts/fleet/merge-phase.mjs, scripts/fleet/run-phase.mjs`. The receipt at release-receipts/P-1.json names reviewed_commit=147b8f2ffe0cea67d9d660d31f73edb8d0481384, but `git diff --name-only 147b8f2ff HEAD` includes the two protected paths above (both modified by commit 3cf4a61109d4 'fix(fleet): read every check-run before merging', which carries the AM-5 trailers Fleet-Role: orchestrator / Protected-Change: merge gate read a partial page of check-runs). The filter at verify-receipt.mjs:75-77 exempts only release-receipts/(ledger|manifests)/*, so scripts/fleet/* and scripts/release/* changes after the receipt are FAIL closed. release-receipts/ledger/fleet.jsonl records merge-refused for PR #997 at head 84a575040 — merge-phase.mjs refused the merge for the same binding reason. The diff contains no follow-up commit that re-writes the receipt at HEAD, no revert of 3cf4a61109d4, and no exception in verify-receipt.mjs for the AM-5 case; the bootstrap is therefore stuck.",
+      "why_blocking": "Rule B3 (spec: 'A receipt cannot name its own commit, so it names the reviewed commit and the tested tree, and the check passes only if the diff from that commit to the head is the receipt file alone') is violated. The fix is one of: (a) re-run scripts/fleet/run-phase.mjs release to write a fresh P-1.json bound to 3cf4a61109d4; (b) add an AM-5 exception in verify-receipt.mjs mirroring the one in verify-protected.mjs (declined in the diff — A-12 scopes the exemption to verify-protected, not verify-receipt, and that scoping is the source of the asymmetry); or (c) revert 3cf4a61109d4 and replace it with a new commit that re-runs release. The current state is un-mergeable and the receipt at HEAD is not verifiable, so the bootstrap is not a passing P-1."
+    },
+    {
+      "id": "P0-RECEIPT-CONTROL-COVERS-NO-BINDING",
+      "severity": "P0",
+      "title": "scripts/release/verify-receipt.mjs --control does not exercise the rule-B3 binding check; a regression there would be silent",
+      "files": ["scripts/release/verify-receipt.mjs"],
+      "quoted_lines": [
+        "scripts/release/verify-receipt.mjs control body  // Negative: a receipt whose reviewed_commit is an older commit with other files in the diff must fail.\n  const head = git(['rev-parse', 'HEAD']);\n  const older = tryGit(['rev-parse', 'HEAD~3']) || head;\n  ...\n  const res = verify(head, 'P99');\n  const okA = res.ok === false;\n  const okB = fake.tested_tree !== git(['rev-parse', `${older}^{tree}`]);\n  return okA && okB;"
+      ],
+      "evidence": "Observed mutation: when the `extra` filter at scripts/release/verify-receipt.mjs:75-77 is changed so that the post-receipt diff is never flagged (the same condition that masks P0-RECEIPT-INVALID-AT-HEAD), `node scripts/release/verify-receipt.mjs --head HEAD --phase P-1` flips from exit 1 to exit 0 (the bug becomes invisible), and `node scripts/release/verify-receipt.mjs --control` still exits 0 (the control is not affected because it asks for a P-99 receipt that does not exist, so the binding code path is never reached). The selftest.mjs controls check then also passes. There is therefore no automated regression guard on the binding check.",
+      "why_blocking": "The control is the only piece of automated evidence in the bootstrap that prove the receipt binding is doing work; the receipt itself is the artifact under test. A future commit that breaks the binding check would not be caught by selftest.mjs (10 of 10 controls), would not be caught by check-bootstrap.mjs (item 9 runs all controls), and would not be caught by gen-contracts.mjs. A green bootstrap would be a green broken bootstrap. The control must plant an actual receipt on a scratch tree and assert that the post-receipt diff is flagged (e.g. write a receipt with reviewed_commit=HEAD~1 and a planted change in scripts/release/verify-receipt.mjs in the scratch clone, then assert verify(head, phase).ok === false and the 'diff from reviewed commit' message is present)."
+    }
+  ],
+  "non_blocking_findings": [
+    {
+      "id": "P1-VERIFY-RECEIPT-MISSING-AM5-EXEMPTION",
+      "severity": "P1",
+      "title": "verify-receipt.mjs has no AM-5 exception analogous to verify-protected.mjs; orchestrator protected-path repairs leave an unrebindable receipt",
+      "files": [
+        "scripts/release/verify-receipt.mjs",
+        "scripts/fleet/verify-protected.mjs",
+        "scripts/fleet/policy.json"
+      ],
+      "quoted_lines": [
+        "scripts/fleet/verify-protected.mjs ~line 145  // when every commit touching the file is an orchestrator commit that declares it with the\n    // trailers Fleet-Role: orchestrator and Protected-Change: <reason>; ...",
+        "scripts/fleet/policy.json protected_exemptions.orchestrator_protected_change  // in this diff: every commit touching the file carries trailers Fleet-Role: orchestrator and Protected-Change: <reason>, on a fleet branch; checked by the independent review bound to the head, the CI jobs and merge-phase.mjs (DECISIONS.md A-12)"
+      ],
+      "evidence": "scripts/fleet/verify-protected.mjs implements the AM-5 exemption declared in scripts/fleet/policy.json protected_exemptions.orchestrator_protected_change. scripts/release/verify-receipt.mjs does not consult that field; the only `extra`-allowlist in verify-receipt.mjs is `release-receipts/(ledger|manifests)/` plus the receipt file itself. Commit 3cf4a61109d4 carries the AM-5 trailers and is accepted by verify-protected.mjs, but the receipt it invalidates cannot be repaired without a re-run of the release step. The amendment and DECISIONS.md A-12 are silent on which side of the release gate the exemption belongs; the diff places it on the verify-protected side only.",
+      "suggestion": "Either add the AM-5 exception to verify-receipt.mjs (treat the post-receipt diff the same way verify-protected.mjs does, then run a fresh release to refresh the receipt at HEAD before merge), or amend A-12 to state explicitly that an orchestrator protected-path fix is release-blocking and must be re-released before merge-phase. The current rule (verify-protected accepts, verify-rejects) is the cause of the stuck state."
+    },
+    {
+      "id": "P1-NO-100-COMMIT-RECEIPT",
+      "severity": "P1",
+      "title": "Receipt at HEAD references reviewed_commit 147b8f2ff but the head is 3cf4a61109d4 — 100-commit drift; the spec requires the diff to hold the receipt file alone",
+      "files": [
+        "release-receipts/P-1.json",
+        "scripts/release/verify-receipt.mjs"
+      ],
+      "quoted_lines": [
+        "release-receipts/P-1.json:5  \"reviewed_commit\": \"147b8f2ffe0cea67d9d660d31f73edb8d0481384\",",
+        "release-receipts/P-1.json:6  \"tested_tree\": \"23911265903ecfab1560bf05b0433ad6e76864dd\","
+      ],
+      "evidence": "git rev-list --count 025e17e7d412..3cf4a61109d4 returns 11 commits in the diff range; 147b8f2ff is commit 8 in that range, 3cf4a6110 is commit 11. The receipt at HEAD is therefore 3 commits behind the head it is supposed to certify. tested_tree equals 147b8f2ff's tree (verified) but 147b8f2ff is not the head. The release step in scripts/fleet/run-phase.mjs writes the receipt on the receipt commit itself (84a575040); the design assumption is that the receipt commit is the last commit before push, which the post-receipt 3cf4a6110 violates.",
+      "suggestion": "Either pin the release step so that no commit can land after the receipt without re-running release, or add a CI job that fails any push that lands a commit after the receipt commit without a fresh release. The run-phase.mjs release step already re-runs verify-receipt after writing the receipt; a follow-up commit that lands on the branch (as the orchestrator's fix did) bypasses that re-run because the release step has already returned."
+    }
+  ],
+  "checklist": {
+    "coverage-ledger": {
+      "state": "PASS",
+      "evidence": "69 unique files in `git diff --name-only 025e17e7d412..3cf4a61109d4`; coverage.reviewed and coverage.not_reviewed below account for every one of them exactly once."
+    },
+    "plan-conformance": {
+      "state": "PASS",
+      "evidence": "Phase -1 DoD per the spec and the amendments: check-bootstrap and gen-contracts --check both exit 0 in the controlled environment; the receipt at release-receipts/P-1.json records all 7 gates PASS. 12 phases P-1 and P0..P10 per AM-3; policy.json substrate=cloudroom per AM-1; committer + Fleet-Role trailer per AM-2 (FD-2); fleet merge via merge-phase.mjs per AM-2 (FD-3); AM-5 orchestrator exemption implemented in verify-protected.mjs."
+    },
+    "weakened-checks": {
+      "state": "FAIL",
+      "evidence": "verify-receipt.mjs --control does not exercise the rule-B3 binding code path; see P0-RECEIPT-CONTROL-COVERS-NO-BINDING. The control passes both before and after a mutation that disables the binding check. No other check in the bootstrap (selftest.mjs controls, check-bootstrap.mjs item 9, gen-contracts.mjs) exercises the binding check either, because they all delegate to verify-receipt.mjs --control."
+    },
+    "mutation-control": {
+      "state": "PARTIAL",
+      "mutants": [
+        {
+          "file": "scripts/fleet/guard.mjs",
+          "planted": "line 77: changed `if (cmd.includes(f)) return deny(...)` to `if (false) return deny(...)` — neuters the forbidden_commands deny list",
+          "test_command": "node scripts/fleet/selftest.mjs --no-write",
+          "exit_under_mutant": 1,
+          "exit_restored": 0,
+          "caught_by": "selftest 'planted' check: 'FAIL selftest: planted — 10 of 12 planted forbidden actions denied' (planted action 'git push --force origin main' for releaser and 'git commit --no-verify -m x' for builder are now allowed because forbidden_commands is disabled and the role-based deny only blocks builder)",
+          "status": "caught"
+        },
+        {
+          "file": "scripts/fleet/guard.mjs",
+          "planted": "line 60: changed `return deny(\\`protected path ${action.path}\\`)` to `return allow('MUTATED: always allow protected path')` — every protected-path write becomes allowed",
+          "test_command": "node scripts/fleet/selftest.mjs --no-write",
+          "exit_under_mutant": 1,
+          "exit_restored": 0,
+          "caught_by": "selftest 'planted' check: 'FAIL selftest: planted — 7 of 12 planted forbidden actions denied' (the five planted writes to CLAUDE.md, .github/workflows/ci.yml, scripts/fleet/policy.json, tests/eval/jev/floors.json, prisma/migrations/* are all allowed because the catch-all deny is gone; the seeder .env.local is still caught by the secrets check, and the shell/mcp planted actions are still caught by the role-based and mcp denials)",
+          "status": "caught"
+        },
+        {
+          "file": "scripts/release/verify-receipt.mjs",
+          "planted": "line 75-77: changed the `extra` filter to `f => f !== file && !/^release-receipts\\/(ledger|manifests)\\//.test(f) && false` — the post-receipt diff is never flagged",
+          "test_command": "node scripts/release/verify-receipt.mjs --head HEAD --phase P-1",
+          "exit_under_mutant": 0,
+          "exit_restored": 1,
+          "caught_by": "NOT CAUGHT by `node scripts/release/verify-receipt.mjs --control` (exit 0 under mutant, exit 0 restored) and NOT CAUGHT by selftest.mjs (10 of 10 controls check exits 0 under mutant). The only test that catches the mutation is the live receipt verification at HEAD, which is the very check the mutant is disabling — so the broken behaviour is exactly what flips from FAIL to PASS. This is the finding reported in P0-RECEIPT-CONTROL-COVERS-NO-BINDING.",
+          "status": "not_caught_by_control"
+        }
+      ]
+    },
+    "guard-falsification": {
+      "state": "PASS",
+      "evidence": "selftest.mjs --no-write on the live tree: 13 of 13 PASS, 0 FAIL. The 12 planted forbidden actions are all denied by guard.mjs (8 write attempts on protected paths / .env* / outside-worktree / reader; 3 shell attempts with forbidden substrings; 1 mcp attempt with a denied tool class). The 3 benign actions (unprotected write, npm test shell, allowed mcp read tool) are all allowed. The guard-control negative (weak policy: protected_paths=[]) correctly lets a planted write through, proving the deny comes from the protected-path rule and not from a coincident. secret-scan detects planted Anthropic and AWS keys. Sandbox probe manifest recorded (child-written file absent from orchestrator)."
+    },
+    "clean-environment-suite": {
+      "state": "PASS",
+      "evidence": "On the review host (the one this review runs on, where committer is Phill and room-cli is absent) `node scripts/fleet/check-bootstrap.mjs` exits 0 with: 8 PASS, 1 FAIL on item 4 (committer identity — environmental, the receipt's host had fleet committer), 1 INCONCLUSIVE on item 10 (room-cli unavailable — environmental). The receipt's own environment is documented in the receipt tail: 'check-bootstrap: 10 of 10 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED'. gen-contracts.mjs --check exits 0 with 12 contracts, 0 drift. selftest.mjs exits 0 with 13 of 13 PASS. The review host's two non-PASS items are environmental, not code defects; the scripts' own check-bootstrap output is honest about it (it does not paper over the FAIL as PASS — it reports FAIL)."
+    },
+    "blast-radius": {
+      "state": "PASS",
+      "evidence": "The diff adds the fleet substrate but does not change the product surface: no changes under app/, lib/, prisma/schema.prisma, or any production runtime path. The protected-paths list is expanded by one entry (scripts/jev/**, see commit 147b8f2ff and A-19), which tightens rather than loosens containment. .env* files: envBad=0 in selftest, no real secrets in tracked tree (envTracked=none, only .env.example / .env.template allowed). prisma/schema.prisma is unchanged, so the 201-model schema is untouched. Branch protection on main is unchanged (A-8). The diff is self-contained under scripts/fleet, scripts/release, scripts/gate, scripts/truth, scripts/jev, scripts/api/exempt-routes.json, release-receipts, tests/eval/jev, .github/workflows, .claude/specs, DECISIONS.md, BACKLOG.md, docs/, and the receipt artifacts. No outbound side-effects observed in the diff."
+    },
+    "outbound-actions": {
+      "state": "PASS",
+      "evidence": "The diff does not make any external network call. The release step in scripts/fleet/run-phase.mjs pushes to the local fork (the Cloudroom gh token, FD-2) and opens a PR, but neither happens in the diff itself — the diff is the content of the PR. The guard.mjs denies: gh pr merge outside merge-phase, vercel --prod, vercel deploy, npm publish, curl -X POST, prisma migrate deploy, prisma db push, force-push git commands, hard git reset, branch delete, --no-verify commits, and the 10 MCP tool classes (deploy, promote, apply_migration, execute_sql, merge_branch, reset_branch, create_or_update_file, send_message, publish, post). Outbound actions are fail-closed by guard.mjs and by verify-receipt.mjs at the receipt level. The only sanctioned outbound path is FD-3 (gh pr merge via merge-phase) and it is gated by 6 gates (halt, pr-readable, head-matches, base-main, branch-pattern, receipt, checks, review, attest)."
+    }
+  },
+  "coverage": {
+    "reviewed": [
+      ".claude/specs/index.md",
+      ".github/repo-controls.json",
+      ".github/workflows/jev-pr.yml",
+      ".github/workflows/jev-ratchet.yml",
+      ".github/workflows/openapi-drift.yml",
+      ".github/workflows/protected-paths.yml",
+      ".github/workflows/receipt-verify.yml",
+      "BACKLOG.md",
+      "DECISIONS.md",
+      "docs/fleet/grill-2026-10-17-vibe-to-leader.md",
+      "docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md",
+      "proposals/.gitkeep",
+      "release-receipts/P-1.json",
+      "release-receipts/halt/.gitkeep",
+      "release-receipts/ledger/.gitkeep",
+      "release-receipts/ledger/fleet.jsonl",
+      "release-receipts/manifests/.gitkeep",
+      "release-receipts/manifests/P-1-gate.json",
+      "release-receipts/manifests/P-1-review-r1.json",
+      "release-receipts/manifests/P-1-review-r3.json",
+      "release-receipts/manifests/P-1-review.json",
+      "release-receipts/manifests/policy-hash.json",
+      "release-receipts/manifests/sandbox-probe.json",
+      "release-receipts/manifests/selftest.json",
+      "scripts/api/exempt-routes.json",
+      "scripts/fleet/README.md",
+      "scripts/fleet/apply-proposals.mjs",
+      "scripts/fleet/assert-absent.mjs",
+      "scripts/fleet/attest-phase.mjs",
+      "scripts/fleet/automations/nightly.md",
+      "scripts/fleet/automations/phase-advance.md",
+      "scripts/fleet/automations/weekly.md",
+      "scripts/fleet/check-bootstrap.mjs",
+      "scripts/fleet/check-governor-mode.mjs",
+      "scripts/fleet/check-ledgers.mjs",
+      "scripts/fleet/check-soak.mjs",
+      "scripts/fleet/contracts/P-1.json",
+      "scripts/fleet/contracts/P0.json",
+      "scripts/fleet/contracts/P1.json",
+      "scripts/fleet/contracts/P10.json",
+      "scripts/fleet/contracts/P2.json",
+      "scripts/fleet/contracts/P3.json",
+      "scripts/fleet/contracts/P4.json",
+      "scripts/fleet/contracts/P5.json",
+      "scripts/fleet/contracts/P6.json",
+      "scripts/fleet/contracts/P7.json",
+      "scripts/fleet/contracts/P8.json",
+      "scripts/fleet/contracts/P9.json",
+      "scripts/fleet/drill.mjs",
+      "scripts/fleet/fanout.mjs",
+      "scripts/fleet/gen-contracts.mjs",
+      "scripts/fleet/guard.mjs",
+      "scripts/fleet/ledger-push.mjs",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/merge-phase.mjs",
+      "scripts/fleet/next-row.mjs",
+      "scripts/fleet/phase-advance.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/provision.mjs",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/secret-scan.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "scripts/gate/check-held.mjs",
+      "scripts/jev/check-ratchet.mjs",
+      "scripts/release/verify-receipt.mjs",
+      "scripts/release/verify-waterline.mjs",
+      "scripts/truth/check-noop.mjs",
+      "tests/eval/jev/floors.json"
+    ],
+    "not_reviewed": []
+  },
+  "head": "3cf4a61109d4e894e6a6ced809ba98615c0ef485",
+  "lane": "minimax"
+}

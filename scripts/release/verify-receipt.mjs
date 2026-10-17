@@ -20,7 +20,15 @@ import {
   run,
   isMain,
 } from '../fleet/lib.mjs';
-import { existsSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
@@ -160,29 +168,52 @@ export function write({
   return receipt;
 }
 function control() {
-  // Negative: a receipt whose reviewed_commit is an older commit with other files in the diff must fail.
-  const head = git(['rev-parse', 'HEAD']);
-  const older = tryGit(['rev-parse', 'HEAD~3']) || head;
-  const fake = {
-    phase: 'P99',
-    reviewed_commit: older,
-    tested_tree: 'x',
-    review_report: null,
-    cost_ledger: {},
-    gate: [{ cmd: 'true', state: 'PASS' }],
-    state: 'PASS',
-  };
-  // Evaluate the same rules in-process against a fake head with no receipt file -> must not be ok.
-  const res = verify(head, 'P99');
-  const okA = res.ok === false;
-  const okB = fake.tested_tree !== git(['rev-parse', `${older}^{tree}`]);
-  return okA && okB;
+  // A: no receipt at head must fail. B and C exercise the rule-B3 binding in a scratch repo:
+  // a head that differs from the reviewed commit by the receipt alone passes (B), and the
+  // same receipt with any other file changed after review fails on the binding (C).
+  const okA = verify(git(['rev-parse', 'HEAD']), 'P99').ok === false;
+  const dir = mkdtempSync(path.join(tmpdir(), 'receipt-control-'));
+  try {
+    const g = a => git(a, { cwd: dir });
+    const id = ['-c', 'user.name=control', '-c', 'user.email=control@local'];
+    g(['init', '-q']);
+    writeFileSync(path.join(dir, 'a.txt'), 'reviewed\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'reviewed']);
+    const reviewed = g(['rev-parse', 'HEAD']);
+    mkdirSync(path.join(dir, 'release-receipts'));
+    writeFileSync(
+      path.join(dir, 'release-receipts/P99.json'),
+      JSON.stringify({
+        phase: 'P99',
+        reviewed_commit: reviewed,
+        tested_tree: g(['rev-parse', 'HEAD^{tree}']),
+        review_report: null,
+        cost_ledger: {},
+        gate: [{ cmd: 'true', state: 'PASS' }],
+        state: 'PASS',
+      })
+    );
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'receipt']);
+    const okB = verify(g(['rev-parse', 'HEAD']), 'P99', dir).ok === true;
+    writeFileSync(path.join(dir, 'a.txt'), 'changed after review\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'post-review change']);
+    const c = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okC =
+      c.ok === false &&
+      c.problems.some(x => x.startsWith('diff from reviewed commit'));
+    return okA && okB && okC;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent/mismatched receipt rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected)`
     );
     process.exit(ok ? 0 : 1);
   }
