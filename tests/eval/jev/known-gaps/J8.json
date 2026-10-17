@@ -1,0 +1,24 @@
+{
+  "schema": "jev-known-gaps/1",
+  "gaps": {
+    "J8-GAP-reclaim-redispatch-after-worker-death": {
+      "cases": [
+        "J8-facebook-slot-crash-retry",
+        "J8-facebook-social-cut-crash-retry",
+        "J8-instagram-slot-crash-retry",
+        "J8-instagram-social-cut-crash-retry",
+        "J8-linkedin-slot-crash-retry",
+        "J8-linkedin-social-cut-crash-retry",
+        "J8-threads-slot-crash-retry",
+        "J8-threads-social-cut-crash-retry",
+        "J8-tiktok-slot-crash-retry",
+        "J8-tiktok-social-cut-crash-retry",
+        "J8-twitter-slot-crash-retry",
+        "J8-twitter-social-cut-crash-retry",
+        "J8-youtube-slot-crash-retry",
+        "J8-youtube-social-cut-crash-retry"
+      ],
+      "note": "lib/publish/postPublishClaim.ts reclaimStalePublishingQueueItems flips any publish_queue row left in 'publishing' for >15 min back to 'failed' with nextRetryAt=now, and processPublishQueue re-dispatches it in the same pass. Nothing records that the platform call already succeeded (no pre-dispatch 'dispatched' marker, no platform idempotency key), so a worker that dies (e.g. function timeout) after the adapter returned success but before the 'published' write sends the same post a second time. At-least-once delivery where the J8 contract requires at-most-once."
+    }
+  }
+}
