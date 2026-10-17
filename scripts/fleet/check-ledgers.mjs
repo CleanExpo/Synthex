@@ -7,7 +7,7 @@
  * decides whether a silent day is acceptable. Positive control: a planted $5.00 day passes,
  * a planted $5.01 day fails.
  */
-import { policy, ledgerRows, report, utcDate } from './lib.mjs';
+import { policy, ledgerRows, report, utcDate, isMain } from './lib.mjs';
 const a = process.argv.slice(2);
 const di = a.indexOf('--days');
 const days = di >= 0 ? Number(a[di + 1]) : 14;
@@ -40,7 +40,7 @@ export function evaluate(rows, ceiling, abortLine, label) {
     });
   return items;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const pol = policy();
   if (a.includes('--control')) {
     const ok =

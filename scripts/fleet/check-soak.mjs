@@ -5,7 +5,7 @@
  * (nightly run) and every merged phase receipt has a start row within 24 hours of its merge.
  * Days without a start row FAIL: a silent scheduler is a failed soak, not a quiet one.
  */
-import { policy, ledgerRows, report, utcDate, ROOT } from './lib.mjs';
+import { policy, ledgerRows, report, utcDate, ROOT, isMain } from './lib.mjs';
 import { readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 const a = process.argv.slice(2);
@@ -46,7 +46,7 @@ export function evaluate(rows, receipts, now = new Date()) {
   }
   return items;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (a.includes('--control')) {
     const now = new Date('2026-01-10T12:00:00Z');
     const good = evaluate(

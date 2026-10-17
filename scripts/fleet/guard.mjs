@@ -13,7 +13,7 @@
  *        node scripts/fleet/guard.mjs --file actions.jsonl   (one action per line)
  * Exit 0 = every action allowed, 1 = at least one denied, 2 = malformed.
  */
-import { policy, isProtected } from './lib.mjs';
+import { policy, isProtected, isMain } from './lib.mjs';
 import { readFileSync } from 'node:fs';
 
 export function evaluate(action, pol = policy()) {
@@ -112,7 +112,7 @@ export function evaluate(action, pol = policy()) {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const a = process.argv.slice(2);
   let actions = [];
   const ji = a.indexOf('--json');

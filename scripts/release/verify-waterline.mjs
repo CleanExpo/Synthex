@@ -20,6 +20,7 @@ import {
   isFleetCommit,
   ROOT,
   ledgerRows,
+  isMain,
 } from '../fleet/lib.mjs';
 const args = process.argv.slice(2);
 const opt = (k, d) => {
@@ -77,7 +78,7 @@ export function events(since) {
     });
   return out;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const planted = [
       { sha: 'planted', event: 'prisma migrations', fleet: true },

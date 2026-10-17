@@ -4,7 +4,7 @@
  * Exit 0 when no floor in tests/eval/jev/floors.json (or the proposal overlay) is lower than at
  * base, and no case file was deleted without a tombstone entry in tests/eval/jev/tombstones.json.
  */
-import { readJson, tryGit, git, ROOT } from '../fleet/lib.mjs';
+import { readJson, tryGit, git, ROOT, isMain } from '../fleet/lib.mjs';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 const args = process.argv.slice(2);
@@ -41,7 +41,7 @@ export function deletedCases(base, head) {
   const tomb = readJson('tests/eval/jev/tombstones.json', { cases: [] });
   return deleted.filter(f => !tomb.cases.some(t => t.file === f));
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const p = compare(
       { families: { J1: { pass_rate: 0.9 } } },

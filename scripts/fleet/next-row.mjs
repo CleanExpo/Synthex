@@ -5,7 +5,7 @@
  * { id, phase, inputs, branch, proving_command }. Exit 0 with a contract; exit 3 when the block
  * holds no open row for the phase (a stop condition, never a failure).
  */
-import { policy, ROOT } from './lib.mjs';
+import { policy, ROOT, isMain } from './lib.mjs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 const a = process.argv.slice(2);
@@ -41,7 +41,7 @@ export function pick(rows, phase) {
     rows.find(r => r.status === 'open' && (!phase || r.phase === phase)) || null
   );
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const pol = policy();
   if (a.includes('--control')) {
     const rows = parseBlock(

@@ -14,6 +14,7 @@ import {
   STATES,
   readJson,
   report,
+  isMain,
 } from './lib.mjs';
 const a = process.argv.slice(2);
 const opt = (k, d) => {
@@ -54,7 +55,7 @@ export function evaluate({ commits, rows, receipt }) {
   });
   return items;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (a.includes('--control')) {
     const bad = evaluate({
       commits: [{ sha: 'deadbeefdeadbeef', fleet: false }],

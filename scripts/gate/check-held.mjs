@@ -6,7 +6,7 @@
  *   - after P7: `resolveHoldState(org)` returns 'held' when the organisation has no recorded policy
  * and that no seed or fixture records a production autonomy policy.
  */
-import { ROOT, run } from '../fleet/lib.mjs';
+import { ROOT, run, isMain } from '../fleet/lib.mjs';
 import { readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 const args = process.argv.slice(2);
@@ -57,7 +57,7 @@ export function check(root = ROOT) {
   });
   return items;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const planted = 'export const HOLD_FOR_REVIEW: boolean = false';
     const ok = !/export const HOLD_FOR_REVIEW:\s*boolean\s*=\s*true/.test(

@@ -7,7 +7,7 @@
  *
  * Exports: spawnUnit, waitForUnits, unitPrompt. CLI: --phase P<n> --units <units.json> [--concurrency 8]
  */
-import { policy, run, ROOT, ledgerAppend, tryGit } from './lib.mjs';
+import { policy, run, ROOT, ledgerAppend, tryGit, isMain } from './lib.mjs';
 import { readFileSync } from 'node:fs';
 const pol = policy();
 
@@ -141,7 +141,7 @@ export async function waitForUnits(
   return results;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const a = process.argv.slice(2);
   const opt = (k, d) => {
     const i = a.indexOf(k);

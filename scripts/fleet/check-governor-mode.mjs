@@ -5,7 +5,7 @@
  * Reads lib/ai/governor/mode.ts (created by P5). Absent file = governor not wired = shadow = PASS.
  * mode 'enforcing' passes only when the commit that introduced it is not a fleet commit.
  */
-import { ROOT, tryGit, isFleetCommit } from './lib.mjs';
+import { ROOT, tryGit, isFleetCommit, isMain } from './lib.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 const a = process.argv.slice(2);
@@ -34,7 +34,7 @@ export function evaluate(src, flipSha, fleetAuthored) {
         detail: `enforcing, flipped by a person at ${flipSha.slice(0, 12)}`,
       };
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (a.includes('--control')) {
     const ok =
       evaluate("export const GOVERNOR_MODE = 'enforcing'", 'abc123456789', true)

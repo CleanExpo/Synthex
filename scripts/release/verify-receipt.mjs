@@ -18,6 +18,7 @@ import {
   ROOT,
   ledgerRows,
   run,
+  isMain,
 } from '../fleet/lib.mjs';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -177,7 +178,7 @@ function control() {
   const okB = fake.tested_tree !== git(['rev-parse', `${older}^{tree}`]);
   return okA && okB;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(

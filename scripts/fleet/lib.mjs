@@ -16,6 +16,7 @@ import {
 } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const STATES = Object.freeze([
   'PASS',
@@ -228,4 +229,15 @@ export function nodeVersionOk(floor) {
   const [a, b, c] = process.versions.node.split('.').map(Number);
   const [x, y, z] = floor.split('.').map(Number);
   return a > x || (a === x && (b > y || (b === y && c >= z)));
+}
+
+/** True when this module is the entry script. Compares real paths, so a repository path with spaces
+ *  (the Mac Mini SSD) still runs the CLI body (independent review r3, B-1). */
+export function isMain(metaUrl) {
+  if (!process.argv[1]) return false;
+  try {
+    return fileURLToPath(metaUrl) === path.resolve(process.argv[1]);
+  } catch {
+    return false;
+  }
 }

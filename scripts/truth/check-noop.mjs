@@ -4,7 +4,7 @@
  * Exit 0 only when `git grep -l "platform/noop-client" -- app lib services` lists no file at
  * head AND the same command at base lists at least one (positive control: 88 on 2026-10-17).
  */
-import { git, tryGit, ROOT } from '../fleet/lib.mjs';
+import { git, tryGit, ROOT, isMain } from '../fleet/lib.mjs';
 const args = process.argv.slice(2);
 const opt = (k, d) => {
   const i = args.indexOf(k);
@@ -23,7 +23,7 @@ export function count(ref) {
   ]);
   return out ? out.split('\n').filter(Boolean).length : 0;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const c = count('HEAD');
     const ok = c > 0;

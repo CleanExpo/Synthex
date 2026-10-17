@@ -19,6 +19,7 @@ import {
   run,
   globToRegExp,
   ROOT,
+  isMain,
 } from './lib.mjs';
 import { execFileSync } from 'node:child_process';
 import {
@@ -213,7 +214,7 @@ function control() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(

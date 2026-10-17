@@ -5,7 +5,7 @@
  * which only a person clears. selftest sets FLEET_HALT_DIR to a scratch dir so a planted hit
  * never writes the real STOP. Usage: node secret-scan.mjs < text  | --diff <base> <head>
  */
-import { policy, ROOT, tryGit } from './lib.mjs';
+import { policy, ROOT, tryGit, isMain } from './lib.mjs';
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 const PATTERNS = [
@@ -38,7 +38,7 @@ export function haltOnHit(hits, reason) {
   );
   return true;
 }
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isMain(import.meta.url)) {
   const a = process.argv.slice(2);
   let text;
   if (a[0] === '--diff') text = tryGit(['diff', a[1], a[2]]) || '';

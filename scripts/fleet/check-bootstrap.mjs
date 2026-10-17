@@ -40,10 +40,10 @@ const add = (id, text, state, detail) =>
 // 1
 add(
   1,
-  'host: Node floor, git repo, policy, Linux sandbox',
+  'host: Node floor, git repo, policy, OS sandbox (Seatbelt on macOS, bubblewrap on Linux/WSL2, Cloudroom sandbox)',
   nodeVersionOk(pol.node_floor) &&
     tryGit(['rev-parse', '--git-dir']) &&
-    os.platform() === 'linux'
+    ['linux', 'darwin'].includes(os.platform())
     ? 'PASS'
     : 'FAIL',
   `node ${process.versions.node} ${os.platform()}`
