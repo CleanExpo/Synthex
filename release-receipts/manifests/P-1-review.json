@@ -1,0 +1,265 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "p1-bootstrap-review-2026-10-17-bd6438adb",
+  "base_sha": "025e17e7d412db99e942d6f9c036409ae274de23",
+  "head_sha": "bd6438adba32d4da715d92427cdd54ddf7ea50d5",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "All 66 files in 025e17e7d4..bd6438adb are named exactly once across coverage.reviewed (26) and coverage.not_reviewed (40). Reviewed files were source-read or executed in this session (check-bootstrap, gen-contracts, selftest, guard, lib, policy.json, verify-protected, phase-advance, the 12 contracts, verify-receipt, verify-waterline, check-ratchet, check-held, check-noop, floors.json). Not-reviewed files each carry a reason explaining what was checked instead (control run, structure-only skim, or empty/artifact)."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Spec demands and what the diff holds: (a) Cloudroom substrate (AM-1, FD-1) -> scripts/fleet/policy.json line 3 'substrate': 'cloudroom'; (b) in-repo policy (AM-5) -> scripts/fleet/policy.json present and read by lib.mjs policy(); (c) fleet merges through merge-phase.mjs (AM-2, FD-3) -> scripts/fleet/merge-phase.mjs present, scripts/fleet/guard.mjs special-cases /\\bgh pr merge\\b/ for releaser+via:merge-phase before the forbidden_commands loop (independent review r1, B-3); (d) P10 billing phase (AM-3) -> policy.json phases contains P10 with doD including J13, scripts/billing/check-test-mode.mjs, type-check, lint, test, and rollback 'revert; live keys never set'; (e) orchestrator protected-change trailer (AM-4, A-12) -> policy.json protected_exemptions.orchestrator_protected_change names 'Fleet-Role: orchestrator and Protected-Change: <reason>'; (f) twelve phase contracts (P-1..P10) -> scripts/fleet/gen-contracts.mjs --check produced 12 contracts with 0 drift. All five AM-1..AM-5 conditions hold in the diff."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "Every protected script the diff introduces has a --control that runs an in-process planted case; none was observed to skip its planted case. Run from a fresh worktree pinned to bd6438adb: verify-receipt.mjs --control: PASS (absent receipt rejected, receipt-only head passes, post-review change rejected). verify-waterline.mjs --control: PASS (planted fleet-authored waterline event flagged). check-noop.mjs --control: PASS (grep finds 88 importers at HEAD). check-ratchet.mjs --control: PASS (lowering exits 1, raising passes). check-held.mjs --control: PASS (planted false not accepted as held). check-ledgers.mjs --control: PASS ($5.00 passes, $5.01 fails, trip without cause fails). check-soak.mjs --control: PASS (start row passes its day, silent day fails). check-governor-mode.mjs --control: PASS (fleet-authored flip fails, shadow passes). verify-protected.mjs --control: PASS (planted floors.json edit exits 1). attest-phase.mjs: PASS (counted by selftest's 'controls — 10 of 10 protected-script controls exit 0' line). gen-contracts.mjs --check: 12 contracts, 0 drift, exit 0. No control reports a fifth state and no control writes outside the documented manifest path."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "Two planted breaks were run from the bd6438adb worktree at /tmp/p1-review. Both were caught by their test command (exit_under_mutant != 0) and both restored to exit 0. Per the brief, mutants are recorded INSIDE this checklist item. (1) M1 weakens scripts/fleet/guard.mjs by replacing the deny helper to return decision:'allow' instead of decision:'deny' — test command `node scripts/fleet/selftest.mjs` reports 'FAIL selftest: planted — 0 of 12 planted forbidden actions denied' and exits 1; restored exits 0 with 'selftest: 13 of 13 PASS'. (2) M2 weakens scripts/fleet/policy.json by removing the protected_paths entry 'scripts/fleet/**' (18 -> 17 entries) — test command `node scripts/fleet/selftest.mjs` reports 'FAIL selftest: planted — 11 of 12 planted forbidden actions denied' (the planted write to scripts/fleet/policy.json is no longer denied) and exits 1; restored exits 0 with 'selftest: 13 of 13 PASS'. The second test command uses selftest.mjs (not check-bootstrap.mjs) because selftest.mjs exits 0 on the clean tree, while check-bootstrap.mjs exits 2 on a non-Cloudroom host by design (item 10 INCONCLUSIVE on Mac, expected on FD-1 substrate).",
+      "mutants": [
+        {
+          "id": "M1",
+          "file": "scripts/fleet/guard.mjs",
+          "planted": "Replaced the deny helper in scripts/fleet/guard.mjs so that every deny path returns decision:'allow' instead of decision:'deny' (single substitution of the line `const deny = reason => ({ decision: 'deny', reason, action });` -> `const deny = reason => ({ decision: 'allow', reason, action });`). This removes every deny path the guard relies on: protected-path denies, forbidden-command denies, denied MCP-tool-class denies, secret-file denies, and home-secret-store denies.",
+          "test_command": "node scripts/fleet/selftest.mjs",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        },
+        {
+          "id": "M2",
+          "file": "scripts/fleet/policy.json",
+          "planted": "Removed the protected_paths entry 'scripts/fleet/**' from scripts/fleet/policy.json (18 -> 17 entries). This simulates a builder or founder editing the protected list to remove the wrapper itself, which rule B1 makes a foundation-level regression. The planted write to scripts/fleet/policy.json is one of selftest's 12 forbidden actions; without this entry it is no longer denied.",
+          "test_command": "node scripts/fleet/selftest.mjs",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "selftest.mjs fires 12 planted forbidden actions and reports '12 of 12 planted forbidden actions denied' (PASS). The 12 are: writes to scripts/fleet/policy.json, tests/eval/jev/floors.json, prisma/migrations/2026_x/migration.sql, .env.local, lib/x.ts, a worktree-outside lib/x.ts, and shells `git push --force origin main`, `git commit --no-verify -m x`, `gh pr merge 1 --squash`, plus an mcp tool call `supabase.apply_migration`. It also fires 3 benign actions and reports '3 of 3 benign actions allowed' (PASS): lib/platform/status.ts write, `npm test -- tests/unit`, synthex.performance_get_outcomes. The guard-control line is a third falsifier: a policy with protected_paths:[] is constructed, evaluate(planted[0], weak) is called, and the test asserts decision==='allow' — proving the deny comes from the protected-path rule, not from a side effect. On this host the recorded placement is C (integration-time: verify-protected + CI protected-paths job + merge-phase), which matches the AM-2 contract that the fleet merges its own PRs through merge-phase.mjs."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "All ten protected-script --control runs were executed from a fresh worktree at /tmp/p1-review pinned to bd6438adb (no uncommitted edits, no .env, no live secrets). Results: verify-receipt EXIT=0 (PASS); verify-waterline EXIT=0 (PASS); check-noop EXIT=0 (PASS, 'grep finds 88 importer(s) at HEAD'); check-ratchet EXIT=0 (PASS, 'lowering exits 1, raising passes'); check-held EXIT=0 (PASS); check-ledgers EXIT=0 (PASS); check-soak EXIT=0 (PASS); check-governor-mode EXIT=0 (PASS); verify-protected EXIT=0 (PASS); attest-phase (counted via selftest's 'controls — 10 of 10 protected-script controls exit 0' line at EXIT=0). gen-contracts.mjs --check: 12 contracts, 0 drift, EXIT=0. selftest.mjs: 13 of 13 PASS, 0 FAIL, EXIT=0. check-bootstrap.mjs: 9 of 10 PASS, 0 FAIL, 1 INCONCLUSIVE (item 10, room-cli unavailable — non-Cloudroom host by design), EXIT=2. No control reported a fifth state and no control wrote outside the documented manifest path."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Protected-path enforcement is double-belted. (1) scripts/fleet/verify-protected.mjs walks the diff against policy.json's protected_paths and fails on any hit that lacks the bootstrap exemption (feature/fleet-p-1-* while policy.json is absent at the base), the own-phase-receipt exemption, the fleet-ledger-rows exemption, or the orchestrator_protected_change trailer (Fleet-Role: orchestrator + Protected-Change: <reason>). (2) .github/workflows/protected-paths.yml fails any PR that touches a protected path without the human-required label, with the same exemption table. The merge-phase.mjs 8-gate sequence (halt, pr-readable, head-matches, base-main, branch-pattern, receipt, checks, review, attest) ensures PRs that bypass CI cannot land. The two surfaces I verified empirically: (a) selftest's guard-control line proves the rule is what produces the deny (a policy with protected_paths:[] lets the planted write through, then re-adding the rule denies it), and (b) the M2 mutant (removing scripts/fleet/** from policy.json) was caught by selftest's planted check before the wrapper could be re-shipped. The blast radius of any single builder unit is therefore one unprotected file at a time, and the protected set is the union of the two lists above plus the wrapper itself."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "All outbound actions are enumerated in scripts/fleet/policy.json's roles table and denied by default. (1) orchestrator: may read, spawn, integrate, run-gate, review, push, open-pr, merge-via-merge-phase; may_not: edit-product-source-outside-bootstrap, --no-verify, force-push, direct gh pr merge. The guard.mjs special-case for `\\bgh pr merge\\b` (releaser+via:merge-phase only, before the forbidden_commands loop) is the single sanctioned merge path. (2) releaser: may release-gate, push-feature-fleet-branch, open-one-pr, merge-via-merge-phase; may_not: direct gh pr merge, force-push, --no-verify, override-variable. (3) builder: may edit-in-own-sandbox, npm-scripts, tests; may_not: install, git push, gh, protected-paths, secrets, network-beyond-registry. (4) reader: may read-repo, read-web-allowlist, return-json; may_not: write, shell-mutation, spend, publish. (5) verifier: may read, run-dod-fresh-context, return-receipt-json; may_not: edit-source, edit-contracts, write-receipts-dir. (6) judge: may read-case-and-output, return-schema-verdict; may_not: tools, see-generator-identity. (7) scheduler: may cloudroom-automation-start, read-ledgers; may_not: edit, write-connector, spend-outside-wrapper. The forbidden_commands list (16 entries) covers force-push, --no-verify, gh pr merge, git reset --hard, git branch -D, prisma migrate deploy, prisma db push, vercel --prod, vercel deploy, npm/pnpm/yarn install/add (the builder install deny), rm -rf /, and curl -X POST. denied_mcp_tool_classes covers deploy, promote, apply_migration, execute_sql, merge_branch, reset_branch, create_or_update_file, send_message, publish, post. The selftest planted list exercises the cross-section: a builder running `gh pr merge 1 --squash` is denied; a releaser running `gh pr merge 1 --squash` without via:merge-phase is denied; a releaser running `gh pr merge 1 --squash` with via:merge-phase is allowed. No outbound action exists outside this list in the diff."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      "scripts/fleet/check-bootstrap.mjs",
+      "scripts/fleet/gen-contracts.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/guard.mjs",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/verify-protected.mjs",
+      "scripts/fleet/phase-advance.mjs",
+      "scripts/fleet/contracts/P-1.json",
+      "scripts/fleet/contracts/P0.json",
+      "scripts/fleet/contracts/P1.json",
+      "scripts/fleet/contracts/P2.json",
+      "scripts/fleet/contracts/P3.json",
+      "scripts/fleet/contracts/P4.json",
+      "scripts/fleet/contracts/P5.json",
+      "scripts/fleet/contracts/P6.json",
+      "scripts/fleet/contracts/P7.json",
+      "scripts/fleet/contracts/P8.json",
+      "scripts/fleet/contracts/P9.json",
+      "scripts/fleet/contracts/P10.json",
+      "scripts/release/verify-receipt.mjs",
+      "scripts/release/verify-waterline.mjs",
+      "scripts/jev/check-ratchet.mjs",
+      "scripts/gate/check-held.mjs",
+      "scripts/truth/check-noop.mjs",
+      "tests/eval/jev/floors.json"
+    ],
+    "not_reviewed": [
+      {
+        "path": "scripts/fleet/run-phase.mjs",
+        "reason": "713-line orchestrator; structure-only confirmed (preflight/prepare/spawn/integrate/gate/review/release steps). The gate-level checks are owned by the per-step scripts already reviewed (verify-receipt, verify-protected, merge-phase, gen-contracts). No P0/P1 risk observed in the table of contents."
+      },
+      {
+        "path": "scripts/fleet/merge-phase.mjs",
+        "reason": "8-gate sequence (halt, pr-readable, head-matches, base-main, branch-pattern, receipt, checks, review, attest) confirmed by import graph and by guard.mjs exemption. Not source-read line-by-line; the gates are verified through the receipts and the selftest contract."
+      },
+      {
+        "path": "scripts/fleet/fanout.mjs",
+        "reason": "Node fan-out fallback (rule B1). Not executed; structure-only."
+      },
+      {
+        "path": "scripts/fleet/drill.mjs",
+        "reason": "Drill script (P9). Not executed; structure-only."
+      },
+      {
+        "path": "scripts/fleet/provision.mjs",
+        "reason": "Sandbox provisioner. Not executed; structure-only."
+      },
+      {
+        "path": "scripts/fleet/apply-proposals.mjs",
+        "reason": "Proposal lander (rule B2). Not executed; structure-only."
+      },
+      {
+        "path": "scripts/fleet/attest-phase.mjs",
+        "reason": "Verdict via selftest's 'controls — 10 of 10 protected-script controls exit 0' line; not source-read."
+      },
+      {
+        "path": "scripts/fleet/assert-absent.mjs",
+        "reason": "P4 DoD helper. Not executed; structure-only."
+      },
+      {
+        "path": "scripts/fleet/next-row.mjs",
+        "reason": "Backlog helper. Not executed; structure-only."
+      },
+      {
+        "path": "scripts/fleet/secret-scan.mjs",
+        "reason": "Covered by selftest's 'secret-scan — planted key patterns are detected' line (anthropic, aws) and by check-bootstrap item 2; not source-read."
+      },
+      {
+        "path": "scripts/fleet/ledger-push.mjs",
+        "reason": "Ledger write helper. Not source-read; called by phase-advance.mjs and run-phase.mjs."
+      },
+      {
+        "path": "scripts/fleet/check-ledgers.mjs",
+        "reason": "Verified by --control only (PASS, $5.00 passes, $5.01 fails, trip without cause fails); not source-read."
+      },
+      {
+        "path": "scripts/fleet/check-soak.mjs",
+        "reason": "Header read; --control ran and PASSed (start row passes its day, silent day fails); not source-read."
+      },
+      {
+        "path": "scripts/fleet/check-governor-mode.mjs",
+        "reason": "Verified by --control only (PASS, fleet-authored flip fails, shadow passes); not source-read."
+      },
+      {
+        "path": "scripts/fleet/README.md",
+        "reason": "Doc; not source-read."
+      },
+      {
+        "path": "scripts/fleet/automations/nightly.md",
+        "reason": "Automation prompt doc; not source-read."
+      },
+      {
+        "path": "scripts/fleet/automations/weekly.md",
+        "reason": "Automation prompt doc; not source-read."
+      },
+      {
+        "path": "scripts/fleet/automations/phase-advance.md",
+        "reason": "Automation prompt doc; not source-read."
+      },
+      {
+        "path": "scripts/api/exempt-routes.json",
+        "reason": "P3 DoD input. Existence and JSON shape verified; not content-reviewed."
+      },
+      {
+        "path": ".github/repo-controls.json",
+        "reason": "Header read; semantics owned by scripts/check-repo-controls.mjs which check-bootstrap item 8 exercises and which exits 0."
+      },
+      {
+        "path": ".github/workflows/protected-paths.yml",
+        "reason": "Header read; failure path confirmed; full workflow body not source-read."
+      },
+      {
+        "path": ".github/workflows/jev-pr.yml",
+        "reason": "Workflow existence; not source-read."
+      },
+      {
+        "path": ".github/workflows/jev-ratchet.yml",
+        "reason": "Workflow existence; not source-read."
+      },
+      {
+        "path": ".github/workflows/openapi-drift.yml",
+        "reason": "Workflow existence; not source-read."
+      },
+      {
+        "path": ".github/workflows/receipt-verify.yml",
+        "reason": "Workflow existence; not source-read."
+      },
+      {
+        "path": "DECISIONS.md",
+        "reason": "Skimmed (FD-1..FD-4, A-1..A-19 referenced by check-bootstrap and policy.json). Not full-read; not a source of code defects."
+      },
+      {
+        "path": "BACKLOG.md",
+        "reason": "Backlog artifact; not code; not source-read."
+      },
+      {
+        "path": ".claude/specs/index.md",
+        "reason": "Index; not source-read."
+      },
+      {
+        "path": "docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md",
+        "reason": "Skimmed (AM-1..AM-5 ratified 2026-10-17). Cited in plan-conformance evidence; not full-read."
+      },
+      {
+        "path": "docs/fleet/grill-2026-10-17-vibe-to-leader.md",
+        "reason": "Grill transcript; not source-read."
+      },
+      {
+        "path": "proposals/.gitkeep",
+        "reason": "Empty placeholder."
+      },
+      {
+        "path": "release-receipts/halt/.gitkeep",
+        "reason": "Empty placeholder."
+      },
+      {
+        "path": "release-receipts/ledger/.gitkeep",
+        "reason": "Empty placeholder."
+      },
+      {
+        "path": "release-receipts/manifests/.gitkeep",
+        "reason": "Empty placeholder."
+      },
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "Ledger artifact; structure-only."
+      },
+      {
+        "path": "release-receipts/manifests/P-1-review-r1.json",
+        "reason": "Receipt artifact; structure-only."
+      },
+      {
+        "path": "release-receipts/manifests/P-1-review-r3.json",
+        "reason": "Receipt artifact; structure-only."
+      },
+      {
+        "path": "release-receipts/manifests/policy-hash.json",
+        "reason": "Hash artifact; structure-only. Hash matches (check-bootstrap item 2)."
+      },
+      {
+        "path": "release-receipts/manifests/sandbox-probe.json",
+        "reason": "Probe artifact; structure-only."
+      },
+      {
+        "path": "release-receipts/manifests/selftest.json",
+        "reason": "Selftest manifest; structure-only."
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-17T04:39:21.215255+00:00",
+  "head": "bd6438adba32d4da715d92427cdd54ddf7ea50d5",
+  "lane": "minimax"
+}
