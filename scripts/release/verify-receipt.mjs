@@ -189,7 +189,19 @@ if (isMain(import.meta.url)) {
   if (args.includes('--write')) {
     const phase = opt('--phase');
     const reviewed = opt('--reviewed');
-    const gate = readJson(opt('--gate'));
+    // The gate manifest is { phase, head, tree, at, results[] }; the receipt carries the results
+    // array and must be written for the head the gate actually ran on.
+    const gateDoc = readJson(opt('--gate'));
+    const gate = Array.isArray(gateDoc) ? gateDoc : gateDoc.results || [];
+    if (
+      gateDoc.head &&
+      !String(gateDoc.head).startsWith(reviewed.slice(0, 12))
+    ) {
+      console.log(
+        `FAIL gate manifest head ${gateDoc.head} is not the reviewed commit ${reviewed}`
+      );
+      process.exit(1);
+    }
     const r = write({
       phase,
       reviewed,
