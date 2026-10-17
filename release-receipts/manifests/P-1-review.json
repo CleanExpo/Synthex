@@ -1,0 +1,147 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "openrouter/moonshotai/kimi-k3",
+  "reviewer_session_id": "kimi-k3-p1-bootstrap-664f496f-01",
+  "base_sha": "025e17e7d412db99e942d6f9c036409ae274de23",
+  "head_sha": "664f496f51380c36606712c0ac49a30f2f89495a",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "Every path in the supplied diff is named exactly once across coverage.reviewed and coverage.not_reviewed; release-receipts/ledger/fleet.jsonl is listed in not_reviewed because the artefact explicitly excluded it. No invented paths.",
+      "reason": null
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "P-1 contract (scripts/fleet/contracts/P-1.json) closes 'every protected file, policy, contracts, CI jobs': the diff adds scripts/fleet/policy.json with its hash manifest, 12 derived contracts (P-1 + P0..P10 per amended AM-3), the five CI jobs (protected-paths, receipt-verify, jev-ratchet, jev-pr, openapi-drift), the protected scripts each with a --control, DECISIONS.md, the amendments file, and the spec index row set to In execution. Prior rounds' defects are visibly fixed: isMain() real-path guard (lib.mjs), Linux+darwin host check (check-bootstrap.mjs), guard.mjs gh-pr-merge exemption ordered before the forbidden-substring loop, policy-hash.json consistent with A-19/A-20 re-recording, trusted-base verifiers in both workflows, per_page=100 plus hasNextPage fail-closed in merge-phase listThreads, merge-commit merge in merge-phase.mjs, scripts/jev/** in protected_paths.",
+      "reason": null
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "No check is weakened in the diff: verify-protected.mjs reads policy from the trusted base ref and force-adds scripts/fleet/policy.json to protected_paths; check-ratchet.mjs ratchets committed floors against base in addition to the proposal overlay and fails on removed/non-numeric floors; verify-receipt.mjs requires every contract command PASS in the receipt gate, exact verdict match, empty blocking_findings, and a commit-object reviewed_commit; merge-phase.mjs fails closed on unknown check-runs (cr=[]), missing required contexts, and unpaginated review threads. The DEPLOY_INHIBIT declaration change (expected \"true\", count 1) is documented in DECISIONS.md A-10 as matching the founder's already-applied live setting, with no GitHub setting changed.",
+      "reason": null
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "N/A",
+      "evidence": "No mutants were planted or run: this lane has no shell, no repo and no tools; the diff is the only artefact. The brief forbids claiming a run that did not happen, so no mutants record is attached.",
+      "reason": "no execution environment in this lane; mutation controls could not be run and are not claimed"
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "N/A",
+      "evidence": "Guard behaviour was assessed statically only: guard.mjs orders the via:merge-phase exemption before the forbidden-substring loop (closing review r1 B-3), denies reader/judge shell, denies builder push/gh/install, and denies every non-exempt protected write; selftest.mjs plants 12 forbidden and 3 benign actions plus a no-protected-paths negative control. These controls could not be executed here.",
+      "reason": "no shell in this lane; falsification judged from source, not executed"
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "N/A",
+      "evidence": "node scripts/fleet/check-bootstrap.mjs and node scripts/fleet/gen-contracts.mjs --check could not be run (no tools). Statically, gen-contracts --check compares derived contracts to committed ones and exits 1 on drift; check-bootstrap items map to the spec table with four-state reporting via lib.mjs report().",
+      "reason": "execution not possible from the diff artefact; not claimed"
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Protected surface is confined to scripts/fleet/**, scripts/jev/**, scripts/release/**, scripts/gate/**, scripts/truth/**, .github/**, release-receipts/**, tests/eval/jev/floors.json and scripts/api/exempt-routes.json, all declared in policy.json protected_paths and enforced by verify-protected.mjs plus the protected-paths workflow running the trusted-base verifier. ledger-push.mjs pushes only to the unprotected fleet-ledger branch; no product source (app/, lib/, prisma/) is touched; no new dependencies, tables or services (D3/D4 hold).",
+      "reason": null
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Outbound surface: gh pr create/merge only through merge-phase.mjs behind halt, receipt, exact-head checks, review-binding, attestation and thread-disposition gates with --match-head-commit; ledger-push.mjs pushes only HEAD:refs/heads/fleet-ledger; fanout spawn/poll via room-cli per FD-1; review lanes limited to minimax/openrouter/gemini with cursor/codex in policy.review.never. Gate commands run with GITHUB_TOKEN/GH_TOKEN emptied (run-phase.mjs gate env). Branch names and SHAs reach workflow shells via env with -- guards; the label check uses toJson; merge-phase thread replies travel as gh api -F fields, not interpolated queries. secret-scan.mjs K3 patterns cover anthropic/openai/aws/github/stripe-live/private-key/database-url and write the security STOP on hits.",
+      "reason": null
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      ".claude/specs/index.md",
+      ".github/repo-controls.json",
+      ".github/workflows/jev-pr.yml",
+      ".github/workflows/jev-ratchet.yml",
+      ".github/workflows/openapi-drift.yml",
+      ".github/workflows/protected-paths.yml",
+      ".github/workflows/receipt-verify.yml",
+      "BACKLOG.md",
+      "DECISIONS.md",
+      "docs/fleet/grill-2026-10-17-vibe-to-leader.md",
+      "docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md",
+      "proposals/.gitkeep",
+      "release-receipts/halt/.gitkeep",
+      "release-receipts/ledger/.gitkeep",
+      "release-receipts/manifests/.gitkeep",
+      "release-receipts/manifests/P-1-review-r1.json",
+      "release-receipts/manifests/P-1-review-r3.json",
+      "release-receipts/manifests/P-1-threads.json",
+      "release-receipts/manifests/policy-hash.json",
+      "release-receipts/manifests/sandbox-probe.json",
+      "release-receipts/manifests/selftest.json",
+      "scripts/api/exempt-routes.json",
+      "scripts/fleet/README.md",
+      "scripts/fleet/apply-proposals.mjs",
+      "scripts/fleet/assert-absent.mjs",
+      "scripts/fleet/attest-phase.mjs",
+      "scripts/fleet/automations/nightly.md",
+      "scripts/fleet/automations/phase-advance.md",
+      "scripts/fleet/automations/weekly.md",
+      "scripts/fleet/check-bootstrap.mjs",
+      "scripts/fleet/check-governor-mode.mjs",
+      "scripts/fleet/check-ledgers.mjs",
+      "scripts/fleet/check-soak.mjs",
+      "scripts/fleet/contracts/P-1.json",
+      "scripts/fleet/contracts/P0.json",
+      "scripts/fleet/contracts/P1.json",
+      "scripts/fleet/contracts/P10.json",
+      "scripts/fleet/contracts/P2.json",
+      "scripts/fleet/contracts/P3.json",
+      "scripts/fleet/contracts/P4.json",
+      "scripts/fleet/contracts/P5.json",
+      "scripts/fleet/contracts/P6.json",
+      "scripts/fleet/contracts/P7.json",
+      "scripts/fleet/contracts/P8.json",
+      "scripts/fleet/contracts/P9.json",
+      "scripts/fleet/drill.mjs",
+      "scripts/fleet/fanout.mjs",
+      "scripts/fleet/gen-contracts.mjs",
+      "scripts/fleet/guard.mjs",
+      "scripts/fleet/ledger-push.mjs",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/merge-phase.mjs",
+      "scripts/fleet/next-row.mjs",
+      "scripts/fleet/phase-advance.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/provision.mjs",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/secret-scan.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "scripts/gate/check-held.mjs",
+      "scripts/jev/check-ratchet.mjs",
+      "scripts/release/verify-receipt.mjs",
+      "scripts/release/verify-waterline.mjs",
+      "scripts/truth/check-noop.mjs",
+      "tests/eval/jev/floors.json"
+    ],
+    "not_reviewed": [
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "explicitly excluded from the supplied artefact ('NOT SHOWN — captured log/JSONL artefacts'); not reviewed and not claimed"
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-17T06:32:17.067031+00:00",
+  "diff_coverage": {
+    "total_chars": 276048,
+    "shown_chars": 276048,
+    "truncated": false,
+    "excluded_files": ["release-receipts/ledger/fleet.jsonl"],
+    "scope_paths": [],
+    "unseen_files": []
+  },
+  "head": "664f496f51380c36606712c0ac49a30f2f89495a",
+  "lane": "openrouter"
+}
