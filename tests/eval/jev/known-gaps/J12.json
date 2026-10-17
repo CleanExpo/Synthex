@@ -1,0 +1,9 @@
+{
+  "schema": "jev-known-gaps/1",
+  "gaps": {
+    "J12-GAP-content-score-history-noop-client": {
+      "cases": ["J12-content-score-history-brand-scope"],
+      "note": "Regression of 78997d5e. ab2f2282 (2026-08-18) rewired app/api/dashboard/content-score-history/route.ts to lib/platform/noop-client, and 8f7d71b2 (2026-08-28, SYN-1070) made noop-client.from() throw NOOP_CLIENT_NOT_MIGRATED. The route now throws for every caller, so the active-brand-scoped read fixed in 78997d5e never runs. There is no Prisma model for content_score_history; fixing it needs a migration-free port or a schema decision (out of P1 scope)."
+    }
+  }
+}
