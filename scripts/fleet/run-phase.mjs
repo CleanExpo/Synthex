@@ -401,19 +401,27 @@ function review() {
       run('git', ['bundle', 'create', bundle, `${base}..HEAD`]);
       run('room-cli', ['mac', 'push', bundle, '/tmp'], { timeout: 600000 });
       run('room-cli', ['mac', 'push', brief, '/tmp'], { timeout: 120000 });
-      const macCmd = `cd ~/Synthex && git fetch -q origin main && git fetch -q /tmp/${path.basename(bundle)} ${head}:refs/fleet/review-${phase} && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief /tmp/${path.basename(brief)} --base ${base} --head ${head} --repo ~/Synthex --out /tmp/review-${phase}.json --lane minimax; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat /tmp/review-${phase}.json 2>/dev/null`;
+      const macCmd = `cd ~/Synthex && git fetch -q origin main && git fetch -q -f /tmp/${path.basename(bundle)} +${head}:refs/fleet/review-${phase} && rm -f /tmp/review-${phase}.json && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief /tmp/${path.basename(brief)} --base ${base} --head ${head} --repo ~/Synthex --out /tmp/review-${phase}.json --lane minimax; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat /tmp/review-${phase}.json 2>/dev/null`;
       const m = run('room-cli', ['mac', 'run', macCmd], { timeout: 1800000 });
       const body = m.stdout.includes('REPORT-BEGIN')
         ? m.stdout.slice(m.stdout.indexOf('REPORT-BEGIN') + 12).trim()
         : '';
-      r = {
-        code: /MAC_EXIT=0/.test(m.stdout) && body.startsWith('{') ? 0 : 1,
-        stdout: m.stdout,
-        stderr: m.stderr,
-      };
+      // The report is the verdict (release law): accept it when it parses and names this head.
+      let parsed = null;
+      try {
+        parsed = body.startsWith('{') ? JSON.parse(body) : null;
+      } catch {
+        parsed = null;
+      }
+      const bound =
+        parsed &&
+        String(parsed.head_sha || parsed.head || '').startsWith(
+          head.slice(0, 12)
+        );
+      r = { code: bound ? 0 : 1, stdout: m.stdout, stderr: m.stderr };
       if (r.code === 0) {
         try {
-          writeJson(out, JSON.parse(body));
+          writeJson(out, parsed);
         } catch {
           r.code = 1;
         }
