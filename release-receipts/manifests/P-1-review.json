@@ -1,0 +1,143 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "minimax-p1-bootstrap-amended-spec-63c18f5c",
+  "base_sha": "025e17e7d412db99e942d6f9c036409ae274de23",
+  "head_sha": "63c18f5caa2d1ff20b2f98c9b71b4427236705cc",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "All 66 files in the diff were opened and read in full or part: scripts/fleet/{lib.mjs, guard.mjs, verify-protected.mjs, selftest.mjs, check-bootstrap.mjs, gen-contracts.mjs, run-phase.mjs, merge-phase.mjs, fanout.mjs, secret-scan.mjs, provision.mjs, attest-phase.mjs, assert-absent.mjs, apply-proposals.mjs, phase-advance.mjs, ledger-push.mjs, next-row.mjs, check-governor-mode.mjs, check-ledgers.mjs, check-soak.mjs, drill.mjs, policy.json, README.md, contracts/*.json, automations/*.md} (47), scripts/release/{verify-receipt.mjs, verify-waterline.mjs} (2), scripts/{gate/check-held.mjs, jev/check-ratchet.mjs, truth/check-noop.mjs, api/exempt-routes.json} (4), .github/workflows/{protected-paths, jev-ratchet, jev-pr, openapi-drift, receipt-verify}.yml (5), .github/repo-controls.json (1), tests/eval/jev/floors.json (1), release-receipts/{ledger/fleet.jsonl, manifests/{policy-hash,sandbox-probe,selftest,P-1-review-r1,P-1-review-r3}.json} (6), {proposals,release-receipts/halt,release-receipts/ledger,release-receipts/manifests}/.gitkeep (4), DECISIONS.md, BACKLOG.md, .claude/specs/index.md, docs/fleet/grill-2026-10-17-vibe-to-leader.md, docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (4). Coverage.reviewed plus coverage.not_reviewed names every changed file exactly once and nothing that is not in the diff."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Phase -1 closes every protected path per Rule B1 and Rule B2 (DECISIONS.md A-7/A-12). The five CI workflows named in the spec are all on disk: protected-paths.yml (the label job, exits on a non-exempt protected change), jev-ratchet.yml (the diff that introduces floors.json must exit 0), jev-pr.yml (records DISABLED before P1), openapi-drift.yml (records DISABLED before P3), and receipt-verify.yml (runs verify-receipt.mjs). scripts/fleet/{lib.mjs, guard.mjs, verify-protected.mjs, selftest.mjs, check-bootstrap.mjs, gen-contracts.mjs, run-phase.mjs, merge-phase.mjs, fanout.mjs, secret-scan.mjs, provision.mjs, attest-phase.mjs, apply-proposals.mjs, phase-advance.mjs, ledger-push.mjs, next-row.mjs, check-governor-mode.mjs, check-ledgers.mjs, check-soak.mjs, drill.mjs, assert-absent.mjs} all match the protected file list in spec line 81. The five amendments (AM-1..AM-5) are correctly applied: AM-1 substrate is cloudroom (policy.json substrate key, selftest placement C); AM-2/FD-3 merge gates sit in scripts/fleet/merge-phase.mjs; AM-3/FD-4 adds phase P10 in policy.json and contracts/P10.json, making the contract count 12 (P-1 and P0..P10) — confirmed by gen-contracts.mjs --check printing '12 contracts, 0 drift'; AM-4 in-repo policy is at scripts/fleet/policy.json with its hash recorded in release-receipts/manifests/policy-hash.json; AM-5 verify-protected.mjs accepts a change only when every touching commit carries Fleet-Role: orchestrator and Protected-Change trailers. The receipt verifier's rule-B3 binding (diff from reviewed_commit to head holds only the receipt file plus ledger/manifests) is verified by the negative control in scripts/release/verify-receipt.mjs:212-260."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "Every protected script (the 10 listed in scripts/fleet/check-bootstrap.mjs:151-162 and scripts/fleet/selftest.mjs:133-144) ships a --control mode that plants the failure it exists to catch and must exit 0 only when caught. Running each control now returns the expected PASS line and exit 0: verify-protected (planted floors.json edit exits 1), verify-receipt (absent receipt rejected, receipt-only head passes, post-review change rejected), verify-waterline (planted fleet event flagged), check-noop (positive control finds 88 importers), check-ratchet (lowering exits 1, raising passes), check-held (planted false is not accepted as held), check-ledgers ($5.00 PASS, $5.01 FAIL, trip-without-cause FAIL), check-soak (start row passes its day, silent day FAILS), check-governor-mode (fleet-authored flip FAILS, shadow PASSES, null PASSES), attest-phase (human commit FAILS, fifth state FAILS, fleet-only PASSES). scripts/fleet/gen-contracts.mjs --check exits 0 with 12 contracts, 0 drift. scripts/fleet/check-bootstrap.mjs itself accepts the four-state rule (lib.mjs STATES = PASS|FAIL|INCONCLUSIVE|DISABLED); assertState() throws on a fifth value. The 'fifth state' DRILL in scripts/fleet/drill.mjs reuses attest-phase to reject a receipt carrying state GREEN. Nothing passed by silence: a day with no ledger cost rows is DISABLED, not PASS (scripts/fleet/check-ledgers.mjs:30-35)."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "Mutant 1 — scripts/fleet/verify-protected.mjs: planted changes the FAIL state for an unexempted protected path to 'MUTATED' (so the inner control call no longer exits 1). Test command: node scripts/fleet/verify-protected.mjs --control. exit_under_mutant = 1 (control output: 'FAIL verify-protected negative control (planted floors.json edit exits 1)'). exit_restored = 0 (after restoring from /tmp/verify-protected.mjs.backup: 'PASS verify-protected negative control'). Mutant 2 — scripts/release/verify-receipt.mjs: planted changes the extra-file filter in the rule-B3 binding check to always return empty (so a head that differs from the reviewed_commit by an extra file would pass). Test command: node scripts/release/verify-receipt.mjs --control. exit_under_mutant = 1 (control output: 'FAIL verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected)'; the post-review-change test fails because the binding check no longer adds 'diff from reviewed commit' to problems). exit_restored = 0 (after restoring from /tmp/verify-receipt.mjs.backup). Both mutants are caught by their own controls; the file is restored verbatim before report write. The numeric exit codes are recorded exactly as observed.",
+      "mutants": [
+        {
+          "file": "scripts/fleet/verify-protected.mjs",
+          "planted": "Changed the trailing unconditional `findings.push({file: f, state: 'FAIL', why: 'protected path changed without exemption'})` to set state 'MUTATED' instead of 'FAIL', so an unexempted protected-path change no longer produces a violation. The negative control plants a floors.json edit on a feature/fleet-p0-control branch in a scratch clone; the inner verify-protected call should exit 1 but with this mutant exits 0, so the control function returns false.",
+          "test_command": "node scripts/fleet/verify-protected.mjs --control",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        },
+        {
+          "file": "scripts/release/verify-receipt.mjs",
+          "planted": "Changed the `extra = diff.filter(...)` line in the rule-B3 binding check so the filter predicate always returns false (the expression `(false) && f !== file && ...`). A head that differs from the reviewed_commit by an extra file would no longer trigger a 'diff from reviewed commit holds more than the receipt' problem. The negative control test C (post-review change to a.txt) should fail verify(), but with this mutant it returns ok=true and the control function returns false.",
+          "test_command": "node scripts/release/verify-receipt.mjs --control",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "scripts/fleet/selftest.mjs plants exactly 12 forbidden actions and 3 benign ones (the spec requires 12/3), firing each through scripts/fleet/guard.mjs evaluate() at integration time (placement C — AM-1 amendment). The planted cases cover: writes to CLAUDE.md, .github/workflows/ci.yml, scripts/fleet/policy.json, tests/eval/jev/floors.json, prisma/migrations/**, .env.local; a reader-role write to lib/x.ts (role separation D6); a builder write outside the worktree (K8); git push --force, git commit --no-verify, gh pr merge (release-law K6); and an MCP apply_migration call (K9). The guard's deny-branch for each one is checked against the policy's forbidden_commands and protected_paths arrays. The guard's negative control (selftest.mjs:97-105) loads a policy with protected_paths:[] and proves the planted[0] write is then allowed — this is the falsifier that proves the denial comes from the rule, not from a hard-coded allow list. Additional falsifiers in run-phase.mjs:integrate (the post-fetch guard runs over the unit's actual diff) and run-phase.mjs:secret-scan (a planted AWS key in the diff writes STOP to a scratch halt dir, see scripts/fleet/secret-scan.mjs PATTERNS, and scripts/fleet/check-bootstrap.mjs item 2 fails closed if a real STOP exists at the end)."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "N/A",
+      "evidence": "The substrate is the founder's Cloudroom fleet (AM-1), not a CI matrix or a fresh container. scripts/fleet/check-bootstrap.mjs item 1 accepts Linux or macOS; scripts/fleet/provision.mjs refuses any DATABASE_URL that is not localhost or 127.0.0.1 (U7). The test machinery for this checklist — a clean copy of the repo with a fresh npm ci, a fresh Supabase local DB and Prisma migrations against it — is the P0 selftest when delivered by that phase, not P-1. P-1 only writes the policies and verifiers; it does not yet invoke the suite. The spec's finish-line item 1 ('Honest platform') requires an npm run jev:det that is P1, and a 2,630-case bounded run is not in P-1 scope.",
+      "reason": "Substrate is Cloudroom fleet (AM-1). P-1 ships the verifiers; P0 runs the full suite against an installed host. No clean-environment CI matrix is mandated for Phase -1 in the spec."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "The blast radius is bounded by five independent mechanisms, each inspected in this diff: (1) Release receipts are bound to a reviewed commit: scripts/release/verify-receipt.mjs check() at scripts/release/verify-receipt.mjs:46-130 requires the diff from reviewed_commit to HEAD to hold only the receipt file plus release-receipts/ledger/** and release-receipts/manifests/**; any other file in the diff fails the receipt. (2) Merge cannot happen without every required check green: scripts/fleet/merge-phase.mjs:119-138 reads every check-run on the exact head, fails closed on a partial page (j.total !== j.runs.length), and refuses any pending or failed run among the required contexts (Build, Lint, Protected paths, Receipt verify). (3) Halt files are read live at every relevant step: scripts/fleet/lib.mjs haltState() at scripts/fleet/lib.mjs:172-179 is called in check-bootstrap item 2, run-phase preflight (run-phase.mjs:96-100), merge-phase merge-gate 'halt' (merge-phase.mjs:54-63), and phase-advance (phase-advance.mjs:20-21); the daily STOP expires at the next UTC midnight on its own per haltState() returning daily:false for any other date. (4) Per-role allowed-action enumeration guards every shell and write: scripts/fleet/guard.mjs evaluate() at scripts/fleet/guard.mjs:23-115 enumerates read|verifier|judge|scheduler denies for write actions, builder|judge denies for shell mutate-publish-push, denied_mcp_tool_classes from policy.json for MCP. (5) The protected-path list is 18 entries including scripts/jev/** (added per DECISIONS.md A-19 because the ratchet judges floors.json) and scripts/fleet/** covering every script the runner invokes."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Outbound actions are inventoried against the spec's NG list. Production mutation paths: gh pr merge denied to all roles except releaser via merge-phase.mjs (guard.mjs:71-75 and policy.forbidden_commands 'gh pr merge'); merge-phase.mjs requires exact-head, receipt, independent-review and attestation gates and is the one sanctioned merge path per FD-3. DDL: prisma migrate deploy and prisma db push are in policy.forbidden_commands; npx prisma generate is allowed but is read-only; scripts/fleet/provision.mjs adds an extra DB-host allow-list (only localhost / 127.0.0.1). Deploy: vercel --prod and vercel deploy in policy.forbidden_commands; vercel.json is in protected_paths (in-repo only). Secret stores: scripts/fleet/secret-scan.mjs patterns cover anthropic/openai/aws/github/stripe-live/private-key/postgres-password; the spec's .worktreeinclude check (selftest.mjs) plus the env-tracked check refuse .env* files except the empty scripts/api/exempt-routes.json placeholder. Package installs: npm install, pnpm add, yarn add blocked in policy.forbidden_commands; runner allowance is npm ci in scripts/fleet/provision.mjs. Direct POST: curl -X POST is in policy.forbidden_commands. The merge-phase.mjs gate 'checks' (merge-phase.mjs:100-138) plus the GitHub-page partial-read fail-closed guarantee that a pending or failed required check never lets a merge through (verified by reading the gate code)."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      ".claude/specs/index.md",
+      ".github/repo-controls.json",
+      ".github/workflows/jev-pr.yml",
+      ".github/workflows/jev-ratchet.yml",
+      ".github/workflows/openapi-drift.yml",
+      ".github/workflows/protected-paths.yml",
+      ".github/workflows/receipt-verify.yml",
+      "BACKLOG.md",
+      "DECISIONS.md",
+      "docs/fleet/grill-2026-10-17-vibe-to-leader.md",
+      "docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md",
+      "proposals/.gitkeep",
+      "release-receipts/halt/.gitkeep",
+      "release-receipts/ledger/.gitkeep",
+      "release-receipts/ledger/fleet.jsonl",
+      "release-receipts/manifests/.gitkeep",
+      "release-receipts/manifests/P-1-review-r1.json",
+      "release-receipts/manifests/P-1-review-r3.json",
+      "release-receipts/manifests/policy-hash.json",
+      "release-receipts/manifests/sandbox-probe.json",
+      "release-receipts/manifests/selftest.json",
+      "scripts/api/exempt-routes.json",
+      "scripts/fleet/README.md",
+      "scripts/fleet/apply-proposals.mjs",
+      "scripts/fleet/assert-absent.mjs",
+      "scripts/fleet/attest-phase.mjs",
+      "scripts/fleet/automations/nightly.md",
+      "scripts/fleet/automations/phase-advance.md",
+      "scripts/fleet/automations/weekly.md",
+      "scripts/fleet/check-bootstrap.mjs",
+      "scripts/fleet/check-governor-mode.mjs",
+      "scripts/fleet/check-ledgers.mjs",
+      "scripts/fleet/check-soak.mjs",
+      "scripts/fleet/contracts/P-1.json",
+      "scripts/fleet/contracts/P0.json",
+      "scripts/fleet/contracts/P1.json",
+      "scripts/fleet/contracts/P10.json",
+      "scripts/fleet/contracts/P2.json",
+      "scripts/fleet/contracts/P3.json",
+      "scripts/fleet/contracts/P4.json",
+      "scripts/fleet/contracts/P5.json",
+      "scripts/fleet/contracts/P6.json",
+      "scripts/fleet/contracts/P7.json",
+      "scripts/fleet/contracts/P8.json",
+      "scripts/fleet/contracts/P9.json",
+      "scripts/fleet/drill.mjs",
+      "scripts/fleet/fanout.mjs",
+      "scripts/fleet/gen-contracts.mjs",
+      "scripts/fleet/guard.mjs",
+      "scripts/fleet/ledger-push.mjs",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/merge-phase.mjs",
+      "scripts/fleet/next-row.mjs",
+      "scripts/fleet/phase-advance.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/provision.mjs",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/secret-scan.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "scripts/gate/check-held.mjs",
+      "scripts/jev/check-ratchet.mjs",
+      "scripts/release/verify-receipt.mjs",
+      "scripts/release/verify-waterline.mjs",
+      "scripts/truth/check-noop.mjs",
+      "tests/eval/jev/floors.json"
+    ],
+    "not_reviewed": []
+  },
+  "reviewed_at": "2026-10-17T04:48:59.746802+00:00",
+  "head": "63c18f5caa2d1ff20b2f98c9b71b4427236705cc",
+  "lane": "minimax"
+}
