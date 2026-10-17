@@ -517,6 +517,10 @@ function review() {
               : {},
           }
         );
+        appendFileSync(
+          path.join(os.tmpdir(), `review-lanes-${phase}.log`),
+          `--- ${new Date().toISOString()} ${lane} ${model || ''} exit=${r.code}\n${(r.stdout + r.stderr).trim().split('\n').slice(-12).join('\n')}\n`
+        );
         if (r.code === 0 && existsSync(path.join(ROOT, out))) break;
         if (model)
           console.log(
