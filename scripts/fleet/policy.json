@@ -65,6 +65,7 @@
     "scripts/release/**",
     "scripts/gate/**",
     "scripts/truth/**",
+    "scripts/jev/**",
     "scripts/api/exempt-routes.json",
     "scripts/check-repo-controls.mjs",
     "release-receipts/**",

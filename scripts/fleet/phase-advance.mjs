@@ -41,10 +41,22 @@ for (const ph of pol.phases) {
     break;
   }
   if (prev) {
+    // Verify the commit that added the receipt, not the tip: main moves after the merge.
+    const added = (
+      tryGit([
+        'log',
+        '-1',
+        '--format=%H',
+        '--diff-filter=A',
+        'origin/main',
+        '--',
+        `release-receipts/${prev.id}.json`,
+      ]) || ''
+    ).trim();
     const v = run(process.execPath, [
       'scripts/release/verify-receipt.mjs',
       '--head',
-      'origin/main',
+      added || 'origin/main',
       '--phase',
       prev.id,
     ]);

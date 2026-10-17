@@ -10,7 +10,8 @@
  *   4. the independent review report named in the receipt names the same head and passes;
  *   5. the PR base is main and the branch name matches the fleet pattern;
  *   6. attest-phase exits 0 for the branch.
- * Then: gh pr merge --squash --delete-branch, ledger row kind=merge, exit 0. Anything else exits 1 and merges nothing.
+ * Then: gh pr merge --merge --delete-branch (a merge commit keeps the receipt commit reachable from
+ * main, so verify-receipt can re-check it after main moves), ledger row kind=merge, exit 0. Anything else exits 1 and merges nothing.
  */
 import {
   policy,
@@ -158,7 +159,7 @@ const m = run(
     'pr',
     'merge',
     pr,
-    '--squash',
+    '--merge',
     '--delete-branch',
     '--match-head-commit',
     head,
