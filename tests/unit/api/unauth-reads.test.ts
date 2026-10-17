@@ -22,7 +22,8 @@ const mockAuditFindMany = jest.fn();
 const mockAuditCount = jest.fn();
 const mockQuoteFindMany = jest.fn();
 const mockQuoteCount = jest.fn();
-const mockQuoteFindUnique = jest.fn();
+const mockQuoteFindFirst = jest.fn();
+const mockQuoteUpdateMany = jest.fn();
 const mockConnectionFindFirst = jest.fn();
 
 const mockPrisma = {
@@ -37,10 +38,8 @@ const mockPrisma = {
   quote: {
     findMany: (...a: unknown[]) => mockQuoteFindMany(...a),
     count: (...a: unknown[]) => mockQuoteCount(...a),
-    findUnique: (...a: unknown[]) => mockQuoteFindUnique(...a),
-    // Plain fn so resetMocks can't strip the .catch()-able return used by
-    // the fire-and-forget usage-count update.
-    update: () => Promise.resolve({}),
+    findFirst: (...a: unknown[]) => mockQuoteFindFirst(...a),
+    updateMany: (...a: unknown[]) => mockQuoteUpdateMany(...a),
   },
   platformConnection: {
     findFirst: (...a: unknown[]) => mockConnectionFindFirst(...a),
@@ -119,7 +118,8 @@ const prismaFns = [
   mockAuditCount,
   mockQuoteFindMany,
   mockQuoteCount,
-  mockQuoteFindUnique,
+  mockQuoteFindFirst,
+  mockQuoteUpdateMany,
   mockConnectionFindFirst,
 ];
 
@@ -142,7 +142,8 @@ beforeEach(() => {
   mockAuditCount.mockResolvedValue(0);
   mockQuoteFindMany.mockResolvedValue([]);
   mockQuoteCount.mockResolvedValue(0);
-  mockQuoteFindUnique.mockResolvedValue(null);
+  mockQuoteFindFirst.mockResolvedValue(null);
+  mockQuoteUpdateMany.mockResolvedValue({ count: 1 });
   mockConnectionFindFirst.mockResolvedValue(null);
 });
 
@@ -218,7 +219,7 @@ describe('GET /api/quotes/[id]', () => {
 
   it("returns the caller's own private quote", async () => {
     authenticated();
-    mockQuoteFindUnique.mockResolvedValue({
+    mockQuoteFindFirst.mockResolvedValue({
       id: 'q1',
       userId: CALLER,
       isPublic: false,
@@ -228,12 +229,17 @@ describe('GET /api/quotes/[id]', () => {
     const res = await getQuote(req('/api/quotes/q1'), ctx);
     expect(res.status).toBe(200);
     expect((await res.json()).data.id).toBe('q1');
-    expect(mockQuoteFindUnique.mock.calls[0][0].where).toEqual({ id: 'q1' });
+    const scopedWhere = {
+      id: 'q1',
+      OR: [{ isPublic: true }, { userId: CALLER }],
+    };
+    expect(mockQuoteFindFirst.mock.calls[0][0].where).toEqual(scopedWhere);
+    expect(mockQuoteUpdateMany.mock.calls[0][0].where).toEqual(scopedWhere);
   });
 
   it("404s another user's private quote", async () => {
     authenticated();
-    mockQuoteFindUnique.mockResolvedValue({
+    mockQuoteFindFirst.mockResolvedValue({
       id: 'q1',
       userId: 'someone-else',
       isPublic: false,

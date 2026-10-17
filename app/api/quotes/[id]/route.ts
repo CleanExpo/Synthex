@@ -83,8 +83,13 @@ export async function GET(
       );
     }
 
-    const quote = await prisma.quote.findUnique({
-      where: { id },
+    // Scope the read itself: only public quotes or the caller's own
+    const readableWhere = {
+      id,
+      OR: [{ isPublic: true }, { userId: security.context.userId }],
+    };
+    const quote = await prisma.quote.findFirst({
+      where: readableWhere,
     });
 
     if (!quote) {
@@ -94,7 +99,7 @@ export async function GET(
       );
     }
 
-    // Private quotes require ownership — return 404 to avoid leaking existence.
+    // Second layer: private quotes require ownership — return 404 to avoid leaking existence.
     // A null owner is treated as deny: a private quote with no owner must not
     // be readable by an arbitrary authenticated caller.
     if (
@@ -117,8 +122,8 @@ export async function GET(
 
     // Increment usage count (fire and forget)
     prisma.quote
-      .update({
-        where: { id },
+      .updateMany({
+        where: readableWhere,
         data: { usageCount: { increment: 1 } },
       })
       .catch(() => {}); // Ignore errors for usage tracking
