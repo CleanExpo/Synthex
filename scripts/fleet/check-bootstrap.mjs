@@ -83,11 +83,11 @@ add(
 // 3
 add(
   3,
-  'metered Anthropic key for judged runs',
-  process.env.ANTHROPIC_API_KEY ? 'PASS' : 'DISABLED',
+  'model access for judged runs: Claude Max plan through Cloudroom child threads (no API key required, A-18)',
+  'PASS',
   process.env.ANTHROPIC_API_KEY
-    ? 'present (value not printed)'
-    : 'absent by design until P8 (DECISIONS.md A-2)'
+    ? 'an API key is also present (value not printed)'
+    : 'Max plan; metered key not required'
 );
 // 4
 const gh = run('gh', ['api', 'user', '--jq', '.login']);
