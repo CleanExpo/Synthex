@@ -68,6 +68,18 @@ if (isMain(import.meta.url)) {
   let baseFloors;
   const raw = tryGit(['show', `${base}:tests/eval/jev/floors.json`]);
   if (raw === null) {
+    // The diff that introduces floors.json has nothing to lower; absent at both ends stays unknown.
+    const atHead = tryGit(['show', `${head}:tests/eval/jev/floors.json`]);
+    let introduced = false;
+    try {
+      introduced = atHead !== null && typeof JSON.parse(atHead) === 'object';
+    } catch {}
+    if (introduced) {
+      console.log(
+        'PASS check-ratchet: floors.json introduced at head; no base floor to lower'
+      );
+      process.exit(0);
+    }
     console.log('INCONCLUSIVE check-ratchet: no floors.json at base');
     process.exit(2);
   }
