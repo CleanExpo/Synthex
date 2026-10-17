@@ -16,6 +16,10 @@
 
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
+import {
+  assertExternalUrlSafe,
+  fetchExternalUrl,
+} from '@/lib/security/validate-url';
 
 // =============================================================================
 // Types
@@ -200,6 +204,30 @@ export async function sendWebhook(
   let lastStatusCode: number | undefined;
   let attempt = 0;
 
+  // SSRF guard at delivery time (J11-GAP-webhook-sender-unguarded): a stored URL, a DNS
+  // change since registration or a redirect must not reach an internal address. Not retried.
+  try {
+    await assertExternalUrlSafe(url);
+  } catch (error) {
+    lastError = error instanceof Error ? error.message : String(error);
+    await logDelivery({
+      deliveryId,
+      webhookId,
+      url,
+      event,
+      error: lastError,
+      success: false,
+      attempt: 0,
+    });
+    return {
+      success: false,
+      deliveryId,
+      error: lastError,
+      attempt: 0,
+      maxAttempts: maxRetries,
+    };
+  }
+
   for (attempt = 1; attempt <= maxRetries; attempt++) {
     const startTime = Date.now();
 
@@ -207,7 +235,7 @@ export async function sendWebhook(
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const response = await fetch(url, {
+      const response = await fetchExternalUrl(url, {
         method: 'POST',
         headers,
         body,
@@ -415,7 +443,7 @@ export async function pingWebhook(url: string): Promise<boolean> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const response = await fetch(url, {
+    const response = await fetchExternalUrl(url, {
       method: 'HEAD',
       signal: controller.signal,
     });
