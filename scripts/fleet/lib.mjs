@@ -65,9 +65,13 @@ export function writeJson(p, obj) {
   mkdirSync(path.dirname(f), { recursive: true });
   writeFileSync(f, JSON.stringify(obj, null, 2) + '\n');
 }
+// Generated files (the P3 OpenAPI spec is ~94k lines) overflow Node's 1 MB default; the unit-diff
+// secret scan must see the whole diff, so the buffer is raised rather than the scan skipped.
+export const MAX_BUFFER = 512 * 1024 * 1024;
 export function git(args, opts = {}) {
   return execFileSync('git', args, {
     cwd: opts.cwd || ROOT,
+    maxBuffer: MAX_BUFFER,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim();
@@ -85,7 +89,7 @@ export function run(cmd, args, opts = {}) {
     encoding: 'utf8',
     env: { ...process.env, ...(opts.env || {}) },
     timeout: opts.timeout,
-    maxBuffer: 64 * 1024 * 1024,
+    maxBuffer: MAX_BUFFER,
     shell: false,
   });
   return {
@@ -101,7 +105,7 @@ export function sh(cmdline, opts = {}) {
     encoding: 'utf8',
     env: { ...process.env, ...(opts.env || {}) },
     timeout: opts.timeout,
-    maxBuffer: 64 * 1024 * 1024,
+    maxBuffer: MAX_BUFFER,
   });
   return {
     code: r.status === null ? 124 : r.status,
