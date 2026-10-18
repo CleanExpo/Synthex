@@ -106,3 +106,17 @@
 {"ts":"2026-10-18T08:10:23.763Z","kind":"integrate","phase":"P2","unit":"status-503","files":58,"head":"92bf318515f2718c6efa9476c5f6f398982f44bd"}
 {"ts":"2026-10-18T08:20:48.262Z","kind":"gate","phase":"P2","head":"92bf318515f2718c6efa9476c5f6f398982f44bd","pass":10,"total":10}
 {"ts":"2026-10-18T08:22:05.155Z","kind":"review","phase":"P2","head":"92bf318515f2718c6efa9476c5f6f398982f44bd","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-18T08:31:45.118Z","kind":"review","phase":"P2","head":"e21b2fce2fef5f42b1bdd7dc1ce61529ef115242","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:00:29.287Z","kind":"integrate","phase":"P2","unit":"errors-isolation","files":2,"head":"a24eea976ec4bce01755f0e4e8f06675083e5be0"}
+{"ts":"2026-10-18T09:05:11.755Z","kind":"review","phase":"P2","head":"fc031f895af61c814d5121426eeb776b0fcd8543","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:13:50.161Z","kind":"review","phase":"P2","head":"31f0bdb172096e846fac3eea35c3eb4201d5ce05","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:18:10.659Z","kind":"review","phase":"P2","head":"5f070185e97d407ed53ee048ac112b17cb7c8e70","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:36:59.339Z","kind":"integrate","phase":"P2","unit":"sweep-a","files":13,"head":"374d60ad89c057ff5b0828f3170865dd04569a6a"}
+{"ts":"2026-10-18T09:37:46.613Z","kind":"integrate","phase":"P2","unit":"sweep-b","files":20,"head":"7ed6271bf8704dc81831a365230a5b50ce5e76fc"}
+{"ts":"2026-10-18T09:43:56.743Z","kind":"review","phase":"P2","head":"7ed6271bf8704dc81831a365230a5b50ce5e76fc","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:53:43.567Z","kind":"review","phase":"P2","head":"d6e10e5ede0a48fc6931adca47978b6ab57251df","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T13:54:48.100Z","kind":"review","phase":"P2","head":"62f76f5b46575f2e85201d6e66a8531d177f578e","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T14:08:29.970Z","kind":"review","phase":"P2","head":"eb6cec05f925b4e2fcc3b3bc06690f685e575e6e","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T14:16:59.159Z","kind":"review","phase":"P2","head":"52043c5f91503bdce047c994175d8d3facc48248","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T14:25:10.899Z","kind":"review","phase":"P2","head":"ecaa0c3c0d3f894763d928331709a511d9002f4c","lane":"codex","verdict":"PASS"}
+{"ts":"2026-10-18T14:27:21.873Z","kind":"gate","phase":"P2","head":"ecaa0c3c0d3f894763d928331709a511d9002f4c","pass":10,"total":10}

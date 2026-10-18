@@ -1,0 +1,103 @@
+{
+  "schema": "synthex-release-receipt/1",
+  "phase": "P2",
+  "written_at": "2026-10-18T14:27:31.887Z",
+  "reviewed_commit": "ecaa0c3c0d3f894763d928331709a511d9002f4c",
+  "tested_tree": "7a0c27d07b7534c62f71b80c5961afe43998640e",
+  "review_report": "release-receipts/manifests/P2-review.json",
+  "cost_ledger": {
+    "file": "release-receipts/ledger/fleet.jsonl",
+    "rows": 20
+  },
+  "gate": [
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:507:28) |       at Object.<anonymous> (app/api/ai-content/hashtags/route.ts:26:1) |       at __tests__/landing/public-claims-api.test.ts:408:24"
+    },
+    {
+      "cmd": "$NODE_DIR/npx prisma validate",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Loaded Prisma config from prisma.config.ts. |  | Prisma schema loaded from prisma/schema.prisma."
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS   scripts/jev/check-ratchet.mjs — orchestrator protected-change declared in 2 commit(s), checked by review + CI + merge-phase | PASS   scripts/release/verify-receipt.mjs — orchestrator protected-change declared in 4 commit(s), checked by review + CI + merge-phase | verify-protected: 229 changed files, 21 protected, 0 violations"
+    },
+    {
+      "cmd": "$NODE scripts/truth/check-noop.mjs --base origin/main",
+      "kind": "dod",
+      "id": "P2-C1",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "check-noop: importers at base=88, at head=0 | PASS check-noop: zero importers at head, positive control satisfied at base"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run jev:det -- --family J2",
+      "kind": "dod",
+      "id": "P2-C2",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Time:        2.361 s, estimated 3 s | Ran all test suites matching /families[\\\\/](j2)\\.jev\\.test\\.ts$/i. | Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "dod",
+      "id": "P2-C3",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "dod",
+      "id": "P2-C4",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "dod",
+      "id": "P2-C5",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:507:28) |       at Object.<anonymous> (app/api/ai-content/hashtags/route.ts:26:1) |       at __tests__/landing/public-claims-api.test.ts:408:24"
+    }
+  ],
+  "human_acts": [],
+  "human_intervention_count": 0,
+  "policy_hash": "8e5d73acd4ebfae3908d007dd60dab0a38e188eb957c4a43f94080d5e238899c",
+  "state": "PASS"
+}
