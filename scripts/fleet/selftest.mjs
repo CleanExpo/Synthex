@@ -112,6 +112,14 @@ const planted = [
     ['orchestrator', 'env -S "git push -f origin x"'],
     ['builder', 'command git -C . push origin feature/x'],
     ['builder', 'env npm install left-pad'],
+    ['orchestrator', 'git -c alias.x="push --force" x origin main'],
+    ['orchestrator', 'git config alias.p "push -f"'],
+    ['orchestrator', "gh alias set m 'pr merge'"],
+    ['orchestrator', 'git update-ref -d refs/heads/main'],
+    [
+      'orchestrator',
+      'curl -X PUT https://api.github.com/repos/o/r/pulls/1/merge',
+    ],
   ].map(([role, command]) => ({ kind: 'shell', command, role })),
 ];
 const benign = [

@@ -238,7 +238,28 @@ export function evaluate(action, pol = policy()) {
         return deny('command nesting too deep to judge');
       for (const argv of argvs) {
         if (argv[0] === 'git') {
+          // Aliases hide the real subcommand ('git -c alias.x="push -f" x'): defining one, or a
+          // config value that runs commands, is refused outright.
+          if (
+            argv.some(
+              (t, i) =>
+                argv[i - 1] === '-c' &&
+                /^(alias\.|core\.(sshcommand|hookspath|pager|editor)|credential\.)/i.test(
+                  t
+                )
+            ) ||
+            argv.some(t => /^--config-env/.test(t))
+          )
+            return deny(
+              'git alias or command-running config on the command line'
+            );
           const { sub: g, args } = gitSubcommand(argv);
+          if (g === 'config' && args.some(t => /^alias\./i.test(t)))
+            return deny('git alias definition');
+          if (g === 'send-pack' || g === 'http-push')
+            return deny('raw push plumbing');
+          if (g === 'update-ref' && args.includes('-d'))
+            return deny('ref delete');
           const flags = args.filter(a => a.startsWith('-'));
           const shortHas = c =>
             flags.some(a => /^-[a-zA-Z]+$/.test(a) && a.includes(c));
@@ -270,6 +291,11 @@ export function evaluate(action, pol = policy()) {
           )
             return deny('branch delete');
         }
+        if (
+          ['curl', 'wget', 'http', 'xh'].includes(argv[0]) &&
+          argv.some(t => /api\.github\.com\/.*\/pulls\/\d+\/merge\b/.test(t))
+        )
+          return deny('direct merge through the GitHub API');
         if (role === 'builder') {
           if (
             argv[0] === 'vercel' ||
@@ -286,6 +312,7 @@ export function evaluate(action, pol = policy()) {
           const gw = ghWords(argv);
           if (role === 'builder')
             return deny('builder may not push, use gh, publish or deploy');
+          if (gw[0] === 'alias') return deny('gh alias');
           if (gw[0] === 'pr' && gw[1] === 'merge') {
             if (role === 'releaser' && action.via === 'merge-phase')
               return allow('gh pr merge via merge-phase (FD-3)');
