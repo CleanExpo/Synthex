@@ -11,6 +11,7 @@ import {
   mkdtempSync,
   rmSync,
   writeFileSync,
+  symlinkSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -55,7 +56,29 @@ export function leafCount(v) {
     return Object.values(v).reduce((n, x) => n + leafCount(x), 0);
   return 1;
 }
+// Stable case keys: every array element is a case. An object element is keyed by the first of
+// id/file/route/slug/m it carries (else its canonical JSON), a string element by itself. Every key
+// at base must still exist at head unless the file is tombstoned: two cases merged into one padded
+// case keeps the leaf count but loses a key (verifier audit, second pass).
+const KEY_FIELDS = ['id', 'file', 'route', 'slug', 'm'];
+export function caseKeys(v, at = '$', out = new Set()) {
+  if (Array.isArray(v)) {
+    for (const x of v) {
+      if (x && typeof x === 'object' && !Array.isArray(x)) {
+        const k = KEY_FIELDS.find(f => typeof x[f] === 'string');
+        out.add(`${at}[${k ? `${k}=${x[k]}` : JSON.stringify(x)}]`);
+      } else if (!Array.isArray(x)) out.add(`${at}[${JSON.stringify(x)}]`);
+      caseKeys(x, `${at}[]`, out);
+    }
+  } else if (v && typeof v === 'object')
+    for (const [k, x] of Object.entries(v)) caseKeys(x, `${at}.${k}`, out);
+  return out;
+}
 const atRef = (ref, file) => tryGit(['show', `${ref}:${file}`]);
+// A case path at head must be a regular file (mode 100644): a symlink or submodule in its place is
+// a deletion (type change T used to escape both D and M).
+const regularAt = (ref, file) =>
+  /^100644 blob /.test(tryGit(['ls-tree', ref, '--', file]) || '');
 // Deleted or shrunk case files without a tombstone at head. A failed diff throws (it used to read
 // as "no deletions"; verifier audit).
 export function deletedCases(base, head) {
@@ -77,7 +100,8 @@ export function deletedCases(base, head) {
       .filter(Boolean);
   const tombRaw = atRef(head, 'tests/eval/jev/tombstones.json');
   const tomb = tombRaw === null ? { cases: [] } : JSON.parse(tombRaw);
-  const shrunk = list('M').filter(f => {
+  const shrunk = list('MT').filter(f => {
+    if (!regularAt(head, f)) return true;
     let before, after;
     try {
       before = JSON.parse(atRef(base, f));
@@ -89,7 +113,9 @@ export function deletedCases(base, head) {
     } catch {
       return true;
     }
-    return leafCount(after) < leafCount(before);
+    if (leafCount(after) < leafCount(before)) return true;
+    const keep = caseKeys(after);
+    return [...caseKeys(before)].some(k => !keep.has(k));
   });
   return [...list('D'), ...shrunk].filter(
     f => !tomb.cases.some(t => t.file === f)
@@ -131,6 +157,23 @@ function scratchControls() {
     sh(['checkout', '-q', '-b', 'lower', 'main']);
     put('tests/eval/jev/floors.json', { families: { J1: { pass_rate: 0.1 } } });
     commit('lower');
+    sh(['checkout', '-q', '-b', 'padded', 'main']);
+    put('tests/eval/jev/cases/J1/c.json', { cases: [{ id: 'a', extra: 'b' }] });
+    commit('merge two cases into one padded case');
+    sh(['checkout', '-q', '-b', 'symlinked', 'main']);
+    rmSync(path.join(dir, 'tests/eval/jev/cases/J1/c.json'));
+    symlinkSync(
+      '../../floors.json',
+      path.join(dir, 'tests/eval/jev/cases/J1/c.json')
+    );
+    commit('replace a case file with a symlink');
+    // As on real main: no committed floors, so only the family set holds an empty proposal.
+    sh(['checkout', '-q', '-b', 'nofloors', 'main']);
+    put('tests/eval/jev/floors.json', { families: {} });
+    commit('no committed floors');
+    sh(['checkout', '-q', '-b', 'nofamilies', 'nofloors']);
+    put('tests/eval/jev/families.json', { families: {} });
+    commit('empty families.json');
     sh(['checkout', '-q', '-b', 'emptied', 'main']);
     put('tests/eval/jev/cases/J1/c.json', {});
     commit('empty a case file');
@@ -141,6 +184,22 @@ function scratchControls() {
       badHead: ratchet('--base', 'main', '--head', 'no-such-ref'),
       lowerFromElsewhere: ratchet('--base', 'main', '--head', 'lower'),
       emptied: ratchet('--base', 'main', '--head', 'emptied'),
+      padded: ratchet('--base', 'main', '--head', 'padded'),
+      symlinked: ratchet('--base', 'main', '--head', 'symlinked'),
+      noFamiliesEmptyProposal: (() => {
+        sh(['checkout', '-q', 'nofamilies']);
+        writeFileSync(path.join(dir, 'proposal.json'), '{"families":{}}');
+        const c = ratchet(
+          '--base',
+          'nofloors',
+          '--head',
+          'nofamilies',
+          '--proposal',
+          'proposal.json'
+        );
+        sh(['checkout', '-q', '-f', 'main']);
+        return c;
+      })(),
     };
     const want = {
       clean: 0,
@@ -148,6 +207,9 @@ function scratchControls() {
       badHead: 2,
       lowerFromElsewhere: 1,
       emptied: 1,
+      padded: 1,
+      symlinked: 1,
+      noFamiliesEmptyProposal: 1,
     };
     const bad = Object.keys(want).filter(k => got[k] !== want[k]);
     for (const k of bad)
@@ -185,7 +247,7 @@ if (isMain(import.meta.url)) {
       full.length === 0 &&
       scratchControls();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} check-ratchet controls (lowering exits 1, raising passes, empty or partial proposal exits 1, unresolvable base/head exit 2, head read from git not the checkout, emptied case file exits 1)`
+      `${ok ? 'PASS' : 'FAIL'} check-ratchet controls (lowering exits 1, raising passes, empty or partial proposal exits 1, unresolvable base/head exit 2, head read from git not the checkout, emptied case file, padded merge of two cases, symlinked case file and emptied families.json with an empty proposal exit 1)`
     );
     process.exit(ok ? 0 : 1);
   }
@@ -226,7 +288,14 @@ if (isMain(import.meta.url)) {
   const prop = opt('--proposal');
   // Committed floors and families come from --head, never the working tree (a checkout elsewhere
   // used to hide a head that lowered them; verifier audit).
-  let committedFloors, familiesAtHead;
+  let committedFloors, familiesAtHead, familiesAtBase;
+  // The families a proposal must measure: base and head together, so a PR that empties
+  // families.json cannot shrink the requirement (verifier audit, second pass).
+  try {
+    familiesAtBase = JSON.parse(atRef(base, 'tests/eval/jev/families.json'));
+  } catch {
+    familiesAtBase = { families: {} };
+  }
   try {
     committedFloors = JSON.parse(atRef(head, 'tests/eval/jev/floors.json'));
     familiesAtHead = JSON.parse(atRef(head, 'tests/eval/jev/families.json'));
@@ -250,9 +319,12 @@ if (isMain(import.meta.url)) {
     ...compare(baseFloors, committedFloors).map(p => `committed floors: ${p}`),
     ...(prop ? compare(baseFloors, headFloors).map(p => `proposal: ${p}`) : []),
     ...(prop
-      ? incompleteProposal(headFloors, familiesAtHead).map(
-          p => `proposal: ${p}`
-        )
+      ? incompleteProposal(headFloors, {
+          families: {
+            ...(familiesAtBase?.families || {}),
+            ...(familiesAtHead?.families || {}),
+          },
+        }).map(p => `proposal: ${p}`)
       : []),
     ...(() => {
       try {
