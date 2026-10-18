@@ -75,11 +75,20 @@ export function evaluate(action, pol = policy()) {
       }
       for (const f of pol.forbidden_commands)
         if (cmd.includes(f)) return deny(`forbidden command: ${f}`);
-      if (
-        role === 'builder' &&
-        /\b(git push|gh |npm publish|vercel)\b/.test(cmd)
-      )
-        return deny('builder may not push, use gh, publish or deploy');
+      // Cloudroom substrate (FD-1): sandboxes share only Git, so a builder hands its unit over by
+      // pushing its own fleet-unit/** branch (fanout.mjs). That one shape, standalone, is allowed;
+      // containment stays at integration (guard over changed files, secret scan, review). A-25.
+      if (role === 'builder' && /\bgit push\b/.test(cmd)) {
+        if (
+          /^\s*git push(\s+(-u|--set-upstream))?\s+origin\s+(HEAD:(refs\/heads\/)?)?fleet-unit\/[A-Za-z0-9._\/-]+\s*$/.test(
+            cmd
+          )
+        )
+          return allow('builder pushes its own fleet-unit branch (A-25)');
+        return deny('builder may push only its own fleet-unit/** branch');
+      }
+      if (role === 'builder' && /\b(gh |npm publish|vercel)\b/.test(cmd))
+        return deny('builder may not use gh, publish or deploy');
       if (
         role === 'builder' &&
         /\b(npm|pnpm|yarn)\s+(install|i|add)\b/.test(cmd) &&

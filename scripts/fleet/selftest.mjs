@@ -51,10 +51,20 @@ const planted = [
   { kind: 'shell', command: 'git commit --no-verify -m x', role: 'builder' },
   { kind: 'shell', command: 'gh pr merge 1 --squash', role: 'builder' },
   { kind: 'mcp', tool: 'supabase.apply_migration', role: 'builder' },
+  {
+    kind: 'shell',
+    command: 'git push origin feature/fleet-p3-contract',
+    role: 'builder',
+  },
 ];
 const benign = [
   { kind: 'write', path: 'lib/platform/status.ts', role: 'builder' },
   { kind: 'shell', command: 'npm test -- tests/unit', role: 'builder' },
+  {
+    kind: 'shell',
+    command: 'git push -u origin fleet-unit/p3/gen',
+    role: 'builder',
+  },
   { kind: 'mcp', tool: 'synthex.performance_get_outcomes', role: 'reader' },
 ];
 const denied = planted

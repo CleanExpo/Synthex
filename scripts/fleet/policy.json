@@ -144,10 +144,15 @@
       "may_not": ["write", "shell-mutation", "spend", "publish"]
     },
     "builder": {
-      "may": ["edit-in-own-sandbox", "npm-scripts", "tests"],
+      "may": [
+        "edit-in-own-sandbox",
+        "npm-scripts",
+        "tests",
+        "git-push-own-fleet-unit-branch"
+      ],
       "may_not": [
         "install",
-        "git push",
+        "git push (any ref other than its own fleet-unit/** branch)",
         "gh",
         "protected-paths",
         "secrets",
