@@ -41,7 +41,6 @@ jest.mock('@/lib/redis-client', () => ({
   }),
 }));
 
-// No Supabase env in test → first-win branch is skipped, prisma path only.
 import { PATCH } from '@/app/api/notifications/read-all/route';
 
 function createRequest() {
@@ -87,10 +86,27 @@ describe('PATCH /api/notifications/read-all', () => {
       data: { read: true },
     });
     expect(mockCreateSecureResponse).toHaveBeenCalledWith(
-      { success: true, markedRead: 49 },
+      expect.objectContaining({ success: true, markedRead: 49 }),
       200,
       expect.any(Object)
     );
+  });
+
+  it('reports the first-win write as not provisioned instead of dropping it silently', async () => {
+    mockSecurityCheck.mockResolvedValue({
+      allowed: true,
+      context: { userId: 'user-123' },
+    });
+    mockPrisma.notification.updateMany.mockResolvedValue({ count: 0 });
+
+    await PATCH(createRequest());
+
+    const [body, status] = mockCreateSecureResponse.mock.calls[0];
+    expect(status).toBe(200);
+    expect((body as { firstWin: unknown }).firstWin).toEqual({
+      available: false,
+      reason: expect.stringContaining('client_notifications'),
+    });
   });
 
   it('returns 500 on database error', async () => {
