@@ -5,13 +5,14 @@
  * Provides structured logging, automatic retry with exponential backoff,
  * Slack alerts on failure, and a validateOutput() hook for semantic correctness.
  *
+ * Run logs are written to edge_function_logs via Prisma (EdgeFunctionLog).
+ *
  * ENVIRONMENT VARIABLES:
- * - LEGACY_PLATFORM_URL: Supabase project URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Service role key (SECRET)
  * - PIPELINE_SLACK_WEBHOOK: Slack webhook for failure alerts (SECRET, optional)
  */
 
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { logger } from '@/lib/logger';
 import crypto from 'crypto';
 
@@ -50,24 +51,11 @@ export interface ClientInput<TInput> {
 }
 
 // ============================================================================
-// Supabase client (lazy singleton)
-// ============================================================================
-
-let _platform: ReturnType<typeof createClient> | null = null;
-
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
-
-// ============================================================================
 // Internal helpers
 // ============================================================================
 
 async function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function postSlackAlert(
@@ -110,26 +98,29 @@ async function writeLog(
   outputMetadata?: Record<string, unknown>
 ): Promise<void> {
   try {
-    const { error } = await (getSupabase() as ReturnType<typeof createClient<any>>)
-      .from('edge_function_logs')
-      .insert({
-        function_name: functionName,
-        run_id: runId,
-        client_id: null, // aggregate row — no single client_id
+    await prisma.edgeFunctionLog.create({
+      data: {
+        functionName,
+        runId,
+        clientId: null, // aggregate row — no single client_id
         status,
-        duration_ms: durationMs,
-        clients_processed: clientsProcessed,
-        clients_failed: clientsFailed,
-        error_json: errors.length > 0 ? errors : null,
-        output_metadata: outputMetadata ?? null,
-      });
-
-    if (error) {
-      logger.error('edge_function_logs write failed', { functionName, error });
-    }
+        durationMs,
+        clientsProcessed,
+        clientsFailed,
+        errorJson:
+          errors.length > 0
+            ? (errors as unknown as Prisma.InputJsonValue)
+            : undefined,
+        outputMetadata:
+          (outputMetadata as Prisma.InputJsonValue | undefined) ?? undefined,
+      },
+    });
   } catch (err) {
     // Log write failure is non-fatal — the pipeline still ran
-    logger.error('edge_function_logs write threw', { functionName, error: err });
+    logger.error('edge_function_logs write threw', {
+      functionName,
+      error: err,
+    });
   }
 }
 
@@ -159,7 +150,10 @@ async function writeLog(
 export function createEdgeFunctionRunner<TInput, TOutput>(
   functionName: string,
   processFn: (input: TInput, clientId: string) => Promise<TOutput>,
-  validateOutput?: (output: TOutput) => { valid: boolean; metadata: Record<string, unknown> },
+  validateOutput?: (output: TOutput) => {
+    valid: boolean;
+    metadata: Record<string, unknown>;
+  },
   options?: RunOptions
 ) {
   const maxRetries = options?.maxRetries ?? 3;
@@ -218,7 +212,7 @@ export function createEdgeFunctionRunner<TInput, TOutput>(
         }
       }
 
-      const clientsProcessed = outputs.filter((o) => !o.error).length;
+      const clientsProcessed = outputs.filter(o => !o.error).length;
       const clientsFailed = errors.length;
 
       // Determine status
@@ -240,7 +234,9 @@ export function createEdgeFunctionRunner<TInput, TOutput>(
           const allMetadata: Record<string, unknown>[] = [];
           let anyInvalid = false;
 
-          for (const { output } of outputs.filter((o) => o.output !== undefined)) {
+          for (const { output } of outputs.filter(
+            o => o.output !== undefined
+          )) {
             const result = validateOutput(output!);
             allMetadata.push(result.metadata);
             if (!result.valid) {
