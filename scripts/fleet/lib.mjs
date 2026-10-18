@@ -187,6 +187,7 @@ export function ledgerAppend(row, file) {
     JSON.stringify({ ts: new Date().toISOString(), ...row }) + '\n'
   );
 }
+let ledgerFetched = false;
 export function ledgerRows(file) {
   const pol = policy();
   const rel = file || pol.ledger;
@@ -203,12 +204,18 @@ export function ledgerRows(file) {
         }
       });
   const local = existsSync(f) ? parse(readFileSync(f, 'utf8')) : [];
-  // Rows written by scheduled runs live on the unprotected branch fleet-ledger (see ledger-push.mjs).
-  const remote = tryGit([
-    'show',
-    `origin/${pol.ledger_branch || 'fleet-ledger'}:${rel}`,
-  ]);
-  const rows = remote ? [...parse(remote), ...local] : local;
+  // Rows written by scheduled runs live on the ref refs/fleet/ledger (see ledger-push.mjs), fetched
+  // once per process; rows from the retired fleet-ledger branch are still read.
+  const ref = pol.ledger_ref || 'refs/fleet/ledger';
+  if (!ledgerFetched) {
+    ledgerFetched = true;
+    tryGit(['fetch', '-q', 'origin', `+${ref}:${ref}`]);
+  }
+  const remote = [
+    tryGit(['show', `${ref}:${rel}`]),
+    tryGit(['show', `origin/fleet-ledger:${rel}`]),
+  ].filter(Boolean);
+  const rows = [...remote.flatMap(parse), ...local];
   const seen = new Set();
   return rows
     .filter(r => {
