@@ -224,6 +224,15 @@ describe('Profile A — new org (no data)', () => {
     expect(call.data.status).toBe('generated');
   });
 
+  it('tells the model content score and journey data are not available (tables not provisioned)', async () => {
+    const { POST } =
+      await import('@/app/api/internal/generate-advisor-brief/route');
+    await POST(makeRequest() as never);
+    const sent = JSON.stringify(mockAnthropicCreate.mock.calls[0][0]);
+    expect(sent).toContain('Content performance score: not available');
+    expect(sent).toContain('Journey engagement: not available');
+  });
+
   it('geoTeaserText is null when authority score is unavailable', async () => {
     const { POST } =
       await import('@/app/api/internal/generate-advisor-brief/route');
