@@ -8,7 +8,7 @@
  *  - Emit happy path + idempotency (duplicate handling)
  *  - Multi-handler subscribe + per-handler error isolation
  *  - Unsubscribe
- *  - Default persist no-op when service-role creds missing
+ *  - Default persist throws FEATURE_NOT_PROVISIONED (table not provisioned)
  *  - Logger never receives raw address
  *
  * @see SYN-836 (parent: SYN-834 epic)
@@ -24,6 +24,7 @@ import {
   _resetContractorEventSubscribersForTests,
   _getContractorEventSubscriberCountForTests,
 } from '@/lib/contractor';
+import { ContractorOnboardingNotProvisionedError } from '@/lib/contractor/onboarding-event';
 import type {
   ContractorOnboardedInput,
   PersistFn,
@@ -404,16 +405,25 @@ describe('P10 — raw address never logged', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  DEFAULT PERSIST — no-op when service-role creds missing
+//  DEFAULT PERSIST — not provisioned (no contractor_onboarding_event table)
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe('default persist — service-role creds missing', () => {
-  it('returns inserted as no-op + warns', async () => {
-    // No persist override → uses default. No SUPABASE_SERVICE_ROLE_KEY in env
-    // (we deleted them in beforeEach).
-    const result = await emitContractorOnboarded(VALID_INPUT);
-    expect(result.firstEmit).toBe(true);
+describe('default persist — not provisioned', () => {
+  it('throws ContractorOnboardingNotProvisionedError and notifies nobody', async () => {
+    const handler = jest.fn(async () => undefined);
+    subscribeContractorOnboarded(handler);
+
+    const err = await emitContractorOnboarded(VALID_INPUT).catch(e => e);
+
+    expect(err).toBeInstanceOf(ContractorOnboardingNotProvisionedError);
+    expect(err).toMatchObject({
+      code: 'FEATURE_NOT_PROVISIONED',
+      table: 'contractor_onboarding_event',
+    });
+    expect(handler).not.toHaveBeenCalled();
     const warns = logCalls.filter(c => c.level === 'warn');
-    expect(warns.some(w => w.msg.includes('persist skipped'))).toBe(true);
+    expect(warns.some(w => w.msg.includes('persist not provisioned'))).toBe(
+      true
+    );
   });
 });
