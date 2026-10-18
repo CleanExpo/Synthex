@@ -81,9 +81,12 @@ const RETENTION_DAYS = parseInt(
 const BATCH_SIZE = 100;
 const FLUSH_INTERVAL = 5000; // 5 seconds
 
-// Compliance-classified categories are written to audit_logs synchronously,
-// one row per call, and a failed write throws to the caller. Other categories
-// ('api', 'system') keep the buffered 90-day retention path.
+// Compliance-classified categories are written synchronously to the
+// append-only audit_events_immutable table (supabase/migrations
+// 20260516000005: UPDATE/DELETE blocked by trigger), and a failed write throws
+// to the caller. A row in audit_logs is kept as a secondary, searchable copy;
+// audit_logs is pruned after 90 days by cleanup(), the immutable table never.
+// Other categories ('api', 'system') keep the buffered 90-day path.
 const IMMUTABLE_CATEGORIES: ReadonlySet<AuditCategory> = new Set<AuditCategory>(
   ['auth', 'security', 'data', 'compliance']
 );
@@ -106,14 +109,26 @@ class AuditLogger {
    * Log an audit event.
    *
    * Compliance-classified categories (auth/security/data/compliance) are
-   * written to audit_logs before this resolves, with no buffer, and a failed
-   * write rejects so the caller cannot report success without an audit row.
-   * (audit_events_immutable has no Prisma model, so there is no append-only
-   * copy.) Other categories are buffered and flushed to audit_logs.
+   * written to audit_events_immutable before this resolves, with no buffer,
+   * and a failed write rejects so the caller cannot report success without an
+   * immutable record. The audit_logs copy that follows is secondary: its
+   * failure is logged, not thrown, because the immutable record exists.
+   * Other categories are buffered and flushed to audit_logs.
    */
   async log(event: AuditEvent): Promise<void> {
     if (IMMUTABLE_CATEGORIES.has(event.category)) {
-      await prisma.auditLog.create({ data: this.toRow(event) });
+      await this.writeImmutable(event);
+      try {
+        await prisma.auditLog.create({ data: this.toRow(event) });
+      } catch (error) {
+        logger.error(
+          'Secondary audit_logs copy failed (immutable row written)',
+          {
+            error,
+            action: event.action,
+          }
+        );
+      }
     } else {
       // Add to buffer
       this.buffer.push(event);
@@ -132,6 +147,33 @@ class AuditLogger {
       outcome: event.outcome,
       userId: event.userId,
     });
+  }
+
+  /**
+   * Append one row to audit_events_immutable. Raw SQL because the table has no
+   * Prisma model; Prisma connects as the table owner. Throws on any failure.
+   */
+  private async writeImmutable(event: AuditEvent): Promise<void> {
+    const uuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const actorId =
+      event.userId && uuid.test(event.userId) ? event.userId : null;
+    const payload = JSON.stringify({
+      resource: event.resource,
+      resourceId: event.resourceId ?? null,
+      category: event.category,
+      severity: event.severity,
+      outcome: event.outcome,
+      details: event.details ?? null,
+      ipAddress: event.ipAddress ?? null,
+      userAgent: event.userAgent ?? null,
+      requestId: event.requestId ?? null,
+      ...(event.userId && !actorId ? { actor: event.userId } : {}),
+    });
+    await prisma.$executeRaw`
+      INSERT INTO public.audit_events_immutable (event_type, actor_id, payload)
+      VALUES (${event.action}, ${actorId}::uuid, ${payload}::jsonb)
+    `;
   }
 
   private toRow(event: AuditEvent) {

@@ -3,7 +3,7 @@
  *   app/api/user/avatar/route.ts        POST NOT_PROVISIONED (no durable storage)
  *   app/api/system/models/route.ts      auth via lib/supabase-server (Prisma)
  *   lib/supabase-server.ts              query client NOT_PROVISIONED (throws)
- *   lib/security/audit-logger.ts        compliance events written synchronously
+ *   lib/security/audit-logger.ts        compliance events written to audit_events_immutable first
  */
 
 /** @jest-environment node */
@@ -36,6 +36,7 @@ const userUpdate = jest.fn();
 const userFindUnique = jest.fn();
 const auditCreateMany = jest.fn();
 const auditCreate = jest.fn();
+const mockExecuteRaw = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
@@ -47,6 +48,7 @@ jest.mock('@/lib/prisma', () => ({
       createMany: (...a: unknown[]) => auditCreateMany(...a),
       create: (...a: unknown[]) => auditCreate(...a),
     },
+    $executeRaw: (...a: unknown[]) => mockExecuteRaw(...a),
   },
 }));
 
@@ -180,27 +182,58 @@ describe('lib/supabase-server', () => {
   });
 });
 
-describe('auditLogger — compliance categories are written, not buffered', () => {
-  it('awaits the audit_logs row before resolving', async () => {
-    auditCreate.mockResolvedValue({ id: 'a1' });
-    await auditLogger.logAuth('login', USER, 'success');
-    expect(auditCreate).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        action: 'auth.login',
-        category: 'auth',
-        userId: USER,
-      }),
+describe('auditLogger — compliance categories go to the immutable table first', () => {
+  const ACTOR = '3f2b8c1e-9a4d-4e7b-8c2f-1a2b3c4d5e6f';
+  const sql = () => (mockExecuteRaw.mock.calls[0][0] as string[]).join('?');
+  const values = () => mockExecuteRaw.mock.calls[0].slice(1);
+
+  it('writes audit_events_immutable, then the audit_logs copy, before resolving', async () => {
+    const order: string[] = [];
+    mockExecuteRaw.mockImplementation(async () => {
+      order.push('immutable');
+      return 1;
+    });
+    auditCreate.mockImplementation(async () => {
+      order.push('audit_logs');
+      return { id: 'a1' };
+    });
+    await auditLogger.logAuth('login', ACTOR, 'success');
+    expect(order).toEqual(['immutable', 'audit_logs']);
+    expect(sql()).toContain('INSERT INTO public.audit_events_immutable');
+    expect(values()[0]).toBe('auth.login');
+    expect(values()[1]).toBe(ACTOR);
+    expect(JSON.parse(values()[2] as string)).toMatchObject({
+      category: 'auth',
+      outcome: 'success',
     });
     await auditLogger.flush();
     expect(auditCreateMany).not.toHaveBeenCalled();
   });
 
-  it('rejects when the audit row cannot be written', async () => {
-    auditCreate.mockRejectedValue(new Error('audit db down'));
+  it('keeps a non-uuid user id in the payload, not actor_id', async () => {
+    mockExecuteRaw.mockResolvedValue(1);
+    auditCreate.mockResolvedValue({ id: 'a1' });
+    await auditLogger.logAuth('login', USER, 'success');
+    expect(values()[1]).toBeNull();
+    expect(JSON.parse(values()[2] as string).actor).toBe(USER);
+  });
+
+  it('rejects, and writes no audit_logs copy, when the immutable row fails', async () => {
+    mockExecuteRaw.mockRejectedValue(new Error('immutable down'));
     await expect(
-      auditLogger.logData('delete', 'competitor', 'c1', USER, 'success')
-    ).rejects.toThrow('audit db down');
+      auditLogger.logData('delete', 'competitor', 'c1', ACTOR, 'success')
+    ).rejects.toThrow('immutable down');
+    expect(auditCreate).not.toHaveBeenCalled();
     await auditLogger.flush();
     expect(auditCreateMany).not.toHaveBeenCalled();
+  });
+
+  it('resolves when only the secondary audit_logs copy fails', async () => {
+    mockExecuteRaw.mockResolvedValue(1);
+    auditCreate.mockRejectedValue(new Error('audit_logs down'));
+    await expect(
+      auditLogger.logData('delete', 'competitor', 'c1', ACTOR, 'success')
+    ).resolves.toBeUndefined();
+    expect(mockExecuteRaw).toHaveBeenCalledTimes(1);
   });
 });
