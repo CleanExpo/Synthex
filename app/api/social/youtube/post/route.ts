@@ -282,6 +282,12 @@ export async function POST(request: NextRequest) {
       }
 
       const videoId = result.postId;
+      // The video is already uploaded; follow-up steps that fail are reported,
+      // not swallowed.
+      const mediaFailed: Array<{
+        step: 'playlist' | 'thumbnail';
+        error: string;
+      }> = [];
 
       // Add to playlist if specified (YouTube-specific, not in base service)
       if (videoData.playlistId && videoId) {
@@ -311,9 +317,17 @@ export async function POST(request: NextRequest) {
               'Failed to add video to playlist:',
               await playlistResponse.text()
             );
+            mediaFailed.push({
+              step: 'playlist',
+              error: `YouTube returned ${playlistResponse.status}`,
+            });
           }
         } catch (playlistError) {
           logger.error('Failed to add video to playlist:', playlistError);
+          mediaFailed.push({
+            step: 'playlist',
+            error: 'Failed to add video to playlist',
+          });
         }
       }
 
@@ -321,12 +335,18 @@ export async function POST(request: NextRequest) {
       if (videoData.thumbnailUrl && videoId) {
         try {
           // SSRF guard (SYN-1001): thumbnailUrl is user-supplied and fetched server-side.
-          // A blocked URL throws → caught below → thumbnail skipped, the post still succeeds.
+          // A blocked URL throws → caught below → thumbnail skipped and reported
+          // in mediaFailed; the upload itself still succeeded.
           validateExternalUrl(videoData.thumbnailUrl);
           const thumbnailResponse = await fetch(videoData.thumbnailUrl);
+          if (!thumbnailResponse.ok) {
+            throw new Error(
+              `Thumbnail fetch returned ${thumbnailResponse.status}`
+            );
+          }
           const thumbnailBuffer = await thumbnailResponse.arrayBuffer();
 
-          await fetch(
+          const setResponse = await fetch(
             `${YOUTUBE_UPLOAD_BASE}/thumbnails/set?videoId=${videoId}`,
             {
               method: 'POST',
@@ -337,8 +357,15 @@ export async function POST(request: NextRequest) {
               body: thumbnailBuffer,
             }
           );
+          if (!setResponse.ok) {
+            throw new Error(`YouTube returned ${setResponse.status}`);
+          }
         } catch (thumbnailError) {
           logger.error('Failed to set thumbnail:', thumbnailError);
+          mediaFailed.push({
+            step: 'thumbnail',
+            error: 'Failed to set thumbnail',
+          });
         }
       }
 
@@ -386,6 +413,7 @@ export async function POST(request: NextRequest) {
           status: 'uploaded',
         },
         recorded: true,
+        mediaFailed,
         usage: USAGE_NOT_PROVISIONED,
       });
     } catch (error: unknown) {
@@ -438,6 +466,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    let syncError: string | undefined;
     if (syncFromPlatform) {
       try {
         // Use YouTubeService for syncing posts from platform
@@ -448,8 +477,12 @@ export async function GET(request: NextRequest) {
             })
           : null;
 
+        if (!service) syncError = 'YouTube service unavailable';
         if (service) {
           const syncResult = await service.syncPosts(limit);
+          if (!syncResult.success) {
+            syncError = syncResult.error || 'YouTube sync failed';
+          }
 
           if (syncResult.success) {
             // Map to the existing response format for backward compatibility
@@ -475,8 +508,9 @@ export async function GET(request: NextRequest) {
             });
           }
         }
-      } catch (syncError) {
-        logger.error('YouTube sync error:', syncError);
+      } catch (err) {
+        logger.error('YouTube sync error:', err);
+        syncError = 'YouTube sync failed';
       }
     }
 
@@ -487,7 +521,12 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    return NextResponse.json({ success: true, data: posts });
+    return NextResponse.json({
+      success: true,
+      data: posts,
+      // A requested sync that failed must not look like fresh platform data.
+      ...(syncFromPlatform ? { synced: false, syncError } : {}),
+    });
   } catch (error: unknown) {
     logger.error('Get YouTube posts error:', error);
     const errorMessage = 'An unexpected error occurred. Please try again.';

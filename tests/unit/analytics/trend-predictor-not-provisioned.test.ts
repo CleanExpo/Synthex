@@ -73,8 +73,10 @@ describe('trendPredictor — NOT_PROVISIONED data paths', () => {
 describe('trendPredictor — reach estimate ported to Prisma', () => {
   beforeEach(() => mockFindFirst.mockReset());
 
-  it('reads only the caller’s live connection and uses metadata.followers', async () => {
-    mockFindFirst.mockResolvedValue({ metadata: { followers: 20000 } });
+  it('reads only the caller’s live connection and uses metadata.lastMetrics.followers', async () => {
+    mockFindFirst.mockResolvedValue({
+      metadata: { lastMetrics: { followers: 20000 } },
+    });
 
     const result = await trendPredictor.calculateViralPotential('user-7', {
       text: 'Launch day! #growth',
@@ -92,6 +94,20 @@ describe('trendPredictor — reach estimate ported to Prisma', () => {
       select: { metadata: true },
     });
     // baseReach = 20000 * 0.1 = 2000, scaled by (1 + score/100) >= 1.
-    expect(result.estimatedReach.medium).toBeGreaterThanOrEqual(2000);
+    expect(result.estimatedReach!.medium).toBeGreaterThanOrEqual(2000);
+    expect(result.estimatedReachUnavailable).toBeUndefined();
+  });
+
+  it('returns null reach with a note instead of inventing 1000 followers', async () => {
+    mockFindFirst.mockResolvedValue({ metadata: {} });
+
+    const result = await trendPredictor.calculateViralPotential('user-7', {
+      text: 'Launch day! #growth',
+      hashtags: ['growth'],
+      platform: 'instagram',
+    });
+
+    expect(result.estimatedReach).toBeNull();
+    expect(result.estimatedReachUnavailable).toContain('follower count');
   });
 });

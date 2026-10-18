@@ -12,7 +12,8 @@
  * NOT PROVISIONED: POST auto-scheduled rows of the `scheduled_posts` table,
  * which has no model in prisma/schema.prisma. It answers 503
  * FEATURE_NOT_PROVISIONED after auth and validation instead of reporting
- * zero scheduled posts. PUT stores settings in users.user_settings (Prisma).
+ * zero scheduled posts. PUT answers the same 503: nothing reads the settings
+ * it would save, so storing them would claim a feature that cannot run.
  */
 
 import { NextRequest } from 'next/server';
@@ -28,7 +29,6 @@ import {
 } from '@/lib/ml/posting-time-predictor';
 import { logger } from '@/lib/logger';
 import { prisma } from '@/lib/prisma';
-import type { Prisma } from '@prisma/client';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
@@ -381,8 +381,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const userId = security.context.userId!;
-
   try {
     const body = await request.json();
 
@@ -403,42 +401,19 @@ export async function PUT(request: NextRequest) {
         .optional(),
     });
 
-    const validated = settingsSchema.parse(body);
+    settingsSchema.parse(body);
 
-    // Merge into the caller's own users.user_settings JSON
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { settings: true },
-    });
-
-    if (!user) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'User not found' },
-        404
-      );
-    }
-
-    const currentSettings =
-      user.settings &&
-      typeof user.settings === 'object' &&
-      !Array.isArray(user.settings)
-        ? (user.settings as Prisma.JsonObject)
-        : {};
-
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        settings: {
-          ...currentSettings,
-          autoSchedule: validated,
-        } as Prisma.InputJsonObject,
+    // Nothing reads autoSchedule settings: the scheduler they would drive
+    // needs scheduled_posts, which is not provisioned. Saving them would
+    // report a feature as enabled that cannot run.
+    return APISecurityChecker.createSecureResponse(
+      {
+        error: 'FEATURE_NOT_PROVISIONED',
+        message:
+          'Auto-scheduling is not provisioned: the scheduled_posts table does not exist. Settings were not saved.',
       },
-    });
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      settings: validated,
-    });
+      NOT_PROVISIONED_STATUS
+    );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
