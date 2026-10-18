@@ -1,11 +1,36 @@
 {
   "schema": "unite-state/1",
   "milestone": "m-2026-10-18-white-rabbit-learning-loop",
-  "decisions": [],
-  "blockers": [],
-  "next": null,
+  "decisions": [
+    {
+      "text": "Loop stored on IntentScapeEvent (no new table); email capture deferred until a consent design exists; resolveRole treats a user with no membership row as owner (pre-existing, flagged, not changed)",
+      "at": "2026-10-18T03:10:37Z"
+    }
+  ],
+  "blockers": [
+    {
+      "id": 1,
+      "text": "Pilot launch, card content (needs and actions), deck clues, prize scope and rules, music rights",
+      "cleared_by": "Phill (founder)",
+      "at": "2026-10-18T03:10:37Z"
+    },
+    {
+      "id": 2,
+      "text": "Push, PR and merge of feature/learning-loop-white-rabbit",
+      "cleared_by": "PC orchestrator after independent review",
+      "at": "2026-10-18T03:10:37Z"
+    },
+    {
+      "id": 3,
+      "text": "Forcing Stop hook (unite_stop.py) not installed; needs founder Bash permission rule (DECISIONS OPEN-1)",
+      "cleared_by": "Phill (founder)",
+      "at": "2026-10-18T03:10:37Z"
+    }
+  ],
+  "next": "Independent review of 2dd805f0, then PC opens the PR; Phill reviews the card content at /card/phill and decides on the pilot",
   "pr": null,
-  "head": "cb1c5a0f1546cc9350bd1e996ea8a06fcec87dcb",
+  "head": "2dd805f09c49776cf231da276391be6e7aabfc12",
   "branch": "feature/learning-loop-white-rabbit",
-  "updated_at": "2026-10-18T02:41:19Z"
+  "updated_at": "2026-10-18T03:10:37Z",
+  "finish": "VERIFIED_LOCAL"
 }
