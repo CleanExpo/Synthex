@@ -51,6 +51,7 @@ export const EXEMPT_PREFIXES: readonly string[] = [
   'app/api/waitlist', // Public sign-up, rate-limited via authStrict
   'app/api/opportunity-map/', // Public scan, feedback and consent-bound handoff; same-origin + rate-limited
   'app/api/v1/connections/status', // #492 Mission Control status manifest — presence-only booleans, no secrets/PII/org data
+  'app/api/card/', // Public digital business card: random session id only, no PII; same-origin + rate-limited; org from the experiment authorisation row
   'app/api/admin/private-refs', // #740 Signed-token ingest (x-ingest-token, timingSafeEqual, fail-closed); no user session
 ];
 
