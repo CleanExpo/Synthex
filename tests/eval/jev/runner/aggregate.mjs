@@ -2,7 +2,7 @@
 /**
  * JEV deterministic verdict.
  *
- *   node tests/eval/jev/runner/aggregate.mjs [--family J3] [--control]
+ *   node tests/eval/jev/runner/aggregate.mjs [--family J3 ...] [--control]
  *
  * Reads tests/eval/jev/out/<FAMILY>.jsonl for every family in scope and
  * applies the rules in tests/eval/jev/README.md. Writes out/summary.json and,
@@ -10,6 +10,7 @@
  * in scope is green; 1 otherwise. --control runs the planted self-test.
  */
 import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -63,7 +64,8 @@ function judgeFamily(id, def, outDir) {
       row.family !== id ||
       !STATES.includes(row.state) ||
       !['case', 'control'].includes(row.kind) ||
-      !row.id
+      !row.id ||
+      (row.state === 'KNOWN_GAP' && !row.gap_id)
     ) {
       reasons.push(`malformed row ${JSON.stringify(row).slice(0, 120)}`);
       continue;
@@ -112,17 +114,24 @@ function judgeFamily(id, def, outDir) {
 
 /**
  * Aggregate the families in scope. Returns { summary, exit }.
- * opts: { family?, familiesFile, outDir, floorsFile, write = true, log = console.log }
+ * opts: { families?, runFailures?, familiesFile, outDir, floorsFile, write = true, log = console.log }
+ * runFailures: run-level failures found before the rows were read (a red
+ * Jest run); each one fails the run whatever the rows say.
  */
 export function aggregate(opts = {}) {
   const o = { ...DEFAULTS, write: true, log: console.log, ...opts };
   const table = JSON.parse(fs.readFileSync(o.familiesFile, 'utf8'));
   if (table.schema !== 'jev-families/1')
     throw new Error(`families.json: unexpected schema ${table.schema}`);
-  const scope = o.family ? [o.family] : Object.keys(table.families);
+  const scope = o.families ?? Object.keys(table.families);
 
   const families = {};
   let exit = 0;
+  const runFailures = o.runFailures ?? [];
+  for (const failure of runFailures) {
+    o.log(`FAIL run ${failure}`);
+    exit = 1;
+  }
   for (const id of scope) {
     const def = table.families[id];
     if (!def) {
@@ -150,6 +159,7 @@ export function aggregate(opts = {}) {
       (n, f) => n + (f.cases ?? 0),
       0
     ),
+    run_failures: runFailures,
     exit,
   };
   if (o.write) {
@@ -158,7 +168,7 @@ export function aggregate(opts = {}) {
       path.join(o.outDir, 'summary.json'),
       `${JSON.stringify(summary, null, 2)}\n`
     );
-    if (o.family) {
+    if (o.families) {
       o.log('floors proposal left as is: a --family run never rewrites it');
     } else if (exit !== 0 || !scope.length) {
       o.log(
@@ -215,12 +225,23 @@ function runControls() {
       expected_cases: 2,
       hard_gate: false,
     },
+    C7: {
+      name: 'KNOWN_GAP with no gap id',
+      expected_cases: 2,
+      hard_gate: true,
+    },
   };
   fs.writeFileSync(
     familiesFile,
     JSON.stringify({ schema: 'jev-families/1', families })
   );
-  const row = (family, kind, id, state) => ({ id, family, kind, state });
+  const row = (family, kind, id, state) => ({
+    id,
+    family,
+    kind,
+    state,
+    ...(state === 'KNOWN_GAP' ? { gap_id: 'M0' } : {}),
+  });
   const controls = (f, last = 'FAIL') => [
     row(f, 'control', 'k1', 'FAIL'),
     row(f, 'control', 'k2', 'FAIL'),
@@ -257,6 +278,11 @@ function runControls() {
       row('C6', 'case', 'b', 'INCONCLUSIVE'),
       ...controls('C6'),
     ],
+    C7: [
+      row('C7', 'case', 'a', 'PASS'),
+      { id: 'b', family: 'C7', kind: 'case', state: 'KNOWN_GAP' },
+      ...controls('C7'),
+    ],
   };
   for (const [f, rows] of Object.entries(planted)) {
     fs.writeFileSync(
@@ -271,11 +297,12 @@ function runControls() {
     C4: [0, 'PASS'],
     C5: [1, 'INCONCLUSIVE'],
     C6: [0, 'PASS'],
+    C7: [1, 'BROKEN_CHECK'],
   };
   let ok = true;
   for (const [f, [wantExit, wantState]] of Object.entries(expect)) {
     const { summary, exit } = aggregate({
-      family: f,
+      families: [f],
       familiesFile,
       outDir: dir,
       write: false,
@@ -288,7 +315,24 @@ function runControls() {
       `${good ? 'PASS' : 'FAIL'} control ${f} (${families[f].name}): exit=${exit} state=${got}, want exit=${wantExit} state=${wantState}`
     );
   }
+  // Every --family given is in scope, not only the first.
+  {
+    const { summary, exit } = aggregate({
+      ...parseArgs(['--family', 'C4', '--family', 'C2']),
+      familiesFile,
+      outDir: dir,
+      write: false,
+      log: () => {},
+    });
+    const got = Object.keys(summary.families).join(',');
+    const good = exit === 1 && got === 'C4,C2';
+    if (!good) ok = false;
+    console.log(
+      `${good ? 'PASS' : 'FAIL'} control --family C4 --family C2: exit=${exit} scope=${got}, want exit=1 scope=C4,C2`
+    );
+  }
   if (!proposalControls(dir, familiesFile)) ok = false;
+  if (!runDetControls()) ok = false;
   fs.rmSync(dir, { recursive: true, force: true });
   return ok ? 0 : 1;
 }
@@ -324,7 +368,16 @@ function proposalControls(dir, brokenFamiliesFile) {
   const scenarios = [
     ['failed full run', { familiesFile: brokenFamiliesFile }, false],
     ['partial full run', { familiesFile: partialFamiliesFile }, false],
-    ['--family run', { familiesFile: cleanFamiliesFile, family: 'C4' }, false],
+    [
+      '--family run',
+      { familiesFile: cleanFamiliesFile, families: ['C4'] },
+      false,
+    ],
+    [
+      'Jest red full run',
+      { familiesFile: cleanFamiliesFile, runFailures: ['jest exit 1'] },
+      false,
+    ],
     ['complete green run', { familiesFile: cleanFamiliesFile }, true],
   ];
   let ok = true;
@@ -350,14 +403,112 @@ function proposalControls(dir, brokenFamiliesFile) {
   return ok;
 }
 
+/**
+ * Planted self-test for run-det.mjs, at its exit code: a family whose Jest
+ * test records valid rows and then fails an assertion must not exit 0, and
+ * neither may a run where a later --family never produced rows. The clean
+ * twin must exit 0, so the reds are the plants, not a broken fixture.
+ */
+function runDetControls() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jev-run-det-'));
+  const outDir = path.join(dir, 'out');
+  const familiesFile = path.join(dir, 'families.json');
+  const jestConfig = path.join(dir, 'jest.config.json');
+  fs.mkdirSync(path.join(dir, 'families'));
+  fs.writeFileSync(
+    familiesFile,
+    JSON.stringify({
+      schema: 'jev-families/1',
+      families: {
+        CJ: { name: 'Jest red after rows', expected_cases: 1, hard_gate: true },
+        CK: { name: 'clean twin', expected_cases: 1, hard_gate: true },
+        CM: { name: 'no test file', expected_cases: 1, hard_gate: true },
+      },
+    })
+  );
+  fs.writeFileSync(
+    jestConfig,
+    JSON.stringify({
+      rootDir: dir,
+      testEnvironment: 'node',
+      testRegex: 'families[\\\\/][^\\\\/]+\\.jev\\.test\\.ts$',
+      transform: {},
+    })
+  );
+  for (const [f, red] of [
+    ['CJ', true],
+    ['CK', false],
+  ]) {
+    const rows = [
+      { id: 'a', family: f, kind: 'case', state: 'PASS' },
+      ...['k1', 'k2', 'k3'].map(id => ({
+        id,
+        family: f,
+        kind: 'control',
+        state: 'FAIL',
+      })),
+    ];
+    const out = path.join(outDir, `${f}.jsonl`);
+    fs.writeFileSync(
+      path.join(dir, 'families', `${f.toLowerCase()}.jev.test.ts`),
+      `const fs = require('fs');
+afterAll(() => {
+  fs.mkdirSync(${JSON.stringify(outDir)}, { recursive: true });
+  fs.writeFileSync(${JSON.stringify(out)}, ${JSON.stringify(rows.map(r => `${JSON.stringify(r)}\n`).join(''))});
+});
+it('records valid rows, then asserts', () => {
+  expect(${red}).toBe(false);
+});
+`
+    );
+  }
+  const runDet = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    'run-det.mjs'
+  );
+  const scenarios = [
+    ['Jest red after valid rows', ['CJ'], false],
+    ['clean twin', ['CK'], true],
+    ['second --family has no rows', ['CK', 'CM'], false],
+  ];
+  let ok = true;
+  for (const [name, scope, wantZero] of scenarios) {
+    const r = spawnSync(
+      process.execPath,
+      [
+        runDet,
+        ...scope.flatMap(f => ['--family', f]),
+        '--families-file',
+        familiesFile,
+        '--out-dir',
+        outDir,
+        '--jest-config',
+        jestConfig,
+      ],
+      { encoding: 'utf8' }
+    );
+    const good = (r.status === 0) === wantZero;
+    if (!good) ok = false;
+    console.log(
+      `${good ? 'PASS' : 'FAIL'} control run-det (${name}): exit=${r.status ?? r.signal}, want ${wantZero ? '0' : 'non-zero'}`
+    );
+    if (!good)
+      console.log(`${r.stdout}${r.stderr}`.split('\n').slice(-15).join('\n'));
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+  return ok;
+}
+
+/** --family may repeat; every value is in scope. families is undefined on a full run. */
 export function parseArgs(argv) {
   const args = { control: argv.includes('--control') };
-  const i = argv.indexOf('--family');
-  if (i !== -1) {
-    args.family = argv[i + 1];
-    if (!args.family || args.family.startsWith('--'))
+  argv.forEach((a, i) => {
+    if (a !== '--family') return;
+    const id = argv[i + 1];
+    if (!id || id.startsWith('--'))
       throw new Error('--family needs a value, e.g. --family J3');
-  }
+    args.families = [...new Set([...(args.families ?? []), id])];
+  });
   return args;
 }
 
@@ -367,6 +518,6 @@ if (
 ) {
   const args = parseArgs(process.argv.slice(2));
   process.exit(
-    args.control ? runControls() : aggregate({ family: args.family }).exit
+    args.control ? runControls() : aggregate({ families: args.families }).exit
   );
 }

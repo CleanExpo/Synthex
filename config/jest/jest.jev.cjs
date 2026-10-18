@@ -9,7 +9,7 @@ const rootDir = path.join(__dirname, '../..');
  * Shares transforms, setupFiles and moduleNameMapper with jest.worktree.cjs.
  * Node environment: route handlers run in-process and need Node's native
  * Request/Response, not jsdom's. No coverage floors — the verdict is
- * tests/eval/jev/runner/aggregate.mjs, not the Jest exit code.
+ * tests/eval/jev/runner/aggregate.mjs, and a non-zero Jest exit fails it too.
  * Run with: npm run jev:det [-- --family J3]
  */
 module.exports = {

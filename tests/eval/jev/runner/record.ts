@@ -4,7 +4,7 @@
  * A family test collects one JevResult per case and per planted-failure
  * control, then calls recordResults(family, results) once. The aggregator
  * (aggregate.mjs) reads tests/eval/jev/out/<FAMILY>.jsonl and decides the
- * verdict; the Jest exit code is not the verdict.
+ * verdict; npm run jev:det also fails when Jest does not exit 0.
  */
 import fs from 'fs';
 import path from 'path';
