@@ -7,19 +7,19 @@
  * generation time we mint short-lived SIGNED URLs so fal can fetch them for
  * grounding, and nobody else can.
  *
- * Fails safe: any misconfiguration (no service-role key, no bucket, no
- * manifest) returns [] so generation silently falls back to public/text-only
- * grounding — never an error, never a leak.
+ * NOT PROVISIONED: the repo has no private storage helper (the only real
+ * one, lib/storage/platform-storage, writes under public/, which would leak
+ * these photos). Until a private store exists, resolution reports the
+ * reference-library-private bucket as unavailable (logged with the reason)
+ * and returns [] — the result callers already handle by falling back to
+ * public/text-only grounding. Never an error, never a leak.
  */
-import { createClient, type SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
 
 import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
 
 const BUCKET = 'reference-library-private';
-const MANIFEST_PATH = '_private-manifest.json';
-const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1h — covers a generation, then expires
-const MANIFEST_CACHE_MS = 5 * 60 * 1000;
 
 interface PrivateImage {
   path: string;
@@ -40,35 +40,9 @@ interface PrivateSubject {
   label?: string;
   images?: PrivateImage[];
 }
-interface PrivateManifest {
+export interface PrivateManifest {
   version?: number;
   industries?: Record<string, { subjects?: Record<string, PrivateSubject> }>;
-}
-
-let client: SupabaseClient | null | undefined;
-function getClient(): SupabaseClient | null {
-  if (client !== undefined) return client;
-  client = createClient();
-  return client;
-}
-
-let manifestCache: { at: number; data: PrivateManifest } | null = null;
-async function loadPrivateManifest(
-  sb: SupabaseClient
-): Promise<PrivateManifest> {
-  if (manifestCache && Date.now() - manifestCache.at < MANIFEST_CACHE_MS) {
-    return manifestCache.data;
-  }
-  const { data, error } = await sb.storage.from(BUCKET).download(MANIFEST_PATH);
-  if (error || !data) return { industries: {} };
-  try {
-    const text = await data.text();
-    const parsed = JSON.parse(text) as PrivateManifest;
-    manifestCache = { at: Date.now(), data: parsed };
-    return parsed;
-  } catch {
-    return { industries: {} };
-  }
 }
 
 /**
@@ -112,46 +86,44 @@ function withinPricedBound(img: PrivateImage): boolean {
 }
 
 /**
+ * Paths of the owned private images of an industry that may be sent, in
+ * first-declared order, capped at `max` and filtered by the priced bound.
+ */
+export function selectPrivatePaths(
+  manifest: PrivateManifest,
+  industry: string,
+  max: number
+): string[] {
+  const subjects = manifest.industries?.[industry]?.subjects;
+  if (!subjects) return [];
+
+  const paths: string[] = [];
+  for (const subject of Object.values(subjects)) {
+    if (subject.rights !== 'owned' || !subject.images?.length) continue;
+    for (const img of subject.images) {
+      if (!img.path) continue;
+      if (!withinPricedBound(img)) continue;
+      paths.push(img.path);
+      if (paths.length >= max) break;
+    }
+    if (paths.length >= max) break;
+  }
+  return paths;
+}
+
+/**
  * Resolve short-lived signed URLs for the owned private images of an industry.
- * Returns [] on any misconfiguration/absence (never throws).
+ * The private bucket is not provisioned, so this logs the unavailable reason
+ * and returns [] (never throws, never signs or leaks anything).
  */
 export async function resolvePrivateReferenceUrls(
   industry: string | null | undefined,
   max = 4
 ): Promise<string[]> {
   if (!industry || max <= 0) return [];
-  const sb = getClient();
-  if (!sb) return [];
-  try {
-    const manifest = await loadPrivateManifest(sb);
-    const subjects = manifest.industries?.[industry]?.subjects;
-    if (!subjects) return [];
-
-    // owned subjects with images, first-declared order
-    const paths: string[] = [];
-    for (const subject of Object.values(subjects)) {
-      if (subject.rights !== 'owned' || !subject.images?.length) continue;
-      for (const img of subject.images) {
-        if (!img.path) continue;
-        if (!withinPricedBound(img)) continue;
-        paths.push(img.path);
-        if (paths.length >= max) break;
-      }
-      if (paths.length >= max) break;
-    }
-    if (paths.length === 0) return [];
-
-    const { data, error } = await sb.storage
-      .from(BUCKET)
-      .createSignedUrls(paths, SIGNED_URL_TTL_SECONDS);
-    if (error || !data) return [];
-    return (data as Array<{ signedUrl?: string }>)
-      .map(d => d.signedUrl)
-      .filter((u): u is string => typeof u === 'string' && u.length > 0);
-  } catch (err) {
-    logger.warn('private reference grounding skipped', {
-      error: err instanceof Error ? err.message : String(err),
-    });
-    return [];
-  }
+  logger.warn('private reference grounding unavailable', {
+    industry,
+    ...tableUnavailable(BUCKET),
+  });
+  return [];
 }
