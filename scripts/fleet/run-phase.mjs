@@ -439,7 +439,7 @@ function review() {
   const brief = path.join(os.tmpdir(), `brief-${phase}.md`);
   writeFileSync(
     brief,
-    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
+    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nCoverage: the review tool hides *.log and *.jsonl files (for example release-receipts/ledger/fleet.jsonl) from the diff and names them in diff_coverage.excluded_files. List each one in coverage.not_reviewed with that reason; a PASS must account for every changed file.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
   );
   const out = `release-receipts/manifests/${phase}-review.json`;
   const script = path.join(
@@ -591,6 +591,13 @@ function release() {
     log('FAIL', `receipt not PASS: ${w.stdout.trim()}`);
     return 1;
   }
+  // Handoff doc for the next orchestrator thread (self-compaction; see docs/fleet/assistance-opportunities.md).
+  // Written before the receipt commit and committed with it, so the pushed head carries it (an amend
+  // after the push left it on a local-only commit that the PR, checks and merge never saw).
+  writeFileSync(
+    path.join(ROOT, `release-receipts/manifests/${phase}-handoff.md`),
+    `# Handoff ${phase} (${ph.slug})\n\nReviewed commit: ${reviewed}\nReceipt: release-receipts/${phase}.json\nGate manifest: ${gateFile}\nReview: release-receipts/manifests/${phase}-review.json\nUnits: release-receipts/manifests/${phase}-units.json (if any)\n\nNext phase: ${pol.phases[pol.phases.indexOf(ph) + 1]?.id || 'none'} — start with node scripts/fleet/phase-advance.mjs.\nOpen blockers: see BACKLOG.md between the fleet markers.\nSuggested skills: proof-discipline, control-readout, adversarial-review.\nNo secrets in this file.\n`
+  );
   // The gate manifest must be committed with the receipt so verify-receipt can read it at head.
   const sha = fleetCommit(
     `chore(fleet): ${phase} release receipt\n\nReviewed-Commit: ${reviewed}\nFleet-Role: releaser\nRatified-By: FD-3`,
@@ -598,6 +605,7 @@ function release() {
       `release-receipts/${phase}.json`,
       gateFile,
       `release-receipts/manifests/${phase}-review.json`,
+      `release-receipts/manifests/${phase}-handoff.md`,
       pol.ledger,
     ].filter(f => existsSync(path.join(ROOT, f)))
   );
@@ -618,22 +626,6 @@ function release() {
     log('FAIL', `push: ${p.stderr.trim().slice(0, 200)}`);
     return 1;
   }
-  // Handoff doc for the next orchestrator thread (self-compaction; see docs/fleet/assistance-opportunities.md).
-  writeFileSync(
-    path.join(ROOT, `release-receipts/manifests/${phase}-handoff.md`),
-    `# Handoff ${phase} (${ph.slug})\n\nReviewed commit: ${reviewed}\nReceipt: release-receipts/${phase}.json\nGate manifest: ${gateFile}\nReview: release-receipts/manifests/${phase}-review.json\nUnits: release-receipts/manifests/${phase}-units.json (if any)\n\nNext phase: ${pol.phases[pol.phases.indexOf(ph) + 1]?.id || 'none'} — start with node scripts/fleet/phase-advance.mjs.\nOpen blockers: see BACKLOG.md between the fleet markers.\nSuggested skills: proof-discipline, control-readout, adversarial-review.\nNo secrets in this file.\n`
-  );
-  run('git', ['add', `release-receipts/manifests/${phase}-handoff.md`]);
-  run('git', [
-    '-c',
-    `user.name=${pol.committer.name}`,
-    '-c',
-    `user.email=${pol.committer.email}`,
-    'commit',
-    '-q',
-    '--amend',
-    '--no-edit',
-  ]);
   ledgerAppend({ kind: 'push', phase, head, branch });
   log(
     'PASS',
