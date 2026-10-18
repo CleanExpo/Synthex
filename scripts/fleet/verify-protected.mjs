@@ -11,6 +11,7 @@
  */
 import {
   commitTrailers,
+  isFleetCommit,
   policy,
   isProtected,
   changedFiles,
@@ -31,6 +32,12 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// The receipt verifier next to THIS file: in CI that is the trusted base copy under /tmp/trusted,
+// never the PR checkout's own copy (a PR could replace it with process.exit(0); verifier audit).
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const TRUSTED_VERIFY_RECEIPT = path.join(HERE, '../release/verify-receipt.mjs');
 
 const args = process.argv.slice(2);
 const opt = (k, d) => {
@@ -56,8 +63,23 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
       cwd,
     }) || '';
   const bootstrap = !policyAtBase && /^feature\/fleet-p-1-/.test(branch);
-  const ledgerGlobs =
-    pol.protected_exemptions.fleet_ledger_rows.map(globToRegExp);
+  // Ledger rows and halt files keep their exemption. Manifests do not, wholesale: a branch may only
+  // add or update its OWN phase's release-written manifests, in fleet commits on a fleet branch;
+  // policy-hash.json, selftest.json and other phases' reports need a declared protected change
+  // (verifier audit: any branch could rewrite policy-hash.json).
+  const ledgerGlobs = pol.protected_exemptions.fleet_ledger_rows
+    .filter(g => !g.startsWith('release-receipts/manifests/'))
+    .map(globToRegExp);
+  const phaseOfBranch = /^feature\/fleet-p(-?\d+)-/.exec(branch);
+  const ownManifest = phaseOfBranch
+    ? new RegExp(
+        `^release-receipts/manifests/P${phaseOfBranch[1]}-(gate|review|handoff|units)\\.(json|md)$`
+      )
+    : null;
+  const touchingCommits = f =>
+    (tryGit(['log', '--format=%H', `${base}..${head}`, '--', f], { cwd }) || '')
+      .split('\n')
+      .filter(Boolean);
   for (const f of files) {
     if (!isProtected(f, pol)) continue;
     if (bootstrap) {
@@ -68,21 +90,33 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
       findings.push({ file: f, state: 'PASS', why: 'ledger row' });
       continue;
     }
+    if (
+      ownManifest?.test(f) &&
+      new RegExp(pol.branch_pattern).test(branch) &&
+      touchingCommits(f).every(sha => isFleetCommit(sha, pol, cwd))
+    ) {
+      findings.push({
+        file: f,
+        state: 'PASS',
+        why: 'own-phase release manifest',
+      });
+      continue;
+    }
     // FD-3 (DECISIONS.md A-12): with no human to apply a label, a protected change is accepted only
     // when every commit touching the file is an orchestrator commit that declares it with the
     // trailers Fleet-Role: orchestrator and Protected-Change: <reason>; the independent review bound
     // to the head, the CI jobs and merge-phase.mjs are the checks that replace the label.
-    const touching = (
-      tryGit(['log', '--format=%H', `${base}..${head}`, '--', f], { cwd }) || ''
-    )
-      .split('\n')
-      .filter(Boolean);
+    // The declaring commits must also be fleet commits (fleet committer + a real role). Trailers
+    // and committer are still author-supplied; a signed trust root is DECISIONS.md OPEN-4.
+    const touching = touchingCommits(f);
     const declared =
       touching.length > 0 &&
       touching.every(sha => {
         const t = commitTrailers(sha, cwd);
         return (
-          t['Fleet-Role'] === 'orchestrator' && Boolean(t['Protected-Change'])
+          isFleetCommit(sha, pol, cwd) &&
+          t['Fleet-Role'] === 'orchestrator' &&
+          Boolean(t['Protected-Change'])
         );
       });
     if (declared && new RegExp(pol.branch_pattern).test(branch)) {
@@ -98,7 +132,9 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
       const r = run(
         process.execPath,
         [
-          path.join(ROOT, 'scripts/release/verify-receipt.mjs'),
+          TRUSTED_VERIFY_RECEIPT,
+          '--repo',
+          cwd,
           '--head',
           head,
           '--phase',
@@ -126,97 +162,107 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
 }
 
 function control() {
-  let dir;
-  try {
-    // Negative control: a scratch clone with a planted floors.json edit must exit 1.
-    dir = mkdtempSync(path.join(tmpdir(), 'vp-control-'));
-    execFileSync('git', [
-      'clone',
-      '-q',
-      '--shared',
-      '--no-checkout',
-      ROOT,
-      dir,
-    ]);
-    execFileSync('git', ['checkout', '-q', 'HEAD', '--', '.'], { cwd: dir });
-    // Seed the scratch clone with the policy and a floors file so the base commit carries both.
-    for (const f of [
-      'scripts/fleet/policy.json',
-      'scripts/fleet/lib.mjs',
-      'tests/eval/jev/floors.json',
-    ]) {
-      mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
-      writeFileSync(path.join(dir, f), readFileSync(path.join(ROOT, f)));
-    }
-    execFileSync(
-      'git',
-      [
-        '-c',
-        'user.name=control',
-        '-c',
-        'user.email=control@example.invalid',
-        'add',
-        '-A',
-      ],
-      { cwd: dir }
-    );
-    execFileSync(
-      'git',
-      [
-        '-c',
-        'user.name=control',
-        '-c',
-        'user.email=control@example.invalid',
-        '-c',
-        'core.hooksPath=/dev/null',
-        'commit',
-        '-q',
-        '--allow-empty',
-        '-m',
-        'control base',
-      ],
-      { cwd: dir }
-    );
-    const base = execFileSync('git', ['rev-parse', 'HEAD'], {
+  // Scratch repo scenarios, each run through this script (cwd = the scratch repo, so ROOT, policy
+  // and git all resolve there). Every one must exit as expected.
+  const dir = mkdtempSync(path.join(tmpdir(), 'vp-control-'));
+  const fleet = [
+    '-c',
+    'user.name=Synthex Fleet',
+    '-c',
+    'user.email=fleet@synthex.local',
+  ];
+  const human = [
+    '-c',
+    'user.name=someone',
+    '-c',
+    'user.email=someone@example.invalid',
+  ];
+  const g = (a, who = human) =>
+    execFileSync('git', [...who, '-c', 'core.hooksPath=/dev/null', ...a], {
       cwd: dir,
       encoding: 'utf8',
     }).trim();
-    execFileSync('git', ['checkout', '-q', '-b', 'feature/fleet-p0-control'], {
-      cwd: dir,
-    });
-    writeFileSync(
-      path.join(dir, 'tests/eval/jev/floors.json'),
-      '{"planted":true}\n'
-    );
-    execFileSync(
-      'git',
-      [
-        '-c',
-        'user.name=control',
-        '-c',
-        'user.email=control@example.invalid',
-        '-c',
-        'core.hooksPath=/dev/null',
-        'commit',
-        '-qam',
-        'planted protected edit',
-      ],
-      { cwd: dir }
-    );
+  const put = (f, body) => {
+    mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+    writeFileSync(path.join(dir, f), body);
+  };
+  const commit = (msg, who) => {
+    g(['add', '-A'], who);
+    g(['commit', '-q', '--allow-empty', '-m', msg], who);
+  };
+  const branch = (name, steps) => {
+    g(['checkout', '-q', '-B', name, base]);
+    steps();
     const r = run(
       process.execPath,
-      [
-        path.join(ROOT, 'scripts/fleet/verify-protected.mjs'),
-        '--base',
-        base,
-        '--head',
-        'HEAD',
-      ],
+      [fileURLToPath(import.meta.url), '--base', base, '--head', 'HEAD'],
       { cwd: dir }
     );
-    return r.code === 1;
+    return r.code;
+  };
+  let base;
+  try {
+    g(['init', '-q', '-b', 'main']);
+    put(
+      'scripts/fleet/policy.json',
+      readFileSync(path.join(ROOT, 'scripts/fleet/policy.json'))
+    );
+    put('scripts/fleet/guard.mjs', '// guard\n');
+    put('tests/eval/jev/floors.json', '{"families":{}}\n');
+    put('release-receipts/manifests/policy-hash.json', '{"sha256":"base"}\n');
+    commit('control base', fleet);
+    base = g(['rev-parse', 'HEAD']);
+    const declared = 'x\n\nFleet-Role: orchestrator\nProtected-Change: control';
+    const got = {
+      plantedFloors: branch('feature/fleet-p0-control', () => {
+        put('tests/eval/jev/floors.json', '{"planted":true}\n');
+        commit('planted protected edit');
+      }),
+      renameOut: branch('feature/x-rename', () => {
+        g(['mv', 'scripts/fleet/guard.mjs', 'tools-guard.mjs']);
+        commit('rename a protected file out');
+      }),
+      nonAsciiWorkflow: branch('feature/x-utf8', () => {
+        put('.github/workflows/é.yml', 'on: push\n');
+        commit('non-ASCII workflow');
+      }),
+      manifestRewrite: branch('feature/x-manifest', () => {
+        put(
+          'release-receipts/manifests/policy-hash.json',
+          '{"sha256":"attacker"}\n'
+        );
+        commit('rewrite policy-hash');
+      }),
+      declaredByHuman: branch('feature/fleet-p1-human', () => {
+        put('.github/workflows/evil.yml', 'on: push\n');
+        commit(declared, human);
+      }),
+      replacedVerifier: branch('feature/fleet-p1-verifier', () => {
+        put('scripts/release/verify-receipt.mjs', 'process.exit(0)\n');
+        commit(declared, fleet);
+        put('release-receipts/P1.json', '{"phase":"P1","state":"PASS"}\n');
+        commit('bogus receipt', fleet);
+      }),
+      ownManifest: branch('feature/fleet-p1-own', () => {
+        put('release-receipts/manifests/P1-gate.json', '{"head":"x"}\n');
+        commit('own-phase gate manifest\n\nFleet-Role: orchestrator', fleet);
+      }),
+    };
+    const want = {
+      plantedFloors: 1,
+      renameOut: 1,
+      nonAsciiWorkflow: 1,
+      manifestRewrite: 1,
+      declaredByHuman: 1,
+      replacedVerifier: 1,
+      ownManifest: 0,
+    };
+    const bad = Object.keys(want).filter(k => got[k] !== want[k]);
+    for (const k of bad)
+      console.log(`FAIL control ${k}: exit ${got[k]}, want ${want[k]}`);
+    return bad.length === 0;
   } finally {
-    if (dir) rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true });
   }
 }
 
@@ -224,7 +270,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-protected negative control (planted floors.json edit exits 1)`
+      `${ok ? 'PASS' : 'FAIL'} verify-protected controls (planted floors edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier all exit 1; own-phase manifest exits 0)`
     );
     process.exit(ok ? 0 : 1);
   }

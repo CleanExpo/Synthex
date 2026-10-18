@@ -1,9 +1,9 @@
 {
   "schema": "selftest-manifest/1",
-  "at": "2026-10-18T00:13:56.016Z",
+  "at": "2026-10-17T03:25:43.082Z",
   "placement": "C",
   "node": "25.9.0",
-  "policy_sha256": "95a1550a3bca161b606880e9eda806bf9aa3013646527959405ac4a6a81df66e",
+  "policy_sha256": "a4e56192e948803bb7d4c7b0b97dd0830ed78be71aaf399bb2bf36006ee91848",
   "planted_denied": 12,
   "benign_allowed": 3,
   "substrate": "cloudroom"
