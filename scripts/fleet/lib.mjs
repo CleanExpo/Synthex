@@ -173,7 +173,14 @@ export function isFleetCommit(sha, pol = policy(), cwd = ROOT) {
   const parents = git(['show', '-s', '--format=%P', sha], { cwd })
     .split(' ')
     .filter(Boolean);
-  return parents.length > 1;
+  if (parents.length < 2) return false;
+  // Only a pure merge: no path differs from every parent (no evil merge content). diff-tree --cc
+  // lists exactly those paths (verifier audit second pass: an evil merge attested as AI-only).
+  const evil = tryGit(
+    ['diff-tree', '--cc', '--no-commit-id', '--name-only', sha],
+    { cwd }
+  );
+  return evil === '';
 }
 export function utcDate(d = new Date()) {
   return d.toISOString().slice(0, 10);
@@ -187,7 +194,27 @@ export function ledgerAppend(row, file) {
     JSON.stringify({ ts: new Date().toISOString(), ...row }) + '\n'
   );
 }
-export function ledgerRows(file) {
+// The live ledger ref, resolved once per process: undefined = not yet read, null = absent on origin.
+let ledgerLive;
+export class LedgerUnreadableError extends Error {}
+// The ledger must be read at the SHA origin reports live. ls-remote failing, a failed fetch, or a
+// fetch landing elsewhere throws, never falls back to a stale local copy (Codex on P2 d6e10e5e: a
+// remote human-intervention row hidden by a failed fetch let attestation pass). An empty ls-remote
+// means the ref does not exist yet: no remote rows.
+export function liveLedgerSha({ lsCode, lsOut, fetchCode, fetchedSha }) {
+  if (lsCode !== 0)
+    throw new LedgerUnreadableError('ledger ref: ls-remote failed');
+  const live = (lsOut || '').trim().split(/\s/)[0] || '';
+  if (!live) return null;
+  if (!/^[0-9a-f]{40}$/.test(live) || fetchCode !== 0 || fetchedSha !== live)
+    throw new LedgerUnreadableError(
+      'ledger ref: not freshly fetched at its live SHA'
+    );
+  return live;
+}
+// at: read the ledger committed at that ref instead of the working tree (attest-phase judges a head,
+// never uncommitted edits; verifier audit second pass).
+export function ledgerRows(file, at = null) {
   const pol = policy();
   const rel = file || pol.ledger;
   const f = path.join(ROOT, rel);
@@ -202,13 +229,41 @@ export function ledgerRows(file) {
           return { kind: 'CORRUPT', raw: l };
         }
       });
-  const local = existsSync(f) ? parse(readFileSync(f, 'utf8')) : [];
-  // Rows written by scheduled runs live on the unprotected branch fleet-ledger (see ledger-push.mjs).
-  const remote = tryGit([
-    'show',
-    `origin/${pol.ledger_branch || 'fleet-ledger'}:${rel}`,
-  ]);
-  const rows = remote ? [...parse(remote), ...local] : local;
+  const atRef = at ? tryGit(['show', `${at}:${rel}`]) : null;
+  if (at && atRef === null)
+    throw new LedgerUnreadableError(`ledger: ${rel} unreadable at ${at}`);
+  const local = at
+    ? parse(atRef)
+    : existsSync(f)
+      ? parse(readFileSync(f, 'utf8'))
+      : [];
+  // Rows written by scheduled runs live on the ref refs/fleet/ledger (see ledger-push.mjs), fetched
+  // once per process; rows from the retired fleet-ledger branch are still read.
+  const ref = pol.ledger_ref || 'refs/fleet/ledger';
+  if (ledgerLive === undefined) {
+    const ls = run('git', ['ls-remote', 'origin', ref]);
+    const fetched =
+      ls.code === 0 && ls.stdout.trim()
+        ? run('git', ['fetch', '-q', 'origin', `+${ref}:${ref}`])
+        : { code: 0 };
+    ledgerLive = liveLedgerSha({
+      lsCode: ls.code,
+      lsOut: ls.stdout,
+      fetchCode: fetched.code,
+      fetchedSha: tryGit(['rev-parse', '--verify', '-q', ref]) || '',
+    });
+  }
+  let liveTxt = null;
+  if (ledgerLive) {
+    liveTxt = tryGit(['show', `${ledgerLive}:${rel}`]);
+    if (liveTxt === null)
+      throw new LedgerUnreadableError(`ledger ref: ${rel} unreadable`);
+  }
+  const remote = [
+    liveTxt,
+    tryGit(['show', `origin/fleet-ledger:${rel}`]),
+  ].filter(Boolean);
+  const rows = [...remote.flatMap(parse), ...local];
   const seen = new Set();
   return rows
     .filter(r => {

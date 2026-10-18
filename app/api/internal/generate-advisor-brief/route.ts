@@ -21,7 +21,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
-import { createClient } from '@/lib/platform/noop-client';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -30,10 +29,6 @@ import { createEdgeFunctionRunner, ClientInput } from '@/lib/pipelines/runner';
 import type { AiAdvisorMetadata } from '@/lib/pipelines/metadata-schemas';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { queryKnowledge, formatKnowledgeContext } from '@/lib/knowledge-query';
-
-function getSupabaseAdmin() {
-  return createClient();
-}
 
 /** Average job value used for dollar attribution when no org-specific data exists. */
 const DEFAULT_AVG_JOB_VALUE_AUD = 350;
@@ -85,8 +80,8 @@ interface OrgContext {
   postsThisWeek: number;
   avgJobValueAud: number;
   competitorGap: string | null; // null if no data (SYN-583 not yet merged)
-  contentScore: number | null; // null if content_score_history has no rows yet — SYN-666
-  journeyEngagement: JourneyEngagementSummary | null; // null if no journey events yet — SYN-678
+  contentScore: number | null; // null: content_score_history not provisioned — SYN-666
+  journeyEngagement: JourneyEngagementSummary | null; // null: journey_analytics not provisioned — SYN-678
 }
 
 interface DigestSummary {
@@ -228,91 +223,12 @@ async function gatherOrgContext(organizationId: string): Promise<OrgContext> {
     competitorGap: competitorGap
       ? `${competitorGap.keyword} (${competitorGap.competitor?.domain ?? competitorGap.competitor?.name ?? 'unknown competitor'})`
       : null,
-    contentScore: await fetchContentScore(organizationId),
-    journeyEngagement: await fetchJourneyEngagement(organizationId),
+    // NOT PROVISIONED: content_score_history (SYN-666) and journey_analytics
+    // (SYN-678) have no Prisma model, so both are explicitly unavailable. The
+    // prompt below already renders null as "no data".
+    contentScore: null,
+    journeyEngagement: null,
   };
-}
-
-/** Fetch journey engagement summary from journey_analytics view. Returns null on error or no data. — SYN-678 */
-async function fetchJourneyEngagement(
-  organizationId: string
-): Promise<JourneyEngagementSummary | null> {
-  const platform = getSupabaseAdmin();
-  if (!platform) return null;
-  try {
-    const { data } = await platform
-      .from('journey_analytics')
-      .select(
-        'engagement_rate, pulse_survey_avg, total_moments_received, total_moments_engaged, moments_detail'
-      )
-      .eq('client_id', organizationId)
-      .maybeSingle();
-
-    if (!data) return null;
-
-    const row = data as {
-      engagement_rate: number;
-      pulse_survey_avg: number | null;
-      total_moments_received: number;
-      total_moments_engaged: number;
-      moments_detail: Array<{ event_type: string; engagement_outcome: string }>;
-    };
-
-    // Derive most/least engaged moment type from moments_detail JSONB array
-    const engagedByType: Record<string, number> = {};
-    const totalByType: Record<string, number> = {};
-    for (const m of row.moments_detail ?? []) {
-      const t = m.event_type;
-      totalByType[t] = (totalByType[t] ?? 0) + 1;
-      if (
-        m.engagement_outcome !== 'delivered' &&
-        m.engagement_outcome !== 'ignored'
-      ) {
-        engagedByType[t] = (engagedByType[t] ?? 0) + 1;
-      }
-    }
-
-    const rateByType = Object.keys(totalByType).map(t => ({
-      type: t,
-      rate: (engagedByType[t] ?? 0) / totalByType[t],
-    }));
-
-    const sorted = rateByType.sort((a, b) => b.rate - a.rate);
-    const mostEngagedType = sorted[0]?.type ?? null;
-    const leastEngagedType = sorted[sorted.length - 1]?.type ?? null;
-
-    return {
-      engagementRate: row.engagement_rate,
-      pulseSurveyAvg: row.pulse_survey_avg,
-      totalMomentsReceived: row.total_moments_received,
-      totalMomentsEngaged: row.total_moments_engaged,
-      mostEngagedType,
-      leastEngagedType:
-        leastEngagedType !== mostEngagedType ? leastEngagedType : null,
-    };
-  } catch {
-    return null;
-  }
-}
-
-/** Fetch latest Content Score from content_score_history. Returns null on error or no data. — SYN-666 */
-async function fetchContentScore(
-  organizationId: string
-): Promise<number | null> {
-  const platform = getSupabaseAdmin();
-  if (!platform) return null;
-  try {
-    const { data } = await platform
-      .from('content_score_history')
-      .select('score')
-      .eq('organization_id', organizationId)
-      .order('week_start', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    return data ? (data as { score: number }).score : null;
-  } catch {
-    return null;
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -352,7 +268,7 @@ async function generateActions(
 
     ctx.contentScore !== null
       ? `Content performance score: ${ctx.contentScore}/100 (weekly composite — higher = stronger content engagement relative to baseline)`
-      : 'Content performance score: building data — fewer than 10 posts analysed',
+      : 'Content performance score: not available',
 
     ctx.journeyEngagement
       ? [
@@ -370,7 +286,7 @@ async function generateActions(
         ]
           .filter(Boolean)
           .join('\n')
-      : 'Journey engagement: no automated communications sent yet',
+      : 'Journey engagement: not available',
 
     knowledgeContext ?? '',
   ]

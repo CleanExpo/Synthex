@@ -1,10 +1,15 @@
 /**
- * Persist a provider artifact: download (3 attempts, backoff) -> Supabase
- * storage bucket 'generated-videos' -> media library row. Provider URLs expire.
+ * Persist a provider artifact (provider URLs expire).
+ *
+ * NOT PROVISIONED: no durable object storage is configured. Local disk
+ * (lib/storage/platform-storage, public/uploads) does not survive restarts
+ * or reach other instances, so storing there would mark a video 'rendered'
+ * at a URL that later 404s. storeArtifact therefore throws, and the fal
+ * webhook records the generation as failed with the provider URL kept in
+ * metadata (the same outcome main had when this went through the noop
+ * client).
  */
-import { createClient } from '@/lib/platform/noop-client';
-import { mediaLibraryService } from '@/lib/services/media-library';
-import { logger } from '@/lib/logger';
+import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
 
 export interface StoreArtifactInput {
   sourceUrl: string;
@@ -14,64 +19,18 @@ export interface StoreArtifactInput {
   metadata?: Record<string, unknown>;
 }
 
-async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
-  let lastErr: unknown;
-  for (let i = 0; i < attempts; i++) {
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(60000) });
-      if (!res.ok) throw new Error(`download ${res.status}`);
-      return await res.arrayBuffer();
-    } catch (err) {
-      lastErr = err;
-      // Fix 5: only sleep when there are more attempts remaining
-      if (i < attempts - 1) {
-        await new Promise(r => setTimeout(r, 1000 * 2 ** i));
-      }
-    }
+export class ArtifactStorageNotProvisionedError extends Error {
+  readonly code = FEATURE_NOT_PROVISIONED;
+  constructor() {
+    super(
+      `${FEATURE_NOT_PROVISIONED}: durable video storage is not provisioned; the artifact was not stored.`
+    );
+    this.name = 'ArtifactStorageNotProvisionedError';
   }
-  throw lastErr;
 }
 
 export async function storeArtifact(
-  input: StoreArtifactInput
+  _input: StoreArtifactInput
 ): Promise<{ storedUrl: string }> {
-  const buffer = await fetchWithRetry(input.sourceUrl);
-
-  const platform = createClient();
-  const path = `${input.userId}/${input.rowId}.mp4`;
-  // Fix 4: wrap ArrayBuffer in Buffer so Supabase client handles it correctly
-  const { error } = await platform.storage
-    .from('generated-videos')
-    .upload(path, Buffer.from(buffer), {
-      contentType: 'video/mp4',
-      upsert: true,
-    });
-  if (error) {
-    const message =
-      error && typeof error === 'object' && 'message' in error
-        ? String((error as { message?: unknown }).message)
-        : 'unknown upload error';
-    throw new Error(`video upload failed: ${message}`);
-  }
-
-  const { data: pub } = platform.storage
-    .from('generated-videos')
-    .getPublicUrl(path);
-  const storedUrl = pub.publicUrl;
-
-  // Register in the media library; non-fatal if it fails (artifact is stored).
-  await mediaLibraryService
-    .createAsset(input.userId, {
-      type: 'video',
-      provider: 'fal',
-      url: storedUrl,
-      externalId: input.rowId,
-      prompt: input.prompt,
-      metadata: input.metadata ?? {},
-    })
-    .catch(e =>
-      logger.error('media library registration failed (non-fatal)', { e })
-    );
-
-  return { storedUrl };
+  throw new ArtifactStorageNotProvisionedError();
 }

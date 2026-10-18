@@ -60,15 +60,6 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-// Mock Supabase createClient for runner factory log writes (non-fatal in tests)
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(() => ({
-    from: jest.fn(() => ({
-      insert: jest.fn().mockResolvedValue({ error: null }),
-    })),
-  })),
-}));
-
 // ── Logger mock ───────────────────────────────────────────────────────────────
 
 jest.mock('@/lib/logger', () => ({

@@ -1,6 +1,5 @@
 // SYN-525: Post performance sync — detects first win and creates notification
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import {
@@ -11,6 +10,7 @@ import {
 } from '@/lib/notifications/detect-first-win';
 import { createFirstWinNotification } from '@/lib/notifications/create-first-win-notification';
 import { logger } from '@/lib/logger';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -63,14 +63,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Idempotency guard — skip if user already has first win.
-    const platform = createClient();
-    const { data: userData } = await platform
-      .from('users')
-      .select('first_win_detected')
-      .eq('id', userId)
-      .single();
-    if (userData?.first_win_detected) {
+    // Idempotency guard — skip if the caller's organisation already has its
+    // first win. first_win_detected lives on organizations (SYN-525), not users.
+    const caller = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organization: { select: { firstWinDetected: true } } },
+    });
+    if (caller?.organization?.firstWinDetected) {
       return NextResponse.json({ status: 'already_won' });
     }
 
@@ -92,11 +91,11 @@ export async function POST(request: NextRequest) {
     });
 
     const metricValues = posts
-      .map((p) => {
+      .map(p => {
         const analytics = p.analytics as Record<string, number> | null;
         return analytics?.[analyticsKey] ?? 0;
       })
-      .filter((v) => v > 0);
+      .filter(v => v > 0);
 
     const rollingAverage =
       metricValues.length > 0
@@ -127,8 +126,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // createFirstWinNotification never throws — fire and await
-    await createFirstWinNotification(winEvent);
+    // createFirstWinNotification never throws; it reports whether the
+    // notification was stored. An unstored win is not a completed first win.
+    const delivery = await createFirstWinNotification(winEvent);
+    if (!delivery.delivered) {
+      return notProvisionedResponse(
+        `A first win was detected but its notification was not stored: the ${delivery.table} table is not provisioned.`,
+        {
+          status: 'first_win_undelivered',
+          improvementPct: winEvent.improvementPct,
+          metric: winEvent.metric,
+        }
+      );
+    }
 
     logger.info(
       `[post-performance-sync] First win: user=${userId} post=${postId} +${winEvent.improvementPct}% ${metric}`

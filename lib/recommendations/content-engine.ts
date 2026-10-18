@@ -11,15 +11,40 @@
  * FAILURE MODE: Returns fallback recommendations
  */
 
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
 import { logger } from '@/lib/logger';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+interface PostAnalytics {
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  impressions?: number;
+}
+
+/**
+ * Engagement rate (%) from a post's analytics JSON. `posts` has no
+ * engagement_rate column, so it is derived; null when there were no impressions.
+ */
+function engagementRateOf(analytics: unknown): number | null {
+  const a = (analytics ?? {}) as PostAnalytics;
+  if (!a.impressions || a.impressions <= 0) return null;
+  return (
+    (((a.likes || 0) + (a.comments || 0) + (a.shares || 0)) / a.impressions) *
+    100
+  );
+}
+
+/** Posts owned by the user (via campaign) on one platform, with analytics. */
+function findUserPosts(userId: string, platform: Platform) {
+  return prisma.post.findMany({
+    where: {
+      platform,
+      deletedAt: null,
+      campaign: { userId },
+    },
+    select: { analytics: true, metadata: true, publishedAt: true },
+  });
 }
 
 export type Platform =
@@ -590,12 +615,15 @@ class ContentRecommendationEngine {
   ): Promise<ContentFormatRecommendation> {
     try {
       // Get user's format performance
-      const { data: formatData } = await getSupabase()
-        .from('posts')
-        .select('content_type, engagement_rate')
-        .eq('user_id', userId)
-        .eq('platform', platform)
-        .not('engagement_rate', 'is', null);
+      // `posts` has no content_type column: the format is read from metadata.
+      const formatData = (await findUserPosts(userId, platform)).flatMap(p => {
+        const engagement_rate = engagementRateOf(p.analytics);
+        const content_type = (p.metadata as { contentType?: unknown } | null)
+          ?.contentType;
+        return engagement_rate !== null && typeof content_type === 'string'
+          ? [{ content_type, engagement_rate }]
+          : [];
+      });
 
       const formatStats = new Map<string, { total: number; sum: number }>();
 
@@ -690,17 +718,15 @@ class ContentRecommendationEngine {
 
       for (const platform of platforms) {
         // Get user's content themes
-        const { data: userContent } = await getSupabase()
-          .from('posts')
-          .select('themes, engagement_rate')
-          .eq('user_id', userId)
-          .eq('platform', platform)
-          .not('themes', 'is', null);
+        // `posts` has no themes column: themes are read from metadata.
+        const userContent = await findUserPosts(userId, platform);
 
         const userThemes = new Set<string>();
-        for (const post of userContent || []) {
-          for (const theme of post.themes || []) {
-            userThemes.add(theme);
+        for (const post of userContent) {
+          const themes = (post.metadata as { themes?: unknown } | null)?.themes;
+          if (!Array.isArray(themes)) continue;
+          for (const theme of themes) {
+            if (typeof theme === 'string') userThemes.add(theme);
           }
         }
 
@@ -751,20 +777,14 @@ class ContentRecommendationEngine {
     userId: string,
     recommendationId: string
   ): Promise<boolean> {
-    try {
-      await getSupabase().from('dismissed_recommendations').insert({
-        user_id: userId,
-        recommendation_id: recommendationId,
-        dismissed_at: new Date().toISOString(),
-      });
-      return true;
-    } catch (error) {
-      logger.error('Failed to dismiss recommendation:', {
-        error,
-        recommendationId,
-      });
-      return false;
-    }
+    // The dismissed_recommendations table is not provisioned: report the
+    // dismissal as not saved rather than pretending it was.
+    logger.warn('Recommendation dismissal not saved', {
+      userId,
+      recommendationId,
+      ...tableUnavailable('dismissed_recommendations'),
+    });
+    return false;
   }
 
   /**
@@ -775,26 +795,16 @@ class ContentRecommendationEngine {
     recommendationId: string,
     action: RecommendationActionData
   ): Promise<{ success: boolean; result?: Record<string, unknown> }> {
-    try {
-      // Log application
-      await getSupabase().from('applied_recommendations').insert({
-        user_id: userId,
-        recommendation_id: recommendationId,
-        action,
-        applied_at: new Date().toISOString(),
-      });
-
-      // Execute action based on type
-      // This would integrate with other services
-
-      return { success: true };
-    } catch (error) {
-      logger.error('Failed to apply recommendation:', {
-        error,
-        recommendationId,
-      });
-      return { success: false };
-    }
+    // The applied_recommendations table is not provisioned, and no action is
+    // executed: report failure with the reason instead of a false success.
+    const unavailable = tableUnavailable('applied_recommendations');
+    logger.warn('Recommendation application not saved', {
+      userId,
+      recommendationId,
+      action,
+      ...unavailable,
+    });
+    return { success: false, result: unavailable };
   }
 
   // Private helper methods
@@ -805,34 +815,26 @@ class ContentRecommendationEngine {
   ): Promise<
     Array<{ platform: string; date: string; [key: string]: unknown }>
   > {
-    try {
-      const { data } = await getSupabase()
-        .from('analytics_summary')
-        .select('*')
-        .eq('user_id', userId)
-        .in('platform', platforms)
-        .gte(
-          'date',
-          new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-        )
-        .order('date', { ascending: false });
-
-      return data || [];
-    } catch (error) {
-      logger.error('Failed to get performance data:', { error, userId });
-      return [];
-    }
+    // The analytics_summary table is not provisioned; recommendations fall
+    // back to post history and platform best practices.
+    logger.warn('Performance summary unavailable', {
+      userId,
+      platforms,
+      ...tableUnavailable('analytics_summary'),
+    });
+    return [];
   }
 
   private async getUserTimezone(userId: string): Promise<string> {
     try {
-      const { data } = await getSupabase()
-        .from('user_settings')
-        .select('timezone')
-        .eq('user_id', userId)
-        .single();
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { settings: true },
+      });
+      const timezone = (user?.settings as { timezone?: unknown } | null)
+        ?.timezone;
 
-      return data?.timezone || 'UTC';
+      return typeof timezone === 'string' && timezone ? timezone : 'UTC';
     } catch (error) {
       return 'UTC';
     }
@@ -845,21 +847,18 @@ class ContentRecommendationEngine {
     Array<{ dayOfWeek: number; hour: number; engagementRate: number }>
   > {
     try {
-      const { data } = await getSupabase()
-        .from('posts')
-        .select('published_at, engagement_rate')
-        .eq('user_id', userId)
-        .eq('platform', platform)
-        .not('engagement_rate', 'is', null);
+      const data = await findUserPosts(userId, platform);
 
       const timeStats = new Map<string, { total: number; sum: number }>();
 
-      for (const post of data || []) {
-        const date = new Date(post.published_at);
+      for (const post of data) {
+        const engagementRate = engagementRateOf(post.analytics);
+        if (!post.publishedAt || engagementRate === null) continue;
+        const date = post.publishedAt;
         const key = `${date.getDay()}-${date.getHours()}`;
         const existing = timeStats.get(key) || { total: 0, sum: 0 };
         existing.total++;
-        existing.sum += post.engagement_rate;
+        existing.sum += engagementRate;
         timeStats.set(key, existing);
       }
 

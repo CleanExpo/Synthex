@@ -1,31 +1,41 @@
 /**
- * Unit tests — content-scorer.ts — SYN-666
+ * Unit tests — content-scorer.ts — SYN-664 / P2 truth
  *
- * Validates that saveContentScore, after a successful content_score_history
- * upsert, records the issued score to the `score_accuracy_events` ledger
- * (domain='content') for the right org — closing the doc-vs-code gap where the
- * docstring claimed ledger persistence but the code only carried a stale TODO.
- *
- * Follows the accuracy-ledger.test.ts convention: mock Supabase admin, assert
- * the mapped params. recordScoreIssued itself is unit-tested separately; here we
- * mock it to assert content-scorer wires it with correctly-mapped params.
+ * `content_score_history` has no Prisma model. The score itself is computed
+ * from org-scoped Prisma reads; the week-over-week delta is reported as null
+ * (unavailable) and saving throws ContentScoreHistoryNotProvisionedError
+ * instead of dropping the write. The ledger is not written for an unsaved score.
  */
 
-import { createClient } from '@/lib/platform/noop-client';
-import { saveContentScore, type ComputedContentScore } from '@/lib/intelligence/content-scorer';
+import prisma from '@/lib/prisma';
+import {
+  computeContentScore,
+  saveContentScore,
+  ContentScoreHistoryNotProvisionedError,
+  type ComputedContentScore,
+} from '@/lib/intelligence/content-scorer';
 import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 
-// ── Mocks ────────────────────────────────────────────────────────────────────
-
-const mockUpsert = jest.fn();
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(),
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    contentPerformanceProfile: { findUnique: jest.fn() },
+    contentImprovementTracking: { findFirst: jest.fn() },
+  },
 }));
 
 jest.mock('@/lib/intelligence/accuracy-ledger', () => ({
-  recordScoreIssued: jest.fn().mockResolvedValue(undefined),
+  recordScoreIssued: jest.fn(),
 }));
+
+jest.mock('@/lib/logger', () => ({
+  logger: { warn: jest.fn(), error: jest.fn(), info: jest.fn() },
+}));
+
+const mockedPrisma = prisma as unknown as {
+  contentPerformanceProfile: { findUnique: jest.Mock };
+  contentImprovementTracking: { findFirst: jest.Mock };
+};
 
 function buildComputed(
   overrides: Partial<ComputedContentScore> = {}
@@ -34,70 +44,70 @@ function buildComputed(
     organizationId: 'org-abc',
     weekStart: '2026-06-08',
     score: 72,
-    delta: 4,
-    components: { data_availability: 32, engagement_lift: 28, volume_bonus: 12 },
+    delta: null,
+    components: {
+      data_availability: 32,
+      engagement_lift: 28,
+      volume_bonus: 12,
+    },
     dataPoints: 18,
     ...overrides,
   };
 }
 
-beforeEach(() => {
-  // jest config sets resetMocks: true — re-apply implementations each test.
-  mockUpsert.mockResolvedValue({ error: null });
-  (createClient as jest.Mock).mockReturnValue({
-    from: (_table: string) => ({ upsert: mockUpsert }),
-  });
-  (recordScoreIssued as jest.Mock).mockResolvedValue(undefined);
+describe('computeContentScore', () => {
+  it('scopes both reads to the organisation and reports delta as unavailable', async () => {
+    mockedPrisma.contentPerformanceProfile.findUnique.mockResolvedValue({
+      confidenceLevel: 0.5,
+      postCount: 50,
+    });
+    mockedPrisma.contentImprovementTracking.findFirst.mockResolvedValue({
+      improvementRate: 0.1,
+    });
 
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
-});
+    const weekStart = new Date('2026-06-08T00:00:00Z');
+    const result = await computeContentScore('org-abc', weekStart);
 
-describe('saveContentScore → accuracy ledger (SYN-666)', () => {
-  it('records a content score_accuracy_events row with correctly-mapped params', async () => {
-    await saveContentScore(buildComputed());
-
-    expect(mockUpsert).toHaveBeenCalledTimes(1);
-    expect(recordScoreIssued).toHaveBeenCalledWith(
+    expect(
+      mockedPrisma.contentPerformanceProfile.findUnique
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { organizationId: 'org-abc' } })
+    );
+    expect(
+      mockedPrisma.contentImprovementTracking.findFirst
+    ).toHaveBeenCalledWith(
       expect.objectContaining({
-        clientId: 'org-abc',
-        domain: 'content',
-        scoreValue: 72,
-        calibrationDataPoints: 18,
-        entityId: 'org-abc',
+        where: expect.objectContaining({ organizationId: 'org-abc' }),
+      })
+    );
+    // 20 (data) + 30 (lift) + 10 (volume)
+    expect(result).toEqual(
+      expect.objectContaining({
+        organizationId: 'org-abc',
+        score: 60,
+        delta: null,
       })
     );
   });
 
-  it("marks confidence 'high' once post count meets the calibration bar (>=15)", async () => {
-    await saveContentScore(buildComputed({ dataPoints: 15 }));
+  it('returns null when the org has no performance profile', async () => {
+    mockedPrisma.contentPerformanceProfile.findUnique.mockResolvedValue(null);
 
-    expect(recordScoreIssued).toHaveBeenCalledWith(
-      expect.objectContaining({ confidence: 'high', calibrationDataPoints: 15 })
-    );
+    await expect(
+      computeContentScore('org-none', new Date('2026-06-08T00:00:00Z'))
+    ).resolves.toBeNull();
   });
+});
 
-  it("marks confidence 'low' while the org is still below the calibration bar", async () => {
-    await saveContentScore(buildComputed({ dataPoints: 9 }));
+describe('saveContentScore — not provisioned', () => {
+  it('throws ContentScoreHistoryNotProvisionedError and skips the ledger', async () => {
+    const err = await saveContentScore(buildComputed()).catch(e => e);
 
-    expect(recordScoreIssued).toHaveBeenCalledWith(
-      expect.objectContaining({ confidence: 'low', calibrationDataPoints: 9 })
-    );
-  });
-
-  it('does NOT record to the ledger when the history upsert fails', async () => {
-    mockUpsert.mockResolvedValueOnce({ error: { message: 'DB down' } });
-
-    await saveContentScore(buildComputed());
-
+    expect(err).toBeInstanceOf(ContentScoreHistoryNotProvisionedError);
+    expect(err).toMatchObject({
+      code: 'FEATURE_NOT_PROVISIONED',
+      table: 'content_score_history',
+    });
     expect(recordScoreIssued).not.toHaveBeenCalled();
-  });
-
-  it('records to the ledger even without leftover Supabase env vars', async () => {
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    await saveContentScore(buildComputed());
-
-    expect(recordScoreIssued).toHaveBeenCalledTimes(1);
   });
 });

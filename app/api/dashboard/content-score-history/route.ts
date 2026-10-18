@@ -1,28 +1,19 @@
 /**
  * GET /api/dashboard/content-score-history
  *
- * Returns the authenticated org's Content Score history — latest 8 weeks
- * from `content_score_history`.
+ * Content Score history for the caller's active brand.
  *
- * Response:
- * {
- *   current: { score, delta, components, dataPoints, weekStart } | null,
- *   history: Array<{ score, weekStart }>,
- * }
+ * NOT PROVISIONED: the `content_score_history` table has no Prisma model, so
+ * after auth and brand resolution this returns 503 FEATURE_NOT_PROVISIONED
+ * (available:false) instead of a fabricated or empty history.
  *
  * @task SYN-665
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
-
-const WEEKS_HISTORY = 8;
-
-function getSupabaseAdmin() {
-  return createClient();
-}
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export interface ContentScoreRow {
   score: number;
@@ -56,28 +47,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const platformAdmin = getSupabaseAdmin();
-  if (!platformAdmin) {
-    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
-  }
-
-  const { data, error } = await platformAdmin
-    .from('content_score_history')
-    .select('score, delta, components, data_points, week_start')
-    .eq('organization_id', organizationId)
-    .order('week_start', { ascending: false })
-    .limit(WEEKS_HISTORY);
-
-  if (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch score history' },
-      { status: 500 }
-    );
-  }
-
-  const rows = (data ?? []) as ContentScoreRow[];
-  const current = rows[0] ?? null;
-  const history = rows.map(r => ({ score: r.score, weekStart: r.week_start }));
-
-  return NextResponse.json({ current, history });
+  return notProvisionedResponse(
+    'Content Score history storage is not provisioned',
+    {
+      available: false,
+      reason: 'content_score_history table is not provisioned',
+    }
+  );
 }

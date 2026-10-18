@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * scripts/fleet/fanout.mjs — Cloudroom fan-out (FD-1). One child thread per unit, each in its
- * own sandbox, each on its own git branch fleet-unit/<phase>/<unit>. The orchestrator never
+ * own sandbox, each pushing to its own ref refs/fleet/units/<phase>/<unit> (a ref, not a branch:
+ * GitHub offers no "Compare & pull request" for it, so no stray PR can be opened). The orchestrator never
  * trusts a child's report: it fetches the branch, runs the guard over the changed files, scans
  * the diff for secrets and re-runs the gate on the integrated tree (fabel-evidence-standard).
  *
@@ -23,7 +24,7 @@ export function unitPrompt({ phase, unit, branch, phaseBranch }) {
     `PROVING COMMAND (must exit 0 before you finish): ${unit.proving_command}`,
     `METHOD (skill .claude/skills/tdd-jev/SKILL.md; read it first): red before green — write the failing test at the public seam first, then the minimal change; no tautological or implementation-coupled tests; no workarounds or one-off hacks that bypass an established process (fix the convention instead); on a second attempt start by building a tight feedback loop that goes red on the exact failure, redact every secret from anything you quote, and never claim PASS without the proving command's own exit 0.`,
     `Also run: npm run type-check && npm run lint && npm test -- --findRelatedTests <changed files> (or the full suite if quick).`,
-    `GIT: commit on branch ${branch} (create it from your current HEAD: git checkout -B ${branch}) with committer "Synthex Fleet <fleet@synthex.local>" (git -c user.name='Synthex Fleet' -c user.email=fleet@synthex.local commit ...). Commit message ends with trailers:\nFleet-Role: builder\nFleet-Unit: ${unit.id}\nThen push: git push -u origin ${branch}. Do NOT open a PR, do NOT push to ${phaseBranch} or main.`,
+    `GIT: commit on a local branch (git checkout -B fleet-unit-work from your current HEAD) with committer "Synthex Fleet <fleet@synthex.local>" (git -c user.name='Synthex Fleet' -c user.email=fleet@synthex.local commit ...). Commit message ends with trailers:\nFleet-Role: builder\nFleet-Unit: ${unit.id}\nThen push to the unit REF (not a branch): git push origin HEAD:${branch}. Never push a branch to GitHub, never open a PR, never push to ${phaseBranch} or main.`,
     `FINISH: your final message must be exactly one line: UNIT-DONE ${unit.id} <full commit sha> <state> where state is PASS, FAIL or INCONCLUSIVE (INCONCLUSIVE when the proving command could not run). Never claim PASS without the proving command's exit 0 in your transcript. If you cannot complete after two honest attempts, report FAIL with one line of cause.`,
   ]
     .filter(Boolean)
@@ -31,7 +32,7 @@ export function unitPrompt({ phase, unit, branch, phaseBranch }) {
 }
 
 export function spawnUnit({ phase, unit, phaseBranch, model }) {
-  const branch = `fleet-unit/${phase.toLowerCase()}/${unit.id}`;
+  const branch = `refs/fleet/units/${phase.toLowerCase()}/${unit.id}`;
   const prompt = unitPrompt({ phase, unit, branch, phaseBranch });
   const r = run(
     'room-cli',

@@ -9,6 +9,8 @@
 import {
   policy,
   ledgerRows,
+  liveLedgerSha,
+  LedgerUnreadableError,
   tryGit,
   git,
   isFleetCommit,
@@ -24,7 +26,7 @@ const opt = (k, d) => {
   const i = a.indexOf(k);
   return i >= 0 ? a[i + 1] : d;
 };
-export function evaluate({ commits, rows, receipt }) {
+export function evaluate({ commits, rows, receipt, corrupt = 0 }) {
   const items = [];
   const human = commits.filter(c => !c.fleet);
   items.push({
@@ -34,10 +36,11 @@ export function evaluate({ commits, rows, receipt }) {
     detail: human.map(c => c.sha.slice(0, 12)).join(','),
   });
   const interventions = rows.filter(r => r.kind === 'human-intervention');
+  // An unreadable ledger row could be a human-intervention row someone corrupted: never a PASS.
   items.push({
     id: 'interventions',
-    text: `${interventions.length} human interventions in the ledger`,
-    state: interventions.length ? 'FAIL' : 'PASS',
+    text: `${interventions.length} human interventions in the ledger${corrupt ? `, ${corrupt} unreadable row(s)` : ''}`,
+    state: interventions.length || corrupt ? 'FAIL' : 'PASS',
   });
   const states = [
     receipt?.state,
@@ -81,13 +84,78 @@ if (isMain(import.meta.url)) {
       ],
       { encoding: 'utf8' }
     ).status;
+    const corruptOnly = evaluate({
+      commits: [{ sha: 'a', fleet: true }],
+      rows: [],
+      receipt: { state: 'PASS', gate: [] },
+      corrupt: 1,
+    });
+    const sha = 'e'.repeat(40);
+    const throws = args => {
+      try {
+        liveLedgerSha(args);
+        return false;
+      } catch (e) {
+        return e instanceof LedgerUnreadableError;
+      }
+    };
+    const ledgerOk =
+      liveLedgerSha({
+        lsCode: 0,
+        lsOut: `${sha}\trefs/fleet/ledger`,
+        fetchCode: 0,
+        fetchedSha: sha,
+      }) === sha &&
+      liveLedgerSha({ lsCode: 0, lsOut: '', fetchCode: 0, fetchedSha: '' }) ===
+        null &&
+      throws({ lsCode: 2, lsOut: '', fetchCode: 0, fetchedSha: '' }) &&
+      throws({
+        lsCode: 0,
+        lsOut: `${sha}\trefs/fleet/ledger`,
+        fetchCode: 1,
+        fetchedSha: 'f'.repeat(40),
+      }) &&
+      throws({
+        lsCode: 0,
+        lsOut: `${sha}\trefs/fleet/ledger`,
+        fetchCode: 0,
+        fetchedSha: 'f'.repeat(40),
+      });
+    // End to end: origin unreachable must fail attestation, never read a stale local ledger.
+    const offline = spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(import.meta.url),
+        '--phase',
+        'P99',
+        '--base',
+        'HEAD~1',
+        '--head',
+        'HEAD',
+      ],
+      {
+        encoding: 'utf8',
+        env: {
+          ...process.env,
+          // Rewrite origin's URL to a path that does not exist (remote.origin.url is multi-valued,
+          // so an extra value would not replace it; insteadOf does).
+          GIT_CONFIG_COUNT: '1',
+          GIT_CONFIG_KEY_0: 'url./nonexistent/fleet-origin/.insteadOf',
+          GIT_CONFIG_VALUE_0: tryGit(['remote', 'get-url', 'origin']) || 'x',
+        },
+      }
+    );
     const ok =
+      offline.status === 1 &&
+      /ledger ref/.test(offline.stdout) &&
+      ledgerOk &&
+      corruptOnly[1].state === 'FAIL' &&
       bad[0].state === 'FAIL' &&
       bad[2].state === 'FAIL' &&
       good.every(i => i.state === 'PASS') &&
       unresolved === 2;
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} attest-phase controls (human commit and fifth state fail; fleet-only passes; unresolvable base exits 2)`
+      `${ok ? 'PASS' : 'FAIL'} attest-phase controls (human commit and fifth state fail; fleet-only passes; unresolvable base exits 2; an unreadable ledger row fails; a stale or unreadable live ledger throws; offline origin fails)`
     );
     process.exit(ok ? 0 : 1);
   }
@@ -114,7 +182,15 @@ if (isMain(import.meta.url)) {
     .split('\n')
     .filter(Boolean);
   const commits = shas.map(sha => ({ sha, fleet: isFleetCommit(sha) }));
-  const rows = ledgerRows().filter(r => r.phase === phase);
+  let allRows;
+  try {
+    allRows = ledgerRows(undefined, head);
+  } catch (e) {
+    console.log(`FAIL attest-phase: ${e.message}`);
+    process.exit(1);
+  }
+  const rows = allRows.filter(r => r.phase === phase);
+  const corrupt = allRows.filter(r => r.kind === 'CORRUPT').length;
   let receipt = null;
   try {
     receipt = JSON.parse(
@@ -122,6 +198,9 @@ if (isMain(import.meta.url)) {
     );
   } catch {}
   process.exit(
-    report(`attest-phase ${phase}`, evaluate({ commits, rows, receipt }))
+    report(
+      `attest-phase ${phase}`,
+      evaluate({ commits, rows, receipt, corrupt })
+    )
   );
 }

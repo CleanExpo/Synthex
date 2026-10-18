@@ -35,70 +35,53 @@ const USER_A = '11111111-1111-1111-1111-111111111111';
 // own decisions, not the auth pipeline.
 jest.mock('@/lib/auth/with-auth', () => ({
   __esModule: true,
-  withAuth: (handler: (req: NextRequest, ctx: unknown) => Promise<Response>) =>
+  withAuth:
+    (handler: (req: NextRequest, ctx: unknown) => Promise<Response>) =>
     (req: NextRequest) =>
       handler(req, { userId: USER_A, clientId: TENANT_A, role: 'owner' }),
 }));
 
-// ── Effect-report generator mock: capture organizationId arg ─────────────────
+// ── Effect-report generator mock: must never be reached ─────────────────────
+// The route answers 503 FEATURE_NOT_PROVISIONED (no effect_reports model in
+// prisma/schema.prisma), so no report is generated for any tenant.
 const mockGenerate = jest.fn();
 jest.mock('@/lib/effect-report/generator', () => ({
   __esModule: true,
   generateEffectReport: (...args: unknown[]) => mockGenerate(...args),
 }));
 
-// ── Supabase mock for ask-synthex retrieveClientContext + writes ─────────────
-const mockSupabaseEq = jest.fn();
-const mockSupabaseSelect = jest.fn().mockReturnValue({ eq: mockSupabaseEq });
-const mockSupabaseInsert = jest.fn().mockResolvedValue({ error: null });
-const mockSupabaseFrom = jest.fn().mockReturnValue({
-  select: mockSupabaseSelect,
-  insert: mockSupabaseInsert,
-});
-jest.mock('@/lib/platform/noop-client', () => ({
-  __esModule: true,
-  createClient: jest.fn(() => ({ from: mockSupabaseFrom })),
-}));
-
 beforeEach(() => {
   jest.clearAllMocks();
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
-  mockGenerate.mockResolvedValue({
-    reportId: 'rep-1',
-    pngUrl: 'https://x/y.png',
-    reportData: { sectionsIncluded: ['summary'] },
-  });
-  mockSupabaseEq.mockResolvedValue({ data: [], error: null });
 });
 
-function jsonRequest(body: unknown): NextRequest {
+function jsonRequest(body: unknown): NextRequest & { json: jest.Mock } {
   return {
-    json: async () => body,
+    json: jest.fn(async () => body),
     url: 'https://synthex.social/api/x',
-  } as unknown as NextRequest;
+  } as unknown as NextRequest & { json: jest.Mock };
 }
 
 describe('POST /api/effect-report/generate — owner-override stripped', () => {
-  it('uses auth.clientId even when body.client_id targets a foreign tenant', async () => {
+  it('ignores body.client_id targeting a foreign tenant: no body read, no generation, honest 503', async () => {
     const { POST } = await import('@/app/api/effect-report/generate/route');
-    const res = await POST(jsonRequest({ client_id: TENANT_B }));
-    expect(res.status).toBe(200);
-    expect(mockGenerate).toHaveBeenCalledTimes(1);
-    const firstArg = mockGenerate.mock.calls[0][0] as { organizationId: string };
-    expect(firstArg.organizationId).toBe(TENANT_A);
-    expect(firstArg.organizationId).not.toBe(TENANT_B);
+    const req = jsonRequest({ client_id: TENANT_B });
+    const res = await POST(req);
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
+    expect(JSON.stringify(body)).not.toContain(TENANT_B);
+    expect(req.json).not.toHaveBeenCalled();
+    expect(mockGenerate).not.toHaveBeenCalled();
   });
 
-  it('uses auth.clientId when body is empty', async () => {
+  it('answers 503 when body is empty', async () => {
     const { POST } = await import('@/app/api/effect-report/generate/route');
     const res = await POST(jsonRequest({}));
-    expect(res.status).toBe(200);
-    const firstArg = mockGenerate.mock.calls[0][0] as { organizationId: string };
-    expect(firstArg.organizationId).toBe(TENANT_A);
+    expect(res.status).toBe(503);
+    expect(mockGenerate).not.toHaveBeenCalled();
   });
 
-  it('uses auth.clientId when request body is not JSON', async () => {
+  it('answers 503 when request body is not JSON', async () => {
     const { POST } = await import('@/app/api/effect-report/generate/route');
     const badReq = {
       json: async () => {
@@ -107,9 +90,19 @@ describe('POST /api/effect-report/generate — owner-override stripped', () => {
       url: 'https://synthex.social/api/effect-report/generate',
     } as unknown as NextRequest;
     const res = await POST(badReq);
-    expect(res.status).toBe(200);
-    const firstArg = mockGenerate.mock.calls[0][0] as { organizationId: string };
-    expect(firstArg.organizationId).toBe(TENANT_A);
+    expect(res.status).toBe(503);
+    expect(mockGenerate).not.toHaveBeenCalled();
+  });
+
+  it('route stays behind withAuth and never reads a body-supplied tenant key', () => {
+    const fs = require('fs');
+    const path = require('path');
+    const src = fs.readFileSync(
+      path.resolve(__dirname, '../../app/api/effect-report/generate/route.ts'),
+      'utf8'
+    );
+    expect(src).toMatch(/export const POST = withAuth\(/);
+    expect(src).not.toMatch(/\.json\(\)|body\.client/);
   });
 });
 
@@ -130,8 +123,9 @@ describe('POST /api/ask-synthex — owner-override stripped (source-level regres
   it('AskSynthexSchema does NOT declare `clientId` as an input field', () => {
     // Match: `clientId: z.<anything>` inside the schema definition
     const schemaSection =
-      ROUTE_SRC.match(/AskSynthexSchema\s*=\s*z\.object\(\{[\s\S]*?\}\)/)?.[0] ??
-      '';
+      ROUTE_SRC.match(
+        /AskSynthexSchema\s*=\s*z\.object\(\{[\s\S]*?\}\)/
+      )?.[0] ?? '';
     expect(schemaSection).not.toMatch(/clientId\s*:\s*z\./);
   });
 
@@ -141,9 +135,7 @@ describe('POST /api/ask-synthex — owner-override stripped (source-level regres
 
   it('route handler does NOT use the `??` fallback against auth.clientId', () => {
     // Catches the previous pattern: `parsed.data.clientId ?? auth.clientId`
-    expect(ROUTE_SRC).not.toMatch(
-      /\.clientId\s*\?\?\s*auth\.clientId/
-    );
+    expect(ROUTE_SRC).not.toMatch(/\.clientId\s*\?\?\s*auth\.clientId/);
   });
 
   it('route handler sources organizationId from auth.clientId directly', () => {

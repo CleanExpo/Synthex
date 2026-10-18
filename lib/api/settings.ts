@@ -74,7 +74,8 @@ export const profileAPI = {
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || 'Failed to upload avatar');
+      // A 503 carries a readable `message` alongside its error code.
+      throw new Error(err.message || err.error || 'Failed to upload avatar');
     }
 
     return response.json();

@@ -51,18 +51,15 @@ import {
   VideoGenerationOptions,
 } from '@/lib/services/ai/video-generation';
 import { logger } from '@/lib/logger';
-import { createClient } from '@/lib/platform/noop-client';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+// NOT_PROVISIONED: prisma/schema.prisma has no media_assets model, so
+// library saves and status sync cannot persist. Responses say so via
+// `library` instead of dropping the write silently.
+const MEDIA_LIBRARY_UNAVAILABLE = tableUnavailable('media_assets');
 
 // Request validation schemas
 const VideoGenerationSchema = z.object({
@@ -283,40 +280,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save to media library if video is processing/complete (skip for service requests)
-    let mediaAssetId: string | undefined;
-    if (!isServiceRequest && validated.saveToLibrary && result.videoId) {
-      const { data: asset, error: saveError } = await getSupabase()
-        .from('media_assets')
-        .insert({
-          user_id: userId,
-          type: 'video',
-          provider: result.provider,
-          external_id: result.videoId,
-          status: result.status,
-          metadata: {
-            ...result.metadata,
-            type: ('type' in validated ? validated.type : undefined) || action,
-            prompt: 'prompt' in validated ? validated.prompt : undefined,
-            script: 'script' in validated ? validated.script : undefined,
-          },
-          video_url: result.videoUrl,
-          created_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
-
-      if (!saveError && asset) {
-        mediaAssetId = asset.id;
-      }
-    }
+    const libraryRequested =
+      !isServiceRequest && validated.saveToLibrary && !!result.videoId;
 
     // Audit log (skip for service requests)
     if (!isServiceRequest) {
       await auditLogger.logData(
         'create',
         'video',
-        mediaAssetId,
+        undefined,
         userId,
         'success',
         {
@@ -336,7 +308,7 @@ export async function POST(request: NextRequest) {
       videoUrl: result.videoUrl,
       status: result.status,
       metadata: result.metadata,
-      mediaAssetId,
+      ...(libraryRequested && { library: MEDIA_LIBRARY_UNAVAILABLE }),
       // Include polling instructions for async generation
       ...(result.status === 'processing' && {
         pollUrl: `/api/media/generate/video?videoId=${result.videoId}&provider=${result.provider}`,
@@ -459,25 +431,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Update media asset if status changed
-    if (result.videoUrl) {
-      await getSupabase()
-        .from('media_assets')
-        .update({
-          status: result.status,
-          video_url: result.videoUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('external_id', videoId)
-        .eq('user_id', userId);
-    }
-
     return APISecurityChecker.createSecureResponse({
       videoId: result.videoId,
       provider: result.provider,
       status: result.status,
       videoUrl: result.videoUrl,
       error: result.error,
+      // The media_assets status sync this used to attempt cannot persist.
+      ...(result.videoUrl && { library: MEDIA_LIBRARY_UNAVAILABLE }),
       ...(result.status === 'processing' && {
         pollUrl: `/api/media/generate/video?videoId=${videoId}&provider=${validated.provider}`,
         pollInterval: 5000,
@@ -541,7 +502,6 @@ export async function PUT(request: NextRequest) {
       .parse(body.requests || []);
 
     const results = [];
-    const savedAssets: string[] = [];
 
     for (const req of requests) {
       const options: VideoGenerationOptions = {
@@ -562,31 +522,6 @@ export async function PUT(request: NextRequest) {
       const result = await generateVideo(options);
       results.push(result);
 
-      // Save to library
-      if (req.saveToLibrary && result.videoId) {
-        const { data: asset } = await getSupabase()
-          .from('media_assets')
-          .insert({
-            user_id: userId,
-            type: 'video',
-            provider: result.provider,
-            external_id: result.videoId,
-            status: result.status,
-            metadata: {
-              ...result.metadata,
-              type: req.type,
-              prompt: req.prompt,
-            },
-            created_at: new Date().toISOString(),
-          })
-          .select('id')
-          .single();
-
-        if (asset) {
-          savedAssets.push(asset.id);
-        }
-      }
-
       // Small delay between requests
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -596,7 +531,6 @@ export async function PUT(request: NextRequest) {
       action: 'MEDIA_GENERATE_BATCH',
       count: requests.length,
       successCount: results.filter(r => r.success).length,
-      savedAssets,
     });
 
     return APISecurityChecker.createSecureResponse({
@@ -609,7 +543,8 @@ export async function PUT(request: NextRequest) {
         status: r.status,
         error: r.error,
         reason: r.reason,
-        mediaAssetId: savedAssets[i],
+        ...(requests[i].saveToLibrary &&
+          r.videoId && { library: MEDIA_LIBRARY_UNAVAILABLE }),
       })),
       totalSuccess: results.filter(r => r.success).length,
       totalFailed: results.filter(r => !r.success).length,

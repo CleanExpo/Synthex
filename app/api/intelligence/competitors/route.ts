@@ -19,6 +19,10 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { competitiveIntel, Platform } from '@/lib/services/competitive-intel';
 import { logger } from '@/lib/logger';
+import {
+  FEATURE_NOT_PROVISIONED,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const AddCompetitorSchema = z.object({
@@ -165,6 +169,15 @@ export async function GET(request: NextRequest) {
       400
     );
   } catch (error: unknown) {
+    if (
+      (error as { code?: unknown } | null)?.code === FEATURE_NOT_PROVISIONED
+    ) {
+      return APISecurityChecker.createSecureResponse(
+        { error: FEATURE_NOT_PROVISIONED, message: (error as Error).message },
+        NOT_PROVISIONED_STATUS
+      );
+    }
+
     logger.error('Competitors GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -319,6 +332,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      (error as { code?: unknown } | null)?.code === FEATURE_NOT_PROVISIONED
+    ) {
+      return APISecurityChecker.createSecureResponse(
+        { error: FEATURE_NOT_PROVISIONED, message: (error as Error).message },
+        NOT_PROVISIONED_STATUS
+      );
+    }
+
     logger.error('Competitors POST error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -358,28 +380,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Soft delete - set as inactive
-    const { createClient } = await import('@/lib/platform/noop-client');
-    const platform = createClient();
-
-    const { error } = await platform
-      .from('competitors')
-      .update({ is_active: false })
-      .eq('id', competitorId)
-      .eq('user_id', userId);
-
-    if (error) throw error;
-
+    // Soft delete needs the competitors table, which has no Prisma model.
+    // Say so honestly instead of reporting a delete that never happened.
     await auditLogger.logData(
       'delete',
       'intelligence',
       competitorId,
       userId,
-      'success',
-      { action: 'COMPETITOR_REMOVE' }
+      'failure',
+      { action: 'COMPETITOR_REMOVE', reason: 'FEATURE_NOT_PROVISIONED' }
     );
 
-    return APISecurityChecker.createSecureResponse({ success: true });
+    return APISecurityChecker.createSecureResponse(
+      {
+        error: 'FEATURE_NOT_PROVISIONED',
+        message:
+          'Removing competitors is not available: the competitors table is not provisioned.',
+      },
+      NOT_PROVISIONED_STATUS
+    );
   } catch (error: unknown) {
     logger.error('Competitors DELETE error:', { error });
     return APISecurityChecker.createSecureResponse(

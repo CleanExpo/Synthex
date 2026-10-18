@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@/lib/platform/noop-client';
 // NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-
-// SYN-953: lazy Supabase init. Eager `const platform = createClient(...)`
-// at module level crashed `next build`'s page-data collection when build
-// env lacked Supabase secrets.
-let _platform: ReturnType<typeof createClient> | null = null;
-function platform() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 
 /** Error log entry structure */
 interface ErrorLogEntry {
@@ -22,7 +11,6 @@ interface ErrorLogEntry {
   stack?: string;
   url?: string;
   userId?: string;
-  userEmail?: string;
   serverTimestamp: string;
   timestamp: string;
   level?: string;
@@ -55,26 +43,24 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const error: Record<string, unknown> = { ...validation.data };
+    // Identity fields come only from the session, never from the client body.
+    const {
+      userId: _clientUserId,
+      userEmail: _clientUserEmail,
+      ...reported
+    } = validation.data;
+    const error: Record<string, unknown> = { ...reported };
 
     // Add server timestamp
     error.serverTimestamp = new Date().toISOString();
 
-    // Get user info from session if available
-    const authHeader = request.headers.get('authorization');
-    if (authHeader) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const {
-          data: { user },
-        } = await platform().auth.getUser(token);
-        if (user) {
-          error.userId = user.id;
-          error.userEmail = user.email;
-        }
-      } catch (authError) {
-        logger.error('Failed to get user from token:', authError);
-      }
+    // Attach the reporting user id when a session is present (cookie or Bearer).
+    // Only the id is kept (no email); anonymous client errors are still recorded.
+    try {
+      const sessionUserId = await getUserIdFromRequestOrCookies(request);
+      if (sessionUserId) error.userId = sessionUserId;
+    } catch (authError) {
+      logger.error('Failed to resolve user for error report:', authError);
     }
 
     // Store error (in production, save to database)
@@ -110,9 +96,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  // Require authentication — this endpoint exposes userId, userEmail, and stack traces
-  const userId = await getUserIdFromRequestOrCookies(request);
-  if (!userId) {
+  // Require authentication — entries carry userId, stack traces and context.
+  // A platform admin sees every entry; anyone else sees only their own.
+  const auth = await verifyAdmin(request);
+  if (!auth.isAdmin && !auth.userId) {
     return NextResponse.json(
       { error: 'Authentication required' },
       { status: 401 }
@@ -126,7 +113,10 @@ export async function GET(request: NextRequest) {
     const level = searchParams.get('level');
     const startDate = searchParams.get('startDate');
 
-    let errors = [...errorLog];
+    const visible = auth.isAdmin
+      ? errorLog
+      : errorLog.filter(e => e.userId === auth.userId);
+    let errors = [...visible];
 
     // Filter by level if specified
     if (level) {
@@ -144,16 +134,16 @@ export async function GET(request: NextRequest) {
 
     // Calculate statistics
     const stats = {
-      total: errorLog.length,
-      last24Hours: errorLog.filter(e => {
+      total: visible.length,
+      last24Hours: visible.filter(e => {
         const date = new Date(e.timestamp);
         const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         return date > dayAgo;
       }).length,
       byLevel: {
-        error: errorLog.filter(e => e.level === 'error').length,
-        warning: errorLog.filter(e => e.level === 'warning').length,
-        info: errorLog.filter(e => e.level === 'info').length,
+        error: visible.filter(e => e.level === 'error').length,
+        warning: visible.filter(e => e.level === 'warning').length,
+        info: visible.filter(e => e.level === 'info').length,
       },
     };
 

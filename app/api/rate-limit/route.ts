@@ -8,21 +8,13 @@
  * Provides endpoints for checking and managing rate limits
  */
 
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimitStatus, resetRateLimits } from '@/lib/rate-limit';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-
-// Initialize Supabase
-
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 // GET: Get rate limit status
 export async function GET(req: NextRequest) {
@@ -38,19 +30,26 @@ export async function GET(req: NextRequest) {
 
     const status = await getRateLimitStatus(userId);
 
-    // Get user's subscription info
-    const { data: user } = await getSupabase()
-      .from('users')
-      .select('email, subscription_plan, rate_limit_override')
-      .eq('id', userId)
-      .single();
+    // Get the caller's own email and subscription plan
+    const [user, subscription] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { email: true },
+      }),
+      prisma.subscription.findUnique({
+        where: { userId },
+        select: { plan: true },
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,
       userId,
       email: user?.email,
-      plan: user?.subscription_plan || 'free',
-      customLimit: user?.rate_limit_override,
+      plan: subscription?.plan || 'free',
+      // Per-user overrides are not provisioned (no users.rate_limit_override column)
+      customLimit: null,
+      customLimitAvailable: false,
       status,
       timestamp: new Date().toISOString(),
     });
@@ -82,28 +81,34 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify user exists
-    const { data: user } = await getSupabase()
-      .from('users')
-      .select('id, email')
-      .eq('id', userId)
-      .single();
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true },
+    });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Reset rate limits
-    await resetRateLimits(userId);
-
-    // Log admin action
-    await getSupabase()
-      .from('audit_logs')
-      .insert({
+    // Audit first: if the row cannot be written, the reset does not happen.
+    // The shared admin key carries no identity, so record its fingerprint.
+    await prisma.auditLog.create({
+      data: {
         action: 'rate_limit_reset',
-        admin_id: 'system',
-        target_user_id: userId,
-        metadata: { reason: 'Admin manual reset' },
-      });
+        resource: 'rate_limit',
+        resourceId: userId,
+        category: 'security',
+        details: {
+          adminKeyFingerprint: createHash('sha256')
+            .update(adminKey)
+            .digest('hex')
+            .slice(0, 12),
+          reason: 'Admin manual reset',
+        },
+      },
+    });
+
+    await resetRateLimits(userId);
 
     return NextResponse.json({
       success: true,
@@ -148,42 +153,11 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Update user's custom rate limit
-    const { data: user, error } = await getSupabase()
-      .from('users')
-      .update({ rate_limit_override: limit })
-      .eq('id', userId)
-      .select('email')
-      .single();
-
-    if (error || !user) {
-      return NextResponse.json(
-        { error: 'Failed to update user' },
-        { status: 500 }
-      );
-    }
-
-    // Log admin action
-    await getSupabase()
-      .from('audit_logs')
-      .insert({
-        action: 'rate_limit_update',
-        admin_id: 'system',
-        target_user_id: userId,
-        metadata: {
-          old_limit: null,
-          new_limit: limit,
-          reason: 'Admin manual update',
-        },
-      });
-
-    return NextResponse.json({
-      success: true,
-      message: `Rate limit updated for user ${user.email}`,
-      userId,
-      newLimit: limit,
-      timestamp: new Date().toISOString(),
-    });
+    // NOT PROVISIONED: per-user overrides need a users.rate_limit_override
+    // column, which prisma/schema.prisma does not define.
+    return notProvisionedResponse(
+      'Custom rate limits are not provisioned: the users.rate_limit_override column does not exist.'
+    );
   } catch (error) {
     logger.error('Error updating rate limit:', error);
     return NextResponse.json(

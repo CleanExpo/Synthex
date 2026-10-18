@@ -3,23 +3,26 @@
  *
  * @description ML-based anomaly detection for marketing metrics
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
- *
- * FAILURE MODE: Returns empty results with error logged
+ * DATA STORE: NOT PROVISIONED. The tables this detector reads and writes
+ * (analytics_metrics, anomalies, anomaly_alerts, anomaly_detection_configs)
+ * have no Prisma model. Every data path throws AnomalyStoreNotProvisionedError
+ * instead of returning empty results that look like "no anomalies found".
+ * In-app alerts use the real `notifications` table via Prisma.
  */
 
 import { randomUUID } from 'crypto';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
+/** Thrown when a path needs an anomaly table that has no Prisma model. */
+export class AnomalyStoreNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly table: string) {
+    super(
+      `Anomaly detection is not provisioned: table "${table}" has no Prisma model.`
+    );
+    this.name = 'AnomalyStoreNotProvisionedError';
   }
-  return _platform;
 }
 
 // Anomaly severity levels
@@ -329,6 +332,7 @@ class AnomalyDetector {
         nextCheckAt: new Date(Date.now() + 15 * 60 * 1000), // 15 min default
       };
     } catch (error) {
+      if (error instanceof AnomalyStoreNotProvisionedError) throw error;
       logger.error('Anomaly detection failed:', { error, userId });
       return {
         anomalies: [],
@@ -634,34 +638,7 @@ class AnomalyDetector {
   private async getUserConfigs(
     userId: string
   ): Promise<Record<MetricType, AnomalyDetectionConfig>> {
-    try {
-      const { data } = await getSupabase()
-        .from('anomaly_detection_configs')
-        .select('*')
-        .eq('user_id', userId);
-
-      const configs: Record<string, AnomalyDetectionConfig> = {};
-
-      if (data) {
-        for (const config of data) {
-          configs[config.metric_type] = {
-            metricType: config.metric_type,
-            enabled: config.enabled,
-            sensitivity: config.sensitivity,
-            minDataPoints: config.min_data_points,
-            lookbackWindow: config.lookback_window,
-            thresholds: config.thresholds,
-            alertChannels: config.alert_channels,
-            cooldownMinutes: config.cooldown_minutes,
-          };
-        }
-      }
-
-      return configs as Record<MetricType, AnomalyDetectionConfig>;
-    } catch (error) {
-      logger.error('Failed to get user configs:', { error, userId });
-      return {} as Record<MetricType, AnomalyDetectionConfig>;
-    }
+    throw new AnomalyStoreNotProvisionedError('anomaly_detection_configs');
   }
 
   /**
@@ -673,40 +650,7 @@ class AnomalyDetector {
     days: number,
     filters: { platform?: string; accountId?: string }
   ): Promise<Array<{ value: number; timestamp: Date }>> {
-    try {
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-      let query = getSupabase()
-        .from('analytics_metrics')
-        .select('value, recorded_at')
-        .eq('user_id', userId)
-        .eq('metric_type', metricType)
-        .gte('recorded_at', startDate.toISOString())
-        .order('recorded_at', { ascending: true });
-
-      if (filters.platform) {
-        query = query.eq('platform', filters.platform);
-      }
-      if (filters.accountId) {
-        query = query.eq('account_id', filters.accountId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return (data || []).map((d: any) => ({
-        value: d.value,
-        timestamp: new Date(d.recorded_at),
-      }));
-    } catch (error) {
-      logger.error('Failed to get historical data:', {
-        error,
-        userId,
-        metricType,
-      });
-      return [];
-    }
+    throw new AnomalyStoreNotProvisionedError('analytics_metrics');
   }
 
   /**
@@ -719,35 +663,7 @@ class AnomalyDetector {
     endDate: Date,
     filters: { platform?: string; accountId?: string }
   ): Promise<Array<{ value: number; timestamp: Date }>> {
-    try {
-      let query = getSupabase()
-        .from('analytics_metrics')
-        .select('value, recorded_at')
-        .eq('user_id', userId)
-        .eq('metric_type', metricType)
-        .gte('recorded_at', startDate.toISOString())
-        .lte('recorded_at', endDate.toISOString())
-        .order('recorded_at', { ascending: true });
-
-      if (filters.platform) {
-        query = query.eq('platform', filters.platform);
-      }
-      if (filters.accountId) {
-        query = query.eq('account_id', filters.accountId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return (data || []).map((d: any) => ({
-        value: d.value,
-        timestamp: new Date(d.recorded_at),
-      }));
-    } catch (error) {
-      logger.error('Failed to get recent data:', { error, userId, metricType });
-      return [];
-    }
+    throw new AnomalyStoreNotProvisionedError('analytics_metrics');
   }
 
   /**
@@ -758,51 +674,14 @@ class AnomalyDetector {
     metricType: MetricType,
     cooldownMinutes: number
   ): Promise<boolean> {
-    try {
-      const cooldownStart = new Date(Date.now() - cooldownMinutes * 60 * 1000);
-
-      const { data } = await getSupabase()
-        .from('anomalies')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('metric_type', metricType)
-        .gte('detected_at', cooldownStart.toISOString())
-        .limit(1);
-
-      return (data?.length || 0) > 0;
-    } catch (error) {
-      logger.error('Failed to check cooldown:', { error });
-      return false;
-    }
+    throw new AnomalyStoreNotProvisionedError('anomalies');
   }
 
   /**
    * Save detected anomaly to database
    */
   private async saveAnomaly(anomaly: Anomaly): Promise<void> {
-    try {
-      await getSupabase().from('anomalies').insert({
-        id: anomaly.id,
-        user_id: anomaly.userId,
-        account_id: anomaly.accountId,
-        platform: anomaly.platform,
-        metric_type: anomaly.metricType,
-        anomaly_type: anomaly.anomalyType,
-        severity: anomaly.severity,
-        value: anomaly.value,
-        expected_value: anomaly.expectedValue,
-        deviation: anomaly.deviation,
-        deviation_percent: anomaly.deviationPercent,
-        timestamp: anomaly.timestamp.toISOString(),
-        detected_at: anomaly.detectedAt.toISOString(),
-        context: anomaly.context,
-        possible_causes: anomaly.possibleCauses,
-        recommendations: anomaly.recommendations,
-        acknowledged: false,
-      });
-    } catch (error) {
-      logger.error('Failed to save anomaly:', { error, anomalyId: anomaly.id });
-    }
+    throw new AnomalyStoreNotProvisionedError('anomalies');
   }
 
   /**
@@ -812,43 +691,7 @@ class AnomalyDetector {
     anomaly: Anomaly,
     channels: Array<'email' | 'slack' | 'discord' | 'in_app'>
   ): Promise<void> {
-    for (const channel of channels) {
-      try {
-        const alertId = `alert_${randomUUID()}`;
-
-        // Save alert record
-        await getSupabase().from('anomaly_alerts').insert({
-          id: alertId,
-          anomaly_id: anomaly.id,
-          user_id: anomaly.userId,
-          channel,
-          sent_at: new Date().toISOString(),
-          acknowledged: false,
-        });
-
-        // Send to appropriate channel
-        switch (channel) {
-          case 'email':
-            await this.sendEmailAlert(anomaly);
-            break;
-          case 'slack':
-            await this.sendSlackAlert(anomaly);
-            break;
-          case 'discord':
-            await this.sendDiscordAlert(anomaly);
-            break;
-          case 'in_app':
-            await this.sendInAppAlert(anomaly);
-            break;
-        }
-      } catch (error) {
-        logger.error('Failed to send alert:', {
-          error,
-          channel,
-          anomalyId: anomaly.id,
-        });
-      }
-    }
+    throw new AnomalyStoreNotProvisionedError('anomaly_alerts');
   }
 
   /**
@@ -879,10 +722,9 @@ class AnomalyDetector {
    * Send in-app notification
    */
   private async sendInAppAlert(anomaly: Anomaly): Promise<void> {
-    await getSupabase()
-      .from('notifications')
-      .insert({
-        user_id: anomaly.userId,
+    await prisma.notification.create({
+      data: {
+        userId: anomaly.userId,
         type: 'anomaly_detected',
         title: `${anomaly.severity.toUpperCase()}: ${anomaly.metricType} Anomaly Detected`,
         message: `${anomaly.anomalyType} detected in ${anomaly.metricType}. Value: ${anomaly.value} (Expected: ${anomaly.expectedValue.toFixed(2)})`,
@@ -893,8 +735,8 @@ class AnomalyDetector {
           recommendations: anomaly.recommendations,
         },
         read: false,
-        created_at: new Date().toISOString(),
-      });
+      },
+    });
   }
 
   /**
@@ -912,70 +754,7 @@ class AnomalyDetector {
       endDate?: Date;
     } = {}
   ): Promise<{ anomalies: Anomaly[]; total: number }> {
-    try {
-      let query = getSupabase()
-        .from('anomalies')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId)
-        .order('detected_at', { ascending: false });
-
-      if (options.severity?.length) {
-        query = query.in('severity', options.severity);
-      }
-      if (options.metricTypes?.length) {
-        query = query.in('metric_type', options.metricTypes);
-      }
-      if (options.acknowledged !== undefined) {
-        query = query.eq('acknowledged', options.acknowledged);
-      }
-      if (options.startDate) {
-        query = query.gte('detected_at', options.startDate.toISOString());
-      }
-      if (options.endDate) {
-        query = query.lte('detected_at', options.endDate.toISOString());
-      }
-      if (options.limit) {
-        query = query.limit(options.limit);
-      }
-      if (options.offset) {
-        query = query.range(
-          options.offset,
-          options.offset + (options.limit || 50) - 1
-        );
-      }
-
-      const { data, count, error } = await query;
-
-      if (error) throw error;
-
-      const anomalies: Anomaly[] = (data || []).map((d: any) => ({
-        id: d.id,
-        userId: d.user_id,
-        accountId: d.account_id,
-        platform: d.platform,
-        metricType: d.metric_type,
-        anomalyType: d.anomaly_type,
-        severity: d.severity,
-        value: d.value,
-        expectedValue: d.expected_value,
-        deviation: d.deviation,
-        deviationPercent: d.deviation_percent,
-        timestamp: new Date(d.timestamp),
-        detectedAt: new Date(d.detected_at),
-        context: d.context,
-        possibleCauses: d.possible_causes,
-        recommendations: d.recommendations,
-        relatedAnomalies: d.related_anomalies,
-        acknowledged: d.acknowledged,
-        resolvedAt: d.resolved_at ? new Date(d.resolved_at) : undefined,
-        notes: d.notes,
-      }));
-
-      return { anomalies, total: count || 0 };
-    } catch (error) {
-      logger.error('Failed to get anomalies:', { error, userId });
-      return { anomalies: [], total: 0 };
-    }
+    throw new AnomalyStoreNotProvisionedError('anomalies');
   }
 
   /**
@@ -986,23 +765,7 @@ class AnomalyDetector {
     userId: string,
     notes?: string
   ): Promise<boolean> {
-    try {
-      const { error } = await getSupabase()
-        .from('anomalies')
-        .update({
-          acknowledged: true,
-          notes,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', anomalyId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error('Failed to acknowledge anomaly:', { error, anomalyId });
-      return false;
-    }
+    throw new AnomalyStoreNotProvisionedError('anomalies');
   }
 
   /**
@@ -1013,24 +776,7 @@ class AnomalyDetector {
     userId: string,
     resolution?: string
   ): Promise<boolean> {
-    try {
-      const { error } = await getSupabase()
-        .from('anomalies')
-        .update({
-          acknowledged: true,
-          resolved_at: new Date().toISOString(),
-          notes: resolution,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', anomalyId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-      return true;
-    } catch (error) {
-      logger.error('Failed to resolve anomaly:', { error, anomalyId });
-      return false;
-    }
+    throw new AnomalyStoreNotProvisionedError('anomalies');
   }
 
   /**
@@ -1041,25 +787,7 @@ class AnomalyDetector {
     metricType: MetricType,
     config: Partial<AnomalyDetectionConfig>
   ): Promise<boolean> {
-    try {
-      await getSupabase().from('anomaly_detection_configs').upsert({
-        user_id: userId,
-        metric_type: metricType,
-        enabled: config.enabled,
-        sensitivity: config.sensitivity,
-        min_data_points: config.minDataPoints,
-        lookback_window: config.lookbackWindow,
-        thresholds: config.thresholds,
-        alert_channels: config.alertChannels,
-        cooldown_minutes: config.cooldownMinutes,
-        updated_at: new Date().toISOString(),
-      });
-
-      return true;
-    } catch (error) {
-      logger.error('Failed to update config:', { error, userId, metricType });
-      return false;
-    }
+    throw new AnomalyStoreNotProvisionedError('anomaly_detection_configs');
   }
 
   /**
@@ -1076,69 +804,7 @@ class AnomalyDetector {
     unacknowledged: number;
     trend: 'increasing' | 'decreasing' | 'stable';
   }> {
-    try {
-      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-      const { data } = await getSupabase()
-        .from('anomalies')
-        .select(
-          'severity, anomaly_type, metric_type, acknowledged, detected_at'
-        )
-        .eq('user_id', userId)
-        .gte('detected_at', startDate.toISOString());
-
-      const anomalies = data || [];
-
-      const bySeverity: Record<AnomalySeverity, number> = {
-        low: 0,
-        medium: 0,
-        high: 0,
-        critical: 0,
-      };
-
-      const byType: Record<string, number> = {};
-      const byMetric: Record<string, number> = {};
-      let unacknowledged = 0;
-
-      for (const a of anomalies) {
-        bySeverity[a.severity as AnomalySeverity]++;
-        byType[a.anomaly_type] = (byType[a.anomaly_type] || 0) + 1;
-        byMetric[a.metric_type] = (byMetric[a.metric_type] || 0) + 1;
-        if (!a.acknowledged) unacknowledged++;
-      }
-
-      // Calculate trend
-      const midPoint = new Date(Date.now() - (days / 2) * 24 * 60 * 60 * 1000);
-      const firstHalf = anomalies.filter(
-        (a: any) => new Date(a.detected_at) < midPoint
-      ).length;
-      const secondHalf = anomalies.filter(
-        (a: any) => new Date(a.detected_at) >= midPoint
-      ).length;
-
-      let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
-      if (secondHalf > firstHalf * 1.2) trend = 'increasing';
-      else if (secondHalf < firstHalf * 0.8) trend = 'decreasing';
-
-      return {
-        total: anomalies.length,
-        bySeverity,
-        byType: byType as Record<AnomalyType, number>,
-        byMetric,
-        unacknowledged,
-        trend,
-      };
-    } catch (error) {
-      logger.error('Failed to get anomaly summary:', { error, userId });
-      return {
-        total: 0,
-        bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
-        byType: {} as Record<AnomalyType, number>,
-        byMetric: {},
-        unacknowledged: 0,
-        trend: 'stable',
-      };
-    }
+    throw new AnomalyStoreNotProvisionedError('anomalies');
   }
 
   // Statistical utility methods

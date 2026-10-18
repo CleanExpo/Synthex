@@ -11,11 +11,12 @@
  *   POST /probe      { videoUrl }      → ffprobe metadata
  *   POST /extract    { videoUrl, everySeconds?, maxFrames?, format?, quality?,
  *                      upload?: { industry, subjectKey, label } }
- *                      → frames as base64, or (if upload) pushed into the
- *                        private reference bucket + manifest
+ *                      → frames as base64; with upload → 503
+ *                        FEATURE_NOT_PROVISIONED (the private reference
+ *                        bucket has no storage backend in this worker)
  *   POST /transcode  { videoUrl, format?, maxWidth?, crf? } → transcoded file (base64)
  *
- * Env: WORKER_TOKEN (required), SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (for upload).
+ * Env: WORKER_TOKEN (required).
  */
 import express from 'express';
 import rateLimit from 'express-rate-limit';
@@ -24,8 +25,6 @@ import { promisify } from 'node:util';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createHash } from 'node:crypto';
-import { createClient } from '@/lib/platform/noop-client';
 
 const execFileP = promisify(execFile);
 const app = express();
@@ -46,7 +45,6 @@ app.use(
 
 const TOKEN = process.env.WORKER_TOKEN;
 const PRIVATE_BUCKET = 'reference-library-private';
-const MANIFEST_PATH = '_private-manifest.json';
 
 function auth(req, res, next) {
   const got = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
@@ -55,13 +53,12 @@ function auth(req, res, next) {
   next();
 }
 
-function supa() {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  return url && key
-    ? createClient(url, key, { auth: { persistSession: false } })
-    : null;
-}
+// Same body as lib/api/not-provisioned.ts notProvisionedBody(); this worker
+// deploys standalone and cannot import from the Synthex app.
+const uploadNotProvisioned = () => ({
+  error: 'FEATURE_NOT_PROVISIONED',
+  message: `Frame upload is not available: the ${PRIVATE_BUCKET} storage bucket is not provisioned.`,
+});
 
 const isUrl = u => typeof u === 'string' && /^https?:\/\//.test(u);
 
@@ -123,6 +120,9 @@ app.post('/extract', auth, async (req, res) => {
   } = req.body || {};
   if (!isUrl(videoUrl))
     return res.status(400).json({ error: 'videoUrl (http) required' });
+  // Refuse before running ffmpeg: frames requested for upload must never be
+  // dropped or handed back as if they had been saved.
+  if (upload) return res.status(503).json(uploadNotProvisioned());
 
   const dir = await mkdtemp(join(tmpdir(), 'frames-'));
   try {
@@ -149,68 +149,6 @@ app.post('/extract', auth, async (req, res) => {
     const frames = [];
     for (const f of files)
       frames.push({ name: f, buf: await readFile(join(dir, f)) });
-
-    if (upload && upload.industry && upload.subjectKey) {
-      const sb = supa();
-      if (!sb)
-        return res
-          .status(500)
-          .json({ error: 'Supabase not configured for upload' });
-      const ext = format === 'png' ? 'png' : 'jpg';
-      const contentType = ext === 'png' ? 'image/png' : 'image/jpeg';
-      const images = [];
-      let i = 0;
-      for (const fr of frames) {
-        i++;
-        const path = `${upload.industry}/${upload.subjectKey}/${String(i).padStart(2, '0')}.${ext}`;
-        const { error } = await sb.storage
-          .from(PRIVATE_BUCKET)
-          .upload(path, fr.buf, { contentType, upsert: true });
-        if (error) throw new Error(`upload ${path}: ${error.message}`);
-        images.push({
-          path,
-          bytes: fr.buf.length,
-          contentHash:
-            'sha256:' + createHash('sha256').update(fr.buf).digest('hex'),
-          source: 'owned-video-frame',
-        });
-      }
-      // merge private manifest
-      let manifest = { version: 1, industries: {} };
-      const { data: existing } = await sb.storage
-        .from(PRIVATE_BUCKET)
-        .download(MANIFEST_PATH);
-      if (existing) {
-        try {
-          manifest = JSON.parse(await existing.text());
-        } catch {}
-      }
-      manifest.industries ??= {};
-      manifest.industries[upload.industry] ??= { subjects: {} };
-      manifest.industries[upload.industry].subjects ??= {};
-      manifest.industries[upload.industry].subjects[upload.subjectKey] = {
-        rights: 'owned',
-        label: upload.label || upload.subjectKey,
-        provenance: {
-          source: 'owned-video-frame',
-          rightsBasis: 'owned',
-          ingestedAt: new Date().toISOString().slice(0, 10),
-        },
-        images,
-      };
-      await sb.storage
-        .from(PRIVATE_BUCKET)
-        .upload(MANIFEST_PATH, Buffer.from(JSON.stringify(manifest, null, 2)), {
-          contentType: 'application/json',
-          upsert: true,
-        });
-      return res.json({
-        success: true,
-        uploaded: images.length,
-        industry: upload.industry,
-        subjectKey: upload.subjectKey,
-      });
-    }
 
     res.json({
       success: true,

@@ -4,24 +4,23 @@
  * @description Serve a stored `media_assets.base64_data` row as a binary
  * image response. Batch generation responses carry no base64 (Vercel 4.5MB
  * response cap), so base64-provider variants render via this path instead.
+ *
+ * NOT_PROVISIONED: prisma/schema.prisma has no media_assets model, so after
+ * auth and id validation this answers 503 rather than a 404 that would claim
+ * the asset does not exist.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
-import { createClient } from '@/lib/platform/noop-client';
-
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+import {
+  notProvisionedBody,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 
 /**
  * GET /api/media/assets/[id]/image
@@ -44,8 +43,6 @@ export async function GET(
     );
   }
 
-  const userId = security.context.userId!;
-
   try {
     const { id } = await params;
 
@@ -57,35 +54,10 @@ export async function GET(
       );
     }
 
-    const { data: row, error } = await getSupabase()
-      .from('media_assets')
-      .select('user_id, base64_data, type')
-      .eq('id', id)
-      .single();
-
-    // Ownership + shape check: missing row, null base64_data, non-image type,
-    // and wrong owner all collapse to an identical 404 to avoid leaking
-    // whether a resource exists for a given ID (media_assets is user-scoped
-    // today, #433 ledger).
-    if (
-      error ||
-      !row ||
-      !row.base64_data ||
-      row.type !== 'image' ||
-      row.user_id !== userId
-    ) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Not found' },
-        404
-      );
-    }
-
-    return new NextResponse(Buffer.from(row.base64_data, 'base64'), {
-      headers: {
-        'Content-Type': 'image/png',
-        'Cache-Control': 'private, max-age=3600',
-      },
-    });
+    return APISecurityChecker.createSecureResponse(
+      notProvisionedBody('media_assets', 'Media asset serving'),
+      NOT_PROVISIONED_STATUS
+    );
   } catch (error: unknown) {
     logger.error('Media asset image serving error:', { error });
     return APISecurityChecker.createSecureResponse(

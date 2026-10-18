@@ -8,6 +8,12 @@
  * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  *
  * FAILURE MODE: Falls back to industry-standard optimal times
+ *
+ * NOT PROVISIONED: POST auto-scheduled rows of the `scheduled_posts` table,
+ * which has no model in prisma/schema.prisma. It answers 503
+ * FEATURE_NOT_PROVISIONED after auth and validation instead of reporting
+ * zero scheduled posts. PUT answers the same 503: nothing reads the settings
+ * it would save, so storing them would claim a feature that cannot run.
  */
 
 import { NextRequest } from 'next/server';
@@ -22,20 +28,12 @@ import {
   Platform,
 } from '@/lib/ml/posting-time-predictor';
 import { logger } from '@/lib/logger';
-import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
 import { resolveEffectivePlan } from '@/lib/billing/plan-access';
-
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const OptimalTimesSchema = z.object({
@@ -158,7 +156,10 @@ export async function GET(request: NextRequest) {
           },
         });
         const orgId = userRecord?.organizationId ?? userId;
-        const plan = await resolveEffectivePlan(userId, userRecord?.organization?.plan);
+        const plan = await resolveEffectivePlan(
+          userId,
+          userRecord?.organization?.plan
+        );
 
         const schedulingWeightsResult = isSurfaceAvailable(
           plan,
@@ -336,126 +337,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const validated = AutoSchedulePostsSchema.parse(body);
+    AutoSchedulePostsSchema.parse(body);
 
-    // Get optimal times for each platform
-    const platformTimes =
-      await postingTimePredictor.getOptimalTimesMultiPlatform(
-        userId,
-        validated.platforms as Platform[],
-        validated.timezone
-      );
-
-    // Calculate schedule start
-    const startDate = validated.startDate
-      ? new Date(validated.startDate)
-      : new Date();
-    const endDate = validated.endDate
-      ? new Date(validated.endDate)
-      : new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // Default to 1 week
-
-    // Generate optimal schedule
-    const scheduledPosts: Array<{
-      postId: string;
-      platform: Platform;
-      scheduledTime: string;
-      engagementScore: number;
-    }> = [];
-
-    const usedTimes: Date[] = [];
-    const minInterval = validated.minIntervalHours * 60 * 60 * 1000;
-
-    for (const postId of validated.postIds) {
-      // Fetch post to determine content type and platforms
-      const { data: post } = await getSupabase()
-        .from('scheduled_posts')
-        .select('*')
-        .eq('id', postId)
-        .eq('user_id', userId)
-        .single();
-
-      if (!post) continue;
-
-      const postPlatform = post.platform as Platform;
-
-      // Skip if platform not in requested list
-      if (!validated.platforms.includes(postPlatform)) continue;
-
-      const platformResult = platformTimes.get(postPlatform);
-      if (!platformResult) continue;
-
-      // Find best available time slot
-      let bestTime: Date | null = null;
-      let bestScore = 0;
-
-      for (const slot of platformResult.slots) {
-        // Calculate next occurrence of this slot
-        const candidateTime = new Date(startDate);
-        const daysUntil = (slot.day - candidateTime.getDay() + 7) % 7;
-        candidateTime.setDate(candidateTime.getDate() + daysUntil);
-        candidateTime.setHours(slot.hour, 0, 0, 0);
-
-        // Ensure it's within date range
-        while (candidateTime < startDate) {
-          candidateTime.setDate(candidateTime.getDate() + 7);
-        }
-
-        if (candidateTime > endDate) continue;
-
-        // Check if slot is available (respects minimum interval)
-        const isAvailable = !usedTimes.some(
-          t => Math.abs(t.getTime() - candidateTime.getTime()) < minInterval
-        );
-
-        if (isAvailable && slot.score > bestScore) {
-          bestTime = candidateTime;
-          bestScore = slot.score;
-        }
-      }
-
-      if (bestTime) {
-        // Update post with scheduled time
-        await getSupabase()
-          .from('scheduled_posts')
-          .update({
-            scheduled_time: bestTime.toISOString(),
-            status: 'scheduled',
-            optimization_metadata: {
-              auto_scheduled: true,
-              engagement_score: bestScore,
-              methodology: platformResult.methodology,
-              scheduled_at: new Date().toISOString(),
-            },
-          })
-          .eq('id', postId)
-          .eq('user_id', userId);
-
-        usedTimes.push(bestTime);
-
-        scheduledPosts.push({
-          postId,
-          platform: postPlatform,
-          scheduledTime: bestTime.toISOString(),
-          engagementScore: bestScore,
-        });
-      }
-    }
-
-    // Audit log
-    await auditLogger.logData('update', 'post', undefined, userId, 'success', {
-      action: 'AUTO_SCHEDULE',
-      totalPosts: validated.postIds.length,
-      scheduledCount: scheduledPosts.length,
-      platforms: validated.platforms,
-      timezone: validated.timezone,
-    });
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      totalRequested: validated.postIds.length,
-      totalScheduled: scheduledPosts.length,
-      scheduledPosts,
-    });
+    return APISecurityChecker.createSecureResponse(
+      {
+        error: 'FEATURE_NOT_PROVISIONED',
+        message:
+          'Auto-scheduling is not provisioned: the scheduled_posts table does not exist.',
+      },
+      NOT_PROVISIONED_STATUS
+    );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -490,8 +381,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const userId = security.context.userId!;
-
   try {
     const body = await request.json();
 
@@ -512,23 +401,19 @@ export async function PUT(request: NextRequest) {
         .optional(),
     });
 
-    const validated = settingsSchema.parse(body);
+    settingsSchema.parse(body);
 
-    // Update user settings
-    const { error } = await getSupabase().from('user_settings').upsert({
-      user_id: userId,
-      auto_schedule_settings: validated,
-      updated_at: new Date().toISOString(),
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      settings: validated,
-    });
+    // Nothing reads autoSchedule settings: the scheduler they would drive
+    // needs scheduled_posts, which is not provisioned. Saving them would
+    // report a feature as enabled that cannot run.
+    return APISecurityChecker.createSecureResponse(
+      {
+        error: 'FEATURE_NOT_PROVISIONED',
+        message:
+          'Auto-scheduling is not provisioned: the scheduled_posts table does not exist. Settings were not saved.',
+      },
+      NOT_PROVISIONED_STATUS
+    );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

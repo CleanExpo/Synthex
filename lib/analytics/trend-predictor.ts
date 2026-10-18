@@ -3,20 +3,37 @@
  *
  * @description ML-based trend prediction, engagement forecasting, and viral potential scoring
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
- *
- * FAILURE MODE: Returns conservative estimates on prediction failure
+ * DATA STORE: partly NOT PROVISIONED. Post history (scheduled_posts) and
+ * analytics snapshots (platform_analytics_snapshots) have no Prisma model, so
+ * paths that need them throw TrendDataNotProvisionedError rather than
+ * forecasting from fabricated empty history. Reach estimates read the caller's
+ * real platform_connections row via Prisma.
  */
 
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+
+/** Thrown when a path needs a trend data table that has no Prisma model. */
+export class TrendDataNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly table: string) {
+    super(
+      `Trend data is not provisioned: table "${table}" has no Prisma model.`
+    );
+    this.name = 'TrendDataNotProvisionedError';
+  }
+}
 
 // Trend types
 export type TrendDirection = 'rising' | 'stable' | 'declining' | 'volatile';
 export type TrendStrength = 'weak' | 'moderate' | 'strong' | 'explosive';
-export type Platform = 'twitter' | 'instagram' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube';
+export type Platform =
+  | 'twitter'
+  | 'instagram'
+  | 'linkedin'
+  | 'facebook'
+  | 'tiktok'
+  | 'youtube';
 
 // Trend prediction result
 export interface TrendPrediction {
@@ -59,11 +76,14 @@ export interface ViralPotentialScore {
     weight: number;
     recommendation?: string;
   }>;
+  /** null when the connection has no synced follower count. */
   estimatedReach: {
     low: number;
     medium: number;
     high: number;
-  };
+  } | null;
+  /** Why estimatedReach is null. */
+  estimatedReachUnavailable?: string;
   optimalPostingWindow: {
     start: Date;
     end: Date;
@@ -150,17 +170,8 @@ interface PredictionsResult {
 }
 
 class TrendPredictor {
-  // SYN-953: lazy Supabase init.
-  private _platform: SupabaseClient | null = null;
   private cache: Map<string, CacheEntry<TrendingTopicResult[]>> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
-
-  private get platform(): SupabaseClient {
-    if (!this._platform) {
-      this._platform = createClient();
-    }
-    return this._platform;
-  }
 
   // ==================== Trend Predictions ====================
 
@@ -181,7 +192,11 @@ class TrendPredictor {
       const lookahead = options.lookaheadDays || 7;
 
       // Get historical topic performance
-      const historicalData = await this.getHistoricalTopicData(userId, platforms, 30);
+      const historicalData = await this.getHistoricalTopicData(
+        userId,
+        platforms,
+        30
+      );
 
       // Get external trend signals (would integrate with trend APIs)
       const externalTrends = await this.getExternalTrendSignals(platforms);
@@ -189,7 +204,8 @@ class TrendPredictor {
       const predictions: TrendPrediction[] = [];
 
       // Analyze each topic
-      const topicsToAnalyze = options.topics || this.extractTopTopics(historicalData);
+      const topicsToAnalyze =
+        options.topics || this.extractTopTopics(historicalData);
 
       for (const topic of topicsToAnalyze) {
         for (const platform of platforms) {
@@ -199,7 +215,12 @@ class TrendPredictor {
 
           if (topicHistory.length < 3) continue;
 
-          const prediction = this.predictTopicTrend(topic, platform, topicHistory, externalTrends);
+          const prediction = this.predictTopicTrend(
+            topic,
+            platform,
+            topicHistory,
+            externalTrends
+          );
           predictions.push(prediction);
         }
       }
@@ -224,13 +245,15 @@ class TrendPredictor {
       region?: string;
       limit?: number;
     } = {}
-  ): Promise<Array<{
-    topic: string;
-    volume: number;
-    change: number;
-    sentiment: 'positive' | 'neutral' | 'negative';
-    relatedHashtags: string[];
-  }>> {
+  ): Promise<
+    Array<{
+      topic: string;
+      volume: number;
+      change: number;
+      sentiment: 'positive' | 'neutral' | 'negative';
+      relatedHashtags: string[];
+    }>
+  > {
     const cacheKey = `trending-${platform}-${options.category || 'all'}`;
     const cached = this.cache.get(cacheKey);
     if (cached && cached.expiry > Date.now()) {
@@ -241,7 +264,10 @@ class TrendPredictor {
     // For now, return sample trending data
     const trendingTopics = await this.fetchPlatformTrends(platform, options);
 
-    this.cache.set(cacheKey, { data: trendingTopics, expiry: Date.now() + this.CACHE_TTL });
+    this.cache.set(cacheKey, {
+      data: trendingTopics,
+      expiry: Date.now() + this.CACHE_TTL,
+    });
 
     return trendingTopics;
   }
@@ -284,7 +310,8 @@ class TrendPredictor {
 
         const dayIndex = history.length + i;
         const predicted = slope * dayIndex + intercept;
-        const uncertainty = stdDev * Math.sqrt(1 + (1 / history.length) + Math.pow(i, 2) / 12);
+        const uncertainty =
+          stdDev * Math.sqrt(1 + 1 / history.length + Math.pow(i, 2) / 12);
 
         predictions.push({
           date: date.toISOString().split('T')[0],
@@ -300,9 +327,12 @@ class TrendPredictor {
       // Calculate growth rate
       const firstWeek = history.slice(0, 7);
       const lastWeek = history.slice(-7);
-      const firstAvg = firstWeek.reduce((s, h) => s + h.value, 0) / firstWeek.length;
-      const lastAvg = lastWeek.reduce((s, h) => s + h.value, 0) / lastWeek.length;
-      const growthRate = firstAvg > 0 ? ((lastAvg - firstAvg) / firstAvg) * 100 : 0;
+      const firstAvg =
+        firstWeek.reduce((s, h) => s + h.value, 0) / firstWeek.length;
+      const lastAvg =
+        lastWeek.reduce((s, h) => s + h.value, 0) / lastWeek.length;
+      const growthRate =
+        firstAvg > 0 ? ((lastAvg - firstAvg) / firstAvg) * 100 : 0;
 
       return {
         platform,
@@ -314,7 +344,11 @@ class TrendPredictor {
         confidence: Math.min(0.95, r2 + 0.1),
       };
     } catch (error: unknown) {
-      logger.error('Failed to forecast engagement:', { error, userId, platform });
+      logger.error('Failed to forecast engagement:', {
+        error,
+        userId,
+        platform,
+      });
       throw error;
     }
   }
@@ -327,15 +361,24 @@ class TrendPredictor {
     platform: Platform,
     forecastDays: number = 14
   ): Promise<Map<string, EngagementForecast>> {
-    const metrics = ['impressions', 'engagement', 'followers', 'reach'] as const;
+    const metrics = [
+      'impressions',
+      'engagement',
+      'followers',
+      'reach',
+    ] as const;
     const forecasts = new Map<string, EngagementForecast>();
 
     await Promise.all(
-      metrics.map(async (metric) => {
+      metrics.map(async metric => {
         try {
-          const forecast = await this.forecastEngagement(userId, platform, { metric, forecastDays });
+          const forecast = await this.forecastEngagement(userId, platform, {
+            metric,
+            forecastDays,
+          });
           forecasts.set(metric, forecast);
-        } catch {
+        } catch (error) {
+          if (error instanceof TrendDataNotProvisionedError) throw error;
           // Skip metrics with insufficient data
         }
       })
@@ -363,7 +406,10 @@ class TrendPredictor {
       const factors: ViralPotentialScore['factors'] = [];
 
       // Factor 1: Content length optimization
-      const lengthScore = this.scoreContentLength(content.text, content.platform);
+      const lengthScore = this.scoreContentLength(
+        content.text,
+        content.platform
+      );
       factors.push({
         factor: 'Content Length',
         score: lengthScore.score,
@@ -372,7 +418,11 @@ class TrendPredictor {
       });
 
       // Factor 2: Hashtag quality
-      const hashtagScore = await this.scoreHashtags(userId, content.hashtags || [], content.platform);
+      const hashtagScore = await this.scoreHashtags(
+        userId,
+        content.hashtags || [],
+        content.platform
+      );
       factors.push({
         factor: 'Hashtag Quality',
         score: hashtagScore.score,
@@ -381,7 +431,10 @@ class TrendPredictor {
       });
 
       // Factor 3: Media type impact
-      const mediaScore = this.scoreMediaType(content.mediaType, content.platform);
+      const mediaScore = this.scoreMediaType(
+        content.mediaType,
+        content.platform
+      );
       factors.push({
         factor: 'Media Type',
         score: mediaScore.score,
@@ -390,7 +443,11 @@ class TrendPredictor {
       });
 
       // Factor 4: Timing optimization
-      const timingScore = await this.scoreTiming(userId, content.scheduledTime, content.platform);
+      const timingScore = await this.scoreTiming(
+        userId,
+        content.scheduledTime,
+        content.platform
+      );
       factors.push({
         factor: 'Posting Time',
         score: timingScore.score,
@@ -417,7 +474,11 @@ class TrendPredictor {
       });
 
       // Factor 7: Trend alignment
-      const trendScore = await this.scoreTrendAlignment(content.text, content.hashtags || [], content.platform);
+      const trendScore = await this.scoreTrendAlignment(
+        content.text,
+        content.hashtags || [],
+        content.platform
+      );
       factors.push({
         factor: 'Trend Alignment',
         score: trendScore.score,
@@ -426,21 +487,36 @@ class TrendPredictor {
       });
 
       // Calculate weighted score
-      const totalScore = factors.reduce((sum, f) => sum + f.score * f.weight, 0);
+      const totalScore = factors.reduce(
+        (sum, f) => sum + f.score * f.weight,
+        0
+      );
       const normalizedScore = Math.round(totalScore);
 
       // Determine grade
-      const grade = normalizedScore >= 80 ? 'A'
-        : normalizedScore >= 65 ? 'B'
-        : normalizedScore >= 50 ? 'C'
-        : normalizedScore >= 35 ? 'D'
-        : 'F';
+      const grade =
+        normalizedScore >= 80
+          ? 'A'
+          : normalizedScore >= 65
+            ? 'B'
+            : normalizedScore >= 50
+              ? 'C'
+              : normalizedScore >= 35
+                ? 'D'
+                : 'F';
 
       // Estimate reach based on score and user's historical data
-      const reachEstimate = await this.estimateReach(userId, content.platform, normalizedScore);
+      const reachEstimate = await this.estimateReach(
+        userId,
+        content.platform,
+        normalizedScore
+      );
 
       // Get optimal posting window
-      const optimalWindow = await this.getOptimalPostingWindow(userId, content.platform);
+      const optimalWindow = await this.getOptimalPostingWindow(
+        userId,
+        content.platform
+      );
 
       // Generate improvements
       const improvements = factors
@@ -454,6 +530,12 @@ class TrendPredictor {
         grade,
         factors,
         estimatedReach: reachEstimate,
+        ...(reachEstimate
+          ? {}
+          : {
+              estimatedReachUnavailable:
+                'No synced follower count for this platform connection; reach not estimated.',
+            }),
         optimalPostingWindow: optimalWindow,
         improvements,
       };
@@ -480,7 +562,11 @@ class TrendPredictor {
   ): Promise<ContentPrediction> {
     try {
       // Get user's historical performance
-      const historicalPosts = await this.getHistoricalPosts(userId, content.platform, 100);
+      const historicalPosts = await this.getHistoricalPosts(
+        userId,
+        content.platform,
+        100
+      );
 
       if (historicalPosts.length < 10) {
         throw new Error('Insufficient historical data for prediction');
@@ -493,7 +579,10 @@ class TrendPredictor {
       const predictions = this.calculatePredictions(similarContent);
 
       // Apply adjustments based on content features
-      const adjustedPredictions = this.applyContentAdjustments(predictions, content);
+      const adjustedPredictions = this.applyContentAdjustments(
+        predictions,
+        content
+      );
 
       return {
         contentId: content.id || 'draft',
@@ -501,7 +590,7 @@ class TrendPredictor {
         predictedEngagement: adjustedPredictions.engagement,
         predictedReach: adjustedPredictions.reach,
         engagementRate: adjustedPredictions.engagementRate,
-        confidence: Math.min(0.9, 0.5 + (similarContent.length * 0.05)),
+        confidence: Math.min(0.9, 0.5 + similarContent.length * 0.05),
         comparableContent: similarContent.slice(0, 5).map(c => ({
           id: c.id,
           similarity: c.similarity,
@@ -524,7 +613,12 @@ class TrendPredictor {
     platform: Platform
   ): Promise<SeasonalPattern> {
     try {
-      const history = await this.getMetricHistory(userId, platform, 'engagement', 365);
+      const history = await this.getMetricHistory(
+        userId,
+        platform,
+        'engagement',
+        365
+      );
 
       // Analyze day of week patterns
       const dayOfWeekScores = this.analyzeDayOfWeekPattern(history);
@@ -545,7 +639,11 @@ class TrendPredictor {
         specialEvents,
       };
     } catch (error: unknown) {
-      logger.error('Failed to detect seasonal patterns:', { error, userId, platform });
+      logger.error('Failed to detect seasonal patterns:', {
+        error,
+        userId,
+        platform,
+      });
       throw error;
     }
   }
@@ -556,44 +654,22 @@ class TrendPredictor {
     userId: string,
     platforms: Platform[],
     days: number
-  ): Promise<Array<{ topic: string; platform: Platform; date: string; score: number }>> {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data: posts } = await this.platform
-      .from('scheduled_posts')
-      .select('hashtags, platform, published_at, analytics')
-      .eq('user_id', userId)
-      .in('platform', platforms)
-      .eq('status', 'published')
-      .gte('published_at', startDate.toISOString());
-
-    const topicData: Array<{ topic: string; platform: Platform; date: string; score: number }> = [];
-
-    for (const post of posts || []) {
-      const hashtags = post.hashtags || [];
-      const analytics = post.analytics || {};
-      const engagement = (analytics.likes || 0) + (analytics.comments || 0) + (analytics.shares || 0);
-
-      for (const hashtag of hashtags) {
-        topicData.push({
-          topic: hashtag,
-          platform: post.platform,
-          date: post.published_at.split('T')[0],
-          score: engagement,
-        });
-      }
-    }
-
-    return topicData;
+  ): Promise<
+    Array<{ topic: string; platform: Platform; date: string; score: number }>
+  > {
+    throw new TrendDataNotProvisionedError('scheduled_posts');
   }
 
-  private async getExternalTrendSignals(platforms: Platform[]): Promise<Map<string, number>> {
+  private async getExternalTrendSignals(
+    platforms: Platform[]
+  ): Promise<Map<string, number>> {
     // Would integrate with Twitter Trends, Google Trends, etc.
     return new Map();
   }
 
-  private extractTopTopics(data: Array<{ topic: string; score: number }>): string[] {
+  private extractTopTopics(
+    data: Array<{ topic: string; score: number }>
+  ): string[] {
     const topicScores = new Map<string, number>();
 
     for (const item of data) {
@@ -613,12 +689,17 @@ class TrendPredictor {
     history: Array<{ date: string; score: number }>,
     externalTrends: Map<string, number>
   ): TrendPrediction {
-    const sortedHistory = [...history].sort((a, b) => a.date.localeCompare(b.date));
+    const sortedHistory = [...history].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
     const scores = sortedHistory.map(h => h.score);
 
     // Calculate trend using simple moving average
-    const recentAvg = scores.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, scores.length);
-    const olderAvg = scores.slice(0, -7).reduce((a, b) => a + b, 0) / Math.max(1, scores.length - 7);
+    const recentAvg =
+      scores.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, scores.length);
+    const olderAvg =
+      scores.slice(0, -7).reduce((a, b) => a + b, 0) /
+      Math.max(1, scores.length - 7);
 
     const change = olderAvg > 0 ? ((recentAvg - olderAvg) / olderAvg) * 100 : 0;
 
@@ -656,16 +737,22 @@ class TrendPredictor {
     }
 
     // Predict future score
-    const { slope, intercept } = this.linearRegression(sortedHistory.map((h, i) => ({ date: h.date, value: h.score })));
+    const { slope, intercept } = this.linearRegression(
+      sortedHistory.map((h, i) => ({ date: h.date, value: h.score }))
+    );
     const predictedScore = Math.max(0, slope * (scores.length + 7) + intercept);
 
     // Generate recommendations
     const recommendations: string[] = [];
     if (direction === 'rising' && strength !== 'weak') {
-      recommendations.push(`Capitalize on ${topic} trend - consider creating more content around this topic`);
+      recommendations.push(
+        `Capitalize on ${topic} trend - consider creating more content around this topic`
+      );
     }
     if (direction === 'declining') {
-      recommendations.push(`${topic} is declining - consider pivoting to related topics`);
+      recommendations.push(
+        `${topic} is declining - consider pivoting to related topics`
+      );
     }
 
     return {
@@ -675,10 +762,13 @@ class TrendPredictor {
       predictedScore,
       direction,
       strength,
-      confidence: Math.min(0.9, 0.5 + (history.length * 0.02)),
+      confidence: Math.min(0.9, 0.5 + history.length * 0.02),
       recommendations,
       relatedTopics: [],
-      historicalData: sortedHistory.map(h => ({ date: h.date, score: h.score })),
+      historicalData: sortedHistory.map(h => ({
+        date: h.date,
+        score: h.score,
+      })),
     };
   }
 
@@ -688,21 +778,7 @@ class TrendPredictor {
     metric: string,
     days: number
   ): Promise<Array<{ date: string; value: number }>> {
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
-    const { data: snapshots } = await this.platform
-      .from('platform_analytics_snapshots')
-      .select('collected_at, metrics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .gte('collected_at', startDate.toISOString())
-      .order('collected_at', { ascending: true });
-
-    return (snapshots || []).map((s: any) => ({
-      date: s.collected_at.split('T')[0],
-      value: s.metrics?.[metric] || 0,
-    }));
+    throw new TrendDataNotProvisionedError('platform_analytics_snapshots');
   }
 
   private linearRegression(data: Array<{ date: string; value: number }>): {
@@ -727,7 +803,10 @@ class TrendPredictor {
     // Calculate R²
     const yMean = sumY / n;
     const ssTotal = values.reduce((sum, y) => sum + Math.pow(y - yMean, 2), 0);
-    const ssResidual = values.reduce((sum, y, i) => sum + Math.pow(y - (slope * i + intercept), 2), 0);
+    const ssResidual = values.reduce(
+      (sum, y, i) => sum + Math.pow(y - (slope * i + intercept), 2),
+      0
+    );
     const r2 = ssTotal > 0 ? 1 - ssResidual / ssTotal : 0;
 
     return { slope, intercept, r2 };
@@ -742,8 +821,12 @@ class TrendPredictor {
     return Math.sqrt(squaredDiffs.reduce((a, b) => a + b, 0) / n);
   }
 
-  private determineTrendDirection(slope: number, history: Array<{ date: string; value: number }>): TrendDirection {
-    const avgValue = history.reduce((sum, h) => sum + h.value, 0) / history.length;
+  private determineTrendDirection(
+    slope: number,
+    history: Array<{ date: string; value: number }>
+  ): TrendDirection {
+    const avgValue =
+      history.reduce((sum, h) => sum + h.value, 0) / history.length;
     const normalizedSlope = avgValue > 0 ? slope / avgValue : 0;
 
     if (normalizedSlope > 0.05) return 'rising';
@@ -759,7 +842,10 @@ class TrendPredictor {
     return [];
   }
 
-  private scoreContentLength(text: string, platform: Platform): { score: number; recommendation?: string } {
+  private scoreContentLength(
+    text: string,
+    platform: Platform
+  ): { score: number; recommendation?: string } {
     const length = text.length;
     const optimalLengths: Record<Platform, { min: number; max: number }> = {
       twitter: { min: 71, max: 140 },
@@ -774,9 +860,15 @@ class TrendPredictor {
     if (length >= optimal.min && length <= optimal.max) {
       return { score: 90 };
     } else if (length < optimal.min) {
-      return { score: 60, recommendation: `Consider adding more context (optimal: ${optimal.min}-${optimal.max} chars)` };
+      return {
+        score: 60,
+        recommendation: `Consider adding more context (optimal: ${optimal.min}-${optimal.max} chars)`,
+      };
     } else {
-      return { score: 70, recommendation: `Consider shortening content (optimal: ${optimal.min}-${optimal.max} chars)` };
+      return {
+        score: 70,
+        recommendation: `Consider shortening content (optimal: ${optimal.min}-${optimal.max} chars)`,
+      };
     }
   }
 
@@ -786,7 +878,10 @@ class TrendPredictor {
     platform: Platform
   ): Promise<{ score: number; recommendation?: string }> {
     if (hashtags.length === 0) {
-      return { score: 40, recommendation: 'Add relevant hashtags to increase discoverability' };
+      return {
+        score: 40,
+        recommendation: 'Add relevant hashtags to increase discoverability',
+      };
     }
 
     const optimalCounts: Record<Platform, number> = {
@@ -799,8 +894,10 @@ class TrendPredictor {
     };
 
     const optimal = optimalCounts[platform];
-    const score = hashtags.length === optimal ? 90
-      : Math.max(50, 90 - Math.abs(hashtags.length - optimal) * 5);
+    const score =
+      hashtags.length === optimal
+        ? 90
+        : Math.max(50, 90 - Math.abs(hashtags.length - optimal) * 5);
 
     return { score };
   }
@@ -819,7 +916,10 @@ class TrendPredictor {
     };
 
     const score = mediaScores[platform]?.[mediaType || 'text'] || 50;
-    const recommendation = score < 70 ? 'Consider adding visual media to boost engagement' : undefined;
+    const recommendation =
+      score < 70
+        ? 'Consider adding visual media to boost engagement'
+        : undefined;
 
     return { score, recommendation };
   }
@@ -830,33 +930,43 @@ class TrendPredictor {
     platform: Platform
   ): Promise<{ score: number; recommendation?: string }> {
     if (!scheduledTime) {
-      return { score: 50, recommendation: 'Schedule at optimal time for better reach' };
+      return {
+        score: 50,
+        recommendation: 'Schedule at optimal time for better reach',
+      };
     }
 
     // Would use posting time predictor
     return { score: 75 };
   }
 
-  private scoreEmotionalContent(text: string): { score: number; recommendation?: string } {
-    const emotionalWords = /\b(amazing|incredible|love|hate|shocking|urgent|exclusive|free|secret|discover|transform)\b/gi;
+  private scoreEmotionalContent(text: string): {
+    score: number;
+    recommendation?: string;
+  } {
+    const emotionalWords =
+      /\b(amazing|incredible|love|hate|shocking|urgent|exclusive|free|secret|discover|transform)\b/gi;
     const matches = text.match(emotionalWords) || [];
 
     const score = Math.min(90, 50 + matches.length * 10);
-    const recommendation = matches.length === 0
-      ? 'Consider adding emotional hooks to increase engagement'
-      : undefined;
+    const recommendation =
+      matches.length === 0
+        ? 'Consider adding emotional hooks to increase engagement'
+        : undefined;
 
     return { score, recommendation };
   }
 
   private scoreCTA(text: string): { score: number; recommendation?: string } {
-    const ctaPatterns = /\b(click|tap|share|comment|follow|subscribe|learn|discover|get|join|try)\b/gi;
+    const ctaPatterns =
+      /\b(click|tap|share|comment|follow|subscribe|learn|discover|get|join|try)\b/gi;
     const matches = text.match(ctaPatterns) || [];
 
     const score = matches.length > 0 ? 80 : 40;
-    const recommendation = matches.length === 0
-      ? 'Add a clear call-to-action to drive engagement'
-      : undefined;
+    const recommendation =
+      matches.length === 0
+        ? 'Add a clear call-to-action to drive engagement'
+        : undefined;
 
     return { score, recommendation };
   }
@@ -867,25 +977,33 @@ class TrendPredictor {
     platform: Platform
   ): Promise<{ score: number; recommendation?: string }> {
     // Would check against trending topics
-    return { score: 60, recommendation: 'Consider incorporating trending topics' };
+    return {
+      score: 60,
+      recommendation: 'Consider incorporating trending topics',
+    };
   }
 
   private async estimateReach(
     userId: string,
     platform: Platform,
     viralScore: number
-  ): Promise<{ low: number; medium: number; high: number }> {
-    const { data: profile } = await this.platform
-      .from('platform_connections')
-      .select('last_metrics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .single();
+  ): Promise<{ low: number; medium: number; high: number } | null> {
+    // Scoped to the caller's own live connection for this platform.
+    const connection = await prisma.platformConnection.findFirst({
+      where: { userId, platform, isActive: true, deletedAt: null },
+      select: { metadata: true },
+    });
 
-    const followers = profile?.last_metrics?.followers || 1000;
+    // The analytics worker stores synced metrics under metadata.lastMetrics.
+    const metadata = connection?.metadata as
+      | { lastMetrics?: { followers?: unknown } }
+      | null
+      | undefined;
+    const followers = metadata?.lastMetrics?.followers;
+    if (typeof followers !== 'number') return null;
     const baseReach = followers * 0.1; // 10% base reach
 
-    const multiplier = 1 + (viralScore / 100);
+    const multiplier = 1 + viralScore / 100;
 
     return {
       low: Math.round(baseReach * multiplier * 0.5),
@@ -908,23 +1026,12 @@ class TrendPredictor {
     return { start, end };
   }
 
-  private async getHistoricalPosts(userId: string, platform: Platform, limit: number): Promise<HistoricalPost[]> {
-    const { data } = await this.platform
-      .from('scheduled_posts')
-      .select('id, content, hashtags, media_type, analytics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(limit);
-
-    return (data || []).map((post: any) => ({
-      id: post.id,
-      content: post.content,
-      hashtags: post.hashtags || [],
-      mediaType: post.media_type,
-      engagement: (post.analytics?.likes || 0) + (post.analytics?.comments || 0),
-    }));
+  private async getHistoricalPosts(
+    userId: string,
+    platform: Platform,
+    limit: number
+  ): Promise<HistoricalPost[]> {
+    throw new TrendDataNotProvisionedError('scheduled_posts');
   }
 
   private findSimilarContent(
@@ -941,7 +1048,10 @@ class TrendPredictor {
       .slice(0, 10);
   }
 
-  private calculateSimilarity(content1: ContentForComparison, content2: ContentForComparison): number {
+  private calculateSimilarity(
+    content1: ContentForComparison,
+    content2: ContentForComparison
+  ): number {
     let score = 0;
 
     // Media type match
@@ -963,10 +1073,16 @@ class TrendPredictor {
     return score;
   }
 
-  private calculatePredictions(similarContent: Array<HistoricalPost & { similarity: number }>): PredictionsResult {
+  private calculatePredictions(
+    similarContent: Array<HistoricalPost & { similarity: number }>
+  ): PredictionsResult {
     if (similarContent.length === 0) {
       return {
-        engagement: { likes: { min: 0, expected: 0, max: 0 }, comments: { min: 0, expected: 0, max: 0 }, shares: { min: 0, expected: 0, max: 0 } },
+        engagement: {
+          likes: { min: 0, expected: 0, max: 0 },
+          comments: { min: 0, expected: 0, max: 0 },
+          shares: { min: 0, expected: 0, max: 0 },
+        },
         reach: { min: 0, expected: 0, max: 0 },
         engagementRate: { min: 0, expected: 0, max: 0 },
       };
@@ -977,11 +1093,27 @@ class TrendPredictor {
 
     return {
       engagement: {
-        likes: { min: Math.round(avg * 0.6), expected: Math.round(avg * 0.7), max: Math.round(avg) },
-        comments: { min: Math.round(avg * 0.1), expected: Math.round(avg * 0.15), max: Math.round(avg * 0.25) },
-        shares: { min: Math.round(avg * 0.05), expected: Math.round(avg * 0.1), max: Math.round(avg * 0.15) },
+        likes: {
+          min: Math.round(avg * 0.6),
+          expected: Math.round(avg * 0.7),
+          max: Math.round(avg),
+        },
+        comments: {
+          min: Math.round(avg * 0.1),
+          expected: Math.round(avg * 0.15),
+          max: Math.round(avg * 0.25),
+        },
+        shares: {
+          min: Math.round(avg * 0.05),
+          expected: Math.round(avg * 0.1),
+          max: Math.round(avg * 0.15),
+        },
       },
-      reach: { min: Math.round(avg * 5), expected: Math.round(avg * 10), max: Math.round(avg * 20) },
+      reach: {
+        min: Math.round(avg * 5),
+        expected: Math.round(avg * 10),
+        max: Math.round(avg * 20),
+      },
       engagementRate: { min: 2, expected: 4, max: 8 },
     };
   }
@@ -994,7 +1126,9 @@ class TrendPredictor {
     return predictions;
   }
 
-  private analyzeDayOfWeekPattern(history: Array<{ date: string; value: number }>): number[] {
+  private analyzeDayOfWeekPattern(
+    history: Array<{ date: string; value: number }>
+  ): number[] {
     const dayScores = [0, 0, 0, 0, 0, 0, 0];
     const dayCounts = [0, 0, 0, 0, 0, 0, 0];
 
@@ -1004,15 +1138,21 @@ class TrendPredictor {
       dayCounts[day]++;
     }
 
-    return dayScores.map((score, i) => dayCounts[i] > 0 ? Math.round(score / dayCounts[i]) : 0);
+    return dayScores.map((score, i) =>
+      dayCounts[i] > 0 ? Math.round(score / dayCounts[i]) : 0
+    );
   }
 
-  private analyzeHourOfDayPattern(history: Array<{ date: string; value: number }>): number[] {
+  private analyzeHourOfDayPattern(
+    history: Array<{ date: string; value: number }>
+  ): number[] {
     // Would need hourly data
     return new Array(24).fill(50);
   }
 
-  private analyzeMonthOfYearPattern(history: Array<{ date: string; value: number }>): number[] {
+  private analyzeMonthOfYearPattern(
+    history: Array<{ date: string; value: number }>
+  ): number[] {
     const monthScores = new Array(12).fill(0);
     const monthCounts = new Array(12).fill(0);
 
@@ -1022,7 +1162,9 @@ class TrendPredictor {
       monthCounts[month]++;
     }
 
-    return monthScores.map((score, i) => monthCounts[i] > 0 ? Math.round(score / monthCounts[i]) : 0);
+    return monthScores.map((score, i) =>
+      monthCounts[i] > 0 ? Math.round(score / monthCounts[i]) : 0
+    );
   }
 
   private async detectSpecialEventImpact(

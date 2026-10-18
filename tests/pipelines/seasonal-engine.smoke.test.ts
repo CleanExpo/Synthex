@@ -75,16 +75,6 @@ jest.mock('@/lib/seasonal/external-signal-adapters', () => ({
   fetchAbsSignals: (...a: unknown[]) => mockFetchAbs(...a),
 }));
 
-// ── Supabase mock (runner log write — non-fatal) ──────────────────────────────
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(() => ({
-    from: jest.fn(() => ({
-      insert: jest.fn().mockResolvedValue({ error: null }),
-    })),
-  })),
-}));
-
 // ── Logger mock ───────────────────────────────────────────────────────────────
 
 jest.mock('@/lib/logger', () => ({

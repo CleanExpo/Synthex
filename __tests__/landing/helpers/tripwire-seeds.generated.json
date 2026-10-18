@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1058,
+  "count": 1083,
   "seeds": [
     {
       "text": "- Audit log + GDPR/Privacy compliance built in",
@@ -1699,6 +1699,56 @@
       "firstSeen": "base"
     },
     {
+      "text": "audit_events_immutable",
+      "file": "lib/security/audit-logger.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.admin.deleteUser",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.getSession",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.getUser",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.onAuthStateChange",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.resetPasswordForEmail",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.signInWithPassword",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.signOut",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.signUp",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "auth.updateUser",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "Authentic content beats advertising budget every time.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -1976,6 +2026,16 @@
     {
       "text": "Certified GDPR",
       "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "channel.send",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "channel.track",
+      "file": "lib/platform/noop-client.ts",
       "firstSeen": "base"
     },
     {
@@ -2489,6 +2549,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "FEATURE_NOT_PROVISIONED: the audit_events_immutable table is not provisioned; the immutable copy was not written.",
+      "file": "lib/security/audit-logger.ts",
+      "firstSeen": "9b976681"
+    },
+    {
       "text": "Feature comparison",
       "file": "app/compare/hootsuite/page.tsx",
       "firstSeen": "base"
@@ -2942,6 +3007,11 @@
       "text": "Image Posts vs Video Posts: The Data | Synthex",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "ImmutableAuditUnavailableError",
+      "file": "lib/security/audit-logger.ts",
+      "firstSeen": "9b976681"
     },
     {
       "text": "Improved API rate limiting Security audit compliance updates",
@@ -3459,6 +3529,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "NOOP_CLIENT_NOT_MIGRATED",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "No polished studio production — raw, genuine, mobile-first content.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3481,6 +3556,11 @@
     {
       "text": "of those posting without a plan.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ok",
+      "file": "lib/platform/noop-client.ts",
       "firstSeen": "base"
     },
     {
@@ -3969,6 +4049,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "rpc",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "sales pipeline",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -4306,6 +4391,46 @@
     {
       "text": "Stop when two independent sources agree or directly conflict.",
       "file": "components/intentscape/demo-data.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.createBucket",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.createSignedUrls",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.download",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.getPublicUrl",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.list",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.listBuckets",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.remove",
+      "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "storage.upload",
+      "file": "lib/platform/noop-client.ts",
       "firstSeen": "base"
     },
     {

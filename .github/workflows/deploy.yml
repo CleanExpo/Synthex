@@ -21,6 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          # Full history: the public-claims seed tests read Git history back to base 83243588
+          # (CI already checks out with fetch-depth: 0). FD-6.
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -72,7 +76,9 @@ jobs:
     name: Deploy Staging
     runs-on: ubuntu-latest
     needs: [test]
-    if: github.ref == 'refs/heads/develop'
+    # FD-6 (founder, 18/10/2026, option B): this workflow no longer deploys. Production and
+    # previews come only from the Vercel Git integration; the Test job still gates every push.
+    if: false && github.ref == 'refs/heads/develop'
     permissions:
       contents: read
       pull-requests: write # Required: github-script createComment for staging URL
@@ -116,7 +122,9 @@ jobs:
     needs: [test]
     # DEPLOY_INHIBIT is a central deploy kill-switch: set repo variable
     # DEPLOY_INHIBIT=true to freeze all production deploys without editing code.
-    if: github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'
+    # FD-6: disabled; see deploy-staging. Verify Production and Lighthouse need this job, so they
+    # skip with it.
+    if: false && github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'
     # Human production approval is enforced by the `production` environment's
     # required reviewers (GitHub pauses this job for a human before it runs). The
     # approval is bound to this exact workflow run, i.e. commit ${{ github.sha }}.

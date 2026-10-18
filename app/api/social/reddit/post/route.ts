@@ -15,25 +15,68 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createPlatformService, RedditService } from '@/lib/social';
+import {
+  createPlatformService,
+  RedditService,
+  type PlatformCredentials,
+} from '@/lib/social';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { decryptField } from '@/lib/security/field-encryption';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+// Usage metering used to write to a Supabase `usage_tracking` table that has
+// no Prisma model. It is reported as not recorded instead of silently dropped.
+const USAGE_NOT_PROVISIONED = {
+  recorded: false,
+  reason: 'FEATURE_NOT_PROVISIONED: usage_tracking table is not provisioned',
+} as const;
+
+/** The caller's own active Reddit connection, scoped to their effective org. */
+async function findRedditConnection(userId: string) {
+  const organizationId = await getEffectiveOrganizationId(userId);
+  return prisma.platformConnection.findFirst({
+    where: {
+      userId,
+      platform: 'reddit',
+      organizationId: organizationId ?? null,
+      isActive: true,
+      deletedAt: null,
+    },
+  });
 }
+
+type RedditConnection = NonNullable<
+  Awaited<ReturnType<typeof findRedditConnection>>
+>;
+
+/** Decrypt stored OAuth tokens; null when the access token is unusable. */
+function toCredentials(
+  connection: RedditConnection
+): PlatformCredentials | null {
+  const accessToken = decryptField(connection.accessToken);
+  if (!accessToken) return null;
+  return {
+    accessToken,
+    refreshToken: connection.refreshToken
+      ? (decryptField(connection.refreshToken) ?? undefined)
+      : undefined,
+    expiresAt: connection.expiresAt ?? undefined,
+    platformUserId: connection.profileId ?? undefined,
+    platformUsername: connection.profileName ?? undefined,
+  };
+}
+
+const RECONNECT_ERROR =
+  'Reddit access token could not be decrypted. Please reconnect your Reddit account.';
 
 // Request validation schema — title and subreddit are REQUIRED for Reddit posts
 const PostRequestSchema = z.object({
@@ -114,15 +157,9 @@ export async function POST(request: NextRequest) {
       const postData: PostRequest = validation.data;
 
       // Get user's Reddit connection
-      const { data: connection, error: connectionError } = await getSupabase()
-        .from('platform_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('platform', 'reddit')
-        .eq('is_active', true)
-        .single();
+      const connection = await findRedditConnection(userId);
 
-      if (connectionError || !connection) {
+      if (!connection) {
         return NextResponse.json(
           {
             error:
@@ -132,15 +169,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const credentials = toCredentials(connection);
+      if (!credentials) {
+        return NextResponse.json({ error: RECONNECT_ERROR }, { status: 400 });
+      }
+
       // Create Reddit service via factory (handles initialization + token refresh)
-      const redditService = createPlatformService('reddit', {
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
-        platformUsername: connection.platform_username,
+      const redditService = createPlatformService('reddit', credentials, {
+        connectionId: connection.id,
       });
 
       if (!redditService) {
@@ -219,35 +255,33 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Save post to database
-      const { data: savedPost } = await getSupabase()
-        .from('social_posts')
-        .insert({
-          user_id: userId,
-          platform: 'reddit',
-          content: postData.content || postData.title,
-          post_id: result.postId,
-          media_urls: postData.url ? [postData.url] : [],
-          status: 'published',
-          metrics: {},
-          metadata: {
-            title: postData.title,
-            subreddit: postData.subreddit,
-            kind: postData.kind,
-            permalink: result.url,
-          },
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      // Track usage
-      await getSupabase().from('usage_tracking').insert({
-        user_id: userId,
-        feature: 'reddit_post',
-        count: 1,
-        timestamp: new Date().toISOString(),
-      });
+      // Save post to database (platform_posts, scoped via the caller's connection)
+      const savedPost = result.postId
+        ? await prisma.platformPost.upsert({
+            where: {
+              connectionId_platformId: {
+                connectionId: connection.id,
+                platformId: result.postId,
+              },
+            },
+            create: {
+              connectionId: connection.id,
+              platformId: result.postId,
+              content: postData.content || postData.title,
+              mediaUrls: postData.url ? [postData.url] : [],
+              status: 'published',
+              publishedAt: new Date(),
+              metadata: {
+                title: postData.title,
+                subreddit: postData.subreddit,
+                kind: postData.kind,
+                permalink: result.url ?? null,
+                source: 'api/social/reddit/post',
+              },
+            },
+            update: { status: 'published' },
+          })
+        : null;
 
       // Log the action
       await auditLogger.logData(
@@ -261,6 +295,8 @@ export async function POST(request: NextRequest) {
           subreddit: postData.subreddit,
           kind: postData.kind,
           hasUrl: !!postData.url,
+          usageFeature: 'reddit_post',
+          usageCount: 1,
         }
       );
 
@@ -272,6 +308,8 @@ export async function POST(request: NextRequest) {
           subreddit: postData.subreddit,
           title: postData.title,
         },
+        recorded: Boolean(savedPost),
+        usage: USAGE_NOT_PROVISIONED,
       });
     } catch (error: unknown) {
       logger.error('Reddit post error:', error);
@@ -323,30 +361,23 @@ export async function GET(request: NextRequest) {
     const listSubreddits = searchParams.get('subreddits') === 'true';
 
     // Get user's Reddit connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'reddit')
-      .eq('is_active', true)
-      .single();
+    const connection = await findRedditConnection(userId);
 
-    if (connectionError || !connection) {
+    if (!connection) {
       return NextResponse.json(
         { error: 'Reddit account not connected' },
         { status: 400 }
       );
     }
 
+    const credentials = toCredentials(connection);
+    if (!credentials) {
+      return NextResponse.json({ error: RECONNECT_ERROR }, { status: 400 });
+    }
+
     // Create service via factory
-    const service = createPlatformService('reddit', {
-      accessToken: connection.access_token,
-      refreshToken: connection.refresh_token,
-      expiresAt: connection.expires_at
-        ? new Date(connection.expires_at)
-        : undefined,
-      platformUserId: connection.platform_user_id,
-      platformUsername: connection.platform_username,
+    const service = createPlatformService('reddit', credentials, {
+      connectionId: connection.id,
     });
 
     if (!service) {
@@ -369,27 +400,37 @@ export async function GET(request: NextRequest) {
     }
 
     // If sync requested, fetch from Reddit API
+    let syncError: string | undefined;
     if (syncFromPlatform) {
       const syncResult = await redditService.syncPosts(limit, cursor);
+      if (!syncResult.success) {
+        syncError = syncResult.error || 'Reddit sync failed';
+      }
 
       if (syncResult.success) {
         // Update database with synced posts
         for (const post of syncResult.posts) {
-          await getSupabase().from('social_posts').upsert(
-            {
-              user_id: userId,
-              platform: 'reddit',
-              post_id: post.platformId,
-              content: post.content,
-              media_urls: post.mediaUrls,
-              metrics: post.metrics,
-              published_at: post.publishedAt.toISOString(),
-              status: 'published',
+          const fields = {
+            content: post.content,
+            mediaUrls: post.mediaUrls ?? [],
+            publishedAt: post.publishedAt,
+            status: 'published',
+            metadata: { metrics: { ...post.metrics } },
+          };
+          await prisma.platformPost.upsert({
+            where: {
+              connectionId_platformId: {
+                connectionId: connection.id,
+                platformId: post.platformId,
+              },
             },
-            {
-              onConflict: 'user_id,platform,post_id',
-            }
-          );
+            create: {
+              connectionId: connection.id,
+              platformId: post.platformId,
+              ...fields,
+            },
+            update: fields,
+          });
         }
 
         return NextResponse.json({
@@ -402,22 +443,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get posts from database
-    const { data: posts, error } = await getSupabase()
-      .from('social_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'reddit')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      throw error;
-    }
+    // Get posts from database (only the caller's own connection)
+    const posts = await prisma.platformPost.findMany({
+      where: { connectionId: connection.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
     return NextResponse.json({
       success: true,
       data: posts,
+      // A requested sync that failed must not look like fresh platform data.
+      ...(syncFromPlatform ? { synced: false, syncError } : {}),
     });
   } catch (error: unknown) {
     logger.error('Get Reddit posts error:', error);

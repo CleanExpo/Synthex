@@ -95,3 +95,28 @@
 {"ts":"2026-10-18T06:15:58.264Z","kind":"review","phase":"P1","head":"73f38bba57686f997a53acab36c6931df6f17aa0","lane":"codex","verdict":"PASS"}
 {"ts":"2026-10-18T06:19:17.255Z","kind":"gate","phase":"P1","head":"73f38bba57686f997a53acab36c6931df6f17aa0","pass":7,"total":7}
 {"ts":"2026-10-18T06:34:38.872Z","kind":"policy-hash","previous":"6a6638fcd272eb353782b45389d84a95927b14cc7a27d43b493b8bd425da5d51","sha256":"aafc2059fbd3e72b93e0aca26761adba139fbce40a86e51036778fff75700fc4","source":"check-bootstrap --record"}
+{"ts":"2026-10-18T06:50:37.273Z","kind":"start","phase":"P2","branch":"feature/fleet-p2-truth","step":"prepare","contract_locked":false,"policy":"6a6638fcd272eb353782b45389d84a95927b14cc7a27d43b493b8bd425da5d51"}
+{"ts":"2026-10-18T07:12:08.209Z","kind":"merge-refused","phase":"P1","pr":"1015","head":"40a5a7bd9f80","gates":[{"id":"halt","state":"PASS","detail":"clear"},{"id":"pr-readable","state":"PASS","detail":""},{"id":"head-matches","state":"FAIL","detail":"40a5a7bd9f80 vs 40a5a7bd9f80"},{"id":"base-main","state":"FAIL","detail":"main MERGED"},{"id":"branch-pattern","state":"PASS","detail":"feature/fleet-p1-jev-core"},{"id":"clean-tree","state":"FAIL","detail":"scripts/fleet/attest-phase.mjs, scripts/fleet/lib.mjs, scripts/fleet/merge-phase.mjs"},{"id":"trusted-copy","state":"PASS","detail":"origin/main"},{"id":"receipt","state":"PASS","detail":"PASS verify-receipt P1 bound to 40a5a7bd9f80 (reviewed 73f38bba5768)"},{"id":"checks","state":"PASS","detail":"49 checks, pending=none, failed=none, missing-required=none"},{"id":"review","state":"PASS","detail":"codex PASS @ 73f38bba5768"},{"id":"attest","state":"PASS","detail":"attest-phase P1: 4 of 4 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED"},{"id":"threads","state":"FAIL","detail":"skipped: an earlier gate failed"}]}
+{"ts":"2026-10-18T07:18:40.261Z","kind":"policy-hash","previous":"aafc2059fbd3e72b93e0aca26761adba139fbce40a86e51036778fff75700fc4","sha256":"8e5d73acd4ebfae3908d007dd60dab0a38e188eb957c4a43f94080d5e238899c","source":"check-bootstrap --record"}
+{"ts":"2026-10-18T04:40:28.570Z","kind":"integrate","phase":"P1","unit":"jev-proposal","files":1,"head":"6962599a52d6c14363c882078079409fcf4c74cb"}
+{"ts":"2026-10-18T04:45:23.024Z","kind":"gate","phase":"P1","head":"6962599a52d6c14363c882078079409fcf4c74cb","pass":7,"total":7}
+{"ts":"2026-10-18T04:45:24.971Z","kind":"review","phase":"P1","head":"6962599a52d6c14363c882078079409fcf4c74cb","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T07:30:23.560Z","kind":"review","phase":"P2","head":"2a6d8e2a01c825689268fbe6c314b24a120790ad","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T07:38:47.204Z","kind":"gate","phase":"P2","head":"2a6d8e2a01c825689268fbe6c314b24a120790ad","pass":10,"total":10}
+{"ts":"2026-10-18T08:10:23.763Z","kind":"integrate","phase":"P2","unit":"status-503","files":58,"head":"92bf318515f2718c6efa9476c5f6f398982f44bd"}
+{"ts":"2026-10-18T08:20:48.262Z","kind":"gate","phase":"P2","head":"92bf318515f2718c6efa9476c5f6f398982f44bd","pass":10,"total":10}
+{"ts":"2026-10-18T08:22:05.155Z","kind":"review","phase":"P2","head":"92bf318515f2718c6efa9476c5f6f398982f44bd","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-18T08:31:45.118Z","kind":"review","phase":"P2","head":"e21b2fce2fef5f42b1bdd7dc1ce61529ef115242","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:00:29.287Z","kind":"integrate","phase":"P2","unit":"errors-isolation","files":2,"head":"a24eea976ec4bce01755f0e4e8f06675083e5be0"}
+{"ts":"2026-10-18T09:05:11.755Z","kind":"review","phase":"P2","head":"fc031f895af61c814d5121426eeb776b0fcd8543","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:13:50.161Z","kind":"review","phase":"P2","head":"31f0bdb172096e846fac3eea35c3eb4201d5ce05","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:18:10.659Z","kind":"review","phase":"P2","head":"5f070185e97d407ed53ee048ac112b17cb7c8e70","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:36:59.339Z","kind":"integrate","phase":"P2","unit":"sweep-a","files":13,"head":"374d60ad89c057ff5b0828f3170865dd04569a6a"}
+{"ts":"2026-10-18T09:37:46.613Z","kind":"integrate","phase":"P2","unit":"sweep-b","files":20,"head":"7ed6271bf8704dc81831a365230a5b50ce5e76fc"}
+{"ts":"2026-10-18T09:43:56.743Z","kind":"review","phase":"P2","head":"7ed6271bf8704dc81831a365230a5b50ce5e76fc","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T09:53:43.567Z","kind":"review","phase":"P2","head":"d6e10e5ede0a48fc6931adca47978b6ab57251df","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T13:54:48.100Z","kind":"review","phase":"P2","head":"62f76f5b46575f2e85201d6e66a8531d177f578e","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T14:08:29.970Z","kind":"review","phase":"P2","head":"eb6cec05f925b4e2fcc3b3bc06690f685e575e6e","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T14:16:59.159Z","kind":"review","phase":"P2","head":"52043c5f91503bdce047c994175d8d3facc48248","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T14:25:10.899Z","kind":"review","phase":"P2","head":"ecaa0c3c0d3f894763d928331709a511d9002f4c","lane":"codex","verdict":"PASS"}
+{"ts":"2026-10-18T14:27:21.873Z","kind":"gate","phase":"P2","head":"ecaa0c3c0d3f894763d928331709a511d9002f4c","pass":10,"total":10}

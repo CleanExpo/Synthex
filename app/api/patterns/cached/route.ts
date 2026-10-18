@@ -1,37 +1,24 @@
 /**
  * Cached Viral Patterns API
  * Returns viral content patterns with Redis caching
+ *
+ * NOT PROVISIONED: the `viral_patterns` table this route read has no model in
+ * prisma/schema.prisma. After auth and org resolution the route answers
+ * 503 FEATURE_NOT_PROVISIONED rather than an empty pattern list.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cachedRoute } from '@/lib/middleware/cache-middleware';
-import { createClient } from '@/lib/platform/noop-client';
 import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
-/** Pattern record from viral patterns table */
-interface PatternRecord {
-  id: string;
-  platform: string;
-  engagement_rate: number;
-  shares?: number;
-  created_at: string;
-  [key: string]: unknown;
-}
-
-// Initialize Supabase client
-// Lazy Supabase client — avoids crash during Next.js build
-let _platform: ReturnType<typeof createClient> | null = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+const NOT_PROVISIONED_REASON =
+  'Viral patterns are not provisioned: the viral_patterns table does not exist.';
 
 async function handler(req: NextRequest) {
   try {
@@ -48,60 +35,9 @@ async function handler(req: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(req.url);
-    const platform = searchParams.get('platform') || 'all';
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const timeframe = searchParams.get('timeframe') || '7d';
-
-    // Fetch viral patterns from database — scoped to the authenticated user's org
-    let query = getSupabase()
-      .from('viral_patterns')
-      .select('*')
-      .eq('organization_id', organizationId)
-      .order('engagement_rate', { ascending: false })
-      .limit(limit);
-
-    if (platform !== 'all') {
-      query = query.eq('platform', platform);
-    }
-
-    // Add timeframe filter
-    const now = new Date();
-    const timeframeMap: Record<string, number> = {
-      '24h': 1,
-      '7d': 7,
-      '30d': 30,
-      '90d': 90,
-    };
-
-    const daysAgo = timeframeMap[timeframe] || 7;
-    const startDate = new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000);
-    query = query.gte('created_at', startDate.toISOString());
-
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json(
-        { error: 'Failed to fetch patterns' },
-        { status: 500 }
-      );
-    }
-
-    // Calculate trending score
-    const patternsWithScore = (data || []).map((pattern: any) => ({
-      ...(pattern as Record<string, unknown>),
-      trendingScore: calculateTrendingScore(pattern as PatternRecord),
-      cacheTimestamp: new Date().toISOString(),
-    }));
-
-    return NextResponse.json({
-      success: true,
-      platform,
-      timeframe,
-      count: patternsWithScore.length,
-      patterns: patternsWithScore,
-      cached: true,
-      timestamp: new Date().toISOString(),
+    return notProvisionedResponse(NOT_PROVISIONED_REASON, {
+      available: false,
+      reason: NOT_PROVISIONED_REASON,
     });
   } catch (error) {
     logger.error('Error fetching patterns:', error);
@@ -112,31 +48,7 @@ async function handler(req: NextRequest) {
   }
 }
 
-function calculateTrendingScore(pattern: PatternRecord): number {
-  const engagementWeight = 0.4;
-  const recencyWeight = 0.3;
-  const virialityWeight = 0.3;
-
-  // Calculate recency score (0-1)
-  const now = Date.now();
-  const createdAt = new Date(pattern.created_at).getTime();
-  const ageInHours = (now - createdAt) / (1000 * 60 * 60);
-  const recencyScore = Math.max(0, 1 - ageInHours / 168); // 168 hours = 1 week
-
-  // Normalize engagement rate (0-1)
-  const engagementScore = Math.min(1, pattern.engagement_rate / 10);
-
-  // Calculate virality score based on share rate
-  const viralityScore = Math.min(1, (pattern.shares || 0) / 1000);
-
-  return (
-    engagementScore * engagementWeight +
-    recencyScore * recencyWeight +
-    viralityScore * virialityWeight
-  );
-}
-
-// Export cached version with 5 minute TTL
+// Export cached version with 5 minute TTL (only 2xx responses are cached)
 export const GET = cachedRoute(handler, {
   ttl: 300, // 5 minutes
   varyBy: ['authorization'], // Vary cache by user

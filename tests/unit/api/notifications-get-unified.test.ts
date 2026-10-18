@@ -2,9 +2,10 @@
  * Unit tests for the unified GET /api/notifications handler.
  *
  * Regression guard for the notifications-bell-disconnect fix: the bell + the
- * Notification Centre must surface BOTH the prisma.notification writer stream
- * (publish failures, token re-auth, etc.) AND the Supabase `client_notifications`
- * first-win rows, in a single response shape that every consumer reads.
+ * Notification Centre must surface the prisma.notification writer stream
+ * (publish failures, token re-auth, etc.) in a single response shape that every
+ * consumer reads. The Supabase `client_notifications` first-win source has no
+ * Prisma model, so it must be reported as unavailable, never read.
  */
 
 import { createMockNextRequest } from '../../helpers/mock-request';
@@ -18,29 +19,9 @@ const mockPrisma = {
   },
 };
 
-// Supabase query-builder mock: chainable, resolves to { data, error }.
-const supabaseResult: { data: unknown; error: { message: string } | null } = {
-  data: [],
-  error: null,
-};
-function makeQuery() {
-  const q: Record<string, unknown> = {};
-  for (const m of ['select', 'eq', 'order', 'limit']) {
-    q[m] = jest.fn(() => q);
-  }
-  // Awaiting the builder resolves to the configured result.
-  (q as { then: unknown }).then = (resolve: (v: unknown) => void) =>
-    resolve(supabaseResult);
-  return q;
-}
-const fromMock = jest.fn();
-
 jest.mock('@/lib/prisma', () => ({ prisma: mockPrisma }));
 jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...a: unknown[]) => getUserIdMock(...a),
-}));
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({ from: fromMock }),
 }));
 jest.mock('@/lib/logger', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
@@ -48,23 +29,9 @@ jest.mock('@/lib/logger', () => ({
 
 import { GET } from '@/app/api/notifications/route';
 
-const ORIGINAL_ENV = process.env;
-
 describe('GET /api/notifications (unified)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    fromMock.mockImplementation(() => makeQuery());
-    process.env = {
-      ...ORIGINAL_ENV,
-      NEXT_PUBLIC_SUPABASE_URL: 'https://example.supabase.co',
-      SUPABASE_SERVICE_ROLE_KEY: 'service-role-key',
-    };
-    supabaseResult.data = [];
-    supabaseResult.error = null;
-  });
-
-  afterAll(() => {
-    process.env = ORIGINAL_ENV;
   });
 
   function req(url = 'http://localhost:3000/api/notifications') {
@@ -113,69 +80,29 @@ describe('GET /api/notifications (unified)', () => {
     );
   });
 
-  it('merges first-win (client_notifications) rows with prisma rows, newest first', async () => {
+  it('reports the first-win source as not provisioned instead of reading it', async () => {
     getUserIdMock.mockResolvedValue('user-123');
-    mockPrisma.notification.findMany.mockResolvedValue([
-      {
-        id: 'n1',
-        type: 'warning',
-        title: 'Publish failed',
-        message: 'Could not publish',
-        read: false,
-        data: null,
-        createdAt: new Date('2026-06-10T08:00:00Z'),
-      },
-    ]);
-    mockPrisma.notification.count.mockResolvedValue(1);
-    supabaseResult.data = [
-      {
-        id: 'fw1',
-        type: 'first_win',
-        title: 'First win!',
-        body: 'Your post outperformed baseline',
-        payload: { improvementPct: 42 },
-        read: false,
-        created_at: '2026-06-11T09:00:00Z',
-      },
-    ];
-
-    const res = await GET(req());
-    const body = await res.json();
-
-    expect(body.notifications).toHaveLength(2);
-    // Newest first → first-win row (2026-06-11) before prisma row (2026-06-10).
-    expect(body.notifications[0].id).toBe('fw1');
-    expect(body.notifications[0].type).toBe('first_win'); // banner match preserved
-    expect(body.notifications[0].data).toEqual({ improvementPct: 42 });
-    expect(body.notifications[0].message).toBe(
-      'Your post outperformed baseline'
-    );
-    expect(body.unreadCount).toBe(2); // 1 prisma unread + 1 first-win unread
-  });
-
-  it('still returns prisma rows when Supabase env is missing', async () => {
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-    getUserIdMock.mockResolvedValue('user-123');
-    mockPrisma.notification.findMany.mockResolvedValue([
-      {
-        id: 'n1',
-        type: 'info',
-        title: 'Hi',
-        message: 'msg',
-        read: true,
-        data: null,
-        createdAt: new Date('2026-06-10T10:00:00Z'),
-      },
-    ]);
+    mockPrisma.notification.findMany.mockResolvedValue([]);
     mockPrisma.notification.count.mockResolvedValue(0);
 
     const res = await GET(req());
     const body = await res.json();
 
-    expect(fromMock).toHaveBeenCalled();
-    expect(body.notifications).toHaveLength(1);
-    expect(body.unreadCount).toBe(0);
+    expect(res.status).toBe(200);
+    expect(body.sources.notifications).toEqual({ available: true });
+    expect(body.sources.firstWin.available).toBe(false);
+    expect(body.sources.firstWin.reason).toContain('client_notifications');
+  });
+
+  it('surfaces a database failure as a 500, not an empty success', async () => {
+    getUserIdMock.mockResolvedValue('user-123');
+    mockPrisma.notification.findMany.mockRejectedValue(new Error('DB down'));
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(body.error).toBe('Failed to fetch notifications');
   });
 
   it('applies unreadOnly filter to the prisma query', async () => {

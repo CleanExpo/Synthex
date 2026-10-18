@@ -3,21 +3,44 @@
  *
  * @description Multi-step content approval workflows for marketing agencies
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
+ * Backed by Prisma: approval_requests (ApprovalRequest), workflow_templates
+ * (WorkflowTemplate) and users. Requests are visible to the caller's
+ * organisation and to their submitter.
  *
- * FAILURE MODE: Returns error response with details
+ * NOT PROVISIONED: client workspaces (clients, client_members) and
+ * scheduled_posts have no Prisma model. Client-scoped calls throw
+ * ApprovalWorkflowNotProvisionedError; the post-approval scheduling step is
+ * recorded on the request as metadata.postApprovalAction {available:false}.
  */
 
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
+import { Prisma } from '@prisma/client';
+import type {
+  ApprovalRequest as ApprovalRequestRow,
+  WorkflowTemplate as WorkflowTemplateRow,
+} from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import {
+  FEATURE_NOT_PROVISIONED,
+  tableUnavailable,
+} from '@/lib/api/not-provisioned';
 import { logger } from '@/lib/logger';
 
 // Approval status
-export type ApprovalStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'revision_requested' | 'auto_approved';
+export type ApprovalStatus =
+  | 'pending'
+  | 'in_review'
+  | 'approved'
+  | 'rejected'
+  | 'revision_requested'
+  | 'auto_approved';
 
 // Workflow step types
-export type StepType = 'review' | 'approval' | 'legal_check' | 'brand_check' | 'final_approval';
+export type StepType =
+  | 'review'
+  | 'approval'
+  | 'legal_check'
+  | 'brand_check'
+  | 'final_approval';
 
 // Approval request
 export interface ApprovalRequest {
@@ -39,6 +62,8 @@ export interface ApprovalRequest {
     platforms?: string[];
     scheduledTime?: string;
     tags?: string[];
+    /** Set when the post-approval action could not run (not provisioned). */
+    postApprovalAction?: { available: false; reason: string };
   };
   createdAt: string;
   updatedAt: string;
@@ -100,55 +125,16 @@ export interface WorkflowStepTemplate {
   autoApproveAfter?: number;
 }
 
-/** Database row for approval request */
-interface ApprovalRequestRow {
-  id: string;
-  content_id: string;
-  content_type: 'post' | 'campaign' | 'media' | 'template';
-  client_id?: string;
-  workflow_id?: string;
-  submitted_by: string;
-  status: ApprovalStatus;
-  current_step: number;
-  total_steps: number;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
-  due_date?: string;
-  steps?: ApprovalStep[];
-  metadata?: {
-    title: string;
-    description?: string;
-    platforms?: string[];
-    scheduledTime?: string;
-    tags?: string[];
-  };
-  created_at: string;
-  updated_at: string;
-}
-
-/** Database row for workflow template */
-interface WorkflowTemplateRow {
-  id: string;
-  organization_id: string;
-  name: string;
-  description: string;
-  steps?: WorkflowStepTemplate[];
-  is_default: boolean;
-  content_types?: string[];
-  created_at: string;
-  updated_at: string;
+/** Thrown when an operation needs a table that is not provisioned. */
+export class ApprovalWorkflowNotProvisionedError extends Error {
+  readonly code = FEATURE_NOT_PROVISIONED;
+  constructor(readonly table: string) {
+    super(tableUnavailable(table).reason);
+    this.name = 'ApprovalWorkflowNotProvisionedError';
+  }
 }
 
 class ApprovalWorkflowService {
-  // SYN-953: lazy Supabase init.
-  private _platform: SupabaseClient | null = null;
-
-  private get platform(): SupabaseClient {
-    if (!this._platform) {
-      this._platform = createClient();
-    }
-    return this._platform;
-  }
-
   // ==================== Approval Requests ====================
 
   /**
@@ -173,45 +159,47 @@ class ApprovalWorkflowService {
     }
   ): Promise<ApprovalRequest> {
     try {
-      // Get workflow template
+      // Client workspaces (and their default workflows) are not provisioned.
+      if (data.clientId) {
+        throw new ApprovalWorkflowNotProvisionedError('clients');
+      }
+
+      const organizationId = await this.getUserOrganizationId(userId);
+
+      // Get workflow template (only one from the caller's organisation)
       let workflow: WorkflowTemplate | null = null;
       if (data.workflowId) {
-        workflow = await this.getWorkflowTemplate(data.workflowId);
-      } else if (data.clientId) {
-        // Get client's default workflow
-        workflow = await this.getDefaultWorkflow(data.clientId, data.contentType);
+        if (!organizationId) throw new Error('Workflow template not found');
+        workflow = await this.getWorkflowTemplate(
+          data.workflowId,
+          organizationId
+        );
+        if (!workflow) throw new Error('Workflow template not found');
       }
 
       // Create steps from workflow or use default
       const steps = workflow
-        ? await this.createStepsFromTemplate(workflow, data.clientId)
+        ? await this.createStepsFromTemplate(workflow)
         : await this.createDefaultSteps(userId);
 
-      const requestId = `apr_${Date.now()}`;
-
-      const { data: request, error } = await this.platform
-        .from('approval_requests')
-        .insert({
-          id: requestId,
-          content_id: data.contentId,
-          content_type: data.contentType,
-          client_id: data.clientId,
-          workflow_id: data.workflowId,
-          submitted_by: userId,
+      const request = await prisma.approvalRequest.create({
+        data: {
+          contentId: data.contentId,
+          contentType: data.contentType,
+          workflowId: data.workflowId,
+          submittedBy: userId,
+          organizationId,
           status: 'pending',
-          current_step: 0,
-          total_steps: steps.length,
+          currentStep: 0,
+          totalSteps: steps.length,
           priority: data.priority || 'normal',
-          due_date: data.dueDate,
-          steps,
-          metadata: data.metadata,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+          dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
+          steps: steps as unknown as Prisma.InputJsonValue,
+          title: data.metadata.title,
+          description: data.metadata.description,
+          metadata: data.metadata as Prisma.InputJsonValue,
+        },
+      });
 
       // Notify first step assignees
       await this.notifyStepAssignees(steps[0], data.metadata.title);
@@ -240,49 +228,45 @@ class ApprovalWorkflowService {
     } = {}
   ): Promise<{ requests: ApprovalRequest[]; total: number }> {
     try {
-      let query = this.platform
-        .from('approval_requests')
-        .select('*', { count: 'exact' });
-
       if (options.clientId) {
-        query = query.eq('client_id', options.clientId);
+        throw new ApprovalWorkflowNotProvisionedError('clients');
       }
 
+      const where: Prisma.ApprovalRequestWhereInput = {
+        AND: [await this.visibleTo(userId)],
+      };
+
       if (options.status && options.status !== 'all') {
-        query = query.eq('status', options.status);
+        where.status = options.status;
       }
 
       if (options.submittedByMe) {
-        query = query.eq('submitted_by', userId);
+        where.submittedBy = userId;
       }
 
       if (options.contentType) {
-        query = query.eq('content_type', options.contentType);
+        where.contentType = options.contentType;
       }
 
       if (options.priority) {
-        query = query.eq('priority', options.priority);
+        where.priority = options.priority;
       }
 
-      query = query.order('created_at', { ascending: false });
+      const [data, count] = await Promise.all([
+        prisma.approvalRequest.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: options.limit,
+          skip: options.offset,
+        }),
+        prisma.approvalRequest.count({ where }),
+      ]);
 
-      if (options.limit) {
-        query = query.limit(options.limit);
-      }
-
-      if (options.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) throw error;
-
-      let requests = (data || []).map(this.mapDbToRequest);
+      let requests = data.map(row => this.mapDbToRequest(row));
 
       // Filter by assigned to me (needs post-processing due to JSON structure)
       if (options.assignedToMe) {
-        requests = requests.filter((r: any) => {
+        requests = requests.filter(r => {
           const currentStep = r.steps[r.currentStep];
           return currentStep?.assignedTo.includes(userId);
         });
@@ -290,7 +274,7 @@ class ApprovalWorkflowService {
 
       return {
         requests,
-        total: count || 0,
+        total: count,
       };
     } catch (error: unknown) {
       logger.error('Failed to get approval requests:', { error, userId });
@@ -301,15 +285,16 @@ class ApprovalWorkflowService {
   /**
    * Get a specific approval request
    */
-  async getApprovalRequest(requestId: string, userId: string): Promise<ApprovalRequest | null> {
+  async getApprovalRequest(
+    requestId: string,
+    userId: string
+  ): Promise<ApprovalRequest | null> {
     try {
-      const { data, error } = await this.platform
-        .from('approval_requests')
-        .select('*')
-        .eq('id', requestId)
-        .single();
+      const data = await prisma.approvalRequest.findFirst({
+        where: { id: requestId, AND: [await this.visibleTo(userId)] },
+      });
 
-      if (error || !data) return null;
+      if (!data) return null;
 
       return this.mapDbToRequest(data);
     } catch (error: unknown) {
@@ -346,6 +331,10 @@ class ApprovalWorkflowService {
       if (!step.assignedTo.includes(userId) && step.assignedTo[0] !== '*') {
         throw new Error('You are not assigned to this step');
       }
+      // A wildcard step means "anyone", never the submitter approving themselves.
+      if (step.assignedTo[0] === '*' && userId === request.submittedBy) {
+        throw new Error('You cannot approve your own request');
+      }
 
       // Add approval
       step.currentApprovals++;
@@ -381,25 +370,21 @@ class ApprovalWorkflowService {
         }
       }
 
-      // Update in database
-      const { data, error } = await this.platform
-        .from('approval_requests')
-        .update({
-          status: request.status,
-          current_step: request.currentStep,
-          steps: request.steps,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', requestId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // If fully approved, trigger post-approval actions
+      // If fully approved, record the post-approval action outcome
       if (request.status === 'approved') {
-        await this.handleApproved(request);
+        this.handleApproved(request);
       }
+
+      // Update in database
+      const data = await prisma.approvalRequest.update({
+        where: { id: request.id },
+        data: {
+          status: request.status,
+          currentStep: request.currentStep,
+          steps: request.steps as unknown as Prisma.InputJsonValue,
+          metadata: request.metadata as Prisma.InputJsonValue,
+        },
+      });
 
       return this.mapDbToRequest(data);
     } catch (error: unknown) {
@@ -449,18 +434,13 @@ class ApprovalWorkflowService {
       request.status = 'rejected';
 
       // Update in database
-      const { data, error } = await this.platform
-        .from('approval_requests')
-        .update({
+      const data = await prisma.approvalRequest.update({
+        where: { id: request.id },
+        data: {
           status: 'rejected',
-          steps: request.steps,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', requestId)
-        .select()
-        .single();
-
-      if (error) throw error;
+          steps: request.steps as unknown as Prisma.InputJsonValue,
+        },
+      });
 
       // Notify submitter
       await this.notifySubmitter(request, 'rejected', reason);
@@ -505,18 +485,13 @@ class ApprovalWorkflowService {
       request.status = 'revision_requested';
 
       // Update in database
-      const { data, error } = await this.platform
-        .from('approval_requests')
-        .update({
+      const data = await prisma.approvalRequest.update({
+        where: { id: request.id },
+        data: {
           status: 'revision_requested',
-          steps: request.steps,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', requestId)
-        .select()
-        .single();
-
-      if (error) throw error;
+          steps: request.steps as unknown as Prisma.InputJsonValue,
+        },
+      });
 
       // Notify submitter
       await this.notifySubmitter(request, 'revision_requested', feedback);
@@ -531,7 +506,11 @@ class ApprovalWorkflowService {
   /**
    * Resubmit after revision
    */
-  async resubmit(requestId: string, userId: string, comment?: string): Promise<ApprovalRequest> {
+  async resubmit(
+    requestId: string,
+    userId: string,
+    comment?: string
+  ): Promise<ApprovalRequest> {
     try {
       const request = await this.getApprovalRequest(requestId, userId);
       if (!request) {
@@ -562,18 +541,13 @@ class ApprovalWorkflowService {
       request.status = 'in_review';
 
       // Update in database
-      const { data, error } = await this.platform
-        .from('approval_requests')
-        .update({
+      const data = await prisma.approvalRequest.update({
+        where: { id: request.id },
+        data: {
           status: 'in_review',
-          steps: request.steps,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', requestId)
-        .select()
-        .single();
-
-      if (error) throw error;
+          steps: request.steps as unknown as Prisma.InputJsonValue,
+        },
+      });
 
       // Notify step assignees
       await this.notifyStepAssignees(step, request.metadata.title);
@@ -620,13 +594,10 @@ class ApprovalWorkflowService {
       step.comments.push(comment);
 
       // Update in database
-      await this.platform
-        .from('approval_requests')
-        .update({
-          steps: request.steps,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', requestId);
+      await prisma.approvalRequest.update({
+        where: { id: request.id },
+        data: { steps: request.steps as unknown as Prisma.InputJsonValue },
+      });
 
       return comment;
     } catch (error: unknown) {
@@ -640,19 +611,21 @@ class ApprovalWorkflowService {
   /**
    * Get workflow templates
    */
-  async getWorkflowTemplates(organizationId: string): Promise<WorkflowTemplate[]> {
+  async getWorkflowTemplates(
+    organizationId: string
+  ): Promise<WorkflowTemplate[]> {
     try {
-      const { data, error } = await this.platform
-        .from('workflow_templates')
-        .select('*')
-        .eq('organization_id', organizationId)
-        .order('name', { ascending: true });
+      const data = await prisma.workflowTemplate.findMany({
+        where: { organizationId },
+        orderBy: { name: 'asc' },
+      });
 
-      if (error) throw error;
-
-      return (data || []).map(this.mapDbToTemplate);
+      return data.map(row => this.mapDbToTemplate(row));
     } catch (error: unknown) {
-      logger.error('Failed to get workflow templates:', { error, organizationId });
+      logger.error('Failed to get workflow templates:', {
+        error,
+        organizationId,
+      });
       throw error;
     }
   }
@@ -660,15 +633,19 @@ class ApprovalWorkflowService {
   /**
    * Get a specific workflow template
    */
-  async getWorkflowTemplate(templateId: string): Promise<WorkflowTemplate | null> {
+  async getWorkflowTemplate(
+    templateId: string,
+    organizationId?: string
+  ): Promise<WorkflowTemplate | null> {
     try {
-      const { data, error } = await this.platform
-        .from('workflow_templates')
-        .select('*')
-        .eq('id', templateId)
-        .single();
+      const data = await prisma.workflowTemplate.findFirst({
+        where: {
+          id: templateId,
+          ...(organizationId ? { organizationId } : {}),
+        },
+      });
 
-      if (error || !data) return null;
+      if (!data) return null;
 
       return this.mapDbToTemplate(data);
     } catch (error: unknown) {
@@ -691,61 +668,56 @@ class ApprovalWorkflowService {
     }
   ): Promise<WorkflowTemplate> {
     try {
-      const { data: template, error } = await this.platform
-        .from('workflow_templates')
-        .insert({
-          organization_id: organizationId,
+      const template = await prisma.workflowTemplate.create({
+        data: {
+          organizationId,
           name: data.name,
           description: data.description,
-          steps: data.steps,
-          is_default: data.isDefault || false,
-          content_types: data.contentTypes || ['post'],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+          steps: data.steps as unknown as Prisma.InputJsonValue,
+          isDefault: data.isDefault || false,
+          contentTypes: data.contentTypes || ['post'],
+        },
+      });
 
       return this.mapDbToTemplate(template);
     } catch (error: unknown) {
-      logger.error('Failed to create workflow template:', { error, organizationId });
+      logger.error('Failed to create workflow template:', {
+        error,
+        organizationId,
+      });
       throw error;
     }
   }
 
   // ==================== Private Methods ====================
 
-  private async getDefaultWorkflow(clientId: string, contentType: string): Promise<WorkflowTemplate | null> {
-    const { data: client } = await this.platform
-      .from('clients')
-      .select('organization_id')
-      .eq('id', clientId)
-      .single();
+  /** Organisation of the caller, or null when they have none. */
+  private async getUserOrganizationId(userId: string): Promise<string | null> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { organizationId: true },
+    });
+    return user?.organizationId ?? null;
+  }
 
-    if (!client) return null;
-
-    const { data: template } = await this.platform
-      .from('workflow_templates')
-      .select('*')
-      .eq('organization_id', client.organization_id)
-      .eq('is_default', true)
-      .contains('content_types', [contentType])
-      .single();
-
-    return template ? this.mapDbToTemplate(template) : null;
+  /** Requests the caller may see: their organisation's, or their own. */
+  private async visibleTo(
+    userId: string
+  ): Promise<Prisma.ApprovalRequestWhereInput> {
+    const organizationId = await this.getUserOrganizationId(userId);
+    return organizationId
+      ? { OR: [{ organizationId }, { submittedBy: userId }] }
+      : { submittedBy: userId };
   }
 
   private async createStepsFromTemplate(
-    template: WorkflowTemplate,
-    clientId?: string
+    template: WorkflowTemplate
   ): Promise<ApprovalStep[]> {
     const steps: ApprovalStep[] = [];
 
     for (const stepTemplate of template.steps) {
       // Get assignees by role
-      const assignees = await this.getAssigneesByRole(stepTemplate.assigneeRole, clientId);
+      const assignees = this.getAssigneesByRole(stepTemplate.assigneeRole);
 
       steps.push({
         id: `step_${Date.now()}_${stepTemplate.order}`,
@@ -766,7 +738,9 @@ class ApprovalWorkflowService {
     return steps;
   }
 
-  private async createDefaultSteps(submitterId: string): Promise<ApprovalStep[]> {
+  private async createDefaultSteps(
+    submitterId: string
+  ): Promise<ApprovalStep[]> {
     return [
       {
         id: `step_${Date.now()}_0`,
@@ -797,85 +771,92 @@ class ApprovalWorkflowService {
     ];
   }
 
-  private async getAssigneesByRole(role: string, clientId?: string): Promise<string[]> {
-    if (role === '*' || role === 'any') return ['*'];
-
-    if (!clientId) return ['*'];
-
-    const { data } = await this.platform
-      .from('client_members')
-      .select('user_id')
-      .eq('client_id', clientId)
-      .eq('role', role)
-      .eq('status', 'active');
-
-    return (data || []).map((m: any) => m.user_id);
+  private getAssigneesByRole(_role: string): string[] {
+    // Role-based assignment needs client_members (not provisioned); without a
+    // client every role resolves to anyone, as before.
+    return ['*'];
   }
 
   private async getUserName(userId: string): Promise<string> {
-    const { data } = await this.platform
-      .from('users')
-      .select('name, email')
-      .eq('id', userId)
-      .single();
+    const data = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true, email: true },
+    });
 
     return data?.name || data?.email || 'Unknown User';
   }
 
-  private async notifyStepAssignees(step: ApprovalStep, title: string): Promise<void> {
+  private async notifyStepAssignees(
+    step: ApprovalStep,
+    title: string
+  ): Promise<void> {
     // Would integrate with notification system
-    logger.info('Notifying step assignees', { stepId: step.id, assignees: step.assignedTo });
+    logger.info('Notifying step assignees', {
+      stepId: step.id,
+      assignees: step.assignedTo,
+    });
   }
 
-  private async notifySubmitter(request: ApprovalRequest, action: string, message: string): Promise<void> {
+  private async notifySubmitter(
+    request: ApprovalRequest,
+    action: string,
+    message: string
+  ): Promise<void> {
     // Would integrate with notification system
-    logger.info('Notifying submitter', { requestId: request.id, submitter: request.submittedBy, action });
+    logger.info('Notifying submitter', {
+      requestId: request.id,
+      submitter: request.submittedBy,
+      action,
+    });
   }
 
-  private async handleApproved(request: ApprovalRequest): Promise<void> {
-    // Handle post-approval actions (e.g., schedule post, publish)
+  private handleApproved(request: ApprovalRequest): void {
+    // Scheduling an approved post needs scheduled_posts (not provisioned):
+    // record that on the request instead of silently skipping it.
     if (request.contentType === 'post') {
-      await this.platform
-        .from('scheduled_posts')
-        .update({
-          status: request.metadata.scheduledTime ? 'scheduled' : 'ready',
-          approved_at: new Date().toISOString(),
-        })
-        .eq('id', request.contentId);
+      request.metadata.postApprovalAction = tableUnavailable('scheduled_posts');
+      logger.warn('Post-approval scheduling not run', {
+        requestId: request.id,
+        ...request.metadata.postApprovalAction,
+      });
     }
   }
 
   private mapDbToRequest(data: ApprovalRequestRow): ApprovalRequest {
     return {
       id: data.id,
-      contentId: data.content_id,
-      contentType: data.content_type,
-      clientId: data.client_id,
-      workflowId: data.workflow_id,
-      submittedBy: data.submitted_by,
-      status: data.status,
-      currentStep: data.current_step,
-      totalSteps: data.total_steps,
-      priority: data.priority,
-      dueDate: data.due_date,
-      steps: data.steps || [],
-      metadata: data.metadata || { title: '' },
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
+      contentId: data.contentId,
+      contentType: data.contentType as ApprovalRequest['contentType'],
+      workflowId: data.workflowId ?? undefined,
+      submittedBy: data.submittedBy,
+      status: data.status as ApprovalStatus,
+      currentStep: data.currentStep,
+      totalSteps: data.totalSteps,
+      priority: data.priority as ApprovalRequest['priority'],
+      dueDate: data.dueDate?.toISOString(),
+      steps: (data.steps as unknown as ApprovalStep[] | null) || [],
+      metadata: (data.metadata as unknown as
+        | ApprovalRequest['metadata']
+        | null) || {
+        title: data.title,
+        description: data.description ?? undefined,
+      },
+      createdAt: data.createdAt.toISOString(),
+      updatedAt: data.updatedAt.toISOString(),
     };
   }
 
   private mapDbToTemplate(data: WorkflowTemplateRow): WorkflowTemplate {
     return {
       id: data.id,
-      organizationId: data.organization_id,
+      organizationId: data.organizationId,
       name: data.name,
-      description: data.description,
-      steps: data.steps || [],
-      isDefault: data.is_default,
-      contentTypes: data.content_types || [],
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
+      description: data.description ?? '',
+      steps: (data.steps as unknown as WorkflowStepTemplate[] | null) || [],
+      isDefault: data.isDefault,
+      contentTypes: (data.contentTypes as unknown as string[] | null) || [],
+      createdAt: data.createdAt.toISOString(),
+      updatedAt: data.updatedAt.toISOString(),
     };
   }
 }

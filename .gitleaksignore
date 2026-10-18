@@ -27,3 +27,6 @@ c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j12/cases-platf
 c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts:generic-api-key:124
 c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts:generic-api-key:125
 c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts:generic-api-key:131
+# P2 unit u04 test fixture (2026-10-18): a synthetic token-signing key in the
+# noop-retirement route test; not a real credential.
+81daffaa516bd0e9a2f60d582a2399056f3123a8:tests/unit/api/p2-u04-noop-retired-routes.test.ts:generic-api-key:41

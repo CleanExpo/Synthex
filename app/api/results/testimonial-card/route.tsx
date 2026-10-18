@@ -28,89 +28,54 @@
  *   Runtime switched from `edge` → `nodejs` because Prisma is not edge-
  *   compatible. ImageResponse from next/og is supported on both runtimes.
  *
- *   The service-role Supabase client is retained for the actual DB reads
- *   (organizations / client_geo_scores / brand_profiles) — the tenant
- *   boundary now sits at the auth check, not at the DB client choice.
+ *   The organisation name is read via Prisma, scoped to that organizationId.
+ *
+ *   NOT PROVISIONED: the GEO-delta headline (client_geo_scores) and brand
+ *   accent colour (brand_profiles) have no tables in prisma/schema.prisma.
+ *   The card renders the milestone headline and default accent, and says
+ *   so in the `X-Synthex-Unavailable` response header.
  *
  * SYN-662 (initial); service-role leak fix 4/N (auth gate added).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ImageResponse }     from 'next/og';
-import { createClient }      from '@/lib/platform/noop-client';
+import { ImageResponse } from 'next/og';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 export const runtime = 'nodejs';
 
-// ── Supabase admin for data fetching ─────────────────────────────────────────
-
-function getAdmin() {
-  return createClient();
-}
+/** Card inputs whose tables are not provisioned in prisma/schema.prisma. */
+const UNAVAILABLE_SOURCES = ['client_geo_scores', 'brand_profiles'];
 
 // ── Card data ─────────────────────────────────────────────────────────────────
 
 interface CardData {
-  businessName:  string;
-  headline:      string;
-  subtext:       string;
-  accentColour:  string;
+  businessName: string;
+  headline: string;
+  subtext: string;
+  accentColour: string;
 }
 
-async function buildCardData(organizationId: string, quarterLabel: string): Promise<CardData> {
-  const admin = getAdmin() as ReturnType<typeof createClient<any>>;
+async function buildCardData(
+  organizationId: string,
+  quarterLabel: string
+): Promise<CardData | null> {
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { name: true },
+  });
+  // No organisation row: there is nothing true to put on the card.
+  if (!org?.name) return null;
 
-  // Business name from org table (via a simple query)
-  const { data: orgData } = await admin
-    .from('organizations')
-    .select('name')
-    .eq('id', organizationId)
-    .single();
-
-  const businessName = (orgData as { name?: string } | null)?.name ?? 'Your Business';
-
-  // Headline metric strategy: GEO delta → attribution → Synthex IQ
-  let headline = '';
-  let subtext  = '';
-
-  // Try GEO delta (last 90 days)
-  const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: geoScores } = await admin
-    .from('client_geo_scores')
-    .select('overall_score, scored_at')
-    .eq('organization_id', organizationId)
-    .order('scored_at', { ascending: false })
-    .limit(20);
-
-  if (geoScores && geoScores.length >= 4) {
-    const scores = geoScores as { overall_score: number; scored_at: string }[];
-    const currentScore = scores[0].overall_score;
-    const oldest90     = scores.filter(s => s.scored_at < ninetyDaysAgo).at(-1);
-    const delta        = oldest90 ? Math.round(currentScore - oldest90.overall_score) : null;
-
-    if (delta !== null && delta >= 20) {
-      headline = `Google visibility: ${delta > 0 ? '+' : ''}${delta} pts in 90 days`;
-      subtext  = 'Local search improvement';
-    }
-  }
-
-  // Brand accent colour
-  const { data: brandData } = await admin
-    .from('brand_profiles')
-    .select('accent_color')
-    .eq('organization_id', organizationId)
-    .single();
-
-  const accentColour = (brandData as { accent_color?: string } | null)?.accent_color ?? '#0f172a';
-
-  // Fallback: Synthex IQ (posts × 2 as simple estimate)
-  if (!headline) {
-    headline = quarterLabel ? `${quarterLabel} Milestone` : 'Quarterly Milestone';
-    subtext  = 'Powered by Synthex';
-  }
-
-  return { businessName, headline, subtext, accentColour };
+  return {
+    businessName: org.name,
+    headline: quarterLabel
+      ? `${quarterLabel} Milestone`
+      : 'Quarterly Milestone',
+    subtext: 'Powered by Synthex',
+    accentColour: '#0f172a',
+  };
 }
 
 // ── Auth gate ─────────────────────────────────────────────────────────────────
@@ -154,70 +119,108 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { searchParams } = new URL(req.url);
   const quarterLabel = searchParams.get('quarter') ?? '';
 
-  let cardData: CardData;
+  let cardData: CardData | null;
   try {
     // SECURITY: organizationId comes from resolveTenant() — never from the
     // query string. Any `?client_id=` param is deliberately ignored.
     cardData = await buildCardData(tenant.clientId, quarterLabel);
   } catch {
-    cardData = {
-      businessName: 'Your Business',
-      headline:     'Quarterly Milestone',
-      subtext:      'Powered by Synthex',
-      accentColour: '#0f172a',
-    };
+    // A failed read must not look like a card: never issue placeholder data.
+    return NextResponse.json(
+      { error: 'Organisation data could not be read' },
+      { status: 503 }
+    );
+  }
+  if (!cardData) {
+    return NextResponse.json(
+      { error: 'Organisation not found' },
+      { status: 404 }
+    );
   }
 
   // 1080×1080 square card — works for Instagram, WhatsApp, download
   return new ImageResponse(
-    (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        width: '100%',
+        height: '100%',
+        background: '#ffffff',
+        padding: '80px',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      }}
+    >
+      {/* Top accent bar */}
       <div
         style={{
-          display:         'flex',
-          flexDirection:   'column',
-          justifyContent:  'space-between',
-          width:           '100%',
-          height:          '100%',
-          background:      '#ffffff',
-          padding:         '80px',
-          fontFamily:      '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+          display: 'flex',
+          width: '80px',
+          height: '6px',
+          background: cardData.accentColour,
+          borderRadius: '3px',
+        }}
+      />
+
+      {/* Content */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div
+          style={{
+            fontSize: '28px',
+            fontWeight: 600,
+            color: '#64748b',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}
+        >
+          {cardData.businessName}
+        </div>
+        <div
+          style={{
+            fontSize: '56px',
+            fontWeight: 800,
+            color: '#0f172a',
+            lineHeight: 1.1,
+            letterSpacing: '-2px',
+          }}
+        >
+          {cardData.headline}
+        </div>
+        {cardData.subtext && (
+          <div style={{ fontSize: '24px', fontWeight: 500, color: '#64748b' }}>
+            {cardData.subtext}
+          </div>
+        )}
+      </div>
+
+      {/* Powered by Synthex watermark */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+          opacity: 0.7,
         }}
       >
-        {/* Top accent bar */}
-        <div style={{ display: 'flex', width: '80px', height: '6px', background: cardData.accentColour, borderRadius: '3px' }} />
-
-        {/* Content */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ fontSize: '28px', fontWeight: 600, color: '#64748b', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            {cardData.businessName}
-          </div>
-          <div style={{ fontSize: '56px', fontWeight: 800, color: '#0f172a', lineHeight: 1.1, letterSpacing: '-2px' }}>
-            {cardData.headline}
-          </div>
-          {cardData.subtext && (
-            <div style={{ fontSize: '24px', fontWeight: 500, color: '#64748b' }}>
-              {cardData.subtext}
-            </div>
-          )}
-        </div>
-
-        {/* Powered by Synthex watermark */}
-        <div style={{
-          display:        'flex',
-          justifyContent: 'flex-end',
-          alignItems:     'center',
-          opacity:        0.7,
-        }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            Powered by Synthex
-          </div>
+        <div
+          style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: '#94a3b8',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Powered by Synthex
         </div>
       </div>
-    ),
+    </div>,
     {
-      width:  1080,
+      width: 1080,
       height: 1080,
       headers: {
+        'X-Synthex-Unavailable': UNAVAILABLE_SOURCES.join(','),
         'Content-Disposition': `attachment; filename="synthex-result-${quarterLabel.replace(/\s+/g, '-').toLowerCase() || 'card'}.png"`,
       },
     }

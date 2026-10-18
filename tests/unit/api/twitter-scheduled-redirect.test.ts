@@ -8,21 +8,14 @@
  * This test drives the real POST handler with a `scheduledTime` and asserts:
  *   - it routes the post through `scheduleViaPost` (the working Post + cron path),
  *   - it returns the scheduled Post id with status 'scheduled',
- *   - it NEVER inserts into the `scheduled_posts` table again.
+ *   - it NEVER inserts into the `scheduled_posts` table again (the route no
+ *     longer has any Supabase client at all — P2 retired the noop stub).
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
 // NOTE: jest.config sets resetMocks:true, so mock *implementations* are wiped
 // before every test — they must be (re)applied in beforeEach, not in the factory.
-
-// -- Capture every Supabase table touched so we can assert scheduled_posts is gone.
-const touchedTables: string[] = [];
-const supabaseInsert = jest.fn();
-const supabaseFrom = jest.fn();
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({ from: supabaseFrom }),
-}));
 
 // -- Rate-limit wrapper: just run the handler.
 jest.mock('@/lib/rate-limit', () => ({
@@ -53,12 +46,13 @@ const scheduleTweet = jest.fn();
 const postTweet = jest.fn();
 const postThread = jest.fn();
 const validateTweet = jest.fn();
+const uploadMedia = jest.fn();
 jest.mock('@/lib/social/twitter-service', () => ({
   twitterService: {
     scheduleTweet: (...a: unknown[]) => scheduleTweet(...a),
     postTweet: (...a: unknown[]) => postTweet(...a),
     postThread: (...a: unknown[]) => postThread(...a),
-    uploadMedia: jest.fn(),
+    uploadMedia: (...a: unknown[]) => uploadMedia(...a),
     validateTweet: (...a: unknown[]) => validateTweet(...a),
   },
 }));
@@ -89,19 +83,8 @@ const originalLegacyFlag =
 
 beforeEach(() => {
   jest.clearAllMocks();
-  touchedTables.length = 0;
   process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS = 'true';
 
-  supabaseInsert.mockResolvedValue({ data: null, error: null });
-  supabaseFrom.mockImplementation((table: string) => {
-    touchedTables.push(table);
-    return {
-      select: () => ({
-        eq: () => ({ single: async () => ({ data: { plan: 'pro' } }) }),
-      }),
-      insert: supabaseInsert,
-    };
-  });
   securityCheck.mockResolvedValue({ allowed: true });
   getUserId.mockResolvedValue('user-1');
   validateTweet.mockReturnValue({ valid: true });
@@ -149,18 +132,54 @@ describe('POST /api/social/twitter/post — scheduled tweet lands in the working
     });
   });
 
-  it('NEVER writes to the dead scheduled_posts table for a scheduled tweet', async () => {
+  it('NEVER uses the legacy no-op stub publisher for a scheduled tweet', async () => {
     await POST(req({ text: 'hi', scheduledTime: '2030-01-01T12:00:00.000Z' }));
 
-    expect(touchedTables).not.toContain('scheduled_posts');
-    // And the legacy no-op stub publisher is not invoked either.
     expect(scheduleTweet).not.toHaveBeenCalled();
   });
 
   it('does not schedule (no Post created) for an immediate tweet', async () => {
-    postTweet.mockResolvedValue({ id: 'tweet-1' });
-    await POST(req({ text: 'now' }));
+    const res = await POST(req({ text: 'now' }));
     expect(scheduleViaPost).not.toHaveBeenCalled();
-    expect(postTweet).toHaveBeenCalledTimes(1);
+    // Immediate tweets are NOT_PROVISIONED (social_posts table missing).
+    expect((res as Response).status).toBe(503);
+    expect(postTweet).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/social/twitter/post — side-step failures are not swallowed', () => {
+  const when = '2030-01-01T12:00:00.000Z';
+
+  it('does not schedule when a media upload fails, and names the failed media', async () => {
+    uploadMedia
+      .mockResolvedValueOnce('media-1')
+      .mockRejectedValueOnce(new Error('upload 500'));
+    const res = await POST(
+      req({
+        text: 'hi',
+        mediaUrls: [
+          'https://cdn.example.com/a.png',
+          'https://cdn.example.com/b.png',
+        ],
+        scheduledTime: when,
+      })
+    );
+    const body = await (res as Response).json();
+
+    expect((res as Response).status).toBe(502);
+    expect(body.scheduled).toBe(false);
+    expect(body.mediaFailed).toEqual(['https://cdn.example.com/b.png']);
+    expect(scheduleViaPost).not.toHaveBeenCalled();
+  });
+
+  it('schedules a thread-only body with the thread text, not undefined', async () => {
+    const res = await POST(
+      req({ thread: ['one', 'two'], scheduledTime: when })
+    );
+
+    expect((res as Response).status).toBe(200);
+    expect(scheduleViaPost).toHaveBeenCalledWith(
+      expect.objectContaining({ content: 'one\n\ntwo' })
+    );
   });
 });

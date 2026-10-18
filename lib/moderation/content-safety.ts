@@ -5,15 +5,31 @@
  * and compliance verification (GDPR, FTC, platform policies)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
  * - OPENROUTER_API_KEY: OpenRouter API for AI moderation (SECRET)
  *
  * FAILURE MODE: Flags content for human review if automated check fails
+ *
+ * NOT_PROVISIONED storage: `content_moderation_logs`, `content_reviews` and
+ * `brand_guidelines` have no Prisma model (prisma/schema.prisma). Moderation
+ * itself is pure computation and still runs; history and review submission
+ * throw ModerationStorageNotProvisionedError; without explicit guidelines,
+ * brand safety fails and the result requires human review; the moderation log
+ * write is reported, not persisted.
  */
 
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
+
+/** Thrown when a moderation feature needs a table that is not provisioned. */
+export class ModerationStorageNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly table: string) {
+    super(
+      `Moderation storage is not provisioned: table "${table}" has no Prisma model`
+    );
+    this.name = 'ModerationStorageNotProvisionedError';
+  }
+}
 
 // Safety check types
 export type SafetyCategory =
@@ -41,6 +57,8 @@ export interface ModerationResult {
   suggestions: string[];
   requiresHumanReview: boolean;
   blockedReasons: string[];
+  /** Set when stored brand guidelines were needed but could not be read. */
+  brandGuidelines?: ReturnType<typeof tableUnavailable>;
 }
 
 export interface CategoryResult {
@@ -91,10 +109,7 @@ const HARMFUL_PATTERNS = {
     /\b(attack|murder|assault|weapon)\b/gi,
     /\b(gun|bomb|explosive)\b/gi,
   ],
-  harassment: [
-    /\b(harass|bully|threaten|stalk)\b/gi,
-    /\b(doxx|doxing)\b/gi,
-  ],
+  harassment: [/\b(harass|bully|threaten|stalk)\b/gi, /\b(doxx|doxing)\b/gi],
   spam: [
     /\b(click here|buy now|limited time|act fast)\b/gi,
     /(.)\1{5,}/g, // Repeated characters
@@ -114,18 +129,9 @@ const FTC_DISCLOSURE_PATTERNS = [
 ];
 
 class ContentSafetyService {
-  // SYN-953: lazy Supabase init. Eager constructor-init crashed `next build`
-  // page-data collection on /api/moderation/check.
-  private _platform: SupabaseClient | null = null;
-  private cache: Map<string, { result: ModerationResult; expiry: number }> = new Map();
+  private cache: Map<string, { result: ModerationResult; expiry: number }> =
+    new Map();
   private readonly CACHE_TTL = 300000; // 5 minutes
-
-  private get platform(): SupabaseClient {
-    if (!this._platform) {
-      this._platform = createClient();
-    }
-    return this._platform;
-  }
 
   /**
    * Perform comprehensive content moderation check
@@ -164,12 +170,13 @@ class ContentSafetyService {
 
       // Calculate overall score
       const categoryScores = categories.map(c => c.score);
-      const avgCategoryScore = categoryScores.reduce((a, b) => a + b, 0) / categoryScores.length;
+      const avgCategoryScore =
+        categoryScores.reduce((a, b) => a + b, 0) / categoryScores.length;
       const brandScore = brandSafety.score;
       const complianceScore = this.calculateComplianceScore(compliance);
 
       const overallScore = Math.round(
-        (avgCategoryScore * 0.5) + (brandScore * 0.3) + (complianceScore * 0.2)
+        avgCategoryScore * 0.5 + brandScore * 0.3 + complianceScore * 0.2
       );
 
       // Determine risk level
@@ -177,19 +184,28 @@ class ContentSafetyService {
 
       // Determine if approved
       const criticalIssues = categories.filter(c => c.flagged && c.score < 30);
-      const approved = criticalIssues.length === 0 &&
+      const approved =
+        criticalIssues.length === 0 &&
         brandSafety.passed &&
         compliance.gdpr.passed &&
         compliance.ftc.passed;
 
       // Generate suggestions
-      const suggestions = this.generateSuggestions(categories, brandSafety, compliance);
+      const suggestions = this.generateSuggestions(
+        categories,
+        brandSafety,
+        compliance
+      );
 
       // Determine blocked reasons
       const blockedReasons: string[] = [];
-      categories.filter(c => c.flagged).forEach(c => {
-        blockedReasons.push(`${c.category}: ${c.details || 'Potentially harmful content detected'}`);
-      });
+      categories
+        .filter(c => c.flagged)
+        .forEach(c => {
+          blockedReasons.push(
+            `${c.category}: ${c.details || 'Potentially harmful content detected'}`
+          );
+        });
       if (!brandSafety.passed) {
         brandSafety.issues.forEach(i => blockedReasons.push(i.description));
       }
@@ -205,8 +221,14 @@ class ContentSafetyService {
         brandSafety,
         compliance,
         suggestions,
-        requiresHumanReview: riskLevel === 'medium' || criticalIssues.length > 0,
+        requiresHumanReview:
+          !brandGuidelines ||
+          riskLevel === 'medium' ||
+          criticalIssues.length > 0,
         blockedReasons,
+        ...(!brandGuidelines && {
+          brandGuidelines: tableUnavailable('brand_guidelines'),
+        }),
       };
 
       // Cache result
@@ -225,16 +247,32 @@ class ContentSafetyService {
         riskLevel: 'medium',
         overallScore: 50,
         categories: [],
-        brandSafety: { passed: false, score: 0, issues: [{ type: 'error', severity: 'medium', description: 'Moderation check failed' }], competitorMentions: [], sensitiveTopics: [] },
+        brandSafety: {
+          passed: false,
+          score: 0,
+          issues: [
+            {
+              type: 'error',
+              severity: 'medium',
+              description: 'Moderation check failed',
+            },
+          ],
+          competitorMentions: [],
+          sensitiveTopics: [],
+        },
         compliance: {
           gdpr: { passed: true, issues: [] },
           ftc: { passed: true, issues: [] },
           platformPolicies: { passed: true, issues: [] },
           coppa: { passed: true, issues: [] },
         },
-        suggestions: ['Manual review recommended due to moderation system error'],
+        suggestions: [
+          'Manual review recommended due to moderation system error',
+        ],
         requiresHumanReview: true,
-        blockedReasons: ['Automated moderation check failed - manual review required'],
+        blockedReasons: [
+          'Automated moderation check failed - manual review required',
+        ],
       };
     }
   }
@@ -279,7 +317,8 @@ class ContentSafetyService {
       isGifted?: boolean;
     }
   ): { required: boolean; present: boolean; suggestion?: string } {
-    const required = options.isPaidPromotion || options.hasAffiliateLinks || options.isGifted;
+    const required =
+      options.isPaidPromotion || options.hasAffiliateLinks || options.isGifted;
     const hasDisclosure = FTC_DISCLOSURE_PATTERNS.some(p => p.test(content));
 
     if (required && !hasDisclosure) {
@@ -303,40 +342,17 @@ class ContentSafetyService {
       offset?: number;
       onlyFlagged?: boolean;
     } = {}
-  ): Promise<Array<{
-    id: string;
-    content: string;
-    result: ModerationResult;
-    createdAt: string;
-  }>> {
-    let query = this.platform
-      .from('content_moderation_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (options.onlyFlagged) {
-      query = query.eq('approved', false);
-    }
-
-    if (options.limit) {
-      query = query.limit(options.limit);
-    }
-
-    if (options.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
-    }
-
-    const { data, error } = await query;
-
-    if (error || !data) return [];
-
-    return data.map((row: any) => ({
-      id: row.id,
-      content: row.content,
-      result: row.result,
-      createdAt: row.created_at,
-    }));
+  ): Promise<
+    Array<{
+      id: string;
+      content: string;
+      result: ModerationResult;
+      createdAt: string;
+    }>
+  > {
+    void userId;
+    void options;
+    throw new ModerationStorageNotProvisionedError('content_moderation_logs');
   }
 
   /**
@@ -349,41 +365,19 @@ class ContentSafetyService {
     moderationResult: ModerationResult,
     notes?: string
   ): Promise<{ reviewId: string; estimatedReviewTime: string }> {
-    const { data, error } = await this.platform
-      .from('content_reviews')
-      .insert({
-        user_id: userId,
-        content_id: contentId,
-        content,
-        moderation_result: moderationResult,
-        notes,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      })
-      .select('id')
-      .single();
-
-    if (error) {
-      throw new Error('Failed to submit for review');
-    }
-
-    // Estimate review time based on queue
-    const { count } = await this.platform
-      .from('content_reviews')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending');
-
-    const estimatedHours = Math.ceil((count || 0) / 10) + 2; // Assume 10 reviews per hour
-
-    return {
-      reviewId: data.id,
-      estimatedReviewTime: `${estimatedHours} hours`,
-    };
+    void userId;
+    void contentId;
+    void content;
+    void moderationResult;
+    void notes;
+    throw new ModerationStorageNotProvisionedError('content_reviews');
   }
 
   // ==================== Private Methods ====================
 
-  private async checkSafetyCategories(content: string): Promise<CategoryResult[]> {
+  private async checkSafetyCategories(
+    content: string
+  ): Promise<CategoryResult[]> {
     const results: CategoryResult[] = [];
     const lowerContent = content.toLowerCase();
 
@@ -402,7 +396,7 @@ class ContentSafetyService {
       }
 
       // Calculate score (100 = safe, 0 = dangerous)
-      const score = flagged ? Math.max(0, 100 - (matchCount * 25)) : 100;
+      const score = flagged ? Math.max(0, 100 - matchCount * 25) : 100;
 
       results.push({
         category: category as SafetyCategory,
@@ -413,7 +407,11 @@ class ContentSafetyService {
     }
 
     // Add generic safety categories with default safe scores
-    const additionalCategories: SafetyCategory[] = ['sexual', 'self_harm', 'copyright'];
+    const additionalCategories: SafetyCategory[] = [
+      'sexual',
+      'self_harm',
+      'copyright',
+    ];
     for (const category of additionalCategories) {
       if (!results.find(r => r.category === category)) {
         results.push({
@@ -431,16 +429,28 @@ class ContentSafetyService {
     content: string,
     guidelines?: BrandGuidelines
   ): Promise<BrandSafetyResult> {
-    const issues: Array<{ type: string; severity: RiskLevel; description: string }> = [];
+    const issues: Array<{
+      type: string;
+      severity: RiskLevel;
+      description: string;
+    }> = [];
     const competitorMentions: string[] = [];
     const sensitiveTopics: string[] = [];
     let score = 100;
 
+    // No guidelines were consulted, so brand safety is unknown, not passed.
     if (!guidelines) {
       return {
-        passed: true,
-        score: 100,
-        issues: [],
+        passed: false,
+        score: 0,
+        issues: [
+          {
+            type: 'brand_guidelines_unavailable',
+            severity: 'medium',
+            description:
+              'Brand guidelines unavailable: brand safety was not checked',
+          },
+        ],
         competitorMentions: [],
         sensitiveTopics: [],
       };
@@ -490,7 +500,11 @@ class ContentSafetyService {
     const contentHashtags = content.match(/#\w+/g) || [];
     for (const hashtag of contentHashtags) {
       const lowerHashtag = hashtag.toLowerCase();
-      if ((guidelines.blockedHashtags || []).some(h => h.toLowerCase() === lowerHashtag)) {
+      if (
+        (guidelines.blockedHashtags || []).some(
+          h => h.toLowerCase() === lowerHashtag
+        )
+      ) {
         score -= 20;
         issues.push({
           type: 'blocked_hashtag',
@@ -501,7 +515,8 @@ class ContentSafetyService {
     }
 
     return {
-      passed: score >= 60 && issues.filter(i => i.severity === 'high').length === 0,
+      passed:
+        score >= 60 && issues.filter(i => i.severity === 'high').length === 0,
       score: Math.max(0, score),
       issues,
       competitorMentions,
@@ -529,7 +544,9 @@ class ContentSafetyService {
       const hasDisclosure = FTC_DISCLOSURE_PATTERNS.some(p => p.test(content));
       if (!hasDisclosure) {
         result.ftc.passed = false;
-        result.ftc.issues.push('Paid promotion requires FTC disclosure (#ad, #sponsored, etc.)');
+        result.ftc.issues.push(
+          'Paid promotion requires FTC disclosure (#ad, #sponsored, etc.)'
+        );
       }
     }
 
@@ -538,49 +555,55 @@ class ContentSafetyService {
       // Check for data collection language
       if (/\b(email|subscribe|sign up|register|join)\b/gi.test(content)) {
         result.coppa.passed = false;
-        result.coppa.issues.push('Content targeting children should not solicit personal information');
+        result.coppa.issues.push(
+          'Content targeting children should not solicit personal information'
+        );
       }
     }
 
     // GDPR compliance
     if (/\b(personal data|email list|subscriber data)\b/gi.test(content)) {
-      result.gdpr.issues.push('Content references personal data - ensure GDPR compliance');
+      result.gdpr.issues.push(
+        'Content references personal data - ensure GDPR compliance'
+      );
     }
 
     // Platform-specific policies
     if (options.platform === 'instagram') {
       // Instagram doesn't allow certain CTA language
       if (/\b(link in bio|comment to get)\b/gi.test(content)) {
-        result.platformPolicies.issues.push('Some engagement bait phrases may violate Instagram policies');
+        result.platformPolicies.issues.push(
+          'Some engagement bait phrases may violate Instagram policies'
+        );
       }
     }
 
     return result;
   }
 
-  private async getUserBrandGuidelines(userId: string): Promise<BrandGuidelines | undefined> {
-    const { data } = await this.platform
-      .from('brand_guidelines')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (!data) return undefined;
-
-    return {
-      companyName: data.company_name,
-      competitors: data.competitors || [],
-      blockedWords: data.blocked_words || [],
-      requiredDisclosures: data.required_disclosures || [],
-      toneOfVoice: data.tone_of_voice || 'professional',
-      sensitiveTopics: data.sensitive_topics || [],
-      approvedHashtags: data.approved_hashtags || [],
-      blockedHashtags: data.blocked_hashtags || [],
-    };
+  private async getUserBrandGuidelines(
+    userId: string
+  ): Promise<BrandGuidelines | undefined> {
+    // `brand_guidelines` is not provisioned: there are no stored guidelines to
+    // read; checkBrandSafety fails closed without them (explicit options still apply).
+    logger.debug(
+      'Stored brand guidelines unavailable: storage not provisioned',
+      {
+        reason: 'FEATURE_NOT_PROVISIONED',
+        table: 'brand_guidelines',
+        userId,
+      }
+    );
+    return undefined;
   }
 
-  private determineRiskLevel(score: number, categories: CategoryResult[]): RiskLevel {
-    const criticalFlags = categories.filter(c => c.flagged && c.score < 30).length;
+  private determineRiskLevel(
+    score: number,
+    categories: CategoryResult[]
+  ): RiskLevel {
+    const criticalFlags = categories.filter(
+      c => c.flagged && c.score < 30
+    ).length;
     const highFlags = categories.filter(c => c.flagged && c.score < 50).length;
 
     if (criticalFlags > 0 || score < 30) return 'critical';
@@ -615,19 +638,25 @@ class ContentSafetyService {
     const suggestions: string[] = [];
 
     // Category-based suggestions
-    categories.filter(c => c.flagged).forEach(c => {
-      switch (c.category) {
-        case 'spam':
-          suggestions.push('Remove promotional language like "click here" or "buy now"');
-          break;
-        case 'harassment':
-          suggestions.push('Review content tone to ensure it is respectful');
-          break;
-        case 'misinformation':
-          suggestions.push('Remove unverified claims and add sources where appropriate');
-          break;
-      }
-    });
+    categories
+      .filter(c => c.flagged)
+      .forEach(c => {
+        switch (c.category) {
+          case 'spam':
+            suggestions.push(
+              'Remove promotional language like "click here" or "buy now"'
+            );
+            break;
+          case 'harassment':
+            suggestions.push('Review content tone to ensure it is respectful');
+            break;
+          case 'misinformation':
+            suggestions.push(
+              'Remove unverified claims and add sources where appropriate'
+            );
+            break;
+        }
+      });
 
     // Brand safety suggestions
     if (brandSafety.competitorMentions.length > 0) {
@@ -647,22 +676,23 @@ class ContentSafetyService {
     content: string,
     result: ModerationResult
   ): Promise<void> {
-    try {
-      await this.platform.from('content_moderation_logs').insert({
-        user_id: userId,
-        content: content.substring(0, 1000), // Limit stored content
-        result,
-        approved: result.approved,
-        risk_level: result.riskLevel,
-        overall_score: result.overallScore,
-        created_at: new Date().toISOString(),
-      });
-    } catch (error) {
-      logger.error('Failed to log moderation result:', { error });
-    }
+    // `content_moderation_logs` is not provisioned: report the unpersisted
+    // result instead of dropping it silently.
+    logger.warn('Moderation result not persisted: storage not provisioned', {
+      reason: 'FEATURE_NOT_PROVISIONED',
+      table: 'content_moderation_logs',
+      userId,
+      contentLength: content.length,
+      approved: result.approved,
+      riskLevel: result.riskLevel,
+      overallScore: result.overallScore,
+    });
   }
 
-  private generateCacheKey(content: string, options: Record<string, unknown>): string {
+  private generateCacheKey(
+    content: string,
+    options: Record<string, unknown>
+  ): string {
     const contentHash = content.substring(0, 50) + content.length;
     return `mod-${contentHash}-${JSON.stringify(options)}`;
   }

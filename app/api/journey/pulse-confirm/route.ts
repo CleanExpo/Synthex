@@ -4,43 +4,40 @@
  * Pulse survey confirmation page — SYN-677 (HMAC-signed since journey-hmac PR).
  *
  * The click tracker (/api/journey/click) redirects to this endpoint after
- * logging the click. This endpoint:
- *   1. Verifies HMAC signature on the `t` query token
- *   2. Logs the pulse survey score (same as /api/journey/pulse) if not
- *      already recorded (don't-downgrade idempotency)
- *   3. Returns a minimal HTML "Thank you" page with ZERO request-derived
- *      content — the page is identical on success and failure to prevent
- *      attacker-controlled UI on a Synthex-domain page.
+ * logging the click. This endpoint verifies the HMAC signature on the `t`
+ * query token and would record the pulse survey score.
+ *
+ * NOT PROVISIONED: `client_journey_events` has no Prisma model, so the score
+ * cannot be recorded. Every request gets HTTP 503 with a minimal HTML page
+ * that says so (no "thank you" for feedback that was dropped). The page has
+ * ZERO request-derived content and is identical for valid and invalid tokens,
+ * so signature validity is not leaked and no attacker-controlled UI appears
+ * on a Synthex-domain page. Valid-but-dropped responses are logged.
  *
  * Backward compatibility: legacy URLs accepted only if
  * `JOURNEY_PIXEL_ACCEPT_UNSIGNED=true`.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import {
   PIXEL_AUDIENCES,
   verifyJourneyToken,
   type VerifyFailureReason,
 } from '@/lib/journey/pixel-token';
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
-function getAdminClient() {
-  return createClient();
-}
-
-// Rendered identically on success AND signature failure — no request-derived
+// Rendered identically for valid AND invalid tokens — no request-derived
 // content, no echoed user input. Attacker cannot manufacture a misleading page
 // on our domain by crafting query params.
-const THANK_YOU_HTML = `<!DOCTYPE html>
+const NOT_PROVISIONED_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thanks for your feedback — Synthex</title>
+  <title>Feedback not recorded — Synthex</title>
   <style>
     body { margin: 0; padding: 0; background: #f9fafb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
     .card { background: #fff; border-radius: 12px; padding: 48px 40px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); max-width: 400px; }
-    .icon { font-size: 40px; margin-bottom: 16px; }
     h1 { margin: 0 0 12px; font-size: 22px; font-weight: 700; color: #0f172a; }
     p { margin: 0; font-size: 15px; color: #64748b; line-height: 1.6; }
     a { display: inline-block; margin-top: 24px; padding: 12px 28px; background: #0f172a; color: #fff; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 600; }
@@ -48,18 +45,18 @@ const THANK_YOU_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <div class="card">
-    <div class="icon">&#10003;</div>
-    <h1>Thanks for your feedback</h1>
-    <p>Your response helps Synthex improve how we communicate your results.</p>
+    <h1>We couldn't record your feedback</h1>
+    <p>Feedback collection isn't available yet, so your response was not saved.</p>
     <a href="https://synthex.social/dashboard">Go to your dashboard</a>
   </div>
 </body>
 </html>`;
 
 function htmlResponse(): NextResponse {
-  return new NextResponse(THANK_YOU_HTML, {
-    status: 200,
+  return new NextResponse(NOT_PROVISIONED_HTML, {
+    status: NOT_PROVISIONED_STATUS,
     headers: {
+      'X-Error': 'FEATURE_NOT_PROVISIONED',
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'no-store',
     },
@@ -81,7 +78,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       return htmlResponse();
     }
     const { cid, mid, s } = result.payload;
-    if (s !== undefined) await recordPulseConfirm(cid, mid, s);
+    if (s !== undefined) logDroppedPulse(cid, mid);
     return htmlResponse();
   }
 
@@ -98,7 +95,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       score >= 1 &&
       score <= 5
     ) {
-      await recordPulseConfirm(clientId, momentId, score as 1 | 2 | 3 | 4 | 5);
+      logDroppedPulse(clientId, momentId);
       return htmlResponse();
     }
   }
@@ -107,39 +104,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return htmlResponse();
 }
 
-async function recordPulseConfirm(
-  clientId: string,
-  momentId: string,
-  score: 1 | 2 | 3 | 4 | 5
-): Promise<void> {
-  try {
-    const platform = getAdminClient();
-
-    const { data: existing } = await platform
-      .from('client_journey_events')
-      .select('metadata, engagement_outcome')
-      .eq('id', momentId)
-      .eq('client_id', clientId)
-      .single();
-
-    // Idempotency: only write if not already surveyed
-    if (!existing || existing.engagement_outcome === 'surveyed') return;
-
-    const existingMeta = (existing.metadata ?? {}) as Record<string, unknown>;
-    await platform
-      .from('client_journey_events')
-      .update({
-        engagement_outcome: 'surveyed',
-        metadata: {
-          ...existingMeta,
-          pulse_score: score,
-          pulse_responded_at: new Date().toISOString(),
-        },
-      })
-      .eq('id', momentId)
-      .eq('client_id', clientId);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[journey/pulse-confirm] Unexpected error:', msg);
-  }
+function logDroppedPulse(clientId: string, momentId: string): void {
+  console.warn(
+    `[journey/pulse-confirm] FEATURE_NOT_PROVISIONED: client_journey_events has no data model; pulse not recorded (client ${clientId}, moment ${momentId})`
+  );
 }

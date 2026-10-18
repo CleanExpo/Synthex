@@ -5,10 +5,10 @@
  * 1. buildPulseSurveyHtml returns well-formed HTML with all 5 score links
  *    and that each link carries a verifiable signed token
  * 2. buildTrackedUrl wraps destination URL inside a signed click token
- * 3. GET /api/journey/pulse returns 1×1 GIF and calls DB update for a
- *    signed token; returns pixel without DB call for missing/invalid token
+ * 3. GET /api/journey/pulse returns the 1×1 GIF under HTTP 503
+ *    FEATURE_NOT_PROVISIONED (client_journey_events has no data model)
  * 4. GET /api/journey/click validates URL safety, redirects to the signed
- *    destination, and does not downgrade 'surveyed' outcome
+ *    destination and flags the click as not recorded
  *
  * URL format moved from `?client_id=&moment_id=&score=&url=` (unsigned,
  * tenant-forgery exploitable) to `?t=<token>` (HMAC-signed) after the
@@ -29,28 +29,31 @@ import {
   type PixelAudience,
 } from '@/lib/journey/pixel-token';
 
-// ── Supabase mock ────────────────────────────────────────────────────────────
+// ── Data-layer guard ─────────────────────────────────────────────────────────
+// client_journey_events has no Prisma model, so these routes must never touch
+// the data layer. Any prisma access is recorded and asserted empty.
 
-const mockUpdateEq2 = jest.fn().mockResolvedValue({ error: null });
-const mockUpdateEq1 = jest.fn().mockReturnValue({ eq: mockUpdateEq2 });
-const mockUpdate = jest.fn().mockReturnValue({ eq: mockUpdateEq1 });
-
-const mockSingleSelect = jest.fn().mockResolvedValue({
-  data: { metadata: {}, engagement_outcome: 'delivered' },
-  error: null,
+const mockDataCalls: string[] = [];
+jest.mock('@/lib/prisma', () => {
+  const client = new Proxy(
+    {},
+    {
+      get: (_t, model) =>
+        new Proxy(
+          {},
+          {
+            get:
+              (_m, op) =>
+              (...args: unknown[]) => {
+                mockDataCalls.push(`${String(model)}.${String(op)}`);
+                return Promise.resolve(args);
+              },
+          }
+        ),
+    }
+  );
+  return { __esModule: true, default: client, prisma: client };
 });
-const mockSelectEq2 = jest.fn().mockReturnValue({ single: mockSingleSelect });
-const mockSelectEq1 = jest.fn().mockReturnValue({ eq: mockSelectEq2 });
-const mockSelect = jest.fn().mockReturnValue({ eq: mockSelectEq1 });
-
-const mockFrom = jest.fn().mockReturnValue({
-  select: mockSelect,
-  update: mockUpdate,
-});
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(() => ({ from: mockFrom })),
-}));
 
 // ── next/server mock ─────────────────────────────────────────────────────────
 
@@ -65,15 +68,12 @@ jest.mock('next/server', () => {
 const SIGNING_KEY =
   '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
+let warnSpy: jest.SpyInstance;
+
 beforeEach(() => {
   jest.clearAllMocks();
-  mockUpdateEq2.mockResolvedValue({ error: null });
-  mockSingleSelect.mockResolvedValue({
-    data: { metadata: {}, engagement_outcome: 'delivered' },
-    error: null,
-  });
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+  mockDataCalls.length = 0;
+  warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   process.env.NEXT_PUBLIC_APP_URL = 'https://synthex.social';
   process.env.JOURNEY_PIXEL_SIGNING_KEY_PRIMARY = SIGNING_KEY;
   delete process.env.JOURNEY_PIXEL_ACCEPT_UNSIGNED;
@@ -84,6 +84,22 @@ beforeEach(() => {
 function makeReq(url: string): { nextUrl: { searchParams: URLSearchParams } } {
   const parsed = new URL(url);
   return { nextUrl: { searchParams: parsed.searchParams } } as never;
+}
+
+/** Messages logged when a verified write is dropped (the only side effect left). */
+function droppedWriteLogs(): string[] {
+  return warnSpy.mock.calls
+    .map(c => String(c[0]))
+    .filter(m => m.includes('not recorded'));
+}
+
+/** Everything a caller can observe from a response. */
+async function observe(res: Response) {
+  return {
+    status: res.status,
+    headers: Array.from(res.headers.entries()).sort(),
+    body: await res.text(),
+  };
 }
 
 function signFor(
@@ -104,9 +120,9 @@ function extractToken(url: string): string {
 
 /** Pull every `?t=…` token out of the rendered HTML, in order of appearance. */
 function tokensFromHtml(html: string): string[] {
-  return Array.from(html.matchAll(/[?&]t=([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/g)).map(
-    m => m[1]
-  );
+  return Array.from(
+    html.matchAll(/[?&]t=([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+)/g)
+  ).map(m => m[1]);
 }
 
 function loadPulse() {
@@ -217,57 +233,71 @@ describe('buildTrackedUrl', () => {
 // ── GET /api/journey/pulse ───────────────────────────────────────────────────
 
 describe('GET /api/journey/pulse', () => {
-  it('returns a 1×1 GIF with no-cache headers for a valid signed token', async () => {
+  it('returns a 1×1 GIF under 503 FEATURE_NOT_PROVISIONED for a valid signed token', async () => {
     const { GET } = loadPulse();
-    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', { score: 4 });
-    const res = await GET(
-      makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
-    );
-    expect(res.status).toBe(200);
-    expect(res.headers.get('Content-Type')).toBe('image/gif');
-    expect(res.headers.get('Cache-Control')).toContain('no-store');
-  });
-
-  it('still returns pixel when DB update fails', async () => {
-    mockUpdateEq2.mockResolvedValueOnce({ error: { message: 'DB error' } });
-    const { GET } = loadPulse();
-    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', { score: 3 });
-    const res = await GET(
-      makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
-    );
-    expect(res.status).toBe(200);
-    expect(res.headers.get('Content-Type')).toBe('image/gif');
-  });
-
-  it('returns pixel without DB call when token is missing', async () => {
-    const { GET } = loadPulse();
-    const res = await GET(makeReq('https://synthex.social/api/journey/pulse'));
-    expect(res.status).toBe(200);
-    expect(mockFrom).not.toHaveBeenCalled();
-  });
-
-  it('returns pixel without DB call for a forged token', async () => {
-    const { GET } = loadPulse();
-    const res = await GET(
-      makeReq(
-        'https://synthex.social/api/journey/pulse?t=not.a-valid-token'
-      )
-    );
-    expect(res.status).toBe(200);
-    expect(mockFrom).not.toHaveBeenCalled();
-  });
-
-  it('returns pixel without DB call for a token bound to a different route (aud-mismatch)', async () => {
-    const { GET } = loadPulse();
-    // A click-aud token should NOT update via the pulse route.
-    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', {
-      url: 'https://example.com',
+    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', {
+      score: 4,
     });
     const res = await GET(
       makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
     );
-    expect(res.status).toBe(200);
-    expect(mockFrom).not.toHaveBeenCalled();
+    expect(res.status).toBe(503);
+    expect(res.headers.get('X-Error')).toBe('FEATURE_NOT_PROVISIONED');
+    expect(res.headers.get('Content-Type')).toBe('image/gif');
+    expect(res.headers.get('Cache-Control')).toContain('no-store');
+  });
+
+  it('returns pixel with no data-layer call or recorded write when token is missing', async () => {
+    const { GET } = loadPulse();
+    const res = await GET(makeReq('https://synthex.social/api/journey/pulse'));
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Content-Type')).toBe('image/gif');
+    expect(mockDataCalls).toEqual([]);
+    expect(droppedWriteLogs()).toEqual([]);
+  });
+
+  it('returns pixel with no data-layer call or recorded write for a forged token', async () => {
+    const { GET } = loadPulse();
+    const res = await GET(
+      makeReq('https://synthex.social/api/journey/pulse?t=not.a-valid-token')
+    );
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Content-Type')).toBe('image/gif');
+    expect(mockDataCalls).toEqual([]);
+    expect(droppedWriteLogs()).toEqual([]);
+  });
+
+  it('treats a token bound to a different route (aud-mismatch) exactly like a forged one', async () => {
+    const { GET } = loadPulse();
+    // A click-aud token must NOT be accepted by the pulse route.
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', {
+      url: 'https://example.com',
+    });
+    const mismatched = await observe(
+      await GET(makeReq(`https://synthex.social/api/journey/pulse?t=${t}`))
+    );
+    expect(mockDataCalls).toEqual([]);
+    expect(droppedWriteLogs()).toEqual([]);
+    expect(
+      warnSpy.mock.calls.some(c => String(c[0]).includes('token-verify failed'))
+    ).toBe(true);
+
+    const forged = await observe(
+      await GET(
+        makeReq('https://synthex.social/api/journey/pulse?t=not.a-valid-token')
+      )
+    );
+    expect(mismatched).toEqual(forged);
+  });
+
+  it('logs the dropped write only for a valid pulse-aud token', async () => {
+    const { GET } = loadPulse();
+    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', {
+      score: 2,
+    });
+    await GET(makeReq(`https://synthex.social/api/journey/pulse?t=${t}`));
+    expect(droppedWriteLogs()).toHaveLength(1);
+    expect(mockDataCalls).toEqual([]);
   });
 });
 
@@ -277,7 +307,9 @@ describe('GET /api/journey/click', () => {
   it('redirects to the destination URL carried in the signed token', async () => {
     const { GET } = loadClick();
     const dest = 'https://synthex.social/dashboard';
-    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', { url: dest });
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', {
+      url: dest,
+    });
     const res = await GET(
       makeReq(`https://synthex.social/api/journey/click?t=${t}`)
     );
@@ -302,21 +334,39 @@ describe('GET /api/journey/click', () => {
 
   it('returns 302 to fallback when the token is missing', async () => {
     const { GET } = loadClick();
-    const res = await GET(
-      makeReq('https://synthex.social/api/journey/click')
-    );
+    const res = await GET(makeReq('https://synthex.social/api/journey/click'));
     expect(res.status).toBe(302);
   });
 
-  it('does not downgrade outcome when already surveyed', async () => {
-    mockSingleSelect.mockResolvedValueOnce({
-      data: { engagement_outcome: 'surveyed' },
-      error: null,
+  it('sends an aud-mismatched token to the fallback with no recorded click', async () => {
+    const { GET } = loadClick();
+    // A pulse-aud token must NOT be accepted by the click route.
+    const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', {
+      score: 4,
     });
+    const res = await GET(
+      makeReq(`https://synthex.social/api/journey/click?t=${t}`)
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      'https://synthex.social/dashboard'
+    );
+    expect(res.headers.get('X-Journey-Tracking')).toBeNull();
+    expect(mockDataCalls).toEqual([]);
+    expect(droppedWriteLogs()).toEqual([]);
+  });
+
+  it('flags the click as not recorded on the redirect', async () => {
     const { GET } = loadClick();
     const dest = 'https://synthex.social/dashboard';
-    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', { url: dest });
-    await GET(makeReq(`https://synthex.social/api/journey/click?t=${t}`));
-    expect(mockUpdate).not.toHaveBeenCalled();
+    const t = signFor(PIXEL_AUDIENCES.click, 'org-abc', 'evt-123', {
+      url: dest,
+    });
+    const res = await GET(
+      makeReq(`https://synthex.social/api/journey/click?t=${t}`)
+    );
+    expect(res.headers.get('X-Journey-Tracking')).toBe(
+      'FEATURE_NOT_PROVISIONED'
+    );
   });
 });

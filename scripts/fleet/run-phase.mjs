@@ -380,12 +380,24 @@ function dirtyFiles() {
   const own = new RegExp(
     `^(release-receipts/ledger/|release-receipts/manifests/${phase}-(gate|review|handoff|units)\\.(json|md)$)`
   );
-  // Untrimmed: porcelain lines start with a status column that may be a space.
-  return run('git', ['status', '--porcelain', '--untracked-files=all', '-z'])
+  // git status hides tracked files flagged skip-worktree (S) or assume-unchanged (lowercase tag),
+  // so a locally modified file could be tested while PASS binds to HEAD's content (verifier audit,
+  // second pass). Any such flag is refused outright.
+  const hidden = run('git', ['ls-files', '-v', '-z'])
     .stdout.split('\0')
-    .filter(Boolean)
-    .map(l => l.slice(3))
-    .filter(f => f && !own.test(f));
+    .filter(l => /^(S|[a-z]) /.test(l))
+    .map(
+      l =>
+        `${l.slice(2)} (hidden by ${l[0] === 'S' ? 'skip-worktree' : 'assume-unchanged'})`
+    );
+  // Untrimmed: porcelain lines start with a status column that may be a space.
+  return hidden.concat(
+    run('git', ['status', '--porcelain', '--untracked-files=all', '-z'])
+      .stdout.split('\0')
+      .filter(Boolean)
+      .map(l => l.slice(3))
+      .filter(f => f && !own.test(f))
+  );
 }
 function gate() {
   const dirty = dirtyFiles();
@@ -474,7 +486,7 @@ function review() {
   const brief = path.join(os.tmpdir(), `brief-${phase}.md`);
   writeFileSync(
     brief,
-    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nCoverage: the review tool hides *.log and *.jsonl files (for example release-receipts/ledger/fleet.jsonl) from the diff and names them in diff_coverage.excluded_files. List each one in coverage.not_reviewed with that reason; a PASS must account for every changed file.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
+    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nTrust root: who authored a commit, a fleet trailer or a committed review report is author-supplied until the founder decides on a fleet signing key (DECISIONS.md OPEN-4); do not re-raise that boundary itself, judge everything else and report EVERY blocking finding in one report.\nCoverage: the review tool hides *.log and *.jsonl files (for example release-receipts/ledger/fleet.jsonl) from the diff and names them in diff_coverage.excluded_files. List each one in coverage.not_reviewed with that reason; a PASS must account for every changed file.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
   );
   const out = `release-receipts/manifests/${phase}-review.json`;
   const script = path.join(
@@ -787,14 +799,17 @@ if (step === 'auto') {
     'release',
   ]) {
     if (s === 'integrate-all') {
-      // Builder work lives on fleet-unit/* branches; bring every PASS unit onto the phase branch
+      // Builder work lives on refs/fleet/units/* (refs, not branches); bring every PASS unit onto the phase branch
       // before the gate (CodeRabbit on PR #997: auto had no integrate step).
       const units = readJson(`release-receipts/manifests/${phase}-units.json`, {
         results: {},
       }).results;
       for (const [id, r] of Object.entries(units)) {
         if (r.state !== 'PASS') continue;
-        const c = integrate(id, r.branch || `fleet-unit/${phase}/${id}`);
+        const c = integrate(
+          id,
+          r.branch || `refs/fleet/units/${phase.toLowerCase()}/${id}`
+        );
         if (c !== 0) process.exit(c);
       }
       continue;

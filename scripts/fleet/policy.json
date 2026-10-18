@@ -77,7 +77,9 @@
     "release-receipts/**",
     "tests/eval/jev/floors.json",
     "vercel.json",
-    "prisma/migrations/**"
+    "prisma/migrations/**",
+    "tests/eval/jev/families.json",
+    "tests/eval/jev/tombstones.json"
   ],
   "protected_exemptions": {
     "own_phase_receipt": "release-receipts/P<n>.json validated by scripts/release/verify-receipt.mjs",
@@ -324,7 +326,6 @@
     "files": [".env.test"],
     "condition": "file holds only test placeholders; scripts/fleet/secret-scan.mjs must pass on it"
   },
-  "ledger_branch": "fleet-ledger",
   "scheduler": {
     "nightly": "fleet-nightly",
     "weekly": "fleet-weekly",
@@ -345,5 +346,6 @@
   "usage": {
     "plan": "Claude Max (founder)",
     "note": "last 20 percent of the usage window on 2026-10-17: prefer Haiku for probes and reads, Sonnet for builds and verification, Opus only when a unit carries hard:true; one spawn per unit, no exploratory re-spawns; check room-cli automation list before adding runs"
-  }
+  },
+  "ledger_ref": "refs/fleet/ledger"
 }

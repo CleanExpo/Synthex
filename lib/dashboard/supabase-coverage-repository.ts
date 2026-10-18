@@ -1,69 +1,37 @@
 /**
- * Default {@link CoverageRepository} backed by Supabase service-role.
+ * Default {@link CoverageRepository} for the DR service-area dashboard.
  *
- * Lazy-imports `@/lib/platform/noop-client`. Throws when creds missing —
- * tests inject a fake.
+ * The `service_area_coverage` table is not provisioned (no Prisma model), so
+ * the default repository throws {@link CoverageNotProvisionedError} rather
+ * than returning an empty list. Tests inject a fake.
  *
- * Phase 3.4: hard-filters `brand='DR'` at the query level so a
- * misconfigured row in the table can't accidentally appear in the
- * dashboard. Defence in depth on top of the DB CHECK constraint.
+ * Phase 3.4: a real store must hard-filter `brand='DR'` at the query level
+ * (defence in depth on top of the DB CHECK constraint).
  *
  * @see SYN-843 (parent: SYN-834 epic)
  */
 
-import type { CoverageRepository, ServiceAreaCoverage } from './types';
+import type { CoverageRepository } from './types';
 
-interface SupabaseRow {
-  id: string;
-  brand: 'DR';
-  postcode: string;
-  suburb: string;
-  state: string;
-  opened_by_contractor_id: string;
-  opened_at: string;
-  closed_at: string | null;
-  status: 'active' | 'paused' | 'retreated' | 'closed';
-  gbp_updated_at: string | null;
-  bing_updated_at: string | null;
-  source_of_truth_job_id: string;
-  created_at: string;
+/**
+ * Thrown by {@link platformCoverageRepository}: the `service_area_coverage`
+ * table has no Prisma model, so coverage cannot be read. Inject
+ * `opts.coverageRepo` to supply a real store.
+ */
+export class CoverageNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  readonly table = 'service_area_coverage';
+
+  constructor() {
+    super(
+      '[dashboard.coverage] service_area_coverage is not provisioned: no table in prisma/schema.prisma'
+    );
+    this.name = 'CoverageNotProvisionedError';
+  }
 }
 
-function rowToCoverage(row: SupabaseRow): ServiceAreaCoverage {
-  return {
-    id: row.id,
-    brand: row.brand,
-    postcode: row.postcode,
-    suburb: row.suburb,
-    state: row.state,
-    openedByContractorId: row.opened_by_contractor_id,
-    openedAt: row.opened_at,
-    closedAt: row.closed_at,
-    status: row.status,
-    gbpUpdatedAt: row.gbp_updated_at,
-    bingUpdatedAt: row.bing_updated_at,
-    sourceOfTruthJobId: row.source_of_truth_job_id,
-    createdAt: row.created_at,
-  };
-}
-
-async function getClient() {
-  const { createClient } = await import('@/lib/platform/noop-client');
-  return createClient();
-}
 export const platformCoverageRepository: CoverageRepository = {
   async findAllForDr() {
-    const client = await getClient();
-    const { data, error } = await client
-      .from('service_area_coverage')
-      .select()
-      .eq('brand', 'DR') // Phase 3.4 hard filter
-      .order('opened_at', { ascending: false });
-    if (error) {
-      throw new Error(
-        `[dashboard.coverage] findAllForDr failed: ${error.code ?? '?'} ${error.message}`
-      );
-    }
-    return (data ?? []).map((r: unknown) => rowToCoverage(r as SupabaseRow));
+    throw new CoverageNotProvisionedError();
   },
 };

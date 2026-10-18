@@ -29,40 +29,27 @@
  * subject with no references at all, the caller's existing no-coverage path
  * blocks the run, which is the correct fail-closed outcome.
  *
- * ZERO SPEND: Supabase and the provider boundary are stubbed.
+ * ZERO SPEND: pure selection; the private store is not provisioned.
  */
 
-const signedFor = jest.fn();
-const downloadManifest = jest.fn();
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({
-    storage: {
-      from: () => ({
-        download: (...a: unknown[]) => downloadManifest(...a),
-        createSignedUrls: (paths: string[], ttl: number) =>
-          signedFor(paths, ttl),
-      }),
-    },
-  }),
-}));
-
 import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
+import {
+  resolvePrivateReferenceUrls,
+  selectPrivatePaths,
+  type PrivateManifest,
+} from '@/lib/services/ai/reference-library-private';
 
 /** A private manifest whose images carry the dimensions shown. */
 function manifestWith(
   images: Array<{ path: string; width?: number; height?: number }>
-) {
+): PrivateManifest {
   return {
-    text: async () =>
-      JSON.stringify({
-        version: 1,
-        industries: {
-          'carpet-cleaning': {
-            subjects: { wand: { rights: 'owned', images } },
-          },
-        },
-      }),
+    version: 1,
+    industries: {
+      'carpet-cleaning': {
+        subjects: { wand: { rights: 'owned', images } },
+      },
+    },
   };
 }
 
@@ -70,77 +57,33 @@ const OVERSIZED = { path: 'p/huge.webp', width: 4096, height: 4096 }; // 16 MP
 const WITHIN = { path: 'p/ok.webp', width: 1536, height: 2048 }; // 3 MP
 const UNMEASURED = { path: 'p/unknown.webp' }; // no dimensions recorded
 
-beforeEach(() => {
-  jest.resetModules();
-  process.env.SUPABASE_URL = 'https://stub.supabase.test';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'stub-key';
-  signedFor.mockReset();
-  downloadManifest.mockReset();
-  signedFor.mockImplementation(async (paths: string[]) => ({
-    data: paths.map(p => ({ signedUrl: `https://signed.test/${p}` })),
-    error: null,
-  }));
-});
-
-async function resolve(): Promise<string[]> {
-  const mod = await import('@/lib/services/ai/reference-library-private');
-  return mod.resolvePrivateReferenceUrls('carpet-cleaning', 4);
+function select(manifest: PrivateManifest): string[] {
+  return selectPrivatePaths(manifest, 'carpet-cleaning', 4);
 }
 
 describe('private references obey the priced megapixel bound', () => {
-  it('sends one that is recorded within the bound', async () => {
-    downloadManifest.mockResolvedValue({
-      data: manifestWith([WITHIN]),
-      error: null,
-    });
-
-    const urls = await resolve();
+  it('selects one that is recorded within the bound', () => {
+    const paths = select(manifestWith([WITHIN]));
 
     // PRECONDITION for the exclusion cases below: the happy path must actually
-    // produce a URL, or "nothing was sent" proves nothing about the bound.
-    expect(urls).toHaveLength(1);
-    expect(urls[0]).toContain('ok.webp');
+    // produce a path, or "nothing was selected" proves nothing about the bound.
+    expect(paths).toEqual(['p/ok.webp']);
   });
 
-  it('EXCLUDES one recorded above the bound', async () => {
-    downloadManifest.mockResolvedValue({
-      data: manifestWith([OVERSIZED, WITHIN]),
-      error: null,
-    });
-
-    const urls = await resolve();
-
+  it('EXCLUDES one recorded above the bound', () => {
     // 16 MP against a 4 MP ceiling: billed as input megapixels, so sending it
     // would cost four times what the hold reserved for it.
-    expect(urls.join(',')).not.toContain('huge.webp');
-    expect(urls.join(',')).toContain('ok.webp');
+    expect(select(manifestWith([OVERSIZED, WITHIN]))).toEqual(['p/ok.webp']);
   });
 
-  it('EXCLUDES one whose dimensions were never recorded', async () => {
-    downloadManifest.mockResolvedValue({
-      data: manifestWith([UNMEASURED, WITHIN]),
-      error: null,
-    });
-
-    const urls = await resolve();
-
+  it('EXCLUDES one whose dimensions were never recorded', () => {
     // Unproven is not the same as small. The private manifest records `bytes`,
-    // not pixels, so an unmeasured image cannot be shown to fit the bound —
-    // and pricing it at the bound anyway is the assumption this whole change
-    // exists to remove.
-    expect(urls.join(',')).not.toContain('unknown.webp');
-    expect(urls.join(',')).toContain('ok.webp');
+    // not pixels, so an unmeasured image cannot be shown to fit the bound.
+    expect(select(manifestWith([UNMEASURED, WITHIN]))).toEqual(['p/ok.webp']);
   });
 
-  it('returns none when every private image is unprovable', async () => {
-    downloadManifest.mockResolvedValue({
-      data: manifestWith([OVERSIZED, UNMEASURED]),
-      error: null,
-    });
-
-    // Degrades to public-only grounding rather than sending something the hold
-    // did not price. The caller blocks if that leaves no references at all.
-    expect(await resolve()).toEqual([]);
+  it('returns none when every private image is unprovable', () => {
+    expect(select(manifestWith([OVERSIZED, UNMEASURED]))).toEqual([]);
   });
 
   it('the bound it enforces is the one the estimate is priced at', () => {
@@ -153,5 +96,22 @@ describe('private references obey the priced megapixel bound', () => {
     expect((4096 * 4096) / (1024 * 1024)).toBeGreaterThan(
       MAX_REFERENCE_MEGAPIXELS
     );
+  });
+});
+
+describe('private reference storage is not provisioned', () => {
+  it('reports the bucket unavailable and resolves no URLs', async () => {
+    const { logger } = await import('@/lib/logger');
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
+
+    expect(await resolvePrivateReferenceUrls('carpet-cleaning', 4)).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      'private reference grounding unavailable',
+      expect.objectContaining({
+        available: false,
+        reason: expect.stringContaining('FEATURE_NOT_PROVISIONED'),
+      })
+    );
+    warn.mockRestore();
   });
 });
