@@ -56,7 +56,7 @@
     ],
     "openrouter_paid_ok": true,
     "openrouter_note": "Founder 2026-10-17: \"OpenRouter Models Kimi for this project\"; paid Kimi allowed (A-21). MiniMax lane stays first and returns when its balance is topped up.",
-    "codex_via": "Codex CLI on the ChatGPT subscription (codex login), run where run-phase runs; never API credits (FD-5)"
+    "codex_via": "Codex CLI on the ChatGPT subscription, run on the founder Mac through room-cli mac run (the Cloudroom sandbox cannot start its bwrap shell sandbox); never API credits (FD-5)"
   },
   "protected_paths": [
     ".claude/settings*.json",

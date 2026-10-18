@@ -450,17 +450,23 @@ function review() {
   for (const lane of pol.review.lanes_in_order) {
     if (pol.review.never.includes(lane)) continue;
     let r;
-    if (lane === 'minimax') {
-      // The MiniMax key lives only on the founder's Mac (mm-ask). Ship the commits as a bundle so no
-      // branch is pushed before the review names the head (spec: push only after the review report).
+    if (lane === 'minimax' || lane === 'codex') {
+      // Both run on the founder's Mac: the MiniMax key lives only there (mm-ask), and Codex's shell
+      // sandbox needs Linux user namespaces the Cloudroom sandbox does not allow (bwrap refuses), while
+      // macOS runs it. Ship the commits as a bundle so no branch is pushed before the review names the
+      // head (spec: push only after the review report). The reviewer reads a worktree checked out at
+      // the head, never the Mac's main checkout.
       const bundle = path.join(os.tmpdir(), `review-${phase}.bundle`);
       run('git', ['bundle', 'create', bundle, `${base}..HEAD`]);
       run('room-cli', ['mac', 'push', bundle, pol.mac.tmp], {
         timeout: 600000,
       });
       run('room-cli', ['mac', 'push', brief, pol.mac.tmp], { timeout: 120000 });
-      const macCmd = `source ${pol.mac.storage_env} 2>/dev/null; cd "${pol.mac.repo}" && git fetch -q origin main && git fetch -q -f "${pol.mac.tmp}/${path.basename(bundle)}" +${head}:refs/fleet/review-${phase} && rm -f "${pol.mac.tmp}/review-${phase}.json" && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief "${pol.mac.tmp}/${path.basename(brief)}" --base ${base} --head ${head} --repo "${pol.mac.repo}" --out "${pol.mac.tmp}/review-${phase}.json" --lane minimax; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat "${pol.mac.tmp}/review-${phase}.json" 2>/dev/null`;
-      const m = run('room-cli', ['mac', 'run', macCmd], { timeout: 1800000 });
+      const wt = `${pol.mac.worktrees}/review-${phase}`;
+      const macCmd = `source ${pol.mac.storage_env} 2>/dev/null; cd "${pol.mac.repo}" && git fetch -q origin main && git fetch -q -f "${pol.mac.tmp}/${path.basename(bundle)}" +${head}:refs/fleet/review-${phase} && { [ -d "${wt}" ] || git worktree add -q --detach "${wt}" ${head}; } && git -C "${wt}" checkout -q --detach -f ${head} && rm -f "${pol.mac.tmp}/review-${phase}.json" && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief "${pol.mac.tmp}/${path.basename(brief)}" --base ${base} --head ${head} --repo "${wt}" --out "${pol.mac.tmp}/review-${phase}.json" --lane ${lane}; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat "${pol.mac.tmp}/review-${phase}.json" 2>/dev/null`;
+      const m = run('room-cli', ['mac', 'run', '--write', macCmd], {
+        timeout: 1800000,
+      });
       const body = m.stdout.includes('REPORT-BEGIN')
         ? m.stdout.slice(m.stdout.indexOf('REPORT-BEGIN') + 12).trim()
         : '';
