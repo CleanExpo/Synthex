@@ -76,3 +76,9 @@
 {"ts":"2026-10-18T04:05:43.722Z","kind":"policy-hash","previous":"95a1550a3bca161b606880e9eda806bf9aa3013646527959405ac4a6a81df66e","sha256":"33c624a93699efba97b7a59c9bab75f4b2c9fc65c410f3b6c1552c08df8706bb","source":"check-bootstrap --record"}
 {"ts":"2026-10-18T04:10:57.755Z","kind":"gate","phase":"P1","head":"67d4012edf9f810989000365e96fc4824839057f","pass":7,"total":7}
 {"ts":"2026-10-18T04:16:44.331Z","kind":"policy-hash","previous":"33c624a93699efba97b7a59c9bab75f4b2c9fc65c410f3b6c1552c08df8706bb","sha256":"6a6638fcd272eb353782b45389d84a95927b14cc7a27d43b493b8bd425da5d51","source":"check-bootstrap --record"}
+{"ts":"2026-10-18T04:26:15.761Z","kind":"integrate","phase":"P1","unit":"jev-inconclusive","files":10,"head":"812820b7f87b20e5f7ed595625a6c45a90fe5ac6"}
+{"ts":"2026-10-18T04:18:53.739Z","kind":"review","phase":"P1","head":"798538e4fe6f6eb55f5181a98a798be355733abe","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T04:20:28.122Z","kind":"review","phase":"P1","head":"67d4012edf9f810989000365e96fc4824839057f","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-18T04:21:50.389Z","kind":"gate","phase":"P1","head":"798538e4fe6f6eb55f5181a98a798be355733abe","pass":7,"total":7}
+{"ts":"2026-10-18T04:26:09.428Z","kind":"unit-queued","phase":"P1","unit":"jev-inconclusive","reason":"merge conflict"}
+{"ts":"2026-10-18T04:28:33.096Z","kind":"review","phase":"P1","head":"812820b7f87b20e5f7ed595625a6c45a90fe5ac6","lane":"codex","verdict":"FAIL"}

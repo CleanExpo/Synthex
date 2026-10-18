@@ -30,6 +30,14 @@ export function compare(baseFloors, headFloors) {
   }
   return problems;
 }
+// A proposal stands in for measured floors, so it must measure every family in families.json; an
+// empty or partial one (a failed jev:det run) would pass compare() against an empty base (Codex on P1).
+export function incompleteProposal(proposal, familiesTable) {
+  const fams = proposal?.families || {};
+  return Object.keys(familiesTable?.families || {})
+    .filter(f => typeof fams[f]?.pass_rate !== 'number')
+    .map(f => `family ${f} not measured`);
+}
 export function deletedCases(base, head) {
   const out =
     tryGit([
@@ -55,9 +63,24 @@ if (isMain(import.meta.url)) {
       { families: { J1: { pass_rate: 0.8 } } },
       { families: { J1: { pass_rate: 0.9 } } }
     );
-    const ok = p.length === 1 && up.length === 0;
+    const table = { families: { J1: {}, J2: {} } };
+    const empty = incompleteProposal({ families: {} }, table);
+    const partial = incompleteProposal(
+      { families: { J1: { pass_rate: 0.9 } } },
+      table
+    );
+    const full = incompleteProposal(
+      { families: { J1: { pass_rate: 0.9 }, J2: { pass_rate: 1 } } },
+      table
+    );
+    const ok =
+      p.length === 1 &&
+      up.length === 0 &&
+      empty.length === 2 &&
+      partial.length === 1 &&
+      full.length === 0;
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} check-ratchet controls (lowering exits 1, raising passes)`
+      `${ok ? 'PASS' : 'FAIL'} check-ratchet controls (lowering exits 1, raising passes, empty or partial proposal exits 1)`
     );
     process.exit(ok ? 0 : 1);
   }
@@ -98,6 +121,12 @@ if (isMain(import.meta.url)) {
     // (CodeRabbit on PR #997: a PR could lower a committed floor behind an unchanged proposal).
     ...compare(baseFloors, committedFloors).map(p => `committed floors: ${p}`),
     ...(prop ? compare(baseFloors, headFloors).map(p => `proposal: ${p}`) : []),
+    ...(prop
+      ? incompleteProposal(
+          headFloors,
+          readJson('tests/eval/jev/families.json', { families: {} })
+        ).map(p => `proposal: ${p}`)
+      : []),
     ...deletedCases(base, head).map(
       f => `case deleted without tombstone: ${f}`
     ),
