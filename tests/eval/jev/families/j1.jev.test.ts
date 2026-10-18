@@ -2,8 +2,8 @@
  * J1 — Route security matrix (hard gate, 640 cases).
  *
  * (a) One unauthenticated probe per non-exempt route in the auth-ratchet
- *     inventory (isExemptPath, as tests/auth/route-coverage.test.ts uses it).
- *     The route's first exported method (GET, POST, PUT, PATCH, DELETE) is
+ *     inventory, frozen in tests/eval/jev/cases/J1/routes.json (./j1/inventory.ts).
+ *     A frozen route whose file is gone is INCONCLUSIVE until tombstoned. The route's first exported method (GET, POST, PUT, PATCH, DELETE) is
  *     called with no auth header or cookie. Property: 401 (403 only where the
  *     route source documents a 403).
  * (b) The remainder: cross-organisation probes (org-A session on an org-B id
@@ -38,8 +38,8 @@ import {
   recordResults,
   type JevResult,
 } from '../runner/record';
-import { invokeRoute, listRoutes } from '../runner/route-harness';
-import { isExemptPath } from '../../../../scripts/auth-coverage-config';
+import { invokeRoute } from '../runner/route-harness';
+import { inventory as frozenInventory } from './j1/inventory';
 import jwt from 'jsonwebtoken';
 import { B_MARKER, USER_A, resetWorld, worldState } from './j1/world';
 import probesDoc from '../cases/J1/probes.json';
@@ -248,7 +248,7 @@ export function judgeMalformed(status: number): UnauthVerdict {
 }
 
 // ── (a) cases ─────────────────────────────────────────────────────────────────
-const inventory = listRoutes().filter(r => !isExemptPath(r.file));
+const inventory = frozenInventory();
 
 function caseRow(
   id: string,
@@ -270,6 +270,16 @@ describe('J1 (a) unauthenticated probe per non-exempt route', () => {
 
   it.each(inventory.map(r => [r.file, r] as const))('%s', async (_f, r) => {
     const id = `J1-unauth-${slug(r.file)}`;
+    // Not inconclusive(): a known gap on the route must not mask a vanished file.
+    if (!r.present) {
+      results.push(
+        caseRow(id, r.route, {
+          state: 'INCONCLUSIVE',
+          detail: `frozen route ${r.file} is gone; remove it from cases/J1/routes.json with a tests/eval/jev/tombstones.json entry`,
+        })
+      );
+      return;
+    }
     const method = METHOD_ORDER.find(m => r.methods.includes(m));
     if (!method) {
       results.push(
