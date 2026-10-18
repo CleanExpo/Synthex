@@ -214,10 +214,10 @@
     },
 
     "workflow.deploy.production_if_condition": {
-      "expected": "github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'",
-      "phase_0_0_target": "github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'",
+      "expected": "false && github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'",
+      "phase_0_0_target": "false && github.ref == 'refs/heads/main' && vars.DEPLOY_INHIBIT != 'true'",
       "gate": "agent",
-      "note": "The exact `if:` on the deploy-production job in .github/workflows/deploy.yml, verbatim. Replaces an earlier boolean 'does this condition mention DEPLOY_INHIBIT', which a condition could satisfy while defeating it: `&& (vars.DEPLOY_INHIBIT != 'true' || always())` contains the guard and always runs. A substring cannot decide a boolean expression, so the whole condition is declared and ANY edit to it is drift. Deliberately strict: this is the one line between a push to main and a production deploy, and a human should look at every change to it. Editing it legitimately means updating this string in the same PR."
+      "note": "The exact `if:` on the deploy-production job in .github/workflows/deploy.yml, verbatim. Replaces an earlier boolean 'does this condition mention DEPLOY_INHIBIT', which a condition could satisfy while defeating it: `&& (vars.DEPLOY_INHIBIT != 'true' || always())` contains the guard and always runs. A substring cannot decide a boolean expression, so the whole condition is declared and ANY edit to it is drift. Deliberately strict: this is the one line between a push to main and a production deploy, and a human should look at every change to it. Editing it legitimately means updating this string in the same PR. 18/10/2026 (DECISIONS.md FD-6, founder option B): the job is disabled with a leading `false &&`; production deploys come only from the Vercel Git integration."
     },
     "workflow.deploy.production_environment_binding": {
       "expected": true,
