@@ -110,12 +110,23 @@ export function verify(head, phase, cwd = ROOT) {
     const diffRaw = tryGit(['diff', '--name-only', reviewed, sha], { cwd });
     if (diffRaw === null)
       problems.push('binding diff from reviewed commit failed');
+    // Only the files the release step itself writes with the receipt may differ from the reviewed
+    // commit (run-phase release). Any other manifest (policy-hash.json, selftest.json, another
+    // phase's gate) changed after review breaks the binding (Codex on P1 1f97dfb6).
+    const releaseWritten = new Set(
+      ['gate.json', 'review.json', 'handoff.md'].map(
+        n => `release-receipts/manifests/${p}-${n}`
+      )
+    );
     const outside = range =>
       (range || '')
         .split('\n')
         .filter(Boolean)
         .filter(
-          f => f !== file && !/^release-receipts\/(ledger|manifests)\//.test(f)
+          f =>
+            f !== file &&
+            !releaseWritten.has(f) &&
+            !/^release-receipts\/ledger\//.test(f)
         );
     let extra = outside(diffRaw);
     // A merge commit on main (merge-phase merges with --merge) also carries whatever main gained
@@ -301,7 +312,22 @@ function control() {
     const okE =
       e.ok === false &&
       e.problems.some(x => x.startsWith('diff from reviewed commit'));
-    return okA && okB && okC && okD && okE;
+    // F: a manifest the release step does not write (policy-hash.json), changed after review, fails.
+    g([...id, 'checkout', '-q', '--detach', receiptHead]);
+    mkdirSync(path.join(dir, 'release-receipts/manifests'), {
+      recursive: true,
+    });
+    writeFileSync(
+      path.join(dir, 'release-receipts/manifests/policy-hash.json'),
+      '{"sha256":"changed after review"}\n'
+    );
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'manifest changed after review']);
+    const f = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okF =
+      f.ok === false &&
+      f.problems.some(x => x.startsWith('diff from reviewed commit'));
+    return okA && okB && okC && okD && okE && okF;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -310,7 +336,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected)`
     );
     process.exit(ok ? 0 : 1);
   }

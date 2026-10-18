@@ -82,3 +82,6 @@
 {"ts":"2026-10-18T04:21:50.389Z","kind":"gate","phase":"P1","head":"798538e4fe6f6eb55f5181a98a798be355733abe","pass":7,"total":7}
 {"ts":"2026-10-18T04:26:09.428Z","kind":"unit-queued","phase":"P1","unit":"jev-inconclusive","reason":"merge conflict"}
 {"ts":"2026-10-18T04:28:33.096Z","kind":"review","phase":"P1","head":"812820b7f87b20e5f7ed595625a6c45a90fe5ac6","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T04:55:31.507Z","kind":"integrate","phase":"P1","unit":"jev-exit","files":5,"head":"1f97dfb615ce721fa07ad31c5c5d7c11d15a60a6"}
+{"ts":"2026-10-18T05:00:27.095Z","kind":"gate","phase":"P1","head":"1f97dfb615ce721fa07ad31c5c5d7c11d15a60a6","pass":7,"total":7}
+{"ts":"2026-10-18T05:00:56.003Z","kind":"review","phase":"P1","head":"1f97dfb615ce721fa07ad31c5c5d7c11d15a60a6","lane":"minimax","verdict":"PASS"}
