@@ -1,6 +1,6 @@
 /**
  * P2 u17 — retire lib/platform/server from:
- *   app/api/user/avatar/route.ts        PORTED to lib/storage/platform-storage
+ *   app/api/user/avatar/route.ts        POST NOT_PROVISIONED (no durable storage)
  *   app/api/system/models/route.ts      auth via lib/supabase-server (Prisma)
  *   lib/supabase-server.ts              query client NOT_PROVISIONED (throws)
  *   lib/security/audit-logger.ts        audit_events_immutable NOT_PROVISIONED
@@ -81,7 +81,7 @@ afterAll(async () => {
   await auditLogger.shutdown();
 });
 
-describe('POST /api/user/avatar (ported to platform-storage)', () => {
+describe('POST /api/user/avatar (durable storage not provisioned)', () => {
   it('401 without a user and never touches storage', async () => {
     mockUserIdFromRequest.mockResolvedValue(null);
     const res = await POST(
@@ -91,49 +91,21 @@ describe('POST /api/user/avatar (ported to platform-storage)', () => {
     expect(mockUpload).not.toHaveBeenCalled();
   });
 
-  it("stores the file in the caller's folder and updates only the caller", async () => {
-    mockUpload.mockResolvedValue({
-      url: `/uploads/${USER}/1-avatar.png`,
-      path: `uploads/${USER}/1-avatar.png`,
-    });
-    userUpdate.mockResolvedValue({});
+  it('503 FEATURE_NOT_PROVISIONED: saves nothing to disk or the user row', async () => {
     const res = await POST(
       avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
     );
-    expect(res.status).toBe(200);
-    expect(mockUpload).toHaveBeenCalledWith(
-      USER,
-      'avatar.png',
-      expect.any(Buffer),
-      'image/png'
-    );
-    expect(userUpdate).toHaveBeenCalledWith({
-      where: { id: USER },
-      data: { avatar: `/uploads/${USER}/1-avatar.png` },
-    });
-    expect((await res.json()).avatarUrl).toBe(`/uploads/${USER}/1-avatar.png`);
-  });
-
-  it('removes the uploaded file and returns 500 when the DB update fails', async () => {
-    mockUpload.mockResolvedValue({
-      url: `/uploads/${USER}/x.png`,
-      path: `uploads/${USER}/x.png`,
-    });
-    userUpdate.mockRejectedValue(new Error('db down'));
-    const res = await POST(
-      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
-    );
-    expect(res.status).toBe(500);
-    expect(mockDelete).toHaveBeenCalledWith(`uploads/${USER}/x.png`);
-  });
-
-  it('500 (not success) when storage fails', async () => {
-    mockUpload.mockRejectedValue(new Error('disk full'));
-    const res = await POST(
-      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
-    );
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(503);
+    expect((await res.json()).error).toBe('FEATURE_NOT_PROVISIONED');
+    expect(mockUpload).not.toHaveBeenCalled();
     expect(userUpdate).not.toHaveBeenCalled();
+  });
+
+  it('still validates input before answering not-provisioned', async () => {
+    const res = await POST(
+      avatarRequest({ name: 'a.txt', type: 'text/plain', size: 10 })
+    );
+    expect(res.status).toBe(400);
   });
 });
 

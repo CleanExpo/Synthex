@@ -60,14 +60,16 @@ interface CardData {
 async function buildCardData(
   organizationId: string,
   quarterLabel: string
-): Promise<CardData> {
+): Promise<CardData | null> {
   const org = await prisma.organization.findUnique({
     where: { id: organizationId },
     select: { name: true },
   });
+  // No organisation row: there is nothing true to put on the card.
+  if (!org?.name) return null;
 
   return {
-    businessName: org?.name ?? 'Your Business',
+    businessName: org.name,
     headline: quarterLabel
       ? `${quarterLabel} Milestone`
       : 'Quarterly Milestone',
@@ -117,18 +119,23 @@ export async function GET(req: NextRequest): Promise<Response> {
   const { searchParams } = new URL(req.url);
   const quarterLabel = searchParams.get('quarter') ?? '';
 
-  let cardData: CardData;
+  let cardData: CardData | null;
   try {
     // SECURITY: organizationId comes from resolveTenant() — never from the
     // query string. Any `?client_id=` param is deliberately ignored.
     cardData = await buildCardData(tenant.clientId, quarterLabel);
   } catch {
-    cardData = {
-      businessName: 'Your Business',
-      headline: 'Quarterly Milestone',
-      subtext: 'Powered by Synthex',
-      accentColour: '#0f172a',
-    };
+    // A failed read must not look like a card: never issue placeholder data.
+    return NextResponse.json(
+      { error: 'Organisation data could not be read' },
+      { status: 503 }
+    );
+  }
+  if (!cardData) {
+    return NextResponse.json(
+      { error: 'Organisation not found' },
+      { status: 404 }
+    );
   }
 
   // 1080×1080 square card — works for Instagram, WhatsApp, download
