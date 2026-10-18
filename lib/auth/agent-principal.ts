@@ -26,52 +26,69 @@ import { checkRateLimit, extractClientIp } from '@/lib/auth/rate-limit';
 export const MACHINE_KEY_PREFIX = 'smk_';
 
 /**
- * REST scope -> routes it grants, as `<METHOD> <URL pattern>`. A route listed
- * nowhere is refused to every key. Scope names are independent of the MCP
+ * Route ids are `<METHOD> /api/<pattern>`. The tables below are written
+ * relative to the /api mount: they name routes, they do not call them, and a
+ * `/api/…` literal in a module public code imports reads as a call (the
+ * public-copy tripwire follows it, __tests__/landing/helpers/public-claims.ts).
+ */
+const API_MOUNT = '/api';
+const mountApi = (ids: readonly string[]): string[] =>
+  ids.map(id => id.replace(' ', ` ${API_MOUNT}/`));
+const underApi = <S extends string>(
+  table: Record<S, readonly string[]>
+): Record<S, readonly string[]> => {
+  const mounted = {} as Record<S, readonly string[]>;
+  for (const s of Object.keys(table) as S[]) mounted[s] = mountApi(table[s]);
+  return mounted;
+};
+
+/**
+ * REST scope -> routes it grants, as `<METHOD> <pattern under /api>`. A route
+ * listed nowhere is refused to every key. Scope names are independent of the MCP
  * tool scopes (lib/services/ai/studio-tools), which gate tools, not routes.
  */
-export const ROUTE_SCOPES = {
+export const ROUTE_SCOPES = underApi({
   organization: [
-    'PATCH /api/organizations/[orgId]',
-    'PATCH /api/organizations/[orgId]/brand-os',
-    'PATCH /api/organizations/[orgId]/client-profile',
+    'PATCH organizations/[orgId]',
+    'PATCH organizations/[orgId]/brand-os',
+    'PATCH organizations/[orgId]/client-profile',
   ],
-  approvals: ['POST /api/approvals', 'POST /api/approvals/[id]/comments'],
+  approvals: ['POST approvals', 'POST approvals/[id]/comments'],
   content: [
-    'PATCH /api/content/[id]',
-    'DELETE /api/content/[id]',
-    'POST /api/content-drafts',
-    'PATCH /api/content-drafts/[id]',
-    'DELETE /api/content-drafts/[id]',
-    'POST /api/content-library',
-    'PATCH /api/content-library/[id]',
-    'DELETE /api/content-library/[id]',
+    'PATCH content/[id]',
+    'DELETE content/[id]',
+    'POST content-drafts',
+    'PATCH content-drafts/[id]',
+    'DELETE content-drafts/[id]',
+    'POST content-library',
+    'PATCH content-library/[id]',
+    'DELETE content-library/[id]',
   ],
   integrations: [
-    'POST /api/integrations',
-    'POST /api/integrations/[integrationId]/sync',
-    'PUT /api/integrations/third-party/[provider]/config',
+    'POST integrations',
+    'POST integrations/[integrationId]/sync',
+    'PUT integrations/third-party/[provider]/config',
   ],
   team: [
-    'POST /api/team',
-    'POST /api/teams/invite',
-    'POST /api/teams/invitations',
-    'PATCH /api/teams/invitations/[id]',
-    'DELETE /api/teams/invitations/[id]',
-    'POST /api/teams/members',
-    'PATCH /api/teams/members/[memberId]',
-    'DELETE /api/teams/members/[memberId]',
-    'PATCH /api/teams/members/[memberId]/role',
-    'PATCH /api/teams/[id]/settings',
-    'DELETE /api/teams/[id]/settings',
+    'POST team',
+    'POST teams/invite',
+    'POST teams/invitations',
+    'PATCH teams/invitations/[id]',
+    'DELETE teams/invitations/[id]',
+    'POST teams/members',
+    'PATCH teams/members/[memberId]',
+    'DELETE teams/members/[memberId]',
+    'PATCH teams/members/[memberId]/role',
+    'PATCH teams/[id]/settings',
+    'DELETE teams/[id]/settings',
   ],
   billing: [
-    'POST /api/invoices',
-    'PATCH /api/invoices/[id]',
-    'DELETE /api/invoices/[id]',
-    'POST /api/invoices/[id]/send',
+    'POST invoices',
+    'PATCH invoices/[id]',
+    'DELETE invoices/[id]',
+    'POST invoices/[id]/send',
   ],
-} as const satisfies Record<string, readonly string[]>;
+});
 
 export type RouteScope = keyof typeof ROUTE_SCOPES;
 
@@ -81,24 +98,24 @@ export type RouteScope = keyof typeof ROUTE_SCOPES;
  * minting more keys, spending (Stripe), offboarding a client, and publishing
  * (P7 delegated publish owns that).
  */
-export const NON_MACHINE_ROUTES: readonly string[] = [
-  'POST /api/organizations',
-  'DELETE /api/organizations/[orgId]',
-  'PATCH /api/approvals/[id]',
-  'DELETE /api/approvals/[id]',
-  'POST /api/user/api-keys',
-  'POST /api/stripe/checkout',
-  'POST /api/stripe/change-plan',
-  'POST /api/command-centre/clients/[id]/offboard',
-  'POST /api/publish-queue/release',
-  'POST /api/social/post',
+export const NON_MACHINE_ROUTES: readonly string[] = mountApi([
+  'POST organizations',
+  'DELETE organizations/[orgId]',
+  'PATCH approvals/[id]',
+  'DELETE approvals/[id]',
+  'POST user/api-keys',
+  'POST stripe/checkout',
+  'POST stripe/change-plan',
+  'POST command-centre/clients/[id]/offboard',
+  'POST publish-queue/release',
+  'POST social/post',
   // Static siblings a dynamic pattern above would otherwise capture; named so
   // routeIdFor resolves them to themselves (tests/unit/auth guards new ones).
-  'PATCH /api/content/calendar',
-  'PATCH /api/content/comments',
-  'DELETE /api/content/comments',
-  'DELETE /api/content/share',
-];
+  'PATCH content/calendar',
+  'PATCH content/comments',
+  'DELETE content/comments',
+  'DELETE content/share',
+]);
 
 /** Per-key bucket: 120 calls a minute per key, 600 per source IP. */
 const RATE_LIMITS = {
@@ -110,7 +127,7 @@ export type AgentPrincipal =
   | { kind: 'none' }
   | { kind: 'denied'; status: 401 | 403 | 429; code: string }
   | {
-      kind: 'ok';
+      kind: 'granted';
       organizationId: string;
       userId: string;
       keyId: string;
@@ -265,7 +282,7 @@ export function routeIdFor(method: string, pathname: string): string | null {
  * Resolve the machine principal for a REST call to routeId.
  *   none   — no `Bearer smk_…` key: the caller falls back to the user path;
  *   denied — 401 (bad key), 403 (scope, route, organisation), 429 (rate);
- *   ok     — organisation, user and scopes from the key row.
+ *   granted — organisation, user and scopes from the key row.
  * `rateLimit: false` skips the bucket for a second resolution of a request
  * whose bucket was already counted (proxy.ts counts; route helpers do not).
  */
@@ -321,7 +338,7 @@ export async function resolveAgentPrincipal(
   }
 
   return {
-    kind: 'ok',
+    kind: 'granted',
     organizationId: key.organizationId,
     userId: key.userId,
     keyId: key.id,

@@ -161,14 +161,7 @@ export async function getUserIdFromRequest(
   const token = authHeader.slice(7); // Remove 'Bearer ' prefix
 
   // P4 machine key: acts as the key's user only on a route its scopes grant.
-  if (token.startsWith('smk_')) {
-    const { resolveAgentPrincipalForRequest } =
-      await import('./agent-principal');
-    const principal = await resolveAgentPrincipalForRequest(request, {
-      rateLimit: false,
-    });
-    return principal.kind === 'ok' ? principal.userId : null;
-  }
+  if (token.startsWith('smk_')) return machineKeyUserId(request);
 
   try {
     const payload = verifyToken(token);
@@ -324,4 +317,16 @@ export async function requireAuth(
   }
 
   return { userId };
+}
+
+/**
+ * The machine key's user, or null when the key is refused for this route.
+ * Loaded lazily so a JWT request never loads the database client.
+ */
+async function machineKeyUserId(request: NextRequest): Promise<string | null> {
+  const { resolveAgentPrincipalForRequest } = await import('./agent-principal');
+  const principal = await resolveAgentPrincipalForRequest(request, {
+    rateLimit: false,
+  });
+  return principal.kind === 'granted' ? principal.userId : null;
 }

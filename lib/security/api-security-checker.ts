@@ -491,7 +491,7 @@ export class APISecurityChecker {
         const principal = await resolveAgentPrincipalForRequest(request, {
           rateLimit: false,
         });
-        return principal.kind === 'ok'
+        return principal.kind === 'granted'
           ? { isValid: true, userId: principal.userId, userRole: 'user' }
           : {
               isValid: false,

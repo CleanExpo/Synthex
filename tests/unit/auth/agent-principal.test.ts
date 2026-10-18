@@ -120,7 +120,7 @@ describe('resolveAgentPrincipal', () => {
       ROUTE
     );
     expect(r).toEqual({
-      kind: 'ok',
+      kind: 'granted',
       organizationId: 'org-A',
       userId: 'user-A',
       keyId: `key-${RAW}`,
