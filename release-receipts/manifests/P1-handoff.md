@@ -1,6 +1,6 @@
 # Handoff P1 (jev-core)
 
-Reviewed commit: 5ea3b8dd4005d60a89aad97b0ec2183154411656
+Reviewed commit: 73f38bba57686f997a53acab36c6931df6f17aa0
 Receipt: release-receipts/P1.json
 Gate manifest: release-receipts/manifests/P1-gate.json
 Review: release-receipts/manifests/P1-review.json
