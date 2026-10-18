@@ -9,7 +9,7 @@
  * `t` query token and would record the score on `client_journey_events`.
  *
  * NOT PROVISIONED: `client_journey_events` has no Prisma model, so the score
- * cannot be recorded. Every request gets HTTP 501 with the 1×1 GIF body (no
+ * cannot be recorded. Every request gets HTTP 503 with the 1×1 GIF body (no
  * broken image in the email) and `X-Error: FEATURE_NOT_PROVISIONED`. The
  * response is identical for valid and invalid tokens, so signature validity
  * is still not leaked. Valid-but-dropped responses are logged.
@@ -27,6 +27,7 @@ import {
   verifyJourneyToken,
   type VerifyFailureReason,
 } from '@/lib/journey/pixel-token';
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
 // 1×1 transparent GIF — 44 bytes, no file I/O
 const PIXEL = Buffer.from(
@@ -36,7 +37,7 @@ const PIXEL = Buffer.from(
 
 function notProvisionedPixel(): NextResponse {
   return new NextResponse(PIXEL, {
-    status: 501,
+    status: NOT_PROVISIONED_STATUS,
     headers: {
       'Content-Type': 'image/gif',
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

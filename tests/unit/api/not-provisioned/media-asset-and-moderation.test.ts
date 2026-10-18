@@ -1,7 +1,7 @@
 /**
  * P2 u05 — honest status where the backing table has no Prisma model.
- *   GET /api/media/assets/[id]/image  → 501 (media_assets not provisioned)
- *   PUT /api/moderation/check         → 501 (brand_guidelines not provisioned)
+ *   GET /api/media/assets/[id]/image  → 503 (media_assets not provisioned)
+ *   PUT /api/moderation/check         → 503 (brand_guidelines not provisioned)
  */
 
 /** @jest-environment node */
@@ -48,9 +48,9 @@ describe('GET /api/media/assets/[id]/image', () => {
       { params: Promise.resolve({ id }) }
     );
 
-  it('answers 501 FEATURE_NOT_PROVISIONED naming media_assets', async () => {
+  it('answers 503 FEATURE_NOT_PROVISIONED naming media_assets', async () => {
     const res = await get(ASSET_ID);
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const json = await res.json();
     expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(json.message).toContain('media_assets');
@@ -78,9 +78,9 @@ describe('PUT /api/moderation/check', () => {
       })
     );
 
-  it('answers 501 naming brand_guidelines and never claims a save', async () => {
+  it('answers 503 naming brand_guidelines and never claims a save', async () => {
     const res = await put({ companyName: 'Acme' });
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const json = await res.json();
     expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(json.message).toContain('brand_guidelines');

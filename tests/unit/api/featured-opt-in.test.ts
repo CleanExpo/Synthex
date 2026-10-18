@@ -2,10 +2,10 @@
  * Behavioural coverage for PATCH /api/clients/featured-opt-in (SYN-508).
  *
  * The opt-in flag lived on clients.featured_programme_status. prisma/schema.prisma
- * has no `clients` table, so the route must say so (501 FEATURE_NOT_PROVISIONED)
+ * has no `clients` table, so the route must say so (503 FEATURE_NOT_PROVISIONED)
  * after auth + validation instead of claiming the opt-in was recorded.
  *
- * Contract: 401 no auth → 400 bad body → 501 not provisioned, no Slack alert.
+ * Contract: 401 no auth → 400 bad body → 503 not provisioned, no Slack alert.
  */
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
@@ -44,10 +44,10 @@ describe('PATCH /api/clients/featured-opt-in', () => {
     expect(res.status).toBe(400);
   });
 
-  it('501 FEATURE_NOT_PROVISIONED for an authenticated opt-in — no fake success, no Slack alert', async () => {
+  it('503 FEATURE_NOT_PROVISIONED for an authenticated opt-in — no fake success, no Slack alert', async () => {
     const res = await PATCH(req({ clientId: 'c-1' }));
     const json = await res.json();
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(json.message).toMatch(/clients table/);
     expect(json).not.toHaveProperty('alreadyOptedIn');

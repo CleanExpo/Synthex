@@ -10,7 +10,7 @@
  * FAILURE MODE: Falls back to industry-standard optimal times
  *
  * NOT PROVISIONED: POST auto-scheduled rows of the `scheduled_posts` table,
- * which has no model in prisma/schema.prisma. It answers 501
+ * which has no model in prisma/schema.prisma. It answers 503
  * FEATURE_NOT_PROVISIONED after auth and validation instead of reporting
  * zero scheduled posts. PUT stores settings in users.user_settings (Prisma).
  */
@@ -33,6 +33,7 @@ import { isSurfaceAvailable } from '@/lib/bayesian/feature-limits';
 import { getContentSchedulingWeights } from '@/lib/bayesian/surfaces/content-scheduling';
 import { registerObservationSilently } from '@/lib/bayesian/fallback';
 import { resolveEffectivePlan } from '@/lib/billing/plan-access';
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const OptimalTimesSchema = z.object({
@@ -344,7 +345,7 @@ export async function POST(request: NextRequest) {
         message:
           'Auto-scheduling is not provisioned: the scheduled_posts table does not exist.',
       },
-      501
+      NOT_PROVISIONED_STATUS
     );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {

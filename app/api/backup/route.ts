@@ -15,7 +15,7 @@ const backupBodySchema = z
 // NOT PROVISIONED: this route backed up profiles and content_posts and recorded
 // runs in system_backups. None of those three tables exist in
 // prisma/schema.prisma, and the backup payload was never stored anywhere, so both
-// handlers answer 501 FEATURE_NOT_PROVISIONED after auth rather than report a
+// handlers answer 503 FEATURE_NOT_PROVISIONED after auth rather than report a
 // backup that did not happen.
 const NOT_PROVISIONED_MESSAGE =
   'Backups are not available: the system_backups, profiles and content_posts tables are not provisioned.';
