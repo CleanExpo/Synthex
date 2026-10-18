@@ -4,7 +4,7 @@
  * Content Score history for the caller's active brand.
  *
  * NOT PROVISIONED: the `content_score_history` table has no Prisma model, so
- * after auth and brand resolution this returns 501 FEATURE_NOT_PROVISIONED
+ * after auth and brand resolution this returns 503 FEATURE_NOT_PROVISIONED
  * (available:false) instead of a fabricated or empty history.
  *
  * @task SYN-665
@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export interface ContentScoreRow {
   score: number;
@@ -46,13 +47,11 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(
+  return notProvisionedResponse(
+    'Content Score history storage is not provisioned',
     {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message: 'Content Score history storage is not provisioned',
       available: false,
       reason: 'content_score_history table is not provisioned',
-    },
-    { status: 501 }
+    }
   );
 }

@@ -2,10 +2,10 @@
  * P2 u04 — routes retired from lib/platform/noop-client.
  *
  * Their tables have no Prisma model, so each must say so honestly:
- *   - cron routes: 501 FEATURE_NOT_PROVISIONED after auth (401 stays first);
+ *   - cron routes: 503 FEATURE_NOT_PROVISIONED after auth (401 stays first);
  *   - refresh-journey-analytics also records the failed run via
  *     prisma.edgeFunctionLog (the one ported write);
- *   - journey pixel / confirm page: 501, identical for valid and invalid tokens;
+ *   - journey pixel / confirm page: 503, identical for valid and invalid tokens;
  *   - journey click: still redirects, flagged X-Journey-Tracking.
  */
 
@@ -77,9 +77,9 @@ describe.each([
     expect(mockEdgeFunctionLogCreate).not.toHaveBeenCalled();
   });
 
-  it('returns 501 FEATURE_NOT_PROVISIONED naming the missing table', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED naming the missing table', async () => {
     const res = await handler(cronReq(path));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toMatch(table);
@@ -99,17 +99,17 @@ describe('refresh-journey-analytics edge_function_logs (ported to Prisma)', () =
     expect(data.runId).toMatch(/^[0-9a-f-]{36}$/);
   });
 
-  it('still returns 501 when the log write fails', async () => {
+  it('still returns 503 when the log write fails', async () => {
     mockEdgeFunctionLogCreate.mockRejectedValueOnce(new Error('db down'));
     const res = await refreshJourneyAnalytics(
       cronReq('refresh-journey-analytics')
     );
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
   });
 });
 
 describe('journey routes (client_journey_events not provisioned)', () => {
-  it('pulse pixel: 501 GIF for a valid token, identical for a forged one', async () => {
+  it('pulse pixel: 503 GIF for a valid token, identical for a forged one', async () => {
     const t = signJourneyToken({
       aud: PIXEL_AUDIENCES.pulse,
       clientId: 'org-abc',
@@ -123,13 +123,13 @@ describe('journey routes (client_journey_events not provisioned)', () => {
       pixelReq('https://synthex.social/api/journey/pulse?t=bad.token')
     );
     for (const res of [valid, forged]) {
-      expect(res.status).toBe(501);
+      expect(res.status).toBe(503);
       expect(res.headers.get('X-Error')).toBe('FEATURE_NOT_PROVISIONED');
       expect(res.headers.get('Content-Type')).toBe('image/gif');
     }
   });
 
-  it('pulse-confirm: 501 page that says feedback was not saved, no thank-you', async () => {
+  it('pulse-confirm: 503 page that says feedback was not saved, no thank-you', async () => {
     const t = signJourneyToken({
       aud: PIXEL_AUDIENCES.pulseConfirm,
       clientId: 'org-abc',
@@ -143,11 +143,11 @@ describe('journey routes (client_journey_events not provisioned)', () => {
       pixelReq('https://synthex.social/api/journey/pulse-confirm?t=bad.token')
     );
     const validHtml = await valid.text();
-    expect(valid.status).toBe(501);
+    expect(valid.status).toBe(503);
     expect(valid.headers.get('X-Error')).toBe('FEATURE_NOT_PROVISIONED');
     expect(validHtml).toContain('was not saved');
     expect(validHtml).not.toContain('Thanks for your feedback');
-    expect(forged.status).toBe(501);
+    expect(forged.status).toBe(503);
     expect(await forged.text()).toBe(validHtml);
   });
 

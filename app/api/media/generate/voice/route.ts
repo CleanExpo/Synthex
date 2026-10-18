@@ -31,11 +31,12 @@ import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import {
   notProvisionedBody,
   tableUnavailable,
+  NOT_PROVISIONED_STATUS,
 } from '@/lib/api/not-provisioned';
 
 // NOT_PROVISIONED: prisma/schema.prisma has no user_voices or media_assets
 // model. Voice ownership (clone, list, delete) cannot be recorded or checked,
-// so those paths answer 501 / available:false; speech saves report `library`
+// so those paths answer 503 / available:false; speech saves report `library`
 // instead of dropping the write silently.
 const MEDIA_LIBRARY_UNAVAILABLE = tableUnavailable('media_assets');
 
@@ -193,7 +194,7 @@ export async function POST(request: NextRequest) {
         VoiceCloneSchema.parse(body);
         return APISecurityChecker.createSecureResponse(
           notProvisionedBody('user_voices', 'Voice cloning'),
-          501
+          NOT_PROVISIONED_STATUS
         );
       }
 
@@ -486,7 +487,7 @@ export async function DELETE(request: NextRequest) {
     // own a voice, so nothing is deleted.
     return APISecurityChecker.createSecureResponse(
       notProvisionedBody('user_voices', 'Voice deletion'),
-      501
+      NOT_PROVISIONED_STATUS
     );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {

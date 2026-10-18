@@ -13,6 +13,7 @@ import { getRateLimitStatus, resetRateLimits } from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 // GET: Get rate limit status
 export async function GET(req: NextRequest) {
@@ -147,13 +148,8 @@ export async function PATCH(req: NextRequest) {
 
     // NOT PROVISIONED: per-user overrides need a users.rate_limit_override
     // column, which prisma/schema.prisma does not define.
-    return NextResponse.json(
-      {
-        error: 'FEATURE_NOT_PROVISIONED',
-        message:
-          'Custom rate limits are not provisioned: the users.rate_limit_override column does not exist.',
-      },
-      { status: 501 }
+    return notProvisionedResponse(
+      'Custom rate limits are not provisioned: the users.rate_limit_override column does not exist.'
     );
   } catch (error) {
     logger.error('Error updating rate limit:', error);

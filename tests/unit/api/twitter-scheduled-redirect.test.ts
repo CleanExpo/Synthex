@@ -141,7 +141,7 @@ describe('POST /api/social/twitter/post — scheduled tweet lands in the working
     const res = await POST(req({ text: 'now' }));
     expect(scheduleViaPost).not.toHaveBeenCalled();
     // Immediate tweets are NOT_PROVISIONED (social_posts table missing).
-    expect((res as Response).status).toBe(501);
+    expect((res as Response).status).toBe(503);
     expect(postTweet).not.toHaveBeenCalled();
   });
 });

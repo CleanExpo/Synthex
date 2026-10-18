@@ -2,7 +2,7 @@
  * Honest status for routes retired from lib/platform/noop-client (P2 u03).
  *
  * Every route here depended on a Supabase table with no Prisma model. They
- * must now say so (501 FEATURE_NOT_PROVISIONED, or an explicit persisted:false)
+ * must now say so (503 FEATURE_NOT_PROVISIONED, or an explicit persisted:false)
  * instead of a 2xx that did nothing.
  */
 
@@ -134,10 +134,10 @@ describe.each(CRON_ROUTES)(
       expect(res.status).toBe(401);
     });
 
-    it('returns 501 FEATURE_NOT_PROVISIONED after auth, naming the missing table', async () => {
+    it('returns 503 FEATURE_NOT_PROVISIONED after auth, naming the missing table', async () => {
       const { POST } = await import(`@/app/api/internal/${name}/route`);
       const res = await POST(cronRequest(name, CRON_SECRET) as never);
-      expect(res.status).toBe(501);
+      expect(res.status).toBe(503);
       const body = await res.json();
       expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
       expect(body.message).toContain(table);
@@ -160,14 +160,14 @@ describe('DELETE /api/intelligence/competitors', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 501 FEATURE_NOT_PROVISIONED instead of a fake success', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED instead of a fake success', async () => {
     mockSecurityCheck.mockResolvedValue({
       allowed: true,
       context: { userId: 'user-1' },
     });
     const { DELETE } = await import('@/app/api/intelligence/competitors/route');
     const res = await DELETE(deleteRequest('c1') as never);
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('competitors table');

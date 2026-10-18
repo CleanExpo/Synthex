@@ -1,6 +1,6 @@
 /**
  * P2 u05 — /api/media/generate/voice without user_voices / media_assets.
- * Clone and delete answer 501 before touching the provider; the voice list
+ * Clone and delete answer 503 before touching the provider; the voice list
  * reports userVoices as unavailable; speech saves report `library`.
  */
 
@@ -64,7 +64,7 @@ beforeEach(() => {
   mockCheck.mockResolvedValue({ allowed: true, context: { userId: 'u1' } });
 });
 
-it('clone answers 501 naming user_voices and never calls the provider', async () => {
+it('clone answers 503 naming user_voices and never calls the provider', async () => {
   const res = await POST(
     createMockNextRequest({
       method: 'POST',
@@ -72,14 +72,14 @@ it('clone answers 501 naming user_voices and never calls the provider', async ()
       body: { name: 'Me', audioFiles: ['https://cdn.example/a.mp3'] },
     })
   );
-  expect(res.status).toBe(501);
+  expect(res.status).toBe(503);
   const json = await res.json();
   expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
   expect(json.message).toContain('user_voices');
   expect(mockClone).not.toHaveBeenCalled();
 });
 
-it('delete answers 501 and never deletes at the provider', async () => {
+it('delete answers 503 and never deletes at the provider', async () => {
   const res = await DELETE(
     createMockNextRequest({
       method: 'DELETE',
@@ -87,7 +87,7 @@ it('delete answers 501 and never deletes at the provider', async () => {
       body: { voiceId: 'abc123' },
     })
   );
-  expect(res.status).toBe(501);
+  expect(res.status).toBe(503);
   expect((await res.json()).message).toContain('user_voices');
   expect(mockDelete).not.toHaveBeenCalled();
 });

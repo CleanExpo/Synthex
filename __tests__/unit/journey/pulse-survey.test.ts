@@ -5,7 +5,7 @@
  * 1. buildPulseSurveyHtml returns well-formed HTML with all 5 score links
  *    and that each link carries a verifiable signed token
  * 2. buildTrackedUrl wraps destination URL inside a signed click token
- * 3. GET /api/journey/pulse returns the 1×1 GIF under HTTP 501
+ * 3. GET /api/journey/pulse returns the 1×1 GIF under HTTP 503
  *    FEATURE_NOT_PROVISIONED (client_journey_events has no data model)
  * 4. GET /api/journey/click validates URL safety, redirects to the signed
  *    destination and flags the click as not recorded
@@ -233,7 +233,7 @@ describe('buildTrackedUrl', () => {
 // ── GET /api/journey/pulse ───────────────────────────────────────────────────
 
 describe('GET /api/journey/pulse', () => {
-  it('returns a 1×1 GIF under 501 FEATURE_NOT_PROVISIONED for a valid signed token', async () => {
+  it('returns a 1×1 GIF under 503 FEATURE_NOT_PROVISIONED for a valid signed token', async () => {
     const { GET } = loadPulse();
     const t = signFor(PIXEL_AUDIENCES.pulse, 'org-abc', 'evt-123', {
       score: 4,
@@ -241,7 +241,7 @@ describe('GET /api/journey/pulse', () => {
     const res = await GET(
       makeReq(`https://synthex.social/api/journey/pulse?t=${t}`)
     );
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(res.headers.get('X-Error')).toBe('FEATURE_NOT_PROVISIONED');
     expect(res.headers.get('Content-Type')).toBe('image/gif');
     expect(res.headers.get('Cache-Control')).toContain('no-store');
@@ -250,7 +250,7 @@ describe('GET /api/journey/pulse', () => {
   it('returns pixel with no data-layer call or recorded write when token is missing', async () => {
     const { GET } = loadPulse();
     const res = await GET(makeReq('https://synthex.social/api/journey/pulse'));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(res.headers.get('Content-Type')).toBe('image/gif');
     expect(mockDataCalls).toEqual([]);
     expect(droppedWriteLogs()).toEqual([]);
@@ -261,7 +261,7 @@ describe('GET /api/journey/pulse', () => {
     const res = await GET(
       makeReq('https://synthex.social/api/journey/pulse?t=not.a-valid-token')
     );
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(res.headers.get('Content-Type')).toBe('image/gif');
     expect(mockDataCalls).toEqual([]);
     expect(droppedWriteLogs()).toEqual([]);

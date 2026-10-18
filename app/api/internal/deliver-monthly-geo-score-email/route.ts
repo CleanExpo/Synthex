@@ -25,12 +25,13 @@
  *
  * NOT PROVISIONED: this job depends on the client_geo_scores table, none of
  * which exist in prisma/schema.prisma.
- * After the flag and auth checks it returns 501 FEATURE_NOT_PROVISIONED rather
+ * After the flag and auth checks it returns 503 FEATURE_NOT_PROVISIONED rather
  * than reporting a successful run that sent or recorded nothing.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,12 +49,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = verifyCronRequest(req, 'DELIVER_MONTHLY_GEO_SCORE_EMAIL');
   if (!auth.ok) return auth.response;
 
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message:
-        'This job cannot run: the client_geo_scores table is not provisioned.',
-    },
-    { status: 501 }
+  return notProvisionedResponse(
+    'This job cannot run: the client_geo_scores table is not provisioned.'
   );
 }

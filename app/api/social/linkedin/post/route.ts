@@ -6,7 +6,7 @@
  * NOT PROVISIONED: this route recorded every publish in the `social_posts`
  * table and metered it in `usage_tracking`. Neither table exists in
  * prisma/schema.prisma, so publishing here would leave no record. Both
- * methods answer 501 FEATURE_NOT_PROVISIONED after auth instead of
+ * methods answer 503 FEATURE_NOT_PROVISIONED after auth instead of
  * publishing without a receipt or returning an empty history.
  *
  * Use /api/social/post — it publishes with organisation-scoped connections,

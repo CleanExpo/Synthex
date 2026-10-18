@@ -6,12 +6,13 @@
  *
  * NOT PROVISIONED: the opt-in reads and writes clients.featured_programme_status,
  * but prisma/schema.prisma has no `clients` table (nor that column). Until it is
- * provisioned the route answers 501 FEATURE_NOT_PROVISIONED instead of
+ * provisioned the route answers 503 FEATURE_NOT_PROVISIONED instead of
  * pretending the opt-in was recorded.
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 
@@ -43,12 +44,7 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message:
-        'Featured-programme opt-in is not available: the clients table is not provisioned.',
-    },
-    { status: 501 }
+  return notProvisionedResponse(
+    'Featured-programme opt-in is not available: the clients table is not provisioned.'
   );
 }

@@ -8,7 +8,7 @@
  * query token and would record the pulse survey score.
  *
  * NOT PROVISIONED: `client_journey_events` has no Prisma model, so the score
- * cannot be recorded. Every request gets HTTP 501 with a minimal HTML page
+ * cannot be recorded. Every request gets HTTP 503 with a minimal HTML page
  * that says so (no "thank you" for feedback that was dropped). The page has
  * ZERO request-derived content and is identical for valid and invalid tokens,
  * so signature validity is not leaked and no attacker-controlled UI appears
@@ -24,6 +24,7 @@ import {
   verifyJourneyToken,
   type VerifyFailureReason,
 } from '@/lib/journey/pixel-token';
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
 // Rendered identically for valid AND invalid tokens — no request-derived
 // content, no echoed user input. Attacker cannot manufacture a misleading page
@@ -53,7 +54,7 @@ const NOT_PROVISIONED_HTML = `<!DOCTYPE html>
 
 function htmlResponse(): NextResponse {
   return new NextResponse(NOT_PROVISIONED_HTML, {
-    status: 501,
+    status: NOT_PROVISIONED_STATUS,
     headers: {
       'X-Error': 'FEATURE_NOT_PROVISIONED',
       'Content-Type': 'text/html; charset=utf-8',

@@ -42,7 +42,7 @@ jest.mock('@/lib/auth/with-auth', () => ({
 }));
 
 // ── Effect-report generator mock: must never be reached ─────────────────────
-// The route answers 501 FEATURE_NOT_PROVISIONED (no effect_reports model in
+// The route answers 503 FEATURE_NOT_PROVISIONED (no effect_reports model in
 // prisma/schema.prisma), so no report is generated for any tenant.
 const mockGenerate = jest.fn();
 jest.mock('@/lib/effect-report/generator', () => ({
@@ -62,11 +62,11 @@ function jsonRequest(body: unknown): NextRequest & { json: jest.Mock } {
 }
 
 describe('POST /api/effect-report/generate — owner-override stripped', () => {
-  it('ignores body.client_id targeting a foreign tenant: no body read, no generation, honest 501', async () => {
+  it('ignores body.client_id targeting a foreign tenant: no body read, no generation, honest 503', async () => {
     const { POST } = await import('@/app/api/effect-report/generate/route');
     const req = jsonRequest({ client_id: TENANT_B });
     const res = await POST(req);
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(JSON.stringify(body)).not.toContain(TENANT_B);
@@ -74,14 +74,14 @@ describe('POST /api/effect-report/generate — owner-override stripped', () => {
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 
-  it('answers 501 when body is empty', async () => {
+  it('answers 503 when body is empty', async () => {
     const { POST } = await import('@/app/api/effect-report/generate/route');
     const res = await POST(jsonRequest({}));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 
-  it('answers 501 when request body is not JSON', async () => {
+  it('answers 503 when request body is not JSON', async () => {
     const { POST } = await import('@/app/api/effect-report/generate/route');
     const badReq = {
       json: async () => {
@@ -90,7 +90,7 @@ describe('POST /api/effect-report/generate — owner-override stripped', () => {
       url: 'https://synthex.social/api/effect-report/generate',
     } as unknown as NextRequest;
     const res = await POST(badReq);
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 

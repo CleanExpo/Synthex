@@ -24,7 +24,7 @@
  *
  *   The card data lived in the Supabase `effect_reports` table, which has no
  *   model in prisma/schema.prisma. After auth and tenant resolution the route
- *   returns 501 FEATURE_NOT_PROVISIONED instead of rendering a placeholder
+ *   returns 503 FEATURE_NOT_PROVISIONED instead of rendering a placeholder
  *   card that looks like a real report.
  *
  * SYN-674
@@ -33,6 +33,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 
@@ -72,12 +73,7 @@ export async function GET(req: NextRequest): Promise<Response> {
 
   // SECURITY: clientId comes from resolveTenant() — never from the query
   // string. Any `?client_id=` param is ignored.
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message:
-        'Effect Report cards are not available: table `effect_reports` is not provisioned.',
-    },
-    { status: 501 }
+  return notProvisionedResponse(
+    'Effect Report cards are not available: table `effect_reports` is not provisioned.'
   );
 }

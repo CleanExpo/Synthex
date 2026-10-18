@@ -3,7 +3,7 @@
  *
  * `effect_reports` and `client_geo_scores` have no Prisma model, so each route
  * authenticates first (401 without a session) and then returns
- * 501 FEATURE_NOT_PROVISIONED — never a 2xx with empty data.
+ * 503 FEATURE_NOT_PROVISIONED — never a 2xx with empty data.
  */
 
 import { createMockNextRequest } from '../../helpers/mock-request';
@@ -104,11 +104,11 @@ describe.each(cases)('%s', (_name, modulePath, method, url) => {
     expect(res.status).toBe(401);
   });
 
-  it('returns 501 FEATURE_NOT_PROVISIONED after auth', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED after auth', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     const handler = (await import(modulePath))[method];
     const res = await handler(createMockNextRequest({ url, method }) as any);
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(await res.json()).toMatchObject({
       error: 'FEATURE_NOT_PROVISIONED',
       message: expect.any(String),
@@ -130,7 +130,7 @@ it('read routes declare available:false with a reason naming the table', async (
   }
 });
 
-it('by-period still validates the quarter param (400) before 501', async () => {
+it('by-period still validates the quarter param (400) before 503', async () => {
   mockGetUserId.mockResolvedValue('user-1');
   const { GET } = await import('@/app/api/effect-report/by-period/route');
   const res = await GET(

@@ -4,7 +4,7 @@
  * Covers GET /api/dashboard/content-score-history:
  *  - 401 unauthenticated
  *  - 403 no active brand (no-org fallback preserved)
- *  - 501 FEATURE_NOT_PROVISIONED after auth + active-brand resolution: the
+ *  - 503 FEATURE_NOT_PROVISIONED after auth + active-brand resolution: the
  *    `content_score_history` table has no Prisma model, so no history is faked
  */
 
@@ -88,12 +88,12 @@ describe('GET /api/dashboard/content-score-history (brand-scope)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 501 FEATURE_NOT_PROVISIONED for an authenticated brand', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED for an authenticated brand', async () => {
     mockGetUserId.mockResolvedValue('user-1');
     mockGetEffectiveOrganizationId.mockResolvedValue('org-active-brand');
     const { GET } = await import(ROUTE);
     const res = await GET(createMockNextRequest({ url: URL }) as any);
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(await res.json()).toMatchObject({
       error: 'FEATURE_NOT_PROVISIONED',
       available: false,
