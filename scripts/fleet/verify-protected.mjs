@@ -76,6 +76,10 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
         `^release-receipts/manifests/P${phaseOfBranch[1]}-(gate|review|handoff|units)\\.(json|md)$`
       )
     : null;
+  const rawAt = (ref, f) => {
+    const r = run('git', ['show', `${ref}:${f}`], { cwd });
+    return r.code === 0 ? r.stdout : null;
+  };
   const touchingCommits = f =>
     (tryGit(['log', '--format=%H', `${base}..${head}`, '--', f], { cwd }) || '')
       .split('\n')
@@ -86,9 +90,38 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
       findings.push({ file: f, state: 'PASS', why: 'bootstrap exemption' });
       continue;
     }
+    // Ledger rows: an existing *.jsonl that only grows (base bytes are a prefix at head), written
+    // by fleet commits on a fleet branch. Halt files: adding one is always safe; removing one is
+    // not. Anything else under these paths needs a declared protected change (verifier audit second
+    // pass: any author could delete human-intervention rows or a daily halt).
     if (ledgerGlobs.some(r => r.test(f))) {
-      findings.push({ file: f, state: 'PASS', why: 'ledger row' });
-      continue;
+      const atBase = rawAt(base, f);
+      const atHead = rawAt(head, f);
+      const growsOnly =
+        /^release-receipts\/ledger\/[^/]+\.jsonl$/.test(f) &&
+        atHead !== null &&
+        (atBase === null ||
+          ((atBase === '' || atBase.endsWith('\n')) &&
+            atHead.startsWith(atBase)));
+      const fleetOnly =
+        new RegExp(pol.branch_pattern).test(branch) &&
+        touchingCommits(f).every(sha => isFleetCommit(sha, pol, cwd));
+      if (growsOnly && fleetOnly) {
+        findings.push({
+          file: f,
+          state: 'PASS',
+          why: 'ledger rows appended by fleet commits',
+        });
+        continue;
+      }
+      if (
+        /^release-receipts\/halt\/STOP-/.test(f) &&
+        atHead !== null &&
+        atBase === null
+      ) {
+        findings.push({ file: f, state: 'PASS', why: 'halt file added' });
+        continue;
+      }
     }
     if (
       ownManifest?.test(f) &&
@@ -210,6 +243,11 @@ function control() {
     put('scripts/fleet/guard.mjs', '// guard\n');
     put('tests/eval/jev/floors.json', '{"families":{}}\n');
     put('release-receipts/manifests/policy-hash.json', '{"sha256":"base"}\n');
+    put(
+      'release-receipts/ledger/fleet.jsonl',
+      '{"kind":"human-intervention","phase":"P0"}\n'
+    );
+    put('release-receipts/halt/STOP-2026-10-18', 'halt\n');
     commit('control base', fleet);
     base = g(['rev-parse', 'HEAD']);
     const declared = 'x\n\nFleet-Role: orchestrator\nProtected-Change: control';
@@ -243,6 +281,21 @@ function control() {
         put('release-receipts/P1.json', '{"phase":"P1","state":"PASS"}\n');
         commit('bogus receipt', fleet);
       }),
+      ledgerRowDeleted: branch('feature/x-ledger', () => {
+        put('release-receipts/ledger/fleet.jsonl', '');
+        commit('drop the human-intervention row');
+      }),
+      ledgerAppended: branch('feature/fleet-p1-ledger', () => {
+        put(
+          'release-receipts/ledger/fleet.jsonl',
+          '{"kind":"human-intervention","phase":"P0"}\n{"kind":"review","phase":"P1"}\n'
+        );
+        commit('append a ledger row\n\nFleet-Role: orchestrator', fleet);
+      }),
+      haltRemoved: branch('feature/x-halt', () => {
+        g(['rm', '-q', 'release-receipts/halt/STOP-2026-10-18']);
+        commit('remove the daily halt');
+      }),
       ownManifest: branch('feature/fleet-p1-own', () => {
         put('release-receipts/manifests/P1-gate.json', '{"head":"x"}\n');
         commit('own-phase gate manifest\n\nFleet-Role: orchestrator', fleet);
@@ -255,6 +308,9 @@ function control() {
       manifestRewrite: 1,
       declaredByHuman: 1,
       replacedVerifier: 1,
+      ledgerRowDeleted: 1,
+      ledgerAppended: 0,
+      haltRemoved: 1,
       ownManifest: 0,
     };
     const bad = Object.keys(want).filter(k => got[k] !== want[k]);
@@ -270,7 +326,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-protected controls (planted floors edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier all exit 1; own-phase manifest exits 0)`
+      `${ok ? 'PASS' : 'FAIL'} verify-protected controls (planted floors edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier, ledger row deleted, halt removed all exit 1; own-phase manifest and fleet-appended ledger rows exit 0)`
     );
     process.exit(ok ? 0 : 1);
   }
