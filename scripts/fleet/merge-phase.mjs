@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * scripts/fleet/merge-phase.mjs --pr <number> --head <sha> --phase P<n> [--dry-run]
+ * scripts/fleet/merge-phase.mjs --pr <number> --head <sha> --phase P<n> [--dry-run] | --control
  *
  * The one sanctioned merge path (DECISIONS.md FD-3: the founder ratified fleet merges).
  * Merges only when ALL hold, each re-read live at call time:
@@ -27,6 +27,37 @@ const opt = (k, d) => {
   const i = a.indexOf(k);
   return i >= 0 ? a[i + 1] : d;
 };
+// The review report must PASS and name the reviewed commit, as head_sha (schema 2, Codex) or head
+// (run-phase adds it). A report with no head, or a head shorter than 12 characters, never binds:
+// an empty head used to satisfy reviewed_commit.startsWith('') (Codex on P1 b8698d17).
+export function reviewBound(rep, reviewedCommit) {
+  const bound = String(rep?.head_sha || rep?.head || '');
+  const reviewed = String(reviewedCommit || '');
+  return (
+    bound.length >= 12 &&
+    reviewed.length >= 12 &&
+    (reviewed.startsWith(bound) || bound.startsWith(reviewed)) &&
+    /^(PASS|APPROVE)/i.test(String(rep?.verdict || ''))
+  );
+}
+if (a.includes('--control')) {
+  const c = 'b8698d17c295d0c31ddd17d452730331e84bdc37';
+  const cases = [
+    ['schema 2 head_sha PASS', { verdict: 'PASS', head_sha: c }, true],
+    ['head PASS', { verdict: 'PASS', head: c.slice(0, 12) }, true],
+    ['no head', { verdict: 'PASS' }, false],
+    ['empty head', { verdict: 'PASS', head: '' }, false],
+    ['short head', { verdict: 'PASS', head: c.slice(0, 7) }, false],
+    ['other commit', { verdict: 'PASS', head_sha: 'a'.repeat(40) }, false],
+    ['FAIL verdict', { verdict: 'FAIL', head_sha: c }, false],
+  ];
+  const bad = cases.filter(([, rep, want]) => reviewBound(rep, c) !== want);
+  for (const [name] of bad) console.log(`FAIL control: ${name}`);
+  console.log(
+    `${bad.length ? 'FAIL' : 'PASS'} merge-phase review-binding control (${cases.length - bad.length}/${cases.length})`
+  );
+  process.exit(bad.length ? 1 : 0);
+}
 const pr = opt('--pr');
 const head = opt('--head');
 const phase = opt('--phase');
@@ -230,14 +261,9 @@ try {
 } catch {}
 gate(
   'review',
-  !!rep &&
-    (String(rep.head || '').startsWith(
-      String(receipt.reviewed_commit).slice(0, 12)
-    ) ||
-      String(receipt.reviewed_commit).startsWith(String(rep.head || ''))) &&
-    /^(PASS|APPROVE)/i.test(String(rep.verdict || '')),
+  !!rep && reviewBound(rep, receipt?.reviewed_commit),
   rep
-    ? `${rep.lane || rep.vendor || 'lane'} ${rep.verdict} @ ${String(rep.head).slice(0, 12)}`
+    ? `${rep.lane || rep.vendor || 'lane'} ${rep.verdict} @ ${String(rep.head_sha || rep.head).slice(0, 12)}`
     : 'no report'
 );
 const at = run(process.execPath, [

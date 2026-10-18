@@ -87,3 +87,6 @@
 {"ts":"2026-10-18T05:00:56.003Z","kind":"review","phase":"P1","head":"1f97dfb615ce721fa07ad31c5c5d7c11d15a60a6","lane":"minimax","verdict":"PASS"}
 {"ts":"2026-10-18T05:06:01.395Z","kind":"review","phase":"P1","head":"5ea3b8dd4005d60a89aad97b0ec2183154411656","lane":"codex","verdict":"PASS"}
 {"ts":"2026-10-18T05:09:05.467Z","kind":"gate","phase":"P1","head":"5ea3b8dd4005d60a89aad97b0ec2183154411656","pass":7,"total":7}
+{"ts":"2026-10-18T05:37:22.134Z","kind":"integrate","phase":"P1","unit":"jev-cr","files":6,"head":"b8698d17c295d0c31ddd17d452730331e84bdc37"}
+{"ts":"2026-10-18T05:37:28.468Z","kind":"receipt-retired","phase":"P1","head":"b8698d17c295d0c31ddd17d452730331e84bdc37","reviewed":"5ea3b8dd4005d60a89aad97b0ec2183154411656","files":["release-receipts/P1.json","release-receipts/manifests/P1-review.json","release-receipts/manifests/P1-gate.json"]}
+{"ts":"2026-10-18T05:39:05.296Z","kind":"review","phase":"P1","head":"b8698d17c295d0c31ddd17d452730331e84bdc37","lane":"codex","verdict":"FAIL"}
