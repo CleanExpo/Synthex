@@ -255,7 +255,7 @@ describe('gen-openapi', () => {
 
     it('passes on a fresh contract and prints both counts', () => {
       const r = run(root, '--check');
-      expect(r.out).toContain('route.ts files: 8; exempt entries: 0');
+      expect(r.out).toContain('route files: 8; exempt entries: 0');
       expect(r.out).toContain('committed spec paths: 8');
       expect(r.status).toBe(0);
     }, 120_000);
@@ -284,7 +284,7 @@ describe('gen-openapi', () => {
         JSON.stringify([{ file: planted, reason: 'fixture' }])
       );
       const r = run(root, '--check', '--exempt', exempt);
-      expect(r.out).toContain('route.ts files: 9; exempt entries: 1');
+      expect(r.out).toContain('route files: 9; exempt entries: 1');
       expect(r.status).toBe(0);
     }, 120_000);
 
@@ -317,5 +317,47 @@ describe('gen-openapi', () => {
     expect(r.out).toContain('CAUGHT/OK: planted route without a spec entry');
     expect(r.out).toContain('CAUGHT/OK: deleted spec entry');
     expect(r.status).toBe(0);
+  }, 120_000);
+});
+
+describe('gen-openapi route file types', () => {
+  // Independent review of 62f7ca82 (P1): only route.ts was read, so the real
+  // route.tsx (og images) and route.js (health/redis-simple) handlers were
+  // missing from the contract and --check could not notice.
+  let root: string;
+  beforeAll(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'gen-openapi-ext-'));
+    const files: Record<string, string> = {
+      'app/api/card/route.tsx': `export async function GET() {\n  const el = <div>card</div>;\n  return new Response(String(el));\n}\n`,
+      'app/api/legacy/route.js': `export async function GET() {\n  return new Response('ok');\n}\n`,
+      'app/api/plain/route.ts': `export async function POST() {\n  return new Response('ok');\n}\n`,
+    };
+    for (const [rel, src] of Object.entries(files)) {
+      fs.mkdirSync(path.join(root, path.dirname(rel)), { recursive: true });
+      fs.writeFileSync(path.join(root, rel), src);
+    }
+    fs.mkdirSync(path.join(root, 'scripts/api'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'scripts/api/exempt-routes.json'), '[]\n');
+  });
+  afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  it('documents route.tsx and route.js handlers, and --check fails when a new one appears', () => {
+    expect(run(root).status).toBe(0);
+    const spec = readSpec(root);
+    expect(Object.keys(spec.paths).sort()).toEqual([
+      '/api/card',
+      '/api/legacy',
+      '/api/plain',
+    ]);
+    expect(Object.keys(spec.paths['/api/card'])).toContain('get');
+    expect(run(root, '--check').status).toBe(0);
+    fs.mkdirSync(path.join(root, 'app/api/added'), { recursive: true });
+    fs.writeFileSync(
+      path.join(root, 'app/api/added/route.js'),
+      'export async function GET() { return new Response("x"); }\n'
+    );
+    const drift = run(root, '--check');
+    expect(drift.status).toBe(1);
+    expect(drift.out).toContain('FAIL (b)');
   }, 120_000);
 });
