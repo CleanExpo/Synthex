@@ -154,6 +154,34 @@ describe('check-report state classifiers', () => {
     ).toBe('INCONCLUSIVE');
   });
 
+  it('a fleet summary outranks exit 0 for G8 commands', () => {
+    const run = (output: string) => ({ code: 0, tail: '', output });
+    expect(
+      call(
+        'classifyCommand',
+        run('check-ledgers: 0 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 2 DISABLED')
+      ).state
+    ).toBe('DISABLED');
+    expect(
+      call(
+        'classifyCommand',
+        run('x: 1 of 3 PASS, 1 FAIL, 0 INCONCLUSIVE, 1 DISABLED')
+      ).state
+    ).toBe('FAIL');
+    expect(call('classifyCommand', run('no summary here')).state).toBe('PASS');
+    const g8 = call('classifyG8', {
+      cmds: [
+        { label: 'a', present: true, run: run('ok') },
+        {
+          label: 'b',
+          present: true,
+          run: run('b: 0 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 2 DISABLED'),
+        },
+      ],
+    });
+    expect(g8.state).not.toBe('PASS');
+  });
+
   it('rejects a fifth state', () => {
     expect(() => call('result', 'PASSISH', [])).toThrow();
   });

@@ -464,32 +464,71 @@ export function classifyG7(e) {
   return result(state, lines);
 }
 
-/** G8. e = { cmds: [{ label, present: bool, reason?, run?: { code, timedOut, spawnError, tail } }] } */
+const SUMMARY_RE =
+  /^(\S+): (\d+) of (\d+) PASS, (\d+) FAIL, (\d+) INCONCLUSIVE, (\d+) DISABLED\b/m;
+
+/**
+ * State of one G8 command. A fleet script's own summary line outranks exit 0: a FAIL item
+ * is FAIL, and a run with zero PASS items checked nothing (INCONCLUSIVE or DISABLED).
+ * Scripts without that summary keep the exit-code rule.
+ */
+export function classifyCommand(run) {
+  if (run.timedOut || run.spawnError || run.code === null)
+    return {
+      state: 'INCONCLUSIVE',
+      why: run.timedOut ? 'timed out' : run.spawnError || 'no exit code',
+    };
+  if (run.code !== 0) return { state: 'FAIL', why: `exit ${run.code}` };
+  const lines = String(run.output ?? run.tail ?? '').split('\n');
+  let m = null;
+  for (const l of lines) m = SUMMARY_RE.exec(l.trim()) || m;
+  if (m) {
+    const [n, total, f, i, d] = m.slice(2).map(Number);
+    if (f > 0)
+      return { state: 'FAIL', why: `exit 0 but summary reports ${f} FAIL` };
+    if (total > 0 && n === 0) {
+      if (i > 0)
+        return {
+          state: 'INCONCLUSIVE',
+          why: `exit 0 but 0 of ${total} PASS, ${i} INCONCLUSIVE`,
+        };
+      if (d === total)
+        return {
+          state: 'DISABLED',
+          why: `exit 0 but 0 of ${total} PASS, all DISABLED — nothing checked`,
+        };
+    }
+  }
+  return { state: 'PASS', why: 'exit 0' };
+}
+
+/** G8. e = { cmds: [{ label, present: bool, reason?, run?: { code, timedOut, spawnError, tail, output? } }] } */
 export function classifyG8(e) {
   const lines = [];
-  const failing = [];
-  let unreadable = false;
-  let ran = 0;
+  const states = [];
   for (const c of e.cmds) {
     if (!c.present) {
       lines.push(`DISABLED \`${c.label}\` — ${c.reason}`);
       continue;
     }
-    ran++;
-    const r = c.run;
-    if (r.timedOut || r.spawnError || r.code === null) {
-      unreadable = true;
-      lines.push(
-        `INCONCLUSIVE \`${c.label}\` — ${r.timedOut ? 'timed out' : r.spawnError || 'no exit code'}`
-      );
-    } else if (r.code !== 0) {
-      failing.push(c.label);
-      lines.push(`FAIL \`${c.label}\` exit ${r.code} — ${r.tail}`);
-    } else lines.push(`PASS \`${c.label}\` exit 0 — ${r.tail}`);
+    const s = classifyCommand(c.run);
+    states.push({ label: c.label, state: s.state });
+    lines.push(
+      `${s.state} \`${c.label}\` ${s.why}${c.run.tail ? ` — ${c.run.tail}` : ''}`
+    );
   }
-  if (!ran) return result('DISABLED', lines);
+  const of = st => states.filter(x => x.state === st).map(x => x.label);
+  const failing = of('FAIL');
   if (failing.length) lines.unshift(`failing: ${failing.join(', ')}`);
-  return result(verdict(failing.length > 0, unreadable), lines);
+  if (failing.length) return result('FAIL', lines);
+  if (of('INCONCLUSIVE').length) return result('INCONCLUSIVE', lines);
+  if (!of('PASS').length) return result('DISABLED', lines);
+  // Some command PASS, some present command checked nothing: the finish line is not fully measured.
+  if (of('DISABLED').length) {
+    lines.unshift(`not measured: ${of('DISABLED').join(', ')}`);
+    return result('INCONCLUSIVE', lines);
+  }
+  return result('PASS', lines);
 }
 
 // ---------------------------------------------------------------- collectors (I/O)
@@ -722,6 +761,7 @@ function collectG8() {
       timedOut: r.timedOut,
       spawnError: r.spawnError,
       tail: lastLine(r.stdout) || lastLine(r.stderr),
+      output: `${r.stdout}\n${r.stderr}`,
     };
   }
   return classifyG8({ cmds });
@@ -1123,6 +1163,41 @@ export function controls() {
     'G8 no command present is DISABLED',
     classifyG8({ cmds: [{ label: 'm', present: false, reason: 'r' }] })
       .state === 'DISABLED'
+  );
+  const run0 = output => ({ code: 0, tail: '', output });
+  add(
+    "exit 0 + '0 of 2 PASS ... 2 DISABLED' summary is DISABLED, not PASS",
+    classifyCommand(
+      run0('check-ledgers: 0 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 2 DISABLED')
+    ).state === 'DISABLED'
+  );
+  add(
+    "exit 0 + '1 of 3 PASS, 1 FAIL' summary is FAIL",
+    classifyCommand(run0('x: 1 of 3 PASS, 1 FAIL, 0 INCONCLUSIVE, 1 DISABLED'))
+      .state === 'FAIL'
+  );
+  add(
+    "exit 0 + '0 of 2 PASS, 1 INCONCLUSIVE' summary is INCONCLUSIVE",
+    classifyCommand(run0('x: 0 of 2 PASS, 0 FAIL, 1 INCONCLUSIVE, 1 DISABLED'))
+      .state === 'INCONCLUSIVE'
+  );
+  add(
+    'exit 0 without a summary is PASS (positive control)',
+    classifyCommand(run0('verify-waterline: 0 events, 0 fleet-authored'))
+      .state === 'PASS'
+  );
+  add(
+    'G8 with one PASS and one all-DISABLED command is not PASS',
+    classifyG8({
+      cmds: [
+        { label: 'a', present: true, run: run0('ok') },
+        {
+          label: 'b',
+          present: true,
+          run: run0('b: 0 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 2 DISABLED'),
+        },
+      ],
+    }).state !== 'PASS'
   );
 
   let threw = false;
