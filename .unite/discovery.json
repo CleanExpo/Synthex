@@ -1,0 +1,577 @@
+{
+  "schema": "unite-discovery/1",
+  "project": "Synthex",
+  "created": "2026-10-18",
+  "request": "Prove one complete Nexus learning loop inside Synthex, first use case the digital business card (Follow the White Rabbit).",
+  "head": "cb1c5a0f1546cc9350bd1e996ea8a06fcec87dcb (origin/main) on branch feature/learning-loop-white-rabbit",
+  "budget": {
+    "max_sources": 16,
+    "max_retries": 2,
+    "max_minutes": 60,
+    "stop_condition": "existing components for hypothesis, authority, evidence, experiment and the card are located and both earlier claims are re-verified",
+    "spend": "subscription-only"
+  },
+  "authority": {
+    "approved_scope": [
+      "lib/learning-loop/**",
+      "lib/cards/**",
+      "app/card/**",
+      "app/api/card/**",
+      "app/api/learning-loop/**",
+      "app/dashboard/learning-loop/**",
+      "scripts/learning-loop/**",
+      "tests/unit/learning-loop/**",
+      "tests/integration/learning-loop/**",
+      "tests/e2e/card-*",
+      "scripts/auth-coverage-config.ts",
+      ".unite/**",
+      ".claude/settings.json",
+      ".claude/hooks/pre-compact-context.py",
+      ".claude/hooks/unite/**"
+    ],
+    "gated": [
+      "push and merge (PC orchestrator; founder brief 18/10/2026 forbids push here)",
+      "launching the pilot",
+      "prize scope and rules",
+      "music rights",
+      "deck clues and answers",
+      "production migrations",
+      "any send or publication"
+    ],
+    "source": "Phill's brief in this session, 18/10/2026: discovery plus reversible local implementation and verification only"
+  },
+  "altitude": {
+    "outcome": "An attendee who meets Phill leaves with one useful, actionable answer to a real need, and Synthex learns from evidence which front door helps more people, so the next brand decision rests on observed value rather than clicks.",
+    "levels": [
+      {
+        "level": "practical",
+        "approach": "A card page with a DISCOVER door (pick a need, get one action, say if it helped) and a CONNECT door (save contact, approved links), recording outcomes.",
+        "value": "A working card that helps before it asks for anything.",
+        "judge": "Playwright journey plus rows in the isolated database."
+      },
+      {
+        "level": "ambitious",
+        "approach": "The same card wired into one complete learning loop on IntentScape: hypothesis, challenge, authorised experiment under a goal contract, observed outcome with uncertainty, deterministic recommendation, and a recorded human decision.",
+        "value": "The first end-to-end proof that Synthex turns customer evidence into an accountable decision; the pattern every brand can reuse.",
+        "judge": "Integration test against Postgres: a recorded outcome reaches a recommendation and a decision that only an authorised human can record, with tenant isolation proven."
+      },
+      {
+        "level": "experimental",
+        "approach": "A cross-brand Nexus learning ledger where each brand's loops feed a shared, consent-bounded decision history.",
+        "value": "Multi-brand growth from verified learning.",
+        "judge": "Needs identity L1 and consent per brand; not yet buildable."
+      }
+    ],
+    "recommended": "ambitious",
+    "why": "Every piece exists except the loop's outcome-to-decision half; building it on IntentScape events needs no new table, and the card gives it a real, small, inspectable journey. The experimental level is blocked by identity L1, which is scoping only."
+  },
+  "depth": {
+    "practitioner_would": "A service designer and an experimentation lead would define the customer outcome first (need identified and an actionable answer received), separate diagnostics from benefit, pre-register the success measure and stop conditions, randomise the comparison, and report intervals rather than point estimates.",
+    "raw_material": "the Prisma models (IntentScape, LinkBio, experiments, outcome events), the A/B module on main and on the fleet branch, the outcome writer and its callers, the identity L1 scope document, the public-route allowlist",
+    "methods": "caller trace by git grep, schema read, pre-registration, randomised assignment, Wilson intervals, deterministic decision rules",
+    "judge": "integration tests on an isolated Postgres plus a browser journey; no model verdict"
+  },
+  "range": [
+    {
+      "discipline": "Service design",
+      "verb": "help before asking",
+      "method": "three-door journey with the useful action before any contact request",
+      "tool": "Next.js page reusing LinkBioPage",
+      "finding_ids": ["f4"]
+    },
+    {
+      "discipline": "Experimental design",
+      "verb": "compare two front doors fairly",
+      "method": "randomised assignment with equivalent offers, pre-registered measure and stop conditions",
+      "tool": "per-session variant recorded on every event",
+      "finding_ids": ["f7"]
+    },
+    {
+      "discipline": "Statistics",
+      "verb": "say how sure we are",
+      "method": "Wilson score interval per variant and for the difference",
+      "tool": "lib/learning-loop summary",
+      "finding_ids": ["f7"]
+    },
+    {
+      "discipline": "Data engineering",
+      "verb": "keep evidence provenance",
+      "method": "append-only events with data class (synthetic, preview, pilot) and revision",
+      "tool": "IntentScapeEvent",
+      "finding_ids": ["f3"]
+    },
+    {
+      "discipline": "Privacy engineering",
+      "verb": "keep consent separate from identity",
+      "method": "no personal data in the slice; random session ids",
+      "tool": "identity L1 scope document as constraint",
+      "finding_ids": ["f6"]
+    }
+  ],
+  "sources": [
+    {
+      "source": "IntentScape models",
+      "status": "READ",
+      "ref": "prisma/schema.prisma:1994-2160"
+    },
+    {
+      "source": "IntentScape repository",
+      "status": "READ",
+      "ref": "lib/intentscape/prisma-repository.ts:950-1000"
+    },
+    {
+      "source": "outcome writer",
+      "status": "READ",
+      "ref": "lib/marketing-agency/intelligence/signal-persistence.ts:204"
+    },
+    {
+      "source": "A/B module on main",
+      "status": "READ",
+      "ref": "git show origin/main:lib/ab-testing.ts"
+    },
+    {
+      "source": "A/B module on fleet P2",
+      "status": "READ",
+      "ref": "fleet/p3-integrate:lib/ab-testing.ts"
+    },
+    {
+      "source": "experiment models",
+      "status": "READ",
+      "ref": "prisma/schema.prisma:4909-4960, 6032-6070"
+    },
+    {
+      "source": "LinkBio models and page",
+      "status": "READ",
+      "ref": "prisma/schema.prisma:3183-3250; app/bio/[slug]"
+    },
+    {
+      "source": "opportunity-map feedback route",
+      "status": "READ",
+      "ref": "app/api/opportunity-map/feedback/route.ts"
+    },
+    {
+      "source": "public route allowlist",
+      "status": "READ",
+      "ref": "scripts/auth-coverage-config.ts:28-55"
+    },
+    {
+      "source": "identity resolution L1",
+      "status": "READ",
+      "ref": "docs/tier-b/identity-resolution-l1.md"
+    },
+    {
+      "source": "programme spec",
+      "status": "READ",
+      "ref": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md (O5, M4, D3)"
+    },
+    {
+      "source": "real business-card deck and clues",
+      "status": "UNREACHED",
+      "ref": "Phill",
+      "why": "not supplied; kept as unconfirmed configuration"
+    },
+    {
+      "source": "production data",
+      "status": "ABSENT",
+      "ref": "not read by design; isolated local Postgres only"
+    }
+  ],
+  "findings": [
+    {
+      "id": "f1",
+      "section": "verified",
+      "title": "Outcome recording still has no production caller",
+      "evidence": [
+        "[VERIFIED command: git grep -l -w recordMarketingAgencyOutcome -- app lib lists only lib/marketing-agency/intelligence/signal-persistence.ts]"
+      ],
+      "consequence": "Marketing-agency outcomes are never written in production; the loop's 'observed outcome' step has no existing writer.",
+      "confidence": "high",
+      "action": "Do not wire it blindly (it needs a signal id); fleet P6 owns the outcome writer. The card loop records its own outcomes on IntentScape events.",
+      "effort": {
+        "value": "none in this milestone",
+        "label": "ESTIMATE",
+        "basis": "left to fleet P6"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "no change"
+      },
+      "dependencies": ["fleet P6"],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "npm run jev:det -- --family J7",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f2",
+      "section": "verified",
+      "title": "The legacy A/B path uses the throwing placeholder on main, not on the fleet branch",
+      "evidence": [
+        "[VERIFIED git show origin/main:lib/ab-testing.ts lines 6 and 78 import createClient from @/lib/platform/noop-client]",
+        "[VERIFIED fleet/p3-integrate lib/ab-testing.ts: retired in 63566bad; every persistence path throws ABTestingNotProvisionedError]",
+        "[VERIFIED prisma/schema.prisma:4909-4960 SEOExperiment and ExperimentObservation are real persisted tables, so the claim does not generalise]"
+      ],
+      "consequence": "The card comparison must not build on lib/ab-testing.ts; it records its own randomised variant.",
+      "confidence": "high",
+      "action": "Record variant assignment on each card event; leave A/B storage to a later decision.",
+      "effort": {
+        "value": "included in the milestone",
+        "label": "ESTIMATE",
+        "basis": "variant field on events"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "no new table"
+      },
+      "dependencies": [],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f3",
+      "section": "buried",
+      "title": "IntentScape already holds hypothesis, human authority and an append-only evidence log",
+      "evidence": [
+        "[VERIFIED prisma/schema.prisma:2084-2160 IntentScapeHypothesis, IntentScapeGoalContract (immutable human promotion with authorityBoundaries), IntentScapeEvent (append-only, server-written)]"
+      ],
+      "consequence": "The learning loop needs no new table; experiment, outcome, recommendation and decision become typed events bound to a goal contract.",
+      "confidence": "high",
+      "action": "Build lib/learning-loop on IntentScapeEvent with goal-contract authority checks.",
+      "effort": {
+        "value": "3-4 days",
+        "label": "ESTIMATE",
+        "basis": "module, routes, page, tests"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "existing database"
+      },
+      "dependencies": [],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.integration.cjs tests/integration/learning-loop",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f4",
+      "section": "buried",
+      "title": "LinkBioPage already is a published contact card with approved links",
+      "evidence": [
+        "[VERIFIED prisma/schema.prisma:3183-3250 LinkBioPage and LinkBioLink with isPublished and isVisible]",
+        "[VERIFIED app/api/bio/[pageId]/track/route.ts counts views and clicks]"
+      ],
+      "consequence": "CONNECT reuses it; the card adds DISCOVER without duplicating contact data.",
+      "confidence": "high",
+      "action": "Read the bio page by slug for profile and visible links; keep its click counters as diagnostics.",
+      "effort": {
+        "value": "0.5 day",
+        "label": "ESTIMATE",
+        "basis": "read-only reuse"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "existing tables"
+      },
+      "dependencies": [],
+      "acceptance": {
+        "kind": "journey",
+        "cmd": "npx playwright test e2e/card-white-rabbit.spec.ts",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f5",
+      "section": "gap",
+      "title": "No digital business card or White Rabbit experience exists",
+      "evidence": [
+        "[VERIFIED command: git grep -l -i -E 'white.?rabbit|business.?card|vcard' -- app lib components matches only dashboard business-overview components]"
+      ],
+      "consequence": "The card is new; the smallest slice is DISCOVER plus CONNECT, with SOLVE held as unconfirmed configuration.",
+      "confidence": "high",
+      "action": "Build app/card/[slug] with SOLVE disabled until the deck, prize and music are confirmed.",
+      "effort": {
+        "value": "2 days",
+        "label": "ESTIMATE",
+        "basis": "page, config, events route"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "static actions, no model calls"
+      },
+      "dependencies": ["f4"],
+      "acceptance": {
+        "kind": "journey",
+        "cmd": "npx playwright test e2e/card-white-rabbit.spec.ts",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f6",
+      "section": "risk",
+      "title": "A shared identifier is not consent, and identity L1 is not built",
+      "evidence": [
+        "[VERIFIED docs/tier-b/identity-resolution-l1.md: scoping only; cross-brand match is for the pooled frequency cap, NOT for marketing reuse without consent; external client excluded]"
+      ],
+      "consequence": "Collecting emails on the card would create a consent and Spam Act obligation the platform cannot yet honour across brands.",
+      "confidence": "high",
+      "action": "The slice stores no personal data; email capture waits for a consent design and Phill's approval.",
+      "effort": {
+        "value": "none",
+        "label": "ESTIMATE",
+        "basis": "by omission"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "none"
+      },
+      "dependencies": [],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop/card-events.test.ts",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f7",
+      "section": "opportunity",
+      "title": "A fair story-versus-plain comparison is cheap if assignment is recorded from day one",
+      "evidence": [
+        "[INFERENCE from f2 and f3: a per-session random variant on every event supports a later comparison without A/B tables]"
+      ],
+      "consequence": "When the pilot is approved, the first sessions already count toward the comparison.",
+      "confidence": "medium",
+      "action": "Assign variant per session, keep the substantive offer identical, report Wilson intervals and label data class.",
+      "effort": {
+        "value": "1 day",
+        "label": "ESTIMATE",
+        "basis": "assignment plus summary"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "none"
+      },
+      "dependencies": ["f3"],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop/summary.test.ts",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f8",
+      "section": "challenged",
+      "title": "Assumption: clicks and shares show the card works",
+      "evidence": [
+        "[VERIFIED app/api/bio/[pageId]/track/route.ts records only view and click counts]",
+        "[INFERENCE from the brief's primary measure: benefit is a need identified plus an actionable answer marked useful]"
+      ],
+      "consequence": "Click counters stay diagnostics; the loop's primary measure is the useful-answer rate.",
+      "confidence": "high",
+      "action": "Keep diagnostics in a separate section of the summary and never feed them to the recommendation.",
+      "effort": {
+        "value": "included",
+        "label": "ESTIMATE",
+        "basis": "summary design"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "none"
+      },
+      "dependencies": [],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop/summary.test.ts",
+        "expect_exit": 0
+      }
+    },
+    {
+      "id": "f9",
+      "section": "hypothesis",
+      "title": "The story card helps at least as many attendees as the plain card",
+      "evidence": [
+        "[UNCONFIRMED no attendee data exists; the pilot is not launched]"
+      ],
+      "consequence": "If false, the story adds friction and should be revised or dropped.",
+      "confidence": "low",
+      "action": "Pre-register in the experiment record; decide only after the pilot is approved and run.",
+      "effort": {
+        "value": "1 event day",
+        "label": "ESTIMATE",
+        "basis": "one pilot event"
+      },
+      "ongoing_cost": {
+        "value": "AUD 0/month",
+        "label": "ESTIMATE",
+        "basis": "static content"
+      },
+      "dependencies": ["pilot approval (Phill)", "f7"],
+      "acceptance": {
+        "kind": "command",
+        "cmd": "node scripts/learning-loop/summary.mjs --experiment exp-white-rabbit-front-door --data-class pilot --min-sessions 60",
+        "expect_exit": 0
+      },
+      "experiment": {
+        "precedent": "[INFERENCE from the opportunity-map feedback route, which already records a usefulness verdict per public scan]",
+        "prerequisites": "pilot approval, at least 60 sessions per variant, equivalent offers",
+        "experiment": "randomise story versus plain per session at one event and compare the useful-answer rate with Wilson intervals",
+        "stop_condition": "60 sessions per variant, the event ends, or any consent error or accessibility failure rate above 5 percent",
+        "limit": "one event gives a small sample; report the interval and treat the result as directional, not causal proof beyond that audience"
+      }
+    }
+  ],
+  "priorities": {
+    "top3": [
+      {
+        "finding": "f3",
+        "scores": {
+          "user_value": 4,
+          "revenue": 3,
+          "time_saved": 4,
+          "reliability": 5,
+          "reuse": 5
+        },
+        "total": 21,
+        "rationale": "The first complete learning loop, reusable by every brand, no new table."
+      },
+      {
+        "finding": "f5",
+        "scores": {
+          "user_value": 5,
+          "revenue": 3,
+          "time_saved": 3,
+          "reliability": 3,
+          "reuse": 3
+        },
+        "total": 17,
+        "rationale": "Gives the loop a real, small customer journey."
+      },
+      {
+        "finding": "f7",
+        "scores": {
+          "user_value": 3,
+          "revenue": 3,
+          "time_saved": 3,
+          "reliability": 4,
+          "reuse": 4
+        },
+        "total": 17,
+        "rationale": "Makes the later comparison fair from the first session."
+      }
+    ],
+    "do_nothing": {
+      "consequence": "Synthex keeps hypotheses and goal contracts with no path from outcome to decision, and the card stays an idea.",
+      "cost_of_delay": "Each event Phill attends without the card is learning not captured; no direct spend."
+    }
+  },
+  "milestone": {
+    "schema": "unite-milestone/1",
+    "id": "m-2026-10-18-white-rabbit-learning-loop",
+    "from_finding": "f3",
+    "promise": "One complete learning loop runs locally: an attendee picks a need on the card and gets an action, the outcome is recorded with provenance, a deterministic recommendation is produced, and only an authorised human can record the next decision, all bound to an approved goal contract in one organisation.",
+    "scope_in": [
+      "lib/learning-loop/**",
+      "lib/cards/**",
+      "app/card/**",
+      "app/api/card/**",
+      "app/api/learning-loop/**",
+      "app/dashboard/learning-loop/**",
+      "scripts/learning-loop/**",
+      "tests/unit/learning-loop/**",
+      "tests/integration/learning-loop/**",
+      "tests/e2e/card-*",
+      "scripts/auth-coverage-config.ts",
+      ".unite/**",
+      ".claude/settings.json",
+      ".claude/hooks/pre-compact-context.py",
+      ".claude/hooks/unite/**"
+    ],
+    "scope_out": [
+      "email capture",
+      "SOLVE gameplay until the deck, prize and music are confirmed",
+      "production migrations",
+      "pilot launch",
+      "lib/ab-testing.ts"
+    ],
+    "acceptance": [
+      {
+        "id": "a1",
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop",
+        "expect_exit": 0,
+        "paths": [
+          "lib/learning-loop/**",
+          "lib/cards/**",
+          "tests/unit/learning-loop/**"
+        ]
+      },
+      {
+        "id": "a2",
+        "kind": "command",
+        "cmd": "DATABASE_URL=postgres://postgres:test@localhost:5499/synthex_test REDIS_URL=redis://localhost:6399 npx jest --config config/jest/jest.integration.cjs --runInBand tests/integration/learning-loop",
+        "expect_exit": 0,
+        "paths": [
+          "lib/learning-loop/**",
+          "app/api/card/**",
+          "app/api/learning-loop/**",
+          "tests/integration/learning-loop/**"
+        ]
+      },
+      {
+        "id": "a3",
+        "kind": "journey",
+        "cmd": "E2E_LEARNING_LOOP=1 PW_SKIP_WEBSERVER=1 BASE_URL=http://localhost:3002 npx playwright test tests/e2e/card-white-rabbit.spec.ts --project=chromium --retries=0 --workers=1",
+        "expect_exit": 0,
+        "paths": [
+          "app/card/**",
+          "app/api/card/**",
+          "app/dashboard/learning-loop/**",
+          "lib/cards/**",
+          "tests/e2e/card-*"
+        ],
+        "journey": "A visitor opens the card, picks a need, gets an action, marks it useful and saves the contact; the owner opens the loop page, sees the observed outcome and recommendation, and records a decision."
+      },
+      {
+        "id": "a4",
+        "kind": "command",
+        "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/auth/route-coverage.test.ts",
+        "expect_exit": 0,
+        "paths": [
+          "app/api/card/**",
+          "app/api/learning-loop/**",
+          "scripts/auth-coverage-config.ts"
+        ]
+      },
+      {
+        "id": "a5",
+        "kind": "command",
+        "cmd": "DATABASE_URL=postgresql://synthex:localdev@127.0.0.1:54329/synthex_dev npx tsx scripts/learning-loop/export.ts seed-org-unite exp-white-rabbit-front-door /tmp/loop.json && python3 ${UNITE_SKILLS:-$HOME/.claude/skills}/unite-project-completion/scripts/check_learning_loop.py /tmp/loop.json",
+        "expect_exit": 0,
+        "paths": [
+          "lib/learning-loop/**",
+          "lib/cards/**",
+          "scripts/learning-loop/**",
+          "app/api/learning-loop/**"
+        ]
+      }
+    ],
+    "finish_target": "VERIFIED_LOCAL",
+    "gated": [
+      "merge (PC orchestrator; founder brief forbids push here)",
+      "pilot launch (Phill)",
+      "production migration (none needed)"
+    ]
+  }
+}

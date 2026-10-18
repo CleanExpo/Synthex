@@ -1,0 +1,98 @@
+{
+  "schema": "unite-milestone/1",
+  "id": "m-2026-10-18-white-rabbit-learning-loop",
+  "from_finding": "f3",
+  "promise": "One complete learning loop runs locally: an attendee picks a need on the card and gets an action, the outcome is recorded with provenance, a deterministic recommendation is produced, and only an authorised human can record the next decision, all bound to an approved goal contract in one organisation.",
+  "scope_in": [
+    "lib/learning-loop/**",
+    "lib/cards/**",
+    "app/card/**",
+    "app/api/card/**",
+    "app/api/learning-loop/**",
+    "app/dashboard/learning-loop/**",
+    "scripts/learning-loop/**",
+    "tests/unit/learning-loop/**",
+    "tests/integration/learning-loop/**",
+    "tests/e2e/card-*",
+    "scripts/auth-coverage-config.ts",
+    ".unite/**",
+    ".claude/settings.json",
+    ".claude/hooks/pre-compact-context.py",
+    ".claude/hooks/unite/**"
+  ],
+  "scope_out": [
+    "email capture",
+    "SOLVE gameplay until the deck, prize and music are confirmed",
+    "production migrations",
+    "pilot launch",
+    "lib/ab-testing.ts"
+  ],
+  "acceptance": [
+    {
+      "id": "a1",
+      "kind": "command",
+      "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop",
+      "expect_exit": 0,
+      "paths": [
+        "lib/learning-loop/**",
+        "lib/cards/**",
+        "tests/unit/learning-loop/**"
+      ]
+    },
+    {
+      "id": "a2",
+      "kind": "command",
+      "cmd": "DATABASE_URL=postgres://postgres:test@localhost:5499/synthex_test REDIS_URL=redis://localhost:6399 npx jest --config config/jest/jest.integration.cjs --runInBand tests/integration/learning-loop",
+      "expect_exit": 0,
+      "paths": [
+        "lib/learning-loop/**",
+        "app/api/card/**",
+        "app/api/learning-loop/**",
+        "tests/integration/learning-loop/**"
+      ]
+    },
+    {
+      "id": "a3",
+      "kind": "journey",
+      "cmd": "E2E_LEARNING_LOOP=1 PW_SKIP_WEBSERVER=1 BASE_URL=http://localhost:3002 npx playwright test tests/e2e/card-white-rabbit.spec.ts --project=chromium --retries=0 --workers=1",
+      "expect_exit": 0,
+      "paths": [
+        "app/card/**",
+        "app/api/card/**",
+        "app/dashboard/learning-loop/**",
+        "lib/cards/**",
+        "tests/e2e/card-*"
+      ],
+      "journey": "A visitor opens the card, picks a need, gets an action, marks it useful and saves the contact; the owner opens the loop page, sees the observed outcome and recommendation, and records a decision."
+    },
+    {
+      "id": "a4",
+      "kind": "command",
+      "cmd": "npx jest --config config/jest/jest.worktree.cjs tests/auth/route-coverage.test.ts",
+      "expect_exit": 0,
+      "paths": [
+        "app/api/card/**",
+        "app/api/learning-loop/**",
+        "scripts/auth-coverage-config.ts"
+      ]
+    },
+    {
+      "id": "a5",
+      "kind": "command",
+      "cmd": "DATABASE_URL=postgresql://synthex:localdev@127.0.0.1:54329/synthex_dev npx tsx scripts/learning-loop/export.ts seed-org-unite exp-white-rabbit-front-door /tmp/loop.json && python3 ${UNITE_SKILLS:-$HOME/.claude/skills}/unite-project-completion/scripts/check_learning_loop.py /tmp/loop.json",
+      "expect_exit": 0,
+      "paths": [
+        "lib/learning-loop/**",
+        "lib/cards/**",
+        "scripts/learning-loop/**",
+        "app/api/learning-loop/**"
+      ]
+    }
+  ],
+  "finish_target": "VERIFIED_LOCAL",
+  "gated": [
+    "merge (PC orchestrator; founder brief forbids push here)",
+    "pilot launch (Phill)",
+    "production migration (none needed)"
+  ]
+}

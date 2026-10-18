@@ -246,6 +246,15 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/unite/unite_context.py --save",
+            "timeout": 15
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -258,6 +267,17 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/unite/unite_guard.py",
+            "timeout": 15,
+            "onFailure": "block"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -267,6 +287,17 @@
           {
             "type": "command",
             "command": "echo '[FILE CHANGED] Remember to update the relevant Linear issue when this task is complete.'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/unite/unite_context.py",
+            "timeout": 15
           }
         ]
       }

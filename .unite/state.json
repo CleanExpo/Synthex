@@ -1,0 +1,11 @@
+{
+  "schema": "unite-state/1",
+  "milestone": "m-2026-10-18-white-rabbit-learning-loop",
+  "decisions": [],
+  "blockers": [],
+  "next": null,
+  "pr": null,
+  "head": "cb1c5a0f1546cc9350bd1e996ea8a06fcec87dcb",
+  "branch": "feature/learning-loop-white-rabbit",
+  "updated_at": "2026-10-18T02:41:19Z"
+}

@@ -2,7 +2,11 @@
 """
 Pre-Compact Context Saver for Claude Code (Synthex)
 Triggered before every context compaction event via the PreCompact hook.
-Outputs additionalContext guidance so the compactor preserves critical rules.
+Writes the snapshot (state plus the compaction guidance) to disk and prints
+nothing: Claude Code's PreCompact hooks may only block compaction and reject
+hookSpecificOutput, so the old additionalContext output failed validation on
+every /compact (hooks reference, "PreCompact", fetched 18/10/2026). The
+SessionStart hook with the `compact` source re-injects state after compaction.
 Adapted from NodeJS-Starter-V1 pre-compact-save.py pattern.
 """
 
@@ -70,15 +74,9 @@ def main() -> None:
     project_dir = get_project_dir()
 
     write_state_snapshot(project_dir, session_id)
-
-    output = {
-        "hookSpecificOutput": {
-            "hookEventName": "PreCompact",
-            "additionalContext": build_compaction_guidance()
-        }
-    }
-
-    print(json.dumps(output))
+    guidance_path = os.path.join(project_dir, ".claude", "scratchpad", "pre-compact-guidance.md")
+    with open(guidance_path, "w", encoding="utf-8") as fh:
+        fh.write(build_compaction_guidance() + "\n")
     sys.exit(0)
 
 

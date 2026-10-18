@@ -1,0 +1,10 @@
+/goal Milestone m-2026-10-18-white-rabbit-learning-loop. Print each command and its exit code in this session:
+1. npx jest --config config/jest/jest.worktree.cjs tests/unit/learning-loop -> 0
+2. DATABASE_URL=postgres://postgres:test@localhost:5499/synthex_test REDIS_URL=redis://localhost:6399 npx jest --config config/jest/jest.integration.cjs --runInBand tests/integration/learning-loop -> 0
+3. E2E_LEARNING_LOOP=1 PW_SKIP_WEBSERVER=1 BASE_URL=http://localhost:3002 npx playwright test tests/e2e/card-white-rabbit.spec.ts --project=chromium --retries=0 --workers=1 -> 0
+4. npx jest --config config/jest/jest.worktree.cjs tests/auth/route-coverage.test.ts -> 0
+5. DATABASE_URL=postgresql://synthex:localdev@127.0.0.1:54329/synthex_dev npx tsx scripts/learning-loop/export.ts seed-org-unite exp-white-rabbit-front-door /tmp/loop.json && python3 ${UNITE_SKILLS:-$HOME/.claude/skills}/unite-project-completion/scripts/check_learning_loop.py /tmp/loop.json -> 0
+6. python3 .claude/hooks/unite/unite_state.py evidence check -> 0
+7. python3 .claude/hooks/unite/unite_state.py status --finish VERIFIED_LOCAL -> 0
+GATED (report, never attempt): merge (PC orchestrator; founder brief forbids push here), pilot launch (Phill), production migration (none needed).
+A skipped or unavailable command is UNPROVEN. Stop after 30 turns and report the finish state.
