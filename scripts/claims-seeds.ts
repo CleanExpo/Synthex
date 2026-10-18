@@ -105,9 +105,17 @@ const realFs = {
   readdirSync: fs.readdirSync,
   readFileSync: fs.readFileSync,
 };
-const inSnapshot = (p: unknown) =>
-  typeof p === 'string' && (p === VROOT || p.startsWith(`${VROOT}/`));
-const relOf = (p: string) => path.relative(VROOT, p);
+// On Windows a path under VROOT arrives with backslashes, and drive-qualified
+// once something has run it through path.resolve. Compare resolved forms;
+// keys stay '/'-separated because the snapshot tree is keyed that way.
+const VROOT_ABS = path.resolve(VROOT);
+const inSnapshot = (p: unknown) => {
+  if (typeof p !== 'string') return false;
+  const abs = path.resolve(p);
+  return abs === VROOT_ABS || abs.startsWith(VROOT_ABS + path.sep);
+};
+const relOf = (p: string) =>
+  path.relative(VROOT_ABS, p).split(path.sep).join('/');
 const contentOf = (entry: Entry, rel: string) =>
   entry.oid.startsWith('wt:')
     ? (realFs.readFileSync(path.join(REPO, rel), 'utf8') as string)

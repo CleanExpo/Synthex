@@ -29,7 +29,9 @@ const requireFromRoot = createRequire(path.join(ROOT, 'package.json'));
 const APP = path.join(ROOT, 'app');
 const SOURCE_EXT = ['.ts', '.tsx', '.js', '.jsx', '.mjs'];
 
-export const rel = (file: string) => path.relative(ROOT, file);
+// Forward slashes on every platform: the suites compare against '/' paths.
+export const rel = (file: string) =>
+  path.relative(ROOT, file).split(path.sep).join('/');
 
 // ── Normalisation ────────────────────────────────────────────────────────────
 
@@ -1126,7 +1128,7 @@ export const GOVERNED_UNCHANGED_PATHS = [
 ];
 export const isGovernedUnchanged = (file: string) =>
   GOVERNED_UNCHANGED_PATHS.includes(
-    path.isAbsolute(file) ? path.relative(ROOT, file) : file
+    path.isAbsolute(file) ? rel(file) : file.split(path.sep).join('/')
   );
 
 // Short seeds (under SHORT_SEED_WORDS words) match only an exact whole
