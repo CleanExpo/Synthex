@@ -10,12 +10,15 @@ import {
   policy,
   ledgerRows,
   tryGit,
+  git,
   isFleetCommit,
   STATES,
   readJson,
   report,
   isMain,
 } from './lib.mjs';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 const a = process.argv.slice(2);
 const opt = (k, d) => {
   const i = a.indexOf(k);
@@ -67,12 +70,24 @@ if (isMain(import.meta.url)) {
       rows: [{ kind: 'waterline' }],
       receipt: { state: 'PASS', gate: [] },
     });
+    const unresolved = spawnSync(
+      process.execPath,
+      [
+        fileURLToPath(import.meta.url),
+        '--phase',
+        'P99',
+        '--base',
+        'refs/heads/no-such-ref',
+      ],
+      { encoding: 'utf8' }
+    ).status;
     const ok =
       bad[0].state === 'FAIL' &&
       bad[2].state === 'FAIL' &&
-      good.every(i => i.state === 'PASS');
+      good.every(i => i.state === 'PASS') &&
+      unresolved === 2;
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} attest-phase controls (human commit and fifth state fail; fleet-only passes)`
+      `${ok ? 'PASS' : 'FAIL'} attest-phase controls (human commit and fifth state fail; fleet-only passes; unresolvable base exits 2)`
     );
     process.exit(ok ? 0 : 1);
   }
@@ -82,12 +97,30 @@ if (isMain(import.meta.url)) {
     process.exit(2);
   }
   const base = opt('--base', 'origin/main');
-  const shas = (tryGit(['rev-list', `${base}..HEAD`]) || '')
+  const head = opt('--head', 'HEAD');
+  // Both refs must resolve: an unresolvable base gave zero commits and the "commits" item passed
+  // (verifier audit). The receipt is read at --head, not from the working tree.
+  for (const [name, ref] of [
+    ['base', base],
+    ['head', head],
+  ])
+    if (tryGit(['rev-parse', '--verify', '-q', `${ref}^{commit}`]) === null) {
+      console.log(
+        `INCONCLUSIVE attest-phase: ${name} ${ref} does not resolve to a commit`
+      );
+      process.exit(2);
+    }
+  const shas = git(['rev-list', `${base}..${head}`])
     .split('\n')
     .filter(Boolean);
   const commits = shas.map(sha => ({ sha, fleet: isFleetCommit(sha) }));
   const rows = ledgerRows().filter(r => r.phase === phase);
-  const receipt = readJson(`release-receipts/${phase}.json`, null);
+  let receipt = null;
+  try {
+    receipt = JSON.parse(
+      git(['show', `${head}:release-receipts/${phase}.json`])
+    );
+  } catch {}
   process.exit(
     report(`attest-phase ${phase}`, evaluate({ commits, rows, receipt }))
   );

@@ -164,11 +164,16 @@ export function commitTrailers(sha, cwd = ROOT) {
 // a signed-commit trust root is DECISIONS.md OPEN-4.
 export function isFleetCommit(sha, pol = policy(), cwd = ROOT) {
   const email = git(['show', '-s', '--format=%ce', sha], { cwd });
+  if (email !== pol.committer.email) return false;
   const role = commitTrailers(sha, cwd)[pol.committer.trailer];
-  return (
-    email === pol.committer.email &&
-    Object.prototype.hasOwnProperty.call(pol.roles || {}, String(role || ''))
-  );
+  if (Object.prototype.hasOwnProperty.call(pol.roles || {}, String(role || '')))
+    return true;
+  // run-phase integrate's merge commits carry git's default message (no trailer); a fleet-committed
+  // merge still counts. Its content is checked as a pure merge elsewhere.
+  const parents = git(['show', '-s', '--format=%P', sha], { cwd })
+    .split(' ')
+    .filter(Boolean);
+  return parents.length > 1;
 }
 export function utcDate(d = new Date()) {
   return d.toISOString().slice(0, 10);

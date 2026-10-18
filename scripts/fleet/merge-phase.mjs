@@ -212,6 +212,30 @@ if (p) {
     p.headRefName
   );
 }
+// Everything below is judged at --head, never from the working tree (verifier audit: a dirty
+// checkout could supply a receipt or report the head does not carry). Ledger rows are the only
+// uncommitted writes this script itself makes.
+run('git', ['fetch', '-q', 'origin', head]);
+const dirty = run('git', [
+  'status',
+  '--porcelain',
+  '--untracked-files=all',
+  '-z',
+])
+  .stdout.split('\0')
+  .filter(Boolean)
+  .map(l => l.slice(3))
+  .filter(f => f && !f.startsWith('release-receipts/ledger/'));
+gate('clean-tree', dirty.length === 0, dirty.slice(0, 5).join(', ') || 'clean');
+const atHead = file => {
+  const r = run('git', ['show', `${head}:${file}`]);
+  if (r.code !== 0) return null;
+  try {
+    return JSON.parse(r.stdout);
+  } catch {
+    return null;
+  }
+};
 const vr = run(process.execPath, [
   'scripts/release/verify-receipt.mjs',
   '--head',
@@ -254,11 +278,8 @@ gate(
     !missingReq.length,
   `${cr.length} checks${partial ? ' (partial read)' : ''}, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
 );
-const receipt = readJson(`release-receipts/${phase}.json`, null);
-let rep = null;
-try {
-  rep = receipt?.review_report ? readJson(receipt.review_report) : null;
-} catch {}
+const receipt = atHead(`release-receipts/${phase}.json`);
+const rep = receipt?.review_report ? atHead(receipt.review_report) : null;
 gate(
   'review',
   !!rep && reviewBound(rep, receipt?.reviewed_commit),
@@ -270,6 +291,8 @@ const at = run(process.execPath, [
   'scripts/fleet/attest-phase.mjs',
   '--phase',
   phase,
+  '--head',
+  head,
 ]);
 gate('attest', at.code === 0, at.stdout.trim().split('\n').pop());
 // Only disposition threads once every other gate holds; replies are outward-facing.

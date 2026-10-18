@@ -15,6 +15,7 @@
  */
 import { policy, isProtected, isMain } from './lib.mjs';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 export function evaluate(action, pol = policy()) {
   const role = action.role || 'builder';
@@ -27,6 +28,17 @@ export function evaluate(action, pol = policy()) {
     case 'edit':
     case 'delete': {
       if (!action.path) return deny('write without path');
+      // Normalise before any glob test: './scripts/fleet/policy.json' or 'lib/../scripts/…' used to
+      // miss the protected globs (verifier audit). Absolute or escaping paths are outside the tree.
+      const raw = String(action.path).replace(/\\/g, '/');
+      const norm = path.posix.normalize(raw).replace(/^(\.\/)+/, '');
+      if (
+        path.posix.isAbsolute(norm) ||
+        norm === '..' ||
+        norm.startsWith('../')
+      )
+        return deny('write outside worktree (absolute or escaping path)');
+      action = { ...action, path: norm };
       if (
         role === 'reader' ||
         role === 'verifier' ||
@@ -63,7 +75,11 @@ export function evaluate(action, pol = policy()) {
       return allow('inside worktree, unprotected');
     }
     case 'shell': {
-      const cmd = String(action.command || '');
+      // Whitespace-normalised, so 'git  push  --force' cannot slip past a substring rule.
+      const cmd = String(action.command || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const words = cmd.split(/[\s;&|()]+/).filter(Boolean);
       if (role === 'reader' || role === 'judge')
         return deny(`${role} holds no shell`);
       // The one sanctioned merge path (FD-3): releaser through merge-phase.mjs. Checked before the
@@ -75,6 +91,27 @@ export function evaluate(action, pol = policy()) {
       }
       for (const f of pol.forbidden_commands)
         if (cmd.includes(f)) return deny(`forbidden command: ${f}`);
+      // API and refspec equivalents of the forbidden merge, force-push and branch delete.
+      if (/\bgh api\b/.test(cmd) && /\/pulls\/\d+\/merge\b/.test(cmd))
+        return deny('direct merge through gh api');
+      const pushAt = words.findIndex(
+        (w, i) => w === 'push' && words[i - 1] === 'git'
+      );
+      if (pushAt >= 0) {
+        const rest = words.slice(pushAt + 1);
+        if (
+          rest.some(
+            w =>
+              w.startsWith('+') ||
+              w.startsWith(':') ||
+              w.startsWith('--force') ||
+              w === '--delete' ||
+              w === '--mirror' ||
+              (/^-[a-zA-Z]+$/.test(w) && /[fd]/.test(w))
+          )
+        )
+          return deny('force, delete or mirror push');
+      }
       if (
         role === 'builder' &&
         /\b(git push|gh |npm publish|vercel)\b/.test(cmd)

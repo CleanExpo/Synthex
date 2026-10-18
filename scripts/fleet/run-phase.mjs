@@ -283,9 +283,22 @@ function integrate(unitArg, refArg) {
     log('FAIL', 'secret pattern in diff; security STOP written');
     return 1;
   }
-  const m = run('git', ['merge', '--no-ff', '--no-edit', '-q', 'FETCH_HEAD'], {
-    cwd: ROOT,
-  });
+  const m = run(
+    'git',
+    [
+      '-c',
+      `user.name=${pol.committer.name}`,
+      '-c',
+      `user.email=${pol.committer.email}`,
+      'merge',
+      '--no-ff',
+      '-q',
+      '-m',
+      `Merge ${ref} (unit ${unit}) into ${branch}\n\nFleet-Role: orchestrator\nFleet-Unit: ${unit}`,
+      'FETCH_HEAD',
+    ],
+    { cwd: ROOT }
+  );
   if (m.code !== 0) {
     run('git', ['merge', '--abort']);
     ledgerAppend({
@@ -360,7 +373,29 @@ function retireStaleReceipt() {
   );
 }
 
+// Uncommitted changes outside the fleet's own bookkeeping. The gate binds its results to HEAD and
+// HEAD^{tree}, so a dirty tree would record a PASS for a tree that was never tested (verifier
+// audit). The ledger and this phase's own manifests are written by the flow itself.
+function dirtyFiles() {
+  const own = new RegExp(
+    `^(release-receipts/ledger/|release-receipts/manifests/${phase}-(gate|review|handoff|units)\\.(json|md)$)`
+  );
+  // Untrimmed: porcelain lines start with a status column that may be a space.
+  return run('git', ['status', '--porcelain', '--untracked-files=all', '-z'])
+    .stdout.split('\0')
+    .filter(Boolean)
+    .map(l => l.slice(3))
+    .filter(f => f && !own.test(f));
+}
 function gate() {
+  const dirty = dirtyFiles();
+  if (dirty.length) {
+    log(
+      'FAIL',
+      `working tree not clean, refusing to gate HEAD: ${dirty.slice(0, 5).join(', ')}`
+    );
+    return 1;
+  }
   retireStaleReceipt();
   const contract = readJson(`scripts/fleet/contracts/${phase}.json`);
   const cmds = [
@@ -449,6 +484,8 @@ function review() {
   let last = null;
   for (const lane of pol.review.lanes_in_order) {
     if (pol.review.never.includes(lane)) continue;
+    // A report left by an earlier attempt must never be read as this lane's (verifier audit).
+    rmSync(path.join(ROOT, out), { force: true });
     let r;
     if (lane === 'minimax' || lane === 'codex') {
       // Both run on the founder's Mac: the MiniMax key lives only there (mm-ask), and Codex's shell
@@ -537,7 +574,17 @@ function review() {
     last = r;
     if (r.code === 0 && existsSync(path.join(ROOT, out))) {
       const rep = readJson(out);
-      rep.head = rep.head || head;
+      // The report must name this exact head itself; it is never stamped with it.
+      const bound = String(rep.head_sha || rep.head || '');
+      if (bound !== head) {
+        log(
+          'FAIL',
+          `${lane}: report names ${bound.slice(0, 12) || 'no head'}, not ${head.slice(0, 12)}`
+        );
+        rmSync(path.join(ROOT, out), { force: true });
+        continue;
+      }
+      rep.head = head;
       rep.lane = rep.lane || lane;
       writeJson(out, rep);
       ledgerAppend({ kind: 'review', phase, head, lane, verdict: rep.verdict });
