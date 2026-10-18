@@ -127,6 +127,12 @@ test('owner sees the observed outcome and recommendation, then records the decis
     page.getByText(/not launched — events are preview data/)
   ).toBeVisible();
   await page.getByRole('button', { name: 'Snapshot outcome' }).click();
+  await expect(page.getByRole('status').first()).toContainText(
+    'Outcome snapshot recorded'
+  );
+  await expect(
+    page.getByRole('button', { name: 'Record decision' })
+  ).toBeEnabled();
   await expect(page.getByTestId('outcome')).toContainText('preview');
   await expect(page.getByTestId('recommendation')).toContainText(
     'continue_observing'

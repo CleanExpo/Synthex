@@ -42,6 +42,9 @@ function LearningLoop() {
     nextDecision: '',
   });
   const [notice, setNotice] = useState<string | null>(null);
+  // One request at a time: a decision must never bind to a recommendation that a
+  // snapshot in flight is about to supersede.
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(
@@ -62,6 +65,7 @@ function LearningLoop() {
   }, [load]);
 
   const observe = async () => {
+    setBusy(true);
     const res = await fetch('/api/learning-loop/observe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -71,11 +75,13 @@ function LearningLoop() {
       res.ok ? 'Outcome snapshot recorded.' : `Snapshot failed (${res.status}).`
     );
     await load();
+    setBusy(false);
   };
 
   const latestRec = loop?.recommendations?.at(-1);
   const decide = async (e: React.FormEvent) => {
     e.preventDefault();
+    setBusy(true);
     const res = await fetch('/api/learning-loop/decision', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -92,6 +98,7 @@ function LearningLoop() {
         : `Decision refused: ${body.message ?? body.error ?? res.status}`
     );
     await load();
+    setBusy(false);
   };
 
   if (error)
@@ -212,7 +219,8 @@ function LearningLoop() {
           </select>
           <button
             onClick={observe}
-            className="rounded bg-slate-900 px-3 py-1 text-white"
+            disabled={busy}
+            className="rounded bg-slate-900 px-3 py-1 text-white disabled:opacity-60"
           >
             Snapshot outcome
           </button>
@@ -304,7 +312,12 @@ function LearningLoop() {
           </p>
         ))}
         {latestRec && loop.viewerRole === 'owner' && (
-          <form onSubmit={decide} className="space-y-2">
+          <form onSubmit={decide} className="space-y-2" aria-busy={busy}>
+            <p data-testid="deciding-on">
+              Deciding on the recommendation of{' '}
+              {new Date(latestRec.at).toLocaleString('en-AU')}:{' '}
+              <strong>{latestRec.verdict}</strong>
+            </p>
             <label className="block">
               Decision
               <select
@@ -342,7 +355,8 @@ function LearningLoop() {
             </label>
             <button
               type="submit"
-              className="rounded bg-amber-500 px-3 py-1 font-medium text-slate-950"
+              disabled={busy}
+              className="rounded bg-amber-500 px-3 py-1 font-medium text-slate-950 disabled:opacity-60"
             >
               Record decision
             </button>
