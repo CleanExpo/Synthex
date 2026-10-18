@@ -170,7 +170,14 @@ export async function findCardBinding(
     where: { slug, isPublished: true },
     select: { userId: true },
   });
-  if (page) {
+  // No published page behind the card: refuse rather than bind events to whichever organisation
+  // last authorised the slug (CodeRabbit on PR #1022).
+  if (!page)
+    throw new LearningLoopError(
+      'NOT_PROVISIONED',
+      'The card has no published page, so its events are not recorded.'
+    );
+  {
     const owner = await db.user.findFirst({
       where: { id: page.userId, organizationId: auth.organizationId },
       select: { id: true },
@@ -187,7 +194,7 @@ export async function findCardBinding(
     goalContractId: p.goalContractId,
     experimentId: auth.entityId,
     dataClass: p.pilotStatus === 'launched' ? 'pilot' : 'preview',
-    bioPageOwnerId: page?.userId ?? null,
+    bioPageOwnerId: page.userId,
   };
 }
 

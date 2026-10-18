@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withOrg } from '@/lib/auth/with-org';
+import { writeDefault } from '@/lib/rate-limit';
 import { DECISIONS, recordDecision } from '@/lib/learning-loop/store';
 import { loopErrorResponse } from '../errors';
 
@@ -19,31 +20,33 @@ const bodySchema = z
   })
   .strict();
 
-export const POST = withOrg(async (request, { userId, org, role }) => {
-  let raw: unknown;
-  try {
-    raw = await request.json();
-  } catch {
-    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
-  }
-  const parsed = bodySchema.safeParse(raw);
-  if (!parsed.success)
-    return NextResponse.json(
-      {
-        error: 'Invalid request',
-        issues: parsed.error.issues.map(i => i.path.join('.')),
-      },
-      { status: 400 }
-    );
-  try {
-    const row = await recordDecision({
-      organizationId: org.id,
-      actorId: userId,
-      actorRole: role,
-      ...parsed.data,
-    });
-    return NextResponse.json({ recorded: true, id: row.id }, { status: 201 });
-  } catch (error) {
-    return loopErrorResponse(error, 'decision');
-  }
-});
+export const POST = withOrg(async (request, { userId, org, role }) =>
+  writeDefault(request, async () => {
+    let raw: unknown;
+    try {
+      raw = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    }
+    const parsed = bodySchema.safeParse(raw);
+    if (!parsed.success)
+      return NextResponse.json(
+        {
+          error: 'Invalid request',
+          issues: parsed.error.issues.map(i => i.path.join('.')),
+        },
+        { status: 400 }
+      );
+    try {
+      const row = await recordDecision({
+        organizationId: org.id,
+        actorId: userId,
+        actorRole: role,
+        ...parsed.data,
+      });
+      return NextResponse.json({ recorded: true, id: row.id }, { status: 201 });
+    } catch (error) {
+      return loopErrorResponse(error, 'decision');
+    }
+  })
+);

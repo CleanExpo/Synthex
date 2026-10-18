@@ -5,21 +5,33 @@
  * title line and the visible links. Saving a contact needs no app and no
  * account; QR codes and NFC tags can point at the card page that links here.
  */
+import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { readDefault } from '@/lib/rate-limit';
 import { getCardConfig } from '@/lib/cards/white-rabbit';
 import { prisma } from '@/lib/prisma';
 
+// vCard 3.0 text values: escape backslash, CR/LF (as \n) and the , ; separators.
 function esc(value: string): string {
   return value
     .replace(/\\/g, '\\\\')
-    .replace(/\n/g, '\\n')
+    .replace(/\r\n|\r|\n/g, '\\n')
     .replace(/([,;])/g, '\\$1');
+}
+// URL is a uri value, not text: no backslash escaping (it would break links that contain , or ;),
+// but a raw line break must never reach the card, so CR/LF are dropped.
+function uri(value: string): string {
+  return value.replace(/[\r\n]/g, '');
 }
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  return readDefault(request, () => vcard(request, params));
+}
+
+async function vcard(request: NextRequest, params: Promise<{ slug: string }>) {
   const { slug } = await params;
   if (!getCardConfig(slug))
     return NextResponse.json({ error: 'Card not found' }, { status: 404 });
@@ -43,10 +55,10 @@ export async function GET(
     'VERSION:3.0',
     `FN:${esc(page.title)}`,
     ...(page.bio ? [`NOTE:${esc(page.bio)}`] : []),
-    `URL:${esc(cardUrl)}`,
+    `URL:${uri(cardUrl)}`,
     ...page.links.map(
       (l, i) =>
-        `item${i + 1}.URL:${esc(l.url)}\r\nitem${i + 1}.X-ABLabel:${esc(l.title)}`
+        `item${i + 1}.URL:${uri(l.url)}\r\nitem${i + 1}.X-ABLabel:${esc(l.title)}`
     ),
     'END:VCARD',
   ];

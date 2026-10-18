@@ -107,6 +107,28 @@ it('records public events through the real route and refuses personal data', asy
   expect(JSON.stringify(rows.map(r => r.payload))).not.toMatch(/@/);
 });
 
+it('refuses events (503) when the card has no published page, instead of binding them to the last authorising organisation', async () => {
+  const page = await prisma.linkBioPage.findFirst({ where: { slug: 'phill' } });
+  expect(page).toBeTruthy();
+  await prisma.linkBioPage.update({
+    where: { id: page!.id },
+    data: { isPublished: false },
+  });
+  try {
+    const res = await postEvent({
+      sessionId: randomUUID(),
+      variant: 'story',
+      type: 'session_started',
+    });
+    expect(res.status).toBe(503);
+  } finally {
+    await prisma.linkBioPage.update({
+      where: { id: page!.id },
+      data: { isPublished: true },
+    });
+  }
+});
+
 it('keeps a synthetic simulation out of the preview outcome', async () => {
   const b = await findCardBinding('phill');
   await recordCardEvent(b, {
