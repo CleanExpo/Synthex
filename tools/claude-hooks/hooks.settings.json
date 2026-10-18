@@ -1,0 +1,101 @@
+{
+  "$comment": "synthex-hooks. Merge a block into the \"hooks\" object of .claude/settings.json with tools/claude-hooks/install.mjs. \"core\" is safe for the orchestrator to install. \"forcing\" holds the forcing Stop hook and needs the founder's explicit Bash permission rule first (README, Founder gate).",
+  "core": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/guard-pretooluse.mjs"
+            ],
+            "timeout": 15,
+            "onFailure": "block",
+            "statusMessage": "synthex-hooks: fleet policy guard"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "if": "Edit(/app/api/**/route.ts)",
+            "prompt": "You review one proposed change to a Synthex Next.js API route file (app/api/**/route.ts). Hook input JSON: $ARGUMENTS\n\nThe new content is tool_input.content (Write) or tool_input.new_string / tool_input.edits[].new_string (Edit, MultiEdit). Judge only what the new content adds or keeps in the edited region; do not guess about code you cannot see.\n\nReturn {\"ok\": false, \"reason\": \"<the rule broken, the line, and the fix>\"} if the new content does any of these:\n1. Returns a 2xx response with empty, zeroed, null or placeholder data when a read failed, threw, or a dependency is unconfigured (a failed read must return 5xx/503 or an explicit available:false, never look like an empty success).\n2. Adds an exported route handler (GET, POST, PUT, PATCH, DELETE) without an authentication check before any data access (database, service or external call).\n3. Queries data without scoping by organisation or user (organizationId / userId from the authenticated principal).\n4. Calls an image or video provider (OpenAI images, DALL-E, Gemini/Imagen, Replicate, fal, Runway, Ideogram, Stability, Midjourney, Seedream, Seedance, HeyGen or similar) directly instead of through lib/services/ai/image-generation.ts (repo rule .claude/rules/real-images-only.md).\n\nOtherwise return {\"ok\": true}. Respond with the JSON object only.",
+            "timeout": 30,
+            "continueOnBlock": true,
+            "statusMessage": "synthex-hooks: API route review"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/context-sessionstart.mjs"
+            ],
+            "timeout": 45
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/context-userprompt.mjs"
+            ],
+            "timeout": 25
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "You check whether a Synthex fleet subagent may stop. Hook input JSON: $ARGUMENTS\n\nlast_assistant_message is the subagent's final message. This rule applies only to fleet work: the message, or the task it reports on, mentions UNIT-DONE, Fleet-Unit, a fleet-unit/ or feature/fleet- branch, or a proving command. For any other subagent (search, exploration, planning) return {\"ok\": true}.\n\nFor fleet work the final message must end with one line: UNIT-DONE <unit> <full 40-hex commit sha> <PASS|FAIL|INCONCLUSIVE>. A PASS claim must be backed by the proving command's own output quoted in the message (the command, its exit code or final result line, e.g. test counts). Evidence labels follow .claude/rules/fabel-evidence-standard.md: [VERIFIED] needs a quoted tool result; [INFERENCE] and [UNCONFIRMED] are not PASS.\n\nReturn {\"ok\": false, \"reason\": \"<exactly what is missing: the UNIT-DONE line, the sha, or the quoted proving output>\"} when the line is missing or malformed, or PASS is claimed without that output.\nReturn {\"ok\": false, \"impossible\": true, \"reason\": \"<why>\"} when the message shows the work cannot be completed in this run (a founder-gated decision, a missing credential, an unreachable lane), or when stop_hook_active is true and the same gap was already reported. FAIL and INCONCLUSIVE lines that state the reason are acceptable: return {\"ok\": true}.\nOtherwise return {\"ok\": true}. Respond with the JSON object only.",
+            "timeout": 30,
+            "statusMessage": "synthex-hooks: subagent evidence check"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You check one task completion in a Synthex session against .claude/rules/fabel-evidence-standard.md. Hook input JSON: $ARGUMENTS\n\nRead the end of the session transcript at transcript_path (the last few hundred lines are enough; use Read with an offset, or Grep for the task subject). Find the completion claim for task_subject and the tool results that back it. Do not edit files and do not run commands that change state.\n\nReturn {\"ok\": true} when the transcript holds a tool result that proves the task done (a command's own output or exit code, a file read showing the change), or the task is a pure planning or bookkeeping item with nothing to verify.\nReturn {\"ok\": false, \"reason\": \"<the claim, and the tool result it still needs, labelled [UNCONFIRMED]>\"} when completion is claimed with no supporting tool result, or the supporting result shows a failure. The transcript is written asynchronously and can lag by a turn: if the claim itself is not yet visible, return {\"ok\": true}.\nRespond with the JSON object only.",
+            "timeout": 60,
+            "statusMessage": "synthex-hooks: task evidence check"
+          }
+        ]
+      }
+    ]
+  },
+  "forcing": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You decide whether a Synthex session may stop or has in-bounds fleet work left. Hook input JSON: $ARGUMENTS\n\n1. If stop_hook_active is true, return {\"ok\": true} at once.\n2. Run `node scripts/goals/check-report.mjs --offline` only if that file exists, and `node scripts/fleet/phase-advance.mjs --dry-run`. Both are read-only. Read BACKLOG.md (fleet block between <!-- fleet:begin --> and <!-- fleet:end -->) and the OPEN items of DECISIONS.md. Do not edit files, push, open or merge pull requests, or spend.\n3. Classify every remaining item (skill goal-circuit-breaker):\n   ACTIONABLE, in bounds for this session: a failing local gate (type-check, lint, tests, a phase DoD command), a builder report not yet verified, a unit built but not integrated, an open BACKLOG fleet row the session can fix in its own sandbox.\n   BLOCKED: a founder decision (DECISIONS.md OPEN), pull request creation or merge (PC-gated), a protected path, waiting on an external lane, review or CI run, or a credential.\n4. Read the end of the transcript at transcript_path. If an earlier Stop hook feedback in this session already named the same next action and nothing changed since (no new commit, no new tool result for it), treat it as BLOCKED: never re-emit the same residual.\n5. If any item is ACTIONABLE, return {\"ok\": false, \"reason\": \"<ONE concrete next action: the command to run or the file and change>\"}. If every item is BLOCKED or nothing remains, return {\"ok\": true}.\nRespond with the JSON object only.",
+            "timeout": 120,
+            "statusMessage": "synthex-hooks: fleet goal check"
+          }
+        ]
+      }
+    ]
+  }
+}
