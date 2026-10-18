@@ -20,7 +20,6 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/platform/noop-client';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
@@ -37,71 +36,24 @@ function isFeatureEnabled(isAdmin: boolean): boolean {
   return isAdmin; // always available to admins during review period
 }
 
-// ── Supabase admin (for writing conversations) ────────────────────────────────
+// ── Not-provisioned stores ────────────────────────────────────────────────────
 
-// SYN-789: minimal schema for the three tables this route touches. Keeps the
-// platform client strongly typed without requiring the full generated Database
-// type. Three previous `(platform as any)` casts at the call sites masked the
-// missing schema — real typos in table/column names would have shipped silently.
-type JourneyAnalyticsRow = {
-  organization_id: string;
-  engagement_rate: number;
-  total_moments_sent: number;
-  avg_pulse_score: number;
-};
-
-type ClientConversationInsert = {
-  client_id: string;
-  question: string;
-  response: Record<string, unknown>;
-};
-
-type ConversationEventInsert = {
-  client_id: string;
-  question: string;
-  question_category: string;
-  answered: boolean;
-  failure_reason: string | null;
-  model_tier_used: string | null;
-};
-
-type AskSynthexDatabase = {
-  public: {
-    Tables: {
-      journey_analytics: {
-        Row: JourneyAnalyticsRow;
-        Insert: never;
-        Update: never;
-        Relationships: [];
-      };
-      client_conversations: {
-        Row: ClientConversationInsert & { id: string; created_at: string };
-        Insert: ClientConversationInsert;
-        Update: Partial<ClientConversationInsert>;
-        Relationships: [];
-      };
-      conversation_events: {
-        Row: ConversationEventInsert & { id: string; created_at: string };
-        Insert: ConversationEventInsert;
-        Update: Partial<ConversationEventInsert>;
-        Relationships: [];
-      };
-    };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
-};
-
-let _platformAdmin: ReturnType<typeof createClient<AskSynthexDatabase>> | null =
-  null;
-function getSupabaseAdmin() {
-  if (!_platformAdmin) {
-    _platformAdmin = createClient<AskSynthexDatabase>();
-  }
-  return _platformAdmin;
-}
+// journey_analytics, client_conversations and conversation_events have no model
+// in prisma/schema.prisma. The answer itself is built from Prisma-backed sources,
+// so the route still answers, but it states in every response that journey
+// context was not consulted and that the conversation was not persisted, instead
+// of pretending either happened.
+const NOT_PROVISIONED = {
+  journeyAnalytics: {
+    available: false,
+    reason: 'journey_analytics table is not provisioned',
+  },
+  conversationLog: {
+    available: false,
+    reason:
+      'client_conversations and conversation_events tables are not provisioned; this conversation was not saved',
+  },
+} as const;
 
 // ── Request validation ────────────────────────────────────────────────────────
 
@@ -303,32 +255,7 @@ async function retrieveClientContext(
     });
   }
 
-  // 5. Journey engagement (if journey analytics available)
-  const platform = getSupabaseAdmin();
-  if (platform) {
-    const { data: journeyData, error: journeyErr } = await platform
-      .from('journey_analytics')
-      .select('engagement_rate, total_moments_sent, avg_pulse_score')
-      .eq('organization_id', organizationId)
-      .single();
-
-    if (!journeyErr && journeyData) {
-      const jd = journeyData as {
-        engagement_rate: number;
-        total_moments_sent: number;
-      };
-      const engRate = (jd.engagement_rate * 100).toFixed(1);
-      contextParts.push(
-        `Journey engagement rate: ${engRate}%, ${jd.total_moments_sent} moments sent.`
-      );
-      sources.push({
-        table: 'journey_analytics',
-        rowsQueried: 1,
-        confidence: 'Medium',
-        summary: `${engRate}% engagement rate`,
-      });
-    }
-  }
+  // 5. Journey engagement — not provisioned (see NOT_PROVISIONED.journeyAnalytics)
 
   return {
     context: contextParts.join('\n'),
@@ -443,8 +370,6 @@ const _postHandler = withAuth(
     const { context, sources, postCount } =
       await retrieveClientContext(organizationId);
 
-    const platform = getSupabaseAdmin();
-
     // Below-threshold: answer from algorithm KB only
     const effectiveContext =
       postCount < 15
@@ -453,97 +378,35 @@ const _postHandler = withAuth(
 
     let answer: string;
     let answered = true;
-    let failureReason: string | null = null;
 
     try {
       answer = await callAI(question, effectiveContext, tier, postCount);
     } catch (err) {
       answered = false;
-      failureReason = String(err);
+      console.error('[ask-synthex] AI call failed:', String(err));
       answer =
         "I wasn't able to answer that right now — please try rephrasing your question.";
     }
 
     const latencyMs = Date.now() - startMs;
 
-    // Persist conversation (non-fatal)
-    if (platform) {
-      const responsePayload = {
-        answer,
-        sources: sources.map(s => ({
-          table: s.table,
-          rows_queried: s.rowsQueried,
-          confidence: s.confidence,
-        })),
-        model_tier: modelTier,
-        score: {
-          domain: 'conversation',
-          value: answered ? 80 : 0,
-          confidence:
-            postCount >= 15 ? 'high' : postCount >= 5 ? 'medium' : 'low',
-          signals: [],
-          calibration: {
-            dataPoints: postCount,
-            meetsThreshold: postCount >= 15,
-            thresholdRequired: 15,
-            accuracyRate: null,
-            firstScoredAt: null,
-            calibrationSummary:
-              postCount >= 15
-                ? `Based on ${postCount} posts`
-                : `Calibration in progress — ${postCount} posts collected`,
-          },
-          generatedAt: new Date().toISOString(),
-        },
-      };
-
-      if (answered) {
-        // Fire-and-forget inserts — non-fatal if they fail
-        void (async () => {
-          const { error } = await platform.from('client_conversations').insert({
-            client_id: organizationId,
-            question,
-            response: responsePayload,
-          });
-          if (error)
-            console.error(
-              '[ask-synthex] failed to persist conversation:',
-              (error as { message: string }).message
-            );
-        })();
-
-        // Accuracy logging for predictive claims
-        const hasPrediction =
-          /likely|will|should|expect|predict|probably/i.test(answer);
-        if (hasPrediction) {
-          recordScoreIssued({
-            clientId: organizationId,
-            domain: 'content',
-            scoreValue: 80,
-            confidence: postCount >= 15 ? 'high' : 'low',
-            calibrationDataPoints: postCount,
-            entityId: organizationId,
-            sprintVersion: 'sprint-8',
-          }).catch(() => undefined);
-        }
+    // Persisting the conversation is not provisioned (NOT_PROVISIONED.conversationLog).
+    if (answered) {
+      // Accuracy logging for predictive claims
+      const hasPrediction = /likely|will|should|expect|predict|probably/i.test(
+        answer
+      );
+      if (hasPrediction) {
+        recordScoreIssued({
+          clientId: organizationId,
+          domain: 'content',
+          scoreValue: 80,
+          confidence: postCount >= 15 ? 'high' : 'low',
+          calibrationDataPoints: postCount,
+          entityId: organizationId,
+          sprintVersion: 'sprint-8',
+        }).catch(() => undefined);
       }
-
-      // Always log to conversation_events (fire-and-forget)
-      void (async () => {
-        const { error } = await platform.from('conversation_events').insert({
-          client_id: organizationId,
-          question,
-          question_category: categoriseQuestion(question),
-          answered,
-          failure_reason: failureReason,
-          model_tier_used: answered ? modelTier : null,
-        });
-        if (error)
-          console.error(
-            '[ask-synthex] failed to log conversation event:',
-            (error as { message: string }).message
-          );
-      })();
     }
 
     return NextResponse.json({
@@ -557,41 +420,11 @@ const _postHandler = withAuth(
       })),
       postCount,
       belowThreshold: postCount < 15,
+      notProvisioned: NOT_PROVISIONED,
     });
   }
 );
 
 export async function POST(request: NextRequest) {
   return withRateLimit(request, async () => _postHandler(request));
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function categoriseQuestion(
-  question: string
-):
-  | 'performance'
-  | 'algorithm'
-  | 'brand'
-  | 'competitor'
-  | 'general'
-  | 'out_of_scope' {
-  const lower = question.toLowerCase();
-  if (
-    /algorithm|platform|instagram|facebook|tiktok|linkedin|posting time/.test(
-      lower
-    )
-  )
-    return 'algorithm';
-  if (/competitor|rival|other business/.test(lower)) return 'competitor';
-  if (/brand|voice|tone|style/.test(lower)) return 'brand';
-  if (
-    /score|reach|impression|engagement|click|follower|analytics|post|content/.test(
-      lower
-    )
-  )
-    return 'performance';
-  if (/synthex|subscription|invoice|billing|plan|feature/.test(lower))
-    return 'out_of_scope';
-  return 'general';
 }

@@ -28,7 +28,7 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { clientManagement } from '@/lib/services/client-management';
 import { logger } from '@/lib/logger';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 
 function unsupported() {
   return APISecurityChecker.createSecureResponse(
@@ -41,12 +41,14 @@ function unsupported() {
   );
 }
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+// The caller's organisation comes from users.organization_id (there is no
+// organization_members table in prisma/schema.prisma).
+async function getUserOrganizationId(userId: string): Promise<string | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { organizationId: true },
+  });
+  return user?.organizationId ?? null;
 }
 
 // Request validation schemas
@@ -152,13 +154,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get user's organization
-    const { data: userOrg } = await getSupabase()
-      .from('organization_members')
-      .select('organization_id')
-      .eq('user_id', userId)
-      .single();
-
-    const organizationId = userOrg?.organization_id;
+    const organizationId = await getUserOrganizationId(userId);
 
     // Get specific client
     const clientId = searchParams.get('id');
@@ -321,13 +317,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create client
-    const { data: userOrg } = await getSupabase()
-      .from('organization_members')
-      .select('organization_id')
-      .eq('user_id', userId)
-      .single();
+    const organizationId = await getUserOrganizationId(userId);
 
-    if (!userOrg?.organization_id) {
+    if (!organizationId) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Organization required to create clients' },
         400
@@ -336,7 +328,7 @@ export async function POST(request: NextRequest) {
 
     const validated = CreateClientSchema.parse(body);
     const client = await clientManagement.createClient(
-      userOrg.organization_id,
+      organizationId,
       userId,
       validated
     );
