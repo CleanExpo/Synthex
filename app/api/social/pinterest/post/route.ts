@@ -20,20 +20,16 @@ import {
 } from '@/lib/security/api-security-checker';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { writeDefault } from '@/lib/rate-limit';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 const NOT_PROVISIONED_REASON =
   'Direct Pinterest post history is not provisioned: the social_posts and usage_tracking tables do not exist. Use /api/social/post to publish.';
 
 function notProvisioned() {
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message: NOT_PROVISIONED_REASON,
-      available: false,
-      reason: NOT_PROVISIONED_REASON,
-    },
-    { status: 501 }
-  );
+  return notProvisionedResponse(NOT_PROVISIONED_REASON, {
+    available: false,
+    reason: NOT_PROVISIONED_REASON,
+  });
 }
 
 /**

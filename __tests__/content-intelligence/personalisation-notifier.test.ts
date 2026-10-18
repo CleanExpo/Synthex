@@ -2,22 +2,18 @@
  * Tests for personalisation-notifier — SYN-637
  *
  * Coverage:
- *  - Fires notification when postCount >= threshold AND confidenceLevel >= 0.3
+ *  - Qualifying org (postCount >= threshold AND confidenceLevel >= 0.3) gets an
+ *    honest `feature_not_provisioned` result: client_notifications has no Prisma
+ *    model, so nothing is stored and nothing is reported as fired
  *  - Skips when postCount < threshold
  *  - Skips when confidenceLevel < 0.3
- *  - Does not fire twice (idempotency check via existing record)
+ *  - Skips when no owner is found; unexpected errors never throw
  */
 
 // ── Shared mock objects ───────────────────────────────────────────────────────
 
 const mockTeamMemberFindFirst = jest.fn();
 const mockLogger = { info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-
-const mockSupabaseFrom = jest.fn();
-const mockSupabaseSelect = jest.fn();
-const mockSupabaseEq = jest.fn();
-const mockSupabaseLimit = jest.fn();
-const mockSupabaseInsert = jest.fn();
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -31,19 +27,6 @@ jest.mock('@/lib/prisma', () => ({
 }));
 
 jest.mock('@/lib/logger', () => ({ logger: mockLogger }));
-
-// Mock Supabase client
-const mockSupabaseChain = {
-  select: mockSupabaseSelect,
-  eq: mockSupabaseEq,
-  limit: mockSupabaseLimit,
-  insert: mockSupabaseInsert,
-};
-
-// Simple stub — resetMocks: true wipes implementations, so createClient is re-set in setupEnv()
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(),
-}));
 
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
@@ -65,48 +48,20 @@ const SAMPLE_OPTIMAL_TIMES: Record<string, string[]> = {
 const ORG_ID = 'org-test-001';
 const USER_ID = 'user-owner-001';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function setupEnv() {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key';
-  process.env.PERSONALISATION_NOTIFICATION_THRESHOLD = '8';
-  // resetMocks: true clears all mock implementations between tests — re-set createClient here
-  const { createClient } = jest.requireMock('@/lib/platform/noop-client') as { createClient: jest.Mock };
-  createClient.mockReturnValue({ from: mockSupabaseFrom });
-}
-
-function setupSupabaseNoExisting() {
-  // from() returns chain
-  mockSupabaseFrom.mockReturnValue(mockSupabaseChain);
-  mockSupabaseSelect.mockReturnValue(mockSupabaseChain);
-  mockSupabaseEq.mockReturnValue(mockSupabaseChain);
-  mockSupabaseLimit.mockResolvedValue({ data: [], error: null });
-  mockSupabaseInsert.mockResolvedValue({ error: null });
-}
-
-function setupSupabaseExistingRecord() {
-  mockSupabaseFrom.mockReturnValue(mockSupabaseChain);
-  mockSupabaseSelect.mockReturnValue(mockSupabaseChain);
-  mockSupabaseEq.mockReturnValue(mockSupabaseChain);
-  mockSupabaseLimit.mockResolvedValue({ data: [{ id: 'existing-notif-id' }], error: null });
-}
-
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('firePersonalisationNotification', () => {
   beforeEach(() => {
-    setupEnv();
     jest.clearAllMocks();
+    process.env.PERSONALISATION_NOTIFICATION_THRESHOLD = '8';
   });
 
   afterEach(() => {
     delete process.env.PERSONALISATION_NOTIFICATION_THRESHOLD;
   });
 
-  it('fires notification for org with postCount >= 8 and confidenceLevel >= 0.3', async () => {
+  it('reports feature_not_provisioned (never fired) for a qualifying org', async () => {
     mockTeamMemberFindFirst.mockResolvedValue({ userId: USER_ID });
-    setupSupabaseNoExisting();
 
     const result = await firePersonalisationNotification(
       ORG_ID,
@@ -116,35 +71,23 @@ describe('firePersonalisationNotification', () => {
       SAMPLE_OPTIMAL_TIMES
     );
 
-    expect(result.fired).toBe(true);
-    expect(result.skipped).toBe(false);
-    expect(result.userId).toBe(USER_ID);
-    expect(mockSupabaseInsert).toHaveBeenCalledWith(
+    expect(result).toEqual({
+      fired: false,
+      skipped: true,
+      userId: USER_ID,
+      reason: 'feature_not_provisioned',
+    });
+    expect(mockTeamMemberFindFirst).toHaveBeenCalledWith({
+      where: { organizationId: ORG_ID, role: 'owner' },
+      select: { userId: true },
+    });
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('client_notifications is not provisioned'),
       expect.objectContaining({
-        user_id: USER_ID,
-        type: 'personalisation_activated',
-        title: 'Your strategy just got personal',
-        read: false,
+        organizationId: ORG_ID,
+        missingTable: 'client_notifications',
       })
     );
-  });
-
-  it('includes correct body copy referencing the top topic and optimal day', async () => {
-    mockTeamMemberFindFirst.mockResolvedValue({ userId: USER_ID });
-    setupSupabaseNoExisting();
-
-    await firePersonalisationNotification(
-      ORG_ID,
-      10,
-      0.4,
-      SAMPLE_TOPICS,
-      SAMPLE_OPTIMAL_TIMES
-    );
-
-    const insertCall = mockSupabaseInsert.mock.calls[0][0];
-    expect(insertCall.body).toContain('local events'); // topic with hyphens replaced
-    expect(insertCall.body).toContain('Wednesday');    // WED mapped to Wednesday
-    expect(insertCall.body).toContain('10 posts');
   });
 
   it('skips when postCount < threshold (default 8)', async () => {
@@ -177,9 +120,8 @@ describe('firePersonalisationNotification', () => {
     expect(mockTeamMemberFindFirst).not.toHaveBeenCalled();
   });
 
-  it('skips when postCount is exactly at threshold boundary (threshold=8, postCount=8 → fires)', async () => {
+  it('postCount exactly at threshold (8) passes the gate and reaches the owner lookup', async () => {
     mockTeamMemberFindFirst.mockResolvedValue({ userId: USER_ID });
-    setupSupabaseNoExisting();
 
     const result = await firePersonalisationNotification(
       ORG_ID,
@@ -189,30 +131,13 @@ describe('firePersonalisationNotification', () => {
       SAMPLE_OPTIMAL_TIMES
     );
 
-    expect(result.fired).toBe(true);
-  });
-
-  it('does not fire twice — skips when notification already exists (idempotency)', async () => {
-    mockTeamMemberFindFirst.mockResolvedValue({ userId: USER_ID });
-    setupSupabaseExistingRecord();
-
-    const result = await firePersonalisationNotification(
-      ORG_ID,
-      15,
-      0.6,
-      SAMPLE_TOPICS,
-      SAMPLE_OPTIMAL_TIMES
-    );
-
+    expect(mockTeamMemberFindFirst).toHaveBeenCalledTimes(1);
     expect(result.fired).toBe(false);
-    expect(result.skipped).toBe(true);
-    expect(result.reason).toBe('already_fired');
-    expect(mockSupabaseInsert).not.toHaveBeenCalled();
+    expect(result.reason).toBe('feature_not_provisioned');
   });
 
   it('skips when no owner TeamMember found', async () => {
     mockTeamMemberFindFirst.mockResolvedValue(null);
-    // Don't call setupSupabase — we shouldn't reach it
 
     const result = await firePersonalisationNotification(
       ORG_ID,
@@ -242,13 +167,8 @@ describe('firePersonalisationNotification', () => {
     expect(result.reason).toBe('post_count_below_threshold');
   });
 
-  it('returns skipped when Supabase insert fails', async () => {
-    mockTeamMemberFindFirst.mockResolvedValue({ userId: USER_ID });
-    mockSupabaseFrom.mockReturnValue(mockSupabaseChain);
-    mockSupabaseSelect.mockReturnValue(mockSupabaseChain);
-    mockSupabaseEq.mockReturnValue(mockSupabaseChain);
-    mockSupabaseLimit.mockResolvedValue({ data: [], error: null });
-    mockSupabaseInsert.mockResolvedValue({ error: { message: 'DB write failed' } });
+  it('returns unexpected_error (never throws) when the owner lookup fails', async () => {
+    mockTeamMemberFindFirst.mockRejectedValue(new Error('DB down'));
 
     const result = await firePersonalisationNotification(
       ORG_ID,
@@ -260,6 +180,6 @@ describe('firePersonalisationNotification', () => {
 
     expect(result.fired).toBe(false);
     expect(result.skipped).toBe(true);
-    expect(result.reason).toBe('insert_failed');
+    expect(result.reason).toBe('unexpected_error');
   });
 });

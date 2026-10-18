@@ -44,7 +44,6 @@ const importMappings = [
   { from: '@/lib/ai/openrouter', to: '@/src/lib/ai/openrouter' },
 
   // Supabase imports
-  { from: '@/lib/platform/server', to: '@/src/lib/supabase-server' },
   { from: '@/lib/platform/client', to: '@/src/lib/supabase-client' },
   { from: '@/lib/platform/integration', to: '@/src/lib/supabase' },
 

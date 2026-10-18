@@ -78,16 +78,6 @@ jest.mock('@anthropic-ai/sdk', () => {
   return { __esModule: true, default: MockAnthropic };
 });
 
-// ── Supabase mock (runner writes edge_function_logs — non-fatal in tests) ─────
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(() => ({
-    from: jest.fn(() => ({
-      insert: jest.fn().mockResolvedValue({ error: null }),
-    })),
-  })),
-}));
-
 // ── Logger mock ───────────────────────────────────────────────────────────────
 
 jest.mock('@/lib/logger', () => ({

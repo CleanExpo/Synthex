@@ -28,6 +28,9 @@
  *
  * Status lifecycle: queued -> rendering -> done | failed
  *
+ * CURRENTLY DISABLED: steps 1 and 5 need the removed Supabase client, so the
+ * worker exits 1 at startup (see getSupabase()).
+ *
  * Usage:
  *   npx tsx scripts/brand-video-worker.ts            # claim + render one job
  *   npx tsx scripts/brand-video-worker.ts --loop     # keep claiming until empty
@@ -48,7 +51,6 @@ import * as path from 'path';
 import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import * as dotenv from 'dotenv';
-import { createClient } from '@/lib/platform/noop-client';
 import {
   generateImage,
   type ImageGenerationResult,
@@ -135,18 +137,16 @@ function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-function requireEnv(name: string, fallback?: string): string {
-  const v = process.env[name] ?? fallback;
-  if (!v) {
-    console.error(`Missing required env: ${name}`);
-    process.exit(1);
-  }
-  return v;
-}
-
-function getSupabase() {
-  const serviceKey = requireEnv();
-  return createClient();
+// The job queue (brand_video_jobs) and the mp4 upload both went through the
+// Supabase client, which has been removed; brand_video_jobs has no Prisma model
+// (the /api/brand-video routes answer FEATURE_NOT_PROVISIONED). Exit 1 before
+// claiming or rendering anything rather than pretend a job ran.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getSupabase(): any {
+  console.error(
+    'brand-video-worker: requires the removed Supabase client (brand_video_jobs queue + Storage upload). Nothing was rendered.'
+  );
+  process.exit(1);
 }
 
 // toBeats and claimJob live in lib/brand-video/planner.ts so they can be tested

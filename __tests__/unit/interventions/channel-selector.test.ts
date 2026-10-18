@@ -2,7 +2,8 @@
  * Unit tests — channel-selector.ts — SYN-619
  *
  * Tests:
- * 1. Returns email fallback when no events exist
+ * 0. getPreferredChannel throws ChannelHistoryNotProvisionedError (no table)
+ * 1. selectPreferredChannel returns email fallback when no events exist
  * 2. Returns email fallback when <5 events per channel
  * 3. Correctly scores a client with strong email engagement
  * 4. Returns sms when SMS has higher engagement score than email
@@ -12,154 +13,129 @@
  * 8. Confidence level assignment at 5, 8, 14, 15 events
  */
 
-// ── Mock Supabase ─────────────────────────────────────────────────────────────
-//
-// Strategy: use a stable closure variable (_queryResult) that the mock chain
-// reads at call time. This is immune to jest's resetMocks/clearMocks because
-// the implementations are plain functions defined inline, not jest.fn() chains
-// set up with mockReturnValue/mockResolvedValue.
-//
-// jest.mock() is hoisted before imports. The factory uses a shared module-level
-// object (__db) as a communication channel.
-
-// Shared state — plain object, not jest.fn() dependent
-const __db: {
-  rows: Array<{ event_type: string; engagement_outcome: string | null; metadata: Record<string, unknown> | null }> | null;
-  error: { message: string } | null;
-} = { rows: [], error: null };
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({
-    from: () => ({
-      select: () => ({
-        eq: () => Promise.resolve({ data: __db.rows, error: __db.error }),
-      }),
-    }),
-  }),
-}));
-
 import {
   getPreferredChannel,
+  selectPreferredChannel,
   computeChannelScore,
   inferChannelFromEventType,
-  _resetAdminForTests,
+  ChannelHistoryNotProvisionedError,
   ChannelEvent,
   ChannelPreference,
+  JourneyEventRow,
 } from '@/lib/interventions/channel-selector';
 
-/** Helper — set what the next Supabase query will return. */
-function mockSupabaseRows(
-  rows: Array<{ event_type: string; engagement_outcome: string | null; metadata: Record<string, unknown> | null }> | null,
-  error: { message: string } | null = null
-) {
-  __db.rows = rows;
-  __db.error = error;
-}
+const EMAIL_FALLBACK: ChannelPreference = {
+  channel: 'email',
+  confidence: 'low',
+  engagementRate: 0,
+  reason: 'insufficient_data',
+};
 
-beforeEach(() => {
-  // Force the channel-selector to call createClient again (picks up closure state)
-  _resetAdminForTests();
-  // Reset to empty result; individual tests call mockSupabaseRows() as needed
-  __db.rows = [];
-  __db.error = null;
-  process.env.NEXT_PUBLIC_SUPABASE_URL  = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-key';
+// ── NOT PROVISIONED ───────────────────────────────────────────────────────────
+
+describe('getPreferredChannel — not provisioned', () => {
+  it('throws ChannelHistoryNotProvisionedError instead of a fabricated email fallback', async () => {
+    await expect(getPreferredChannel('org-any')).rejects.toBeInstanceOf(
+      ChannelHistoryNotProvisionedError
+    );
+    await expect(getPreferredChannel('org-any')).rejects.toMatchObject({
+      code: 'FEATURE_NOT_PROVISIONED',
+      table: 'client_journey_events',
+    });
+  });
 });
 
 // ── EMAIL FALLBACK CASES ──────────────────────────────────────────────────────
 
-describe('getPreferredChannel — email fallback', () => {
-  it('returns email fallback when client has no journey events', async () => {
-    mockSupabaseRows([]);
-
-    const result = await getPreferredChannel('org-no-events');
-
-    expect(result).toEqual<ChannelPreference>({
-      channel: 'email',
-      confidence: 'low',
-      engagementRate: 0,
-      reason: 'insufficient_data',
-    });
+describe('selectPreferredChannel — email fallback', () => {
+  it('returns email fallback when client has no journey events', () => {
+    expect(selectPreferredChannel([])).toEqual(EMAIL_FALLBACK);
   });
 
-  it('returns email fallback when Supabase returns null data', async () => {
-    mockSupabaseRows(null);
-
-    const result = await getPreferredChannel('org-null-data');
-
-    expect(result).toEqual<ChannelPreference>({
-      channel: 'email',
-      confidence: 'low',
-      engagementRate: 0,
-      reason: 'insufficient_data',
-    });
-  });
-
-  it('returns email fallback when Supabase returns an error', async () => {
-    mockSupabaseRows(null, { message: 'DB error' });
-
-    const result = await getPreferredChannel('org-db-error');
-
-    expect(result).toEqual<ChannelPreference>({
-      channel: 'email',
-      confidence: 'low',
-      engagementRate: 0,
-      reason: 'insufficient_data',
-    });
-  });
-
-  it('returns email fallback when fewer than 5 events exist for every channel', async () => {
+  it('returns email fallback when fewer than 5 events exist for every channel', () => {
     // 4 email events — one short of the threshold
-    mockSupabaseRows([
-      { event_type: 'thirty_day_check_in', engagement_outcome: 'acted',   metadata: null },
-      { event_type: 'thirty_day_check_in', engagement_outcome: 'clicked', metadata: null },
-      { event_type: 'win_notification',    engagement_outcome: 'replied', metadata: null },
-      { event_type: 'monthly_story',       engagement_outcome: 'ignored', metadata: null },
+    const result = selectPreferredChannel([
+      {
+        event_type: 'thirty_day_check_in',
+        engagement_outcome: 'acted',
+        metadata: null,
+      },
+      {
+        event_type: 'thirty_day_check_in',
+        engagement_outcome: 'clicked',
+        metadata: null,
+      },
+      {
+        event_type: 'win_notification',
+        engagement_outcome: 'replied',
+        metadata: null,
+      },
+      {
+        event_type: 'monthly_story',
+        engagement_outcome: 'ignored',
+        metadata: null,
+      },
     ]);
 
-    const result = await getPreferredChannel('org-below-threshold');
-
-    expect(result).toEqual<ChannelPreference>({
-      channel: 'email',
-      confidence: 'low',
-      engagementRate: 0,
-      reason: 'insufficient_data',
-    });
+    expect(result).toEqual(EMAIL_FALLBACK);
   });
 
-  it('returns email fallback when all events have null engagement_outcome (pre-SYN-677 rows)', async () => {
-    mockSupabaseRows([
-      { event_type: 'thirty_day_check_in', engagement_outcome: null, metadata: null },
-      { event_type: 'thirty_day_check_in', engagement_outcome: null, metadata: null },
-      { event_type: 'win_notification',    engagement_outcome: null, metadata: null },
-      { event_type: 'monthly_story',       engagement_outcome: null, metadata: null },
-      { event_type: 'monthly_story',       engagement_outcome: null, metadata: null },
+  it('returns email fallback when all events have null engagement_outcome (pre-SYN-677 rows)', () => {
+    const result = selectPreferredChannel([
+      {
+        event_type: 'thirty_day_check_in',
+        engagement_outcome: null,
+        metadata: null,
+      },
+      {
+        event_type: 'thirty_day_check_in',
+        engagement_outcome: null,
+        metadata: null,
+      },
+      {
+        event_type: 'win_notification',
+        engagement_outcome: null,
+        metadata: null,
+      },
+      { event_type: 'monthly_story', engagement_outcome: null, metadata: null },
+      { event_type: 'monthly_story', engagement_outcome: null, metadata: null },
     ]);
 
-    const result = await getPreferredChannel('org-no-outcomes');
-
-    expect(result).toEqual<ChannelPreference>({
-      channel: 'email',
-      confidence: 'low',
-      engagementRate: 0,
-      reason: 'insufficient_data',
-    });
+    expect(result).toEqual(EMAIL_FALLBACK);
   });
 });
 
 // ── STRONG EMAIL ENGAGEMENT ───────────────────────────────────────────────────
 
-describe('getPreferredChannel — email winning channel', () => {
-  it('returns email when client has strong email engagement (5+ events)', async () => {
-    mockSupabaseRows([
-      { event_type: 'thirty_day_check_in',       engagement_outcome: 'acted',    metadata: null },
-      { event_type: 'quarterly_milestone_review', engagement_outcome: 'acted',    metadata: null },
-      { event_type: 'win_notification',           engagement_outcome: 'clicked',  metadata: null },
-      { event_type: 'monthly_story',              engagement_outcome: 'replied',  metadata: null },
-      { event_type: 'geo_score_introduced',       engagement_outcome: 'surveyed', metadata: null },
+describe('selectPreferredChannel — email winning channel', () => {
+  it('returns email when client has strong email engagement (5+ events)', () => {
+    const result = selectPreferredChannel([
+      {
+        event_type: 'thirty_day_check_in',
+        engagement_outcome: 'acted',
+        metadata: null,
+      },
+      {
+        event_type: 'quarterly_milestone_review',
+        engagement_outcome: 'acted',
+        metadata: null,
+      },
+      {
+        event_type: 'win_notification',
+        engagement_outcome: 'clicked',
+        metadata: null,
+      },
+      {
+        event_type: 'monthly_story',
+        engagement_outcome: 'replied',
+        metadata: null,
+      },
+      {
+        event_type: 'geo_score_introduced',
+        engagement_outcome: 'surveyed',
+        metadata: null,
+      },
     ]);
-
-    const result = await getPreferredChannel('org-strong-email');
 
     expect(result.channel).toBe('email');
     expect(result.confidence).toBe('low'); // 5 events → low (< 8)
@@ -167,29 +143,25 @@ describe('getPreferredChannel — email winning channel', () => {
     expect(result.reason).toContain('best_engagement_rate');
   });
 
-  it('returns medium confidence with 8–14 email events', async () => {
+  it('returns medium confidence with 8–14 email events', () => {
     const rows = Array.from({ length: 10 }, () => ({
       event_type: 'monthly_story',
       engagement_outcome: 'acted',
       metadata: null,
     }));
-    mockSupabaseRows(rows);
-
-    const result = await getPreferredChannel('org-medium-email');
+    const result = selectPreferredChannel(rows);
 
     expect(result.channel).toBe('email');
     expect(result.confidence).toBe('medium');
   });
 
-  it('returns high confidence with 15+ email events', async () => {
+  it('returns high confidence with 15+ email events', () => {
     const rows = Array.from({ length: 15 }, () => ({
       event_type: 'win_notification',
       engagement_outcome: 'acted',
       metadata: null,
     }));
-    mockSupabaseRows(rows);
-
-    const result = await getPreferredChannel('org-high-email');
+    const result = selectPreferredChannel(rows);
 
     expect(result.channel).toBe('email');
     expect(result.confidence).toBe('high');
@@ -198,8 +170,8 @@ describe('getPreferredChannel — email winning channel', () => {
 
 // ── SMS WINNING CHANNEL ───────────────────────────────────────────────────────
 
-describe('getPreferredChannel — sms winning channel', () => {
-  it('returns sms when SMS has higher engagement score than email', async () => {
+describe('selectPreferredChannel — sms winning channel', () => {
+  it('returns sms when SMS has higher engagement score than email', () => {
     // 5 email events with mostly ignored outcomes (low score)
     const emailRows = Array.from({ length: 5 }, () => ({
       event_type: 'thirty_day_check_in',
@@ -214,9 +186,7 @@ describe('getPreferredChannel — sms winning channel', () => {
       metadata: null,
     }));
 
-    mockSupabaseRows([...emailRows, ...smsRows]);
-
-    const result = await getPreferredChannel('org-sms-winner');
+    const result = selectPreferredChannel([...emailRows, ...smsRows]);
 
     expect(result.channel).toBe('sms');
     expect(result.engagementRate).toBeGreaterThan(0.5);
@@ -268,10 +238,10 @@ describe('computeChannelScore', () => {
 
   it('returns a value between 0 and 1 for mixed events', () => {
     const events: ChannelEvent[] = [
-      { engagement_outcome: 'acted' },    // +1.0
-      { engagement_outcome: 'clicked' },  // +0.7
-      { engagement_outcome: 'ignored' },  // -0.5
-      { engagement_outcome: 'dismissed' },// -0.3
+      { engagement_outcome: 'acted' }, // +1.0
+      { engagement_outcome: 'clicked' }, // +0.7
+      { engagement_outcome: 'ignored' }, // -0.5
+      { engagement_outcome: 'dismissed' }, // -0.3
     ];
     const score = computeChannelScore(events);
     expect(score).toBeGreaterThan(0);
@@ -279,14 +249,22 @@ describe('computeChannelScore', () => {
   });
 
   it('returns a higher score for "replied" than for "delivered"', () => {
-    const repliedScore = computeChannelScore([{ engagement_outcome: 'replied' }]);
-    const deliveredScore = computeChannelScore([{ engagement_outcome: 'delivered' }]);
+    const repliedScore = computeChannelScore([
+      { engagement_outcome: 'replied' },
+    ]);
+    const deliveredScore = computeChannelScore([
+      { engagement_outcome: 'delivered' },
+    ]);
     expect(repliedScore).toBeGreaterThan(deliveredScore);
   });
 
   it('returns a higher score for "clicked" than for "dismissed"', () => {
-    const clickedScore = computeChannelScore([{ engagement_outcome: 'clicked' }]);
-    const dismissedScore = computeChannelScore([{ engagement_outcome: 'dismissed' }]);
+    const clickedScore = computeChannelScore([
+      { engagement_outcome: 'clicked' },
+    ]);
+    const dismissedScore = computeChannelScore([
+      { engagement_outcome: 'dismissed' },
+    ]);
     expect(clickedScore).toBeGreaterThan(dismissedScore);
   });
 
@@ -306,11 +284,7 @@ describe('computeChannelScore', () => {
 // ── Confidence level boundary tests ──────────────────────────────────────────
 
 describe('confidence level assignment by event count', () => {
-  function buildEmailRows(count: number): Array<{
-    event_type: string;
-    engagement_outcome: string;
-    metadata: null;
-  }> {
+  function buildEmailRows(count: number): JourneyEventRow[] {
     return Array.from({ length: count }, () => ({
       event_type: 'monthly_story',
       engagement_outcome: 'acted',
@@ -318,39 +292,33 @@ describe('confidence level assignment by event count', () => {
     }));
   }
 
-  it('returns low confidence at exactly 5 events', async () => {
-    mockSupabaseRows(buildEmailRows(5));
-    const result = await getPreferredChannel('org-5-events');
+  it('returns low confidence at exactly 5 events', () => {
+    const result = selectPreferredChannel(buildEmailRows(5));
     expect(result.confidence).toBe('low');
   });
 
-  it('returns low confidence at 7 events (below medium threshold)', async () => {
-    mockSupabaseRows(buildEmailRows(7));
-    const result = await getPreferredChannel('org-7-events');
+  it('returns low confidence at 7 events (below medium threshold)', () => {
+    const result = selectPreferredChannel(buildEmailRows(7));
     expect(result.confidence).toBe('low');
   });
 
-  it('returns medium confidence at exactly 8 events', async () => {
-    mockSupabaseRows(buildEmailRows(8));
-    const result = await getPreferredChannel('org-8-events');
+  it('returns medium confidence at exactly 8 events', () => {
+    const result = selectPreferredChannel(buildEmailRows(8));
     expect(result.confidence).toBe('medium');
   });
 
-  it('returns medium confidence at 14 events', async () => {
-    mockSupabaseRows(buildEmailRows(14));
-    const result = await getPreferredChannel('org-14-events');
+  it('returns medium confidence at 14 events', () => {
+    const result = selectPreferredChannel(buildEmailRows(14));
     expect(result.confidence).toBe('medium');
   });
 
-  it('returns high confidence at exactly 15 events', async () => {
-    mockSupabaseRows(buildEmailRows(15));
-    const result = await getPreferredChannel('org-15-events');
+  it('returns high confidence at exactly 15 events', () => {
+    const result = selectPreferredChannel(buildEmailRows(15));
     expect(result.confidence).toBe('high');
   });
 
-  it('returns high confidence at 20 events', async () => {
-    mockSupabaseRows(buildEmailRows(20));
-    const result = await getPreferredChannel('org-20-events');
+  it('returns high confidence at 20 events', () => {
+    const result = selectPreferredChannel(buildEmailRows(20));
     expect(result.confidence).toBe('high');
   });
 });
@@ -387,10 +355,14 @@ describe('inferChannelFromEventType', () => {
 
   it('respects explicit channel in metadata over event_type inference', () => {
     // event_type would map to email, but metadata says in_app
-    expect(inferChannelFromEventType('monthly_story', { channel: 'in_app' })).toBe('in_app');
+    expect(
+      inferChannelFromEventType('monthly_story', { channel: 'in_app' })
+    ).toBe('in_app');
   });
 
   it('ignores invalid channel values in metadata', () => {
-    expect(inferChannelFromEventType('monthly_story', { channel: 'fax' })).toBe('email');
+    expect(inferChannelFromEventType('monthly_story', { channel: 'fax' })).toBe(
+      'email'
+    );
   });
 });

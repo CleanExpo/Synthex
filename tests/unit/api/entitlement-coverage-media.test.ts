@@ -65,10 +65,6 @@ jest.mock('@/lib/services/ai/voice-generation', () => ({
   DEFAULT_VOICES: {},
 }));
 
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({ from: () => ({ insert: () => ({}) }) }),
-}));
-
 jest.mock('@/lib/multi-business/business-scope', () => ({
   getEffectiveOrganizationId: jest.fn(),
 }));
