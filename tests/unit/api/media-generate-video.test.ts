@@ -30,20 +30,6 @@ jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: { logData: (...a: unknown[]) => mockAudit(...a) },
 }));
 
-const mockInsert = jest.fn();
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({
-    from: () => ({
-      insert: (...a: unknown[]) => {
-        mockInsert(...a);
-        return {
-          select: () => ({ single: () => ({ data: null, error: null }) }),
-        };
-      },
-    }),
-  }),
-}));
-
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
@@ -92,8 +78,5 @@ describe('POST /api/media/generate/video with an unconfigured provider', () => {
     const json = await res.json();
     expect(json.error).toMatch(/not configured|Artlist|substrate/i);
     expect(json.details).toEqual({ provider: 'runway' });
-
-    // No fabricated asset written to the media library.
-    expect(mockInsert).not.toHaveBeenCalled();
   });
 });

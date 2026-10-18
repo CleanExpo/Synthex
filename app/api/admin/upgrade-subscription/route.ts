@@ -3,7 +3,7 @@
  *
  * Upgrades a user's subscription to a specified plan.
  * Protected by admin API key or admin JWT.
- * Uses the platform client for legacy admin updates.
+ * Reads and writes users, subscriptions and audit_logs via Prisma.
  *
  * @route POST /api/admin/upgrade-subscription
  *
@@ -14,18 +14,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'crypto';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { PLAN_LIMITS } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
-
-// =============================================================================
-// Admin client
-// =============================================================================
-
-function getSupabaseAdmin() {
-  return createClient();
-}
 
 // =============================================================================
 // Schema
@@ -33,7 +25,14 @@ function getSupabaseAdmin() {
 
 const upgradeSchema = z.object({
   email: z.string().email(),
-  plan: z.enum(['pro', 'growth', 'scale', 'professional', 'business', 'custom']),
+  plan: z.enum([
+    'pro',
+    'growth',
+    'scale',
+    'professional',
+    'business',
+    'custom',
+  ]),
 });
 
 // =============================================================================
@@ -72,16 +71,18 @@ async function verifyAdmin(request: NextRequest): Promise<{
       role?: string;
     };
 
-    const platformAdmin = getSupabaseAdmin();
-    const { data: user } = await platformAdmin
-      .from('users')
-      .select('id, preferences')
-      .eq('id', decoded.userId)
-      .single();
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, preferences: true },
+    });
 
     const prefs = user?.preferences as { role?: string } | null;
     if (!user || (prefs?.role !== 'admin' && prefs?.role !== 'superadmin')) {
-      return { isAdmin: false, userId: decoded.userId, error: 'Admin access required' };
+      return {
+        isAdmin: false,
+        userId: decoded.userId,
+        error: 'Admin access required',
+      };
     }
 
     return { isAdmin: true, userId: decoded.userId };
@@ -124,16 +125,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const platformAdmin = getSupabaseAdmin();
-
     // Find user by email
-    const { data: user, error: userError } = await platformAdmin
-      .from('users')
-      .select('id, email, name')
-      .eq('email', email)
-      .single();
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, name: true },
+    });
 
-    if (userError || !user) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Not Found', message: `No user found with email: ${email}` },
         { status: 404 }
@@ -144,62 +142,31 @@ export async function POST(request: NextRequest) {
     const oneYearFromNow = new Date(now);
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
-    // Check if subscription exists
-    const { data: existingSub } = await platformAdmin
-      .from('subscriptions')
-      .select('id')
-      .eq('userId', user.id)
-      .maybeSingle();
+    const periodAndLimits = {
+      plan,
+      status: 'active',
+      currentPeriodStart: now,
+      currentPeriodEnd: oneYearFromNow,
+      maxSocialAccounts: limits.maxSocialAccounts,
+      maxAiPosts: limits.maxAiPosts,
+      maxPersonas: limits.maxPersonas,
+    };
 
-    let subscription;
+    // Update the existing subscription or create one (userId is unique)
+    const subscription = await prisma.subscription.upsert({
+      where: { userId: user.id },
+      update: {
+        ...periodAndLimits,
+        cancelAtPeriodEnd: false,
+        cancelledAt: null,
+      },
+      create: { userId: user.id, ...periodAndLimits },
+    });
 
-    if (existingSub) {
-      // Update existing subscription
-      const { data, error } = await platformAdmin
-        .from('subscriptions')
-        .update({
-          plan,
-          status: 'active',
-          currentPeriodStart: now.toISOString(),
-          currentPeriodEnd: oneYearFromNow.toISOString(),
-          cancelAtPeriodEnd: false,
-          cancelledAt: null,
-          maxSocialAccounts: limits.maxSocialAccounts,
-          maxAiPosts: limits.maxAiPosts,
-          maxPersonas: limits.maxPersonas,
-        })
-        .eq('userId', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      subscription = data;
-    } else {
-      // Create new subscription
-      const { data, error } = await platformAdmin
-        .from('subscriptions')
-        .insert({
-          userId: user.id,
-          plan,
-          status: 'active',
-          currentPeriodStart: now.toISOString(),
-          currentPeriodEnd: oneYearFromNow.toISOString(),
-          maxSocialAccounts: limits.maxSocialAccounts,
-          maxAiPosts: limits.maxAiPosts,
-          maxPersonas: limits.maxPersonas,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      subscription = data;
-    }
-
-    // Create audit log
-    await platformAdmin
-      .from('audit_logs')
-      .insert({
-        userId: auth.userId || 'system',
+    // Create audit log (userId is a FK to users; API-key callers have none)
+    await prisma.auditLog.create({
+      data: {
+        userId: auth.userId ?? null,
         action: 'subscription_upgraded',
         resource: 'subscription',
         resourceId: subscription.id,
@@ -207,12 +174,13 @@ export async function POST(request: NextRequest) {
           targetEmail: email,
           targetUserId: user.id,
           plan,
-          limits,
+          limits: { ...limits },
         },
         severity: 'high',
         category: 'admin',
         outcome: 'success',
-      });
+      },
+    });
 
     return NextResponse.json({
       success: true,

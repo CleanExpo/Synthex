@@ -15,7 +15,6 @@
 
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { createServerClient } from '@/lib/platform/server';
 
 // ============================================================================
 // TYPES
@@ -71,23 +70,38 @@ export interface AuditQuery {
   offset?: number;
 }
 
+/**
+ * Thrown when a compliance event cannot be written to audit_events_immutable:
+ * the table has no Prisma model, so the append-only ledger is not provisioned.
+ * The event still goes to audit_logs through the buffered path.
+ */
+export class ImmutableAuditUnavailableError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED';
+  constructor() {
+    super(
+      'FEATURE_NOT_PROVISIONED: the audit_events_immutable table is not provisioned; the immutable copy was not written.'
+    );
+    this.name = 'ImmutableAuditUnavailableError';
+  }
+}
+
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
-const RETENTION_DAYS = parseInt(process.env.AUDIT_LOG_RETENTION_DAYS || '90', 10);
+const RETENTION_DAYS = parseInt(
+  process.env.AUDIT_LOG_RETENTION_DAYS || '90',
+  10
+);
 const BATCH_SIZE = 100;
 const FLUSH_INTERVAL = 5000; // 5 seconds
 
 // Compliance-classified categories routed to audit_events_immutable per
 // migration 20260516000001_immutable_audit_log.sql. Other categories
 // ('api', 'system') keep the existing 90-day retention path on audit_logs.
-const IMMUTABLE_CATEGORIES: ReadonlySet<AuditCategory> = new Set<AuditCategory>([
-  'auth',
-  'security',
-  'data',
-  'compliance',
-]);
+const IMMUTABLE_CATEGORIES: ReadonlySet<AuditCategory> = new Set<AuditCategory>(
+  ['auth', 'security', 'data', 'compliance']
+);
 
 // ============================================================================
 // AUDIT LOGGER CLASS
@@ -147,37 +161,27 @@ class AuditLogger {
   }
 
   /**
-   * Synchronously insert a single event into audit_events_immutable.
-   * The table has RLS forced + a BEFORE UPDATE/DELETE trigger that raises
-   * — see migration 20260516000001. Only service_role can INSERT.
+   * Write a single event to audit_events_immutable.
+   * That table (migration 20260516000001) has no Prisma model, so there is
+   * no supported writer: fail loudly with a typed error instead of pretending.
    */
-  private async writeImmutable(event: AuditEvent): Promise<void> {
-    const platform = createServerClient();
-    const { error } = await platform
-      .from('audit_events_immutable')
-      .insert({
-        event_type: event.action,
-        actor_id: event.userId ?? null,
-        payload: {
-          resource: event.resource,
-          resourceId: event.resourceId ?? null,
-          category: event.category,
-          severity: event.severity,
-          outcome: event.outcome,
-          details: event.details ?? null,
-          ipAddress: event.ipAddress ?? null,
-          userAgent: event.userAgent ?? null,
-          requestId: event.requestId ?? null,
-        },
-      });
-    if (error) throw error;
+  private async writeImmutable(_event: AuditEvent): Promise<void> {
+    throw new ImmutableAuditUnavailableError();
   }
 
   /**
    * Log authentication event
    */
   async logAuth(
-    action: 'login' | 'logout' | 'login_failed' | 'password_change' | 'password_reset' | 'mfa_enabled' | 'mfa_disabled' | 'session_expired',
+    action:
+      | 'login'
+      | 'logout'
+      | 'login_failed'
+      | 'password_change'
+      | 'password_reset'
+      | 'mfa_enabled'
+      | 'mfa_disabled'
+      | 'session_expired',
     userId: string | undefined,
     outcome: AuditOutcome,
     details?: Record<string, unknown>,
@@ -224,7 +228,13 @@ class AuditLogger {
    * Log security event
    */
   async logSecurity(
-    action: 'rate_limited' | 'blocked' | 'suspicious_activity' | 'unauthorized_access' | 'csrf_attempt' | 'injection_attempt',
+    action:
+      | 'rate_limited'
+      | 'blocked'
+      | 'suspicious_activity'
+      | 'unauthorized_access'
+      | 'csrf_attempt'
+      | 'injection_attempt',
     details: Record<string, unknown>,
     request?: { ip?: string; userAgent?: string; userId?: string }
   ): Promise<void> {
@@ -252,7 +262,8 @@ class AuditLogger {
     duration: number,
     request?: { ip?: string; userAgent?: string }
   ): Promise<void> {
-    const outcome: AuditOutcome = statusCode < 400 ? 'success' : statusCode < 500 ? 'warning' : 'failure';
+    const outcome: AuditOutcome =
+      statusCode < 400 ? 'success' : statusCode < 500 ? 'warning' : 'failure';
 
     await this.log({
       action: `api.${method.toLowerCase()}`,
@@ -275,7 +286,13 @@ class AuditLogger {
    * Log compliance event
    */
   async logCompliance(
-    action: 'data_access' | 'data_export' | 'data_deletion' | 'consent_given' | 'consent_withdrawn' | 'gdpr_request',
+    action:
+      | 'data_access'
+      | 'data_export'
+      | 'data_deletion'
+      | 'consent_given'
+      | 'consent_withdrawn'
+      | 'gdpr_request',
     resource: string,
     resourceId: string | undefined,
     userId: string | undefined,
@@ -309,8 +326,10 @@ class AuditLogger {
 
       if (query.startDate || query.endDate) {
         where.createdAt = {};
-        if (query.startDate) (where.createdAt as Record<string, Date>).gte = query.startDate;
-        if (query.endDate) (where.createdAt as Record<string, Date>).lte = query.endDate;
+        if (query.startDate)
+          (where.createdAt as Record<string, Date>).gte = query.startDate;
+        if (query.endDate)
+          (where.createdAt as Record<string, Date>).lte = query.endDate;
       }
 
       const [logs, total] = await Promise.all([
@@ -341,7 +360,7 @@ class AuditLogger {
 
     try {
       await prisma.auditLog.createMany({
-        data: events.map((event) => ({
+        data: events.map(event => ({
           action: event.action,
           resource: event.resource,
           resourceId: event.resourceId,
@@ -358,7 +377,10 @@ class AuditLogger {
 
       logger.debug('Flushed audit logs', { count: events.length });
     } catch (error) {
-      logger.error('Failed to flush audit logs', { error, count: events.length });
+      logger.error('Failed to flush audit logs', {
+        error,
+        count: events.length,
+      });
       // Re-add to buffer on failure
       this.buffer.unshift(...events);
     }
@@ -398,46 +420,50 @@ class AuditLogger {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
-      const [
-        totalLogs,
-        byCategory,
-        bySeverity,
-        byOutcome,
-        topActions,
-      ] = await Promise.all([
-        prisma.auditLog.count({
-          where: { createdAt: { gte: startDate } },
-        }),
-        prisma.auditLog.groupBy({
-          by: ['category'],
-          where: { createdAt: { gte: startDate } },
-          _count: true,
-        }),
-        prisma.auditLog.groupBy({
-          by: ['severity'],
-          where: { createdAt: { gte: startDate } },
-          _count: true,
-        }),
-        prisma.auditLog.groupBy({
-          by: ['outcome'],
-          where: { createdAt: { gte: startDate } },
-          _count: true,
-        }),
-        prisma.auditLog.groupBy({
-          by: ['action'],
-          where: { createdAt: { gte: startDate } },
-          _count: true,
-          orderBy: { _count: { action: 'desc' } },
-          take: 10,
-        }),
-      ]);
+      const [totalLogs, byCategory, bySeverity, byOutcome, topActions] =
+        await Promise.all([
+          prisma.auditLog.count({
+            where: { createdAt: { gte: startDate } },
+          }),
+          prisma.auditLog.groupBy({
+            by: ['category'],
+            where: { createdAt: { gte: startDate } },
+            _count: true,
+          }),
+          prisma.auditLog.groupBy({
+            by: ['severity'],
+            where: { createdAt: { gte: startDate } },
+            _count: true,
+          }),
+          prisma.auditLog.groupBy({
+            by: ['outcome'],
+            where: { createdAt: { gte: startDate } },
+            _count: true,
+          }),
+          prisma.auditLog.groupBy({
+            by: ['action'],
+            where: { createdAt: { gte: startDate } },
+            _count: true,
+            orderBy: { _count: { action: 'desc' } },
+            take: 10,
+          }),
+        ]);
 
       return {
         totalLogs,
-        byCategory: Object.fromEntries(byCategory.map((c) => [c.category, c._count])),
-        bySeverity: Object.fromEntries(bySeverity.map((s) => [s.severity, s._count])),
-        byOutcome: Object.fromEntries(byOutcome.map((o) => [o.outcome, o._count])),
-        topActions: topActions.map((a) => ({ action: a.action, count: a._count })),
+        byCategory: Object.fromEntries(
+          byCategory.map(c => [c.category, c._count])
+        ),
+        bySeverity: Object.fromEntries(
+          bySeverity.map(s => [s.severity, s._count])
+        ),
+        byOutcome: Object.fromEntries(
+          byOutcome.map(o => [o.outcome, o._count])
+        ),
+        topActions: topActions.map(a => ({
+          action: a.action,
+          count: a._count,
+        })),
         period: { days, startDate },
       };
     } catch (error) {
@@ -460,7 +486,9 @@ class AuditLogger {
     }, FLUSH_INTERVAL);
   }
 
-  private getLogLevel(severity: AuditSeverity): 'debug' | 'info' | 'warn' | 'error' {
+  private getLogLevel(
+    severity: AuditSeverity
+  ): 'debug' | 'info' | 'warn' | 'error' {
     switch (severity) {
       case 'critical':
         return 'error';

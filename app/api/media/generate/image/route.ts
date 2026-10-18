@@ -38,7 +38,6 @@ import {
   type SupportedPlatform,
 } from '@/lib/ai/generation-context';
 import { logger } from '@/lib/logger';
-import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
 import { prisma } from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 
@@ -79,16 +78,13 @@ function mediaGenerationContext(
     autonomyLevel: 'manual',
   });
 }
-import { createClient } from '@/lib/platform/noop-client';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+// NOT_PROVISIONED: prisma/schema.prisma has no media_assets model, so
+// saveToLibrary cannot persist. Responses say so via `library` instead of
+// dropping the save silently; generation itself is unaffected.
+const MEDIA_LIBRARY_UNAVAILABLE = tableUnavailable('media_assets');
 
 /**
  * Resolve the organisation that will own this generation's spend, or the 403
@@ -273,52 +269,6 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
-    // Shared media-library save helper (single + batch paths). Closes the
-    // grounded-images-never-saved gap (spec 2026-07-12 Part B): grounded
-    // FLUX/reference results are URL-only and were previously never saved.
-    // Uses result.imageBase64 when present (today's behaviour, byte-identical
-    // insert columns); otherwise fetches the URL via the SSRF-guarded
-    // fetchImageAsBase64 and saves that. Fetch failure is non-fatal — the row
-    // simply keeps its imageUrl and no asset id is returned.
-    async function saveVariantToLibrary(
-      result: ImageGenerationResult,
-      uid: string,
-      v: z.infer<typeof ImageGenerationSchema>
-    ): Promise<string | undefined> {
-      let base64 = result.imageBase64;
-      if (!base64 && result.imageUrl) {
-        const fetched = await fetchImageAsBase64(result.imageUrl);
-        if (!fetched.ok) {
-          logger.warn('media save skipped', { reason: fetched.reason });
-          return undefined;
-        }
-        base64 = fetched.base64;
-      }
-      if (!base64) return undefined;
-
-      const { data: asset, error: saveError } = await getSupabase()
-        .from('media_assets')
-        .insert({
-          user_id: uid,
-          type: 'image',
-          provider: result.provider,
-          prompt: v.prompt,
-          metadata: {
-            ...result.metadata,
-            style: v.style,
-            platform: v.platform,
-            originalPrompt: v.prompt,
-            enhancedPrompt: v.enhancePrompt ? finalPrompt : undefined,
-          },
-          base64_data: base64,
-          created_at: new Date().toISOString(),
-        })
-        .select('id')
-        .single();
-
-      return !saveError && asset ? asset.id : undefined;
-    }
-
     // Generate the image
     const options: ImageGenerationOptions = {
       prompt: finalPrompt,
@@ -414,27 +364,6 @@ async function _handlePost(request: NextRequest) {
         )
       );
 
-      // (2) media-library saves in parallel, non-fatal per variant.
-      const assetIds = await Promise.allSettled(
-        results.map(r =>
-          r.success && validated.saveToLibrary
-            ? saveVariantToLibrary(r, userId, validated)
-            : Promise.resolve(undefined)
-        )
-      );
-      await Promise.allSettled(
-        rows.map((row, i) => {
-          const a = assetIds[i];
-          const id = a.status === 'fulfilled' ? a.value : undefined;
-          return id
-            ? prisma.imageGeneration.update({
-                where: { id: row.id },
-                data: { mediaAssetId: id },
-              })
-            : Promise.resolve(null);
-        })
-      );
-
       // Audit log — one entry for the whole batch.
       await auditLogger.logData(
         'create',
@@ -484,11 +413,6 @@ async function _handlePost(request: NextRequest) {
           success: r.success,
           provider: r.provider,
           imageUrl: r.imageUrl,
-          mediaAssetId:
-            assetIds[i].status === 'fulfilled'
-              ? (assetIds[i] as PromiseFulfilledResult<string | undefined>)
-                  .value
-              : undefined,
           metadata: r.metadata,
           grounded: r.grounded,
           referenceSet: r.referenceSet,
@@ -499,6 +423,7 @@ async function _handlePost(request: NextRequest) {
           blocked: r.blocked,
           error: r.error,
         })),
+        ...(validated.saveToLibrary && { library: MEDIA_LIBRARY_UNAVAILABLE }),
       });
     }
 
@@ -540,29 +465,13 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
-    // Save to media library if requested. saveVariantToLibrary uses
-    // result.imageBase64 when present (byte-identical to the previous inline
-    // insert) and otherwise falls back to fetching result.imageUrl — closing
-    // the grounded-images-never-saved gap for this path too.
-    let mediaAssetId: string | undefined;
-    if (validated.saveToLibrary) {
-      mediaAssetId = await saveVariantToLibrary(result, userId, validated);
-    }
-
     // Audit log
-    await auditLogger.logData(
-      'create',
-      'image',
-      mediaAssetId,
-      userId,
-      'success',
-      {
-        action: 'MEDIA_GENERATE',
-        provider: result.provider,
-        style: validated.style,
-        platform: validated.platform,
-      }
-    );
+    await auditLogger.logData('create', 'image', undefined, userId, 'success', {
+      action: 'MEDIA_GENERATE',
+      provider: result.provider,
+      style: validated.style,
+      platform: validated.platform,
+    });
 
     return APISecurityChecker.createSecureResponse({
       success: true,
@@ -570,7 +479,7 @@ async function _handlePost(request: NextRequest) {
       imageBase64: result.imageBase64,
       imageUrl: result.imageUrl,
       metadata: result.metadata,
-      mediaAssetId,
+      ...(validated.saveToLibrary && { library: MEDIA_LIBRARY_UNAVAILABLE }),
       // Grounding status so the client can confirm generation ran on real
       // reference photos vs silently fell back to the text-only path.
       grounded: result.grounded,
@@ -661,38 +570,11 @@ export async function PUT(request: NextRequest) {
       validated.count
     );
 
-    // Save successful results to library
-    const savedAssets: string[] = [];
-    if (validated.saveToLibrary) {
-      for (const result of results) {
-        if (result.success && result.imageBase64) {
-          const { data: asset } = await getSupabase()
-            .from('media_assets')
-            .insert({
-              user_id: userId,
-              type: 'image',
-              provider: result.provider,
-              prompt: validated.prompt,
-              metadata: result.metadata,
-              base64_data: result.imageBase64,
-              created_at: new Date().toISOString(),
-            })
-            .select('id')
-            .single();
-
-          if (asset) {
-            savedAssets.push(asset.id);
-          }
-        }
-      }
-    }
-
     // Audit log
     await auditLogger.logData('create', 'image', undefined, userId, 'success', {
       action: 'MEDIA_GENERATE_VARIATIONS',
       count: validated.count,
       successCount: results.filter(r => r.success).length,
-      savedAssets,
     });
 
     return APISecurityChecker.createSecureResponse({
@@ -709,7 +591,6 @@ export async function PUT(request: NextRequest) {
         // fail-closed grounding failure) mirror the batch route's per-item
         // flag rather than a bare failure.
         blocked: r.blocked,
-        mediaAssetId: savedAssets[i],
         // SYN-1115: per-variant spend is part of the response contract, so a
         // caller can reconcile without querying the ledger.
         estimatedCostUsd: r.estimatedCostUsd,
@@ -717,6 +598,7 @@ export async function PUT(request: NextRequest) {
       })),
       totalSuccess: results.filter(r => r.success).length,
       totalFailed: results.filter(r => !r.success).length,
+      ...(validated.saveToLibrary && { library: MEDIA_LIBRARY_UNAVAILABLE }),
     });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {

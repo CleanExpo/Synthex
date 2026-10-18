@@ -4,20 +4,42 @@
  * @description Automatically optimizes content based on performance data,
  * A/B testing, and engagement patterns
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
- * - OPENROUTER_API_KEY: OpenRouter API key for AI enhancements (SECRET)
- *
- * FAILURE MODE: Returns original content if optimization fails
+ * DATA STORE: NOT PROVISIONED. Post history lives in `scheduled_posts`, which
+ * has no Prisma model. The `ab_tests` model exists but has no content_id,
+ * split_ratio or per-variation control/rate columns, so persisting this
+ * engine's A/B tests would silently drop data. Every data path throws
+ * ContentOptimizerNotProvisionedError instead of faking success.
  */
 
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
 
+/** Thrown when a path needs a table (or columns) that has no Prisma model. */
+export class ContentOptimizerNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly table: string) {
+    super(
+      `Content optimization is not provisioned: table "${table}" has no matching Prisma model.`
+    );
+    this.name = 'ContentOptimizerNotProvisionedError';
+  }
+}
+
 // Optimization types
-export type OptimizationType = 'hashtag' | 'caption' | 'timing' | 'format' | 'cta' | 'emoji' | 'length';
-export type Platform = 'twitter' | 'instagram' | 'linkedin' | 'facebook' | 'tiktok' | 'youtube';
+export type OptimizationType =
+  | 'hashtag'
+  | 'caption'
+  | 'timing'
+  | 'format'
+  | 'cta'
+  | 'emoji'
+  | 'length';
+export type Platform =
+  | 'twitter'
+  | 'instagram'
+  | 'linkedin'
+  | 'facebook'
+  | 'tiktok'
+  | 'youtube';
 
 // Content performance metrics
 export interface ContentPerformance {
@@ -96,17 +118,8 @@ interface ABTestAnalysis {
 }
 
 class ContentOptimizer {
-  // SYN-953: lazy Supabase init.
-  private _platform: SupabaseClient | null = null;
   private cache: Map<string, { data: unknown; expiry: number }> = new Map();
   private readonly CACHE_TTL = 1800000; // 30 minutes
-
-  private get platform(): SupabaseClient {
-    if (!this._platform) {
-      this._platform = createClient();
-    }
-    return this._platform;
-  }
 
   /**
    * Optimize content for a specific platform
@@ -148,7 +161,11 @@ class ContentOptimizer {
       const lengthSuggestions = this.optimizeLength(content, platform);
       suggestions.push(...lengthSuggestions);
 
-      const emojiSuggestions = this.optimizeEmojis(content, platform, performanceData);
+      const emojiSuggestions = this.optimizeEmojis(
+        content,
+        platform,
+        performanceData
+      );
       suggestions.push(...emojiSuggestions);
 
       const ctaSuggestions = this.optimizeCTA(content, platform, options.goal);
@@ -168,7 +185,7 @@ class ContentOptimizer {
 
       // Calculate expected boost
       const expectedBoost = suggestions.reduce((total, s) => {
-        return total + (s.expectedImprovement * s.confidence * 0.1);
+        return total + s.expectedImprovement * s.confidence * 0.1;
       }, 0);
 
       return {
@@ -180,6 +197,7 @@ class ContentOptimizer {
         expectedEngagementBoost: Math.min(expectedBoost, 50), // Cap at 50%
       };
     } catch (error: unknown) {
+      if (error instanceof ContentOptimizerNotProvisionedError) throw error;
       logger.error('Content optimization failed:', { error, userId });
       return {
         success: false,
@@ -210,48 +228,7 @@ class ContentOptimizer {
       splitRatio?: number[]; // e.g., [50, 50] for equal split
     }
   ): Promise<ABTestConfig> {
-    const testId = `ab_${Date.now()}`;
-    const startDate = new Date();
-    const endDate = config.durationDays
-      ? new Date(startDate.getTime() + config.durationDays * 24 * 60 * 60 * 1000)
-      : undefined;
-
-    const abVariations: ABVariation[] = variations.map((v, i) => ({
-      id: `var_${i}`,
-      name: v.name,
-      content: v.content,
-      hashtags: v.hashtags,
-      impressions: 0,
-      engagementRate: 0,
-      conversionRate: 0,
-      isControl: v.isControl || i === 0,
-    }));
-
-    const test: ABTestConfig = {
-      id: testId,
-      name: config.name,
-      contentId,
-      variations: abVariations,
-      status: 'draft',
-      startDate,
-      endDate,
-    };
-
-    // Save to database
-    await this.platform.from('ab_tests').insert({
-      id: testId,
-      user_id: userId,
-      content_id: contentId,
-      name: config.name,
-      variations: abVariations,
-      status: 'draft',
-      split_ratio: config.splitRatio || [50, 50],
-      start_date: startDate.toISOString(),
-      end_date: endDate?.toISOString(),
-      created_at: new Date().toISOString(),
-    });
-
-    return test;
+    throw new ContentOptimizerNotProvisionedError('ab_tests');
   }
 
   /**
@@ -261,66 +238,7 @@ class ContentOptimizer {
     userId: string,
     testId: string
   ): Promise<(ABTestConfig & { analysis: ABTestAnalysis }) | null> {
-    const { data: test, error } = await this.platform
-      .from('ab_tests')
-      .select('*')
-      .eq('id', testId)
-      .eq('user_id', userId)
-      .single();
-
-    if (error || !test) {
-      return null;
-    }
-
-    // Calculate statistical significance
-    const variations = test.variations as ABVariation[];
-    const control = variations.find(v => v.isControl);
-    const treatments = variations.filter(v => !v.isControl);
-
-    let winningVariation: string | undefined;
-    let highestLift = 0;
-    let significance = 0;
-
-    if (control && control.impressions > 100) {
-      for (const treatment of treatments) {
-        if (treatment.impressions < 100) continue;
-
-        const lift = ((treatment.engagementRate - control.engagementRate) / control.engagementRate) * 100;
-        const sig = this.calculateStatisticalSignificance(
-          control.impressions,
-          control.engagementRate,
-          treatment.impressions,
-          treatment.engagementRate
-        );
-
-        if (lift > highestLift && sig >= 0.95) {
-          highestLift = lift;
-          winningVariation = treatment.id;
-          significance = sig;
-        }
-      }
-    }
-
-    const result = {
-      ...test,
-      variations,
-      status: test.status,
-      startDate: new Date(test.start_date),
-      endDate: test.end_date ? new Date(test.end_date) : undefined,
-      winningVariation,
-      statisticalSignificance: significance,
-      analysis: {
-        totalImpressions: variations.reduce((sum, v) => sum + v.impressions, 0),
-        avgEngagementRate: variations.reduce((sum, v) => sum + v.engagementRate, 0) / variations.length,
-        lift: highestLift,
-        isSignificant: significance >= 0.95,
-        recommendation: winningVariation
-          ? `Variation "${variations.find(v => v.id === winningVariation)?.name}" outperforms control by ${highestLift.toFixed(1)}%`
-          : 'Not enough data or no significant winner yet',
-      },
-    };
-
-    return result;
+    throw new ContentOptimizerNotProvisionedError('ab_tests');
   }
 
   /**
@@ -334,76 +252,16 @@ class ContentOptimizer {
       maxToOptimize?: number;
       autoApply?: boolean;
     } = {}
-  ): Promise<Array<{
-    postId: string;
-    original: string;
-    optimized: string;
-    suggestions: OptimizationSuggestion[];
-    applied: boolean;
-  }>> {
-    const threshold = options.performanceThreshold || 0.02; // 2% default
-    const maxOptimize = options.maxToOptimize || 10;
-
-    // Find underperforming posts
-    const { data: posts } = await this.platform
-      .from('scheduled_posts')
-      .select('id, content, hashtags, analytics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .eq('status', 'published')
-      .order('published_at', { ascending: false })
-      .limit(100);
-
-    if (!posts) return [];
-
-    const underperformers = posts.filter((post: any) => {
-      const analytics = post.analytics || {};
-      const impressions = analytics.impressions || 1;
-      const engagements = (analytics.likes || 0) + (analytics.comments || 0);
-      return (engagements / impressions) < threshold;
-    }).slice(0, maxOptimize);
-
-    const results = [];
-
-    for (const post of underperformers) {
-      const optimization = await this.optimizeContent(
-        userId,
-        post.content,
-        platform,
-        { hashtags: post.hashtags }
-      );
-
-      const result = {
-        postId: post.id,
-        original: post.content,
-        optimized: optimization.optimizedContent,
-        suggestions: optimization.suggestions,
-        applied: false,
-      };
-
-      if (options.autoApply && optimization.success) {
-        // Create a new optimized version as a draft
-        await this.platform.from('scheduled_posts').insert({
-          user_id: userId,
-          platform,
-          content: optimization.optimizedContent,
-          hashtags: this.extractHashtags(optimization.optimizedContent),
-          status: 'draft',
-          parent_post_id: post.id,
-          optimization_metadata: {
-            optimized_from: post.id,
-            suggestions: optimization.suggestions,
-            expected_boost: optimization.expectedEngagementBoost,
-          },
-          created_at: new Date().toISOString(),
-        });
-        result.applied = true;
-      }
-
-      results.push(result);
-    }
-
-    return results;
+  ): Promise<
+    Array<{
+      postId: string;
+      original: string;
+      optimized: string;
+      suggestions: OptimizationSuggestion[];
+      applied: boolean;
+    }>
+  > {
+    throw new ContentOptimizerNotProvisionedError('scheduled_posts');
   }
 
   /**
@@ -414,57 +272,7 @@ class ContentOptimizer {
     platform: Platform,
     category?: string
   ): Promise<HashtagPerformance[]> {
-    const cacheKey = `trending-${platform}-${category || 'all'}`;
-    const cached = this.cache.get(cacheKey);
-    if (cached && cached.expiry > Date.now()) {
-      return cached.data as HashtagPerformance[];
-    }
-
-    // Get hashtag performance from historical data
-    const { data: posts } = await this.platform
-      .from('scheduled_posts')
-      .select('hashtags, analytics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .eq('status', 'published')
-      .gte('published_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-    if (!posts) return [];
-
-    const hashtagStats: Map<string, { total: number; engagementSum: number; reachSum: number }> = new Map();
-
-    posts.forEach((post: any) => {
-      const hashtags = post.hashtags || [];
-      const analytics = post.analytics || {};
-      const impressions = analytics.impressions || 1;
-      const engagements = (analytics.likes || 0) + (analytics.comments || 0);
-      const engagementRate = engagements / impressions;
-      const reach = analytics.reach || impressions;
-
-      hashtags.forEach((tag: string) => {
-        const existing = hashtagStats.get(tag) || { total: 0, engagementSum: 0, reachSum: 0 };
-        hashtagStats.set(tag, {
-          total: existing.total + 1,
-          engagementSum: existing.engagementSum + engagementRate,
-          reachSum: existing.reachSum + reach,
-        });
-      });
-    });
-
-    const trending: HashtagPerformance[] = Array.from(hashtagStats.entries())
-      .map(([hashtag, stats]) => ({
-        hashtag,
-        avgEngagementRate: stats.engagementSum / stats.total,
-        avgReach: stats.reachSum / stats.total,
-        usageCount: stats.total,
-        trendingScore: (stats.engagementSum / stats.total) * Math.log(stats.total + 1) * 100,
-      }))
-      .sort((a, b) => b.trendingScore - a.trendingScore)
-      .slice(0, 30);
-
-    this.cache.set(cacheKey, { data: trending, expiry: Date.now() + this.CACHE_TTL });
-
-    return trending;
+    throw new ContentOptimizerNotProvisionedError('scheduled_posts');
   }
 
   // ==================== Private Methods ====================
@@ -473,30 +281,7 @@ class ContentOptimizer {
     userId: string,
     platform: Platform
   ): Promise<ContentPerformance[]> {
-    const { data: posts } = await this.platform
-      .from('scheduled_posts')
-      .select('analytics')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .eq('status', 'published')
-      .gte('published_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString());
-
-    if (!posts) return [];
-
-    return posts.map((post: any) => {
-      const a = post.analytics || {};
-      const impressions = a.impressions || 1;
-      return {
-        impressions,
-        engagementRate: ((a.likes || 0) + (a.comments || 0) + (a.shares || 0)) / impressions,
-        likes: a.likes || 0,
-        comments: a.comments || 0,
-        shares: a.shares || 0,
-        saves: a.saves || 0,
-        clicks: a.clicks || 0,
-        reach: a.reach || impressions,
-      };
-    });
+    throw new ContentOptimizerNotProvisionedError('scheduled_posts');
   }
 
   private async optimizeHashtags(
@@ -530,7 +315,10 @@ class ContentOptimizer {
         type: 'hashtag',
         priority: 'high',
         original: currentHashtags.join(' '),
-        suggested: [...currentHashtags.slice(0, limit - 3), ...unusedTrending.slice(0, 3).map(t => t.hashtag)].join(' '),
+        suggested: [
+          ...currentHashtags.slice(0, limit - 3),
+          ...unusedTrending.slice(0, 3).map(t => t.hashtag),
+        ].join(' '),
         expectedImprovement: 15,
         confidence: 0.7,
         reasoning: `Adding trending hashtags like ${unusedTrending[0].hashtag} could increase reach by ~15%`,
@@ -569,7 +357,8 @@ class ContentOptimizer {
         suggested: content + '\n\nWhat do you think? 👇',
         expectedImprovement: 20,
         confidence: 0.6,
-        reasoning: 'Questions in captions typically increase comment rate by 20%',
+        reasoning:
+          'Questions in captions typically increase comment rate by 20%',
       });
     }
 
@@ -583,14 +372,18 @@ class ContentOptimizer {
         suggested: firstLine.substring(0, 80) + '...',
         expectedImprovement: 10,
         confidence: 0.7,
-        reasoning: 'Shorter first lines perform better in feeds (truncated preview)',
+        reasoning:
+          'Shorter first lines perform better in feeds (truncated preview)',
       });
     }
 
     return suggestions;
   }
 
-  private optimizeLength(content: string, platform: Platform): OptimizationSuggestion[] {
+  private optimizeLength(
+    content: string,
+    platform: Platform
+  ): OptimizationSuggestion[] {
     const suggestions: OptimizationSuggestion[] = [];
 
     // Optimal lengths by platform
@@ -684,7 +477,18 @@ class ContentOptimizer {
   ): OptimizationSuggestion[] {
     const suggestions: OptimizationSuggestion[] = [];
 
-    const ctaKeywords = ['click', 'link', 'comment', 'share', 'like', 'follow', 'subscribe', 'learn', 'discover', 'join'];
+    const ctaKeywords = [
+      'click',
+      'link',
+      'comment',
+      'share',
+      'like',
+      'follow',
+      'subscribe',
+      'learn',
+      'discover',
+      'join',
+    ];
     const hasCTA = ctaKeywords.some(kw => content.toLowerCase().includes(kw));
 
     if (!hasCTA && goal === 'conversions') {
@@ -719,8 +523,12 @@ class ContentOptimizer {
     treatmentRate: number
   ): number {
     // Simplified Z-test for proportions
-    const pooledRate = (controlRate * controlN + treatmentRate * treatmentN) / (controlN + treatmentN);
-    const se = Math.sqrt(pooledRate * (1 - pooledRate) * (1/controlN + 1/treatmentN));
+    const pooledRate =
+      (controlRate * controlN + treatmentRate * treatmentN) /
+      (controlN + treatmentN);
+    const se = Math.sqrt(
+      pooledRate * (1 - pooledRate) * (1 / controlN + 1 / treatmentN)
+    );
 
     if (se === 0) return 0;
 
@@ -729,9 +537,9 @@ class ContentOptimizer {
     // Convert Z-score to confidence level (approximation)
     if (z >= 2.576) return 0.99;
     if (z >= 1.96) return 0.95;
-    if (z >= 1.645) return 0.90;
-    if (z >= 1.28) return 0.80;
-    return 0.5 + (z * 0.15);
+    if (z >= 1.645) return 0.9;
+    if (z >= 1.28) return 0.8;
+    return 0.5 + z * 0.15;
   }
 
   private extractHashtags(content: string): string[] {

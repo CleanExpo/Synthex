@@ -21,15 +21,6 @@ import { decide, decodeAuthTokenPayload } from '@/proxy';
 
 const TEST_SECRET = 'test-secret-key-at-least-32-chars-long';
 
-// Mock @/lib/platform/browser-client — middleware creates a Supabase client for session checks
-jest.mock('@/lib/platform/browser-client', () => ({
-  createServerClient: jest.fn(() => ({
-    auth: {
-      getSession: jest.fn().mockResolvedValue({ data: { session: null } }),
-    },
-  })),
-}));
-
 // Mock the API key gate (not relevant to onboarding tests)
 jest.mock('@/lib/middleware/api-key-gate.edge', () => ({
   checkApiKeyGate: jest.fn(() => null),

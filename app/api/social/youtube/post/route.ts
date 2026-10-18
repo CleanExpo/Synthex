@@ -18,22 +18,61 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { decryptField } from '@/lib/security/field-encryption';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { validateExternalUrl } from '@/lib/security/validate-url';
-import { createPlatformService } from '@/lib/social';
+import { createPlatformService, type PlatformCredentials } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+// Usage metering used to write to a Supabase `usage_tracking` table that has
+// no Prisma model. It is reported as not recorded instead of silently dropped.
+const USAGE_NOT_PROVISIONED = {
+  recorded: false,
+  reason: 'FEATURE_NOT_PROVISIONED: usage_tracking table is not provisioned',
+} as const;
+
+/** The caller's own active YouTube connection, scoped to their effective org. */
+async function findYouTubeConnection(userId: string) {
+  const organizationId = await getEffectiveOrganizationId(userId);
+  return prisma.platformConnection.findFirst({
+    where: {
+      userId,
+      platform: 'youtube',
+      organizationId: organizationId ?? null,
+      isActive: true,
+      deletedAt: null,
+    },
+  });
 }
+
+type YouTubeConnection = NonNullable<
+  Awaited<ReturnType<typeof findYouTubeConnection>>
+>;
+
+/** Decrypt stored OAuth tokens; null when the access token is unusable. */
+function toCredentials(
+  connection: YouTubeConnection
+): PlatformCredentials | null {
+  const accessToken = decryptField(connection.accessToken);
+  if (!accessToken) return null;
+  return {
+    accessToken,
+    refreshToken: connection.refreshToken
+      ? (decryptField(connection.refreshToken) ?? undefined)
+      : undefined,
+    expiresAt: connection.expiresAt ?? undefined,
+    platformUserId: connection.profileId ?? undefined,
+    platformUsername: connection.profileName ?? undefined,
+  };
+}
+
+const RECONNECT_ERROR =
+  'YouTube access token could not be decrypted. Please reconnect your YouTube account.';
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const YOUTUBE_UPLOAD_BASE = 'https://www.googleapis.com/upload/youtube/v3';
@@ -110,15 +149,9 @@ export async function POST(request: NextRequest) {
       const postType = searchParams.get('type') || 'video';
 
       // Get user's YouTube connection
-      const { data: connection, error: connectionError } = await getSupabase()
-        .from('platform_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('platform', 'youtube')
-        .eq('is_active', true)
-        .single();
+      const connection = await findYouTubeConnection(userId);
 
-      if (connectionError || !connection) {
+      if (!connection) {
         return NextResponse.json(
           {
             error:
@@ -212,14 +245,14 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      const credentials = toCredentials(connection);
+      if (!credentials) {
+        return NextResponse.json({ error: RECONNECT_ERROR }, { status: 400 });
+      }
+
       // Use YouTubeService for video upload
-      const service = createPlatformService('youtube', {
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
+      const service = createPlatformService('youtube', credentials, {
+        connectionId: connection.id,
       });
 
       if (!service) {
@@ -258,7 +291,7 @@ export async function POST(request: NextRequest) {
             {
               method: 'POST',
               headers: {
-                Authorization: `Bearer ${connection.access_token}`,
+                Authorization: `Bearer ${credentials.accessToken}`,
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
@@ -298,7 +331,7 @@ export async function POST(request: NextRequest) {
             {
               method: 'POST',
               headers: {
-                Authorization: `Bearer ${connection.access_token}`,
+                Authorization: `Bearer ${credentials.accessToken}`,
                 'Content-Type': 'image/jpeg',
               },
               body: thumbnailBuffer,
@@ -309,27 +342,24 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Save to database
-      await getSupabase()
-        .from('social_posts')
-        .insert({
-          user_id: userId,
-          platform: 'youtube',
+      // Save to database (platform_posts, scoped via the caller's connection)
+      await prisma.platformPost.upsert({
+        where: {
+          connectionId_platformId: {
+            connectionId: connection.id,
+            platformId: videoId,
+          },
+        },
+        create: {
+          connectionId: connection.id,
+          platformId: videoId,
           content: `${videoData.title}\n\n${videoData.description || ''}`,
-          post_id: videoId,
-          media_urls: [videoData.videoUrl],
-          media_type: 'VIDEO',
+          mediaUrls: [videoData.videoUrl],
           status: 'published',
-          metrics: {},
-          created_at: new Date().toISOString(),
-        });
-
-      // Track usage
-      await getSupabase().from('usage_tracking').insert({
-        user_id: userId,
-        feature: 'youtube_upload',
-        count: 1,
-        timestamp: new Date().toISOString(),
+          publishedAt: new Date(),
+          metadata: { mediaType: 'VIDEO', source: 'api/social/youtube/post' },
+        },
+        update: { status: 'published' },
       });
 
       await auditLogger.logData(
@@ -342,6 +372,8 @@ export async function POST(request: NextRequest) {
           action: 'youtube_video_uploaded',
           privacy: videoData.privacy,
           categoryId: videoData.categoryId,
+          usageFeature: 'youtube_upload',
+          usageCount: 1,
         }
       );
 
@@ -353,6 +385,8 @@ export async function POST(request: NextRequest) {
           title: videoData.title,
           status: 'uploaded',
         },
+        recorded: true,
+        usage: USAGE_NOT_PROVISIONED,
       });
     } catch (error: unknown) {
       logger.error('YouTube post error:', error);
@@ -395,13 +429,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'youtube')
-      .eq('is_active', true)
-      .single();
+    const connection = await findYouTubeConnection(userId);
 
     if (!connection) {
       return NextResponse.json(
@@ -413,14 +441,12 @@ export async function GET(request: NextRequest) {
     if (syncFromPlatform) {
       try {
         // Use YouTubeService for syncing posts from platform
-        const service = createPlatformService('youtube', {
-          accessToken: connection.access_token,
-          refreshToken: connection.refresh_token,
-          expiresAt: connection.expires_at
-            ? new Date(connection.expires_at)
-            : undefined,
-          platformUserId: connection.platform_user_id,
-        });
+        const credentials = toCredentials(connection);
+        const service = credentials
+          ? createPlatformService('youtube', credentials, {
+              connectionId: connection.id,
+            })
+          : null;
 
         if (service) {
           const syncResult = await service.syncPosts(limit);
@@ -454,15 +480,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await getSupabase()
-      .from('social_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'youtube')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
+    // Stored posts for the caller's own connection only
+    const posts = await prisma.platformPost.findMany({
+      where: { connectionId: connection.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
     return NextResponse.json({ success: true, data: posts });
   } catch (error: unknown) {

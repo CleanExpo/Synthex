@@ -88,10 +88,6 @@ jest.mock('@/lib/logger', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(() => ({})),
-}));
-
 import { GET } from '@/app/api/media/generate/voice/route';
 
 describe('SYN-859 — GET /api/media/generate/voice voiceId validation', () => {

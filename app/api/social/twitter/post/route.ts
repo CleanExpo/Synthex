@@ -16,7 +16,6 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createClient } from '@/lib/platform/noop-client';
 import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
@@ -32,13 +31,12 @@ const twitterPostSchema = z.object({
   scheduledTime: z.string().optional(),
 });
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+// Immediate tweets go out via the shared app-level account and used to be
+// logged to a Supabase `social_posts` table (plus `usage_tracking`) that has no
+// Prisma model. Without a per-user record the route cannot publish honestly, so
+// it reports the gap instead of posting and silently dropping the record.
+const NOT_PROVISIONED_REASON =
+  'Direct X/Twitter post history is not provisioned (social_posts table missing). Use /api/social/post to publish from your connected account.';
 
 export async function POST(request: NextRequest) {
   return writeDefault(request, async () => {
@@ -76,13 +74,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Check user's subscription limits
-      const { data: subscription } = await getSupabase()
-        .from('subscriptions')
-        .select('plan, metadata')
-        .eq('user_id', userId)
-        .single();
-
       // Get and validate request body
       const rawBody = await request.json();
       const validation = twitterPostSchema.safeParse(rawBody);
@@ -101,6 +92,13 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (!scheduledTime) {
+        return NextResponse.json(
+          { error: 'FEATURE_NOT_PROVISIONED', message: NOT_PROVISIONED_REASON },
+          { status: 501 }
+        );
+      }
+
       // Handle media uploads if provided
       const mediaIds: string[] = [];
       if (mediaUrls && mediaUrls.length > 0) {
@@ -114,95 +112,25 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      let result;
-
-      // Handle scheduled posts.
       // Route through the WORKING scheduler (Post + cron). The previous path
       // inserted into the `scheduled_posts` table drained by a BullMQ worker
       // that is never booted, so scheduled tweets were silently lost (P1).
-      if (scheduledTime) {
-        const scheduled = await scheduleViaPost({
-          userId,
-          platform: 'twitter',
-          content: text!,
-          scheduledTime: new Date(scheduledTime),
-          metadata: { mediaIds },
-        });
-
-        return NextResponse.json({
-          success: true,
-          scheduled: true,
-          data: {
-            id: scheduled.id,
-            scheduledTime: scheduled.scheduledAt,
-            status: scheduled.status,
-          },
-        });
-      }
-      // Handle thread posting
-      else if (thread && Array.isArray(thread)) {
-        // Validate all tweets in thread
-        for (const tweet of thread) {
-          const validation = twitterService.validateTweet(tweet);
-          if (!validation.valid) {
-            return NextResponse.json(
-              { error: validation.error },
-              { status: 400 }
-            );
-          }
-        }
-
-        result = await twitterService.postThread({
-          tweets: thread,
-          mediaIds: mediaIds.length > 0 ? [mediaIds] : undefined,
-        });
-      }
-      // Handle single tweet
-      else {
-        // Validate tweet
-        const tweetValidation = twitterService.validateTweet(text!);
-        if (!tweetValidation.valid) {
-          return NextResponse.json(
-            { error: tweetValidation.error },
-            { status: 400 }
-          );
-        }
-
-        result = await twitterService.postTweet({
-          text: text!,
-          mediaIds,
-        });
-      }
-
-      // Log the post.
-      // `result` is a single TweetPostResult (single tweet) or an array
-      // (thread); use the first id in the thread case.
-      const primaryResult = Array.isArray(result) ? result[0] : result;
-      await getSupabase()
-        .from('social_posts')
-        .insert({
-          user_id: userId,
-          platform: 'twitter',
-          content: text || thread?.join('\n'),
-          post_id: primaryResult?.id || null,
-          status: 'published',
-          metrics: {},
-          created_at: new Date().toISOString(),
-        });
-
-      // Track usage
-      await getSupabase()
-        .from('usage_tracking')
-        .insert({
-          user_id: userId,
-          feature: 'twitter_post',
-          count: thread ? thread.length : 1,
-          timestamp: new Date().toISOString(),
-        });
+      const scheduled = await scheduleViaPost({
+        userId,
+        platform: 'twitter',
+        content: text!,
+        scheduledTime: new Date(scheduledTime),
+        metadata: { mediaIds },
+      });
 
       return NextResponse.json({
         success: true,
-        data: result,
+        scheduled: true,
+        data: {
+          id: scheduled.id,
+          scheduledTime: scheduled.scheduledAt,
+          status: scheduled.status,
+        },
       });
     } catch (error: unknown) {
       logger.error('Twitter post error:', error);
@@ -237,45 +165,14 @@ export async function GET(request: NextRequest) {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) return unauthorizedResponse();
 
-    // Get posts from database
-    const { data: posts, error } = await getSupabase()
-      .from('social_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'twitter')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      throw error;
-    }
-
-    // Try to update metrics for recent posts
-    for (const post of posts || []) {
-      if (post.post_id && post.created_at) {
-        const postAge = Date.now() - new Date(post.created_at).getTime();
-        // Only update metrics for posts less than 7 days old
-        if (postAge < 7 * 24 * 60 * 60 * 1000) {
-          try {
-            const metrics = await twitterService.getTweetMetrics(post.post_id);
-            if (metrics) {
-              await getSupabase()
-                .from('social_posts')
-                .update({ metrics })
-                .eq('id', post.id);
-              post.metrics = metrics;
-            }
-          } catch (error) {
-            logger.error('Failed to update metrics:', error);
-          }
-        }
-      }
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: posts,
-    });
+    return NextResponse.json(
+      {
+        available: false,
+        error: 'FEATURE_NOT_PROVISIONED',
+        reason: NOT_PROVISIONED_REASON,
+      },
+      { status: 501 }
+    );
   } catch (error) {
     logger.error('Get posts error:', error);
     return NextResponse.json(

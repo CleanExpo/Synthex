@@ -53,11 +53,6 @@ jest.mock('@/lib/platform/client', () => ({
   },
 }));
 
-// Supabase server client mock (used by /api/user/account DELETE)
-jest.mock('@/lib/platform/server', () => ({
-  createServerClient: jest.fn(),
-}));
-
 // Prisma mock (used by /api/user/account, /api/user/export and /api/user/profile)
 jest.mock('@/lib/prisma', () => {
   const mockPrisma = {
@@ -90,7 +85,6 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 
 import * as rateLimitModule from '@/lib/rate-limit';
 import * as supabaseClientModule from '@/lib/platform/client';
-import * as supabaseServerModule from '@/lib/platform/server';
 import * as prismaModule from '@/lib/prisma';
 import * as jwtUtilsModule from '@/lib/auth/jwt-utils';
 import * as auditModule from '@/lib/audit/audit-logger';
@@ -122,10 +116,6 @@ const mockSupabaseGetUser = supabaseClientModule.supabase.auth
 >;
 const mockSupabaseFrom = supabaseClientModule.supabase
   .from as jest.MockedFunction<typeof supabaseClientModule.supabase.from>;
-const mockCreateServerClient =
-  supabaseServerModule.createServerClient as jest.MockedFunction<
-    typeof supabaseServerModule.createServerClient
-  >;
 const mockPrismaDefault = (prismaModule as any).default;
 const mockPrismaNamedDefault = (prismaModule as any).prisma;
 const mockGetUserId =
@@ -251,13 +241,6 @@ describe.skip('DELETE /api/user/account — GDPR Art.17 Right to Erasure', () =>
       delete: jest.fn().mockReturnValue({
         eq: jest.fn().mockResolvedValue({ error: null }),
       }),
-    } as any);
-    mockCreateServerClient.mockReturnValue({
-      auth: {
-        admin: {
-          deleteUser: jest.fn().mockResolvedValue({ error: null }),
-        },
-      },
     } as any);
   });
 

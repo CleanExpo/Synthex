@@ -1,9 +1,24 @@
 /**
  * A/B Testing Framework
  * Manage experiments and track performance
+ *
+ * DATA STORE: NOT PROVISIONED. experiment_assignments, experiment_events and
+ * profiles have no Prisma model, and the `experiments` model is the founder
+ * experiment log (no variants, metrics or target-audience columns). Every
+ * persistence path throws ABTestingNotProvisionedError instead of faking a
+ * saved experiment or dropping tracked events.
  */
 
-import { createClient } from '@/lib/platform/noop-client';
+/** Thrown when a path needs an A/B testing table that has no Prisma model. */
+export class ABTestingNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly table: string) {
+    super(
+      `A/B testing is not provisioned: table "${table}" has no matching Prisma model.`
+    );
+    this.name = 'ABTestingNotProvisionedError';
+  }
+}
 
 export interface Experiment {
   id: string;
@@ -75,27 +90,16 @@ export interface ExperimentResults {
   recommendation: string;
 }
 
-import { SupabaseClient } from '@/lib/platform/noop-client';
-
 class ABTestingService {
-  // SYN-953: lazy Supabase init. Original constructor gated on `typeof
-  // process !== 'undefined'` which is always true in Node, so it always
-  // tried to init at import time. Lazy getter avoids the build-time crash.
-  private _platform: SupabaseClient | null = null;
   private experiments: Map<string, Experiment> = new Map();
   private userAssignments: Map<string, Map<string, string>> = new Map(); // userId -> experimentId -> variantId
-
-  private get platform(): SupabaseClient {
-    if (!this._platform) {
-      this._platform = createClient();
-    }
-    return this._platform;
-  }
 
   /**
    * Create a new experiment
    */
-  async createExperiment(experiment: Omit<Experiment, 'id' | 'createdAt' | 'updatedAt' | 'metrics'>): Promise<Experiment> {
+  async createExperiment(
+    experiment: Omit<Experiment, 'id' | 'createdAt' | 'updatedAt' | 'metrics'>
+  ): Promise<Experiment> {
     const newExperiment: Experiment = {
       ...experiment,
       id: crypto.randomUUID(),
@@ -106,32 +110,29 @@ class ABTestingService {
         conversions: 0,
         conversionRate: 0,
         engagement: 0,
-        confidence: 0
-      }
+        confidence: 0,
+      },
     };
 
     // Validate variant weights sum to 100
-    const totalWeight = experiment.variants.reduce((sum, v) => sum + v.weight, 0);
+    const totalWeight = experiment.variants.reduce(
+      (sum, v) => sum + v.weight,
+      0
+    );
     if (Math.abs(totalWeight - 100) > 0.01) {
       throw new Error('Variant weights must sum to 100%');
     }
 
-    // Save to database
-    if (!this.platform) throw new Error('Supabase client not initialized');
-    const { error } = await this.platform
-      .from('experiments')
-      .insert(newExperiment);
-
-    if (error) throw error;
-
-    this.experiments.set(newExperiment.id, newExperiment);
-    return newExperiment;
+    throw new ABTestingNotProvisionedError('experiments');
   }
 
   /**
    * Get variant for user
    */
-  async getVariant(experimentId: string, userId: string): Promise<Variant | null> {
+  async getVariant(
+    experimentId: string,
+    userId: string
+  ): Promise<Variant | null> {
     // Check if user already assigned
     const userExperiments = this.userAssignments.get(userId);
     if (userExperiments?.has(experimentId)) {
@@ -147,16 +148,19 @@ class ABTestingService {
     }
 
     // Check target audience
-    if (experiment.targetAudience && !await this.isUserEligible(userId, experiment.targetAudience)) {
+    if (
+      experiment.targetAudience &&
+      !(await this.isUserEligible(userId, experiment.targetAudience))
+    ) {
       return null;
     }
 
     // Assign variant based on weights
     const variant = this.assignVariant(experiment.variants, userId);
-    
+
     // Save assignment
     await this.saveAssignment(userId, experimentId, variant.id);
-    
+
     // Track participant
     await this.trackEvent(experimentId, variant.id, 'participant', userId);
 
@@ -170,7 +174,7 @@ class ABTestingService {
     // Create deterministic hash from userId
     const hash = this.hashCode(userId);
     const bucket = Math.abs(hash) % 100;
-    
+
     let cumulativeWeight = 0;
     for (const variant of variants) {
       cumulativeWeight += variant.weight;
@@ -178,7 +182,7 @@ class ABTestingService {
         return variant;
       }
     }
-    
+
     return variants[variants.length - 1]; // Fallback to last variant
   }
 
@@ -189,7 +193,7 @@ class ABTestingService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return hash;
@@ -198,22 +202,12 @@ class ABTestingService {
   /**
    * Save user assignment
    */
-  private async saveAssignment(userId: string, experimentId: string, variantId: string): Promise<void> {
-    if (!this.userAssignments.has(userId)) {
-      this.userAssignments.set(userId, new Map());
-    }
-    this.userAssignments.get(userId)!.set(experimentId, variantId);
-
-    // Save to database
-    if (!this.platform) return;
-    await this.platform
-      .from('experiment_assignments')
-      .insert({
-        user_id: userId,
-        experiment_id: experimentId,
-        variant_id: variantId,
-        assigned_at: new Date().toISOString()
-      });
+  private async saveAssignment(
+    userId: string,
+    experimentId: string,
+    variantId: string
+  ): Promise<void> {
+    throw new ABTestingNotProvisionedError('experiment_assignments');
   }
 
   /**
@@ -226,27 +220,17 @@ class ABTestingService {
     userId: string,
     metadata?: Record<string, unknown>
   ): Promise<void> {
-    // Save event to database
-    if (!this.platform) return;
-    await this.platform
-      .from('experiment_events')
-      .insert({
-        experiment_id: experimentId,
-        variant_id: variantId,
-        user_id: userId,
-        event_type: eventType,
-        metadata,
-        created_at: new Date().toISOString()
-      });
-
-    // Update metrics
-    await this.updateMetrics(experimentId, variantId, eventType);
+    throw new ABTestingNotProvisionedError('experiment_events');
   }
 
   /**
    * Update experiment metrics
    */
-  private async updateMetrics(experimentId: string, variantId: string, eventType: string): Promise<void> {
+  private async updateMetrics(
+    experimentId: string,
+    variantId: string,
+    eventType: string
+  ): Promise<void> {
     const experiment = await this.getExperiment(experimentId);
     if (!experiment) return;
 
@@ -259,7 +243,7 @@ class ABTestingService {
         participants: 0,
         conversions: 0,
         conversionRate: 0,
-        engagement: 0
+        engagement: 0,
       };
     }
 
@@ -281,10 +265,14 @@ class ABTestingService {
 
     // Calculate conversion rates
     if (variant.metrics.participants > 0) {
-      variant.metrics.conversionRate = (variant.metrics.conversions / variant.metrics.participants) * 100;
+      variant.metrics.conversionRate =
+        (variant.metrics.conversions / variant.metrics.participants) * 100;
     }
     if (experiment.metrics.totalParticipants > 0) {
-      experiment.metrics.conversionRate = (experiment.metrics.conversions / experiment.metrics.totalParticipants) * 100;
+      experiment.metrics.conversionRate =
+        (experiment.metrics.conversions /
+          experiment.metrics.totalParticipants) *
+        100;
     }
 
     // Calculate statistical significance
@@ -298,12 +286,8 @@ class ABTestingService {
       }
     }
 
-    // Save updated metrics
-    if (!this.platform) return;
-    await this.platform
-      .from('experiments')
-      .update({ metrics: experiment.metrics, updated_at: new Date().toISOString() })
-      .eq('id', experimentId);
+    // Persisting metrics needs a metrics column on experiments.
+    throw new ABTestingNotProvisionedError('experiments');
   }
 
   /**
@@ -314,11 +298,14 @@ class ABTestingService {
     // In production, use proper statistical tests (chi-square, t-test, etc.)
     const control = experiment.variants.find(v => v.isControl);
     const variant = experiment.variants.find(v => !v.isControl);
-    
+
     if (!control?.metrics || !variant?.metrics) return 0;
-    
+
     const minSampleSize = 100;
-    if (control.metrics.participants < minSampleSize || variant.metrics.participants < minSampleSize) {
+    if (
+      control.metrics.participants < minSampleSize ||
+      variant.metrics.participants < minSampleSize
+    ) {
       return 0;
     }
 
@@ -327,14 +314,15 @@ class ABTestingService {
     const p2 = variant.metrics.conversionRate / 100;
     const n1 = control.metrics.participants;
     const n2 = variant.metrics.participants;
-    
-    const pooledP = (control.metrics.conversions + variant.metrics.conversions) / (n1 + n2);
-    const se = Math.sqrt(pooledP * (1 - pooledP) * (1/n1 + 1/n2));
-    
+
+    const pooledP =
+      (control.metrics.conversions + variant.metrics.conversions) / (n1 + n2);
+    const se = Math.sqrt(pooledP * (1 - pooledP) * (1 / n1 + 1 / n2));
+
     if (se === 0) return 0;
-    
+
     const z = Math.abs((p1 - p2) / se);
-    
+
     // Convert z-score to confidence level
     // Simplified conversion (use statistical library in production)
     if (z >= 2.58) return 99;
@@ -363,28 +351,11 @@ class ABTestingService {
   /**
    * Check if user is eligible for experiment
    */
-  private async isUserEligible(userId: string, targetAudience: TargetAudience): Promise<boolean> {
-    // Get user profile
-    if (!this.platform) return false;
-
-    const { data: profile } = await this.platform
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (!profile) return false;
-
-    // Check audience criteria
-    if (targetAudience.minFollowers && profile.followers < targetAudience.minFollowers) {
-      return false;
-    }
-    if (targetAudience.maxFollowers && profile.followers > targetAudience.maxFollowers) {
-      return false;
-    }
-    // Add more criteria checks as needed
-
-    return true;
+  private async isUserEligible(
+    userId: string,
+    targetAudience: TargetAudience
+  ): Promise<boolean> {
+    throw new ABTestingNotProvisionedError('profiles');
   }
 
   /**
@@ -395,62 +366,24 @@ class ABTestingService {
       return this.experiments.get(experimentId)!;
     }
 
-    if (!this.platform) return null;
-
-    const { data, error } = await this.platform
-      .from('experiments')
-      .select('*')
-      .eq('id', experimentId)
-      .single();
-
-    if (error || !data) return null;
-
-    this.experiments.set(experimentId, data);
-    return data;
+    throw new ABTestingNotProvisionedError('experiments');
   }
 
   /**
    * Get all experiments
    */
   async getExperiments(status?: string): Promise<Experiment[]> {
-    if (!this.platform) return [];
-
-    const query = this.platform.from('experiments').select('*');
-    
-    if (status) {
-      query.eq('status', status);
-    }
-
-    const { data, error } = await query.order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Failed to fetch experiments:', error);
-      return [];
-    }
-
-    return data || [];
+    throw new ABTestingNotProvisionedError('experiments');
   }
 
   /**
    * Update experiment status
    */
-  async updateExperimentStatus(experimentId: string, status: Experiment['status']): Promise<boolean> {
-    if (!this.platform) return false;
-
-    const { error } = await this.platform
-      .from('experiments')
-      .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', experimentId);
-
-    if (!error) {
-      const experiment = this.experiments.get(experimentId);
-      if (experiment) {
-        experiment.status = status;
-        experiment.updatedAt = new Date();
-      }
-    }
-
-    return !error;
+  async updateExperimentStatus(
+    experimentId: string,
+    status: Experiment['status']
+  ): Promise<boolean> {
+    throw new ABTestingNotProvisionedError('experiments');
   }
 
   /**
@@ -465,9 +398,15 @@ class ABTestingService {
         id: experiment.id,
         name: experiment.name,
         status: experiment.status,
-        duration: experiment.endDate 
-          ? Math.floor((experiment.endDate.getTime() - experiment.startDate.getTime()) / (1000 * 60 * 60 * 24))
-          : Math.floor((Date.now() - experiment.startDate.getTime()) / (1000 * 60 * 60 * 24))
+        duration: experiment.endDate
+          ? Math.floor(
+              (experiment.endDate.getTime() - experiment.startDate.getTime()) /
+                (1000 * 60 * 60 * 24)
+            )
+          : Math.floor(
+              (Date.now() - experiment.startDate.getTime()) /
+                (1000 * 60 * 60 * 24)
+            ),
       },
       metrics: experiment.metrics,
       variants: experiment.variants.map(v => ({
@@ -475,11 +414,12 @@ class ABTestingService {
         name: v.name,
         isControl: v.isControl,
         weight: v.weight,
-        metrics: v.metrics
+        metrics: v.metrics,
       })),
-      recommendation: experiment.metrics.confidence >= 95 
-        ? `Variant "${experiment.variants.find(v => v.id === experiment.metrics.winner)?.name}" is the winner with ${experiment.metrics.confidence}% confidence`
-        : `Need more data. Current confidence: ${experiment.metrics.confidence}%`
+      recommendation:
+        experiment.metrics.confidence >= 95
+          ? `Variant "${experiment.variants.find(v => v.id === experiment.metrics.winner)?.name}" is the winner with ${experiment.metrics.confidence}% confidence`
+          : `Need more data. Current confidence: ${experiment.metrics.confidence}%`,
     };
   }
 }

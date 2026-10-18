@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 
 export const CLOSE_LOOP_REQUIRED_PIPELINES = [
@@ -82,7 +81,7 @@ export function evaluateCloseLoopHealth(
     }
   }
 
-  const pipelines = CLOSE_LOOP_REQUIRED_PIPELINES.map((name) => {
+  const pipelines = CLOSE_LOOP_REQUIRED_PIPELINES.map(name => {
     const row = latestByName.get(name);
     if (!row) {
       return {
@@ -109,11 +108,11 @@ export function evaluateCloseLoopHealth(
   });
 
   const hasRed = pipelines.some(
-    (p) => p.status === 'failed' || p.status === 'no_data' || p.stale
+    p => p.status === 'failed' || p.status === 'no_data' || p.stale
   );
   const hasYellow =
     !hasRed &&
-    pipelines.some((p) => p.status === 'partial' || p.clientsFailed > 0);
+    pipelines.some(p => p.status === 'partial' || p.clientsFailed > 0);
 
   return {
     checkedAt: now.toISOString(),
@@ -123,27 +122,48 @@ export function evaluateCloseLoopHealth(
   };
 }
 
-export async function fetchCloseLoopHealth(input: {
-  organizationId?: string;
-} = {}): Promise<CloseLoopHealthReport> {
+export async function fetchCloseLoopHealth(
+  input: {
+    organizationId?: string;
+  } = {}
+): Promise<CloseLoopHealthReport> {
   const now = new Date();
   const since = new Date(now);
   since.setDate(since.getDate() - 14);
 
-  const platform = createClient();
+  // edge_function_logs holds aggregate pipeline runs (client_id is null), so
+  // this read is platform-wide, exactly as before; only the learning signal
+  // below is organisation-scoped.
+  const logs = await prisma.edgeFunctionLog
+    .findMany({
+      where: {
+        functionName: { in: [...CLOSE_LOOP_REQUIRED_PIPELINES] },
+        createdAt: { gte: since },
+      },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        functionName: true,
+        status: true,
+        clientsProcessed: true,
+        clientsFailed: true,
+        durationMs: true,
+        createdAt: true,
+      },
+    })
+    .catch((error: unknown) => {
+      throw new Error(
+        `close-loop health query failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    });
 
-  const { data, error } = await platform
-    .from('edge_function_logs')
-    .select(
-      'function_name, status, clients_processed, clients_failed, duration_ms, created_at'
-    )
-    .in('function_name', [...CLOSE_LOOP_REQUIRED_PIPELINES])
-    .gte('created_at', since.toISOString())
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    throw new Error(`close-loop health query failed: ${error.message}`);
-  }
+  const rows: EdgeFunctionLogRow[] = logs.map(log => ({
+    function_name: log.functionName,
+    status: log.status as EdgeFunctionLogRow['status'],
+    clients_processed: log.clientsProcessed,
+    clients_failed: log.clientsFailed,
+    duration_ms: log.durationMs,
+    created_at: log.createdAt.toISOString(),
+  }));
 
   const learningSignals: CloseLoopLearningSnapshot[] = [];
   if (input.organizationId) {
@@ -166,9 +186,5 @@ export async function fetchCloseLoopHealth(input: {
     );
   }
 
-  return evaluateCloseLoopHealth(
-    (data ?? []) as EdgeFunctionLogRow[],
-    now,
-    learningSignals
-  );
+  return evaluateCloseLoopHealth(rows, now, learningSignals);
 }

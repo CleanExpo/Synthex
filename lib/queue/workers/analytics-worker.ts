@@ -9,7 +9,10 @@
  */
 
 import { Worker, Job } from 'bullmq';
-import { createClient } from '@/lib/platform/noop-client';
+import { Prisma } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
+import { decryptFieldSafe } from '@/lib/security/field-encryption';
 import { QUEUE_NAMES, AnalyticsJobData } from '../bull-queue';
 import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 import { InstagramService } from '@/lib/social/instagram-service';
@@ -17,12 +20,42 @@ import { LinkedInService } from '@/lib/social/linkedin-service';
 import { twitterService } from '@/lib/social/twitter-service';
 import { logger } from '@/lib/logger';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
+/**
+ * Thrown after collection because the platform_analytics_snapshots table is
+ * not provisioned: the snapshot cannot be stored, so the job fails honestly
+ * instead of reporting success for data that was dropped.
+ */
+export class AnalyticsSnapshotsNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED';
+  readonly table = 'platform_analytics_snapshots';
+  constructor() {
+    super(tableUnavailable('platform_analytics_snapshots').reason);
+    this.name = 'AnalyticsSnapshotsNotProvisionedError';
   }
-  return _platform;
+}
+
+/**
+ * Record sync state on the caller's connection. There are no last_metrics /
+ * last_sync_error columns, so they live in the connection's metadata JSON.
+ */
+async function recordConnectionSync(
+  connectionId: string,
+  userId: string,
+  state: { lastMetrics?: Record<string, number>; lastSyncError?: string }
+): Promise<void> {
+  const existing = await prisma.platformConnection.findFirst({
+    where: { id: connectionId, userId, deletedAt: null },
+    select: { metadata: true },
+  });
+  if (!existing) return;
+  const metadata = {
+    ...((existing.metadata as Record<string, unknown> | null) ?? {}),
+    ...state,
+  };
+  await prisma.platformConnection.updateMany({
+    where: { id: connectionId, userId, deletedAt: null },
+    data: { lastSync: new Date(), metadata: metadata as Prisma.InputJsonValue },
+  });
 }
 
 function getRedisConnection() {
@@ -55,20 +88,21 @@ async function processAnalyticsCollection(
 
   try {
     // Get user's platform connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('id', connectionId)
-      .single();
+    const connection = await prisma.platformConnection.findFirst({
+      where: { id: connectionId, userId, deletedAt: null },
+    });
 
-    if (connectionError || !connection) {
+    if (!connection) {
       throw new Error(`Connection ${connectionId} not found`);
     }
 
-    if (!connection.is_active) {
+    if (!connection.isActive) {
       logger.warn(`Connection ${connectionId} is inactive, skipping analytics`);
       return;
     }
+
+    const accessToken = decryptFieldSafe(connection.accessToken) ?? '';
+    const refreshToken = decryptFieldSafe(connection.refreshToken) ?? undefined;
 
     let analyticsResult: {
       success: boolean;
@@ -95,8 +129,8 @@ async function processAnalyticsCollection(
       case 'instagram': {
         const instagramService = new InstagramService();
         instagramService.initialize({
-          accessToken: connection.access_token,
-          refreshToken: connection.refresh_token,
+          accessToken,
+          refreshToken,
         });
 
         const result = await instagramService.syncAnalytics(30);
@@ -111,8 +145,8 @@ async function processAnalyticsCollection(
       case 'linkedin': {
         const linkedInService = new LinkedInService();
         linkedInService.initialize({
-          accessToken: connection.access_token,
-          refreshToken: connection.refresh_token,
+          accessToken,
+          refreshToken,
         });
 
         const result = await linkedInService.syncAnalytics(30);
@@ -126,9 +160,8 @@ async function processAnalyticsCollection(
 
       case 'facebook': {
         // Collect Facebook Page insights
-        const pageId = connection.platform_user_id;
-        const pageAccessToken =
-          connection.page_access_token || connection.access_token;
+        const pageId = connection.profileId;
+        const pageAccessToken = accessToken;
 
         try {
           const response = await fetch(
@@ -183,7 +216,7 @@ async function processAnalyticsCollection(
             {
               method: 'GET',
               headers: {
-                'Access-Token': connection.access_token,
+                'Access-Token': accessToken,
               },
             }
           );
@@ -223,7 +256,7 @@ async function processAnalyticsCollection(
               `endDate=${new Date().toISOString().split('T')[0]}`,
             {
               headers: {
-                Authorization: `Bearer ${connection.access_token}`,
+                Authorization: `Bearer ${accessToken}`,
               },
             }
           );
@@ -269,39 +302,23 @@ async function processAnalyticsCollection(
       throw new Error(analyticsResult.error || 'Failed to collect analytics');
     }
 
-    // Store analytics snapshot
-    await getSupabase().from('platform_analytics_snapshots').insert({
-      user_id: userId,
-      platform,
-      connection_id: connectionId,
-      metrics: analyticsResult.metrics,
-      collected_at: new Date().toISOString(),
-    });
-
     // Update connection with latest metrics
-    await getSupabase()
-      .from('platform_connections')
-      .update({
-        last_metrics: analyticsResult.metrics,
-        last_sync_at: new Date().toISOString(),
-      })
-      .eq('id', connectionId);
-
-    logger.info(`Successfully collected analytics for ${platform}`, {
-      userId,
-      metrics: analyticsResult.metrics,
+    await recordConnectionSync(connectionId, userId, {
+      lastMetrics: analyticsResult.metrics,
     });
+
+    // The snapshot history table is not provisioned: fail the job honestly.
+    throw new AnalyticsSnapshotsNotProvisionedError();
   } catch (error: unknown) {
     logger.error(`Failed to collect analytics for ${platform}:`, { error });
 
-    // Update connection with error
-    await getSupabase()
-      .from('platform_connections')
-      .update({
-        last_sync_error: error instanceof Error ? error.message : String(error),
-        last_sync_at: new Date().toISOString(),
-      })
-      .eq('id', connectionId);
+    // Update connection with error (the not-provisioned case already saved
+    // its metrics above and is not a sync error).
+    if (!(error instanceof AnalyticsSnapshotsNotProvisionedError)) {
+      await recordConnectionSync(connectionId, userId, {
+        lastSyncError: error instanceof Error ? error.message : String(error),
+      });
+    }
 
     throw error;
   }

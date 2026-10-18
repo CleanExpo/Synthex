@@ -1,4 +1,13 @@
-import { SupabaseClient } from '@/lib/platform/noop-client';
+/**
+ * Client journey event delivery gate and log.
+ *
+ * NOT PROVISIONED: these helpers called the `should_deliver_journey_event` and
+ * `record_journey_event` RPCs over the `client_journey_events` table, which has
+ * no Prisma model in `prisma/schema.prisma`. Both functions throw
+ * {@link JourneyEventsNotProvisionedError} instead of guessing: the old
+ * fallbacks reported "safe to deliver" and swallowed failed writes, so a caller
+ * could not tell an unprovisioned feature from a working one.
+ */
 
 export type JourneyEventType =
   | 'onboarding_30_day'
@@ -18,69 +27,47 @@ export interface JourneyEvent {
   metadata?: Record<string, unknown>;
 }
 
-/**
- * Returns true if it is safe to deliver the journey event.
- * Non-fatal: logs errors and returns true (optimistic) on failure so delivery is not blocked.
- */
-export async function shouldDeliverJourneyEvent(
-  platform: SupabaseClient,
-  clientId: string,
-  eventType: JourneyEventType,
-  channel: JourneyChannel,
-  minDaysBetween = 7
-): Promise<boolean> {
-  try {
-    const { data, error } = await platform.rpc('should_deliver_journey_event', {
-      p_client_id: clientId,
-      p_event_type: eventType,
-      p_channel: channel,
-      p_min_days_between: minDaysBetween,
-    });
-    if (error) {
-      console.error(
-        '[journey-events] shouldDeliverJourneyEvent error:',
-        error.message
-      );
-      return true; // optimistic fallback
-    }
-    return data as boolean;
-  } catch (err) {
-    console.error(
-      '[journey-events] shouldDeliverJourneyEvent unexpected error:',
-      err
+/** Minimal RPC-capable client shape accepted for API compatibility. */
+export interface JourneyRpcClient {
+  rpc(fn: string, params: Record<string, unknown>): PromiseLike<unknown>;
+}
+
+export class JourneyEventsNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  readonly table = 'client_journey_events' as const;
+
+  constructor(operation: string) {
+    super(
+      `[journey-events] ${operation} unavailable: the client_journey_events table is not provisioned`
     );
-    return true; // non-fatal
+    this.name = 'JourneyEventsNotProvisionedError';
   }
 }
 
 /**
+ * Whether it is safe to deliver the journey event.
+ * @throws JourneyEventsNotProvisionedError until client_journey_events exists.
+ */
+export async function shouldDeliverJourneyEvent(
+  _platform: JourneyRpcClient,
+  _clientId: string,
+  _eventType: JourneyEventType,
+  _channel: JourneyChannel,
+  _minDaysBetween = 7
+): Promise<boolean> {
+  throw new JourneyEventsNotProvisionedError('shouldDeliverJourneyEvent');
+}
+
+/**
  * Records a delivered journey event.
- * Non-fatal: logs errors silently so calling code is not blocked.
+ * @throws JourneyEventsNotProvisionedError until client_journey_events exists.
  */
 export async function recordJourneyEvent(
-  platform: SupabaseClient,
-  clientId: string,
-  eventType: JourneyEventType,
-  channel: JourneyChannel,
-  metadata?: Record<string, unknown>
+  _platform: JourneyRpcClient,
+  _clientId: string,
+  _eventType: JourneyEventType,
+  _channel: JourneyChannel,
+  _metadata?: Record<string, unknown>
 ): Promise<string | null> {
-  try {
-    const { data, error } = await platform.rpc('record_journey_event', {
-      p_client_id: clientId,
-      p_event_type: eventType,
-      p_channel: channel,
-      p_metadata: metadata ?? null,
-    });
-    if (error) {
-      console.error(
-        '[journey-events] recordJourneyEvent error:',
-        error.message
-      );
-      return null;
-    }
-    return data as string;
-  } catch (err) {
-    console.error('[journey-events] recordJourneyEvent unexpected error:', err);
-    return null; // non-fatal
-  }
+  throw new JourneyEventsNotProvisionedError('recordJourneyEvent');
 }

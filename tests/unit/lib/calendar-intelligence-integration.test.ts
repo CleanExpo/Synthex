@@ -21,7 +21,9 @@ jest.mock('next/server', () => {
       this._body = body;
       this.status = init.status ?? 200;
     }
-    json() { return Promise.resolve(JSON.parse(this._body)); }
+    json() {
+      return Promise.resolve(JSON.parse(this._body));
+    }
     static json(data: unknown, init: { status?: number } = {}) {
       return new MockNextResponse(JSON.stringify(data), init);
     }
@@ -45,21 +47,14 @@ jest.mock('@/lib/ai/prompts/anti-slop-directive', () => ({
   withAntiSlop: (s: string) => s,
 }));
 
-// ── Supabase mock (runner factory) ────────────────────────────────────────────
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(() => ({
-    from: jest.fn(() => ({ insert: jest.fn().mockResolvedValue({ error: null }) })),
-  })),
-}));
-
 // ── Prisma mock ───────────────────────────────────────────────────────────────
 // Use arrow-function wrappers (not jest.fn() directly) so that Jest config's
 // resetMocks:true does not nuke the mock implementations between tests.
 // The underlying jest.fn() variables are re-armed in beforeEach instead.
 const mockFindMany = jest.fn();
 const mockFindUnique = jest.fn();
-const mockFindUsers = jest.fn();   // prisma.user.findMany  (needed by digestReader)
-const mockFindPosts = jest.fn();   // prisma.post.findMany  (needed by digestReader)
+const mockFindUsers = jest.fn(); // prisma.user.findMany  (needed by digestReader)
+const mockFindPosts = jest.fn(); // prisma.post.findMany  (needed by digestReader)
 const mockUpsert = jest.fn().mockResolvedValue({ id: 'cal-1' });
 const mockCountDigests = jest.fn().mockResolvedValue(5);
 const mockSeasonalDismissalFindMany = jest.fn();
@@ -80,11 +75,18 @@ jest.mock('@/lib/prisma', () => ({
     // getContentIntelligence is fully mocked so these won't be called in practice,
     // but keep them for safety (inline jest.fn() is fine here since getContentIntelligence
     // mock intercepts before these are reached in generateWeeklyCalendar tests)
-    contentPerformanceProfile: { findUnique: jest.fn().mockResolvedValue(null) },
+    contentPerformanceProfile: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
     industryBaseline: { findUnique: jest.fn().mockResolvedValue(null) },
-    seasonalSignal: { findMany: jest.fn().mockResolvedValue([]), findFirst: jest.fn().mockResolvedValue(null) },
+    seasonalSignal: {
+      findMany: jest.fn().mockResolvedValue([]),
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
     // seasonalSignalsMatcher has its own catch so dismissal returning [] or undefined is safe
-    seasonalSignalDismissal: { findMany: (...a: unknown[]) => mockSeasonalDismissalFindMany(...a) },
+    seasonalSignalDismissal: {
+      findMany: (...a: unknown[]) => mockSeasonalDismissalFindMany(...a),
+    },
     // $queryRaw used by seasonalSignalsMatcher; non-fatal (caught internally)
     $queryRaw: (...a: unknown[]) => mockQueryRaw(...a),
   },
@@ -172,8 +174,11 @@ describe('captionGenerator — intelligence prompt framing', () => {
    * Returns the messages payload sent to getAIProvider().complete, serialized
    * as { messages } so the existing prompt-content assertions still apply.
    */
-  async function capturePrompt(intel?: BlendedContentIntelligence): Promise<string> {
-    const { generateCaptions } = await import('@/lib/calendar/captionGenerator');
+  async function capturePrompt(
+    intel?: BlendedContentIntelligence
+  ): Promise<string> {
+    const { generateCaptions } =
+      await import('@/lib/calendar/captionGenerator');
     await generateCaptions(
       {
         platform: 'instagram',
@@ -186,14 +191,17 @@ describe('captionGenerator — intelligence prompt framing', () => {
       },
       'org-1'
     );
-    const req = mockComplete.mock.calls[0]?.[0] as { messages: Array<{ content: string }> };
+    const req = mockComplete.mock.calls[0]?.[0] as {
+      messages: Array<{ content: string }>;
+    };
     return JSON.stringify({ messages: req.messages });
   }
 
   it('includes client-specific framing when confidenceLevel >= 0.6', async () => {
     const body = await capturePrompt(HIGH_CONFIDENCE_INTEL);
     const parsed = JSON.parse(body) as { messages: Array<{ content: string }> };
-    const userContent = parsed.messages.find(m => m.content.includes('audience'))?.content ?? '';
+    const userContent =
+      parsed.messages.find(m => m.content.includes('audience'))?.content ?? '';
     expect(userContent).toContain("Based on this client's audience data");
     expect(userContent).toContain('80% confidence');
     expect(userContent).toContain('before-after');
@@ -202,8 +210,11 @@ describe('captionGenerator — intelligence prompt framing', () => {
   it('includes industry-based framing when confidenceLevel < 0.6', async () => {
     const body = await capturePrompt(LOW_CONFIDENCE_INTEL);
     const parsed = JSON.parse(body) as { messages: Array<{ content: string }> };
-    const userContent = parsed.messages.find(m => m.content.includes('audience'))?.content ?? '';
-    expect(userContent).toContain('Based on industry patterns for plumbing-hvac');
+    const userContent =
+      parsed.messages.find(m => m.content.includes('audience'))?.content ?? '';
+    expect(userContent).toContain(
+      'Based on industry patterns for plumbing-hvac'
+    );
   });
 
   it('omits intelligence line when no intelligenceContext provided', async () => {
@@ -255,12 +266,22 @@ describe('generateWeeklyCalendar — content intelligence null safety', () => {
     mockQueryRaw.mockResolvedValue([]);
 
     // Mock org + brand context
-    mockFindUnique.mockImplementation((args: { where?: { organizationId?: string; id?: string } }) => {
-      if (args.where?.organizationId !== undefined || args.where?.id === 'org-1') {
-        return Promise.resolve({ name: 'Test Biz', industry: 'plumbing-hvac', businessName: 'Test Biz', brandVoice: { tone: 'friendly' } });
+    mockFindUnique.mockImplementation(
+      (args: { where?: { organizationId?: string; id?: string } }) => {
+        if (
+          args.where?.organizationId !== undefined ||
+          args.where?.id === 'org-1'
+        ) {
+          return Promise.resolve({
+            name: 'Test Biz',
+            industry: 'plumbing-hvac',
+            businessName: 'Test Biz',
+            brandVoice: { tone: 'friendly' },
+          });
+        }
+        return Promise.resolve(null);
       }
-      return Promise.resolve(null);
-    });
+    );
 
     // Mock platform connections (for slot scheduler)
     mockFindMany.mockResolvedValue([]);
@@ -295,7 +316,9 @@ describe('generateWeeklyCalendar — content intelligence null safety', () => {
     await generateWeeklyCalendar('org-1', weekStart);
 
     const upsertCall = mockUpsert.mock.calls[0]?.[0];
-    expect(upsertCall?.create?.signalsVersion ?? upsertCall?.update?.signalsVersion).toBe('1.2');
+    expect(
+      upsertCall?.create?.signalsVersion ?? upsertCall?.update?.signalsVersion
+    ).toBe('1.2');
   });
 
   it('uses signalsVersion 1.0 when intelligence unavailable and no market slots', async () => {
@@ -305,7 +328,8 @@ describe('generateWeeklyCalendar — content intelligence null safety', () => {
     await generateWeeklyCalendar('org-1', weekStart);
 
     const upsertCall = mockUpsert.mock.calls[0]?.[0];
-    const version = upsertCall?.create?.signalsVersion ?? upsertCall?.update?.signalsVersion;
+    const version =
+      upsertCall?.create?.signalsVersion ?? upsertCall?.update?.signalsVersion;
     // Empty intelligence → no topics/hashtags → not applied → stays 1.0
     expect(['1.0', '1.1']).toContain(version);
   });

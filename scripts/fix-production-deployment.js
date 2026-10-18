@@ -129,8 +129,7 @@ const nextConfig = {
     serverComponentsExternalPackages: [
       '@prisma/client', 
       'bcryptjs',
-      'redis',
-      '@/lib/platform/noop-client'
+      'redis'
     ],
     optimizeCss: false,
   },

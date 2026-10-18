@@ -1,9 +1,9 @@
 /**
  * Mark All Notifications as Read API
- * PATCH /api/notifications/read-all - Mark every unread notification for the
- * authenticated user as read across BOTH backend writers (prisma.notification
- * and the Supabase `client_notifications` first-win table), so the bell badge
- * clears to zero in one action.
+ * PATCH /api/notifications/read-all - Mark every unread prisma.notification for
+ * the authenticated user as read. The Supabase `client_notifications` first-win
+ * table has no model in prisma/schema.prisma, so that half of the write is not
+ * performed and the response reports `firstWin: { available: false, reason }`.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET: Token signing key (CRITICAL)
@@ -11,7 +11,6 @@
  */
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import {
   APISecurityChecker,
@@ -49,25 +48,6 @@ export async function PATCH(request: NextRequest) {
       data: { read: true },
     });
 
-    // 2. First-win notifications remain best-effort.
-    try {
-      const platform = createClient();
-      const { error } = await platform
-        .from('client_notifications')
-        .update({ read: true })
-        .eq('user_id', userId)
-        .eq('read', false);
-      if (error) {
-        logger.error(
-          '[notifications] read-all first-win error:',
-          error.message
-        );
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      logger.error('[notifications] read-all first-win failed:', msg);
-    }
-
     // Invalidate the notifications GET cache so the unread badge reflects the
     // change immediately rather than waiting for the TTL to expire.
     try {
@@ -82,7 +62,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     return APISecurityChecker.createSecureResponse(
-      { success: true, markedRead: count },
+      {
+        success: true,
+        markedRead: count,
+        firstWin: {
+          available: false,
+          reason:
+            'FEATURE_NOT_PROVISIONED: table `client_notifications` is not provisioned',
+        },
+      },
       200,
       security.context
     );

@@ -20,25 +20,24 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import {
   generateSpeech,
   generateSpeechStream,
-  cloneVoice,
   getVoices,
   getCustomVoices,
-  deleteVoice,
   getVoiceSettings,
   getCharacterQuota,
   DEFAULT_VOICES,
 } from '@/lib/services/ai/voice-generation';
 import { logger } from '@/lib/logger';
-import { createClient } from '@/lib/platform/noop-client';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
+import {
+  notProvisionedBody,
+  tableUnavailable,
+} from '@/lib/api/not-provisioned';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+// NOT_PROVISIONED: prisma/schema.prisma has no user_voices or media_assets
+// model. Voice ownership (clone, list, delete) cannot be recorded or checked,
+// so those paths answer 501 / available:false; speech saves report `library`
+// instead of dropping the write silently.
+const MEDIA_LIBRARY_UNAVAILABLE = tableUnavailable('media_assets');
 
 // SYN-859: ElevenLabs voiceId allowlist. Voice IDs are short alphanumeric
 // strings; anything else risks path-injection / SSRF when interpolated into
@@ -188,52 +187,14 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'clone': {
-        // Clone a voice from audio samples
-        const validated = VoiceCloneSchema.parse(body);
-
-        const result = await cloneVoice({
-          name: validated.name,
-          description: validated.description,
-          audioFiles: validated.audioFiles,
-          labels: validated.labels,
-        });
-
-        if (!result.success) {
-          return APISecurityChecker.createSecureResponse(
-            { error: result.error || 'Voice cloning failed' },
-            500
-          );
-        }
-
-        // Save cloned voice reference
-        await getSupabase().from('user_voices').insert({
-          user_id: userId,
-          voice_id: result.voiceId,
-          name: validated.name,
-          description: validated.description,
-          is_cloned: true,
-          created_at: new Date().toISOString(),
-        });
-
-        // Audit log
-        await auditLogger.logData(
-          'create',
-          'voice',
-          result.voiceId,
-          userId,
-          'success',
-          {
-            action: 'VOICE_CLONE',
-            name: validated.name,
-            audioFilesCount: validated.audioFiles.length,
-          }
+        // Clone a voice from audio samples. Cloning without a user_voices
+        // row would create a provider voice nobody can list or delete, so
+        // refuse before spending.
+        VoiceCloneSchema.parse(body);
+        return APISecurityChecker.createSecureResponse(
+          notProvisionedBody('user_voices', 'Voice cloning'),
+          501
         );
-
-        return APISecurityChecker.createSecureResponse({
-          success: true,
-          voiceId: result.voiceId,
-          name: validated.name,
-        });
       }
 
       case 'stream': {
@@ -312,43 +273,15 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Save to media library if requested (skip for service requests)
-        let mediaAssetId: string | undefined;
-        if (
-          !isServiceRequest &&
-          validated.saveToLibrary &&
-          result.audioBase64
-        ) {
-          const { data: asset, error: saveError } = await getSupabase()
-            .from('media_assets')
-            .insert({
-              user_id: userId,
-              type: 'audio',
-              provider: 'elevenlabs',
-              metadata: {
-                voiceId: result.voiceId,
-                characterCount: result.characterCount,
-                model: validated.modelId || 'eleven_multilingual_v2',
-                text: validated.text.substring(0, 500), // Store first 500 chars
-              },
-              base64_data: result.audioBase64,
-              content_type: result.contentType,
-              created_at: new Date().toISOString(),
-            })
-            .select('id')
-            .single();
-
-          if (!saveError && asset) {
-            mediaAssetId = asset.id;
-          }
-        }
+        const libraryRequested =
+          !isServiceRequest && validated.saveToLibrary && !!result.audioBase64;
 
         // Audit log (skip for service requests to avoid noise)
         if (!isServiceRequest) {
           await auditLogger.logData(
             'create',
             'audio',
-            mediaAssetId,
+            undefined,
             userId,
             'success',
             {
@@ -365,7 +298,7 @@ export async function POST(request: NextRequest) {
           contentType: result.contentType,
           voiceId: result.voiceId,
           characterCount: result.characterCount,
-          mediaAssetId,
+          ...(libraryRequested && { library: MEDIA_LIBRARY_UNAVAILABLE }),
         });
       }
     }
@@ -491,18 +424,12 @@ export async function GET(request: NextRequest) {
         break;
     }
 
-    // Also get user's saved voices from database
-    const { data: userVoices } = await getSupabase()
-      .from('user_voices')
-      .select('*')
-      .eq('user_id', userId);
-
     // Get quota for display
     const quota = await getCharacterQuota();
 
     return APISecurityChecker.createSecureResponse({
       voices,
-      userVoices: userVoices || [],
+      userVoices: tableUnavailable('user_voices'),
       defaultVoices: DEFAULT_VOICES,
       quota,
       models: [
@@ -553,57 +480,14 @@ export async function DELETE(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const validated = VoiceDeleteSchema.parse(body);
+    VoiceDeleteSchema.parse(body);
 
-    // Verify user owns this voice
-    const { data: userVoice } = await getSupabase()
-      .from('user_voices')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('voice_id', validated.voiceId)
-      .single();
-
-    if (!userVoice) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Voice not found or not owned by user' },
-        404
-      );
-    }
-
-    // Delete from ElevenLabs
-    const success = await deleteVoice(validated.voiceId);
-
-    if (!success) {
-      return APISecurityChecker.createSecureResponse(
-        { error: 'Failed to delete voice from provider' },
-        500
-      );
-    }
-
-    // Delete from database
-    await getSupabase()
-      .from('user_voices')
-      .delete()
-      .eq('voice_id', validated.voiceId)
-      .eq('user_id', userId);
-
-    // Audit log
-    await auditLogger.logData(
-      'delete',
-      'voice',
-      validated.voiceId,
-      userId,
-      'success',
-      {
-        action: 'VOICE_DELETE',
-        name: userVoice.name,
-      }
+    // Ownership lives in user_voices; without it no caller can be shown to
+    // own a voice, so nothing is deleted.
+    return APISecurityChecker.createSecureResponse(
+      notProvisionedBody('user_voices', 'Voice deletion'),
+      501
     );
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      deletedVoiceId: validated.voiceId,
-    });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(
@@ -663,7 +547,6 @@ export async function PUT(request: NextRequest) {
       .parse(body.requests || []);
 
     const results = [];
-    const savedAssets: string[] = [];
     let totalCharacters = 0;
 
     for (const req of requests) {
@@ -688,31 +571,6 @@ export async function PUT(request: NextRequest) {
 
       if (result.success) {
         totalCharacters += result.characterCount || 0;
-
-        // Save to library
-        if (req.saveToLibrary && result.audioBase64) {
-          const { data: asset } = await getSupabase()
-            .from('media_assets')
-            .insert({
-              user_id: userId,
-              type: 'audio',
-              provider: 'elevenlabs',
-              metadata: {
-                voiceId: result.voiceId,
-                characterCount: result.characterCount,
-                text: req.text.substring(0, 500),
-              },
-              base64_data: result.audioBase64,
-              content_type: result.contentType,
-              created_at: new Date().toISOString(),
-            })
-            .select('id')
-            .single();
-
-          if (asset) {
-            savedAssets.push(asset.id);
-          }
-        }
       }
 
       // Small delay between requests to avoid rate limiting
@@ -725,7 +583,6 @@ export async function PUT(request: NextRequest) {
       count: requests.length,
       successCount: results.filter(r => r.success).length,
       totalCharacters,
-      savedAssets,
     });
 
     return APISecurityChecker.createSecureResponse({
@@ -738,7 +595,8 @@ export async function PUT(request: NextRequest) {
         voiceId: r.voiceId,
         characterCount: r.characterCount,
         error: r.error,
-        mediaAssetId: savedAssets[i],
+        ...(requests[i].saveToLibrary &&
+          r.audioBase64 && { library: MEDIA_LIBRARY_UNAVAILABLE }),
       })),
       totalSuccess: results.filter(r => r.success).length,
       totalFailed: results.filter(r => !r.success).length,

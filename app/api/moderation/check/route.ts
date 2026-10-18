@@ -27,6 +27,7 @@ import {
   BrandGuidelines,
 } from '@/lib/moderation/content-safety';
 import { logger } from '@/lib/logger';
+import { notProvisionedBody } from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const ModerationCheckSchema = z.object({
@@ -289,8 +290,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 
-  const userId = security.context.userId!;
-
   try {
     const body = await request.json();
 
@@ -307,50 +306,14 @@ export async function PUT(request: NextRequest) {
       blockedHashtags: z.array(z.string()).optional(),
     });
 
-    const validated = guidelinesSchema.parse(body);
+    guidelinesSchema.parse(body);
 
-    // Import platform client
-    const { createClient } = await import('@/lib/platform/noop-client');
-    const platform = createClient();
-
-    // Upsert brand guidelines
-    const { data, error } = await platform
-      .from('brand_guidelines')
-      .upsert({
-        user_id: userId,
-        company_name: validated.companyName,
-        competitors: validated.competitors || [],
-        blocked_words: validated.blockedWords || [],
-        required_disclosures: validated.requiredDisclosures || [],
-        tone_of_voice: validated.toneOfVoice || 'professional',
-        sensitive_topics: validated.sensitiveTopics || [],
-        approved_hashtags: validated.approvedHashtags || [],
-        blocked_hashtags: validated.blockedHashtags || [],
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) {
-      throw error;
-    }
-
-    await auditLogger.logData(
-      'update',
-      'settings',
-      undefined,
-      userId,
-      'success',
-      {
-        action: 'BRAND_GUIDELINES_UPDATE',
-        companyName: validated.companyName,
-      }
+    // NOT_PROVISIONED: prisma/schema.prisma has no brand_guidelines model,
+    // so the guidelines cannot be saved; say so instead of claiming success.
+    return APISecurityChecker.createSecureResponse(
+      notProvisionedBody('brand_guidelines', 'Brand guideline storage'),
+      501
     );
-
-    return APISecurityChecker.createSecureResponse({
-      success: true,
-      guidelines: validated,
-    });
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       return APISecurityChecker.createSecureResponse(

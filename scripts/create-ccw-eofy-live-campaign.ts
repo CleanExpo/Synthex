@@ -1,5 +1,3 @@
-import { createClient } from '@/lib/platform/noop-client';
-import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import prisma from '../lib/prisma';
 import { buildCcwEofyAuthorityMetadata } from '../lib/marketing-agency/ccw-eofy-authority-manifest';
@@ -125,112 +123,19 @@ const platformDrafts = [
   },
 ];
 
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) throw new Error(`${name} is required`);
-  return value;
-}
-
-function randomPassword(): string {
-  return `CCW-UAT-${crypto.randomBytes(12).toString('base64url')}!9a`;
-}
-
 type TempUatResult =
   | { skipped: false; email: string; userId: string; path: string }
   | { skipped: true; reason: string };
 
-async function ensureTempUatUser(organizationId: string) {
-  const supabaseUrl = requireEnv();
-  const serviceRoleKey = requireEnv();
-  const supabase = createClient();
-
-  const email = `synthex-ccw-uat-${Date.now()}@synthex.social`;
-  const password = randomPassword();
-
-  const { data, error } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      name: 'Synthex CCW Live UAT',
-      purpose: 'ccw-eofy-live-campaign-verification',
-    },
-  });
-  if (error || !data.user) {
-    throw new Error(`Supabase UAT user create failed: ${error?.message}`);
-  }
-
-  const user = await prisma.user.upsert({
-    where: { email },
-    update: {
-      name: 'Synthex CCW Live UAT',
-      authProvider: 'email',
-      emailVerified: true,
-      organizationId,
-      activeOrganizationId: organizationId,
-      onboardingComplete: true,
-      businessProfileComplete: true,
-      apiKeyConfigured: true,
-      apiKeyValid: true,
-      isMultiBusinessOwner: true,
-    },
-    create: {
-      id: data.user.id,
-      email,
-      name: 'Synthex CCW Live UAT',
-      authProvider: 'email',
-      emailVerified: true,
-      organizationId,
-      activeOrganizationId: organizationId,
-      onboardingComplete: true,
-      businessProfileComplete: true,
-      apiKeyConfigured: true,
-      apiKeyValid: true,
-      isMultiBusinessOwner: true,
-      preferences: {
-        purpose: 'ccw-eofy-live-campaign-verification',
-        temporary: true,
-      },
-    },
-  });
-
-  await prisma.businessOwnership.upsert({
-    where: {
-      ownerId_organizationId: {
-        ownerId: user.id,
-        organizationId,
-      },
-    },
-    update: {
-      isActive: true,
-      billingStatus: 'active',
-      displayName: 'CCW',
-    },
-    create: {
-      ownerId: user.id,
-      organizationId,
-      displayName: 'CCW',
-      isActive: true,
-      billingStatus: 'active',
-      monthlyRate: 0,
-    },
-  });
-
-  const payload = {
-    email,
-    password,
-    userId: user.id,
-    organizationId,
-    createdAt: new Date().toISOString(),
-    cleanupCommand:
-      'npx dotenv -e .env.local -- npx tsx scripts/create-ccw-eofy-live-campaign.ts --cleanup-uat',
-  };
-  fs.writeFileSync(TMP_CREDS_PATH, JSON.stringify(payload, null, 2), {
-    mode: 0o600,
-  });
-  fs.chmodSync(TMP_CREDS_PATH, 0o600);
-
-  return { email, userId: user.id, path: TMP_CREDS_PATH };
+// The temporary UAT login was a Supabase Auth user (auth.admin.createUser).
+// That client has been removed, so no UAT login can be created; the campaign
+// itself is still written through Prisma and the result reports the skip.
+async function ensureTempUatUser(
+  _organizationId: string
+): Promise<{ email: string; userId: string; path: string }> {
+  throw new Error(
+    'Temporary UAT login requires the removed Supabase client (auth.admin.createUser); no UAT user was created.'
+  );
 }
 
 async function tryEnsureTempUatUser(
@@ -253,10 +158,6 @@ async function tryEnsureTempUatUser(
 }
 
 async function cleanupTempUatUsers() {
-  const supabaseUrl = requireEnv();
-  const serviceRoleKey = requireEnv();
-  const supabase = createClient();
-
   const users = await prisma.user.findMany({
     where: { email: { startsWith: 'synthex-ccw-uat-' } },
     select: { id: true, email: true },
@@ -267,7 +168,6 @@ async function cleanupTempUatUsers() {
     await prisma.businessOwnership.deleteMany({ where: { ownerId: user.id } });
     await prisma.auditLog.deleteMany({ where: { userId: user.id } });
     await prisma.user.delete({ where: { id: user.id } });
-    await supabase.auth.admin.deleteUser(user.id).catch(() => null);
   }
 
   if (fs.existsSync(TMP_CREDS_PATH)) fs.unlinkSync(TMP_CREDS_PATH);
