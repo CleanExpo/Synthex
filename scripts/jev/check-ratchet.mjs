@@ -5,7 +5,16 @@
  * base, and no case file was deleted without a tombstone entry in tests/eval/jev/tombstones.json.
  */
 import { readJson, tryGit, git, ROOT, isMain } from '../fleet/lib.mjs';
-import { existsSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 const args = process.argv.slice(2);
 const opt = (k, d) => {
@@ -38,20 +47,115 @@ export function incompleteProposal(proposal, familiesTable) {
     .filter(f => typeof fams[f]?.pass_rate !== 'number')
     .map(f => `family ${f} not measured`);
 }
+// Leaf values in a case file. A case file that stops parsing, or loses entries, is a deletion
+// in all but name (emptying it to {} used to pass; verifier audit).
+export function leafCount(v) {
+  if (Array.isArray(v)) return v.reduce((n, x) => n + leafCount(x), 0);
+  if (v && typeof v === 'object')
+    return Object.values(v).reduce((n, x) => n + leafCount(x), 0);
+  return 1;
+}
+const atRef = (ref, file) => tryGit(['show', `${ref}:${file}`]);
+// Deleted or shrunk case files without a tombstone at head. A failed diff throws (it used to read
+// as "no deletions"; verifier audit).
 export function deletedCases(base, head) {
-  const out =
-    tryGit([
+  const list = filter =>
+    git([
+      '-c',
+      'core.quotePath=false',
       'diff',
-      '--diff-filter=D',
+      '--no-renames',
+      `--diff-filter=${filter}`,
       '--name-only',
+      '-z',
       base,
       head,
       '--',
       'tests/eval/jev/cases',
-    ]) || '';
-  const deleted = out.split('\n').filter(Boolean);
-  const tomb = readJson('tests/eval/jev/tombstones.json', { cases: [] });
-  return deleted.filter(f => !tomb.cases.some(t => t.file === f));
+    ])
+      .split('\0')
+      .filter(Boolean);
+  const tombRaw = atRef(head, 'tests/eval/jev/tombstones.json');
+  const tomb = tombRaw === null ? { cases: [] } : JSON.parse(tombRaw);
+  const shrunk = list('M').filter(f => {
+    let before, after;
+    try {
+      before = JSON.parse(atRef(base, f));
+    } catch {
+      return false;
+    }
+    try {
+      after = JSON.parse(atRef(head, f));
+    } catch {
+      return true;
+    }
+    return leafCount(after) < leafCount(before);
+  });
+  return [...list('D'), ...shrunk].filter(
+    f => !tomb.cases.some(t => t.file === f)
+  );
+}
+// End-to-end controls: run this script in a scratch repo (ROOT is the cwd).
+function scratchControls() {
+  const dir = mkdtempSync(path.join(tmpdir(), 'ratchet-control-'));
+  const sh = (args, opts = {}) =>
+    spawnSync('git', args, { cwd: dir, encoding: 'utf8', ...opts });
+  const id = ['-c', 'user.name=control', '-c', 'user.email=control@local'];
+  const put = (f, v) => {
+    mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
+    writeFileSync(path.join(dir, f), JSON.stringify(v));
+  };
+  const commit = m => {
+    sh(['add', '-A']);
+    sh([...id, 'commit', '-q', '-m', m]);
+  };
+  const ratchet = (...a) =>
+    spawnSync(process.execPath, [fileURLToPath(import.meta.url), ...a], {
+      cwd: dir,
+      encoding: 'utf8',
+    }).status;
+  try {
+    sh(['init', '-q', '-b', 'main']);
+    put('scripts/fleet/policy.json', { protected_paths: [] });
+    put('tests/eval/jev/families.json', { families: { J1: {} } });
+    put('tests/eval/jev/floors.json', { families: { J1: { pass_rate: 0.9 } } });
+    put('tests/eval/jev/cases/J1/c.json', {
+      cases: [{ id: 'a' }, { id: 'b' }],
+    });
+    commit('base');
+    sh(['checkout', '-q', '-b', 'clean']);
+    put('tests/eval/jev/floors.json', {
+      families: { J1: { pass_rate: 0.95 } },
+    });
+    commit('raise');
+    sh(['checkout', '-q', '-b', 'lower', 'main']);
+    put('tests/eval/jev/floors.json', { families: { J1: { pass_rate: 0.1 } } });
+    commit('lower');
+    sh(['checkout', '-q', '-b', 'emptied', 'main']);
+    put('tests/eval/jev/cases/J1/c.json', {});
+    commit('empty a case file');
+    sh(['checkout', '-q', 'main']);
+    const got = {
+      clean: ratchet('--base', 'main', '--head', 'clean'),
+      badBase: ratchet('--base', 'no-such-ref', '--head', 'clean'),
+      badHead: ratchet('--base', 'main', '--head', 'no-such-ref'),
+      lowerFromElsewhere: ratchet('--base', 'main', '--head', 'lower'),
+      emptied: ratchet('--base', 'main', '--head', 'emptied'),
+    };
+    const want = {
+      clean: 0,
+      badBase: 2,
+      badHead: 2,
+      lowerFromElsewhere: 1,
+      emptied: 1,
+    };
+    const bad = Object.keys(want).filter(k => got[k] !== want[k]);
+    for (const k of bad)
+      console.log(`FAIL control ${k}: exit ${got[k]}, want ${want[k]}`);
+    return bad.length === 0;
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
@@ -78,9 +182,10 @@ if (isMain(import.meta.url)) {
       up.length === 0 &&
       empty.length === 2 &&
       partial.length === 1 &&
-      full.length === 0;
+      full.length === 0 &&
+      scratchControls();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} check-ratchet controls (lowering exits 1, raising passes, empty or partial proposal exits 1)`
+      `${ok ? 'PASS' : 'FAIL'} check-ratchet controls (lowering exits 1, raising passes, empty or partial proposal exits 1, unresolvable base/head exit 2, head read from git not the checkout, emptied case file exits 1)`
     );
     process.exit(ok ? 0 : 1);
   }
@@ -92,6 +197,18 @@ if (isMain(import.meta.url)) {
     process.exit(2);
   }
   const head = opt('--head', 'HEAD');
+  // Both refs must resolve. An unresolvable base used to read as "no floors at base" and pass
+  // lowered floors (verifier audit); an unresolvable head reported zero deletions.
+  for (const [name, ref] of [
+    ['base', base],
+    ['head', head],
+  ])
+    if (tryGit(['rev-parse', '--verify', '-q', `${ref}^{commit}`]) === null) {
+      console.log(
+        `INCONCLUSIVE check-ratchet: ${name} ${ref} does not resolve to a commit`
+      );
+      process.exit(2);
+    }
   let baseFloors;
   const raw = tryGit(['show', `${base}:tests/eval/jev/floors.json`]);
   if (raw === null) {
@@ -107,7 +224,18 @@ if (isMain(import.meta.url)) {
     process.exit(2);
   }
   const prop = opt('--proposal');
-  const committedFloors = readJson('tests/eval/jev/floors.json');
+  // Committed floors and families come from --head, never the working tree (a checkout elsewhere
+  // used to hide a head that lowered them; verifier audit).
+  let committedFloors, familiesAtHead;
+  try {
+    committedFloors = JSON.parse(atRef(head, 'tests/eval/jev/floors.json'));
+    familiesAtHead = JSON.parse(atRef(head, 'tests/eval/jev/families.json'));
+  } catch {
+    console.log(
+      `INCONCLUSIVE check-ratchet: floors.json or families.json unreadable at ${head}`
+    );
+    process.exit(2);
+  }
   let headFloors = committedFloors;
   if (prop) {
     if (!existsSync(path.join(ROOT, prop))) {
@@ -122,14 +250,22 @@ if (isMain(import.meta.url)) {
     ...compare(baseFloors, committedFloors).map(p => `committed floors: ${p}`),
     ...(prop ? compare(baseFloors, headFloors).map(p => `proposal: ${p}`) : []),
     ...(prop
-      ? incompleteProposal(
-          headFloors,
-          readJson('tests/eval/jev/families.json', { families: {} })
-        ).map(p => `proposal: ${p}`)
+      ? incompleteProposal(headFloors, familiesAtHead).map(
+          p => `proposal: ${p}`
+        )
       : []),
-    ...deletedCases(base, head).map(
-      f => `case deleted without tombstone: ${f}`
-    ),
+    ...(() => {
+      try {
+        return deletedCases(base, head).map(
+          f => `case deleted or shrunk without tombstone: ${f}`
+        );
+      } catch (e) {
+        console.log(
+          `INCONCLUSIVE check-ratchet: case diff failed: ${String(e.message).split('\n')[0]}`
+        );
+        process.exit(2);
+      }
+    })(),
   ];
   for (const p of problems) console.log(`FAIL check-ratchet: ${p}`);
   if (!problems.length)
