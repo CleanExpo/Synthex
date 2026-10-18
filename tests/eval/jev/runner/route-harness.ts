@@ -167,6 +167,55 @@ export async function invokeRoute(
   }
 }
 
+/**
+ * Call a route the way Next does: proxy.ts first, then the handler when the
+ * proxy passes the request on (NextResponse.next()). A proxy answer is the
+ * result; a proxy throw is { status: null }.
+ */
+export async function invokeThroughProxy(
+  routeFile: string,
+  method: string,
+  opts: InvokeOptions = {}
+): Promise<InvokeResult & { answeredBy: 'proxy' | 'route' }> {
+  let res: { status: number; headers: Headers; text(): Promise<string> };
+  try {
+    const mod = loadModule(path.join(ROOT, 'proxy.ts')) as {
+      proxy(r: unknown): Promise<typeof res>;
+    };
+    res = await mod.proxy(
+      createMockNextRequest({
+        method: method.toUpperCase(),
+        headers: opts.headers,
+        body: opts.body,
+        url:
+          opts.url ??
+          `http://localhost:3000${routePath(routeFile, opts.params)}`,
+      })
+    );
+  } catch (err) {
+    return {
+      status: null,
+      json: null,
+      error: `proxy threw: ${errorText(err)}`,
+      answeredBy: 'proxy',
+    };
+  }
+  if (res.headers.get('x-middleware-next') !== '1') {
+    const text = await res.text();
+    let json: unknown = null;
+    try {
+      json = text ? JSON.parse(text) : null;
+    } catch {
+      // non-JSON proxy answer; status still recorded
+    }
+    return { status: res.status, json, answeredBy: 'proxy' };
+  }
+  return {
+    ...(await invokeRoute(routeFile, method, opts)),
+    answeredBy: 'route',
+  };
+}
+
 /** Exported HTTP methods of a route file, read from its source text (no import). */
 function exportedMethods(source: string): string[] {
   const found = new Set<string>();

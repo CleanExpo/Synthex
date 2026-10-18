@@ -142,7 +142,44 @@ function resourceRow(owner: Owner, id: string | undefined) {
   };
 }
 
+// ── Machine keys (McpApiKey rows, looked up by sha-256 hash) ─────────────────
+const KEYS = '__J1_KEYS__';
+
+function keyTable(): Map<string, Record<string, unknown>> {
+  const g = globalThis as unknown as Record<
+    string,
+    Map<string, Record<string, unknown>>
+  >;
+  if (!g[KEYS]) g[KEYS] = new Map();
+  return g[KEYS];
+}
+
+/** Register an org-A key (user-A) by its hash. Returns the raw key. */
+export function registerKey(
+  raw: string,
+  hash: string,
+  scopes: string[],
+  overrides: Record<string, unknown> = {}
+): string {
+  keyTable().set(hash, {
+    id: `key-${raw}`,
+    keyHash: hash,
+    organizationId: ORG_A,
+    userId: USER_A,
+    label: raw,
+    scopes,
+    expiresAt: null,
+    revokedAt: null,
+    ...overrides,
+  });
+  return raw;
+}
+
 function rowFor(model: string, where: unknown): Record<string, unknown> | null {
+  if (model === 'mcpApiKey') {
+    const hash = (where as { keyHash?: unknown } | undefined)?.keyHash;
+    return typeof hash === 'string' ? (keyTable().get(hash) ?? null) : null;
+  }
   const o = owners(where);
   if (o.size !== 1) return null;
   const owner = [...o][0];
