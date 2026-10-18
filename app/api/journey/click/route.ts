@@ -7,13 +7,14 @@
  * link-click engagement can be tracked per journey moment. On receipt:
  *
  *   1. Verifies HMAC signature on the `t` query token
- *   2. Updates `client_journey_events.engagement_outcome` → 'clicked'
- *      (only if current outcome is 'delivered' — doesn't downgrade
- *      'surveyed' / 'acted')
+ *   2. Would update `client_journey_events.engagement_outcome` → 'clicked'
  *   3. Returns HTTP 302 redirect to the signed destination URL
  *
- * Non-fatal: DB errors are logged but the redirect always proceeds so
- * the client reaches their intended destination.
+ * NOT PROVISIONED: `client_journey_events` has no Prisma model, so the click
+ * cannot be recorded. The redirect still proceeds (the client must reach
+ * their destination) but the drop is explicit: it is logged as
+ * FEATURE_NOT_PROVISIONED and the redirect carries an
+ * `X-Journey-Tracking: FEATURE_NOT_PROVISIONED` header.
  *
  * Signature failures (forged URL, expired token, wrong audience) always
  * return a 302 to the dashboard fallback — the failure mode is NOT leaked
@@ -28,19 +29,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import {
   PIXEL_AUDIENCES,
   verifyJourneyToken,
   type VerifyFailureReason,
 } from '@/lib/journey/pixel-token';
 
-/** Outcomes that represent deeper engagement than 'clicked' — do not downgrade. */
-const HIGHER_OUTCOMES = new Set(['surveyed', 'acted', 'replied']);
-
-function getAdminClient() {
-  return createClient();
-}
+const JOURNEY_TRACKING_HEADER = 'X-Journey-Tracking';
 
 function isSafeUrl(raw: string): boolean {
   try {
@@ -77,8 +72,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       logVerifyFailure('payload-shape');
       return NextResponse.redirect(fallbackUrl(), { status: 302 });
     }
-    await advanceClickIfLower(cid, mid);
-    return NextResponse.redirect(u, { status: 302 });
+    return untrackedRedirect(u, cid, mid);
   }
 
   // Legacy path — only enabled during cutover when flag is explicitly set
@@ -87,8 +81,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const momentId = searchParams.get('moment_id');
     const destUrl = searchParams.get('url');
     if (clientId && momentId && destUrl && isSafeUrl(destUrl)) {
-      await advanceClickIfLower(clientId, momentId);
-      return NextResponse.redirect(destUrl, { status: 302 });
+      return untrackedRedirect(destUrl, clientId, momentId);
     }
   }
 
@@ -96,30 +89,20 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return NextResponse.redirect(fallbackUrl(), { status: 302 });
 }
 
-async function advanceClickIfLower(clientId: string, momentId: string): Promise<void> {
-  try {
-    const platform = getAdminClient();
-    const { data: existing } = await platform
-      .from('client_journey_events')
-      .select('engagement_outcome')
-      .eq('id', momentId)
-      .eq('client_id', clientId)
-      .single();
-
-    const current = existing?.engagement_outcome as string | undefined;
-    if (current && HIGHER_OUTCOMES.has(current)) return;
-
-    const { error } = await platform
-      .from('client_journey_events')
-      .update({ engagement_outcome: 'clicked' })
-      .eq('id', momentId)
-      .eq('client_id', clientId);
-
-    if (error) {
-      console.error('[journey/click] DB update error:', error.message);
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[journey/click] Unexpected error:', msg);
-  }
+/**
+ * Redirect to the destination without recording the click: the
+ * client_journey_events table is not provisioned. The drop is logged and
+ * flagged on the response, never silent.
+ */
+function untrackedRedirect(
+  url: string,
+  clientId: string,
+  momentId: string
+): NextResponse {
+  console.warn(
+    `[journey/click] FEATURE_NOT_PROVISIONED: client_journey_events has no data model; click not recorded (client ${clientId}, moment ${momentId})`
+  );
+  const res = NextResponse.redirect(url, { status: 302 });
+  res.headers.set(JOURNEY_TRACKING_HEADER, 'FEATURE_NOT_PROVISIONED');
+  return res;
 }
