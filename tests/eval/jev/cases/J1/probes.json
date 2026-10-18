@@ -1,0 +1,429 @@
+{
+  "schema": "jev-j1-probes/1",
+  "note": "J1 part (b): high-risk mutating routes (organisation, team, billing, content publish, API keys, integrations, approvals), picked by hand from the non-exempt inventory and fixed here so ids are stable. cross-org: an org-A session (user-A) acts on an org-B id (org-B or bbbbbbbb-*); must get 403 or 404 and no org-B data. malformed-body: an org-A session sends invalid JSON to an org-A id; must get 400. Malformed body text is in the test file.",
+  "probes": [
+    {
+      "kind": "cross-org",
+      "file": "app/api/organizations/[orgId]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "orgId": "org-B"
+      },
+      "body": {
+        "name": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/organizations/[orgId]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "orgId": "org-B"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/organizations/[orgId]/brand-os/route.ts",
+      "method": "PATCH",
+      "params": {
+        "orgId": "org-B"
+      },
+      "body": {
+        "rules": ["JEV probe"]
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/organizations/[orgId]/client-profile/route.ts",
+      "method": "PATCH",
+      "params": {
+        "orgId": "org-B"
+      },
+      "body": {
+        "goals": ["JEV probe"]
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/approvals/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "action": "approve"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/approvals/[id]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/approvals/[id]/comments/route.ts",
+      "method": "POST",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "body": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/content/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "content": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/content/[id]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/content-drafts/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "content": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/content-drafts/[id]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/content-library/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "title": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/content-library/[id]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/integrations/[integrationId]/sync/route.ts",
+      "method": "POST",
+      "params": {
+        "integrationId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "type": "full"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/[id]/settings/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "name": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/[id]/settings/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/invitations/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "message": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/invitations/[id]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/members/[memberId]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "memberId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "name": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/members/[memberId]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "memberId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/teams/members/[memberId]/role/route.ts",
+      "method": "PATCH",
+      "params": {
+        "memberId": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "roleId": "role-viewer"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/invoices/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {
+        "notes": "JEV probe"
+      }
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/invoices/[id]/route.ts",
+      "method": "DELETE",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": null
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/invoices/[id]/send/route.ts",
+      "method": "POST",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {}
+    },
+    {
+      "kind": "cross-org",
+      "file": "app/api/command-centre/clients/[id]/offboard/route.ts",
+      "method": "POST",
+      "params": {
+        "id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbb0001"
+      },
+      "body": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/organizations/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/organizations/[orgId]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "orgId": "org-A"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/organizations/[orgId]/brand-os/route.ts",
+      "method": "PATCH",
+      "params": {
+        "orgId": "org-A"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/organizations/[orgId]/client-profile/route.ts",
+      "method": "PATCH",
+      "params": {
+        "orgId": "org-A"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/approvals/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/approvals/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/approvals/[id]/comments/route.ts",
+      "method": "POST",
+      "params": {
+        "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/content/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/content-drafts/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/content-library/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/integrations/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/integrations/third-party/[provider]/config/route.ts",
+      "method": "PUT",
+      "params": {
+        "provider": "canva"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/team/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/teams/invite/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/teams/invitations/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/teams/members/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/teams/members/[memberId]/role/route.ts",
+      "method": "PATCH",
+      "params": {
+        "memberId": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/teams/[id]/settings/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/user/api-keys/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/stripe/checkout/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/stripe/change-plan/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/invoices/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/invoices/[id]/route.ts",
+      "method": "PATCH",
+      "params": {
+        "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaa0001"
+      }
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/publish-queue/release/route.ts",
+      "method": "POST",
+      "params": {}
+    },
+    {
+      "kind": "malformed-body",
+      "file": "app/api/social/post/route.ts",
+      "method": "POST",
+      "params": {}
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "note": "Frozen list of app/api routes that reach a paid AI provider (text, image, video, voice), from grep on 2026-10-17 of route.ts files importing a provider client, content generator, image/video/voice generation service or provider SDK. Frozen so the J9 case count is stable; a removed file is INCONCLUSIVE, never PASS.",
+  "routes": [
+    "app/api/admin/blog/generate/route.ts",
+    "app/api/ai-content/sentiment/route.ts",
+    "app/api/ai/generate-content/route.ts",
+    "app/api/ask-synthex/route.ts",
+    "app/api/brand-iq/next-steps/route.ts",
+    "app/api/cron/autopilot/route.ts",
+    "app/api/cron/gbp-monitor/route.ts",
+    "app/api/demo/image/route.ts",
+    "app/api/geo/rewrite/route.ts",
+    "app/api/google-business/reviews/[reviewId]/auto-reply/route.ts",
+    "app/api/heygen/video/route.ts",
+    "app/api/internal/algorithm-freshness-monitor/route.ts",
+    "app/api/internal/generate-advisor-brief/route.ts",
+    "app/api/internal/generate-review-responses/route.ts",
+    "app/api/media/generate/image/route.ts",
+    "app/api/media/generate/voice/route.ts",
+    "app/api/posts/quick-create/route.ts",
+    "app/api/profile-analyser/generate-content/route.ts",
+    "app/api/video/generate/route.ts"
+  ]
+}

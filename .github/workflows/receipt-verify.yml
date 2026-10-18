@@ -27,13 +27,21 @@ jobs:
       - env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          # Fleet phase PRs must carry a receipt; for them a missing or removed receipt is a FAIL,
+          # never DISABLED-and-green (verifier audit).
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           git fetch --no-tags origin "$HEAD_SHA" || true
           # Look at the whole PR (base...head) or push range, not only the last commit
           # (CodeRabbit on PR #997). A new-branch push has no usable before; fall back to HEAD~1.
           if [ -z "$BASE_SHA" ] || echo "$BASE_SHA" | grep -qE '^0+$' || ! git cat-file -e "$BASE_SHA" 2>/dev/null; then BASE_SHA="$HEAD_SHA~1"; fi
           RECEIPTS=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -E '^release-receipts/P-?[0-9]+\.json$' || true)
-          if [ -z "$RECEIPTS" ]; then echo "DISABLED receipt-verify: no phase receipt changed in $BASE_SHA..$HEAD_SHA"; exit 0; fi
+          FLEET_PR=0
+          if echo "$HEAD_REF" | grep -qE '^feature/fleet-p(-1|[0-9]{1,2})-[a-z0-9-]+$'; then FLEET_PR=1; fi
+          if [ -z "$RECEIPTS" ]; then
+            if [ "$FLEET_PR" = 1 ]; then echo "FAIL receipt-verify: fleet phase PR $HEAD_REF carries no phase receipt in $BASE_SHA..$HEAD_SHA"; exit 1; fi
+            echo "DISABLED receipt-verify: no phase receipt changed in $BASE_SHA..$HEAD_SHA"; exit 0
+          fi
           # Run the verifier and its policy from the trusted BASE, with the head passed as data
           # (CodeRabbit on PR #997); the PR's own copy only while the base has none (bootstrap).
           V=scripts/release/verify-receipt.mjs
@@ -47,6 +55,8 @@ jobs:
           rc=0
           for f in $RECEIPTS; do
             ph=$(basename "$f" .json)
-            if git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then node "$V" --repo "$PWD" --head "$HEAD_SHA" --phase "$ph" || rc=1; else echo "NOTE $f removed in this range (retired)"; fi
+            if git cat-file -e "$HEAD_SHA:$f" 2>/dev/null; then node "$V" --repo "$PWD" --head "$HEAD_SHA" --phase "$ph" || rc=1
+            elif [ "$FLEET_PR" = 1 ]; then echo "FAIL receipt-verify: $f removed by fleet phase PR $HEAD_REF"; rc=1
+            else echo "NOTE $f removed in this range (retired)"; fi
           done
           exit $rc

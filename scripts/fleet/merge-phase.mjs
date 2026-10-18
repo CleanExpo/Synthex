@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * scripts/fleet/merge-phase.mjs --pr <number> --head <sha> --phase P<n> [--dry-run]
+ * scripts/fleet/merge-phase.mjs --pr <number> --head <sha> --phase P<n> [--dry-run] | --control
  *
  * The one sanctioned merge path (DECISIONS.md FD-3: the founder ratified fleet merges).
  * Merges only when ALL hold, each re-read live at call time:
@@ -27,6 +27,37 @@ const opt = (k, d) => {
   const i = a.indexOf(k);
   return i >= 0 ? a[i + 1] : d;
 };
+// The review report must PASS and name the reviewed commit, as head_sha (schema 2, Codex) or head
+// (run-phase adds it). A report with no head, or a head shorter than 12 characters, never binds:
+// an empty head used to satisfy reviewed_commit.startsWith('') (Codex on P1 b8698d17).
+export function reviewBound(rep, reviewedCommit) {
+  const bound = String(rep?.head_sha || rep?.head || '');
+  const reviewed = String(reviewedCommit || '');
+  return (
+    bound.length >= 12 &&
+    reviewed.length >= 12 &&
+    (reviewed.startsWith(bound) || bound.startsWith(reviewed)) &&
+    /^(PASS|APPROVE)/i.test(String(rep?.verdict || ''))
+  );
+}
+if (a.includes('--control')) {
+  const c = 'b8698d17c295d0c31ddd17d452730331e84bdc37';
+  const cases = [
+    ['schema 2 head_sha PASS', { verdict: 'PASS', head_sha: c }, true],
+    ['head PASS', { verdict: 'PASS', head: c.slice(0, 12) }, true],
+    ['no head', { verdict: 'PASS' }, false],
+    ['empty head', { verdict: 'PASS', head: '' }, false],
+    ['short head', { verdict: 'PASS', head: c.slice(0, 7) }, false],
+    ['other commit', { verdict: 'PASS', head_sha: 'a'.repeat(40) }, false],
+    ['FAIL verdict', { verdict: 'FAIL', head_sha: c }, false],
+  ];
+  const bad = cases.filter(([, rep, want]) => reviewBound(rep, c) !== want);
+  for (const [name] of bad) console.log(`FAIL control: ${name}`);
+  console.log(
+    `${bad.length ? 'FAIL' : 'PASS'} merge-phase review-binding control (${cases.length - bad.length}/${cases.length})`
+  );
+  process.exit(bad.length ? 1 : 0);
+}
 const pr = opt('--pr');
 const head = opt('--head');
 const phase = opt('--phase');
@@ -181,6 +212,30 @@ if (p) {
     p.headRefName
   );
 }
+// Everything below is judged at --head, never from the working tree (verifier audit: a dirty
+// checkout could supply a receipt or report the head does not carry). Ledger rows are the only
+// uncommitted writes this script itself makes.
+run('git', ['fetch', '-q', 'origin', head]);
+const dirty = run('git', [
+  'status',
+  '--porcelain',
+  '--untracked-files=all',
+  '-z',
+])
+  .stdout.split('\0')
+  .filter(Boolean)
+  .map(l => l.slice(3))
+  .filter(f => f && !f.startsWith('release-receipts/ledger/'));
+gate('clean-tree', dirty.length === 0, dirty.slice(0, 5).join(', ') || 'clean');
+const atHead = file => {
+  const r = run('git', ['show', `${head}:${file}`]);
+  if (r.code !== 0) return null;
+  try {
+    return JSON.parse(r.stdout);
+  } catch {
+    return null;
+  }
+};
 const vr = run(process.execPath, [
   'scripts/release/verify-receipt.mjs',
   '--head',
@@ -193,11 +248,15 @@ const checks = run('gh', [
   'api',
   `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
   '--jq',
-  '[.check_runs[] | {name, status, conclusion}]',
+  '{total: .total_count, runs: [.check_runs[] | {name, status, conclusion}]}',
 ]);
+// GitHub pages check-runs; a read whose count differs from total_count is not evidence.
 let cr = [];
+let partial = true;
 try {
-  cr = JSON.parse(checks.stdout);
+  const j = JSON.parse(checks.stdout);
+  cr = j.runs;
+  partial = j.total !== cr.length;
 } catch {}
 if (!Array.isArray(cr)) cr = []; // an unknown head yields null, not a list
 const pending = cr.filter(c => c.status !== 'completed');
@@ -212,30 +271,28 @@ const missingReq = required.filter(
 );
 gate(
   'checks',
-  cr.length > 0 && !pending.length && !failed.length && !missingReq.length,
-  `${cr.length} checks, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
+  cr.length > 0 &&
+    !partial &&
+    !pending.length &&
+    !failed.length &&
+    !missingReq.length,
+  `${cr.length} checks${partial ? ' (partial read)' : ''}, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
 );
-const receipt = readJson(`release-receipts/${phase}.json`, null);
-let rep = null;
-try {
-  rep = receipt?.review_report ? readJson(receipt.review_report) : null;
-} catch {}
+const receipt = atHead(`release-receipts/${phase}.json`);
+const rep = receipt?.review_report ? atHead(receipt.review_report) : null;
 gate(
   'review',
-  !!rep &&
-    (String(rep.head || '').startsWith(
-      String(receipt.reviewed_commit).slice(0, 12)
-    ) ||
-      String(receipt.reviewed_commit).startsWith(String(rep.head || ''))) &&
-    /^(PASS|APPROVE)/i.test(String(rep.verdict || '')),
+  !!rep && reviewBound(rep, receipt?.reviewed_commit),
   rep
-    ? `${rep.lane || rep.vendor || 'lane'} ${rep.verdict} @ ${String(rep.head).slice(0, 12)}`
+    ? `${rep.lane || rep.vendor || 'lane'} ${rep.verdict} @ ${String(rep.head_sha || rep.head).slice(0, 12)}`
     : 'no report'
 );
 const at = run(process.execPath, [
   'scripts/fleet/attest-phase.mjs',
   '--phase',
   phase,
+  '--head',
+  head,
 ]);
 gate('attest', at.code === 0, at.stdout.trim().split('\n').pop());
 // Only disposition threads once every other gate holds; replies are outward-facing.

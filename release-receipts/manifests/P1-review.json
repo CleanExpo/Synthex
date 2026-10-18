@@ -1,0 +1,145 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "codex",
+  "reviewer_session_id": "codex-p1-73f38bba-20261018",
+  "base_sha": "13fb872e8dc6ac1c07b55ea2d40ac7eb37b976da",
+  "head_sha": "73f38bba57686f997a53acab36c6931df6f17aa0",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "git diff --name-only lists 72 changed files; 71 reviewed and 1 excluded JSONL path recorded."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Amendments AM-1..AM-5 and P1 definition of done checked; deterministic suite exited 0 with 1,830 cases and ratchet proposal exited 0."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "Compared the ratchet, aggregate, receipt, protected-path and merge guard changes against base; no P0/P1 weakening found. Controls reject missing refs, missing rows and post-review edits."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "The floor-comparison mutant caused ratchet controls to exit 1; restored source exited 0.",
+      "mutants": [
+        {
+          "file": "scripts/jev/check-ratchet.mjs",
+          "planted": "Changed floor lowering comparison from h[k] < v to h[k] > v",
+          "test_command": "node scripts/jev/check-ratchet.mjs --control",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "verify-protected --control and verify-receipt --control exited 0 after rejecting their planted invalid paths, receipt bindings, and manifest changes."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "npm run jev:det exited 0 at the reviewed checkout: 9 suites, 866 Jest tests, 1,830 aggregate cases. Ratchet proposal check exited 0."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Reviewed changed paths and fleet protected-path policy; changes are concentrated in P1 evaluation, fleet gates, receipts, and documentation. No P0/P1 cross-tenant or empty-data regression established."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Review was local and read-only apart from restored temporary mutant and report. No push, merge, deployment or live outbound action performed."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      ".github/workflows/receipt-verify.yml",
+      ".gitignore",
+      ".gitleaksignore",
+      "BACKLOG.md",
+      "DECISIONS.md",
+      "config/jest/jest.jev.cjs",
+      "package.json",
+      "proposals/P1/tests/eval/jev/floors.json",
+      "release-receipts/manifests/P1-handoff.md",
+      "release-receipts/manifests/policy-hash.json",
+      "scripts/fleet/attest-phase.mjs",
+      "scripts/fleet/automations/phase-advance.md",
+      "scripts/fleet/guard.mjs",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/merge-phase.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "scripts/jev/check-ratchet.mjs",
+      "scripts/release/verify-receipt.mjs",
+      "tests/eval/jev/README.md",
+      "tests/eval/jev/cases/J1/probes.json",
+      "tests/eval/jev/cases/J1/routes.json",
+      "tests/eval/jev/cases/J11/cases.json",
+      "tests/eval/jev/cases/J2/routes.json",
+      "tests/eval/jev/cases/J4/probes.json",
+      "tests/eval/jev/cases/J9/spend-routes.json",
+      "tests/eval/jev/families.json",
+      "tests/eval/jev/families/j1.jev.test.ts",
+      "tests/eval/jev/families/j1/inventory.ts",
+      "tests/eval/jev/families/j1/planted-route.ts",
+      "tests/eval/jev/families/j1/world.ts",
+      "tests/eval/jev/families/j11.jev.test.ts",
+      "tests/eval/jev/families/j11/fake-db.ts",
+      "tests/eval/jev/families/j11/harness.ts",
+      "tests/eval/jev/families/j12.jev.test.ts",
+      "tests/eval/jev/families/j12/cases-content.ts",
+      "tests/eval/jev/families/j12/cases-platform.ts",
+      "tests/eval/jev/families/j12/cases-routes.ts",
+      "tests/eval/jev/families/j12/cases-security.ts",
+      "tests/eval/jev/families/j12/db.ts",
+      "tests/eval/jev/families/j12/harness.ts",
+      "tests/eval/jev/families/j2.jev.test.ts",
+      "tests/eval/jev/families/j2/detector.ts",
+      "tests/eval/jev/families/j2/failing-prisma.ts",
+      "tests/eval/jev/families/j2/fixtures.ts",
+      "tests/eval/jev/families/j2/select.ts",
+      "tests/eval/jev/families/j3.jev.test.ts",
+      "tests/eval/jev/families/j3/detector.ts",
+      "tests/eval/jev/families/j4.jev.test.ts",
+      "tests/eval/jev/families/j4/probes.ts",
+      "tests/eval/jev/families/j7.jev.test.ts",
+      "tests/eval/jev/families/j8.jev.test.ts",
+      "tests/eval/jev/families/j9.jev.test.ts",
+      "tests/eval/jev/families/j9/detectors.ts",
+      "tests/eval/jev/families/j9/fake-db.ts",
+      "tests/eval/jev/known-gaps/.gitkeep",
+      "tests/eval/jev/known-gaps/J1.json",
+      "tests/eval/jev/known-gaps/J11.json",
+      "tests/eval/jev/known-gaps/J12.json",
+      "tests/eval/jev/known-gaps/J2.json",
+      "tests/eval/jev/known-gaps/J3.json",
+      "tests/eval/jev/known-gaps/J4.json",
+      "tests/eval/jev/known-gaps/J7.json",
+      "tests/eval/jev/known-gaps/J8.json",
+      "tests/eval/jev/known-gaps/J9.json",
+      "tests/eval/jev/runner/aggregate.mjs",
+      "tests/eval/jev/runner/record.ts",
+      "tests/eval/jev/runner/route-harness.ts",
+      "tests/eval/jev/runner/run-det.mjs"
+    ],
+    "not_reviewed": [
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "Excluded by review-tool diff coverage: *.jsonl files are hidden from the diff."
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-18T06:15:46.444139+00:00",
+  "head": "73f38bba57686f997a53acab36c6931df6f17aa0",
+  "lane": "codex"
+}

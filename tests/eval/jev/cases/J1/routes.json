@@ -1,0 +1,2367 @@
+{
+  "schema": "jev-j1-routes/1",
+  "frozen_at": "P1 jev-exit tree (fleet-unit/p1/jev-exit @55de2792)",
+  "count": 590,
+  "routes": [
+    {
+      "file": "app/api/ab-testing/tests/[testId]/results/route.ts",
+      "route": "/api/ab-testing/tests/[testId]/results"
+    },
+    {
+      "file": "app/api/ab-testing/tests/[testId]/route.ts",
+      "route": "/api/ab-testing/tests/[testId]"
+    },
+    {
+      "file": "app/api/ab-testing/tests/route.ts",
+      "route": "/api/ab-testing/tests"
+    },
+    {
+      "file": "app/api/activity/autonomous/route.ts",
+      "route": "/api/activity/autonomous"
+    },
+    {
+      "file": "app/api/activity/route.ts",
+      "route": "/api/activity"
+    },
+    {
+      "file": "app/api/admin/audit-log/route.ts",
+      "route": "/api/admin/audit-log"
+    },
+    {
+      "file": "app/api/admin/bayesian-health/route.ts",
+      "route": "/api/admin/bayesian-health"
+    },
+    {
+      "file": "app/api/admin/blog/generate/route.ts",
+      "route": "/api/admin/blog/generate"
+    },
+    {
+      "file": "app/api/admin/credential-intake-links/route.ts",
+      "route": "/api/admin/credential-intake-links"
+    },
+    {
+      "file": "app/api/admin/geo-citations/route.ts",
+      "route": "/api/admin/geo-citations"
+    },
+    {
+      "file": "app/api/admin/health/route.ts",
+      "route": "/api/admin/health"
+    },
+    {
+      "file": "app/api/admin/intervention-logs/route.ts",
+      "route": "/api/admin/intervention-logs"
+    },
+    {
+      "file": "app/api/admin/intervention-review/route.ts",
+      "route": "/api/admin/intervention-review"
+    },
+    {
+      "file": "app/api/admin/invites/route.ts",
+      "route": "/api/admin/invites"
+    },
+    {
+      "file": "app/api/admin/jobs/route.ts",
+      "route": "/api/admin/jobs"
+    },
+    {
+      "file": "app/api/admin/mcp-keys/route.ts",
+      "route": "/api/admin/mcp-keys"
+    },
+    {
+      "file": "app/api/admin/model-metrics/route.ts",
+      "route": "/api/admin/model-metrics"
+    },
+    {
+      "file": "app/api/admin/oauth-preflight/route.ts",
+      "route": "/api/admin/oauth-preflight"
+    },
+    {
+      "file": "app/api/admin/org-brand-profile/route.ts",
+      "route": "/api/admin/org-brand-profile"
+    },
+    {
+      "file": "app/api/admin/org-spend/route.ts",
+      "route": "/api/admin/org-spend"
+    },
+    {
+      "file": "app/api/admin/platform-credentials/route.ts",
+      "route": "/api/admin/platform-credentials"
+    },
+    {
+      "file": "app/api/admin/platform-stats/route.ts",
+      "route": "/api/admin/platform-stats"
+    },
+    {
+      "file": "app/api/admin/remotion/route.ts",
+      "route": "/api/admin/remotion"
+    },
+    {
+      "file": "app/api/admin/roi-attribution/route.ts",
+      "route": "/api/admin/roi-attribution"
+    },
+    {
+      "file": "app/api/admin/test-nrpg-event/route.ts",
+      "route": "/api/admin/test-nrpg-event"
+    },
+    {
+      "file": "app/api/admin/upgrade-subscription/route.ts",
+      "route": "/api/admin/upgrade-subscription"
+    },
+    {
+      "file": "app/api/admin/users/route.ts",
+      "route": "/api/admin/users"
+    },
+    {
+      "file": "app/api/admin/vault/access-log/route.ts",
+      "route": "/api/admin/vault/access-log"
+    },
+    {
+      "file": "app/api/admin/vault/decrypt/route.ts",
+      "route": "/api/admin/vault/decrypt"
+    },
+    {
+      "file": "app/api/admin/vault/import-doc/confirm/route.ts",
+      "route": "/api/admin/vault/import-doc/confirm"
+    },
+    {
+      "file": "app/api/admin/vault/import-doc/route.ts",
+      "route": "/api/admin/vault/import-doc"
+    },
+    {
+      "file": "app/api/admin/vault/route.ts",
+      "route": "/api/admin/vault"
+    },
+    {
+      "file": "app/api/admin/vault/seed-all/route.ts",
+      "route": "/api/admin/vault/seed-all"
+    },
+    {
+      "file": "app/api/advisor/brief/route.ts",
+      "route": "/api/advisor/brief"
+    },
+    {
+      "file": "app/api/advisor/feedback/route.ts",
+      "route": "/api/advisor/feedback"
+    },
+    {
+      "file": "app/api/affiliates/links/[linkId]/clicks/route.ts",
+      "route": "/api/affiliates/links/[linkId]/clicks"
+    },
+    {
+      "file": "app/api/affiliates/links/[linkId]/route.ts",
+      "route": "/api/affiliates/links/[linkId]"
+    },
+    {
+      "file": "app/api/affiliates/links/route.ts",
+      "route": "/api/affiliates/links"
+    },
+    {
+      "file": "app/api/affiliates/networks/[networkId]/route.ts",
+      "route": "/api/affiliates/networks/[networkId]"
+    },
+    {
+      "file": "app/api/affiliates/networks/route.ts",
+      "route": "/api/affiliates/networks"
+    },
+    {
+      "file": "app/api/affiliates/stats/route.ts",
+      "route": "/api/affiliates/stats"
+    },
+    {
+      "file": "app/api/agency/ceo-review-queue/route.ts",
+      "route": "/api/agency/ceo-review-queue"
+    },
+    {
+      "file": "app/api/agency/hypercare-report/route.ts",
+      "route": "/api/agency/hypercare-report"
+    },
+    {
+      "file": "app/api/agency/tier1-report/route.ts",
+      "route": "/api/agency/tier1-report"
+    },
+    {
+      "file": "app/api/agency/tier2-report/route.ts",
+      "route": "/api/agency/tier2-report"
+    },
+    {
+      "file": "app/api/agents/dispatch-campaign/route.ts",
+      "route": "/api/agents/dispatch-campaign"
+    },
+    {
+      "file": "app/api/agents/enhance-post/route.ts",
+      "route": "/api/agents/enhance-post"
+    },
+    {
+      "file": "app/api/ai-content/hashtags/route.ts",
+      "route": "/api/ai-content/hashtags"
+    },
+    {
+      "file": "app/api/ai-content/optimize/route.ts",
+      "route": "/api/ai-content/optimize"
+    },
+    {
+      "file": "app/api/ai-content/sentiment/batch/route.ts",
+      "route": "/api/ai-content/sentiment/batch"
+    },
+    {
+      "file": "app/api/ai-content/sentiment/route.ts",
+      "route": "/api/ai-content/sentiment"
+    },
+    {
+      "file": "app/api/ai-content/translate/route.ts",
+      "route": "/api/ai-content/translate"
+    },
+    {
+      "file": "app/api/ai-websites/generate/route.ts",
+      "route": "/api/ai-websites/generate"
+    },
+    {
+      "file": "app/api/ai/calendar-jobs/route.ts",
+      "route": "/api/ai/calendar-jobs"
+    },
+    {
+      "file": "app/api/ai/chat/conversations/[conversationId]/auto-title/route.ts",
+      "route": "/api/ai/chat/conversations/[conversationId]/auto-title"
+    },
+    {
+      "file": "app/api/ai/chat/conversations/[conversationId]/messages/route.ts",
+      "route": "/api/ai/chat/conversations/[conversationId]/messages"
+    },
+    {
+      "file": "app/api/ai/chat/conversations/[conversationId]/route.ts",
+      "route": "/api/ai/chat/conversations/[conversationId]"
+    },
+    {
+      "file": "app/api/ai/chat/conversations/route.ts",
+      "route": "/api/ai/chat/conversations"
+    },
+    {
+      "file": "app/api/ai/generate-content/route.ts",
+      "route": "/api/ai/generate-content"
+    },
+    {
+      "file": "app/api/ai/pm/conversations/[conversationId]/messages/route.ts",
+      "route": "/api/ai/pm/conversations/[conversationId]/messages"
+    },
+    {
+      "file": "app/api/ai/pm/conversations/route.ts",
+      "route": "/api/ai/pm/conversations"
+    },
+    {
+      "file": "app/api/ai/pm/digest/route.ts",
+      "route": "/api/ai/pm/digest"
+    },
+    {
+      "file": "app/api/ai/pm/feedback/route.ts",
+      "route": "/api/ai/pm/feedback"
+    },
+    {
+      "file": "app/api/ai/pm/suggestions/route.ts",
+      "route": "/api/ai/pm/suggestions"
+    },
+    {
+      "file": "app/api/analytics/anomalies/route.ts",
+      "route": "/api/analytics/anomalies"
+    },
+    {
+      "file": "app/api/analytics/benchmarks/route.ts",
+      "route": "/api/analytics/benchmarks"
+    },
+    {
+      "file": "app/api/analytics/dashboard-stats/route.ts",
+      "route": "/api/analytics/dashboard-stats"
+    },
+    {
+      "file": "app/api/analytics/dashboard/route.ts",
+      "route": "/api/analytics/dashboard"
+    },
+    {
+      "file": "app/api/analytics/engagement-event/route.ts",
+      "route": "/api/analytics/engagement-event"
+    },
+    {
+      "file": "app/api/analytics/engagement/route.ts",
+      "route": "/api/analytics/engagement"
+    },
+    {
+      "file": "app/api/analytics/export/route.ts",
+      "route": "/api/analytics/export"
+    },
+    {
+      "file": "app/api/analytics/follower-growth/route.ts",
+      "route": "/api/analytics/follower-growth"
+    },
+    {
+      "file": "app/api/analytics/insights/route.ts",
+      "route": "/api/analytics/insights"
+    },
+    {
+      "file": "app/api/analytics/performance/route.ts",
+      "route": "/api/analytics/performance"
+    },
+    {
+      "file": "app/api/analytics/post-performance-sync/route.ts",
+      "route": "/api/analytics/post-performance-sync"
+    },
+    {
+      "file": "app/api/analytics/predict-engagement/route.ts",
+      "route": "/api/analytics/predict-engagement"
+    },
+    {
+      "file": "app/api/analytics/realtime/route.ts",
+      "route": "/api/analytics/realtime"
+    },
+    {
+      "file": "app/api/analytics/reports/route.ts",
+      "route": "/api/analytics/reports"
+    },
+    {
+      "file": "app/api/analytics/reports/scheduled/route.ts",
+      "route": "/api/analytics/reports/scheduled"
+    },
+    {
+      "file": "app/api/analytics/route.ts",
+      "route": "/api/analytics"
+    },
+    {
+      "file": "app/api/analytics/sentiment/route.ts",
+      "route": "/api/analytics/sentiment"
+    },
+    {
+      "file": "app/api/api-keys/status/route.ts",
+      "route": "/api/api-keys/status"
+    },
+    {
+      "file": "app/api/approvals/[id]/comments/route.ts",
+      "route": "/api/approvals/[id]/comments"
+    },
+    {
+      "file": "app/api/approvals/[id]/route.ts",
+      "route": "/api/approvals/[id]"
+    },
+    {
+      "file": "app/api/approvals/route.ts",
+      "route": "/api/approvals"
+    },
+    {
+      "file": "app/api/ask-synthex/route.ts",
+      "route": "/api/ask-synthex"
+    },
+    {
+      "file": "app/api/audience/insights/route.ts",
+      "route": "/api/audience/insights"
+    },
+    {
+      "file": "app/api/authority/analyze/route.ts",
+      "route": "/api/authority/analyze"
+    },
+    {
+      "file": "app/api/authority/citations/route.ts",
+      "route": "/api/authority/citations"
+    },
+    {
+      "file": "app/api/authority/design-audit/route.ts",
+      "route": "/api/authority/design-audit"
+    },
+    {
+      "file": "app/api/authority/sources/route.ts",
+      "route": "/api/authority/sources"
+    },
+    {
+      "file": "app/api/authority/validate-claim/route.ts",
+      "route": "/api/authority/validate-claim"
+    },
+    {
+      "file": "app/api/authors/[id]/route.ts",
+      "route": "/api/authors/[id]"
+    },
+    {
+      "file": "app/api/authors/[id]/schema/route.ts",
+      "route": "/api/authors/[id]/schema"
+    },
+    {
+      "file": "app/api/authors/route.ts",
+      "route": "/api/authors"
+    },
+    {
+      "file": "app/api/auto-research/[id]/route.ts",
+      "route": "/api/auto-research/[id]"
+    },
+    {
+      "file": "app/api/auto-research/health/route.ts",
+      "route": "/api/auto-research/health"
+    },
+    {
+      "file": "app/api/auto-research/insights/route.ts",
+      "route": "/api/auto-research/insights"
+    },
+    {
+      "file": "app/api/auto-research/route.ts",
+      "route": "/api/auto-research"
+    },
+    {
+      "file": "app/api/autonomous/execute/route.ts",
+      "route": "/api/autonomous/execute"
+    },
+    {
+      "file": "app/api/autonomous/parse/route.ts",
+      "route": "/api/autonomous/parse"
+    },
+    {
+      "file": "app/api/autopilot/config/route.ts",
+      "route": "/api/autopilot/config"
+    },
+    {
+      "file": "app/api/autopilot/preview/route.ts",
+      "route": "/api/autopilot/preview"
+    },
+    {
+      "file": "app/api/autopilot/runs/[runId]/route.ts",
+      "route": "/api/autopilot/runs/[runId]"
+    },
+    {
+      "file": "app/api/autopilot/runs/route.ts",
+      "route": "/api/autopilot/runs"
+    },
+    {
+      "file": "app/api/autopilot/stats/route.ts",
+      "route": "/api/autopilot/stats"
+    },
+    {
+      "file": "app/api/awards/[id]/generate-nomination/route.ts",
+      "route": "/api/awards/[id]/generate-nomination"
+    },
+    {
+      "file": "app/api/awards/[id]/route.ts",
+      "route": "/api/awards/[id]"
+    },
+    {
+      "file": "app/api/awards/route.ts",
+      "route": "/api/awards"
+    },
+    {
+      "file": "app/api/backlinks/analysis/route.ts",
+      "route": "/api/backlinks/analysis"
+    },
+    {
+      "file": "app/api/backlinks/analyze/route.ts",
+      "route": "/api/backlinks/analyze"
+    },
+    {
+      "file": "app/api/backlinks/outreach/route.ts",
+      "route": "/api/backlinks/outreach"
+    },
+    {
+      "file": "app/api/backlinks/prospects/route.ts",
+      "route": "/api/backlinks/prospects"
+    },
+    {
+      "file": "app/api/backup/route.ts",
+      "route": "/api/backup"
+    },
+    {
+      "file": "app/api/bayesian/observe/route.ts",
+      "route": "/api/bayesian/observe"
+    },
+    {
+      "file": "app/api/bayesian/run/route.ts",
+      "route": "/api/bayesian/run"
+    },
+    {
+      "file": "app/api/bayesian/spaces/route.ts",
+      "route": "/api/bayesian/spaces"
+    },
+    {
+      "file": "app/api/bayesian/status/[jobId]/route.ts",
+      "route": "/api/bayesian/status/[jobId]"
+    },
+    {
+      "file": "app/api/bayesian/suggest/route.ts",
+      "route": "/api/bayesian/suggest"
+    },
+    {
+      "file": "app/api/billing/dunning-state/route.ts",
+      "route": "/api/billing/dunning-state"
+    },
+    {
+      "file": "app/api/billing/subscription/route.ts",
+      "route": "/api/billing/subscription"
+    },
+    {
+      "file": "app/api/billing/usage/route.ts",
+      "route": "/api/billing/usage"
+    },
+    {
+      "file": "app/api/brand-dna/[organizationId]/route.ts",
+      "route": "/api/brand-dna/[organizationId]"
+    },
+    {
+      "file": "app/api/brand-dna/extract/route.ts",
+      "route": "/api/brand-dna/extract"
+    },
+    {
+      "file": "app/api/brand-dna/persona/feedback/route.ts",
+      "route": "/api/brand-dna/persona/feedback"
+    },
+    {
+      "file": "app/api/brand-dna/refresh/route.ts",
+      "route": "/api/brand-dna/refresh"
+    },
+    {
+      "file": "app/api/brand-iq/next-steps/route.ts",
+      "route": "/api/brand-iq/next-steps"
+    },
+    {
+      "file": "app/api/brand-presets/[id]/route.ts",
+      "route": "/api/brand-presets/[id]"
+    },
+    {
+      "file": "app/api/brand-presets/route.ts",
+      "route": "/api/brand-presets"
+    },
+    {
+      "file": "app/api/brand-profile/route.ts",
+      "route": "/api/brand-profile"
+    },
+    {
+      "file": "app/api/brand-video/generate/route.ts",
+      "route": "/api/brand-video/generate"
+    },
+    {
+      "file": "app/api/brand-video/jobs/route.ts",
+      "route": "/api/brand-video/jobs"
+    },
+    {
+      "file": "app/api/brand-video/motion-plan/route.ts",
+      "route": "/api/brand-video/motion-plan"
+    },
+    {
+      "file": "app/api/brand-voice/review-queue/[stepId]/approve/route.ts",
+      "route": "/api/brand-voice/review-queue/[stepId]/approve"
+    },
+    {
+      "file": "app/api/brand-voice/review-queue/[stepId]/reject/route.ts",
+      "route": "/api/brand-voice/review-queue/[stepId]/reject"
+    },
+    {
+      "file": "app/api/brand-voice/review-queue/route.ts",
+      "route": "/api/brand-voice/review-queue"
+    },
+    {
+      "file": "app/api/brand-voice/score/route.ts",
+      "route": "/api/brand-voice/score"
+    },
+    {
+      "file": "app/api/brand/calendar/route.ts",
+      "route": "/api/brand/calendar"
+    },
+    {
+      "file": "app/api/brand/consistency/route.ts",
+      "route": "/api/brand/consistency"
+    },
+    {
+      "file": "app/api/brand/dna/route.ts",
+      "route": "/api/brand/dna"
+    },
+    {
+      "file": "app/api/brand/generate/route.ts",
+      "route": "/api/brand/generate"
+    },
+    {
+      "file": "app/api/brand/identity/route.ts",
+      "route": "/api/brand/identity"
+    },
+    {
+      "file": "app/api/brand/kg-check/route.ts",
+      "route": "/api/brand/kg-check"
+    },
+    {
+      "file": "app/api/brand/mentions/poll/route.ts",
+      "route": "/api/brand/mentions/poll"
+    },
+    {
+      "file": "app/api/brand/mentions/route.ts",
+      "route": "/api/brand/mentions"
+    },
+    {
+      "file": "app/api/brand/profile/route.ts",
+      "route": "/api/brand/profile"
+    },
+    {
+      "file": "app/api/brand/wikidata/route.ts",
+      "route": "/api/brand/wikidata"
+    },
+    {
+      "file": "app/api/businesses/[id]/route.ts",
+      "route": "/api/businesses/[id]"
+    },
+    {
+      "file": "app/api/businesses/overview/route.ts",
+      "route": "/api/businesses/overview"
+    },
+    {
+      "file": "app/api/businesses/route.ts",
+      "route": "/api/businesses"
+    },
+    {
+      "file": "app/api/businesses/switch/route.ts",
+      "route": "/api/businesses/switch"
+    },
+    {
+      "file": "app/api/calendar/current-week/route.ts",
+      "route": "/api/calendar/current-week"
+    },
+    {
+      "file": "app/api/calendar/live-mode-activate/route.ts",
+      "route": "/api/calendar/live-mode-activate"
+    },
+    {
+      "file": "app/api/calendar/live-mode-readiness/route.ts",
+      "route": "/api/calendar/live-mode-readiness"
+    },
+    {
+      "file": "app/api/calendar/mode/route.ts",
+      "route": "/api/calendar/mode"
+    },
+    {
+      "file": "app/api/calendar/nudge-dismiss/route.ts",
+      "route": "/api/calendar/nudge-dismiss"
+    },
+    {
+      "file": "app/api/calendar/pause/route.ts",
+      "route": "/api/calendar/pause"
+    },
+    {
+      "file": "app/api/calendar/seasonal-dismiss/route.ts",
+      "route": "/api/calendar/seasonal-dismiss"
+    },
+    {
+      "file": "app/api/calendar/slots/[slotId]/route.ts",
+      "route": "/api/calendar/slots/[slotId]"
+    },
+    {
+      "file": "app/api/campaign-concept-studio/generate/route.ts",
+      "route": "/api/campaign-concept-studio/generate"
+    },
+    {
+      "file": "app/api/campaigns/route.ts",
+      "route": "/api/campaigns"
+    },
+    {
+      "file": "app/api/citation/opportunities/route.ts",
+      "route": "/api/citation/opportunities"
+    },
+    {
+      "file": "app/api/citation/overview/route.ts",
+      "route": "/api/citation/overview"
+    },
+    {
+      "file": "app/api/citation/timeline/route.ts",
+      "route": "/api/citation/timeline"
+    },
+    {
+      "file": "app/api/client/nudges/route.ts",
+      "route": "/api/client/nudges"
+    },
+    {
+      "file": "app/api/clients/[clientId]/crm/route.ts",
+      "route": "/api/clients/[clientId]/crm"
+    },
+    {
+      "file": "app/api/clients/featured-opt-in/route.ts",
+      "route": "/api/clients/featured-opt-in"
+    },
+    {
+      "file": "app/api/clients/route.ts",
+      "route": "/api/clients"
+    },
+    {
+      "file": "app/api/collaborator/context/route.ts",
+      "route": "/api/collaborator/context"
+    },
+    {
+      "file": "app/api/collaborator/pageview/route.ts",
+      "route": "/api/collaborator/pageview"
+    },
+    {
+      "file": "app/api/command-centre/activity/route.ts",
+      "route": "/api/command-centre/activity"
+    },
+    {
+      "file": "app/api/command-centre/autopilot/route.ts",
+      "route": "/api/command-centre/autopilot"
+    },
+    {
+      "file": "app/api/command-centre/clients/[id]/offboard/route.ts",
+      "route": "/api/command-centre/clients/[id]/offboard"
+    },
+    {
+      "file": "app/api/command-centre/clients/route.ts",
+      "route": "/api/command-centre/clients"
+    },
+    {
+      "file": "app/api/command-centre/connection-spine/route.ts",
+      "route": "/api/command-centre/connection-spine"
+    },
+    {
+      "file": "app/api/command-centre/hermes-handoff/route.ts",
+      "route": "/api/command-centre/hermes-handoff"
+    },
+    {
+      "file": "app/api/command-centre/intake/route.ts",
+      "route": "/api/command-centre/intake"
+    },
+    {
+      "file": "app/api/command-centre/packets/[id]/route.ts",
+      "route": "/api/command-centre/packets/[id]"
+    },
+    {
+      "file": "app/api/command-centre/packets/route.ts",
+      "route": "/api/command-centre/packets"
+    },
+    {
+      "file": "app/api/command-centre/pending/route.ts",
+      "route": "/api/command-centre/pending"
+    },
+    {
+      "file": "app/api/command-centre/performance/route.ts",
+      "route": "/api/command-centre/performance"
+    },
+    {
+      "file": "app/api/command-centre/provider-readiness/route.ts",
+      "route": "/api/command-centre/provider-readiness"
+    },
+    {
+      "file": "app/api/command-centre/stats/route.ts",
+      "route": "/api/command-centre/stats"
+    },
+    {
+      "file": "app/api/command-centre/status/route.ts",
+      "route": "/api/command-centre/status"
+    },
+    {
+      "file": "app/api/comments/[id]/route.ts",
+      "route": "/api/comments/[id]"
+    },
+    {
+      "file": "app/api/comments/route.ts",
+      "route": "/api/comments"
+    },
+    {
+      "file": "app/api/competitors/[competitorId]/analyze/route.ts",
+      "route": "/api/competitors/[competitorId]/analyze"
+    },
+    {
+      "file": "app/api/competitors/alerts/route.ts",
+      "route": "/api/competitors/alerts"
+    },
+    {
+      "file": "app/api/competitors/route.ts",
+      "route": "/api/competitors"
+    },
+    {
+      "file": "app/api/competitors/track/[id]/route.ts",
+      "route": "/api/competitors/track/[id]"
+    },
+    {
+      "file": "app/api/competitors/track/[id]/snapshot/route.ts",
+      "route": "/api/competitors/track/[id]/snapshot"
+    },
+    {
+      "file": "app/api/competitors/track/execute/route.ts",
+      "route": "/api/competitors/track/execute"
+    },
+    {
+      "file": "app/api/competitors/track/route.ts",
+      "route": "/api/competitors/track"
+    },
+    {
+      "file": "app/api/contacts/[id]/route.ts",
+      "route": "/api/contacts/[id]"
+    },
+    {
+      "file": "app/api/contacts/route.ts",
+      "route": "/api/contacts"
+    },
+    {
+      "file": "app/api/content-drafts/[id]/route.ts",
+      "route": "/api/content-drafts/[id]"
+    },
+    {
+      "file": "app/api/content-drafts/route.ts",
+      "route": "/api/content-drafts"
+    },
+    {
+      "file": "app/api/content-library/[id]/route.ts",
+      "route": "/api/content-library/[id]"
+    },
+    {
+      "file": "app/api/content-library/route.ts",
+      "route": "/api/content-library"
+    },
+    {
+      "file": "app/api/content/[id]/route.ts",
+      "route": "/api/content/[id]"
+    },
+    {
+      "file": "app/api/content/branded/route.ts",
+      "route": "/api/content/branded"
+    },
+    {
+      "file": "app/api/content/bulk/route.ts",
+      "route": "/api/content/bulk"
+    },
+    {
+      "file": "app/api/content/calendar/optimal-times/route.ts",
+      "route": "/api/content/calendar/optimal-times"
+    },
+    {
+      "file": "app/api/content/calendar/route.ts",
+      "route": "/api/content/calendar"
+    },
+    {
+      "file": "app/api/content/comments/route.ts",
+      "route": "/api/content/comments"
+    },
+    {
+      "file": "app/api/content/cross-post/route.ts",
+      "route": "/api/content/cross-post"
+    },
+    {
+      "file": "app/api/content/generate/route.ts",
+      "route": "/api/content/generate"
+    },
+    {
+      "file": "app/api/content/import-obsidian/confirm/route.ts",
+      "route": "/api/content/import-obsidian/confirm"
+    },
+    {
+      "file": "app/api/content/import-obsidian/route.ts",
+      "route": "/api/content/import-obsidian"
+    },
+    {
+      "file": "app/api/content/industry/route.ts",
+      "route": "/api/content/industry"
+    },
+    {
+      "file": "app/api/content/industry/templates/route.ts",
+      "route": "/api/content/industry/templates"
+    },
+    {
+      "file": "app/api/content/multi-format/route.ts",
+      "route": "/api/content/multi-format"
+    },
+    {
+      "file": "app/api/content/performance/route.ts",
+      "route": "/api/content/performance"
+    },
+    {
+      "file": "app/api/content/repurpose/route.ts",
+      "route": "/api/content/repurpose"
+    },
+    {
+      "file": "app/api/content/route.ts",
+      "route": "/api/content"
+    },
+    {
+      "file": "app/api/content/score/route.ts",
+      "route": "/api/content/score"
+    },
+    {
+      "file": "app/api/content/share/route.ts",
+      "route": "/api/content/share"
+    },
+    {
+      "file": "app/api/content/variations/route.ts",
+      "route": "/api/content/variations"
+    },
+    {
+      "file": "app/api/creators/route.ts",
+      "route": "/api/creators"
+    },
+    {
+      "file": "app/api/credential-coverage/route.ts",
+      "route": "/api/credential-coverage"
+    },
+    {
+      "file": "app/api/cvml/emit/route.ts",
+      "route": "/api/cvml/emit"
+    },
+    {
+      "file": "app/api/dashboard/authority-score/route.ts",
+      "route": "/api/dashboard/authority-score"
+    },
+    {
+      "file": "app/api/dashboard/awards/route.ts",
+      "route": "/api/dashboard/awards"
+    },
+    {
+      "file": "app/api/dashboard/bio/route.ts",
+      "route": "/api/dashboard/bio"
+    },
+    {
+      "file": "app/api/dashboard/brand-iq/route.ts",
+      "route": "/api/dashboard/brand-iq"
+    },
+    {
+      "file": "app/api/dashboard/citation/route.ts",
+      "route": "/api/dashboard/citation"
+    },
+    {
+      "file": "app/api/dashboard/content-intelligence/route.ts",
+      "route": "/api/dashboard/content-intelligence"
+    },
+    {
+      "file": "app/api/dashboard/content-score-history/route.ts",
+      "route": "/api/dashboard/content-score-history"
+    },
+    {
+      "file": "app/api/dashboard/eeat/route.ts",
+      "route": "/api/dashboard/eeat"
+    },
+    {
+      "file": "app/api/dashboard/experiments/route.ts",
+      "route": "/api/dashboard/experiments"
+    },
+    {
+      "file": "app/api/dashboard/geo-score/route.ts",
+      "route": "/api/dashboard/geo-score"
+    },
+    {
+      "file": "app/api/dashboard/geo/route.ts",
+      "route": "/api/dashboard/geo"
+    },
+    {
+      "file": "app/api/dashboard/onboarding-summary/route.ts",
+      "route": "/api/dashboard/onboarding-summary"
+    },
+    {
+      "file": "app/api/dashboard/personalisation-status/route.ts",
+      "route": "/api/dashboard/personalisation-status"
+    },
+    {
+      "file": "app/api/dashboard/referrals/route.ts",
+      "route": "/api/dashboard/referrals"
+    },
+    {
+      "file": "app/api/dashboard/roi/route.ts",
+      "route": "/api/dashboard/roi"
+    },
+    {
+      "file": "app/api/dashboard/sponsors/route.ts",
+      "route": "/api/dashboard/sponsors"
+    },
+    {
+      "file": "app/api/dashboard/stats/route.ts",
+      "route": "/api/dashboard/stats"
+    },
+    {
+      "file": "app/api/dashboard/visuals/route.ts",
+      "route": "/api/dashboard/visuals"
+    },
+    {
+      "file": "app/api/dashboard/voice/route.ts",
+      "route": "/api/dashboard/voice"
+    },
+    {
+      "file": "app/api/directories/[id]/route.ts",
+      "route": "/api/directories/[id]"
+    },
+    {
+      "file": "app/api/directories/route.ts",
+      "route": "/api/directories"
+    },
+    {
+      "file": "app/api/eeat/v2/assets/route.ts",
+      "route": "/api/eeat/v2/assets"
+    },
+    {
+      "file": "app/api/eeat/v2/audit/route.ts",
+      "route": "/api/eeat/v2/audit"
+    },
+    {
+      "file": "app/api/effect-report/[id]/pdf/route.ts",
+      "route": "/api/effect-report/[id]/pdf"
+    },
+    {
+      "file": "app/api/effect-report/by-period/route.ts",
+      "route": "/api/effect-report/by-period"
+    },
+    {
+      "file": "app/api/effect-report/generate/route.ts",
+      "route": "/api/effect-report/generate"
+    },
+    {
+      "file": "app/api/effect-report/list/route.ts",
+      "route": "/api/effect-report/list"
+    },
+    {
+      "file": "app/api/email/send/route.ts",
+      "route": "/api/email/send"
+    },
+    {
+      "file": "app/api/experiments/dogfood/route.ts",
+      "route": "/api/experiments/dogfood"
+    },
+    {
+      "file": "app/api/experiments/experiments/[id]/complete/route.ts",
+      "route": "/api/experiments/experiments/[id]/complete"
+    },
+    {
+      "file": "app/api/experiments/experiments/[id]/record/route.ts",
+      "route": "/api/experiments/experiments/[id]/record"
+    },
+    {
+      "file": "app/api/experiments/experiments/[id]/start/route.ts",
+      "route": "/api/experiments/experiments/[id]/start"
+    },
+    {
+      "file": "app/api/experiments/experiments/route.ts",
+      "route": "/api/experiments/experiments"
+    },
+    {
+      "file": "app/api/experiments/healing/analyze/route.ts",
+      "route": "/api/experiments/healing/analyze"
+    },
+    {
+      "file": "app/api/experiments/healing/route.ts",
+      "route": "/api/experiments/healing"
+    },
+    {
+      "file": "app/api/experiments/suggest/route.ts",
+      "route": "/api/experiments/suggest"
+    },
+    {
+      "file": "app/api/features/route.ts",
+      "route": "/api/features"
+    },
+    {
+      "file": "app/api/forecast/[modelId]/route.ts",
+      "route": "/api/forecast/[modelId]"
+    },
+    {
+      "file": "app/api/forecast/models/route.ts",
+      "route": "/api/forecast/models"
+    },
+    {
+      "file": "app/api/forecast/predict/route.ts",
+      "route": "/api/forecast/predict"
+    },
+    {
+      "file": "app/api/founder/delete-account/route.ts",
+      "route": "/api/founder/delete-account"
+    },
+    {
+      "file": "app/api/gamification/achievements/route.ts",
+      "route": "/api/gamification/achievements"
+    },
+    {
+      "file": "app/api/gamification/streak/route.ts",
+      "route": "/api/gamification/streak"
+    },
+    {
+      "file": "app/api/generate/diagram/route.ts",
+      "route": "/api/generate/diagram"
+    },
+    {
+      "file": "app/api/generate/plot/route.ts",
+      "route": "/api/generate/plot"
+    },
+    {
+      "file": "app/api/geo/analyze/route.ts",
+      "route": "/api/geo/analyze"
+    },
+    {
+      "file": "app/api/geo/passages/route.ts",
+      "route": "/api/geo/passages"
+    },
+    {
+      "file": "app/api/geo/rewrite/route.ts",
+      "route": "/api/geo/rewrite"
+    },
+    {
+      "file": "app/api/geo/score/route.ts",
+      "route": "/api/geo/score"
+    },
+    {
+      "file": "app/api/geo/tactic-score/route.ts",
+      "route": "/api/geo/tactic-score"
+    },
+    {
+      "file": "app/api/google-business/insights/route.ts",
+      "route": "/api/google-business/insights"
+    },
+    {
+      "file": "app/api/google-business/locations/[locationId]/route.ts",
+      "route": "/api/google-business/locations/[locationId]"
+    },
+    {
+      "file": "app/api/google-business/locations/route.ts",
+      "route": "/api/google-business/locations"
+    },
+    {
+      "file": "app/api/google-business/nap-audit/route.ts",
+      "route": "/api/google-business/nap-audit"
+    },
+    {
+      "file": "app/api/google-business/photos/route.ts",
+      "route": "/api/google-business/photos"
+    },
+    {
+      "file": "app/api/google-business/posts/route.ts",
+      "route": "/api/google-business/posts"
+    },
+    {
+      "file": "app/api/google-business/reviews/[reviewId]/auto-reply/route.ts",
+      "route": "/api/google-business/reviews/[reviewId]/auto-reply"
+    },
+    {
+      "file": "app/api/google-business/reviews/[reviewId]/dismiss/route.ts",
+      "route": "/api/google-business/reviews/[reviewId]/dismiss"
+    },
+    {
+      "file": "app/api/google-business/reviews/[reviewId]/reply/route.ts",
+      "route": "/api/google-business/reviews/[reviewId]/reply"
+    },
+    {
+      "file": "app/api/google-business/reviews/route.ts",
+      "route": "/api/google-business/reviews"
+    },
+    {
+      "file": "app/api/hermes/proposals/answers/route.ts",
+      "route": "/api/hermes/proposals/answers"
+    },
+    {
+      "file": "app/api/heygen/video/route.ts",
+      "route": "/api/heygen/video"
+    },
+    {
+      "file": "app/api/indexing/route.ts",
+      "route": "/api/indexing"
+    },
+    {
+      "file": "app/api/insights/route.ts",
+      "route": "/api/insights"
+    },
+    {
+      "file": "app/api/integrations/[integrationId]/connect/route.ts",
+      "route": "/api/integrations/[integrationId]/connect"
+    },
+    {
+      "file": "app/api/integrations/[integrationId]/status/route.ts",
+      "route": "/api/integrations/[integrationId]/status"
+    },
+    {
+      "file": "app/api/integrations/[integrationId]/sync/route.ts",
+      "route": "/api/integrations/[integrationId]/sync"
+    },
+    {
+      "file": "app/api/integrations/ga4/connect/route.ts",
+      "route": "/api/integrations/ga4/connect"
+    },
+    {
+      "file": "app/api/integrations/ga4/properties/route.ts",
+      "route": "/api/integrations/ga4/properties"
+    },
+    {
+      "file": "app/api/integrations/ga4/select-property/route.ts",
+      "route": "/api/integrations/ga4/select-property"
+    },
+    {
+      "file": "app/api/integrations/route.ts",
+      "route": "/api/integrations"
+    },
+    {
+      "file": "app/api/integrations/third-party/[provider]/config/route.ts",
+      "route": "/api/integrations/third-party/[provider]/config"
+    },
+    {
+      "file": "app/api/integrations/third-party/[provider]/route.ts",
+      "route": "/api/integrations/third-party/[provider]"
+    },
+    {
+      "file": "app/api/integrations/third-party/route.ts",
+      "route": "/api/integrations/third-party"
+    },
+    {
+      "file": "app/api/intelligence/competitors/route.ts",
+      "route": "/api/intelligence/competitors"
+    },
+    {
+      "file": "app/api/intentscape/public/expand/route.ts",
+      "route": "/api/intentscape/public/expand"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/[id]/approve-goal/route.ts",
+      "route": "/api/intentscape/workspaces/[id]/approve-goal"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/[id]/expand/route.ts",
+      "route": "/api/intentscape/workspaces/[id]/expand"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/[id]/export/route.ts",
+      "route": "/api/intentscape/workspaces/[id]/export"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/[id]/route.ts",
+      "route": "/api/intentscape/workspaces/[id]"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/[id]/signals/route.ts",
+      "route": "/api/intentscape/workspaces/[id]/signals"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/[id]/work-packet/route.ts",
+      "route": "/api/intentscape/workspaces/[id]/work-packet"
+    },
+    {
+      "file": "app/api/intentscape/workspaces/route.ts",
+      "route": "/api/intentscape/workspaces"
+    },
+    {
+      "file": "app/api/invite/accept/route.ts",
+      "route": "/api/invite/accept"
+    },
+    {
+      "file": "app/api/invoices/[id]/payment-link/route.ts",
+      "route": "/api/invoices/[id]/payment-link"
+    },
+    {
+      "file": "app/api/invoices/[id]/pdf/route.ts",
+      "route": "/api/invoices/[id]/pdf"
+    },
+    {
+      "file": "app/api/invoices/[id]/route.ts",
+      "route": "/api/invoices/[id]"
+    },
+    {
+      "file": "app/api/invoices/[id]/send/route.ts",
+      "route": "/api/invoices/[id]/send"
+    },
+    {
+      "file": "app/api/invoices/list/route.ts",
+      "route": "/api/invoices/list"
+    },
+    {
+      "file": "app/api/invoices/route.ts",
+      "route": "/api/invoices"
+    },
+    {
+      "file": "app/api/leads/[id]/verify/route.ts",
+      "route": "/api/leads/[id]/verify"
+    },
+    {
+      "file": "app/api/leads/route.ts",
+      "route": "/api/leads"
+    },
+    {
+      "file": "app/api/library/content/[contentId]/route.ts",
+      "route": "/api/library/content/[contentId]"
+    },
+    {
+      "file": "app/api/library/content/route.ts",
+      "route": "/api/library/content"
+    },
+    {
+      "file": "app/api/listening/keywords/route.ts",
+      "route": "/api/listening/keywords"
+    },
+    {
+      "file": "app/api/listening/mentions/route.ts",
+      "route": "/api/listening/mentions"
+    },
+    {
+      "file": "app/api/listening/route.ts",
+      "route": "/api/listening"
+    },
+    {
+      "file": "app/api/local/case-studies/route.ts",
+      "route": "/api/local/case-studies"
+    },
+    {
+      "file": "app/api/loyalty/route.ts",
+      "route": "/api/loyalty"
+    },
+    {
+      "file": "app/api/marketing-agency/agents/[id]/route.ts",
+      "route": "/api/marketing-agency/agents/[id]"
+    },
+    {
+      "file": "app/api/marketing-agency/agents/[id]/run/route.ts",
+      "route": "/api/marketing-agency/agents/[id]/run"
+    },
+    {
+      "file": "app/api/marketing-agency/agents/[id]/runs/route.ts",
+      "route": "/api/marketing-agency/agents/[id]/runs"
+    },
+    {
+      "file": "app/api/marketing-agency/agents/route.ts",
+      "route": "/api/marketing-agency/agents"
+    },
+    {
+      "file": "app/api/marketing-agency/campaigns/route.ts",
+      "route": "/api/marketing-agency/campaigns"
+    },
+    {
+      "file": "app/api/marketing-agency/claims/[id]/action/route.ts",
+      "route": "/api/marketing-agency/claims/[id]/action"
+    },
+    {
+      "file": "app/api/marketing-agency/claims/[id]/verify/route.ts",
+      "route": "/api/marketing-agency/claims/[id]/verify"
+    },
+    {
+      "file": "app/api/marketing-agency/opportunities/route.ts",
+      "route": "/api/marketing-agency/opportunities"
+    },
+    {
+      "file": "app/api/marketing-agency/runs/[id]/cancel/route.ts",
+      "route": "/api/marketing-agency/runs/[id]/cancel"
+    },
+    {
+      "file": "app/api/marketing-agency/runs/[id]/route.ts",
+      "route": "/api/marketing-agency/runs/[id]"
+    },
+    {
+      "file": "app/api/marketing-agency/studio/[client]/route.ts",
+      "route": "/api/marketing-agency/studio/[client]"
+    },
+    {
+      "file": "app/api/marketing/ccw-boundary/route.ts",
+      "route": "/api/marketing/ccw-boundary"
+    },
+    {
+      "file": "app/api/marketing/cro-proposal/route.ts",
+      "route": "/api/marketing/cro-proposal"
+    },
+    {
+      "file": "app/api/marketing/email-sequence/route.ts",
+      "route": "/api/marketing/email-sequence"
+    },
+    {
+      "file": "app/api/marketing/incident/route.ts",
+      "route": "/api/marketing/incident"
+    },
+    {
+      "file": "app/api/marketing/orchestrate/route.ts",
+      "route": "/api/marketing/orchestrate"
+    },
+    {
+      "file": "app/api/marketing/paid-pilot/route.ts",
+      "route": "/api/marketing/paid-pilot"
+    },
+    {
+      "file": "app/api/marketing/platform-score/route.ts",
+      "route": "/api/marketing/platform-score"
+    },
+    {
+      "file": "app/api/marketing/tier3-portfolio-review/route.ts",
+      "route": "/api/marketing/tier3-portfolio-review"
+    },
+    {
+      "file": "app/api/marketplace/products/route.ts",
+      "route": "/api/marketplace/products"
+    },
+    {
+      "file": "app/api/mcp/[transport]/route.ts",
+      "route": "/api/mcp/[transport]"
+    },
+    {
+      "file": "app/api/media/assets/[id]/image/route.ts",
+      "route": "/api/media/assets/[id]/image"
+    },
+    {
+      "file": "app/api/media/generate/image/feedback/route.ts",
+      "route": "/api/media/generate/image/feedback"
+    },
+    {
+      "file": "app/api/media/generate/image/route.ts",
+      "route": "/api/media/generate/image"
+    },
+    {
+      "file": "app/api/media/generate/video/route.ts",
+      "route": "/api/media/generate/video"
+    },
+    {
+      "file": "app/api/media/generate/voice/route.ts",
+      "route": "/api/media/generate/voice"
+    },
+    {
+      "file": "app/api/media/library/route.ts",
+      "route": "/api/media/library"
+    },
+    {
+      "file": "app/api/media/upload/route.ts",
+      "route": "/api/media/upload"
+    },
+    {
+      "file": "app/api/mission-control/analyze-repo/route.ts",
+      "route": "/api/mission-control/analyze-repo"
+    },
+    {
+      "file": "app/api/mission-control/approve-tickets/route.ts",
+      "route": "/api/mission-control/approve-tickets"
+    },
+    {
+      "file": "app/api/mission-control/draft-tickets/route.ts",
+      "route": "/api/mission-control/draft-tickets"
+    },
+    {
+      "file": "app/api/mission-control/missions/route.ts",
+      "route": "/api/mission-control/missions"
+    },
+    {
+      "file": "app/api/mission-control/projects/route.ts",
+      "route": "/api/mission-control/projects"
+    },
+    {
+      "file": "app/api/mission-control/repos/route.ts",
+      "route": "/api/mission-control/repos"
+    },
+    {
+      "file": "app/api/mission-control/select-project/route.ts",
+      "route": "/api/mission-control/select-project"
+    },
+    {
+      "file": "app/api/mobile/config/route.ts",
+      "route": "/api/mobile/config"
+    },
+    {
+      "file": "app/api/mobile/sync/route.ts",
+      "route": "/api/mobile/sync"
+    },
+    {
+      "file": "app/api/moderation/check/route.ts",
+      "route": "/api/moderation/check"
+    },
+    {
+      "file": "app/api/monthly-story/[id]/dismiss/route.ts",
+      "route": "/api/monthly-story/[id]/dismiss"
+    },
+    {
+      "file": "app/api/monthly-story/latest/route.ts",
+      "route": "/api/monthly-story/latest"
+    },
+    {
+      "file": "app/api/notifications/[notificationId]/read/route.ts",
+      "route": "/api/notifications/[notificationId]/read"
+    },
+    {
+      "file": "app/api/notifications/read-all/route.ts",
+      "route": "/api/notifications/read-all"
+    },
+    {
+      "file": "app/api/notifications/route.ts",
+      "route": "/api/notifications"
+    },
+    {
+      "file": "app/api/notifications/settings/route.ts",
+      "route": "/api/notifications/settings"
+    },
+    {
+      "file": "app/api/onboarding/api-credentials/route.ts",
+      "route": "/api/onboarding/api-credentials"
+    },
+    {
+      "file": "app/api/onboarding/checklist/route.ts",
+      "route": "/api/onboarding/checklist"
+    },
+    {
+      "file": "app/api/onboarding/complete/route.ts",
+      "route": "/api/onboarding/complete"
+    },
+    {
+      "file": "app/api/onboarding/generate-plan/route.ts",
+      "route": "/api/onboarding/generate-plan"
+    },
+    {
+      "file": "app/api/onboarding/kickstart/route.ts",
+      "route": "/api/onboarding/kickstart"
+    },
+    {
+      "file": "app/api/onboarding/pipeline/route.ts",
+      "route": "/api/onboarding/pipeline"
+    },
+    {
+      "file": "app/api/onboarding/progress/route.ts",
+      "route": "/api/onboarding/progress"
+    },
+    {
+      "file": "app/api/onboarding/review/route.ts",
+      "route": "/api/onboarding/review"
+    },
+    {
+      "file": "app/api/onboarding/validate-key/route.ts",
+      "route": "/api/onboarding/validate-key"
+    },
+    {
+      "file": "app/api/onboarding/voice/route.ts",
+      "route": "/api/onboarding/voice"
+    },
+    {
+      "file": "app/api/opportunity-proposals/[id]/export/route.ts",
+      "route": "/api/opportunity-proposals/[id]/export"
+    },
+    {
+      "file": "app/api/opportunity-proposals/route.ts",
+      "route": "/api/opportunity-proposals"
+    },
+    {
+      "file": "app/api/optimize/auto-schedule/route.ts",
+      "route": "/api/optimize/auto-schedule"
+    },
+    {
+      "file": "app/api/organisations/children/route.ts",
+      "route": "/api/organisations/children"
+    },
+    {
+      "file": "app/api/organizations/[orgId]/brand-os/route.ts",
+      "route": "/api/organizations/[orgId]/brand-os"
+    },
+    {
+      "file": "app/api/organizations/[orgId]/client-profile/route.ts",
+      "route": "/api/organizations/[orgId]/client-profile"
+    },
+    {
+      "file": "app/api/organizations/[orgId]/route.ts",
+      "route": "/api/organizations/[orgId]"
+    },
+    {
+      "file": "app/api/organizations/route.ts",
+      "route": "/api/organizations"
+    },
+    {
+      "file": "app/api/patterns/analyze/route.ts",
+      "route": "/api/patterns/analyze"
+    },
+    {
+      "file": "app/api/patterns/cached/route.ts",
+      "route": "/api/patterns/cached"
+    },
+    {
+      "file": "app/api/performance/metrics/route.ts",
+      "route": "/api/performance/metrics"
+    },
+    {
+      "file": "app/api/personas/[id]/optimize/route.ts",
+      "route": "/api/personas/[id]/optimize"
+    },
+    {
+      "file": "app/api/personas/[id]/train/route.ts",
+      "route": "/api/personas/[id]/train"
+    },
+    {
+      "file": "app/api/personas/route.ts",
+      "route": "/api/personas"
+    },
+    {
+      "file": "app/api/platforms/[platform]/metrics/route.ts",
+      "route": "/api/platforms/[platform]/metrics"
+    },
+    {
+      "file": "app/api/platforms/metrics/route.ts",
+      "route": "/api/platforms/metrics"
+    },
+    {
+      "file": "app/api/posts/quick-create/route.ts",
+      "route": "/api/posts/quick-create"
+    },
+    {
+      "file": "app/api/pr/journalists/[id]/enrich/route.ts",
+      "route": "/api/pr/journalists/[id]/enrich"
+    },
+    {
+      "file": "app/api/pr/journalists/[id]/route.ts",
+      "route": "/api/pr/journalists/[id]"
+    },
+    {
+      "file": "app/api/pr/journalists/route.ts",
+      "route": "/api/pr/journalists"
+    },
+    {
+      "file": "app/api/pr/pitches/[id]/route.ts",
+      "route": "/api/pr/pitches/[id]"
+    },
+    {
+      "file": "app/api/pr/pitches/route.ts",
+      "route": "/api/pr/pitches"
+    },
+    {
+      "file": "app/api/pr/press-releases/[id]/distribute/route.ts",
+      "route": "/api/pr/press-releases/[id]/distribute"
+    },
+    {
+      "file": "app/api/pr/press-releases/[id]/distributions/route.ts",
+      "route": "/api/pr/press-releases/[id]/distributions"
+    },
+    {
+      "file": "app/api/pr/press-releases/[id]/route.ts",
+      "route": "/api/pr/press-releases/[id]"
+    },
+    {
+      "file": "app/api/pr/press-releases/generate/route.ts",
+      "route": "/api/pr/press-releases/generate"
+    },
+    {
+      "file": "app/api/pr/press-releases/route.ts",
+      "route": "/api/pr/press-releases"
+    },
+    {
+      "file": "app/api/predict/models/route.ts",
+      "route": "/api/predict/models"
+    },
+    {
+      "file": "app/api/predict/predict/route.ts",
+      "route": "/api/predict/predict"
+    },
+    {
+      "file": "app/api/predict/train/route.ts",
+      "route": "/api/predict/train"
+    },
+    {
+      "file": "app/api/predict/trends/route.ts",
+      "route": "/api/predict/trends"
+    },
+    {
+      "file": "app/api/profile-analyser/generate-content/route.ts",
+      "route": "/api/profile-analyser/generate-content"
+    },
+    {
+      "file": "app/api/profile-analyser/route.ts",
+      "route": "/api/profile-analyser"
+    },
+    {
+      "file": "app/api/prompts/gaps/route.ts",
+      "route": "/api/prompts/gaps"
+    },
+    {
+      "file": "app/api/prompts/generate/route.ts",
+      "route": "/api/prompts/generate"
+    },
+    {
+      "file": "app/api/prompts/test/route.ts",
+      "route": "/api/prompts/test"
+    },
+    {
+      "file": "app/api/prompts/trackers/route.ts",
+      "route": "/api/prompts/trackers"
+    },
+    {
+      "file": "app/api/psychology/analyze/route.ts",
+      "route": "/api/psychology/analyze"
+    },
+    {
+      "file": "app/api/psychology/principles/route.ts",
+      "route": "/api/psychology/principles"
+    },
+    {
+      "file": "app/api/publish-queue/gated/route.ts",
+      "route": "/api/publish-queue/gated"
+    },
+    {
+      "file": "app/api/publish-queue/release/route.ts",
+      "route": "/api/publish-queue/release"
+    },
+    {
+      "file": "app/api/push/send/route.ts",
+      "route": "/api/push/send"
+    },
+    {
+      "file": "app/api/push/subscribe/route.ts",
+      "route": "/api/push/subscribe"
+    },
+    {
+      "file": "app/api/quality/audit/route.ts",
+      "route": "/api/quality/audit"
+    },
+    {
+      "file": "app/api/quality/gate/route.ts",
+      "route": "/api/quality/gate"
+    },
+    {
+      "file": "app/api/quotes/[id]/route.ts",
+      "route": "/api/quotes/[id]"
+    },
+    {
+      "file": "app/api/quotes/route.ts",
+      "route": "/api/quotes"
+    },
+    {
+      "file": "app/api/rate-limit/route.ts",
+      "route": "/api/rate-limit"
+    },
+    {
+      "file": "app/api/recommendations/route.ts",
+      "route": "/api/recommendations"
+    },
+    {
+      "file": "app/api/referrals/redeem/route.ts",
+      "route": "/api/referrals/redeem"
+    },
+    {
+      "file": "app/api/referrals/route.ts",
+      "route": "/api/referrals"
+    },
+    {
+      "file": "app/api/reporting/generate/route.ts",
+      "route": "/api/reporting/generate"
+    },
+    {
+      "file": "app/api/reporting/reports/[reportId]/download/route.ts",
+      "route": "/api/reporting/reports/[reportId]/download"
+    },
+    {
+      "file": "app/api/reporting/reports/[reportId]/route.ts",
+      "route": "/api/reporting/reports/[reportId]"
+    },
+    {
+      "file": "app/api/reporting/reports/route.ts",
+      "route": "/api/reporting/reports"
+    },
+    {
+      "file": "app/api/reports/scheduled/execute/route.ts",
+      "route": "/api/reports/scheduled/execute"
+    },
+    {
+      "file": "app/api/reports/scheduled/route.ts",
+      "route": "/api/reports/scheduled"
+    },
+    {
+      "file": "app/api/reports/templates/route.ts",
+      "route": "/api/reports/templates"
+    },
+    {
+      "file": "app/api/research/[id]/route.ts",
+      "route": "/api/research/[id]"
+    },
+    {
+      "file": "app/api/research/capabilities/route.ts",
+      "route": "/api/research/capabilities"
+    },
+    {
+      "file": "app/api/research/implementation-plan/route.ts",
+      "route": "/api/research/implementation-plan"
+    },
+    {
+      "file": "app/api/research/route.ts",
+      "route": "/api/research"
+    },
+    {
+      "file": "app/api/research/trends/route.ts",
+      "route": "/api/research/trends"
+    },
+    {
+      "file": "app/api/revenue/[id]/route.ts",
+      "route": "/api/revenue/[id]"
+    },
+    {
+      "file": "app/api/revenue/projection/route.ts",
+      "route": "/api/revenue/projection"
+    },
+    {
+      "file": "app/api/revenue/route.ts",
+      "route": "/api/revenue"
+    },
+    {
+      "file": "app/api/reviews/moderation/[reviewId]/route.ts",
+      "route": "/api/reviews/moderation/[reviewId]"
+    },
+    {
+      "file": "app/api/reviews/moderation/route.ts",
+      "route": "/api/reviews/moderation"
+    },
+    {
+      "file": "app/api/reviews/request/route.ts",
+      "route": "/api/reviews/request"
+    },
+    {
+      "file": "app/api/roi/investments/[id]/route.ts",
+      "route": "/api/roi/investments/[id]"
+    },
+    {
+      "file": "app/api/roi/investments/route.ts",
+      "route": "/api/roi/investments"
+    },
+    {
+      "file": "app/api/roi/route.ts",
+      "route": "/api/roi"
+    },
+    {
+      "file": "app/api/roles/[id]/route.ts",
+      "route": "/api/roles/[id]"
+    },
+    {
+      "file": "app/api/roles/[id]/users/route.ts",
+      "route": "/api/roles/[id]/users"
+    },
+    {
+      "file": "app/api/roles/route.ts",
+      "route": "/api/roles"
+    },
+    {
+      "file": "app/api/scheduler/posts/[postId]/route.ts",
+      "route": "/api/scheduler/posts/[postId]"
+    },
+    {
+      "file": "app/api/scheduler/posts/bulk/route.ts",
+      "route": "/api/scheduler/posts/bulk"
+    },
+    {
+      "file": "app/api/scheduler/posts/route.ts",
+      "route": "/api/scheduler/posts"
+    },
+    {
+      "file": "app/api/scheduler/stats/route.ts",
+      "route": "/api/scheduler/stats"
+    },
+    {
+      "file": "app/api/scoring/visibility/route.ts",
+      "route": "/api/scoring/visibility"
+    },
+    {
+      "file": "app/api/search/route.ts",
+      "route": "/api/search"
+    },
+    {
+      "file": "app/api/seasonal-signals/route.ts",
+      "route": "/api/seasonal-signals"
+    },
+    {
+      "file": "app/api/sentinel/alerts/[id]/acknowledge/route.ts",
+      "route": "/api/sentinel/alerts/[id]/acknowledge"
+    },
+    {
+      "file": "app/api/sentinel/alerts/route.ts",
+      "route": "/api/sentinel/alerts"
+    },
+    {
+      "file": "app/api/sentinel/check/route.ts",
+      "route": "/api/sentinel/check"
+    },
+    {
+      "file": "app/api/sentinel/status/route.ts",
+      "route": "/api/sentinel/status"
+    },
+    {
+      "file": "app/api/sentinel/updates/route.ts",
+      "route": "/api/sentinel/updates"
+    },
+    {
+      "file": "app/api/seo/audit/route.ts",
+      "route": "/api/seo/audit"
+    },
+    {
+      "file": "app/api/seo/competitor/route.ts",
+      "route": "/api/seo/competitor"
+    },
+    {
+      "file": "app/api/seo/dashboard-stats/route.ts",
+      "route": "/api/seo/dashboard-stats"
+    },
+    {
+      "file": "app/api/seo/displacement/competitors/route.ts",
+      "route": "/api/seo/displacement/competitors"
+    },
+    {
+      "file": "app/api/seo/displacement/route.ts",
+      "route": "/api/seo/displacement"
+    },
+    {
+      "file": "app/api/seo/enhancements/execute/route.ts",
+      "route": "/api/seo/enhancements/execute"
+    },
+    {
+      "file": "app/api/seo/enhancements/route.ts",
+      "route": "/api/seo/enhancements"
+    },
+    {
+      "file": "app/api/seo/geo-readiness/analyze/route.ts",
+      "route": "/api/seo/geo-readiness/analyze"
+    },
+    {
+      "file": "app/api/seo/geo-readiness/history/route.ts",
+      "route": "/api/seo/geo-readiness/history"
+    },
+    {
+      "file": "app/api/seo/geo-readiness/trends/route.ts",
+      "route": "/api/seo/geo-readiness/trends"
+    },
+    {
+      "file": "app/api/seo/page-analysis/route.ts",
+      "route": "/api/seo/page-analysis"
+    },
+    {
+      "file": "app/api/seo/pagespeed/analyze/route.ts",
+      "route": "/api/seo/pagespeed/analyze"
+    },
+    {
+      "file": "app/api/seo/pagespeed/history/route.ts",
+      "route": "/api/seo/pagespeed/history"
+    },
+    {
+      "file": "app/api/seo/pagespeed/trends/route.ts",
+      "route": "/api/seo/pagespeed/trends"
+    },
+    {
+      "file": "app/api/seo/rankings/route.ts",
+      "route": "/api/seo/rankings"
+    },
+    {
+      "file": "app/api/seo/rankings/seed/route.ts",
+      "route": "/api/seo/rankings/seed"
+    },
+    {
+      "file": "app/api/seo/rankings/targets/[id]/route.ts",
+      "route": "/api/seo/rankings/targets/[id]"
+    },
+    {
+      "file": "app/api/seo/rankings/targets/route.ts",
+      "route": "/api/seo/rankings/targets"
+    },
+    {
+      "file": "app/api/seo/recommendations/route.ts",
+      "route": "/api/seo/recommendations"
+    },
+    {
+      "file": "app/api/seo/route.ts",
+      "route": "/api/seo"
+    },
+    {
+      "file": "app/api/seo/scheduled-audits/[id]/route.ts",
+      "route": "/api/seo/scheduled-audits/[id]"
+    },
+    {
+      "file": "app/api/seo/scheduled-audits/route.ts",
+      "route": "/api/seo/scheduled-audits"
+    },
+    {
+      "file": "app/api/seo/schema-markup/extract/route.ts",
+      "route": "/api/seo/schema-markup/extract"
+    },
+    {
+      "file": "app/api/seo/schema-markup/templates/route.ts",
+      "route": "/api/seo/schema-markup/templates"
+    },
+    {
+      "file": "app/api/seo/schema-markup/validate/route.ts",
+      "route": "/api/seo/schema-markup/validate"
+    },
+    {
+      "file": "app/api/seo/schema/route.ts",
+      "route": "/api/seo/schema"
+    },
+    {
+      "file": "app/api/seo/search-console/analytics/route.ts",
+      "route": "/api/seo/search-console/analytics"
+    },
+    {
+      "file": "app/api/seo/search-console/coverage/route.ts",
+      "route": "/api/seo/search-console/coverage"
+    },
+    {
+      "file": "app/api/seo/search-console/indexing-status/route.ts",
+      "route": "/api/seo/search-console/indexing-status"
+    },
+    {
+      "file": "app/api/seo/search-console/indexing/route.ts",
+      "route": "/api/seo/search-console/indexing"
+    },
+    {
+      "file": "app/api/seo/search-console/properties/route.ts",
+      "route": "/api/seo/search-console/properties"
+    },
+    {
+      "file": "app/api/seo/search-console/sitemaps/route.ts",
+      "route": "/api/seo/search-console/sitemaps"
+    },
+    {
+      "file": "app/api/seo/search-console/sitemaps/submit/route.ts",
+      "route": "/api/seo/search-console/sitemaps/submit"
+    },
+    {
+      "file": "app/api/seo/sitemap/route.ts",
+      "route": "/api/seo/sitemap"
+    },
+    {
+      "file": "app/api/seo/technical/cwv-history/route.ts",
+      "route": "/api/seo/technical/cwv-history"
+    },
+    {
+      "file": "app/api/seo/technical/mobile-parity/route.ts",
+      "route": "/api/seo/technical/mobile-parity"
+    },
+    {
+      "file": "app/api/seo/technical/robots-txt/route.ts",
+      "route": "/api/seo/technical/robots-txt"
+    },
+    {
+      "file": "app/api/settings/api-credentials/route.ts",
+      "route": "/api/settings/api-credentials"
+    },
+    {
+      "file": "app/api/shares/[id]/route.ts",
+      "route": "/api/shares/[id]"
+    },
+    {
+      "file": "app/api/shares/route.ts",
+      "route": "/api/shares"
+    },
+    {
+      "file": "app/api/social/facebook/post/route.ts",
+      "route": "/api/social/facebook/post"
+    },
+    {
+      "file": "app/api/social/instagram/post/route.ts",
+      "route": "/api/social/instagram/post"
+    },
+    {
+      "file": "app/api/social/linkedin/post/route.ts",
+      "route": "/api/social/linkedin/post"
+    },
+    {
+      "file": "app/api/social/pinterest/post/route.ts",
+      "route": "/api/social/pinterest/post"
+    },
+    {
+      "file": "app/api/social/post/route.ts",
+      "route": "/api/social/post"
+    },
+    {
+      "file": "app/api/social/reddit/post/route.ts",
+      "route": "/api/social/reddit/post"
+    },
+    {
+      "file": "app/api/social/threads/post/route.ts",
+      "route": "/api/social/threads/post"
+    },
+    {
+      "file": "app/api/social/tiktok/post/route.ts",
+      "route": "/api/social/tiktok/post"
+    },
+    {
+      "file": "app/api/social/twitter/post/route.ts",
+      "route": "/api/social/twitter/post"
+    },
+    {
+      "file": "app/api/social/youtube/post/route.ts",
+      "route": "/api/social/youtube/post"
+    },
+    {
+      "file": "app/api/sponsors/[id]/deals/[dealId]/deliverables/[deliverableId]/route.ts",
+      "route": "/api/sponsors/[id]/deals/[dealId]/deliverables/[deliverableId]"
+    },
+    {
+      "file": "app/api/sponsors/[id]/deals/[dealId]/deliverables/route.ts",
+      "route": "/api/sponsors/[id]/deals/[dealId]/deliverables"
+    },
+    {
+      "file": "app/api/sponsors/[id]/deals/[dealId]/route.ts",
+      "route": "/api/sponsors/[id]/deals/[dealId]"
+    },
+    {
+      "file": "app/api/sponsors/[id]/deals/route.ts",
+      "route": "/api/sponsors/[id]/deals"
+    },
+    {
+      "file": "app/api/sponsors/[id]/route.ts",
+      "route": "/api/sponsors/[id]"
+    },
+    {
+      "file": "app/api/sponsors/pipeline/route.ts",
+      "route": "/api/sponsors/pipeline"
+    },
+    {
+      "file": "app/api/sponsors/route.ts",
+      "route": "/api/sponsors"
+    },
+    {
+      "file": "app/api/stats/route.ts",
+      "route": "/api/stats"
+    },
+    {
+      "file": "app/api/stripe/billing-portal/route.ts",
+      "route": "/api/stripe/billing-portal"
+    },
+    {
+      "file": "app/api/stripe/change-plan/route.ts",
+      "route": "/api/stripe/change-plan"
+    },
+    {
+      "file": "app/api/stripe/checkout/route.ts",
+      "route": "/api/stripe/checkout"
+    },
+    {
+      "file": "app/api/submissions/route.ts",
+      "route": "/api/submissions"
+    },
+    {
+      "file": "app/api/system/models/route.ts",
+      "route": "/api/system/models"
+    },
+    {
+      "file": "app/api/tasks/bulk/route.ts",
+      "route": "/api/tasks/bulk"
+    },
+    {
+      "file": "app/api/tasks/route.ts",
+      "route": "/api/tasks"
+    },
+    {
+      "file": "app/api/team/route.ts",
+      "route": "/api/team"
+    },
+    {
+      "file": "app/api/teams/[id]/settings/route.ts",
+      "route": "/api/teams/[id]/settings"
+    },
+    {
+      "file": "app/api/teams/activity/route.ts",
+      "route": "/api/teams/activity"
+    },
+    {
+      "file": "app/api/teams/invitations/[id]/route.ts",
+      "route": "/api/teams/invitations/[id]"
+    },
+    {
+      "file": "app/api/teams/invitations/route.ts",
+      "route": "/api/teams/invitations"
+    },
+    {
+      "file": "app/api/teams/invite-prompt/route.ts",
+      "route": "/api/teams/invite-prompt"
+    },
+    {
+      "file": "app/api/teams/invite/route.ts",
+      "route": "/api/teams/invite"
+    },
+    {
+      "file": "app/api/teams/members/[memberId]/role/route.ts",
+      "route": "/api/teams/members/[memberId]/role"
+    },
+    {
+      "file": "app/api/teams/members/[memberId]/route.ts",
+      "route": "/api/teams/members/[memberId]"
+    },
+    {
+      "file": "app/api/teams/members/route.ts",
+      "route": "/api/teams/members"
+    },
+    {
+      "file": "app/api/teams/members/search/route.ts",
+      "route": "/api/teams/members/search"
+    },
+    {
+      "file": "app/api/teams/notifications/route.ts",
+      "route": "/api/teams/notifications"
+    },
+    {
+      "file": "app/api/teams/stats/route.ts",
+      "route": "/api/teams/stats"
+    },
+    {
+      "file": "app/api/teams/team-card/route.ts",
+      "route": "/api/teams/team-card"
+    },
+    {
+      "file": "app/api/templates/[id]/route.ts",
+      "route": "/api/templates/[id]"
+    },
+    {
+      "file": "app/api/templates/[id]/use/route.ts",
+      "route": "/api/templates/[id]/use"
+    },
+    {
+      "file": "app/api/templates/route.ts",
+      "route": "/api/templates"
+    },
+    {
+      "file": "app/api/testimonials/[id]/post-to-gmb/route.ts",
+      "route": "/api/testimonials/[id]/post-to-gmb"
+    },
+    {
+      "file": "app/api/testimonials/[id]/route.ts",
+      "route": "/api/testimonials/[id]"
+    },
+    {
+      "file": "app/api/testimonials/requests/route.ts",
+      "route": "/api/testimonials/requests"
+    },
+    {
+      "file": "app/api/testimonials/route.ts",
+      "route": "/api/testimonials"
+    },
+    {
+      "file": "app/api/trending/route.ts",
+      "route": "/api/trending"
+    },
+    {
+      "file": "app/api/ugc/promote/route.ts",
+      "route": "/api/ugc/promote"
+    },
+    {
+      "file": "app/api/ugc/route.ts",
+      "route": "/api/ugc"
+    },
+    {
+      "file": "app/api/unified/metrics/route.ts",
+      "route": "/api/unified/metrics"
+    },
+    {
+      "file": "app/api/unite-group/route.ts",
+      "route": "/api/unite-group"
+    },
+    {
+      "file": "app/api/unite-group/status/route.ts",
+      "route": "/api/unite-group/status"
+    },
+    {
+      "file": "app/api/user/account/route.ts",
+      "route": "/api/user/account"
+    },
+    {
+      "file": "app/api/user/api-keys/route.ts",
+      "route": "/api/user/api-keys"
+    },
+    {
+      "file": "app/api/user/avatar/route.ts",
+      "route": "/api/user/avatar"
+    },
+    {
+      "file": "app/api/user/change-password/route.ts",
+      "route": "/api/user/change-password"
+    },
+    {
+      "file": "app/api/user/export/route.ts",
+      "route": "/api/user/export"
+    },
+    {
+      "file": "app/api/user/health-score/route.ts",
+      "route": "/api/user/health-score"
+    },
+    {
+      "file": "app/api/user/loyalty/route.ts",
+      "route": "/api/user/loyalty"
+    },
+    {
+      "file": "app/api/user/profile/route.ts",
+      "route": "/api/user/profile"
+    },
+    {
+      "file": "app/api/user/settings/route.ts",
+      "route": "/api/user/settings"
+    },
+    {
+      "file": "app/api/user/subscription/route.ts",
+      "route": "/api/user/subscription"
+    },
+    {
+      "file": "app/api/user/usage/route.ts",
+      "route": "/api/user/usage"
+    },
+    {
+      "file": "app/api/video/[id]/publish/route.ts",
+      "route": "/api/video/[id]/publish"
+    },
+    {
+      "file": "app/api/video/[id]/route.ts",
+      "route": "/api/video/[id]"
+    },
+    {
+      "file": "app/api/video/cards/route.ts",
+      "route": "/api/video/cards"
+    },
+    {
+      "file": "app/api/video/episodes/route.ts",
+      "route": "/api/video/episodes"
+    },
+    {
+      "file": "app/api/video/generate/route.ts",
+      "route": "/api/video/generate"
+    },
+    {
+      "file": "app/api/video/route.ts",
+      "route": "/api/video"
+    },
+    {
+      "file": "app/api/visuals/generate/route.ts",
+      "route": "/api/visuals/generate"
+    },
+    {
+      "file": "app/api/visuals/route.ts",
+      "route": "/api/visuals"
+    },
+    {
+      "file": "app/api/voice/analyze/route.ts",
+      "route": "/api/voice/analyze"
+    },
+    {
+      "file": "app/api/voice/capsule/route.ts",
+      "route": "/api/voice/capsule"
+    },
+    {
+      "file": "app/api/voice/context/route.ts",
+      "route": "/api/voice/context"
+    },
+    {
+      "file": "app/api/voice/slop-scan/route.ts",
+      "route": "/api/voice/slop-scan"
+    },
+    {
+      "file": "app/api/web-projects/[id]/route.ts",
+      "route": "/api/web-projects/[id]"
+    },
+    {
+      "file": "app/api/web-projects/route.ts",
+      "route": "/api/web-projects"
+    },
+    {
+      "file": "app/api/white-label/config/route.ts",
+      "route": "/api/white-label/config"
+    },
+    {
+      "file": "app/api/workflows/batch/[batchId]/route.ts",
+      "route": "/api/workflows/batch/[batchId]"
+    },
+    {
+      "file": "app/api/workflows/batch/route.ts",
+      "route": "/api/workflows/batch"
+    },
+    {
+      "file": "app/api/workflows/executions/[id]/approve/route.ts",
+      "route": "/api/workflows/executions/[id]/approve"
+    },
+    {
+      "file": "app/api/workflows/executions/[id]/audit/route.ts",
+      "route": "/api/workflows/executions/[id]/audit"
+    },
+    {
+      "file": "app/api/workflows/executions/[id]/cancel/route.ts",
+      "route": "/api/workflows/executions/[id]/cancel"
+    },
+    {
+      "file": "app/api/workflows/executions/[id]/reject/route.ts",
+      "route": "/api/workflows/executions/[id]/reject"
+    },
+    {
+      "file": "app/api/workflows/executions/[id]/route.ts",
+      "route": "/api/workflows/executions/[id]"
+    },
+    {
+      "file": "app/api/workflows/executions/route.ts",
+      "route": "/api/workflows/executions"
+    },
+    {
+      "file": "app/api/workflows/intelligence/route.ts",
+      "route": "/api/workflows/intelligence"
+    },
+    {
+      "file": "app/api/workflows/templates/route.ts",
+      "route": "/api/workflows/templates"
+    },
+    {
+      "file": "app/api/workspaces/[parentSlug]/route.ts",
+      "route": "/api/workspaces/[parentSlug]"
+    }
+  ]
+}

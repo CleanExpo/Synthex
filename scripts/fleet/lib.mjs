@@ -131,11 +131,23 @@ export function globToRegExp(glob) {
 export function isProtected(file, pol = policy()) {
   return pol.protected_paths.some(g => globToRegExp(g).test(file));
 }
+// No rename detection (a protected file renamed out of a protected dir must show its old path),
+// unquoted paths (core.quotePath quoted non-ASCII names past the protected globs) and NUL
+// separators (verifier audit).
 export function changedFiles(base, head = 'HEAD', cwd = ROOT) {
+  const args = d => [
+    '-c',
+    'core.quotePath=false',
+    'diff',
+    '--no-renames',
+    '--name-only',
+    '-z',
+    ...d,
+  ];
   const out =
-    tryGit(['diff', '--name-only', `${base}...${head}`], { cwd }) ??
-    git(['diff', '--name-only', base, head], { cwd });
-  return out ? out.split('\n').filter(Boolean) : [];
+    tryGit(args([`${base}...${head}`]), { cwd }) ??
+    git(args([base, head]), { cwd });
+  return out ? out.split('\0').filter(Boolean) : [];
 }
 export function commitTrailers(sha, cwd = ROOT) {
   const body = git(['show', '-s', '--format=%B', sha], { cwd });
@@ -146,10 +158,22 @@ export function commitTrailers(sha, cwd = ROOT) {
   }
   return t;
 }
+// A fleet commit has the fleet committer AND a Fleet-Role trailer naming a real role. Either one
+// alone used to suffice, so any author could attest a human commit as AI-only with
+// "Fleet-Role: none-really" (verifier audit). Both remain forgeable by someone with push access;
+// a signed-commit trust root is DECISIONS.md OPEN-4.
 export function isFleetCommit(sha, pol = policy(), cwd = ROOT) {
   const email = git(['show', '-s', '--format=%ce', sha], { cwd });
-  const t = commitTrailers(sha, cwd);
-  return email === pol.committer.email || Boolean(t[pol.committer.trailer]);
+  if (email !== pol.committer.email) return false;
+  const role = commitTrailers(sha, cwd)[pol.committer.trailer];
+  if (Object.prototype.hasOwnProperty.call(pol.roles || {}, String(role || '')))
+    return true;
+  // run-phase integrate's merge commits carry git's default message (no trailer); a fleet-committed
+  // merge still counts. Its content is checked as a pure merge elsewhere.
+  const parents = git(['show', '-s', '--format=%P', sha], { cwd })
+    .split(' ')
+    .filter(Boolean);
+  return parents.length > 1;
 }
 export function utcDate(d = new Date()) {
   return d.toISOString().slice(0, 10);

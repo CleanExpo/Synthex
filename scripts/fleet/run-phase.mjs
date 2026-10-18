@@ -283,9 +283,22 @@ function integrate(unitArg, refArg) {
     log('FAIL', 'secret pattern in diff; security STOP written');
     return 1;
   }
-  const m = run('git', ['merge', '--no-ff', '--no-edit', '-q', 'FETCH_HEAD'], {
-    cwd: ROOT,
-  });
+  const m = run(
+    'git',
+    [
+      '-c',
+      `user.name=${pol.committer.name}`,
+      '-c',
+      `user.email=${pol.committer.email}`,
+      'merge',
+      '--no-ff',
+      '-q',
+      '-m',
+      `Merge ${ref} (unit ${unit}) into ${branch}\n\nFleet-Role: orchestrator\nFleet-Unit: ${unit}`,
+      'FETCH_HEAD',
+    ],
+    { cwd: ROOT }
+  );
   if (m.code !== 0) {
     run('git', ['merge', '--abort']);
     ledgerAppend({
@@ -360,7 +373,29 @@ function retireStaleReceipt() {
   );
 }
 
+// Uncommitted changes outside the fleet's own bookkeeping. The gate binds its results to HEAD and
+// HEAD^{tree}, so a dirty tree would record a PASS for a tree that was never tested (verifier
+// audit). The ledger and this phase's own manifests are written by the flow itself.
+function dirtyFiles() {
+  const own = new RegExp(
+    `^(release-receipts/ledger/|release-receipts/manifests/${phase}-(gate|review|handoff|units)\\.(json|md)$)`
+  );
+  // Untrimmed: porcelain lines start with a status column that may be a space.
+  return run('git', ['status', '--porcelain', '--untracked-files=all', '-z'])
+    .stdout.split('\0')
+    .filter(Boolean)
+    .map(l => l.slice(3))
+    .filter(f => f && !own.test(f));
+}
 function gate() {
+  const dirty = dirtyFiles();
+  if (dirty.length) {
+    log(
+      'FAIL',
+      `working tree not clean, refusing to gate HEAD: ${dirty.slice(0, 5).join(', ')}`
+    );
+    return 1;
+  }
   retireStaleReceipt();
   const contract = readJson(`scripts/fleet/contracts/${phase}.json`);
   const cmds = [
@@ -439,7 +474,7 @@ function review() {
   const brief = path.join(os.tmpdir(), `brief-${phase}.md`);
   writeFileSync(
     brief,
-    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
+    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nCoverage: the review tool hides *.log and *.jsonl files (for example release-receipts/ledger/fleet.jsonl) from the diff and names them in diff_coverage.excluded_files. List each one in coverage.not_reviewed with that reason; a PASS must account for every changed file.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
   );
   const out = `release-receipts/manifests/${phase}-review.json`;
   const script = path.join(
@@ -449,18 +484,26 @@ function review() {
   let last = null;
   for (const lane of pol.review.lanes_in_order) {
     if (pol.review.never.includes(lane)) continue;
+    // A report left by an earlier attempt must never be read as this lane's (verifier audit).
+    rmSync(path.join(ROOT, out), { force: true });
     let r;
-    if (lane === 'minimax') {
-      // The MiniMax key lives only on the founder's Mac (mm-ask). Ship the commits as a bundle so no
-      // branch is pushed before the review names the head (spec: push only after the review report).
+    if (lane === 'minimax' || lane === 'codex') {
+      // Both run on the founder's Mac: the MiniMax key lives only there (mm-ask), and Codex's shell
+      // sandbox needs Linux user namespaces the Cloudroom sandbox does not allow (bwrap refuses), while
+      // macOS runs it. Ship the commits as a bundle so no branch is pushed before the review names the
+      // head (spec: push only after the review report). The reviewer reads a worktree checked out at
+      // the head, never the Mac's main checkout.
       const bundle = path.join(os.tmpdir(), `review-${phase}.bundle`);
       run('git', ['bundle', 'create', bundle, `${base}..HEAD`]);
       run('room-cli', ['mac', 'push', bundle, pol.mac.tmp], {
         timeout: 600000,
       });
       run('room-cli', ['mac', 'push', brief, pol.mac.tmp], { timeout: 120000 });
-      const macCmd = `source ${pol.mac.storage_env} 2>/dev/null; cd "${pol.mac.repo}" && git fetch -q origin main && git fetch -q -f "${pol.mac.tmp}/${path.basename(bundle)}" +${head}:refs/fleet/review-${phase} && rm -f "${pol.mac.tmp}/review-${phase}.json" && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief "${pol.mac.tmp}/${path.basename(brief)}" --base ${base} --head ${head} --repo "${pol.mac.repo}" --out "${pol.mac.tmp}/review-${phase}.json" --lane minimax; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat "${pol.mac.tmp}/review-${phase}.json" 2>/dev/null`;
-      const m = run('room-cli', ['mac', 'run', macCmd], { timeout: 1800000 });
+      const wt = `${pol.mac.worktrees}/review-${phase}`;
+      const macCmd = `source ${pol.mac.storage_env} 2>/dev/null; cd "${pol.mac.repo}" && git fetch -q origin main && git fetch -q -f "${pol.mac.tmp}/${path.basename(bundle)}" +${head}:refs/fleet/review-${phase} && { [ -d "${wt}" ] || git worktree add -q --detach "${wt}" ${head}; } && git -C "${wt}" checkout -q --detach -f ${head} && rm -f "${pol.mac.tmp}/review-${phase}.json" && python3 ~/.claude/skills/pr-release-gate/scripts/independent_review.py --brief "${pol.mac.tmp}/${path.basename(brief)}" --base ${base} --head ${head} --repo "${wt}" --out "${pol.mac.tmp}/review-${phase}.json" --lane ${lane}; echo MAC_EXIT=$?; echo REPORT-BEGIN; cat "${pol.mac.tmp}/review-${phase}.json" 2>/dev/null`;
+      const m = run('room-cli', ['mac', 'run', '--write', macCmd], {
+        timeout: 1800000,
+      });
       const body = m.stdout.includes('REPORT-BEGIN')
         ? m.stdout.slice(m.stdout.indexOf('REPORT-BEGIN') + 12).trim()
         : '';
@@ -531,7 +574,17 @@ function review() {
     last = r;
     if (r.code === 0 && existsSync(path.join(ROOT, out))) {
       const rep = readJson(out);
-      rep.head = rep.head || head;
+      // The report must name this exact head itself; it is never stamped with it.
+      const bound = String(rep.head_sha || rep.head || '');
+      if (bound !== head) {
+        log(
+          'FAIL',
+          `${lane}: report names ${bound.slice(0, 12) || 'no head'}, not ${head.slice(0, 12)}`
+        );
+        rmSync(path.join(ROOT, out), { force: true });
+        continue;
+      }
+      rep.head = head;
       rep.lane = rep.lane || lane;
       writeJson(out, rep);
       ledgerAppend({ kind: 'review', phase, head, lane, verdict: rep.verdict });
@@ -591,6 +644,13 @@ function release() {
     log('FAIL', `receipt not PASS: ${w.stdout.trim()}`);
     return 1;
   }
+  // Handoff doc for the next orchestrator thread (self-compaction; see docs/fleet/assistance-opportunities.md).
+  // Written before the receipt commit and committed with it, so the pushed head carries it (an amend
+  // after the push left it on a local-only commit that the PR, checks and merge never saw).
+  writeFileSync(
+    path.join(ROOT, `release-receipts/manifests/${phase}-handoff.md`),
+    `# Handoff ${phase} (${ph.slug})\n\nReviewed commit: ${reviewed}\nReceipt: release-receipts/${phase}.json\nGate manifest: ${gateFile}\nReview: release-receipts/manifests/${phase}-review.json\nUnits: release-receipts/manifests/${phase}-units.json (if any)\n\nNext phase: ${pol.phases[pol.phases.indexOf(ph) + 1]?.id || 'none'} — start with node scripts/fleet/phase-advance.mjs.\nOpen blockers: see BACKLOG.md between the fleet markers.\nSuggested skills: proof-discipline, control-readout, adversarial-review.\nNo secrets in this file.\n`
+  );
   // The gate manifest must be committed with the receipt so verify-receipt can read it at head.
   const sha = fleetCommit(
     `chore(fleet): ${phase} release receipt\n\nReviewed-Commit: ${reviewed}\nFleet-Role: releaser\nRatified-By: FD-3`,
@@ -598,6 +658,7 @@ function release() {
       `release-receipts/${phase}.json`,
       gateFile,
       `release-receipts/manifests/${phase}-review.json`,
+      `release-receipts/manifests/${phase}-handoff.md`,
       pol.ledger,
     ].filter(f => existsSync(path.join(ROOT, f)))
   );
@@ -618,22 +679,6 @@ function release() {
     log('FAIL', `push: ${p.stderr.trim().slice(0, 200)}`);
     return 1;
   }
-  // Handoff doc for the next orchestrator thread (self-compaction; see docs/fleet/assistance-opportunities.md).
-  writeFileSync(
-    path.join(ROOT, `release-receipts/manifests/${phase}-handoff.md`),
-    `# Handoff ${phase} (${ph.slug})\n\nReviewed commit: ${reviewed}\nReceipt: release-receipts/${phase}.json\nGate manifest: ${gateFile}\nReview: release-receipts/manifests/${phase}-review.json\nUnits: release-receipts/manifests/${phase}-units.json (if any)\n\nNext phase: ${pol.phases[pol.phases.indexOf(ph) + 1]?.id || 'none'} — start with node scripts/fleet/phase-advance.mjs.\nOpen blockers: see BACKLOG.md between the fleet markers.\nSuggested skills: proof-discipline, control-readout, adversarial-review.\nNo secrets in this file.\n`
-  );
-  run('git', ['add', `release-receipts/manifests/${phase}-handoff.md`]);
-  run('git', [
-    '-c',
-    `user.name=${pol.committer.name}`,
-    '-c',
-    `user.email=${pol.committer.email}`,
-    'commit',
-    '-q',
-    '--amend',
-    '--no-edit',
-  ]);
   ledgerAppend({ kind: 'push', phase, head, branch });
   log(
     'PASS',
@@ -697,16 +742,21 @@ function waitForChecks(head, timeoutMs) {
       'api',
       `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
       '--jq',
-      '[.check_runs[] | {name, status, conclusion}]',
+      '{total: .total_count, runs: [.check_runs[] | {name, status, conclusion}]}',
     ]);
     let cr = [];
+    let partial = true;
     try {
-      cr = JSON.parse(r.stdout);
+      const j = JSON.parse(r.stdout);
+      cr = j.runs;
+      partial = j.total !== cr.length;
     } catch {}
     // Required contexts come from the pull_request run, which registers after the push-run
     // finishes; a head missing any of them is still pending (P-1: merge refused on PR #997).
     const required = ['Build', 'Lint', 'Protected paths', 'Receipt verify'];
     const pending = cr.filter(c => c.status !== 'completed');
+    // A partial page is still pending, never all green.
+    if (partial) pending.push({ name: 'unread check-runs' });
     for (const name of required)
       if (!cr.some(c => c.name === name)) pending.push({ name });
     const failed = cr.filter(

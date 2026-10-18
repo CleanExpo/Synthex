@@ -20,7 +20,16 @@ import {
   run,
   isMain,
 } from '../fleet/lib.mjs';
-import { existsSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  appendFileSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const args = process.argv.slice(2);
@@ -95,17 +104,93 @@ export function verify(head, phase, cwd = ROOT) {
   }
   if (r.state !== 'PASS') problems.push(`receipt state ${r.state}`);
   // Binding: head differs from reviewed commit by the receipt file alone.
+  // A pinned 40-hex commit, never a ref, a prefix or a revision expression (verifier audit).
   const reviewed = r.reviewed_commit;
-  if (!reviewed || tryGit(['cat-file', '-t', reviewed], { cwd }) !== 'commit')
+  if (!/^[0-9a-f]{40}$/.test(String(reviewed || '')))
+    problems.push('reviewed_commit is not a full 40-hex commit SHA');
+  else if (tryGit(['cat-file', '-t', reviewed], { cwd }) !== 'commit')
     problems.push('reviewed_commit is not a commit in this repo');
   else {
     const diffRaw = tryGit(['diff', '--name-only', reviewed, sha], { cwd });
     if (diffRaw === null)
       problems.push('binding diff from reviewed commit failed');
-    const diff = (diffRaw || '').split('\n').filter(Boolean);
-    const extra = diff.filter(
-      f => f !== file && !/^release-receipts\/(ledger|manifests)\//.test(f)
+    // Only the files the release step itself writes with the receipt may differ from the reviewed
+    // commit (run-phase release). Any other manifest (policy-hash.json, selftest.json, another
+    // phase's gate) changed after review breaks the binding (Codex on P1 1f97dfb6).
+    const releaseWritten = new Set(
+      ['gate.json', 'review.json', 'handoff.md'].map(
+        n => `release-receipts/manifests/${p}-${n}`
+      )
     );
+    const outside = range =>
+      (range || '')
+        .split('\n')
+        .filter(Boolean)
+        .filter(
+          f =>
+            f !== file &&
+            !releaseWritten.has(f) &&
+            !/^release-receipts\/ledger\//.test(f)
+        );
+    let extra = outside(diffRaw);
+    // The ledger may only grow after review: a rewritten or truncated row (for example a
+    // human-intervention row) breaks the binding (verifier audit).
+    for (const f of (diffRaw || '')
+      .split('\n')
+      .filter(x => /^release-receipts\/ledger\//.test(x))) {
+      const before = tryGit(['show', `${reviewed}:${f}`], { cwd });
+      const after = tryGit(['show', `${sha}:${f}`], { cwd });
+      if (before !== null && (after === null || !after.startsWith(before)))
+        problems.push(`ledger ${f} rewritten after review (append-only)`);
+    }
+    // A merge commit on main (merge-phase merges with --merge) also carries whatever main gained
+    // after the branch was cut (P0 #1005 after #998). It passes only as a PURE merge: one parent is
+    // bound to the reviewed commit, every file the merge changes against that parent equals another
+    // parent's copy, and every other parent is already on main, so what it brings was released on
+    // its own (CodeRabbit on PR #1015: a merge could copy unreviewed source from an arbitrary
+    // parent). No main ref to check against means not pure (fail closed).
+    if (extra.length) {
+      const mainRef = ['refs/remotes/origin/main', 'refs/heads/main'].find(
+        ref => tryGit(['rev-parse', '--verify', '-q', ref], { cwd })
+      );
+      const onMain = c =>
+        Boolean(mainRef) &&
+        tryGit(['merge-base', '--is-ancestor', c, mainRef], { cwd }) !== null;
+      const parents = (tryGit(['rev-parse', `${sha}^@`], { cwd }) || '')
+        .split('\n')
+        .filter(Boolean);
+      const blob = (c, f) => tryGit(['rev-parse', `${c}:${f}`], { cwd });
+      const pure =
+        parents.length > 1 &&
+        parents.some(p => {
+          if (
+            outside(tryGit(['diff', '--name-only', reviewed, p], { cwd }))
+              .length
+          )
+            return false;
+          const others = parents.filter(o => o !== p);
+          if (!others.every(onMain)) return false;
+          const merged = (
+            tryGit(['diff', '--name-only', p, sha], { cwd }) || ''
+          )
+            .split('\n')
+            .filter(Boolean);
+          // A file the merge changes must come from a parent that itself changed it since the
+          // merge base, as a real three-way merge would take it; equal-but-unchanged (an old main
+          // ancestor, or a deletion both sides lack) is a revert, not a merge (verifier audit).
+          return merged.every(f =>
+            others.some(o => {
+              const mb = tryGit(['merge-base', p, o], { cwd });
+              return (
+                Boolean(mb) &&
+                blob(o, f) === blob(sha, f) &&
+                blob(o, f) !== blob(mb, f)
+              );
+            })
+          );
+        });
+      if (pure) extra = [];
+    }
     if (extra.length)
       problems.push(
         `diff from reviewed commit holds more than the receipt: ${extra.slice(0, 5).join(', ')}`
@@ -116,7 +201,11 @@ export function verify(head, phase, cwd = ROOT) {
         `tested_tree ${String(r.tested_tree).slice(0, 12)} != tree of reviewed commit ${String(tree).slice(0, 12)}`
       );
   }
-  if (r.review_report) {
+  if (typeof r.review_report !== 'string' || !r.review_report.trim())
+    problems.push(
+      'receipt names no review report (an independent review is required)'
+    );
+  else {
     const rep = tryGit(['show', `${sha}:${r.review_report}`], { cwd });
     if (rep === null)
       problems.push(`review report ${r.review_report} absent at head`);
@@ -125,14 +214,20 @@ export function verify(head, phase, cwd = ROOT) {
         const j = JSON.parse(rep);
         const bound = String(j.head_sha || j.head || '');
         if (!bound) problems.push('review report names no head');
-        else if (
-          !String(r.reviewed_commit).startsWith(bound) &&
-          !bound.startsWith(String(r.reviewed_commit))
-        )
-          problems.push('review report names a different head');
+        else if (bound !== String(r.reviewed_commit))
+          problems.push(
+            'review report does not name the reviewed commit (full 40-hex SHA required)'
+          );
         if (!('verdict' in j)) problems.push('review report has no verdict');
         else if (!/^(pass|approve)$/i.test(String(j.verdict).trim()))
           problems.push(`review verdict ${j.verdict}`);
+        const failed = (Array.isArray(j.checklist) ? j.checklist : []).filter(
+          c => String(c?.verdict || '').toUpperCase() === 'FAIL'
+        );
+        if (failed.length)
+          problems.push(
+            `review checklist has FAIL items: ${failed.map(c => c.id).join(', ')}`
+          );
         const blocking = j.blocking_findings ?? j.findings ?? [];
         if (Array.isArray(blocking) ? blocking.length : blocking)
           problems.push(
@@ -192,30 +287,191 @@ export function write({
   writeJson(path.join(cwd, `release-receipts/${phase}.json`), receipt);
   return receipt;
 }
+function fs_appendLedger(dir, row) {
+  appendFileSync(path.join(dir, 'release-receipts/ledger/fleet.jsonl'), row);
+}
 function control() {
-  // Negative: a receipt whose reviewed_commit is an older commit with other files in the diff must fail.
-  const head = git(['rev-parse', 'HEAD']);
-  const older = tryGit(['rev-parse', 'HEAD~3']) || head;
-  const fake = {
-    phase: 'P99',
-    reviewed_commit: older,
-    tested_tree: 'x',
-    review_report: null,
-    cost_ledger: {},
-    gate: [{ cmd: 'true', state: 'PASS' }],
-    state: 'PASS',
-  };
-  // Evaluate the same rules in-process against a fake head with no receipt file -> must not be ok.
-  const res = verify(head, 'P99');
-  const okA = res.ok === false;
-  const okB = fake.tested_tree !== git(['rev-parse', `${older}^{tree}`]);
-  return okA && okB;
+  // A: no receipt at head must fail. B and C exercise the rule-B3 binding in a scratch repo:
+  // a head that differs from the reviewed commit by the receipt alone passes (B), and the
+  // same receipt with any other file changed after review fails on the binding (C).
+  const okA = verify(git(['rev-parse', 'HEAD']), 'P99').ok === false;
+  const dir = mkdtempSync(path.join(tmpdir(), 'receipt-control-'));
+  try {
+    const g = a => git(a, { cwd: dir });
+    const id = ['-c', 'user.name=control', '-c', 'user.email=control@local'];
+    g(['init', '-q']);
+    // verify() also requires the phase contract at head and its commands PASS in the receipt gate.
+    mkdirSync(path.join(dir, 'scripts/fleet/contracts'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'scripts/fleet/contracts/P99.json'),
+      JSON.stringify({ cumulative_gate: ['true'], criteria: [] })
+    );
+    mkdirSync(path.join(dir, 'release-receipts/ledger'), { recursive: true });
+    writeFileSync(
+      path.join(dir, 'release-receipts/ledger/fleet.jsonl'),
+      '{"kind":"human-intervention","phase":"P99"}\n'
+    );
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'root']);
+    const root = g(['rev-parse', 'HEAD']);
+    writeFileSync(path.join(dir, 'a.txt'), 'reviewed\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'reviewed']);
+    const reviewed = g(['rev-parse', 'HEAD']);
+    const report = 'release-receipts/manifests/P99-review.json';
+    const receipt = over =>
+      JSON.stringify({
+        phase: 'P99',
+        reviewed_commit: reviewed,
+        tested_tree: g(['rev-parse', `${reviewed}^{tree}`]),
+        review_report: report,
+        cost_ledger: {},
+        gate: [{ cmd: 'true', state: 'PASS' }],
+        state: 'PASS',
+        ...over,
+      });
+    mkdirSync(path.join(dir, 'release-receipts/manifests'), {
+      recursive: true,
+    });
+    writeFileSync(
+      path.join(dir, report),
+      JSON.stringify({
+        head_sha: reviewed,
+        verdict: 'PASS',
+        blocking_findings: [],
+      })
+    );
+    writeFileSync(path.join(dir, 'release-receipts/P99.json'), receipt({}));
+    fs_appendLedger(dir, '{"kind":"review","phase":"P99"}\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'receipt']);
+    const okB = verify(g(['rev-parse', 'HEAD']), 'P99', dir).ok === true;
+    writeFileSync(path.join(dir, 'a.txt'), 'changed after review\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'post-review change']);
+    const c = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okC =
+      c.ok === false &&
+      c.problems.some(x => x.startsWith('diff from reviewed commit'));
+    // D: a pure merge of the receipt head with a main that moved after review passes. E: the same
+    // merge with a change made inside the merge commit fails on the binding.
+    g([...id, 'reset', '-q', '--hard', 'HEAD~1']);
+    const receiptHead = g(['rev-parse', 'HEAD']);
+    g(['checkout', '-q', '-b', 'moved-main', reviewed]);
+    writeFileSync(path.join(dir, 'b.txt'), 'landed on main after review\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'main moved']);
+    g(['branch', '-f', 'main', 'HEAD']);
+    g([
+      ...id,
+      'merge',
+      '-q',
+      '--no-ff',
+      '-m',
+      'merge receipt head',
+      receiptHead,
+    ]);
+    const okD = verify(g(['rev-parse', 'HEAD']), 'P99', dir).ok === true;
+    writeFileSync(path.join(dir, 'a.txt'), 'changed inside the merge\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '--amend', '--no-edit']);
+    const e = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okE =
+      e.ok === false &&
+      e.problems.some(x => x.startsWith('diff from reviewed commit'));
+    // F: a manifest the release step does not write (policy-hash.json), changed after review, fails.
+    g([...id, 'checkout', '-q', '--detach', receiptHead]);
+    mkdirSync(path.join(dir, 'release-receipts/manifests'), {
+      recursive: true,
+    });
+    writeFileSync(
+      path.join(dir, 'release-receipts/manifests/policy-hash.json'),
+      '{"sha256":"changed after review"}\n'
+    );
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'manifest changed after review']);
+    const f = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okF =
+      f.ok === false &&
+      f.problems.some(x => x.startsWith('diff from reviewed commit'));
+    // G: a merge that copies an unreviewed source change from a parent that is not on main fails.
+    g(['checkout', '-q', '-b', 'unreviewed', reviewed]);
+    writeFileSync(path.join(dir, 'a.txt'), 'unreviewed change\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'unreviewed']);
+    g(['checkout', '-q', '--detach', receiptHead]);
+    g([
+      ...id,
+      'merge',
+      '-q',
+      '--no-ff',
+      '-X',
+      'theirs',
+      '-m',
+      'copy from unreviewed parent',
+      'unreviewed',
+    ]);
+    const gv = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okG =
+      gv.ok === false &&
+      gv.problems.some(x => x.startsWith('diff from reviewed commit'));
+    // H: the same receipt with no review report fails. I: a receipt commit that rewrites the
+    // ledger (drops the human-intervention row) fails. J: a merge whose other parent is an old
+    // main ancestor, deleting a reviewed file, fails. K: a short reviewed_commit fails.
+    const variant = (over, mutate) => {
+      g(['checkout', '-q', '-f', '--detach', receiptHead]);
+      writeFileSync(path.join(dir, 'release-receipts/P99.json'), receipt(over));
+      if (mutate) mutate();
+      g(['add', '-A']);
+      g([...id, 'commit', '-q', '--allow-empty', '-m', 'variant']);
+      return verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    };
+    const h = variant({ review_report: null });
+    const okH = !h.ok && h.problems.some(x => x.includes('no review report'));
+    const i = variant({}, () =>
+      writeFileSync(
+        path.join(dir, 'release-receipts/ledger/fleet.jsonl'),
+        '{"kind":"review","phase":"P99"}\n'
+      )
+    );
+    const okI = !i.ok && i.problems.some(x => x.includes('append-only'));
+    g(['checkout', '-q', '-f', '--detach', receiptHead]);
+    g(['rm', '-q', 'a.txt']);
+    const revertTree = g(['write-tree']);
+    const revert = g([
+      ...id,
+      'commit-tree',
+      revertTree,
+      '-p',
+      receiptHead,
+      '-p',
+      root,
+      '-m',
+      'revert via old ancestor',
+    ]);
+    g(['checkout', '-q', '-f', '--detach', receiptHead]);
+    const jv = verify(revert, 'P99', dir);
+    const okJ =
+      !jv.ok &&
+      jv.problems.some(x => x.startsWith('diff from reviewed commit'));
+    const k = variant({ reviewed_commit: reviewed.slice(0, 12) });
+    const okK =
+      !k.ok &&
+      k.problems.some(x =>
+        x.startsWith('reviewed_commit is not a full 40-hex')
+      );
+    return (
+      okA && okB && okC && okD && okE && okF && okG && okH && okI && okJ && okK
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent/mismatched receipt rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected, merge copying from an unreviewed parent rejected, no review report / ledger rewrite / old-ancestor revert / short reviewed_commit rejected)`
     );
     process.exit(ok ? 0 : 1);
   }

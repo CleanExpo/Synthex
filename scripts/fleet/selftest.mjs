@@ -51,10 +51,30 @@ const planted = [
   { kind: 'shell', command: 'git commit --no-verify -m x', role: 'builder' },
   { kind: 'shell', command: 'gh pr merge 1 --squash', role: 'builder' },
   { kind: 'mcp', tool: 'supabase.apply_migration', role: 'builder' },
+  // Bypass forms the verifier audit proved (path and whitespace variants, API and refspec forms).
+  { kind: 'write', path: './scripts/fleet/policy.json', role: 'builder' },
+  { kind: 'write', path: 'lib/../scripts/fleet/policy.json', role: 'builder' },
+  {
+    kind: 'shell',
+    command: 'git  push  --force origin main',
+    role: 'orchestrator',
+  },
+  { kind: 'shell', command: 'git push origin +main', role: 'orchestrator' },
+  { kind: 'shell', command: 'git push origin :main', role: 'orchestrator' },
+  {
+    kind: 'shell',
+    command: 'gh api -X PUT repos/o/r/pulls/1/merge',
+    role: 'orchestrator',
+  },
 ];
 const benign = [
   { kind: 'write', path: 'lib/platform/status.ts', role: 'builder' },
   { kind: 'shell', command: 'npm test -- tests/unit', role: 'builder' },
+  {
+    kind: 'shell',
+    command: 'git push -u origin feature/fleet-p1-x',
+    role: 'orchestrator',
+  },
   { kind: 'mcp', tool: 'synthex.performance_get_outcomes', role: 'reader' },
 ];
 const denied = planted

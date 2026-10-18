@@ -1,0 +1,50 @@
+{
+  "schema": "jev-known-gaps/1",
+  "family": "J2",
+  "gaps": {
+    "J2-GAP-admin-credentials-empty-on-error": {
+      "cases": ["J2-admin.platform-credentials"],
+      "note": "GET /api/admin/platform-credentials catches any platformOAuthCredential.findMany failure (not only a missing table) and returns 200 {credentials:[]}, so an outage reads as \"no credentials stored\"."
+    },
+    "J2-GAP-error-under-2xx": {
+      "cases": ["J2-billing.dunning-state", "J2-invoices"],
+      "note": "The failed or unconfigured read is reported in the body (error field) under HTTP 200, and dunning-state also asserts state:\"current\". Needs a 5xx/503 or available:false."
+    },
+    "J2-GAP-integrations-all-false-on-error": {
+      "cases": ["J2-integrations"],
+      "note": "GET /api/integrations catches the platformConnection read failure and returns the all-false emptyIntegrations default with 200, so a database outage reads as \"nothing connected\"."
+    },
+    "J2-GAP-profile-null-fallback": {
+      "cases": ["J2-brand.dna", "J2-brand.profile", "J2-dashboard.bio"],
+      "note": "Profile reads catch the database error and return 200 with a null or blank profile ({profile:null}, null vault fields, empty bio with memberSince stamped from the clock)."
+    },
+    "J2-GAP-swallowed-list-reads": {
+      "cases": [
+        "J2-intelligence.competitors",
+        "J2-monitoring.errors",
+        "J2-notifications"
+      ],
+      "note": "Routes that still import lib/platform/noop-client: the route or its service catches the data failure and returns 200 with empty lists and zero counts. P2 (retire the stub) owns these."
+    },
+    "J2-GAP-zeroed-metrics-fallback": {
+      "cases": [
+        "J2-analytics.dashboard",
+        "J2-dashboard.awards",
+        "J2-dashboard.citation",
+        "J2-dashboard.eeat",
+        "J2-dashboard.experiments",
+        "J2-dashboard.geo",
+        "J2-dashboard.onboarding-summary",
+        "J2-dashboard.personalisation-status",
+        "J2-dashboard.referrals",
+        "J2-dashboard.roi",
+        "J2-dashboard.sponsors",
+        "J2-dashboard.visuals",
+        "J2-dashboard.voice",
+        "J2-onboarding.kickstart",
+        "J2-stats"
+      ],
+      "note": "Dashboard and stats reads catch the database error and return 200 with every metric zeroed and lists empty (stats adds a fabricated \"1.0x\" engagement multiplier), so an outage renders as a real zero."
+    }
+  }
+}

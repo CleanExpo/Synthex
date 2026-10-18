@@ -1,0 +1,859 @@
+{
+  "schema": "jev-j4-probes/1",
+  "spec": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md",
+  "note": "J4 script part: 50 gaps x 4 probes (exists, rest, mcp, typed) = 200 cases. Receipt and idempotent probes and the 100 model-pair cases are reserved by the spec for later.",
+  "probe_kinds": ["exists", "rest", "mcp", "typed"],
+  "mcp_registry_dir": "lib/services/ai/studio-tools",
+  "route_root": "app",
+  "auth_markers": [
+    "getUserIdFromRequestOrCookies",
+    "verifyCronRequest",
+    "APISecurityChecker",
+    "withAuth",
+    "withOrg",
+    "verifyAdmin",
+    "requireApiKey",
+    "requireAuth",
+    "resolveOrgFromBearer",
+    "getServerSession",
+    "CRON_SECRET",
+    "verify\\w*Signature",
+    "x-api-key",
+    "auth\\.getUser"
+  ],
+  "response_schema_marker": "\\b[A-Za-z]\\w*(Response|Output|Result)Schema\\b",
+  "gaps": [
+    {
+      "slug": "m1-approval-workflow",
+      "m": "M1",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:313",
+      "capability": "Approval workflow service on a real data layer",
+      "exists": {
+        "files": ["lib/services/approval-workflow.ts"],
+        "symbol": "^approvalWorkflow$",
+        "forbid_import": "platform/noop-client"
+      },
+      "rest": {
+        "route": "^/api/approvals$"
+      },
+      "mcp": {
+        "tool": "^approvals_list_pending$"
+      }
+    },
+    {
+      "slug": "m1-competitive-intel",
+      "m": "M1",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:313",
+      "capability": "Competitive-intel reads on a real data layer (no swallowed stub throw)",
+      "exists": {
+        "files": ["lib/services/competitive-intel.ts"],
+        "symbol": "^competitiveIntel$",
+        "forbid_import": "platform/noop-client"
+      },
+      "rest": {
+        "route": "^/api/competitors(/|$)"
+      },
+      "mcp": {
+        "tool": "^\\w*compet\\w*$"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:247"
+    },
+    {
+      "slug": "m1-email-send",
+      "m": "M1",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:313",
+      "capability": "Email send on a real data layer",
+      "exists": {
+        "files": ["app/api/email/send/route.ts"],
+        "symbol": "^POST$",
+        "forbid_import": "platform/noop-client"
+      },
+      "rest": {
+        "route": "^/api/email/send$"
+      },
+      "mcp": {
+        "tool": "^\\w*email\\w*$"
+      }
+    },
+    {
+      "slug": "m1-media-library",
+      "m": "M1",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:313",
+      "capability": "Media library on a real data layer, not the throwing stub",
+      "exists": {
+        "files": ["lib/services/media-library.ts"],
+        "symbol": "^mediaLibraryService$",
+        "forbid_import": "platform/noop-client"
+      },
+      "rest": {
+        "route": "^/api/media/library(/|$)"
+      },
+      "mcp": {
+        "tool": "^search_media_library$"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:231"
+    },
+    {
+      "slug": "m1-video-archive",
+      "m": "M1",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:313",
+      "capability": "Video artifact archive on a real data layer",
+      "exists": {
+        "files": ["lib/services/ai/video/artifact-store.ts"],
+        "symbol": "^storeArtifact$",
+        "forbid_import": "platform/noop-client"
+      },
+      "rest": {
+        "route": "^/api/video/(archive|artifacts)(/|$)"
+      },
+      "mcp": {
+        "tool": "^(get_job|list_jobs)$"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:231"
+    },
+    {
+      "slug": "m10-client-metering",
+      "m": "M10",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:322",
+      "capability": "Per-client cost metering exposed to agents",
+      "exists": {
+        "files": ["lib/budget/per-location-ledger.ts"],
+        "symbol": "^getMonthlyBudgetUtilisation$"
+      },
+      "rest": {
+        "route": "^/api/(budget|usage|metering)(/|$)"
+      },
+      "mcp": {
+        "tool": "^performance_cost_report$"
+      }
+    },
+    {
+      "slug": "m10-image-quote",
+      "m": "M10",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:322",
+      "capability": "Pre-run cost quote for image generation",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(quote|estimate)\\w*Image\\w*(Cost)?$"
+      },
+      "rest": {
+        "route": "^/api/(media/generate/image|ai/image)/(quote|estimate)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(quote|estimate)\\w*image\\w*$"
+      }
+    },
+    {
+      "slug": "m10-video-quote",
+      "m": "M10",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:322",
+      "capability": "Pre-run cost quote for video generation",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(quote|estimate)\\w*Video\\w*(Cost)?$"
+      },
+      "rest": {
+        "route": "^/api/(media/generate/video|video)/(quote|estimate)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(quote|estimate)\\w*video\\w*$"
+      }
+    },
+    {
+      "slug": "m11-cron-outcomes",
+      "m": "M11",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:323",
+      "capability": "Machine read of cron job outcomes",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(get|list|read)\\w*Cron\\w*(Runs|Outcomes|Results)$"
+      },
+      "rest": {
+        "route": "^/api/admin/(jobs|cron-runs|cron)$"
+      },
+      "mcp": {
+        "tool": "^\\w*cron\\w*$"
+      }
+    },
+    {
+      "slug": "m11-org-spend",
+      "m": "M11",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:323",
+      "capability": "Machine read of org spend",
+      "exists": {
+        "dirs": ["lib/ai"],
+        "symbol": "^getOrgSpendSnapshot$"
+      },
+      "rest": {
+        "route": "^/api/admin/org-spend$"
+      },
+      "mcp": {
+        "tool": "^\\w*(org_spend|spend)\\w*$"
+      }
+    },
+    {
+      "slug": "m11-platform-health",
+      "m": "M11",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:323",
+      "capability": "Machine read of platform health",
+      "exists": {
+        "files": ["lib/health/composite-score.ts"],
+        "symbol": "^computeCompositeHealthScore$"
+      },
+      "rest": {
+        "route": "^/api/(admin/health|health/composite)$"
+      },
+      "mcp": {
+        "tool": "^\\w*health\\w*$"
+      }
+    },
+    {
+      "slug": "m12-google-review-monitor",
+      "m": "M12",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:324",
+      "capability": "Google review monitoring read",
+      "exists": {
+        "dirs": ["lib/gbp", "lib/reviews", "lib/google"],
+        "symbol": "^(list|get|fetch|sync)\\w*Reviews$"
+      },
+      "rest": {
+        "route": "^/api/google-business/reviews$"
+      },
+      "mcp": {
+        "tool": "(^|_)reviews?(_|$)"
+      }
+    },
+    {
+      "slug": "m12-multi-source-reviews",
+      "m": "M12",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:324",
+      "capability": "Review monitoring beyond Google",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(Yelp|Trustpilot|Facebook|ProductReview|Hipages)\\w*Reviews?\\w*$"
+      },
+      "rest": {
+        "route": "^/api/reviews/(yelp|trustpilot|facebook|sources)$"
+      },
+      "mcp": {
+        "tool": "(^|_)review_sources?(_|$)"
+      }
+    },
+    {
+      "slug": "m12-review-reply",
+      "m": "M12",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:324",
+      "capability": "Review reply bound to a template and claims check",
+      "exists": {
+        "dirs": ["lib/gbp", "lib/reviews", "lib/google"],
+        "symbol": "^\\w*(reply|Reply)\\w*Review\\w*|^\\w*Review\\w*Reply\\w*$"
+      },
+      "rest": {
+        "route": "^/api/google-business/reviews/\\[\\w+\\]/reply$"
+      },
+      "mcp": {
+        "tool": "(^|_)reviews?_\\w*repl"
+      }
+    },
+    {
+      "slug": "m12-review-request",
+      "m": "M12",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:324",
+      "capability": "Consent-safe review-request campaign with opt-out",
+      "exists": {
+        "files": ["lib/reviews/review-request-service.ts"],
+        "symbol": "^sendReviewRequest$"
+      },
+      "rest": {
+        "route": "^/api/reviews/request$"
+      },
+      "mcp": {
+        "tool": "(^|_)review_request"
+      }
+    },
+    {
+      "slug": "m13-rank-grid",
+      "m": "M13",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:325",
+      "capability": "Local map-pack rank grid",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(RankGrid|rankGrid|GeoGrid|geoGrid|MapPack|mapPack)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(seo|local)/(rank-grid|geo-grid|map-pack)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(rank_grid|map_pack)\\w*$"
+      }
+    },
+    {
+      "slug": "m14-white-label-portal",
+      "m": "M14",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:326",
+      "capability": "White-label multi-client portal",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(WhiteLabel|whiteLabel)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/white-label/config$"
+      },
+      "mcp": {
+        "tool": "^\\w*white_label\\w*$"
+      }
+    },
+    {
+      "slug": "m2-key-caps",
+      "m": "M2",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:314",
+      "capability": "Per-key rate and spend caps",
+      "exists": {
+        "dirs": ["lib", "app/api/mcp"],
+        "symbol": "^\\w*(PerKey|KeyRate|KeySpend|keyRate|keySpend)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/admin/mcp-keys/\\[\\w+\\]/(limits|caps)$"
+      },
+      "mcp": {
+        "tool": "^\\w*key_(limits|caps)\\w*$"
+      }
+    },
+    {
+      "slug": "m2-key-mint",
+      "m": "M2",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:314",
+      "capability": "Admin route that mints hashed, scoped MCP keys",
+      "exists": {
+        "files": ["app/api/mcp/auth.ts"],
+        "symbol": "^hashMcpKey$"
+      },
+      "rest": {
+        "route": "^/api/admin/mcp-keys$",
+        "methods": ["POST"]
+      },
+      "mcp": {
+        "tool": "^\\w*(mint|create)_\\w*key\\w*$"
+      }
+    },
+    {
+      "slug": "m2-key-revoke",
+      "m": "M2",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:314",
+      "capability": "Revoke a scoped key",
+      "exists": {
+        "files": ["app/api/admin/mcp-keys/route.ts"],
+        "symbol": "^DELETE$",
+        "contains": "revokedAt"
+      },
+      "rest": {
+        "route": "^/api/admin/mcp-keys(/\\[\\w+\\])?$",
+        "methods": ["DELETE"]
+      },
+      "mcp": {
+        "tool": "^\\w*revoke\\w*$"
+      }
+    },
+    {
+      "slug": "m2-oauth-dcr",
+      "m": "M2",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:314",
+      "capability": "OAuth dynamic client registration for agents",
+      "exists": {
+        "dirs": ["lib", "app/api"],
+        "symbol": "^\\w*(registerClient|ClientRegistration|DynamicClient)\\w*$"
+      },
+      "rest": {
+        "route": "^/(api/)?(oauth|mcp)/register$"
+      },
+      "mcp": {
+        "tool": "^\\w*register_client\\w*$"
+      }
+    },
+    {
+      "slug": "m2-oauth-metadata",
+      "m": "M2",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:314",
+      "capability": "OAuth authorization-server / protected-resource metadata endpoint",
+      "exists": {
+        "dirs": ["app", "public"],
+        "contains": "registration_endpoint|oauth-authorization-server|oauth-protected-resource"
+      },
+      "rest": {
+        "route": "^/\\.well-known/oauth-(authorization-server|protected-resource)"
+      },
+      "mcp": {
+        "tool": "^\\w*oauth_metadata\\w*$"
+      }
+    },
+    {
+      "slug": "m2-scoped-rest-key",
+      "m": "M2",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:314",
+      "capability": "Scoped machine principal accepted by user-facing REST routes",
+      "exists": {
+        "dirs": ["lib/auth", "lib/middleware"],
+        "symbol": "^(resolve|verify|authenticate|require)\\w*(Machine|Scoped|Mcp)\\w*(Key|Principal|Credential)$"
+      },
+      "rest": {
+        "route": "^/api/v1/",
+        "auth": "(resolve|verify|authenticate|require)\\w*(Machine|Scoped|Mcp)\\w*(Key|Principal|Credential)"
+      },
+      "mcp": {
+        "tool": "^\\w*(whoami|key_scopes|get_principal)\\w*$"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:232"
+    },
+    {
+      "slug": "m3-error-codes",
+      "m": "M3",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:315",
+      "capability": "Stable machine error-code catalogue",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(ERROR_CODES|ErrorCode|API_ERROR_CODES|ApiErrorCode)$"
+      },
+      "rest": {
+        "route": "^/api/(error-codes|errors)$"
+      },
+      "mcp": {
+        "tool": "^\\w*error_codes\\w*$"
+      }
+    },
+    {
+      "slug": "m3-llms-index",
+      "m": "M3",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:315",
+      "capability": "llms.txt index that lists the machine routes",
+      "exists": {
+        "files": ["public/llms.txt"],
+        "contains": "/api/"
+      },
+      "rest": {
+        "route": "^/(api/)?llms(\\.txt)?$"
+      },
+      "mcp": {
+        "tool": "^\\w*(llms|capabilities)\\w*$"
+      }
+    },
+    {
+      "slug": "m3-openapi",
+      "m": "M3",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:315",
+      "capability": "OpenAPI document for every route",
+      "exists": {
+        "files": [
+          "public/openapi.json",
+          "public/openapi.yaml",
+          "docs/openapi.json",
+          "docs/openapi.yaml",
+          "openapi.json",
+          "openapi.yaml"
+        ],
+        "contains": "\"?openapi\"?\\s*:"
+      },
+      "rest": {
+        "route": "^/api/(openapi|spec|docs/openapi)(\\.json)?$"
+      },
+      "mcp": {
+        "tool": "^\\w*(openapi|contract)\\w*$"
+      }
+    },
+    {
+      "slug": "m3-rate-limit-table",
+      "m": "M3",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:315",
+      "capability": "Published rate-limit table",
+      "exists": {
+        "dirs": ["lib", "docs/api", "public"],
+        "symbol": "^(RATE_LIMIT_TABLE|PUBLISHED_RATE_LIMITS|RATE_LIMITS)$"
+      },
+      "rest": {
+        "route": "^/api/(rate-limits|limits)$"
+      },
+      "mcp": {
+        "tool": "^\\w*rate_limits?\\w*$"
+      }
+    },
+    {
+      "slug": "m4-booking-outcome",
+      "m": "M4",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:316",
+      "capability": "Outcome writer: bookings per location",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(record|write|log|create)\\w*Booking(Outcome|Event)?$"
+      },
+      "rest": {
+        "route": "^/api/outcomes/bookings$"
+      },
+      "mcp": {
+        "tool": "^\\w*(record|write|log)_\\w*booking\\w*$"
+      }
+    },
+    {
+      "slug": "m4-call-outcome",
+      "m": "M4",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:316",
+      "capability": "Outcome writer: phone calls per location",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(record|write|log|create)\\w*(Call)(Outcome|Event)?$"
+      },
+      "rest": {
+        "route": "^/api/outcomes/calls$"
+      },
+      "mcp": {
+        "tool": "^\\w*(record|write|log)_\\w*call\\w*$"
+      }
+    },
+    {
+      "slug": "m4-directions-outcome",
+      "m": "M4",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:316",
+      "capability": "Outcome writer: direction requests per location",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(record|write|log|create)\\w*Direction\\w*$"
+      },
+      "rest": {
+        "route": "^/api/outcomes/directions$"
+      },
+      "mcp": {
+        "tool": "^\\w*(record|write|log)_\\w*direction\\w*$"
+      }
+    },
+    {
+      "slug": "m4-outcome-dedupe",
+      "m": "M4",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:316",
+      "capability": "Dedupe key per outcome event",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(outcomeDedupe|OutcomeDedupe|eventDedupeKey|dedupeKeyFor)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/outcomes(/|$)"
+      },
+      "mcp": {
+        "tool": "^\\w*outcome\\w*dedupe\\w*$"
+      }
+    },
+    {
+      "slug": "m4-outcome-writer",
+      "m": "M4",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:316",
+      "capability": "Generic org-scoped outcome writer",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(record|write|create)\\w*Outcome$"
+      },
+      "rest": {
+        "route": "^/api/outcomes$",
+        "methods": ["POST"]
+      },
+      "mcp": {
+        "tool": "^\\w*(record|write)_outcome\\w*$"
+      }
+    },
+    {
+      "slug": "m5-booking-webhook",
+      "m": "M5",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:317",
+      "capability": "Inbound booking webhook adapter",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(Booking)\\w*(Adapter|Webhook)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/webhooks/(bookings?|calendly|cal)$"
+      },
+      "mcp": {
+        "tool": "^\\w*booking_webhook\\w*$"
+      }
+    },
+    {
+      "slug": "m5-call-consent",
+      "m": "M5",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:317",
+      "capability": "Consent and opt-out handling for captured calls",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(Call|Sms|Voice)\\w*(Consent|OptOut)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(calls|sms|voice)/(consent|opt-out)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(consent|opt_out)\\w*$"
+      }
+    },
+    {
+      "slug": "m5-inbound-call-webhook",
+      "m": "M5",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:317",
+      "capability": "Inbound call webhook with provider signature check",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^verify\\w*(Twilio|Call|Voice|Telephony)\\w*Signature$"
+      },
+      "rest": {
+        "route": "^/api/webhooks/(calls?|voice|twilio|telephony|callrail)$"
+      },
+      "mcp": {
+        "tool": "^\\w*inbound_call\\w*$"
+      }
+    },
+    {
+      "slug": "m5-signed-lead-intake",
+      "m": "M5",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:317",
+      "capability": "Signed lead intake accepting phone_call, booking and direction_request",
+      "exists": {
+        "files": ["app/api/leads/route.ts"],
+        "symbol": "^POST$",
+        "contains": "phone_call"
+      },
+      "rest": {
+        "route": "^/api/leads$",
+        "methods": ["POST"]
+      },
+      "mcp": {
+        "tool": "(^|_)leads?(_|$)"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:225"
+    },
+    {
+      "slug": "m6-agent-approve",
+      "m": "M6",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:318",
+      "capability": "Agent-delegated approve under per-org policy",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(agentApprove|approveAsAgent|delegatedApprove)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/approvals/\\[\\w+\\]$",
+        "methods": ["POST", "PATCH", "PUT"]
+      },
+      "mcp": {
+        "tool": "^approvals_(approve|decide)\\w*$"
+      }
+    },
+    {
+      "slug": "m6-agent-publish",
+      "m": "M6",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:318",
+      "capability": "Agent-delegated publish under per-org policy",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(agentPublish|publishAsAgent|delegatedPublish)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(agents/publish|v1/publish)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(publish|schedule_post|create_post)\\w*$"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:269"
+    },
+    {
+      "slug": "m6-autonomy-policy",
+      "m": "M6",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:318",
+      "capability": "Per-org autonomy policy read by the publish path",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^\\w*(AutonomyPolicy|autonomyPolicy)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(settings|organizations?/\\[\\w+\\])/autonomy(-policy)?$"
+      },
+      "mcp": {
+        "tool": "^\\w*autonomy\\w*$"
+      }
+    },
+    {
+      "slug": "m6-kill-switch",
+      "m": "M6",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:318",
+      "capability": "Org kill switch (autoPublishPaused) honoured by publish",
+      "exists": {
+        "files": ["lib/publish/safetyChecks.ts"],
+        "symbol": "^resolveOrgAutoPublishGate$"
+      },
+      "rest": {
+        "route": "^/api/(settings|organizations?/\\[\\w+\\])/(kill-switch|auto-publish)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(kill_switch|auto_publish)\\w*$"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:222"
+    },
+    {
+      "slug": "m6-publish-receipt",
+      "m": "M6",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:318",
+      "capability": "Publish receipt with run id",
+      "exists": {
+        "dirs": ["lib/publish", "lib/social"],
+        "symbol": "^\\w*(Receipt|receipt)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/\\S*receipts?(/|$)"
+      },
+      "mcp": {
+        "tool": "^\\w*receipt\\w*$"
+      }
+    },
+    {
+      "slug": "m6-run-id",
+      "m": "M6",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:318",
+      "capability": "One run id threaded through brief, content, approve, publish",
+      "exists": {
+        "dirs": ["lib"],
+        "symbol": "^(create|new|mint|generate)\\w*RunId$"
+      },
+      "rest": {
+        "route": "^/api/(autopilot/)?runs(/\\[\\w+\\])?$"
+      },
+      "mcp": {
+        "tool": "^\\w*(get_run|list_runs|run_status)\\w*$"
+      }
+    },
+    {
+      "slug": "m7-idempotency-campaign",
+      "m": "M7",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:319",
+      "capability": "Idempotency key on campaign routes",
+      "exists": {
+        "dirs": ["lib/campaigns"],
+        "symbol": "^\\w*[Ii]dempoten\\w*$"
+      },
+      "rest": {
+        "route": "^/api/campaigns$",
+        "methods": ["POST"],
+        "require": "Idempotency-Key|idempotencyKey"
+      },
+      "mcp": {
+        "tool": "^\\w*campaign\\w*$"
+      }
+    },
+    {
+      "slug": "m7-idempotency-publish",
+      "m": "M7",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:319",
+      "capability": "Idempotency key on publish routes",
+      "exists": {
+        "dirs": ["lib/publish", "lib/social"],
+        "symbol": "^\\w*[Ii]dempoten\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(posts/\\[\\w+\\]/publish|publish-queue/release|video/\\[\\w+\\]/publish)$",
+        "require": "Idempotency-Key|idempotencyKey"
+      },
+      "mcp": {
+        "tool": "^\\w*publish\\w*$"
+      }
+    },
+    {
+      "slug": "m7-idempotency-spend",
+      "m": "M7",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:319",
+      "capability": "Idempotency key on spend (generation) routes",
+      "exists": {
+        "dirs": ["lib/budget", "lib/ai/governor"],
+        "symbol": "^\\w*[Ii]dempoten\\w*$"
+      },
+      "rest": {
+        "route": "^/api/media/generate/(image|video)$",
+        "require": "Idempotency-Key|idempotencyKey"
+      },
+      "mcp": {
+        "tool": "^generate_(image|video)$"
+      }
+    },
+    {
+      "slug": "m7-structured-errors",
+      "m": "M7",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:319",
+      "capability": "Structured error codes on publish, campaign and spend routes",
+      "exists": {
+        "dirs": ["lib/publish", "lib/api"],
+        "symbol": "^\\w*(ErrorCode|ERROR_CODES)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(posts/\\[\\w+\\]/publish|publish-queue/release)$",
+        "require": "\\bcode:\\s*['\"][A-Z_]{4,}['\"]"
+      },
+      "mcp": {
+        "tool": "^\\w*publish\\w*$"
+      }
+    },
+    {
+      "slug": "m8-receipt-verifier",
+      "m": "M8",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:320",
+      "capability": "Release receipt verifier readable by agents",
+      "exists": {
+        "files": ["scripts/release/verify-receipt.mjs"]
+      },
+      "rest": {
+        "route": "^/api/(release|receipts?)(/|$)"
+      },
+      "mcp": {
+        "tool": "^\\w*(release|receipt)\\w*$"
+      }
+    },
+    {
+      "slug": "m9-blocking-gate",
+      "m": "M9",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:321",
+      "capability": "Blocking content gate that a failing eval stops",
+      "exists": {
+        "dirs": ["lib/ai/eval", "lib/autopilot"],
+        "symbol": "^\\w*(blockOn|assert)\\w*(Eval|Quality)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(ai/)?(quality-gate|eval/gate)$"
+      },
+      "mcp": {
+        "tool": "^\\w*(quality_gate|eval_gate)\\w*$"
+      }
+    },
+    {
+      "slug": "m9-calibrated-judge",
+      "m": "M9",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:321",
+      "capability": "Calibrated model judge for generated content",
+      "exists": {
+        "dirs": ["lib/ai/eval", "lib/ai"],
+        "symbol": "^\\w*(Judge|judge)\\w*$"
+      },
+      "rest": {
+        "route": "^/api/(ai/)?(judge|eval/judge)$"
+      },
+      "mcp": {
+        "tool": "^\\w*judge\\w*$"
+      }
+    },
+    {
+      "slug": "m9-golden-set",
+      "m": "M9",
+      "spec_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:321",
+      "capability": "Golden eval set for generated content",
+      "exists": {
+        "files": ["lib/ai/eval/golden-cases.ts"],
+        "symbol": "^GOLDEN_CASES$"
+      },
+      "rest": {
+        "route": "^/api/(ai/)?eval(s)?(/|$)"
+      },
+      "mcp": {
+        "tool": "(^|_)evals?(_|$)"
+      },
+      "swot_line": "docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md:235"
+    }
+  ]
+}
