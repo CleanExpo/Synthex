@@ -8,13 +8,12 @@
  *  1. Auth check — valid session required
  *  2. Body validation — must include confirmation string "DELETE MY ACCOUNT"
  *  3. Best-effort OAuth token revocation across all connected platforms
- *  4. Delete from auth.users via Supabase admin client (ON DELETE CASCADE handles all dependent tables)
+ *  4. Delete the user row via Prisma (ON DELETE CASCADE handles dependent tables)
  *  5. Return 200
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - JWT_SECRET (CRITICAL)
- * - LEGACY_PLATFORM_URL (CRITICAL)
- * - LEGACY_PLATFORM_SERVICE_KEY (CRITICAL)
+ * - DATABASE_URL (CRITICAL)
  * - FIELD_ENCRYPTION_KEY — for decrypting OAuth tokens before revocation
  *
  * @module app/api/founder/delete-account/route
@@ -26,7 +25,7 @@ import {
   getUserIdFromRequestOrCookies,
   unauthorizedResponse,
 } from '@/lib/auth/jwt-utils';
-import { createServerClient } from '@/lib/platform/server';
+import { prisma } from '@/lib/prisma';
 import { revokePlatformTokens } from '@/lib/oauth';
 import { isSupportedPlatform } from '@/lib/oauth';
 import { decryptFieldSafe } from '@/lib/security/field-encryption';
@@ -79,33 +78,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const platform = createServerClient();
-
     // 3. Best-effort OAuth token revocation
     // Fetch all active platform connections for this user so we can revoke tokens
     // with the upstream provider before the DB rows are cascaded away.
     try {
-      const { data: connections, error: connectionsError } = await platform
-        .from('platform_connections')
-        .select('platform, access_token')
-        .eq('user_id', userId)
-        .eq('is_active', true);
+      const connections = await prisma.platformConnection.findMany({
+        where: { userId, isActive: true },
+        select: { platform: true, accessToken: true },
+      });
 
-      if (connectionsError) {
-        logger.warn(
-          '[DELETE_ACCOUNT] Could not fetch platform connections for revocation',
-          {
-            userId,
-            error: connectionsError.message,
-          }
-        );
-      } else if (connections && connections.length > 0) {
+      if (connections.length > 0) {
         // Revoke in parallel — failures are non-fatal
-        const revocations = connections.map(async (conn: any) => {
+        const revocations = connections.map(async conn => {
           try {
             if (!isSupportedPlatform(conn.platform)) return;
 
-            const rawToken = decryptFieldSafe(conn.access_token);
+            const rawToken = decryptFieldSafe(conn.accessToken);
             if (!rawToken) return;
 
             await revokePlatformTokens(conn.platform, rawToken);
@@ -136,14 +124,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 4. Delete from auth.users — ON DELETE CASCADE handles all dependent tables
-    // The admin client is required; the anon client cannot delete auth users.
-    const { error: deleteError } = await platform.auth.admin.deleteUser(userId);
-
-    if (deleteError) {
-      logger.error('[DELETE_ACCOUNT] Failed to delete user from auth.users', {
+    // 4. Delete the user — ON DELETE CASCADE handles all dependent tables.
+    // Sessions and accounts go in the same transaction so a failure leaves
+    // nothing half-erased.
+    try {
+      await prisma.$transaction([
+        prisma.session.deleteMany({ where: { userId } }),
+        prisma.account.deleteMany({ where: { userId } }),
+        prisma.user.delete({ where: { id: userId } }),
+      ]);
+    } catch (deleteError) {
+      logger.error('[DELETE_ACCOUNT] Failed to delete user', {
         userId,
-        error: deleteError.message,
+        error:
+          deleteError instanceof Error
+            ? deleteError.message
+            : String(deleteError),
       });
       return NextResponse.json(
         {
