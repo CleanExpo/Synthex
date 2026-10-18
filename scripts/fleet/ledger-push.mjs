@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * scripts/fleet/ledger-push.mjs --row '<json>' [--row ...]
- * Appends rows to release-receipts/ledger/fleet.jsonl on the unprotected branch `fleet-ledger`
+ * Appends rows to release-receipts/ledger/fleet.jsonl on the ref refs/fleet/ledger (a ref, not a
+ * branch, so GitHub never offers a pull request for it)
  * and pushes it. Scheduled runs (nightly, weekly, phase-advance) use this because main accepts
  * no direct push; the ledger branch is read by ledgerRows() in every check. Never touches main.
  */
@@ -10,7 +11,7 @@ import { mkdtempSync, appendFileSync, mkdirSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 const pol = policy();
-const br = pol.ledger_branch || 'fleet-ledger';
+const ref = pol.ledger_ref || 'refs/fleet/ledger';
 const rows = [];
 const a = process.argv.slice(2);
 for (let i = 0; i < a.length; i++)
@@ -20,15 +21,16 @@ if (!rows.length) {
   process.exit(2);
 }
 git(['fetch', '-q', 'origin']);
+tryGit(['fetch', '-q', 'origin', `+${ref}:${ref}`]);
 const wt = mkdtempSync(path.join(tmpdir(), 'ledger-'));
-const has = tryGit(['rev-parse', '--verify', `origin/${br}`]);
+const has = tryGit(['rev-parse', '--verify', '-q', ref]);
 run('git', [
   'worktree',
   'add',
   '-q',
   '--detach',
   wt,
-  has ? `origin/${br}` : 'origin/main',
+  has ? ref : 'origin/main',
 ]);
 const f = path.join(wt, pol.ledger);
 mkdirSync(path.dirname(f), { recursive: true });
@@ -51,7 +53,7 @@ git(
   ],
   { cwd: wt }
 );
-const p = run('git', ['push', '-q', 'origin', `HEAD:refs/heads/${br}`], {
+const p = run('git', ['push', '-q', 'origin', `HEAD:${ref}`], {
   cwd: wt,
 });
 run('git', ['worktree', 'remove', '--force', wt]);
@@ -59,4 +61,4 @@ if (p.code !== 0) {
   console.log(`FAIL ledger-push: ${p.stderr.trim().slice(0, 200)}`);
   process.exit(1);
 }
-console.log(`PASS ledger-push: ${rows.length} row(s) to ${br}`);
+console.log(`PASS ledger-push: ${rows.length} row(s) to ${ref}`);

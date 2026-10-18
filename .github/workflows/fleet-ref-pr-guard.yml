@@ -1,0 +1,27 @@
+name: Fleet hand-off PR guard
+
+# Fleet hand-off branches (fleet-unit/*, fleet-ledger) are never released by pull request: the
+# fleet merges one PR per phase through scripts/fleet/merge-phase.mjs. Something outside the
+# repo opens a PR for freshly pushed branches through GitHub's "Compare & pull request" banner
+# (DECISIONS.md OPEN-2). New hand-offs use refs/fleet/* (refs cannot be PR heads); this closes
+# any PR still opened from the old branch names, within seconds. No checkout, no PR code runs.
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  close:
+    if: startsWith(github.head_ref, 'fleet-unit/') || github.head_ref == 'fleet-ledger'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr close "$PR" --repo "$REPO" --comment "Closed automatically: fleet hand-off branches are not released by pull request. The work ships in its phase PR through scripts/fleet/merge-phase.mjs (DECISIONS.md FD-3, OPEN-2)."
