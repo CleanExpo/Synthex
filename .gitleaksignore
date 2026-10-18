@@ -18,3 +18,12 @@
 84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:830
 84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:884
 84876b177d64110d620712750aec1829275163d1:__tests__/landing/helpers/tripwire-seeds.generated.json:generic-api-key:914
+# P1 JEV fixtures (2026-10-18): synthetic env values set inside the J7, J11 and J12
+# test files (e.g. 'jev-j7-synthetic-hmac', 'sk-or-j12-synthetic'); none is a real
+# credential. Pinned by commit and line, so any new finding is still reported.
+c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j7.jev.test.ts:generic-api-key:207
+c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j7.jev.test.ts:generic-api-key:208
+c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j12/cases-platform.ts:generic-api-key:132
+c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts:generic-api-key:124
+c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts:generic-api-key:125
+c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts:generic-api-key:131
