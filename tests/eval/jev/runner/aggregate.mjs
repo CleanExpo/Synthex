@@ -6,7 +6,7 @@
  *
  * Reads tests/eval/jev/out/<FAMILY>.jsonl for every family in scope and
  * applies the rules in tests/eval/jev/README.md. Writes out/summary.json and,
- * on a full run, the measured floors proposal. Exit 0 only when every family
+ * only on a complete full run that exits 0, the measured floors proposal. Exit 0 only when every family
  * in scope is green; 1 otherwise. --control runs the planted self-test.
  */
 import fs from 'node:fs';
@@ -158,32 +158,39 @@ export function aggregate(opts = {}) {
       path.join(o.outDir, 'summary.json'),
       `${JSON.stringify(summary, null, 2)}\n`
     );
-    if (!o.family) {
-      const floors = {
-        schema: 'jev-floors/1',
-        measured_at: at,
-        note: `measured by npm run jev:det (${summary.run_id}, exit ${exit}); proposal only, adopting it into tests/eval/jev/floors.json is gated (rule B2)`,
-        families: Object.fromEntries(
-          Object.entries(families)
-            // Only measured families: a missing or broken family has no floor to propose.
-            .filter(
-              ([, f]) =>
-                f.state === 'PASS' ||
-                f.state === 'RED_ADVISORY' ||
-                f.state === 'FAIL'
-            )
-            .map(([id, f]) => [
-              id,
-              {
-                pass_rate: f.cases
-                  ? Math.floor((f.pass / f.cases) * 1000) / 1000
-                  : 0,
-              },
-            ])
-        ),
-      };
-      fs.mkdirSync(path.dirname(o.floorsFile), { recursive: true });
-      fs.writeFileSync(o.floorsFile, `${JSON.stringify(floors, null, 2)}\n`);
+    if (o.family) {
+      o.log('floors proposal left as is: a --family run never rewrites it');
+    } else if (exit !== 0 || !scope.length) {
+      o.log(
+        `floors proposal left as is: run exit ${exit}, not every family in families.json measured green`
+      );
+    } else {
+      const measured = Object.fromEntries(
+        Object.entries(families).map(([id, f]) => [
+          id,
+          {
+            pass_rate: f.cases
+              ? Math.floor((f.pass / f.cases) * 1000) / 1000
+              : 0,
+          },
+        ])
+      );
+      let previous;
+      try {
+        previous = JSON.parse(fs.readFileSync(o.floorsFile, 'utf8')).families;
+      } catch {}
+      if (JSON.stringify(previous) === JSON.stringify(measured)) {
+        o.log('floors proposal left as is: measured floors unchanged');
+      } else {
+        const floors = {
+          schema: 'jev-floors/1',
+          measured_at: at,
+          note: `measured by npm run jev:det (${summary.run_id}, exit ${exit}); proposal only, adopting it into tests/eval/jev/floors.json is gated (rule B2)`,
+          families: measured,
+        };
+        fs.mkdirSync(path.dirname(o.floorsFile), { recursive: true });
+        fs.writeFileSync(o.floorsFile, `${JSON.stringify(floors, null, 2)}\n`);
+      }
     }
   }
   return { summary, exit };
@@ -281,8 +288,66 @@ function runControls() {
       `${good ? 'PASS' : 'FAIL'} control ${f} (${families[f].name}): exit=${exit} state=${got}, want exit=${wantExit} state=${wantState}`
     );
   }
+  if (!proposalControls(dir, familiesFile)) ok = false;
   fs.rmSync(dir, { recursive: true, force: true });
   return ok ? 0 : 1;
+}
+
+/**
+ * Planted self-test for the floors proposal: a failed, partial or --family run
+ * leaves it byte-identical; only a complete green run with new floors rewrites it.
+ */
+function proposalControls(dir, brokenFamiliesFile) {
+  const floorsFile = path.join(dir, 'proposal', 'floors.json');
+  const cleanFamiliesFile = path.join(dir, 'families-clean.json');
+  fs.writeFileSync(
+    cleanFamiliesFile,
+    JSON.stringify({
+      schema: 'jev-families/1',
+      families: { C4: { name: 'clean', expected_cases: 2, hard_gate: true } },
+    })
+  );
+  const partialFamiliesFile = path.join(dir, 'families-partial.json');
+  fs.writeFileSync(
+    partialFamiliesFile,
+    JSON.stringify({
+      schema: 'jev-families/1',
+      families: {
+        C4: { name: 'clean', expected_cases: 2, hard_gate: true },
+        C9: { name: 'never ran', expected_cases: 2, hard_gate: false },
+      },
+    })
+  );
+  const seed = '{"planted":"measured baseline"}\n';
+  const run = opts =>
+    aggregate({ outDir: dir, floorsFile, log: () => {}, ...opts });
+  const scenarios = [
+    ['failed full run', { familiesFile: brokenFamiliesFile }, false],
+    ['partial full run', { familiesFile: partialFamiliesFile }, false],
+    ['--family run', { familiesFile: cleanFamiliesFile, family: 'C4' }, false],
+    ['complete green run', { familiesFile: cleanFamiliesFile }, true],
+  ];
+  let ok = true;
+  for (const [name, opts, wantWrite] of scenarios) {
+    fs.mkdirSync(path.dirname(floorsFile), { recursive: true });
+    fs.writeFileSync(floorsFile, seed);
+    run(opts);
+    const wrote = fs.readFileSync(floorsFile, 'utf8') !== seed;
+    const good = wrote === wantWrite;
+    if (!good) ok = false;
+    console.log(
+      `${good ? 'PASS' : 'FAIL'} control proposal (${name}): rewritten=${wrote}, want ${wantWrite}`
+    );
+  }
+  // Same floors again: the proposal is not churned for a new timestamp.
+  const before = fs.readFileSync(floorsFile, 'utf8');
+  run({ familiesFile: cleanFamiliesFile });
+  const same = fs.readFileSync(floorsFile, 'utf8') === before;
+  if (!same) ok = false;
+  console.log(
+    `${same ? 'PASS' : 'FAIL'} control proposal (unchanged floors): rewritten=${!same}, want false`
+  );
+  return ok;
 }
 
 export function parseArgs(argv) {
