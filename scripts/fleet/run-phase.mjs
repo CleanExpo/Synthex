@@ -400,6 +400,22 @@ function dirtyFiles() {
   );
 }
 function gate() {
+  // Gates and full suites run on the Mac mini external drive (founder, 18/10/2026: the cloud
+  // sandbox filled up). FLEET_ALLOW_CLOUD_GATE=1 overrides and is reported.
+  const mini = [pol.mac?.repo, pol.mac?.worktrees].filter(Boolean);
+  if (!mini.some(r => ROOT.startsWith(r))) {
+    if (process.env.FLEET_ALLOW_CLOUD_GATE !== '1') {
+      log(
+        'FAIL',
+        `gate refuses to run outside the Mac mini external drive (${ROOT}); set FLEET_ALLOW_CLOUD_GATE=1 to override`
+      );
+      return 1;
+    }
+    log(
+      'PASS',
+      `location: outside the Mac mini (${ROOT}) by FLEET_ALLOW_CLOUD_GATE override, reported`
+    );
+  }
   const dirty = dirtyFiles();
   if (dirty.length) {
     log(
@@ -481,6 +497,22 @@ function gate() {
   return bad ? 1 : 0;
 }
 function review() {
+  // Preflight first (scripts/fleet/pre-release.mjs): the review is never the first full run, every
+  // commit is a fleet commit, and visible red is reported. Review itself runs from any checkout.
+  const pre = run(NODE, ['scripts/fleet/pre-release.mjs', '--phase', phase], {
+    env: { ...process.env, FLEET_ALLOW_CLOUD_GATE: '1' },
+  });
+  if (pre.code !== 0) {
+    log(
+      'FAIL',
+      `pre-release preflight not clean; fix before review: ${pre.stdout
+        .split('\n')
+        .filter(l => l.startsWith('FAIL') || l.startsWith('INCONCLUSIVE'))
+        .join(' | ')
+        .slice(0, 400)}`
+    );
+    return 1;
+  }
   const head = git(['rev-parse', 'HEAD']);
   const base = git(['merge-base', 'origin/main', 'HEAD']);
   const brief = path.join(os.tmpdir(), `brief-${phase}.md`);

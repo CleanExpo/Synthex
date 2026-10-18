@@ -229,6 +229,7 @@ const controls = [
   'scripts/fleet/check-soak.mjs',
   'scripts/fleet/check-governor-mode.mjs',
   'scripts/fleet/attest-phase.mjs',
+  'scripts/fleet/pre-release.mjs',
 ];
 const bad = controls.filter(
   c => run(process.execPath, [c, '--control'], { timeout: 180000 }).code !== 0
