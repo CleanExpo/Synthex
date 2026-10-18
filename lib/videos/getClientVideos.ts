@@ -1,5 +1,8 @@
 // SYN-507: Fetch client videos for VideoObject schema injection
-import { createClient } from '@/lib/platform/noop-client';
+import {
+  FEATURE_NOT_PROVISIONED,
+  notProvisionedBody,
+} from '@/lib/api/not-provisioned';
 
 export interface ClientVideo {
   id: string;
@@ -12,16 +15,23 @@ export interface ClientVideo {
   published_at: string;
 }
 
-export async function getClientVideos(clientId: string): Promise<ClientVideo[]> {
+/** The client_videos table is not in prisma/schema.prisma. */
+export class ClientVideosNotProvisionedError extends Error {
+  readonly code = FEATURE_NOT_PROVISIONED;
+  readonly table = 'client_videos';
 
-  const platform = createClient();
-  const { data, error } = await platform
-    .from('client_videos')
-    .select('id, youtube_video_id, title, description, thumbnail_url, upload_date, duration_iso, published_at')
-    .eq('client_id', clientId)
-    .order('published_at', { ascending: false })
-    .limit(10);
+  constructor() {
+    super(notProvisionedBody('client_videos', 'Client videos').message);
+    this.name = 'ClientVideosNotProvisionedError';
+  }
+}
 
-  if (error) return [];
-  return (data ?? []) as ClientVideo[];
+/**
+ * Always throws ClientVideosNotProvisionedError until client_videos is
+ * provisioned. It never returns an empty list in place of a failed read.
+ */
+export async function getClientVideos(
+  _clientId: string
+): Promise<ClientVideo[]> {
+  throw new ClientVideosNotProvisionedError();
 }
