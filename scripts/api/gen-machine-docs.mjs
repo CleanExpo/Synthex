@@ -474,6 +474,9 @@ function renderErrorCodes({ codes }) {
       `| \`${code}\` | ${statusText} | ${mdCell(meaning ?? '(no message in source)')} | ${routes.length ? routes.map(r => `\`${r}\``).join(', ') : '(lib/api helper only)'} |`
     );
   }
+  // Files, not line numbers: a line number in a committed doc goes stale on any edit above it, and
+  // the CI drift check would then fail unrelated PRs. Repeats within a file collapse to one entry.
+  const uniq = xs => [...new Set(xs)];
   lines.push('', '## Codes with an unresolved HTTP status', '');
   if (!unresolved.length) lines.push('None.');
   for (const code of unresolved) {
@@ -482,14 +485,14 @@ function renderErrorCodes({ codes }) {
       .get(code)
       .occurrences.filter(o => o.status === undefined && o.route);
     lines.push(
-      `- \`${code}\`: ${occ.map(o => `${o.file}:${o.line}${o.via ? ` (via ${o.via})` : ''}`).join(', ')}`
+      `- \`${code}\`: ${uniq(occ.map(o => `${o.file}${o.via ? ` (via ${o.via})` : ''}`)).join(', ')}`
     );
   }
   lines.push('', '## Source locations', '');
   for (const code of names) {
     const occ = codes.get(code).occurrences;
     lines.push(
-      `- \`${code}\`: ${occ.map(o => `${o.file}:${o.line}${o.status !== undefined ? ` (${o.status})` : ''}${o.via ? ` via ${o.via}` : ''}`).join(', ')}`
+      `- \`${code}\`: ${uniq(occ.map(o => `${o.file}${o.status !== undefined ? ` (${o.status})` : ''}${o.via ? ` via ${o.via}` : ''}`)).join(', ')}`
     );
   }
   return lines.join('\n') + '\n';
@@ -728,7 +731,8 @@ function collectRateLimits(root) {
         use(
           `RateLimiter ${route} ${v} ${lineOf(sf, n)}`,
           {
-            name: `RateLimiter \`${v}\` (${rel}:${lineOf(sf, n)})`,
+            // File only: a committed line number goes stale on any edit above it.
+            name: `RateLimiter \`${v}\` (${rel})`,
             kind: 'route instance',
             limit:
               max ??

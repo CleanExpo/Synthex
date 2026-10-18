@@ -6,48 +6,48 @@ Scope: limiters called from `app/api/**/route.{ts,tsx,js}` — the category pres
 
 40 limiters across 126 routes.
 
-| Limiter                                                                      | Kind           | Limit (requests)                                                                           | Window       | Routes |
-| ---------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ | ------------ | ------ |
-| admin ('admin')                                                              | preset         | 30                                                                                         | 60 s         | 5      |
-| aiGeneration ('ai-generation')                                               | preset         | 20                                                                                         | 60 s         | 15     |
-| authGeneral ('auth-general')                                                 | preset         | 15                                                                                         | 60 s         | 1      |
-| authStrict ('auth-strict')                                                   | preset         | 5                                                                                          | 60 s         | 10     |
-| billing ('billing')                                                          | preset         | 20                                                                                         | 60 s         | 3      |
-| mutation ('mutation')                                                        | preset         | 60                                                                                         | 60 s         | 2      |
-| readDefault ('read-default')                                                 | preset         | 120                                                                                        | 60 s         | 4      |
-| writeDefault ('write-default')                                               | preset         | 30                                                                                         | 60 s         | 30     |
-| withRateLimit (/api/ai/generate-content override)                            | tier           | free 5, pro 20, growth 100, scale 500, professional 20, business 100, custom 500           | 60 s         | 1      |
-| withRateLimit (tier default)                                                 | tier           | free 100, pro 500, growth 2000, scale 10000, professional 500, business 2000, custom 10000 | 60 s         | 34     |
-| checkRateLimit 'card-events' (ip bucket)                                     | org/ip bucket  | 120                                                                                        | 3600 s (1 h) | 1      |
-| checkRateLimit 'card-events' (org bucket)                                    | org/ip bucket  | 5000                                                                                       | 3600 s (1 h) | 1      |
-| checkRateLimit 'intentscape-public-expansion' (ip bucket)                    | org/ip bucket  | 3                                                                                          | 3600 s (1 h) | 1      |
-| checkRateLimit 'intentscape-public-expansion' (org bucket)                   | org/ip bucket  | 120                                                                                        | 3600 s (1 h) | 1      |
-| checkRateLimit 'leads' (ip bucket, default)                                  | org/ip bucket  | 120                                                                                        | 60 s         | 2      |
-| checkRateLimit 'leads' (org bucket, default)                                 | org/ip bucket  | 60                                                                                         | 60 s         | 2      |
-| checkRateLimit 'opportunity-map' (ip bucket)                                 | org/ip bucket  | 4                                                                                          | 3600 s (1 h) | 1      |
-| checkRateLimit 'opportunity-map' (org bucket)                                | org/ip bucket  | 500                                                                                        | 3600 s (1 h) | 1      |
-| checkRateLimit 'opportunity-map-feedback' (ip bucket)                        | org/ip bucket  | 12                                                                                         | 3600 s (1 h) | 1      |
-| checkRateLimit 'opportunity-map-feedback' (org bucket)                       | org/ip bucket  | 1000                                                                                       | 3600 s (1 h) | 1      |
-| checkRateLimit 'opportunity-map-handoff' (ip bucket)                         | org/ip bucket  | 6                                                                                          | 3600 s (1 h) | 1      |
-| checkRateLimit 'opportunity-map-handoff' (org bucket)                        | org/ip bucket  | 500                                                                                        | 3600 s (1 h) | 1      |
-| RateLimiter `limiter` (app/api/campaign-concept-studio/generate/route.ts:93) | route instance | unresolved (`getCampaignStudioRateLimit()`)                                                | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/affiliates/track/[shortCode]/route.ts:17) | route instance | 120                                                                                        | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/brand/calendar/route.ts:20)               | route instance | 20                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/brand/consistency/route.ts:21)            | route instance | 20                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/brand/identity/route.ts:23)               | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/brand/kg-check/route.ts:18)               | route instance | 10                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/brand/mentions/poll/route.ts:20)          | route instance | 10                                                                                         | 3600 s (1 h) | 1      |
-| RateLimiter `rateLimiter` (app/api/brand/wikidata/route.ts:18)               | route instance | 10                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/eeat/v2/assets/route.ts:19)               | route instance | 20                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/eeat/v2/audit/route.ts:23)                | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/quality/audit/route.ts:23)                | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/quality/gate/route.ts:23)                 | route instance | 60                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/search/route.ts:32)                       | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/voice/analyze/route.ts:28)                | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/voice/capsule/route.ts:28)                | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/voice/context/route.ts:26)                | route instance | 30                                                                                         | 60 s         | 1      |
-| RateLimiter `rateLimiter` (app/api/voice/slop-scan/route.ts:29)              | route instance | 60                                                                                         | 60 s         | 1      |
-| RateLimiter `rewriteRateLimiter` (app/api/geo/rewrite/route.ts:32)           | route instance | 20                                                                                         | 60 s         | 1      |
+| Limiter                                                                   | Kind           | Limit (requests)                                                                           | Window       | Routes |
+| ------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ | ------------ | ------ |
+| admin ('admin')                                                           | preset         | 30                                                                                         | 60 s         | 5      |
+| aiGeneration ('ai-generation')                                            | preset         | 20                                                                                         | 60 s         | 15     |
+| authGeneral ('auth-general')                                              | preset         | 15                                                                                         | 60 s         | 1      |
+| authStrict ('auth-strict')                                                | preset         | 5                                                                                          | 60 s         | 10     |
+| billing ('billing')                                                       | preset         | 20                                                                                         | 60 s         | 3      |
+| mutation ('mutation')                                                     | preset         | 60                                                                                         | 60 s         | 2      |
+| readDefault ('read-default')                                              | preset         | 120                                                                                        | 60 s         | 4      |
+| writeDefault ('write-default')                                            | preset         | 30                                                                                         | 60 s         | 30     |
+| withRateLimit (/api/ai/generate-content override)                         | tier           | free 5, pro 20, growth 100, scale 500, professional 20, business 100, custom 500           | 60 s         | 1      |
+| withRateLimit (tier default)                                              | tier           | free 100, pro 500, growth 2000, scale 10000, professional 500, business 2000, custom 10000 | 60 s         | 34     |
+| checkRateLimit 'card-events' (ip bucket)                                  | org/ip bucket  | 120                                                                                        | 3600 s (1 h) | 1      |
+| checkRateLimit 'card-events' (org bucket)                                 | org/ip bucket  | 5000                                                                                       | 3600 s (1 h) | 1      |
+| checkRateLimit 'intentscape-public-expansion' (ip bucket)                 | org/ip bucket  | 3                                                                                          | 3600 s (1 h) | 1      |
+| checkRateLimit 'intentscape-public-expansion' (org bucket)                | org/ip bucket  | 120                                                                                        | 3600 s (1 h) | 1      |
+| checkRateLimit 'leads' (ip bucket, default)                               | org/ip bucket  | 120                                                                                        | 60 s         | 2      |
+| checkRateLimit 'leads' (org bucket, default)                              | org/ip bucket  | 60                                                                                         | 60 s         | 2      |
+| checkRateLimit 'opportunity-map' (ip bucket)                              | org/ip bucket  | 4                                                                                          | 3600 s (1 h) | 1      |
+| checkRateLimit 'opportunity-map' (org bucket)                             | org/ip bucket  | 500                                                                                        | 3600 s (1 h) | 1      |
+| checkRateLimit 'opportunity-map-feedback' (ip bucket)                     | org/ip bucket  | 12                                                                                         | 3600 s (1 h) | 1      |
+| checkRateLimit 'opportunity-map-feedback' (org bucket)                    | org/ip bucket  | 1000                                                                                       | 3600 s (1 h) | 1      |
+| checkRateLimit 'opportunity-map-handoff' (ip bucket)                      | org/ip bucket  | 6                                                                                          | 3600 s (1 h) | 1      |
+| checkRateLimit 'opportunity-map-handoff' (org bucket)                     | org/ip bucket  | 500                                                                                        | 3600 s (1 h) | 1      |
+| RateLimiter `limiter` (app/api/campaign-concept-studio/generate/route.ts) | route instance | unresolved (`getCampaignStudioRateLimit()`)                                                | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/affiliates/track/[shortCode]/route.ts) | route instance | 120                                                                                        | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/brand/calendar/route.ts)               | route instance | 20                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/brand/consistency/route.ts)            | route instance | 20                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/brand/identity/route.ts)               | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/brand/kg-check/route.ts)               | route instance | 10                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/brand/mentions/poll/route.ts)          | route instance | 10                                                                                         | 3600 s (1 h) | 1      |
+| RateLimiter `rateLimiter` (app/api/brand/wikidata/route.ts)               | route instance | 10                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/eeat/v2/assets/route.ts)               | route instance | 20                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/eeat/v2/audit/route.ts)                | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/quality/audit/route.ts)                | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/quality/gate/route.ts)                 | route instance | 60                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/search/route.ts)                       | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/voice/analyze/route.ts)                | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/voice/capsule/route.ts)                | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/voice/context/route.ts)                | route instance | 30                                                                                         | 60 s         | 1      |
+| RateLimiter `rateLimiter` (app/api/voice/slop-scan/route.ts)              | route instance | 60                                                                                         | 60 s         | 1      |
+| RateLimiter `rewriteRateLimiter` (app/api/geo/rewrite/route.ts)           | route instance | 20                                                                                         | 60 s         | 1      |
 
 ## Preset definitions
 
@@ -257,75 +257,75 @@ Overrides with no matching `withRateLimit` route file (they never apply): `/api/
 
 - `/api/opportunity-map/handoff`
 
-### RateLimiter `limiter` (app/api/campaign-concept-studio/generate/route.ts:93)
+### RateLimiter `limiter` (app/api/campaign-concept-studio/generate/route.ts)
 
 - `/api/campaign-concept-studio/generate`
 
-### RateLimiter `rateLimiter` (app/api/affiliates/track/[shortCode]/route.ts:17)
+### RateLimiter `rateLimiter` (app/api/affiliates/track/[shortCode]/route.ts)
 
 - `/api/affiliates/track/[shortCode]`
 
-### RateLimiter `rateLimiter` (app/api/brand/calendar/route.ts:20)
+### RateLimiter `rateLimiter` (app/api/brand/calendar/route.ts)
 
 - `/api/brand/calendar`
 
-### RateLimiter `rateLimiter` (app/api/brand/consistency/route.ts:21)
+### RateLimiter `rateLimiter` (app/api/brand/consistency/route.ts)
 
 - `/api/brand/consistency`
 
-### RateLimiter `rateLimiter` (app/api/brand/identity/route.ts:23)
+### RateLimiter `rateLimiter` (app/api/brand/identity/route.ts)
 
 - `/api/brand/identity`
 
-### RateLimiter `rateLimiter` (app/api/brand/kg-check/route.ts:18)
+### RateLimiter `rateLimiter` (app/api/brand/kg-check/route.ts)
 
 - `/api/brand/kg-check`
 
-### RateLimiter `rateLimiter` (app/api/brand/mentions/poll/route.ts:20)
+### RateLimiter `rateLimiter` (app/api/brand/mentions/poll/route.ts)
 
 - `/api/brand/mentions/poll`
 
-### RateLimiter `rateLimiter` (app/api/brand/wikidata/route.ts:18)
+### RateLimiter `rateLimiter` (app/api/brand/wikidata/route.ts)
 
 - `/api/brand/wikidata`
 
-### RateLimiter `rateLimiter` (app/api/eeat/v2/assets/route.ts:19)
+### RateLimiter `rateLimiter` (app/api/eeat/v2/assets/route.ts)
 
 - `/api/eeat/v2/assets`
 
-### RateLimiter `rateLimiter` (app/api/eeat/v2/audit/route.ts:23)
+### RateLimiter `rateLimiter` (app/api/eeat/v2/audit/route.ts)
 
 - `/api/eeat/v2/audit`
 
-### RateLimiter `rateLimiter` (app/api/quality/audit/route.ts:23)
+### RateLimiter `rateLimiter` (app/api/quality/audit/route.ts)
 
 - `/api/quality/audit`
 
-### RateLimiter `rateLimiter` (app/api/quality/gate/route.ts:23)
+### RateLimiter `rateLimiter` (app/api/quality/gate/route.ts)
 
 - `/api/quality/gate`
 
-### RateLimiter `rateLimiter` (app/api/search/route.ts:32)
+### RateLimiter `rateLimiter` (app/api/search/route.ts)
 
 - `/api/search`
 
-### RateLimiter `rateLimiter` (app/api/voice/analyze/route.ts:28)
+### RateLimiter `rateLimiter` (app/api/voice/analyze/route.ts)
 
 - `/api/voice/analyze`
 
-### RateLimiter `rateLimiter` (app/api/voice/capsule/route.ts:28)
+### RateLimiter `rateLimiter` (app/api/voice/capsule/route.ts)
 
 - `/api/voice/capsule`
 
-### RateLimiter `rateLimiter` (app/api/voice/context/route.ts:26)
+### RateLimiter `rateLimiter` (app/api/voice/context/route.ts)
 
 - `/api/voice/context`
 
-### RateLimiter `rateLimiter` (app/api/voice/slop-scan/route.ts:29)
+### RateLimiter `rateLimiter` (app/api/voice/slop-scan/route.ts)
 
 - `/api/voice/slop-scan`
 
-### RateLimiter `rewriteRateLimiter` (app/api/geo/rewrite/route.ts:32)
+### RateLimiter `rewriteRateLimiter` (app/api/geo/rewrite/route.ts)
 
 - `/api/geo/rewrite`
 

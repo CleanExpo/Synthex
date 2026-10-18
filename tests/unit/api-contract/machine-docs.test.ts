@@ -179,7 +179,7 @@ describe('gen-machine-docs', () => {
       '| `GAMMA_PENDING` | unresolved | Gamma is pending | `/api/gen` |'
     );
     expect(md).toMatch(
-      /unresolved HTTP status\n\n- `GAMMA_PENDING`: app\/api\/gen\/route\.ts:3/
+      /unresolved HTTP status\n\n- `GAMMA_PENDING`: app\/api\/gen\/route\.ts\n/
     );
     // Prose errors are not codes.
     expect(md).not.toContain('Slow down');
@@ -211,7 +211,7 @@ describe('gen-machine-docs', () => {
       "| checkRateLimit 'delta' (org bucket, default) | org/ip bucket | 60 | 60 s | 1 |"
     );
     expect(md).toContain(
-      '| RateLimiter `limiter` (app/api/delta/route.ts:5) | route instance | 7 | 3600 s (1 h) | 1 |'
+      '| RateLimiter `limiter` (app/api/delta/route.ts) | route instance | 7 | 3600 s (1 h) | 1 |'
     );
     expect(md).toContain('- `/api/epsilon` (app/api/epsilon/route.ts)');
   });
