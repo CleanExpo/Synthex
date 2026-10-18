@@ -32,7 +32,12 @@ import {
 import fs from 'fs';
 import net from 'net';
 import path from 'path';
-import { classify, recordResults, type JevResult } from '../runner/record';
+import {
+  classify,
+  inconclusive,
+  recordResults,
+  type JevResult,
+} from '../runner/record';
 import { invokeRoute, listRoutes } from '../runner/route-harness';
 import { isExemptPath } from '../../../../scripts/auth-coverage-config';
 import jwt from 'jsonwebtoken';
@@ -268,10 +273,14 @@ describe('J1 (a) unauthenticated probe per non-exempt route', () => {
     const method = METHOD_ORDER.find(m => r.methods.includes(m));
     if (!method) {
       results.push(
-        caseRow(id, r.route, {
-          state: 'INCONCLUSIVE',
-          detail: `no GET/POST/PUT/PATCH/DELETE export (${r.methods.join(',') || 'none'})`,
-        })
+        caseRow(
+          id,
+          r.route,
+          inconclusive(
+            id,
+            `no GET/POST/PUT/PATCH/DELETE export (${r.methods.join(',') || 'none'})`
+          )
+        )
       );
       return;
     }
@@ -282,17 +291,19 @@ describe('J1 (a) unauthenticated probe per non-exempt route', () => {
       body: method === 'GET' || method === 'DELETE' ? undefined : {},
     });
     if (res.status === null) {
-      results.push(
-        caseRow(id, route, { state: 'INCONCLUSIVE', detail: res.error })
-      );
+      results.push(caseRow(id, route, inconclusive(id, res.error)));
       return;
     }
     if (notConfigured(res.status, res.json)) {
       results.push(
-        caseRow(id, route, {
-          state: 'INCONCLUSIVE',
-          detail: `status ${res.status} service not configured (missing env)${bodyText(res.json)}`,
-        })
+        caseRow(
+          id,
+          route,
+          inconclusive(
+            id,
+            `status ${res.status} service not configured (missing env)${bodyText(res.json)}`
+          )
+        )
       );
       return;
     }
@@ -343,17 +354,19 @@ describe('J1 (b) cross-organisation and malformed-body probes', () => {
         },
       });
       if (res.status === null) {
-        results.push(
-          caseRow(id, route, { state: 'INCONCLUSIVE', detail: res.error })
-        );
+        results.push(caseRow(id, route, inconclusive(id, res.error)));
         return;
       }
       if (notConfigured(res.status, res.json)) {
         results.push(
-          caseRow(id, route, {
-            state: 'INCONCLUSIVE',
-            detail: `status ${res.status} service not configured (missing env)${bodyText(res.json)}`,
-          })
+          caseRow(
+            id,
+            route,
+            inconclusive(
+              id,
+              `status ${res.status} service not configured (missing env)${bodyText(res.json)}`
+            )
+          )
         );
         return;
       }
@@ -361,9 +374,7 @@ describe('J1 (b) cross-organisation and malformed-body probes', () => {
       if (p.kind === 'cross-org') {
         const v = judgeCrossOrg(res.status, res.json);
         if (v.inconclusive) {
-          results.push(
-            caseRow(id, route, { state: 'INCONCLUSIVE', detail: v.detail })
-          );
+          results.push(caseRow(id, route, inconclusive(id, v.detail)));
           return;
         }
         results.push(

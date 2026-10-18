@@ -60,6 +60,21 @@
     "J1-GAP-malformed-json-accepted": {
       "cases": ["J1-malformed-post-user.api-keys"],
       "note": "POST /api/user/api-keys swallows a JSON parse error as {} and creates a key with the default name (200) instead of rejecting the body with 400."
+    },
+    "J1-GAP-route-not-importable": {
+      "cases": ["J1-unauth-auto-research.health", "J1-unauth-video"],
+      "note": "Route not evaluated: Jest cannot import it (ESM). /api/auto-research/health fails with 'Cannot use import statement outside a module' and /api/video with 'await is only valid in async functions and the top level bodies of modules', so no auth property is observed for either route."
+    },
+    "J1-GAP-billing-config-before-auth": {
+      "cases": [
+        "J1-unauth-invoices",
+        "J1-unauth-stripe.billing-portal",
+        "J1-unauth-stripe.change-plan",
+        "J1-unauth-stripe.checkout",
+        "J1-malformed-post-stripe.checkout",
+        "J1-malformed-post-stripe.change-plan"
+      ],
+      "note": "Billing/Stripe routes check configuration before authentication: an unauthenticated request reaches 'not configured' (503; GET /api/invoices even answers 200 {error:'Billing not configured', invoices:[]}) instead of 401, and the malformed-body probes get 503 before the body is validated. P10 must put auth first."
     }
   }
 }

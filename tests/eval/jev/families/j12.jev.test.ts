@@ -8,7 +8,12 @@
  * Boundary mocks only: Prisma is a recording stand-in (j12/db.ts) and
  * next/headers has no request scope in-process, so it serves an empty cookie jar.
  */
-import { classify, recordResults, type JevResult } from '../runner/record';
+import {
+  classify,
+  inconclusive,
+  recordResults,
+  type JevResult,
+} from '../runner/record';
 import { Inconclusive, type GoldenCase, type Verdict } from './j12/harness';
 import {
   assertEscapeHtml,
@@ -59,8 +64,7 @@ async function runCase(c: GoldenCase): Promise<JevResult> {
     if (err instanceof Inconclusive)
       return {
         ...base,
-        state: 'INCONCLUSIVE',
-        detail: `[${c.sha}] ${err.message}`,
+        ...inconclusive(id, `[${c.sha}] ${err.message}`),
       };
     const msg =
       err instanceof Error ? `${err.name}: ${err.message}` : String(err);

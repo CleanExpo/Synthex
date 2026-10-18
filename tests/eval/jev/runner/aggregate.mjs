@@ -99,6 +99,14 @@ function judgeFamily(id, def, outDir) {
       state: 'FAIL',
       reasons: [`${r.fail} hard-gate case(s) FAIL`],
     };
+  // A hard gate is not green on cases it never evaluated. Expected-red cases
+  // belong in known-gaps/<FAMILY>.json (KNOWN_GAP), not in INCONCLUSIVE.
+  if (r.inconclusive > 0 && def.hard_gate)
+    return {
+      ...r,
+      state: 'INCONCLUSIVE',
+      reasons: [`${r.inconclusive} hard-gate case(s) INCONCLUSIVE`],
+    };
   return { ...r, state: r.fail > 0 ? 'RED_ADVISORY' : 'PASS', reasons: [] };
 }
 
@@ -190,6 +198,16 @@ function runControls() {
     C2: { name: 'hard-gate FAIL case', expected_cases: 2, hard_gate: true },
     C3: { name: 'wrong case count', expected_cases: 3, hard_gate: false },
     C4: { name: 'clean', expected_cases: 2, hard_gate: true },
+    C5: {
+      name: 'hard-gate all INCONCLUSIVE',
+      expected_cases: 2,
+      hard_gate: true,
+    },
+    C6: {
+      name: 'advisory INCONCLUSIVE',
+      expected_cases: 2,
+      hard_gate: false,
+    },
   };
   fs.writeFileSync(
     familiesFile,
@@ -222,6 +240,16 @@ function runControls() {
       row('C4', 'case', 'b', 'KNOWN_GAP'),
       ...controls('C4'),
     ],
+    C5: [
+      row('C5', 'case', 'a', 'INCONCLUSIVE'),
+      row('C5', 'case', 'b', 'INCONCLUSIVE'),
+      ...controls('C5'),
+    ],
+    C6: [
+      row('C6', 'case', 'a', 'PASS'),
+      row('C6', 'case', 'b', 'INCONCLUSIVE'),
+      ...controls('C6'),
+    ],
   };
   for (const [f, rows] of Object.entries(planted)) {
     fs.writeFileSync(
@@ -234,6 +262,8 @@ function runControls() {
     C2: [1, 'FAIL'],
     C3: [1, 'BROKEN_CHECK'],
     C4: [0, 'PASS'],
+    C5: [1, 'INCONCLUSIVE'],
+    C6: [0, 'PASS'],
   };
   let ok = true;
   for (const [f, [wantExit, wantState]] of Object.entries(expect)) {

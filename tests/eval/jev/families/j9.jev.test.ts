@@ -66,7 +66,12 @@ jest.mock('@/lib/observability/sentry-server', () => ({
 
 import fs from 'fs';
 import path from 'path';
-import { classify, recordResults, type JevResult } from '../runner/record';
+import {
+  classify,
+  inconclusive,
+  recordResults,
+  type JevResult,
+} from '../runner/record';
 import { invokeRoute } from '../runner/route-harness';
 import {
   bump,
@@ -122,9 +127,8 @@ async function runCase(
       id,
       family: FAMILY,
       kind: 'case',
-      state: 'INCONCLUSIVE',
       route,
-      detail: `${property} | could not run: ${errText(e)}`,
+      ...inconclusive(id, `${property} | could not run: ${errText(e)}`),
     });
     return;
   }

@@ -15,7 +15,12 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { classify, recordResults, type JevResult } from '../runner/record';
+import {
+  classify,
+  inconclusive,
+  recordResults,
+  type JevResult,
+} from '../runner/record';
 import { invokeRoute, type InvokeResult } from '../runner/route-harness';
 import { generateToken } from '@/lib/auth/jwt-utils';
 import { judgeRead } from './j2/detector';
@@ -170,9 +175,8 @@ describe('J2 cases', () => {
           id: r.id,
           family: FAMILY,
           kind: 'case',
-          state: 'INCONCLUSIVE',
           route,
-          detail: j.inconclusive.slice(0, 300),
+          ...inconclusive(r.id, j.inconclusive.slice(0, 300)),
         });
         return;
       }
