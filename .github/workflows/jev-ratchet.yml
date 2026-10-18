@@ -22,8 +22,22 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - run: |
-          git fetch --no-tags origin "${{ github.event.pull_request.base.sha }}"
+      - env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git fetch --no-tags origin "$BASE_SHA"
           PROP=""
           if [ -f proposals/P1/tests/eval/jev/floors.json ]; then PROP="--proposal proposals/P1/tests/eval/jev/floors.json"; fi
-          node scripts/jev/check-ratchet.mjs --base "${{ github.event.pull_request.base.sha }}" --head HEAD $PROP
+          # Run the ratchet and its lib from the trusted BASE, with the PR as data, never the PR's
+          # own copy: a PR could lower a floor and replace the script (verifier audit, second
+          # pass). Same pattern as receipt-verify.yml and protected-paths.yml. The PR's copy only
+          # while the base has none (bootstrap).
+          R=scripts/jev/check-ratchet.mjs
+          if git cat-file -e "$BASE_SHA:scripts/jev/check-ratchet.mjs" 2>/dev/null; then
+            rm -rf /tmp/trusted && mkdir -p /tmp/trusted
+            git archive "$BASE_SHA" scripts/jev scripts/fleet | tar -x -C /tmp/trusted
+            R=/tmp/trusted/scripts/jev/check-ratchet.mjs
+          else
+            echo "NOTE bootstrap: base has no ratchet; using the PR's copy"
+          fi
+          node "$R" --base "$BASE_SHA" --head HEAD $PROP
