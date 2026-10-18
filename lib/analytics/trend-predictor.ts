@@ -76,11 +76,14 @@ export interface ViralPotentialScore {
     weight: number;
     recommendation?: string;
   }>;
+  /** null when the connection has no synced follower count. */
   estimatedReach: {
     low: number;
     medium: number;
     high: number;
-  };
+  } | null;
+  /** Why estimatedReach is null. */
+  estimatedReachUnavailable?: string;
   optimalPostingWindow: {
     start: Date;
     end: Date;
@@ -527,6 +530,12 @@ class TrendPredictor {
         grade,
         factors,
         estimatedReach: reachEstimate,
+        ...(reachEstimate
+          ? {}
+          : {
+              estimatedReachUnavailable:
+                'No synced follower count for this platform connection; reach not estimated.',
+            }),
         optimalPostingWindow: optimalWindow,
         improvements,
       };
@@ -978,19 +987,20 @@ class TrendPredictor {
     userId: string,
     platform: Platform,
     viralScore: number
-  ): Promise<{ low: number; medium: number; high: number }> {
+  ): Promise<{ low: number; medium: number; high: number } | null> {
     // Scoped to the caller's own live connection for this platform.
     const connection = await prisma.platformConnection.findFirst({
       where: { userId, platform, isActive: true, deletedAt: null },
       select: { metadata: true },
     });
 
+    // The analytics worker stores synced metrics under metadata.lastMetrics.
     const metadata = connection?.metadata as
-      | { followers?: unknown }
+      | { lastMetrics?: { followers?: unknown } }
       | null
       | undefined;
-    const followers =
-      typeof metadata?.followers === 'number' ? metadata.followers : 1000;
+    const followers = metadata?.lastMetrics?.followers;
+    if (typeof followers !== 'number') return null;
     const baseReach = followers * 0.1; // 10% base reach
 
     const multiplier = 1 + viralScore / 100;

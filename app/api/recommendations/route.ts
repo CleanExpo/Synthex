@@ -22,6 +22,10 @@ import {
   Platform,
   RecommendationType,
 } from '@/lib/recommendations/content-engine';
+import {
+  notProvisionedBody,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 import { logger } from '@/lib/logger';
 
 // Request validation schemas
@@ -316,10 +320,14 @@ export async function PUT(request: NextRequest) {
         validated.recommendationId
       );
 
+      // The only failure path: dismissed_recommendations is not provisioned.
       if (!success) {
         return APISecurityChecker.createSecureResponse(
-          { error: 'Failed to dismiss recommendation' },
-          500
+          notProvisionedBody(
+            'dismissed_recommendations',
+            'Dismissing recommendations'
+          ),
+          NOT_PROVISIONED_STATUS
         );
       }
 
@@ -346,6 +354,15 @@ export async function PUT(request: NextRequest) {
       );
 
       if (!result.success) {
+        if (result.result?.available === false) {
+          return APISecurityChecker.createSecureResponse(
+            notProvisionedBody(
+              'applied_recommendations',
+              'Applying recommendations'
+            ),
+            NOT_PROVISIONED_STATUS
+          );
+        }
         return APISecurityChecker.createSecureResponse(
           { error: 'Failed to apply recommendation' },
           500

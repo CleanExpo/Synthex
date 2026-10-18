@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       }
       const { text, thread, mediaUrls, scheduledTime } = validation.data;
 
-      if (!text && !thread) {
+      if (!text && !thread?.length) {
         return NextResponse.json(
           { error: 'Tweet text or thread is required' },
           { status: 400 }
@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
 
       // Handle media uploads if provided
       const mediaIds: string[] = [];
+      const mediaFailed: string[] = [];
       if (mediaUrls && mediaUrls.length > 0) {
         for (const url of mediaUrls) {
           try {
@@ -109,8 +110,22 @@ export async function POST(request: NextRequest) {
             mediaIds.push(mediaId);
           } catch (error) {
             logger.error('Media upload failed:', error);
+            mediaFailed.push(url);
           }
         }
+      }
+
+      // A post scheduled without its media is not the post that was asked for.
+      if (mediaFailed.length > 0) {
+        return NextResponse.json(
+          {
+            error: 'Media upload failed',
+            message: 'The post was not scheduled because some media failed.',
+            scheduled: false,
+            mediaFailed,
+          },
+          { status: 502 }
+        );
       }
 
       // Route through the WORKING scheduler (Post + cron). The previous path
@@ -119,7 +134,7 @@ export async function POST(request: NextRequest) {
       const scheduled = await scheduleViaPost({
         userId,
         platform: 'twitter',
-        content: text!,
+        content: text || thread!.join('\n\n'),
         scheduledTime: new Date(scheduledTime),
         metadata: { mediaIds },
       });

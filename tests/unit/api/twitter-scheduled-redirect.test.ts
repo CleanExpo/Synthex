@@ -46,12 +46,13 @@ const scheduleTweet = jest.fn();
 const postTweet = jest.fn();
 const postThread = jest.fn();
 const validateTweet = jest.fn();
+const uploadMedia = jest.fn();
 jest.mock('@/lib/social/twitter-service', () => ({
   twitterService: {
     scheduleTweet: (...a: unknown[]) => scheduleTweet(...a),
     postTweet: (...a: unknown[]) => postTweet(...a),
     postThread: (...a: unknown[]) => postThread(...a),
-    uploadMedia: jest.fn(),
+    uploadMedia: (...a: unknown[]) => uploadMedia(...a),
     validateTweet: (...a: unknown[]) => validateTweet(...a),
   },
 }));
@@ -143,5 +144,42 @@ describe('POST /api/social/twitter/post — scheduled tweet lands in the working
     // Immediate tweets are NOT_PROVISIONED (social_posts table missing).
     expect((res as Response).status).toBe(503);
     expect(postTweet).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/social/twitter/post — side-step failures are not swallowed', () => {
+  const when = '2030-01-01T12:00:00.000Z';
+
+  it('does not schedule when a media upload fails, and names the failed media', async () => {
+    uploadMedia
+      .mockResolvedValueOnce('media-1')
+      .mockRejectedValueOnce(new Error('upload 500'));
+    const res = await POST(
+      req({
+        text: 'hi',
+        mediaUrls: [
+          'https://cdn.example.com/a.png',
+          'https://cdn.example.com/b.png',
+        ],
+        scheduledTime: when,
+      })
+    );
+    const body = await (res as Response).json();
+
+    expect((res as Response).status).toBe(502);
+    expect(body.scheduled).toBe(false);
+    expect(body.mediaFailed).toEqual(['https://cdn.example.com/b.png']);
+    expect(scheduleViaPost).not.toHaveBeenCalled();
+  });
+
+  it('schedules a thread-only body with the thread text, not undefined', async () => {
+    const res = await POST(
+      req({ thread: ['one', 'two'], scheduledTime: when })
+    );
+
+    expect((res as Response).status).toBe(200);
+    expect(scheduleViaPost).toHaveBeenCalledWith(
+      expect.objectContaining({ content: 'one\n\ntwo' })
+    );
   });
 });

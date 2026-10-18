@@ -28,6 +28,7 @@ import {
 } from '@/lib/moderation/content-safety';
 import { logger } from '@/lib/logger';
 import {
+  FEATURE_NOT_PROVISIONED,
   notProvisionedBody,
   NOT_PROVISIONED_STATUS,
 } from '@/lib/api/not-provisioned';
@@ -220,6 +221,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      (error as { code?: unknown } | null)?.code === FEATURE_NOT_PROVISIONED
+    ) {
+      return APISecurityChecker.createSecureResponse(
+        { error: FEATURE_NOT_PROVISIONED, message: (error as Error).message },
+        NOT_PROVISIONED_STATUS
+      );
+    }
+
     logger.error('Moderation check error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -267,6 +277,15 @@ export async function GET(request: NextRequest) {
       total: history.length, // Would need count query for accurate total
     });
   } catch (error: unknown) {
+    if (
+      (error as { code?: unknown } | null)?.code === FEATURE_NOT_PROVISIONED
+    ) {
+      return APISecurityChecker.createSecureResponse(
+        { error: FEATURE_NOT_PROVISIONED, message: (error as Error).message },
+        NOT_PROVISIONED_STATUS
+      );
+    }
+
     logger.error('Moderation history error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
