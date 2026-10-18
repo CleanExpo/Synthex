@@ -120,7 +120,10 @@ describe('readiness stays scoped to the actual identity', () => {
     const spy = jest
       .spyOn(fs, 'existsSync')
       .mockImplementation(file =>
-        String(file).endsWith('/logos/synthex/favicon.ico')
+        String(file)
+          .split(path.sep)
+          .join('/')
+          .endsWith('/logos/synthex/favicon.ico')
           ? false
           : exists(file)
       );
