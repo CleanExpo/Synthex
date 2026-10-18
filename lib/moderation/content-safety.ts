@@ -12,12 +12,13 @@
  * NOT_PROVISIONED storage: `content_moderation_logs`, `content_reviews` and
  * `brand_guidelines` have no Prisma model (prisma/schema.prisma). Moderation
  * itself is pure computation and still runs; history and review submission
- * throw ModerationStorageNotProvisionedError; stored brand guidelines are
- * treated as absent (callers may pass them explicitly) and the moderation log
+ * throw ModerationStorageNotProvisionedError; without explicit guidelines,
+ * brand safety fails and the result requires human review; the moderation log
  * write is reported, not persisted.
  */
 
 import { logger } from '@/lib/logger';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
 
 /** Thrown when a moderation feature needs a table that is not provisioned. */
 export class ModerationStorageNotProvisionedError extends Error {
@@ -56,6 +57,8 @@ export interface ModerationResult {
   suggestions: string[];
   requiresHumanReview: boolean;
   blockedReasons: string[];
+  /** Set when stored brand guidelines were needed but could not be read. */
+  brandGuidelines?: ReturnType<typeof tableUnavailable>;
 }
 
 export interface CategoryResult {
@@ -219,8 +222,13 @@ class ContentSafetyService {
         compliance,
         suggestions,
         requiresHumanReview:
-          riskLevel === 'medium' || criticalIssues.length > 0,
+          !brandGuidelines ||
+          riskLevel === 'medium' ||
+          criticalIssues.length > 0,
         blockedReasons,
+        ...(!brandGuidelines && {
+          brandGuidelines: tableUnavailable('brand_guidelines'),
+        }),
       };
 
       // Cache result
@@ -430,11 +438,19 @@ class ContentSafetyService {
     const sensitiveTopics: string[] = [];
     let score = 100;
 
+    // No guidelines were consulted, so brand safety is unknown, not passed.
     if (!guidelines) {
       return {
-        passed: true,
-        score: 100,
-        issues: [],
+        passed: false,
+        score: 0,
+        issues: [
+          {
+            type: 'brand_guidelines_unavailable',
+            severity: 'medium',
+            description:
+              'Brand guidelines unavailable: brand safety was not checked',
+          },
+        ],
         competitorMentions: [],
         sensitiveTopics: [],
       };
@@ -569,7 +585,7 @@ class ContentSafetyService {
     userId: string
   ): Promise<BrandGuidelines | undefined> {
     // `brand_guidelines` is not provisioned: there are no stored guidelines to
-    // read, so moderation proceeds without them (explicit options still apply).
+    // read; checkBrandSafety fails closed without them (explicit options still apply).
     logger.debug(
       'Stored brand guidelines unavailable: storage not provisioned',
       {

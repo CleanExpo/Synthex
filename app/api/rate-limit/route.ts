@@ -8,6 +8,7 @@
  * Provides endpoints for checking and managing rate limits
  */
 
+import { createHash } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimitStatus, resetRateLimits } from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
@@ -89,19 +90,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Reset rate limits
-    await resetRateLimits(userId);
-
-    // Log admin action
+    // Audit first: if the row cannot be written, the reset does not happen.
+    // The shared admin key carries no identity, so record its fingerprint.
     await prisma.auditLog.create({
       data: {
         action: 'rate_limit_reset',
         resource: 'rate_limit',
         resourceId: userId,
         category: 'security',
-        details: { adminId: 'system', reason: 'Admin manual reset' },
+        details: {
+          adminKeyFingerprint: createHash('sha256')
+            .update(adminKey)
+            .digest('hex')
+            .slice(0, 12),
+          reason: 'Admin manual reset',
+        },
       },
     });
+
+    await resetRateLimits(userId);
 
     return NextResponse.json({
       success: true,

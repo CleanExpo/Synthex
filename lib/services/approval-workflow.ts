@@ -331,6 +331,10 @@ class ApprovalWorkflowService {
       if (!step.assignedTo.includes(userId) && step.assignedTo[0] !== '*') {
         throw new Error('You are not assigned to this step');
       }
+      // A wildcard step means "anyone", never the submitter approving themselves.
+      if (step.assignedTo[0] === '*' && userId === request.submittedBy) {
+        throw new Error('You cannot approve your own request');
+      }
 
       // Add approval
       step.currentApprovals++;
