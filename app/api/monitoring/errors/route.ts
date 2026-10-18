@@ -3,7 +3,7 @@ import { z } from 'zod';
 // NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { prisma } from '@/lib/prisma';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 
 /** Error log entry structure */
 interface ErrorLogEntry {
@@ -11,7 +11,6 @@ interface ErrorLogEntry {
   stack?: string;
   url?: string;
   userId?: string;
-  userEmail?: string;
   serverTimestamp: string;
   timestamp: string;
   level?: string;
@@ -44,23 +43,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const error: Record<string, unknown> = { ...validation.data };
+    // Identity fields come only from the session, never from the client body.
+    const {
+      userId: _clientUserId,
+      userEmail: _clientUserEmail,
+      ...reported
+    } = validation.data;
+    const error: Record<string, unknown> = { ...reported };
 
     // Add server timestamp
     error.serverTimestamp = new Date().toISOString();
 
-    // Attach the reporting user when a session is present (cookie or Bearer).
-    // Best-effort enrichment: anonymous client errors are still recorded.
+    // Attach the reporting user id when a session is present (cookie or Bearer).
+    // Only the id is kept (no email); anonymous client errors are still recorded.
     try {
       const sessionUserId = await getUserIdFromRequestOrCookies(request);
-      if (sessionUserId) {
-        error.userId = sessionUserId;
-        const user = await prisma.user.findUnique({
-          where: { id: sessionUserId },
-          select: { email: true },
-        });
-        if (user) error.userEmail = user.email;
-      }
+      if (sessionUserId) error.userId = sessionUserId;
     } catch (authError) {
       logger.error('Failed to resolve user for error report:', authError);
     }
@@ -98,9 +96,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
-  // Require authentication — this endpoint exposes userId, userEmail, and stack traces
-  const userId = await getUserIdFromRequestOrCookies(request);
-  if (!userId) {
+  // Require authentication — entries carry userId, stack traces and context.
+  // A platform admin sees every entry; anyone else sees only their own.
+  const auth = await verifyAdmin(request);
+  if (!auth.isAdmin && !auth.userId) {
     return NextResponse.json(
       { error: 'Authentication required' },
       { status: 401 }
@@ -114,7 +113,10 @@ export async function GET(request: NextRequest) {
     const level = searchParams.get('level');
     const startDate = searchParams.get('startDate');
 
-    let errors = [...errorLog];
+    const visible = auth.isAdmin
+      ? errorLog
+      : errorLog.filter(e => e.userId === auth.userId);
+    let errors = [...visible];
 
     // Filter by level if specified
     if (level) {
@@ -132,16 +134,16 @@ export async function GET(request: NextRequest) {
 
     // Calculate statistics
     const stats = {
-      total: errorLog.length,
-      last24Hours: errorLog.filter(e => {
+      total: visible.length,
+      last24Hours: visible.filter(e => {
         const date = new Date(e.timestamp);
         const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
         return date > dayAgo;
       }).length,
       byLevel: {
-        error: errorLog.filter(e => e.level === 'error').length,
-        warning: errorLog.filter(e => e.level === 'warning').length,
-        info: errorLog.filter(e => e.level === 'info').length,
+        error: visible.filter(e => e.level === 'error').length,
+        warning: visible.filter(e => e.level === 'warning').length,
+        info: visible.filter(e => e.level === 'info').length,
       },
     };
 
