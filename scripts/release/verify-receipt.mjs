@@ -110,10 +110,43 @@ export function verify(head, phase, cwd = ROOT) {
     const diffRaw = tryGit(['diff', '--name-only', reviewed, sha], { cwd });
     if (diffRaw === null)
       problems.push('binding diff from reviewed commit failed');
-    const diff = (diffRaw || '').split('\n').filter(Boolean);
-    const extra = diff.filter(
-      f => f !== file && !/^release-receipts\/(ledger|manifests)\//.test(f)
-    );
+    const outside = range =>
+      (range || '')
+        .split('\n')
+        .filter(Boolean)
+        .filter(
+          f => f !== file && !/^release-receipts\/(ledger|manifests)\//.test(f)
+        );
+    let extra = outside(diffRaw);
+    // A merge commit on main (merge-phase merges with --merge) also carries whatever main gained
+    // after the branch was cut (P0 #1005 after #998). It passes only as a PURE merge: one parent is
+    // bound to the reviewed commit, and every file the merge changes against that parent equals
+    // another parent's copy, so the merge commit itself adds nothing.
+    if (extra.length) {
+      const parents = (tryGit(['rev-parse', `${sha}^@`], { cwd }) || '')
+        .split('\n')
+        .filter(Boolean);
+      const blob = (c, f) => tryGit(['rev-parse', `${c}:${f}`], { cwd });
+      const pure =
+        parents.length > 1 &&
+        parents.some(p => {
+          if (
+            outside(tryGit(['diff', '--name-only', reviewed, p], { cwd }))
+              .length
+          )
+            return false;
+          const others = parents.filter(o => o !== p);
+          const merged = (
+            tryGit(['diff', '--name-only', p, sha], { cwd }) || ''
+          )
+            .split('\n')
+            .filter(Boolean);
+          return merged.every(f =>
+            others.some(o => blob(o, f) === blob(sha, f))
+          );
+        });
+      if (pure) extra = [];
+    }
     if (extra.length)
       problems.push(
         `diff from reviewed commit holds more than the receipt: ${extra.slice(0, 5).join(', ')}`
@@ -243,7 +276,32 @@ function control() {
     const okC =
       c.ok === false &&
       c.problems.some(x => x.startsWith('diff from reviewed commit'));
-    return okA && okB && okC;
+    // D: a pure merge of the receipt head with a main that moved after review passes. E: the same
+    // merge with a change made inside the merge commit fails on the binding.
+    g([...id, 'reset', '-q', '--hard', 'HEAD~1']);
+    const receiptHead = g(['rev-parse', 'HEAD']);
+    g(['checkout', '-q', '-b', 'moved-main', reviewed]);
+    writeFileSync(path.join(dir, 'b.txt'), 'landed on main after review\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'main moved']);
+    g([
+      ...id,
+      'merge',
+      '-q',
+      '--no-ff',
+      '-m',
+      'merge receipt head',
+      receiptHead,
+    ]);
+    const okD = verify(g(['rev-parse', 'HEAD']), 'P99', dir).ok === true;
+    writeFileSync(path.join(dir, 'a.txt'), 'changed inside the merge\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '--amend', '--no-edit']);
+    const e = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okE =
+      e.ok === false &&
+      e.problems.some(x => x.startsWith('diff from reviewed commit'));
+    return okA && okB && okC && okD && okE;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -252,7 +310,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected)`
     );
     process.exit(ok ? 0 : 1);
   }
