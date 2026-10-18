@@ -4,9 +4,8 @@
  * Covers GET /api/dashboard/content-score-history:
  *  - 401 unauthenticated
  *  - 403 no active brand (no-org fallback preserved)
- *  - 503 when Supabase admin client unavailable
- *  - the Supabase `content_score_history` query is `.eq('organization_id', …)`
- *    scoped to the ACTIVE brand (not the home org) for a brand-switched owner
+ *  - 501 FEATURE_NOT_PROVISIONED after auth + active-brand resolution: the
+ *    `content_score_history` table has no Prisma model, so no history is faked
  */
 
 import { createMockNextRequest } from '../../helpers/mock-request';
@@ -70,34 +69,6 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-// ── Supabase mock ─────────────────────────────────────────────────────────────
-// Capture the organization_id passed to `.eq()` so we can assert active-brand
-// scoping. The query chain is select → eq → order → limit (awaited).
-
-const mockEq = jest.fn();
-const mockSelect = jest.fn();
-const mockFrom = jest.fn();
-
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(),
-}));
-
-import { createClient } from '@/lib/platform/noop-client';
-
-beforeEach(() => {
-  // jest config sets resetMocks: true — re-apply implementations each test.
-  process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
-  process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-key';
-
-  const result = { data: [], error: null };
-  const limit = jest.fn().mockResolvedValue(result);
-  const order = jest.fn(() => ({ limit }));
-  mockEq.mockImplementation(() => ({ order }));
-  mockSelect.mockImplementation(() => ({ eq: mockEq }));
-  mockFrom.mockImplementation(() => ({ select: mockSelect }));
-  (createClient as jest.Mock).mockReturnValue({ from: mockFrom });
-});
-
 const ROUTE = '@/app/api/dashboard/content-score-history/route';
 const URL = 'http://localhost/api/dashboard/content-score-history';
 
@@ -117,29 +88,18 @@ describe('GET /api/dashboard/content-score-history (brand-scope)', () => {
     expect(res.status).toBe(403);
   });
 
-  it('still returns scores when leftover Supabase env vars are missing', async () => {
+  it('returns 501 FEATURE_NOT_PROVISIONED for an authenticated brand', async () => {
     mockGetUserId.mockResolvedValue('user-1');
-    mockGetEffectiveOrganizationId.mockResolvedValue('org-1');
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    mockGetEffectiveOrganizationId.mockResolvedValue('org-active-brand');
     const { GET } = await import(ROUTE);
     const res = await GET(createMockNextRequest({ url: URL }) as any);
-    expect(res.status).toBe(200);
-  });
-
-  it('scopes the content_score_history query to the ACTIVE brand', async () => {
-    // Brand-switched multi-business owner: active brand differs from home org.
-    const ACTIVE_BRAND = 'org-active-brand';
-    mockGetUserId.mockResolvedValue('user-1');
-    mockGetEffectiveOrganizationId.mockResolvedValue(ACTIVE_BRAND);
-
-    const { GET } = await import(ROUTE);
-    const res = await GET(createMockNextRequest({ url: URL }) as any);
-    expect(res.status).toBe(200);
-
+    expect(res.status).toBe(501);
+    expect(await res.json()).toMatchObject({
+      error: 'FEATURE_NOT_PROVISIONED',
+      available: false,
+      reason: expect.stringContaining('content_score_history'),
+    });
     expect(mockGetEffectiveOrganizationId).toHaveBeenCalledWith('user-1');
-    expect(mockFrom).toHaveBeenCalledWith('content_score_history');
-    // The `.eq('organization_id', …)` filter carries the active brand id.
-    expect(mockEq).toHaveBeenCalledWith('organization_id', ACTIVE_BRAND);
     // Must NOT have fallen back to the raw home-org lookup.
     expect(mockUserFindUnique).not.toHaveBeenCalled();
   });

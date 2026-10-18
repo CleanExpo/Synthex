@@ -1,53 +1,34 @@
 /**
  * GET /api/effect-report/by-period?quarter=Q1+2026
  *
- * Returns a single Effect Report for the given quarter label.
+ * Single Effect Report for the given quarter label, for the caller's org.
  * Used by /dashboard/effect-report/[period] viewer.
+ *
+ * NOT PROVISIONED: the `effect_reports` table has no Prisma model, so after
+ * auth and input validation this returns 501 FEATURE_NOT_PROVISIONED.
+ *
  * SYN-674
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
-import { withAuth, type AuthContext } from '@/lib/auth/with-auth';
-import { getEffectReportByPeriod } from '@/lib/effect-report/generator';
+import { withAuth } from '@/lib/auth/with-auth';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
-
-function getAdmin() {
-  return createClient();
-}
-
-export const GET = withAuth(
-  async (req: NextRequest, { clientId }: AuthContext) => {
-    const { searchParams } = new URL(req.url);
-    const quarterLabel = searchParams.get('quarter');
-
-    if (!quarterLabel) {
-      return NextResponse.json(
-        { error: 'quarter param required' },
-        { status: 400 }
-      );
-    }
-
-    const admin = getAdmin() as ReturnType<
-      typeof import('@/lib/platform/noop-client').createClient<any>
-    >;
-    const report = await getEffectReportByPeriod(admin, clientId, quarterLabel);
-
-    if (!report) {
-      return NextResponse.json({ error: 'Report not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({
-      reportId: report.id,
-      quarterLabel: report.report_data?.quarterLabel ?? quarterLabel,
-      reportData: report.report_data,
-      // SECURITY (2026-05-16): /api/og/effect-report now derives clientId
-      // from the authenticated session; the param is ignored if supplied.
-      pngUrl:
-        report.png_url ??
-        `${APP_URL}/api/og/effect-report?period=${encodeURIComponent(quarterLabel)}`,
-      pdfUrl: report.pdf_url ?? `${APP_URL}/api/effect-report/${report.id}/pdf`,
-    });
+export const GET = withAuth(async (req: NextRequest) => {
+  const { searchParams } = new URL(req.url);
+  if (!searchParams.get('quarter')) {
+    return NextResponse.json(
+      { error: 'quarter param required' },
+      { status: 400 }
+    );
   }
-);
+
+  return NextResponse.json(
+    {
+      error: 'FEATURE_NOT_PROVISIONED',
+      message: 'Effect Report storage is not provisioned',
+      available: false,
+      reason: 'effect_reports table is not provisioned',
+    },
+    { status: 501 }
+  );
+});
