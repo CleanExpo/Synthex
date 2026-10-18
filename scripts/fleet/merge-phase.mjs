@@ -13,6 +13,7 @@
  * Then: gh pr merge --merge --delete-branch (a merge commit keeps the receipt commit reachable from
  * main, so verify-receipt can re-check it after main moves), ledger row kind=merge, exit 0. Anything else exits 1 and merges nothing.
  */
+import os from 'node:os';
 import {
   policy,
   run,
@@ -257,18 +258,32 @@ if (dry) {
   console.log('merge-phase: all gates PASS (dry run, not merging)');
   process.exit(0);
 }
+const repoFull = (
+  run('gh', [
+    'repo',
+    'view',
+    '--json',
+    'nameWithOwner',
+    '--jq',
+    '.nameWithOwner',
+  ]).stdout || ''
+).trim();
+// Explicit repo + cwd outside the checkout: gh then merges and deletes the remote branch without
+// switching this working tree (P-1 reported exit 1 after a successful merge for that reason).
 const m = run(
   'gh',
   [
     'pr',
     'merge',
     pr,
+    '-R',
+    repoFull,
     '--merge',
     '--delete-branch',
     '--match-head-commit',
     head,
   ],
-  { timeout: 180000 }
+  { timeout: 180000, cwd: os.tmpdir() }
 );
 ledgerAppend({
   kind: m.code === 0 ? 'merge' : 'merge-refused',

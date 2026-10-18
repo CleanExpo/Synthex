@@ -21,6 +21,7 @@ export function unitPrompt({ phase, unit, branch, phaseBranch }) {
       ? `FILES IN SCOPE (at most ${pol.fanout.files_per_builder}): ${unit.inputs.join(', ')}`
       : '',
     `PROVING COMMAND (must exit 0 before you finish): ${unit.proving_command}`,
+    `METHOD (skill .claude/skills/tdd-jev/SKILL.md; read it first): red before green — write the failing test at the public seam first, then the minimal change; no tautological or implementation-coupled tests; no workarounds or one-off hacks that bypass an established process (fix the convention instead); on a second attempt start by building a tight feedback loop that goes red on the exact failure, redact every secret from anything you quote, and never claim PASS without the proving command's own exit 0.`,
     `Also run: npm run type-check && npm run lint && npm test -- --findRelatedTests <changed files> (or the full suite if quick).`,
     `GIT: commit on branch ${branch} (create it from your current HEAD: git checkout -B ${branch}) with committer "Synthex Fleet <fleet@synthex.local>" (git -c user.name='Synthex Fleet' -c user.email=fleet@synthex.local commit ...). Commit message ends with trailers:\nFleet-Role: builder\nFleet-Unit: ${unit.id}\nThen push: git push -u origin ${branch}. Do NOT open a PR, do NOT push to ${phaseBranch} or main.`,
     `FINISH: your final message must be exactly one line: UNIT-DONE ${unit.id} <full commit sha> <state> where state is PASS, FAIL or INCONCLUSIVE (INCONCLUSIVE when the proving command could not run). Never claim PASS without the proving command's exit 0 in your transcript. If you cannot complete after two honest attempts, report FAIL with one line of cause.`,
@@ -40,7 +41,10 @@ export function spawnUnit({ phase, unit, phaseBranch, model }) {
       '--provider',
       'claude-code',
       '--model',
-      model || pol.models.builder,
+      model ||
+        (unit.hard
+          ? pol.models.builder_hard || pol.models.builder
+          : pol.models.builder),
       '--title',
       `fleet ${phase} ${unit.id}`,
       '--prompt',

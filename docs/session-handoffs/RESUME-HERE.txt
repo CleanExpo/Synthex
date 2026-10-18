@@ -1,0 +1,66 @@
+SYNTHEX FLEET - RESUME HERE (plain text, written 2026-10-17 02:35 UTC)
+
+WHAT THIS IS
+We are building the "Vibe to leader" spec for Synthex with no human in the loop.
+Phill (founder) decided: Option B (Cloudroom-native fleet), no human to push or merge,
+all automation, use the Mac Mini external SSD, use Opus/Sonnet/Haiku 5.5 to save Max usage,
+never call Cursor or Codex. Done means: spec phases P-1..P9 green plus P10 billing in Stripe test mode.
+
+WHERE THE WORK IS
+Repo: github.com/CleanExpo/Synthex. Branch: feature/fleet-p-1-bootstrap (from main 621dcd55).
+Commits on it: b18b84cc bootstrap, 8aca5c51 review fixes, 2c9268e1 minimax lane fix, cade6963 receipt fix.
+Sandbox clone: /code/Synthex. Node 22 is at ~/node22/bin (run: export PATH=$HOME/node22/bin:$PATH).
+Canonical spec from Phill's PC: branch origin/feature/vibe-to-leader-spec, commit 6c19cfc2.
+Decisions log: DECISIONS.md (rows FD-1..FD-4, A-1..A-16). Fleet docs: scripts/fleet/README.md.
+Founder amendments to the spec (reviewers must read): docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md
+
+STATE RIGHT NOW
+Phase -1 is built, gated 7/7 on head cade6963, reviewed PASS by MiniMax on the Mac Mini.
+A background chain is doing: write receipt -> push branch -> wait GitHub checks -> open PR -> merge via
+scripts/fleet/merge-phase.mjs. Then P0 starts automatically. Nothing is on origin yet.
+
+FIRST COMMANDS
+  tail -20 /tmp/p-1-chain.log
+  gh pr list --head feature/fleet-p-1-bootstrap
+If the PR is merged: run  node scripts/fleet/phase-advance.mjs  and follow scripts/fleet/automations/phase-advance.md.
+If the chain is dead: on the branch run, in order,
+  node scripts/fleet/run-phase.mjs --phase P-1 gate
+  node scripts/fleet/run-phase.mjs --phase P-1 review
+  node scripts/fleet/run-phase.mjs --phase P-1 release
+(set GITHUB_TOKEN=$(gh auth token) and FLEET_HALT_DIR=$PWD/release-receipts/halt first).
+
+P0 MUST INCLUDE (one orchestrator commit, trailers "Fleet-Role: orchestrator" and "Protected-Change: <reason>")
+1. SSD routing: policy.json "mac" = repo /Volumes/Mini Mini 2T Storage/code/Synthex, tmp /Volumes/Mini Mini 2T Storage/hot/tmp/fleet.
+2. Model mix: reader/screen haiku-5-5, builder/verifier/judge sonnet-5-5, builder_hard opus-5-5.
+3. Replace docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md with the file from commit 6c19cfc2.
+4. Commit docs/strategy/2026-10-17-world-class-ai-agency-operating-model.md and docs/fleet/assistance-opportunities.md
+   (both exist untracked in /code/Synthex and /tmp/fleet; see the handoff file if missing).
+5. Builder prompt method lines (tdd, no workarounds) in scripts/fleet/fanout.mjs and a handoff writer in run-phase release.
+Script that does all of it in this sandbox: /tmp/fleet/p0-mac-storage.sh (lost if the sandbox is gone; rebuild from this list).
+
+NEXT PHASES
+P1 = JEV deterministic harness (9 units, plan in /tmp/fleet/units-P1.json; families J1..J12, 1,830 script cases, planted controls).
+P2 = retire lib/platform/noop-client (88 importers, 11 batches of 8 + delete-stub; plan in /tmp/fleet/units-P2.json).
+Then P3 contract, P4 machine principal, P5 receipts, P6 outcomes, P7 delegated publish, P8 quality, P9 drills, P10 billing.
+
+AUTOMATIONS (Cloudroom)
+fleet-phase-advance ef3f4c7e-d35d-4a23-9411-5627bddba69e every 30 min (holds until scripts/fleet is on main)
+fleet-nightly 27d8b7fd-139d-4a99-928a-d1393cc0d394 15:00 UTC
+fleet-weekly 2ddc8e76-57c0-452f-a5f8-bf90884451f3 Sunday 16:00 UTC
+
+REVIEW LANE
+If a reviewer flags the Cloudroom substrate, fleet merge or P10 as spec violations: point at the amendments file; those are founder decisions.
+MiniMax on the Mac Mini works (run-phase review handles it: git bundle -> room-cli mac push -> independent_review.py --lane minimax).
+Free OpenRouter models are rate-limited. Never cursor/codex.
+
+GOTCHAS
+pkill -f kills your own command if the pattern is in it; use pkill -f 'name[.]sh'.
+room-cli does not work from setsid/detached processes; run chains attached (run_in_background).
+Pre-commit prettier reformats files; after editing scripts/fleet/policy.json run: node scripts/fleet/check-bootstrap.mjs --record
+The Mac's ~/Synthex is on the internal disk; use /Volumes/Mini Mini 2T Storage/code/Synthex for fleet work (A-13).
+
+NO API KEY NEEDED: judged runs use the Max plan via Cloudroom child threads (A-18).
+
+WAITING ON PHILL (not blocking)
+Constitution v2 ratification; metered Anthropic key for P8; pilot org + call provider; four one-word
+decisions in docs/strategy/...operating-model.md section 8.
