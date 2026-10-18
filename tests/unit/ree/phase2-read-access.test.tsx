@@ -131,7 +131,8 @@ test.each([
   ['DELETE', clients.DELETE],
 ] as const)('%s: auth then unsupported (real noop)', async (verb, route) => {
   const res = await route(request());
-  expect(res.status).toBe(501);
+  // geo-score answers FEATURE_NOT_PROVISIONED (503); legacy clients stay 501.
+  expect(res.status).toBe(verb === 'score' ? 503 : 501);
   expect(await res.json()).toMatchObject({
     state: 'UNSUPPORTED',
     value: null,

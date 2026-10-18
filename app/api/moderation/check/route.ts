@@ -27,7 +27,10 @@ import {
   BrandGuidelines,
 } from '@/lib/moderation/content-safety';
 import { logger } from '@/lib/logger';
-import { notProvisionedBody } from '@/lib/api/not-provisioned';
+import {
+  notProvisionedBody,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const ModerationCheckSchema = z.object({
@@ -312,7 +315,7 @@ export async function PUT(request: NextRequest) {
     // so the guidelines cannot be saved; say so instead of claiming success.
     return APISecurityChecker.createSecureResponse(
       notProvisionedBody('brand_guidelines', 'Brand guideline storage'),
-      501
+      NOT_PROVISIONED_STATUS
     );
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {

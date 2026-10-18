@@ -2,7 +2,7 @@
  * Unit tests for GET /api/og/effect-report.
  *
  * The `effect_reports` table has no Prisma model, so after auth and tenant
- * resolution the route must return 501 FEATURE_NOT_PROVISIONED rather than a
+ * resolution the route must return 503 FEATURE_NOT_PROVISIONED rather than a
  * placeholder card that looks like a real report.
  */
 
@@ -41,14 +41,14 @@ describe('GET /api/og/effect-report', () => {
     expect(res.status).toBe(403);
   });
 
-  it('returns 501 FEATURE_NOT_PROVISIONED after auth', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED after auth', async () => {
     getUserIdMock.mockResolvedValue('user-123');
     mockPrisma.user.findUnique.mockResolvedValue({ organizationId: 'org-1' });
 
     const res = await GET(req());
     const body = await res.json();
 
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('effect_reports');
     expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({

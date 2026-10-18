@@ -1,7 +1,7 @@
 /**
  * /api/backup — NOT PROVISIONED (system_backups, profiles, content_posts have
  * no model in prisma/schema.prisma). Auth still gates both handlers; an
- * authorised caller gets 501 FEATURE_NOT_PROVISIONED, never a fake
+ * authorised caller gets 503 FEATURE_NOT_PROVISIONED, never a fake
  * "success: true" backup or an empty history list.
  */
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -44,7 +44,7 @@ describe('POST /api/backup', () => {
     expect(res.status).toBe(400);
   });
 
-  it('501 FEATURE_NOT_PROVISIONED for an authorised run — no fake success', async () => {
+  it('503 FEATURE_NOT_PROVISIONED for an authorised run — no fake success', async () => {
     const res = await POST(
       createMockNextRequest({
         method: 'POST',
@@ -54,7 +54,7 @@ describe('POST /api/backup', () => {
       })
     );
     const json = await res.json();
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(json.message).toMatch(/system_backups/);
     expect(json).not.toHaveProperty('success');
@@ -67,7 +67,7 @@ describe('GET /api/backup', () => {
     expect(res.status).toBe(401);
   });
 
-  it('501 available:false for an admin read — never an empty backups list', async () => {
+  it('503 available:false for an admin read — never an empty backups list', async () => {
     const res = await GET(
       createMockNextRequest({
         url: URL_,
@@ -75,7 +75,7 @@ describe('GET /api/backup', () => {
       })
     );
     const json = await res.json();
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     expect(json).toMatchObject({
       error: 'FEATURE_NOT_PROVISIONED',
       available: false,

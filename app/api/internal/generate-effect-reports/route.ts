@@ -6,7 +6,7 @@
  *
  * NOT PROVISIONED: neither `effect_reports` nor `client_journey_events` has a
  * Prisma model, so the job cannot dedupe, persist or record anything. After
- * auth it returns 501 FEATURE_NOT_PROVISIONED instead of reporting a run.
+ * auth it returns 503 FEATURE_NOT_PROVISIONED instead of reporting a run.
  *
  * Feature flag: EFFECT_REPORT_ENABLED=true required (defaults disabled).
  * Called by: platform/functions/generate-effect-reports (Deno cron proxy)
@@ -16,6 +16,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Feature flag guard
@@ -30,12 +31,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = verifyCronRequest(req, 'GENERATE_EFFECT_REPORTS');
   if (!auth.ok) return auth.response;
 
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message:
-        'Effect report generation is not provisioned: the effect_reports and client_journey_events tables have no data model. No reports were generated.',
-    },
-    { status: 501 }
+  return notProvisionedResponse(
+    'Effect report generation is not provisioned: the effect_reports and client_journey_events tables have no data model. No reports were generated.'
   );
 }

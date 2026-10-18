@@ -23,6 +23,10 @@ import {
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { scheduleViaPost } from '@/lib/social/schedule-via-post';
+import {
+  notProvisionedResponse,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 
 const twitterPostSchema = z.object({
   text: z.string().optional(),
@@ -93,10 +97,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (!scheduledTime) {
-        return NextResponse.json(
-          { error: 'FEATURE_NOT_PROVISIONED', message: NOT_PROVISIONED_REASON },
-          { status: 501 }
-        );
+        return notProvisionedResponse(NOT_PROVISIONED_REASON);
       }
 
       // Handle media uploads if provided
@@ -171,7 +172,7 @@ export async function GET(request: NextRequest) {
         error: 'FEATURE_NOT_PROVISIONED',
         reason: NOT_PROVISIONED_REASON,
       },
-      { status: 501 }
+      { status: NOT_PROVISIONED_STATUS }
     );
   } catch (error) {
     logger.error('Get posts error:', error);

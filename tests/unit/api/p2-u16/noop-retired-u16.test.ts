@@ -3,7 +3,7 @@
  *
  * P2 u16: five routes stopped using the noop-client wrapper.
  *  - brand-video generate/jobs and admin private-refs have no backing table or
- *    private storage, so they answer 501 FEATURE_NOT_PROVISIONED after auth.
+ *    private storage, so they answer 503 FEATURE_NOT_PROVISIONED after auth.
  *  - founder delete-account is ported to Prisma, scoped to the caller.
  *  - health/scaling authenticates via the real JWT helper.
  */
@@ -93,14 +93,14 @@ beforeEach(() => {
 });
 
 describe('POST /api/brand-video/generate (NOT_PROVISIONED brand_video_jobs)', () => {
-  it('answers 501 FEATURE_NOT_PROVISIONED instead of a queued job', async () => {
+  it('answers 503 FEATURE_NOT_PROVISIONED instead of a queued job', async () => {
     const res = await generate.POST(
       req('/api/brand-video/generate', 'POST', {
         brand: 'synthex',
         topic: 'launch',
       })
     );
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('brand_video_jobs');
@@ -128,9 +128,9 @@ describe('POST /api/brand-video/generate (NOT_PROVISIONED brand_video_jobs)', ()
 });
 
 describe('GET /api/brand-video/jobs (NOT_PROVISIONED brand_video_jobs)', () => {
-  it('answers 501 rather than an empty job list', async () => {
+  it('answers 503 rather than an empty job list', async () => {
     const res = await jobs.GET(req('/api/brand-video/jobs', 'GET'));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('brand_video_jobs');
@@ -156,13 +156,13 @@ describe('POST /api/admin/private-refs (NOT_PROVISIONED reference-library-privat
     expect(res.status).toBe(401);
   });
 
-  it('answers 501 FEATURE_NOT_PROVISIONED after auth', async () => {
+  it('answers 503 FEATURE_NOT_PROVISIONED after auth', async () => {
     const res = await privateRefs.POST(
       req('/api/admin/private-refs', 'POST', undefined, {
         'x-ingest-token': 'secret-token',
       })
     );
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('reference-library-private');

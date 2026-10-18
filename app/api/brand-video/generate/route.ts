@@ -4,7 +4,7 @@
  * Queues a Brand Video Studio render job. Jobs live in `brand_video_jobs`,
  * which has no Prisma model (it was a Supabase-only table removed with
  * SYN-1070), so the job cannot be recorded. After auth, validation and brand
- * preflight the route answers 501 FEATURE_NOT_PROVISIONED rather than
+ * preflight the route answers 503 FEATURE_NOT_PROVISIONED rather than
  * pretending to queue.
  *
  * Auth: withAuth (401 no session → 403 no org). Zod-validated body per
@@ -15,7 +15,10 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit';
-import { notProvisionedBody } from '@/lib/api/not-provisioned';
+import {
+  notProvisionedBody,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 import {
   BRAND_VIDEO_STYLE_KEYS,
   DEFAULT_BRAND_VIDEO_STYLE,
@@ -70,7 +73,7 @@ export const POST = withAuth(async (request, { userId }) =>
     // No brand_video_jobs table: say so instead of reporting a queued job.
     return NextResponse.json(
       notProvisionedBody('brand_video_jobs', 'Brand video job queueing'),
-      { status: 501 }
+      { status: NOT_PROVISIONED_STATUS }
     );
   })
 );

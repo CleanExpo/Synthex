@@ -4,7 +4,7 @@
  *
  * NOT PROVISIONED: the `viral_patterns` table this route read has no model in
  * prisma/schema.prisma. After auth and org resolution the route answers
- * 501 FEATURE_NOT_PROVISIONED rather than an empty pattern list.
+ * 503 FEATURE_NOT_PROVISIONED rather than an empty pattern list.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,6 +15,7 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 const NOT_PROVISIONED_REASON =
   'Viral patterns are not provisioned: the viral_patterns table does not exist.';
@@ -34,15 +35,10 @@ async function handler(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      {
-        error: 'FEATURE_NOT_PROVISIONED',
-        message: NOT_PROVISIONED_REASON,
-        available: false,
-        reason: NOT_PROVISIONED_REASON,
-      },
-      { status: 501 }
-    );
+    return notProvisionedResponse(NOT_PROVISIONED_REASON, {
+      available: false,
+      reason: NOT_PROVISIONED_REASON,
+    });
   } catch (error) {
     logger.error('Error fetching patterns:', error);
     return NextResponse.json(

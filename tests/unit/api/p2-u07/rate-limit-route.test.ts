@@ -120,9 +120,9 @@ describe('POST /api/rate-limit', () => {
 });
 
 describe('PATCH /api/rate-limit', () => {
-  it('returns 501 FEATURE_NOT_PROVISIONED and writes nothing', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED and writes nothing', async () => {
     const res = await PATCH(req('PATCH', { userId: 'user-B', limit: 500 }));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('rate_limit_override');

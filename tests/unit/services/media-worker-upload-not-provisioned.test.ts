@@ -2,7 +2,7 @@
  * @jest-environment node
  *
  * P2 u15: the standalone media-worker has no storage backend for the private
- * reference bucket. POST /extract with `upload` must answer 501
+ * reference bucket. POST /extract with `upload` must answer 503
  * FEATURE_NOT_PROVISIONED (after auth, before ffmpeg runs) instead of
  * pretending frames were saved. Runs the real server on a local port.
  */
@@ -62,9 +62,9 @@ it('rejects an unauthenticated upload with 401', async () => {
   expect(res.status).toBe(401);
 });
 
-it('answers an authenticated upload with 501 FEATURE_NOT_PROVISIONED', async () => {
+it('answers an authenticated upload with 503 FEATURE_NOT_PROVISIONED', async () => {
   const res = await extract(uploadBody, TOKEN);
-  expect(res.status).toBe(501);
+  expect(res.status).toBe(503);
   expect(await res.json()).toEqual({
     error: 'FEATURE_NOT_PROVISIONED',
     message:
