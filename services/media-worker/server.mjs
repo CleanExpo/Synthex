@@ -11,7 +11,7 @@
  *   POST /probe      { videoUrl }      → ffprobe metadata
  *   POST /extract    { videoUrl, everySeconds?, maxFrames?, format?, quality?,
  *                      upload?: { industry, subjectKey, label } }
- *                      → frames as base64; with upload → 501
+ *                      → frames as base64; with upload → 503
  *                        FEATURE_NOT_PROVISIONED (the private reference
  *                        bucket has no storage backend in this worker)
  *   POST /transcode  { videoUrl, format?, maxWidth?, crf? } → transcoded file (base64)
@@ -122,7 +122,7 @@ app.post('/extract', auth, async (req, res) => {
     return res.status(400).json({ error: 'videoUrl (http) required' });
   // Refuse before running ffmpeg: frames requested for upload must never be
   // dropped or handed back as if they had been saved.
-  if (upload) return res.status(501).json(uploadNotProvisioned());
+  if (upload) return res.status(503).json(uploadNotProvisioned());
 
   const dir = await mkdtemp(join(tmpdir(), 'frames-'));
   try {

@@ -16,12 +16,13 @@
  *
  * NOT PROVISIONED: this job depends on the milestone_events table and
  * get_anniversary_orgs function, none of which exist in prisma/schema.prisma.
- * After the flag and auth checks it returns 501 FEATURE_NOT_PROVISIONED rather
+ * After the flag and auth checks it returns 503 FEATURE_NOT_PROVISIONED rather
  * than reporting a successful run that sent or recorded nothing.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   // Feature flag guard (defaults off)
@@ -36,12 +37,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = verifyCronRequest(req, 'DELIVER_MILESTONE_NOTIFICATIONS');
   if (!auth.ok) return auth.response;
 
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message:
-        'This job cannot run: the milestone_events table and get_anniversary_orgs function are not provisioned.',
-    },
-    { status: 501 }
+  return notProvisionedResponse(
+    'This job cannot run: the milestone_events table and get_anniversary_orgs function are not provisioned.'
   );
 }

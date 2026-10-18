@@ -3,7 +3,7 @@
  *
  * Immediate tweets go out via a shared app account and were logged to a
  * Supabase `social_posts` table that has no Prisma model. The route now says
- * so (501 FEATURE_NOT_PROVISIONED) instead of publishing and losing the record.
+ * so (503 FEATURE_NOT_PROVISIONED) instead of publishing and losing the record.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -75,13 +75,13 @@ afterAll(() => {
 });
 
 describe('/api/social/twitter/post — social_posts not provisioned', () => {
-  it('POST immediate tweet returns 501 FEATURE_NOT_PROVISIONED without publishing', async () => {
+  it('POST immediate tweet returns 503 FEATURE_NOT_PROVISIONED without publishing', async () => {
     const res = await POST(
       req('POST', { text: 'now', mediaUrls: ['https://x/a.png'] }) as never
     );
     const json = await (res as Response).json();
 
-    expect((res as Response).status).toBe(501);
+    expect((res as Response).status).toBe(503);
     expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(json.message).toContain('social_posts');
     expect(postTweet).not.toHaveBeenCalled();
@@ -89,10 +89,10 @@ describe('/api/social/twitter/post — social_posts not provisioned', () => {
     expect(uploadMedia).not.toHaveBeenCalled();
   });
 
-  it('POST immediate thread returns 501 without publishing', async () => {
+  it('POST immediate thread returns 503 without publishing', async () => {
     const res = await POST(req('POST', { thread: ['a', 'b'] }) as never);
 
-    expect((res as Response).status).toBe(501);
+    expect((res as Response).status).toBe(503);
     expect(postThread).not.toHaveBeenCalled();
   });
 
@@ -103,11 +103,11 @@ describe('/api/social/twitter/post — social_posts not provisioned', () => {
     expect((res as Response).status).toBe(401);
   });
 
-  it('GET returns available:false with 501, never an empty 2xx list', async () => {
+  it('GET returns available:false with 503, never an empty 2xx list', async () => {
     const res = await GET(req('GET') as never);
     const json = await (res as Response).json();
 
-    expect((res as Response).status).toBe(501);
+    expect((res as Response).status).toBe(503);
     expect(json).toEqual({
       available: false,
       error: 'FEATURE_NOT_PROVISIONED',

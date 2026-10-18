@@ -14,7 +14,7 @@
  *   3. Ignores `?client_id=` and uses the session's organizationId only
  *   4. Never reads or renders a foreign tenant's data: the effect_reports
  *      table has no Prisma model, so after auth + tenant resolution it answers
- *      501 FEATURE_NOT_PROVISIONED and renders no card for anyone
+ *      503 FEATURE_NOT_PROVISIONED and renders no card for anyone
  *
  * This test asserts all four properties without hitting the network.
  */
@@ -105,13 +105,13 @@ describe('GET /api/og/effect-report — cross-tenant access protection', () => {
     expect(mockImageResponse).not.toHaveBeenCalled();
   });
 
-  test('authenticated user with org gets an honest 501, not a placeholder card', async () => {
+  test('authenticated user with org gets an honest 503, not a placeholder card', async () => {
     mockGetUserId.mockResolvedValue(USER_A_ID);
     mockUserFindUnique.mockResolvedValue({ organizationId: TENANT_A_ID });
 
     const res = (await GET(makeReq({ period: 'Q1 2026' }))) as Response;
 
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(mockImageResponse).not.toHaveBeenCalled();

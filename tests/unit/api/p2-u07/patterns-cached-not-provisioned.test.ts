@@ -1,6 +1,6 @@
 /**
  * P2 u07: GET /api/patterns/cached read `viral_patterns`, which has no Prisma
- * model. After auth and org resolution it must answer 501, not an empty list.
+ * model. After auth and org resolution it must answer 503, not an empty list.
  */
 
 import type { NextRequest } from 'next/server';
@@ -32,11 +32,11 @@ const req = () =>
 beforeEach(() => jest.clearAllMocks());
 
 describe('GET /api/patterns/cached', () => {
-  it('returns 501 FEATURE_NOT_PROVISIONED naming viral_patterns', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED naming viral_patterns', async () => {
     mockGetUserId.mockResolvedValue('user-A');
     mockGetOrg.mockResolvedValue('org-A');
     const res = await GET(req());
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body).toMatchObject({
       error: 'FEATURE_NOT_PROVISIONED',

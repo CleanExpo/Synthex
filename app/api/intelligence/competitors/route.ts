@@ -19,6 +19,7 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { competitiveIntel, Platform } from '@/lib/services/competitive-intel';
 import { logger } from '@/lib/logger';
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const AddCompetitorSchema = z.object({
@@ -375,7 +376,7 @@ export async function DELETE(request: NextRequest) {
         message:
           'Removing competitors is not available: the competitors table is not provisioned.',
       },
-      501
+      NOT_PROVISIONED_STATUS
     );
   } catch (error: unknown) {
     logger.error('Competitors DELETE error:', { error });

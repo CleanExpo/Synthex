@@ -7,7 +7,7 @@
  * them into the private Supabase bucket `reference-library-private`, but that
  * client was removed (SYN-1070) and the repo has no private-bucket storage
  * helper — lib/storage/platform-storage.ts writes under public/, which would
- * leak them. Until private storage is provisioned the route answers 501
+ * leak them. Until private storage is provisioned the route answers 503
  * FEATURE_NOT_PROVISIONED after auth and stores nothing.
  *
  * Auth: requires header `x-ingest-token` to match REFERENCE_INGEST_TOKEN
@@ -15,7 +15,10 @@
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { timingSafeEqual } from 'node:crypto';
-import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
+import {
+  FEATURE_NOT_PROVISIONED,
+  notProvisionedResponse,
+} from '@/lib/api/not-provisioned';
 
 const BUCKET = 'reference-library-private';
 
@@ -32,11 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
   }
 
-  return NextResponse.json(
-    {
-      error: FEATURE_NOT_PROVISIONED,
-      message: `Private reference ingest is not available: the ${BUCKET} storage bucket is not provisioned. Nothing was uploaded.`,
-    },
-    { status: 501 }
+  return notProvisionedResponse(
+    `Private reference ingest is not available: the ${BUCKET} storage bucket is not provisioned. Nothing was uploaded.`
   );
 }

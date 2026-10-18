@@ -6,7 +6,7 @@
  * response cap), so base64-provider variants render via this path instead.
  *
  * NOT_PROVISIONED: prisma/schema.prisma has no media_assets model, so after
- * auth and id validation this answers 501 rather than a 404 that would claim
+ * auth and id validation this answers 503 rather than a 404 that would claim
  * the asset does not exist.
  */
 
@@ -17,7 +17,10 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
-import { notProvisionedBody } from '@/lib/api/not-provisioned';
+import {
+  notProvisionedBody,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 
 /**
  * GET /api/media/assets/[id]/image
@@ -53,7 +56,7 @@ export async function GET(
 
     return APISecurityChecker.createSecureResponse(
       notProvisionedBody('media_assets', 'Media asset serving'),
-      501
+      NOT_PROVISIONED_STATUS
     );
   } catch (error: unknown) {
     logger.error('Media asset image serving error:', { error });

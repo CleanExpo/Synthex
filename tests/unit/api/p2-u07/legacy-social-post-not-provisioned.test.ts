@@ -2,7 +2,7 @@
  * P2 u07: the legacy direct social post routes (facebook, instagram,
  * linkedin, pinterest) recorded every publish in `social_posts` and
  * `usage_tracking`, neither of which has a Prisma model. They must answer
- * 501 FEATURE_NOT_PROVISIONED after auth, never publish without a record.
+ * 503 FEATURE_NOT_PROVISIONED after auth, never publish without a record.
  */
 
 import type { NextRequest } from 'next/server';
@@ -63,10 +63,10 @@ afterAll(() => {
 });
 
 describe.each(Object.entries(ROUTES))('/api/social/%s/post', (_name, route) => {
-  it('POST returns 501 FEATURE_NOT_PROVISIONED when the legacy flag is on', async () => {
+  it('POST returns 503 FEATURE_NOT_PROVISIONED when the legacy flag is on', async () => {
     process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS = 'true';
     const res = await route.POST(makeReq('POST'));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('social_posts');
@@ -87,9 +87,9 @@ describe.each(Object.entries(ROUTES))('/api/social/%s/post', (_name, route) => {
     expect(res.status).toBe(401);
   });
 
-  it('GET returns 501 with available:false instead of an empty post list', async () => {
+  it('GET returns 503 with available:false instead of an empty post list', async () => {
     const res = await route.GET(makeReq('GET'));
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body).toMatchObject({
       error: 'FEATURE_NOT_PROVISIONED',

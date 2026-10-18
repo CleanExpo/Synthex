@@ -4,7 +4,7 @@
  * GEO score for the authenticated user.
  *
  * NOT PROVISIONED: the `client_geo_scores` table has no Prisma model, so after
- * auth this returns 501 FEATURE_NOT_PROVISIONED with an UNSUPPORTED reading.
+ * auth this returns 503 FEATURE_NOT_PROVISIONED with an UNSUPPORTED reading.
  *
  * SYN-657
  */
@@ -12,6 +12,7 @@
 import { notObserved } from '@/lib/ree/evidence-state';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,6 @@ export async function GET(request: NextRequest) {
       message: 'GEO score storage is not provisioned',
       available: false,
     },
-    { status: 501 }
+    { status: NOT_PROVISIONED_STATUS }
   );
 }

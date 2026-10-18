@@ -9,7 +9,7 @@
  * NOT PROVISIONED: the `journey_analytics` view (and its source table
  * `client_journey_events`) has no Prisma model, so there is nothing to
  * refresh. After auth the route records a failed run in edge_function_logs
- * (EdgeFunctionLog model) and returns 501 FEATURE_NOT_PROVISIONED.
+ * (EdgeFunctionLog model) and returns 503 FEATURE_NOT_PROVISIONED.
  *
  * @task SYN-678
  */
@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 const FUNCTION_NAME = 'refresh-journey-analytics';
 const MESSAGE =
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
-    // Observability must not mask the 501 below; say so in the logs.
+    // Observability must not mask the 503 below; say so in the logs.
     logger.error('refresh-journey-analytics: edge_function_logs write failed', {
       message: err instanceof Error ? err.message : String(err),
     });
@@ -49,8 +50,5 @@ export async function POST(request: NextRequest) {
     view: 'journey_analytics',
   });
 
-  return NextResponse.json(
-    { error: 'FEATURE_NOT_PROVISIONED', message: MESSAGE },
-    { status: 501 }
-  );
+  return notProvisionedResponse(MESSAGE);
 }

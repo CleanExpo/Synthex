@@ -1,6 +1,6 @@
 /**
  * P2 u07: /api/optimize/auto-schedule
- * - POST is NOT_PROVISIONED (no scheduled_posts table) → 501 after auth.
+ * - POST is NOT_PROVISIONED (no scheduled_posts table) → 503 after auth.
  * - PUT is ported to the caller's own users.user_settings JSON via Prisma.
  */
 
@@ -46,11 +46,11 @@ beforeEach(() => {
 });
 
 describe('POST /api/optimize/auto-schedule', () => {
-  it('returns 501 FEATURE_NOT_PROVISIONED naming scheduled_posts', async () => {
+  it('returns 503 FEATURE_NOT_PROVISIONED naming scheduled_posts', async () => {
     const res = await POST(
       req('POST', { postIds: ['p1'], platforms: ['instagram'] })
     );
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(503);
     const body = await res.json();
     expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
     expect(body.message).toContain('scheduled_posts');
