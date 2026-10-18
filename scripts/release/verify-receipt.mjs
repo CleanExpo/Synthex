@@ -27,6 +27,7 @@ import {
   appendFileSync,
   mkdirSync,
   mkdtempSync,
+  cpSync,
   rmSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -149,10 +150,15 @@ export function verify(head, phase, cwd = ROOT) {
     const ledgerFile = f =>
       /^release-receipts\/ledger\/[^/]+\.jsonl$/.test(f) &&
       rawBytes(reviewed, f) !== null;
+    // A diff git could not produce is never read as "no changes" (Codex on P2 52043c5f).
     const outside = names =>
-      (names || []).filter(
-        f => f !== file && !releaseWritten.has(f) && !ledgerFile(f)
-      );
+      names === null
+        ? ['<git diff failed>']
+        : names.filter(
+            f => f !== file && !releaseWritten.has(f) && !ledgerFile(f)
+          );
+    if (diffRaw === null)
+      problems.push('diff from reviewed commit could not be read');
     let extra = outside(diffRaw);
     // The ledger may only grow after review: a rewritten or truncated row (for example a
     // human-intervention row) breaks the binding (verifier audit).
@@ -188,10 +194,13 @@ export function verify(head, phase, cwd = ROOT) {
       const pure =
         parents.length > 1 &&
         parents.some(p => {
-          if (outside(diffNames(reviewed, p)).length) return false;
+          const fromReviewed = diffNames(reviewed, p);
+          if (fromReviewed === null || outside(fromReviewed).length)
+            return false;
           const others = parents.filter(o => o !== p);
           if (!others.every(onMain)) return false;
-          const merged = diffNames(p, sha) || [];
+          const merged = diffNames(p, sha);
+          if (merged === null) return false;
           // A file the merge changes must come from a parent that itself changed it since the
           // merge base, as a real three-way merge would take it; equal-but-unchanged (an old main
           // ancestor, or a deletion both sides lack) is a revert, not a merge (verifier audit).
@@ -395,6 +404,26 @@ function control() {
       receiptHead,
     ]);
     const okD = verify(g(['rev-parse', 'HEAD']), 'P99', dir).ok === true;
+    // D2: the same pure merge in a copy whose parents' tree objects are gone, so every git diff
+    // against a parent fails; a failed diff must never pass as "no changes".
+    const broken = mkdtempSync(path.join(tmpdir(), 'receipt-control-broken-'));
+    let okD2 = false;
+    try {
+      cpSync(dir, broken, { recursive: true });
+      const mergeSha = g(['rev-parse', 'HEAD']);
+      for (const parent of g(['rev-parse', `${mergeSha}^@`]).split('\n')) {
+        const t = g(['rev-parse', `${parent}^{tree}`]);
+        rmSync(path.join(broken, '.git/objects', t.slice(0, 2), t.slice(2)), {
+          force: true,
+        });
+      }
+      const d2 = verify(mergeSha, 'P99', broken);
+      okD2 =
+        d2.ok === false &&
+        d2.problems.some(x => x.startsWith('diff from reviewed commit'));
+    } finally {
+      rmSync(broken, { recursive: true, force: true });
+    }
     writeFileSync(path.join(dir, 'a.txt'), 'changed inside the merge\n');
     g(['add', '-A']);
     g([...id, 'commit', '-q', '--amend', '--no-edit']);
@@ -513,6 +542,7 @@ function control() {
       okB &&
       okC &&
       okD &&
+      okD2 &&
       okE &&
       okF &&
       okG &&
@@ -532,7 +562,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected, merge copying from an unreviewed parent rejected, no review report / ledger rewrite / old-ancestor revert / short reviewed_commit and an unnamed reviewer rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, the same merge with failing git diffs rejected, change inside the merge rejected, other manifest changed after review rejected, merge copying from an unreviewed parent rejected, no review report / ledger rewrite / old-ancestor revert / short reviewed_commit and an unnamed reviewer rejected)`
     );
     process.exit(ok ? 0 : 1);
   }

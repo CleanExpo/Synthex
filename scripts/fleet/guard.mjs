@@ -44,12 +44,101 @@ export function segments(cmd) {
     })
     .filter(a => a.length);
 }
+// Wrappers that run another command: strip them (and their options) so the real command is judged.
+// Value-taking options are listed per wrapper. sh/bash/zsh -c, env -S and eval re-parse their
+// script. Codex on P2 52043c5f: 'command git -C . push --force' and 'env git ...' read as allowed.
+const WRAPPERS = {
+  command: [],
+  builtin: [],
+  exec: ['-a'],
+  nohup: [],
+  time: ['-f', '-o'],
+  nice: ['-n'],
+  ionice: ['-c', '-n', '-p'],
+  sudo: ['-u', '-g', '-h', '-p', '-C', '-U', '-r', '-t', '-D'],
+  doas: ['-u', '-C'],
+  timeout: ['-s', '-k', '--signal', '--kill-after'],
+  stdbuf: ['-i', '-o', '-e'],
+  setsid: [],
+  chronic: [],
+  xargs: ['-I', '-i', '-n', '-P', '-d', '-E', '-e', '-L', '-l', '-s', '-a'],
+  env: ['-u', '-C', '--unset', '--chdir'],
+};
+const SHELLS = ['sh', 'bash', 'zsh', 'dash', 'ksh', 'fish'];
+export function unwrap(argv, depth = 0) {
+  if (depth > 8) return [['<too-deep>']];
+  let a = argv.slice();
+  for (;;) {
+    if (!a.length) return [];
+    const name = a[0].split('/').pop();
+    a[0] = name;
+    if (name === 'eval')
+      return segments(a.slice(1).join(' ')).flatMap(x => unwrap(x, depth + 1));
+    if (SHELLS.includes(name)) {
+      const c = a.findIndex(
+        (x, i) => i > 0 && /^-[a-zA-Z]*c[a-zA-Z]*$/.test(x)
+      );
+      if (c > 0 && a[c + 1] !== undefined)
+        return segments(a[c + 1]).flatMap(x => unwrap(x, depth + 1));
+      return [a];
+    }
+    if (!Object.prototype.hasOwnProperty.call(WRAPPERS, name)) return [a];
+    const valued = WRAPPERS[name];
+    let i = 1;
+    while (i < a.length) {
+      const t = a[i];
+      if (t === '--') {
+        i++;
+        break;
+      }
+      if (name === 'env' && (t === '-S' || t === '--split-string')) {
+        return segments(a.slice(i + 1).join(' ')).flatMap(x =>
+          unwrap(x, depth + 1)
+        );
+      }
+      if (name === 'env' && /^[A-Za-z_][A-Za-z0-9_]*=/.test(t)) {
+        i++;
+        continue;
+      }
+      if (!t.startsWith('-')) break;
+      i += valued.includes(t) ? 2 : 1;
+    }
+    // timeout DURATION, nice/ionice priority already consumed as values
+    if (name === 'timeout' && i < a.length) i++;
+    a = a.slice(i);
+  }
+}
+// gh's positional words with global and per-command value options removed, so 'gh -R o/r pr merge'
+// and 'gh pr -R o/r merge' both read as [pr, merge] (Codex on P2 52043c5f).
+function ghWords(argv) {
+  const valued = ['-R', '--repo', '--hostname', '-H', '--header'];
+  const out = [];
+  for (let i = 1; i < argv.length; i++) {
+    const t = argv[i];
+    if (valued.includes(t)) {
+      i++;
+      continue;
+    }
+    if (t.startsWith('-')) continue;
+    out.push(t);
+  }
+  return out;
+}
 // git's global options before the subcommand (-C <dir>, -c <k=v>, --git-dir, --work-tree, ...).
 function gitSubcommand(argv) {
   let i = 1;
   while (i < argv.length && argv[i].startsWith('-')) {
     if (
-      ['-C', '-c', '--git-dir', '--work-tree', '--namespace'].includes(argv[i])
+      [
+        '-C',
+        '-c',
+        '--git-dir',
+        '--work-tree',
+        '--namespace',
+        '--config-env',
+        '--super-prefix',
+        '--exec-path',
+      ].includes(argv[i])
     )
       i += 2;
     else i += 1;
@@ -144,12 +233,17 @@ export function evaluate(action, pol = policy()) {
         if (cmd.includes(f)) return deny(`forbidden command: ${f}`);
       // Argv-level rules: global options, a path to git, long and short flag forms (verifier
       // audit, second pass).
-      for (const argv of segments(action.command || '')) {
+      const argvs = segments(action.command || '').flatMap(x => unwrap(x));
+      if (argvs.some(x => x[0] === '<too-deep>'))
+        return deny('command nesting too deep to judge');
+      for (const argv of argvs) {
         if (argv[0] === 'git') {
           const { sub: g, args } = gitSubcommand(argv);
           const flags = args.filter(a => a.startsWith('-'));
           const shortHas = c =>
             flags.some(a => /^-[a-zA-Z]+$/.test(a) && a.includes(c));
+          if (g === 'push' && role === 'builder')
+            return deny('builder may not push, use gh, publish or deploy');
           if (g === 'push') {
             if (
               args.some(a => a.startsWith('+') || a.startsWith(':')) ||
@@ -176,14 +270,29 @@ export function evaluate(action, pol = policy()) {
           )
             return deny('branch delete');
         }
+        if (role === 'builder') {
+          if (
+            argv[0] === 'vercel' ||
+            (argv[0] === 'npm' && argv[1] === 'publish')
+          )
+            return deny('builder may not push, use gh, publish or deploy');
+          if (
+            ['npm', 'pnpm', 'yarn'].includes(argv[0]) &&
+            ['install', 'i', 'add'].includes(argv[1])
+          )
+            return deny('builder may not install');
+        }
         if (argv[0] === 'gh') {
-          if (argv[1] === 'pr' && argv[2] === 'merge') {
+          const gw = ghWords(argv);
+          if (role === 'builder')
+            return deny('builder may not push, use gh, publish or deploy');
+          if (gw[0] === 'pr' && gw[1] === 'merge') {
             if (role === 'releaser' && action.via === 'merge-phase')
               return allow('gh pr merge via merge-phase (FD-3)');
             return deny('direct gh pr merge');
           }
           if (
-            argv[1] === 'api' &&
+            gw[0] === 'api' &&
             (argv.some(a => /\/pulls\/\d+\/merge\b/.test(a)) ||
               /mergePullRequest|enablePullRequestAutoMerge/i.test(cmd))
           )
