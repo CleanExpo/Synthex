@@ -99,6 +99,8 @@ const CRON_ROUTES: Array<{ name: string; flag?: string; table: string }> = [
     table: 'client_journey_events',
   },
   { name: 'deliver-win-notifications', table: 'client_journey_events' },
+  { name: 'compute-content-scores', table: 'content_score_history' },
+  { name: 'build-knowledge-graph', table: 'client_knowledge_entities' },
 ];
 
 function cronRequest(name: string, secret?: string) {

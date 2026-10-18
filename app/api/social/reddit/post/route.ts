@@ -400,8 +400,12 @@ export async function GET(request: NextRequest) {
     }
 
     // If sync requested, fetch from Reddit API
+    let syncError: string | undefined;
     if (syncFromPlatform) {
       const syncResult = await redditService.syncPosts(limit, cursor);
+      if (!syncResult.success) {
+        syncError = syncResult.error || 'Reddit sync failed';
+      }
 
       if (syncResult.success) {
         // Update database with synced posts
@@ -449,6 +453,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: posts,
+      // A requested sync that failed must not look like fresh platform data.
+      ...(syncFromPlatform ? { synced: false, syncError } : {}),
     });
   } catch (error: unknown) {
     logger.error('Get Reddit posts error:', error);

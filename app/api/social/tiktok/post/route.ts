@@ -362,6 +362,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    let syncError: string | undefined;
     if (syncFromPlatform) {
       // Use TikTok service to sync posts from platform
       try {
@@ -372,8 +373,12 @@ export async function GET(request: NextRequest) {
             })
           : null;
 
+        if (!service) syncError = 'TikTok service unavailable';
         if (service) {
           const syncResult = await service.syncPosts(limit);
+          if (!syncResult.success) {
+            syncError = syncResult.error || 'TikTok sync failed';
+          }
 
           if (syncResult.success) {
             // Map to the existing response format to preserve API contract
@@ -398,8 +403,9 @@ export async function GET(request: NextRequest) {
             });
           }
         }
-      } catch (syncError) {
-        logger.error('TikTok sync error:', syncError);
+      } catch (err) {
+        logger.error('TikTok sync error:', err);
+        syncError = 'TikTok sync failed';
         // Fall through to database query
       }
     }
@@ -411,7 +417,12 @@ export async function GET(request: NextRequest) {
       take: limit,
     });
 
-    return NextResponse.json({ success: true, data: posts });
+    return NextResponse.json({
+      success: true,
+      data: posts,
+      // A requested sync that failed must not look like fresh platform data.
+      ...(syncFromPlatform ? { synced: false, syncError } : {}),
+    });
   } catch (error: unknown) {
     logger.error('Get TikTok posts error:', error);
     const errorMessage = 'An unexpected error occurred. Please try again.';

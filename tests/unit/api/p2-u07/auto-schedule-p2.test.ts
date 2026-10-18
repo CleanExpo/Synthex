@@ -1,7 +1,7 @@
 /**
  * P2 u07: /api/optimize/auto-schedule
  * - POST is NOT_PROVISIONED (no scheduled_posts table) → 503 after auth.
- * - PUT is ported to the caller's own users.user_settings JSON via Prisma.
+ * - PUT is NOT_PROVISIONED too: nothing reads the settings → 503, no write.
  */
 
 import type { NextRequest } from 'next/server';
@@ -71,35 +71,26 @@ describe('POST /api/optimize/auto-schedule', () => {
 });
 
 describe('PUT /api/optimize/auto-schedule', () => {
-  it('merges settings into the caller user row only', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue({
-      settings: { theme: 'dark' },
-    });
-    mockPrisma.user.update.mockResolvedValue({});
-
+  it('returns 503 and saves nothing: no reader of the settings exists', async () => {
     const res = await PUT(
       req('PUT', { enabled: true, defaultTimezone: 'UTC' })
     );
-    expect(res.status).toBe(200);
-    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
-      where: { id: 'user-A' },
-      select: { settings: true },
-    });
-    expect(mockPrisma.user.update).toHaveBeenCalledWith({
-      where: { id: 'user-A' },
-      data: {
-        settings: {
-          theme: 'dark',
-          autoSchedule: { enabled: true, defaultTimezone: 'UTC' },
-        },
-      },
-    });
+    expect(res.status).toBe(503);
+    const body = await res.json();
+    expect(body.error).toBe('FEATURE_NOT_PROVISIONED');
+    expect(body.message).toContain('scheduled_posts');
+    expect(body.success).toBeUndefined();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('returns 404 when the user row is missing and writes nothing', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(null);
-    const res = await PUT(req('PUT', { enabled: false }));
-    expect(res.status).toBe(404);
-    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  it('still validates input (400) before answering', async () => {
+    const res = await PUT(req('PUT', { enabled: 'yes' }));
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 403 when the security check fails', async () => {
+    mockCheck.mockResolvedValue({ allowed: false, error: 'nope' });
+    const res = await PUT(req('PUT', { enabled: true }));
+    expect(res.status).toBe(403);
   });
 });

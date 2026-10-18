@@ -19,7 +19,10 @@ import {
 import { auditLogger } from '@/lib/security/audit-logger';
 import { competitiveIntel, Platform } from '@/lib/services/competitive-intel';
 import { logger } from '@/lib/logger';
-import { NOT_PROVISIONED_STATUS } from '@/lib/api/not-provisioned';
+import {
+  FEATURE_NOT_PROVISIONED,
+  NOT_PROVISIONED_STATUS,
+} from '@/lib/api/not-provisioned';
 
 // Request validation schemas
 const AddCompetitorSchema = z.object({
@@ -166,6 +169,15 @@ export async function GET(request: NextRequest) {
       400
     );
   } catch (error: unknown) {
+    if (
+      (error as { code?: unknown } | null)?.code === FEATURE_NOT_PROVISIONED
+    ) {
+      return APISecurityChecker.createSecureResponse(
+        { error: FEATURE_NOT_PROVISIONED, message: (error as Error).message },
+        NOT_PROVISIONED_STATUS
+      );
+    }
+
     logger.error('Competitors GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -317,6 +329,15 @@ export async function POST(request: NextRequest) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.issues },
         400
+      );
+    }
+
+    if (
+      (error as { code?: unknown } | null)?.code === FEATURE_NOT_PROVISIONED
+    ) {
+      return APISecurityChecker.createSecureResponse(
+        { error: FEATURE_NOT_PROVISIONED, message: (error as Error).message },
+        NOT_PROVISIONED_STATUS
       );
     }
 

@@ -56,6 +56,7 @@ jest.mock('@/lib/multi-business', () => ({
 }));
 
 const createPost = jest.fn();
+const syncPosts = jest.fn();
 const createPlatformService = jest.fn();
 jest.mock('@/lib/social', () => ({
   createPlatformService: (...a: unknown[]) => createPlatformService(...a),
@@ -132,7 +133,7 @@ beforeEach(() => {
     postId: 'remote-1',
     url: 'https://example.com/p/remote-1',
   });
-  createPlatformService.mockReturnValue({ createPost });
+  createPlatformService.mockReturnValue({ createPost, syncPosts });
   upsert.mockResolvedValue({ id: 'pp-1' });
   findMany.mockResolvedValue([{ id: 'pp-1', platformId: 'remote-1' }]);
 });
@@ -232,6 +233,33 @@ describe.each(ROUTES)(
       expect(json.data).toEqual([{ id: 'pp-1', platformId: 'remote-1' }]);
     });
 
+    it('GET ?sync=true flags a failed sync instead of passing stored rows off as synced', async () => {
+      syncPosts.mockResolvedValue({
+        success: false,
+        posts: [],
+        hasMore: false,
+        error: 'rate limited',
+      });
+      const res = await route.GET(
+        createMockNextRequest({
+          method: 'GET',
+          url: `http://localhost/api/social/${platform}/post?sync=true`,
+        }) as never
+      );
+      const json = await (res as Response).json();
+
+      expect(syncPosts).toHaveBeenCalled();
+      expect(json.data).toEqual([{ id: 'pp-1', platformId: 'remote-1' }]);
+      expect(json.synced).toBe(false);
+      expect(json.syncError).toBe('rate limited');
+    });
+
+    it('GET without sync carries no sync flag', async () => {
+      const res = await route.GET(req(platform, 'GET') as never);
+      const json = await (res as Response).json();
+      expect(json.synced).toBeUndefined();
+    });
+
     it('GET scopes a personal (no-org) caller to organizationId null', async () => {
       getEffectiveOrganizationId.mockResolvedValue(null);
       await route.GET(req(platform, 'GET') as never);
@@ -245,3 +273,69 @@ describe.each(ROUTES)(
     });
   }
 );
+
+describe.each([
+  { platform: 'tiktok', route: tiktok },
+  { platform: 'youtube', route: youtube },
+])('/api/social/$platform/post GET sync throw', ({ platform, route }) => {
+  it('a thrown sync falls back to stored rows with synced:false', async () => {
+    syncPosts.mockRejectedValue(new Error('network'));
+    const res = await route.GET(
+      createMockNextRequest({
+        method: 'GET',
+        url: `http://localhost/api/social/${platform}/post?sync=true`,
+      }) as never
+    );
+    const json = await (res as Response).json();
+    expect((res as Response).status).toBe(200);
+    expect(json.synced).toBe(false);
+    expect(json.syncError).toMatch(/sync failed/);
+  });
+});
+
+describe('/api/social/youtube/post POST follow-up steps', () => {
+  const originalFetch = global.fetch;
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  it('reports a failed playlist add and thumbnail set in mediaFailed', async () => {
+    global.fetch = (async (url: string) => {
+      const ok = String(url).includes('thumbnail.example.com');
+      return {
+        ok,
+        status: ok ? 200 : 403,
+        text: async () => 'nope',
+        arrayBuffer: async () => new ArrayBuffer(1),
+      };
+    }) as unknown as typeof fetch;
+
+    const res = await youtube.POST(
+      req('youtube', 'POST', {
+        title: 'Video',
+        videoUrl: 'https://cdn.example.com/v.mp4',
+        playlistId: 'PL1',
+        thumbnailUrl: 'https://thumbnail.example.com/t.jpg',
+      }) as never
+    );
+    const json = await (res as Response).json();
+
+    expect((res as Response).status).toBe(200);
+    expect(json.success).toBe(true);
+    expect(json.mediaFailed).toEqual([
+      { step: 'playlist', error: 'YouTube returned 403' },
+      { step: 'thumbnail', error: 'Failed to set thumbnail' },
+    ]);
+  });
+
+  it('reports an empty mediaFailed when there are no follow-up steps', async () => {
+    const res = await youtube.POST(
+      req('youtube', 'POST', {
+        title: 'Video',
+        videoUrl: 'https://cdn.example.com/v.mp4',
+      }) as never
+    );
+    const json = await (res as Response).json();
+    expect(json.mediaFailed).toEqual([]);
+  });
+});
