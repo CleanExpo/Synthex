@@ -380,12 +380,24 @@ function dirtyFiles() {
   const own = new RegExp(
     `^(release-receipts/ledger/|release-receipts/manifests/${phase}-(gate|review|handoff|units)\\.(json|md)$)`
   );
-  // Untrimmed: porcelain lines start with a status column that may be a space.
-  return run('git', ['status', '--porcelain', '--untracked-files=all', '-z'])
+  // git status hides tracked files flagged skip-worktree (S) or assume-unchanged (lowercase tag),
+  // so a locally modified file could be tested while PASS binds to HEAD's content (verifier audit,
+  // second pass). Any such flag is refused outright.
+  const hidden = run('git', ['ls-files', '-v', '-z'])
     .stdout.split('\0')
-    .filter(Boolean)
-    .map(l => l.slice(3))
-    .filter(f => f && !own.test(f));
+    .filter(l => /^(S|[a-z]) /.test(l))
+    .map(
+      l =>
+        `${l.slice(2)} (hidden by ${l[0] === 'S' ? 'skip-worktree' : 'assume-unchanged'})`
+    );
+  // Untrimmed: porcelain lines start with a status column that may be a space.
+  return hidden.concat(
+    run('git', ['status', '--porcelain', '--untracked-files=all', '-z'])
+      .stdout.split('\0')
+      .filter(Boolean)
+      .map(l => l.slice(3))
+      .filter(f => f && !own.test(f))
+  );
 }
 function gate() {
   const dirty = dirtyFiles();
