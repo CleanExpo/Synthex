@@ -1,27 +1,20 @@
 /**
  * GET /api/dashboard/geo-score
  *
- * Returns the latest client_geo_scores row for the authenticated user.
- * Returns { score: null } when no row exists yet (cold start).
+ * GEO score for the authenticated user.
+ *
+ * NOT PROVISIONED: the `client_geo_scores` table has no Prisma model, so after
+ * auth this returns 501 FEATURE_NOT_PROVISIONED with an UNSUPPORTED reading.
  *
  * SYN-657
  */
 
 import { notObserved } from '@/lib/ree/evidence-state';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-let _admin: ReturnType<typeof createClient> | null = null;
-function getAdmin() {
-  if (!_admin) {
-    _admin = createClient();
-  }
-  return _admin;
-}
 
 export async function GET(request: NextRequest) {
   const userId = await getUserIdFromRequestOrCookies(request);
@@ -29,53 +22,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Retired storage: keep authentication, withhold the unsupported read.
-  if (userId)
-    return NextResponse.json(
-      notObserved(
+  return NextResponse.json(
+    {
+      ...notObserved(
         'UNSUPPORTED',
         'client_geo_scores',
         'Legacy GEO score storage is not available'
       ),
-      { status: 501 }
-    );
-
-  try {
-    const admin = getAdmin() as ReturnType<typeof createClient<any>>;
-
-    const { data, error } = await admin
-      .from('client_geo_scores')
-      .select('score, components, trend_data, recommended_actions, computed_at')
-      .eq('client_id', userId)
-      .order('computed_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      console.error('[geo-score] Supabase error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch GEO score' },
-        { status: 500 }
-      );
-    }
-
-    // No row yet — cold start
-    if (!data) {
-      return NextResponse.json({ score: null });
-    }
-
-    return NextResponse.json({
-      score: data.score ?? 0,
-      components: data.components ?? {},
-      trend_data: data.trend_data ?? [],
-      recommended_actions: data.recommended_actions ?? [],
-      computed_at: data.computed_at,
-    });
-  } catch (err) {
-    console.error('[geo-score] Unexpected error:', err);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+      error: 'FEATURE_NOT_PROVISIONED',
+      message: 'GEO score storage is not provisioned',
+      available: false,
+    },
+    { status: 501 }
+  );
 }
