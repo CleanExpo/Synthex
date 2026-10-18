@@ -17,6 +17,7 @@ import {
   videoAttemptKey,
 } from '@/lib/services/ai/image/spend-log';
 import { storeArtifact } from '@/lib/services/ai/video/artifact-store';
+import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
 import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
 
@@ -201,7 +202,11 @@ export async function POST(request: NextRequest) {
         where: { id: row.id, status: 'generating' },
         data: {
           status: 'failed',
-          errorMessage: 'artifact download/storage failed',
+          errorMessage:
+            err instanceof Error &&
+            (err as { code?: string }).code === FEATURE_NOT_PROVISIONED
+              ? err.message
+              : 'artifact download/storage failed',
           metadata: {
             ...objectMetadata(row.metadata),
             providerUrl: result.videoUrl,
