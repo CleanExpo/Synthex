@@ -152,34 +152,39 @@ export async function POST(request: NextRequest) {
       maxPersonas: limits.maxPersonas,
     };
 
-    // Update the existing subscription or create one (userId is unique)
-    const subscription = await prisma.subscription.upsert({
-      where: { userId: user.id },
-      update: {
-        ...periodAndLimits,
-        cancelAtPeriodEnd: false,
-        cancelledAt: null,
-      },
-      create: { userId: user.id, ...periodAndLimits },
-    });
-
-    // Create audit log (userId is a FK to users; API-key callers have none)
-    await prisma.auditLog.create({
-      data: {
-        userId: auth.userId ?? null,
-        action: 'subscription_upgraded',
-        resource: 'subscription',
-        resourceId: subscription.id,
-        details: {
-          targetEmail: email,
-          targetUserId: user.id,
-          plan,
-          limits: { ...limits },
+    // The plan change and its audit record commit together: a failed audit
+    // write rolls the entitlement back, so no paid plan exists unaudited.
+    const subscription = await prisma.$transaction(async tx => {
+      // Update the existing subscription or create one (userId is unique)
+      const sub = await tx.subscription.upsert({
+        where: { userId: user.id },
+        update: {
+          ...periodAndLimits,
+          cancelAtPeriodEnd: false,
+          cancelledAt: null,
         },
-        severity: 'high',
-        category: 'admin',
-        outcome: 'success',
-      },
+        create: { userId: user.id, ...periodAndLimits },
+      });
+
+      // Create audit log (userId is a FK to users; API-key callers have none)
+      await tx.auditLog.create({
+        data: {
+          userId: auth.userId ?? null,
+          action: 'subscription_upgraded',
+          resource: 'subscription',
+          resourceId: sub.id,
+          details: {
+            targetEmail: email,
+            targetUserId: user.id,
+            plan,
+            limits: { ...limits },
+          },
+          severity: 'high',
+          category: 'admin',
+          outcome: 'success',
+        },
+      });
+      return sub;
     });
 
     return NextResponse.json({
