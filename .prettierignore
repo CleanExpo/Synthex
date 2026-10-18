@@ -4,3 +4,6 @@ package-lock.json
 .next_alt/
 node_modules/
 next-env.d.ts
+# Generated API contract (scripts/api/gen-openapi.mjs) and the hand-written legacy spec: keep bytes as produced
+docs/api/openapi.generated.json
+docs/api/openapi.yaml
