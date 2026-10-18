@@ -1,9 +1,9 @@
 {
-  "$comment": "synthex-hooks. Merge a block into the \"hooks\" object of .claude/settings.json with tools/claude-hooks/install.mjs. \"core\" is safe for the orchestrator to install. \"forcing\" holds the forcing Stop hook and needs the founder's explicit Bash permission rule first (README, Founder gate).",
+  "$comment": "synthex-hooks. Merge a block into the \"hooks\" object of .claude/settings.json with tools/claude-hooks/install.mjs. \"core\" is safe for the orchestrator to install. \"forcing\" holds only the goal-driving Stop agent hook and needs the founder's explicit Bash permission rule first (README, Founder gate). Check ids H1-H15: docs/research/2026-10-18-next-level.md section (d).",
   "core": {
     "PreToolUse": [
       {
-        "matcher": "Bash|Read|Write|Edit|MultiEdit|NotebookEdit",
+        "matcher": "*",
         "hooks": [
           {
             "type": "command",
@@ -13,7 +13,7 @@
             ],
             "timeout": 15,
             "onFailure": "block",
-            "statusMessage": "synthex-hooks: fleet policy guard"
+            "statusMessage": "synthex-hooks: fleet policy guard (H1, H3-H9, H13)"
           }
         ]
       },
@@ -27,6 +27,53 @@
             "timeout": 30,
             "continueOnBlock": true,
             "statusMessage": "synthex-hooks: API route review"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/tools/claude-hooks/lint-n1.mjs"],
+            "timeout": 10,
+            "onFailure": "block",
+            "statusMessage": "synthex-hooks: N1 compliance lint (H15, advisory)"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/permission-denied.mjs"
+            ],
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "matcher": "project_settings|local_settings|skills",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/config-change.mjs"
+            ],
+            "timeout": 10,
+            "onFailure": "block"
           }
         ]
       }
@@ -63,6 +110,15 @@
       {
         "hooks": [
           {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/check-unit-done.mjs"
+            ],
+            "timeout": 45,
+            "statusMessage": "synthex-hooks: UNIT-DONE sha check (H12)"
+          },
+          {
             "type": "prompt",
             "prompt": "You check whether a Synthex fleet subagent may stop. Hook input JSON: $ARGUMENTS\n\nlast_assistant_message is the subagent's final message. This rule applies only to fleet work: the message, or the task it reports on, mentions UNIT-DONE, Fleet-Unit, a fleet-unit/ or feature/fleet- branch, or a proving command. For any other subagent (search, exploration, planning) return {\"ok\": true}.\n\nFor fleet work the final message must end with one line: UNIT-DONE <unit> <full 40-hex commit sha> <PASS|FAIL|INCONCLUSIVE>. A PASS claim must be backed by the proving command's own output quoted in the message (the command, its exit code or final result line, e.g. test counts). Evidence labels follow .claude/rules/fabel-evidence-standard.md: [VERIFIED] needs a quoted tool result; [INFERENCE] and [UNCONFIRMED] are not PASS.\n\nReturn {\"ok\": false, \"reason\": \"<exactly what is missing: the UNIT-DONE line, the sha, or the quoted proving output>\"} when the line is missing or malformed, or PASS is claimed without that output.\nReturn {\"ok\": false, \"impossible\": true, \"reason\": \"<why>\"} when the message shows the work cannot be completed in this run (a founder-gated decision, a missing credential, an unreachable lane), or when stop_hook_active is true and the same gap was already reported. FAIL and INCONCLUSIVE lines that state the reason are acceptable: return {\"ok\": true}.\nOtherwise return {\"ok\": true}. Respond with the JSON object only.",
             "timeout": 30,
@@ -75,10 +131,40 @@
       {
         "hooks": [
           {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/check-unit-done.mjs"
+            ],
+            "timeout": 45,
+            "statusMessage": "synthex-hooks: UNIT-DONE sha check (H12)"
+          },
+          {
             "type": "agent",
             "prompt": "You check one task completion in a Synthex session against .claude/rules/fabel-evidence-standard.md. Hook input JSON: $ARGUMENTS\n\nRead the end of the session transcript at transcript_path (the last few hundred lines are enough; use Read with an offset, or Grep for the task subject). Find the completion claim for task_subject and the tool results that back it. Do not edit files and do not run commands that change state.\n\nReturn {\"ok\": true} when the transcript holds a tool result that proves the task done (a command's own output or exit code, a file read showing the change), or the task is a pure planning or bookkeeping item with nothing to verify.\nReturn {\"ok\": false, \"reason\": \"<the claim, and the tool result it still needs, labelled [UNCONFIRMED]>\"} when completion is claimed with no supporting tool result, or the supporting result shows a failure. The transcript is written asynchronously and can lag by a turn: if the claim itself is not yet visible, return {\"ok\": true}.\nRespond with the JSON object only.",
             "timeout": 60,
             "statusMessage": "synthex-hooks: task evidence check"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/tools/claude-hooks/check-unit-done.mjs"
+            ],
+            "timeout": 45,
+            "statusMessage": "synthex-hooks: UNIT-DONE sha check (H12)"
+          },
+          {
+            "type": "prompt",
+            "prompt": "Advisory check (H14), never a gate. Hook input JSON: $ARGUMENTS\n\nRead last_assistant_message. List every line that claims something is done, passing, fixed, deployed, verified or green but carries no evidence tag ([VERIFIED], [INFERENCE] or [UNCONFIRMED], .claude/rules/fabel-evidence-standard.md) and no quoted command result.\n\nAlways return {\"ok\": true}. Put the untagged claim lines, or \"no untagged claims\", in \"reason\". Never return ok false: this hook only reports.",
+            "timeout": 30,
+            "statusMessage": "synthex-hooks: untagged claim scan (H14, advisory)"
           }
         ]
       }

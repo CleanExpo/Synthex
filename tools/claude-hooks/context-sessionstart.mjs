@@ -35,6 +35,58 @@ export function openFleetRows(md, markers) {
     .map(c => c.slice(0, 2).concat(c.length > 5 ? [c[5]] : []));
 }
 
+const VERSION_FLOOR = [2, 1, 295]; // onFailure needs Claude Code v2.1.295 or later
+const POLICY_EVENTS = ['PreToolUse', 'PermissionRequest', 'ConfigChange'];
+
+/** H2: command hooks on blocking policy events that would let the action through on a crash. */
+export function policyHookProblems(settings) {
+  const out = [];
+  for (const ev of POLICY_EVENTS)
+    for (const g of (settings && settings.hooks && settings.hooks[ev]) || [])
+      for (const h of g.hooks || [])
+        if (h.type === 'command' && h.onFailure !== 'block')
+          out.push(
+            `${ev}${g.matcher ? `(${g.matcher})` : ''} ${[h.command, ...(h.args || [])].join(' ').slice(0, 80)}`
+          );
+  return out;
+}
+
+/** H2: "2.1.300 (Claude Code)" -> ok when at or above the floor; null when unreadable. */
+export function versionOk(text) {
+  const m = /(\d+)\.(\d+)\.(\d+)/.exec(String(text || ''));
+  if (!m) return null;
+  const v = m.slice(1).map(Number);
+  for (let i = 0; i < 3; i++)
+    if (v[i] !== VERSION_FLOOR[i]) return v[i] > VERSION_FLOOR[i];
+  return true;
+}
+
+function hookHealth(root, env) {
+  const raw =
+    env.SYNTHEX_HOOKS_CLAUDE_VERSION ??
+    run('claude', ['--version'], { timeout: 5000 }).stdout;
+  const ok = versionOk(raw);
+  const floor = VERSION_FLOOR.join('.');
+  const ver =
+    ok === null
+      ? `Claude Code version unknown (need ${floor}+ for onFailure)`
+      : ok
+        ? `Claude Code ${/\d+\.\d+\.\d+/.exec(raw)[0]} meets ${floor}`
+        : `WARNING Claude Code ${/\d+\.\d+\.\d+/.exec(raw)[0]} is below ${floor}: onFailure is ignored, a crashed guard lets the action through`;
+  let pol;
+  try {
+    const p = policyHookProblems(
+      JSON.parse(readFileSync(path.join(root, '.claude/settings.json'), 'utf8'))
+    );
+    pol = p.length
+      ? `WARNING policy hooks without onFailure "block": ${p.join('; ')}`
+      : 'every policy hook sets onFailure "block"';
+  } catch (e) {
+    pol = `policy hooks unknown (.claude/settings.json unreadable: ${e.message})`;
+  }
+  return `- hook health (H2): ${ver}; ${pol}`;
+}
+
 export function buildContext(root, env = process.env) {
   const git = args => run('git', args, { cwd: root, timeout: 15000 });
   const lines = [
@@ -181,6 +233,7 @@ export function buildContext(root, env = process.env) {
     );
     for (const r of rows.slice(0, 5)) lines.push(`  - ${r.join(' | ')}`);
   }
+  lines.push(hookHealth(root, env));
   lines.push(
     '- Build law: spec docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md as amended by ...-amendments.md, DECISIONS.md, scripts/fleet/policy.json. Founder-gated items stay open in DECISIONS.md.'
   );

@@ -7,13 +7,16 @@
  *   node tools/claude-hooks/install.mjs --write --forcing     also "forcing"; refused unless
  *                                                             SYNTHEX_FOUNDER_STOP_HOOK_APPROVED=1
  *
- * Existing hooks are kept in place; a matcher group already present (same matcher, same handlers)
- * is not added twice, and a handler already in a same-matcher group is not repeated. The only file
- * this ever writes is <project>/.claude/settings.json, a protected path: commit it with
+ * Existing hooks and groups are kept exactly as they are; pack groups are appended, minus any
+ * handler already registered for the same event and matcher (a second run is a no-op). The only file
+ * this writes is <project>/.claude/settings.json, a protected path (plus the H10 marker in the temp
+ * dir that lets config-change.mjs accept exactly that content mid-session); commit it with
  * Fleet-Role: orchestrator and Protected-Change trailers (policy protected_exemptions).
  * Exit 0 ok, 2 usage, 3 refused.
  */
+import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { HOOKS_DIR, projectRoot } from './lib.mjs';
@@ -28,18 +31,27 @@ const stable = v =>
           .join(',')}}`
       : JSON.stringify(v);
 
+/** H10: temp-dir marker naming the sha256 of the settings content this installer wrote. */
+export function installMarkerPath(root) {
+  const id = createHash('sha256')
+    .update(path.resolve(root))
+    .digest('hex')
+    .slice(0, 16);
+  return path.join(tmpdir(), `synthex-hook-install-${id}.json`);
+}
+
 export function mergeHooks(existing = {}, add = {}) {
   const out = JSON.parse(JSON.stringify(existing));
   for (const [event, groups] of Object.entries(add)) {
     const list = (out[event] = out[event] || []);
     for (const g of groups) {
-      if (list.some(x => stable(x) === stable(g))) continue;
-      const same = list.find(x => (x.matcher || '') === (g.matcher || ''));
-      if (same) {
-        for (const h of g.hooks)
-          if (!same.hooks.some(x => stable(x) === stable(h)))
-            same.hooks.push(h);
-      } else list.push(JSON.parse(JSON.stringify(g)));
+      // Existing groups are never edited; a handler already registered for this event and
+      // matcher is not added again, so a second run is a no-op.
+      const have = list
+        .filter(x => (x.matcher || '') === (g.matcher || ''))
+        .flatMap(x => x.hooks.map(stable));
+      const hooks = g.hooks.filter(h => !have.includes(stable(h)));
+      if (hooks.length) list.push(JSON.parse(JSON.stringify({ ...g, hooks })));
     }
   }
   return out;
@@ -83,6 +95,13 @@ if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   const out = JSON.stringify(merged(root, { forcing }), null, 2) + '\n';
   if (a.has('--print')) process.stdout.write(out);
   else {
+    writeFileSync(
+      installMarkerPath(root),
+      JSON.stringify({
+        sha256: createHash('sha256').update(out).digest('hex'),
+        ts: Date.now(),
+      })
+    );
     writeFileSync(path.join(root, '.claude/settings.json'), out);
     process.stderr.write(`wrote ${path.join(root, '.claude/settings.json')}\n`);
   }

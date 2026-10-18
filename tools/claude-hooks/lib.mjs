@@ -5,7 +5,7 @@
  * Output is one JSON object on stdout with exit 0 ("JSON output", "Exit code 0").
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -50,4 +50,47 @@ export function run(cmd, args, opts = {}) {
     stderr: (r.stderr || '').trim(),
     error: r.error ? r.error.message : null,
   };
+}
+
+/**
+ * Secret patterns for new content (H6) and ledger redaction (H11). A subset of the gitleaks
+ * default rules plus the Stripe live-key prefixes; each needs enough key body to avoid prose hits.
+ */
+export const SECRET_PATTERNS = [
+  [/\b[sr]k_live_[0-9A-Za-z]{16,}/, 'Stripe live key'],
+  [/-----BEGIN [A-Z ]*PRIVATE KEY-----/, 'private key block'],
+  [/\bAKIA[0-9A-Z]{16}\b/, 'AWS access key id'],
+  [
+    /\bgh[pousr]_[A-Za-z0-9]{36,}\b|\bgithub_pat_[A-Za-z0-9_]{50,}/,
+    'GitHub token',
+  ],
+  [/\bxox[abprs]-[A-Za-z0-9-]{10,}/, 'Slack token'],
+  [/\bAIza[0-9A-Za-z_-]{35}\b/, 'Google API key'],
+  [/\bsk-ant-[A-Za-z0-9_-]{20,}/, 'Anthropic key'],
+  [/\bsk-(proj-|or-v1-)?[A-Za-z0-9_-]{32,}/, 'OpenAI/OpenRouter-style key'],
+  [/\bSG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}\b/, 'SendGrid key'],
+  [/\bwhsec_[A-Za-z0-9]{24,}/, 'webhook signing secret'],
+  [
+    /postgres(ql)?:\/\/[^:\s/]+:[^@\s]{6,}@(?!localhost|127\.0\.0\.1)/,
+    'database URL with password',
+  ],
+];
+export const findSecret = text =>
+  SECRET_PATTERNS.find(([re]) => re.test(String(text || '')))?.[1] ?? null;
+export const redact = text =>
+  SECRET_PATTERNS.reduce(
+    (t, [re]) => t.replace(new RegExp(re.source, 'g'), '[REDACTED]'),
+    String(text || '')
+  );
+
+export function utcDate(d = new Date()) {
+  return d.toISOString().slice(0, 10);
+}
+
+/** H9: the halt files scripts/fleet/lib.mjs haltState() reads (security STOP or today's STOP-<date>). */
+export function haltFiles(root, pol) {
+  const dir = path.join(root, (pol && pol.halt_dir) || 'release-receipts/halt');
+  return ['STOP', `STOP-${utcDate()}`].filter(f =>
+    existsSync(path.join(dir, f))
+  );
 }

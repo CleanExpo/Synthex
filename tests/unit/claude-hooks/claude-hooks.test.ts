@@ -12,6 +12,7 @@ import {
   copyFileSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   writeFileSync,
 } from 'fs';
@@ -39,6 +40,7 @@ function runHook(
       SYNTHEX_FLEET_ROLE: '',
       SYNTHEX_PROTECTED_CHANGE: '',
       SYNTHEX_FOUNDER_STOP_HOOK_APPROVED: '',
+      SYNTHEX_HOOKS_CLAUDE_VERSION: '2.1.300 (Claude Code)',
       ...env,
     },
     timeout: 60000,
@@ -86,9 +88,7 @@ describe('guard-pretooluse.mjs', () => {
     );
     expect(r.code).toBe(0);
     expect(r.stdout).toBe(
-      denied(
-        'force push (git push --force, -f, --force-with-lease or +refspec)'
-      )
+      denied('H4 force push (git push --force, -f, --force-with-lease)')
     );
   });
 
@@ -108,7 +108,7 @@ describe('guard-pretooluse.mjs', () => {
   it('denies a protected-path write by a builder', () => {
     const r = runHook('guard-pretooluse.mjs', fileTool('Write', 'CLAUDE.md'));
     expect(r.code).toBe(0);
-    expect(r.stdout).toBe(denied('protected path CLAUDE.md (role builder)'));
+    expect(r.stdout).toBe(denied('H3 protected path CLAUDE.md (role builder)'));
   });
 
   it('denies a protected-path write through Bash', () => {
@@ -117,7 +117,9 @@ describe('guard-pretooluse.mjs', () => {
       bash('echo x > scripts/fleet/policy.json')
     );
     expect(r.stdout).toBe(
-      denied('protected path scripts/fleet/policy.json (role builder) via Bash')
+      denied(
+        'H3 protected path scripts/fleet/policy.json (role builder) via Bash'
+      )
     );
   });
 
@@ -137,7 +139,9 @@ describe('guard-pretooluse.mjs', () => {
       runHook('guard-pretooluse.mjs', input, {
         SYNTHEX_FLEET_ROLE: 'orchestrator',
       }).stdout
-    ).toBe(denied('protected path .claude/settings.json (role orchestrator)'));
+    ).toBe(
+      denied('H3 protected path .claude/settings.json (role orchestrator)')
+    );
     expect(
       runHook('guard-pretooluse.mjs', input, {
         SYNTHEX_FLEET_ROLE: 'orchestrator',
@@ -151,23 +155,29 @@ describe('guard-pretooluse.mjs', () => {
     expect(
       runHook('guard-pretooluse.mjs', bash('gh pr merge 12 --merge'), env)
         .stdout
-    ).toBe(denied('gh pr merge outside scripts/fleet/merge-phase.mjs (FD-3)'));
+    ).toBe(
+      denied('H4 gh pr merge outside scripts/fleet/merge-phase.mjs (FD-3)')
+    );
     expect(
       runHook('guard-pretooluse.mjs', bash('git commit --no-verify -m x'), env)
         .stdout
-    ).toBe(denied('--no-verify skips the repository hooks'));
+    ).toBe(denied('H4 --no-verify skips the repository hooks'));
     expect(
       runHook('guard-pretooluse.mjs', bash('npx prisma db push'), env).stdout
-    ).toBe(denied('prisma db push / migrate deploy mutates a database'));
+    ).toBe(
+      denied(
+        'H7 prisma db push / migrate deploy / migrate reset mutates a database'
+      )
+    );
     expect(
       runHook('guard-pretooluse.mjs', bash('cat .env.local'), env).stdout
-    ).toBe(denied('command names secrets file .env.local'));
+    ).toBe(denied('H6 command names secrets file .env.local'));
     expect(runHook('guard-pretooluse.mjs', bash('printenv'), env).stdout).toBe(
-      denied('printing the environment exposes secrets')
+      denied('H6 printing the environment exposes secrets')
     );
     expect(
       runHook('guard-pretooluse.mjs', fileTool('Read', '.env'), env).stdout
-    ).toBe(denied('read of secrets file .env'));
+    ).toBe(denied('H6 read of secrets file .env'));
   });
 
   it('lets the builder read the placeholder env example', () => {
@@ -322,7 +332,11 @@ describe('install.mjs', () => {
       pack.core as Record<string, unknown[]>
     ))
       for (const g of groups) expect(out.hooks[event]).toContainEqual(g);
-    expect(out.hooks.Stop).toBeUndefined();
+    // Core carries the H12/H14 Stop checks; the goal-driving agent Stop hook stays out.
+    expect(out.hooks.Stop).toEqual(pack.core.Stop);
+    expect(JSON.stringify(out.hooks)).not.toContain(
+      '"type":"agent","prompt":"You decide'
+    );
     const { hooks: _a, ...restOut } = out;
     const { hooks: _b, ...restIn } = settings;
     expect(restOut).toEqual(restIn);
@@ -362,7 +376,7 @@ describe('install.mjs', () => {
     expect(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8')).toBe(
       first
     );
-    expect(JSON.parse(first).hooks.Stop).toBeUndefined();
+    expect(JSON.parse(first).hooks.Stop).toEqual(pack.core.Stop);
   });
 
   it('--write --forcing with the approval adds the Stop hook', () => {
@@ -377,7 +391,7 @@ describe('install.mjs', () => {
     expect(
       JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf8'))
         .hooks.Stop
-    ).toEqual(pack.forcing.Stop);
+    ).toEqual([...pack.core.Stop, ...pack.forcing.Stop]);
   });
 });
 
@@ -444,13 +458,21 @@ describe('hooks.settings.json structure', () => {
       groups.flatMap(g => g.hooks.map(h => ({ event, h })))
     );
 
-  it('has exactly the core and forcing blocks, with Stop only in forcing', () => {
+  it('has exactly the core and forcing blocks; forcing holds only the goal-driving agent Stop hook', () => {
     expect(Object.keys(pack).filter(k => !k.startsWith('$'))).toEqual([
       'core',
       'forcing',
     ]);
     expect(Object.keys(pack.forcing)).toEqual(['Stop']);
-    expect(pack.core.Stop).toBeUndefined();
+    expect(handlers(pack.forcing).map(x => x.h.type)).toEqual(['agent']);
+    expect(handlers({ Stop: pack.core.Stop }).map(x => x.h.type)).toEqual([
+      'command',
+      'prompt',
+    ]);
+    // H14 is advisory: it must never ask to continue the turn.
+    const h14 = pack.core.Stop[0].hooks[1];
+    expect(h14.prompt).toContain('Always return {"ok": true}');
+    expect(h14.prompt).toContain('Never return ok false');
   });
 
   it('uses only documented events and handler types each event supports', () => {
@@ -479,8 +501,25 @@ describe('hooks.settings.json structure', () => {
 
   it('guards with onFailure block and keeps the forcing Stop hook an agent hook at 120 s', () => {
     const guard = pack.core.PreToolUse[0];
-    expect(guard.matcher).toBe('Bash|Read|Write|Edit|MultiEdit|NotebookEdit');
-    expect(guard.hooks[0].onFailure).toBe('block');
+    expect(guard.matcher).toBe('*');
+    // Every command check sets onFailure "block", except where the docs say it has no effect
+    // (Stop, SubagentStop, TaskCompleted) or the hook must never block (SessionStart, UserPromptSubmit).
+    const exempt = [
+      'Stop',
+      'SubagentStop',
+      'TaskCompleted',
+      'SessionStart',
+      'UserPromptSubmit',
+    ];
+    for (const { event, h } of handlers(pack.core))
+      if (h.type === 'command')
+        expect([event, h.onFailure]).toEqual([
+          event,
+          exempt.includes(event) ? undefined : 'block',
+        ]);
+    expect(pack.core.ConfigChange[0].matcher).toBe(
+      'project_settings|local_settings|skills'
+    );
     const route = pack.core.PreToolUse[1].hooks[0];
     expect(route).toMatchObject({
       type: 'prompt',
@@ -495,4 +534,62 @@ describe('hooks.settings.json structure', () => {
       'stop_hook_active is true'
     );
   });
+});
+
+describe('selftest.mjs', () => {
+  it('exits 0 with every planted act PASS', () => {
+    const r = spawnSync('node', [join(HOOKS, 'selftest.mjs')], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      timeout: 240000,
+    });
+    expect(r.stdout).not.toMatch(/^FAIL/m);
+    for (const id of [
+      'H1',
+      'H2',
+      'H3',
+      'H4',
+      'H5',
+      'H6',
+      'H7',
+      'H8',
+      'H9',
+      'H10',
+      'H11',
+      'H12',
+      'H13',
+      'H15',
+    ])
+      expect(r.stdout).toMatch(new RegExp(`^PASS ${id} `, 'm'));
+    expect(r.stdout).toMatch(/^Summary: \d+ PASS, 0 FAIL/m);
+    expect(r.status).toBe(0);
+  }, 300000);
+
+  it('fails (exit 1) when a check is removed (negative control)', () => {
+    // A copy of the pack with the H4 branch allowlist disabled must not pass its own selftest.
+    const tmp = mkdtempSync(join(tmpdir(), 'synthex-hooks-mutant-'));
+    mkdirSync(join(tmp, 'tools', 'claude-hooks'), { recursive: true });
+    mkdirSync(join(tmp, 'scripts', 'fleet'), { recursive: true });
+    for (const f of readdirSync(HOOKS))
+      copyFileSync(join(HOOKS, f), join(tmp, 'tools', 'claude-hooks', f));
+    for (const f of ['guard.mjs', 'lib.mjs', 'policy.json'])
+      copyFileSync(
+        join(ROOT, 'scripts', 'fleet', f),
+        join(tmp, 'scripts', 'fleet', f)
+      );
+    const guard = join(tmp, 'tools', 'claude-hooks', 'guard-pretooluse.mjs');
+    const src = readFileSync(guard, 'utf8');
+    expect(src).toContain('!PUSH_BRANCH.test(dst)');
+    writeFileSync(guard, src.replace('!PUSH_BRANCH.test(dst)', 'false'));
+    const r = spawnSync(
+      'node',
+      [join(tmp, 'tools', 'claude-hooks', 'selftest.mjs')],
+      {
+        encoding: 'utf8',
+        timeout: 240000,
+      }
+    );
+    expect(r.stdout).toMatch(/^FAIL H4 deny git push origin HEAD:main/m);
+    expect(r.status).toBe(1);
+  }, 300000);
 });
