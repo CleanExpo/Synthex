@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1081,
+  "count": 1083,
   "seeds": [
     {
       "text": "- Audit log + GDPR/Privacy compliance built in",
@@ -2549,6 +2549,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "FEATURE_NOT_PROVISIONED: the audit_events_immutable table is not provisioned; the immutable copy was not written.",
+      "file": "lib/security/audit-logger.ts",
+      "firstSeen": "9b976681"
+    },
+    {
       "text": "Feature comparison",
       "file": "app/compare/hootsuite/page.tsx",
       "firstSeen": "base"
@@ -3002,6 +3007,11 @@
       "text": "Image Posts vs Video Posts: The Data | Synthex",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "ImmutableAuditUnavailableError",
+      "file": "lib/security/audit-logger.ts",
+      "firstSeen": "9b976681"
     },
     {
       "text": "Improved API rate limiting Security audit compliance updates",
