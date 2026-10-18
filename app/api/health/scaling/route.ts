@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 import {
   getAutoScalingConfig,
   getMonitoringThresholds,
@@ -162,17 +162,22 @@ function getRequestMetrics(): ScalingMetrics['requests'] {
   };
 }
 
+function adminDenied(auth: { error?: string }) {
+  return NextResponse.json(
+    { error: auth.error ?? 'Admin access required' },
+    { status: auth.error === 'Authentication required' ? 401 : 403 }
+  );
+}
+
 /**
  * GET /api/health/scaling
  * Returns scaling metrics and system health
  */
 export async function GET(request: NextRequest) {
   try {
-    // Require authentication — exposes internal operational metrics
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Admin only — exposes internal operational metrics
+    const auth = await verifyAdmin(request);
+    if (!auth.isAdmin) return adminDenied(auth);
 
     const startTime = Date.now();
     const config = getAutoScalingConfig();
@@ -269,11 +274,9 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Require authentication — prevents external manipulation of in-memory metrics
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Admin only — can reset counters and set the circuit breaker status
+    const auth = await verifyAdmin(request);
+    if (!auth.isAdmin) return adminDenied(auth);
 
     const body = await request.json();
     const { action, value } = body;

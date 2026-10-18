@@ -21,6 +21,17 @@ export class AutomationStoreNotProvisionedError extends Error {
   }
 }
 
+/** Thrown by actions that have no delivery wired: nothing is sent or changed. */
+export class AutomationActionNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly action: string) {
+    super(
+      `Automation action "${action}" is not provisioned: nothing was sent or changed.`
+    );
+    this.name = 'AutomationActionNotProvisionedError';
+  }
+}
+
 /** Action configuration types */
 interface NotificationConfig {
   type: string;
@@ -883,21 +894,19 @@ class RulesEngine {
     }
   }
 
-  // Action implementations (simplified)
+  // Action implementations: unwired actions throw instead of faking success
   private async actionSendNotification(
     config: NotificationConfig,
     context: ExecutionContext
   ): Promise<ActionResult> {
-    logger.info('Sending notification', { config, ruleId: context.ruleId });
-    return { sent: true, type: config.type };
+    throw new AutomationActionNotProvisionedError('send_notification');
   }
 
   private async actionSendEmail(
     config: EmailConfig,
     context: ExecutionContext
   ): Promise<ActionResult> {
-    logger.info('Sending email', { config, ruleId: context.ruleId });
-    return { sent: true, to: config.to };
+    throw new AutomationActionNotProvisionedError('send_email');
   }
 
   private async actionSchedulePost(
@@ -918,8 +927,7 @@ class RulesEngine {
     config: OptimizeContentConfig,
     context: ExecutionContext
   ): Promise<ActionResult> {
-    logger.info('Optimizing content', { config, ruleId: context.ruleId });
-    return { optimized: true };
+    throw new AutomationActionNotProvisionedError('optimize_content');
   }
 
   private async actionWebhook(

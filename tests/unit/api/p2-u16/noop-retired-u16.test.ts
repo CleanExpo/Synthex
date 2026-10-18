@@ -5,7 +5,6 @@
  *  - brand-video generate/jobs and admin private-refs have no backing table or
  *    private storage, so they answer 503 FEATURE_NOT_PROVISIONED after auth.
  *  - founder delete-account is ported to Prisma, scoped to the caller.
- *  - health/scaling authenticates via the real JWT helper.
  */
 
 import type { NextRequest } from 'next/server';
@@ -66,7 +65,6 @@ import * as generate from '@/app/api/brand-video/generate/route';
 import * as jobs from '@/app/api/brand-video/jobs/route';
 import * as privateRefs from '@/app/api/admin/private-refs/route';
 import * as deleteAccount from '@/app/api/founder/delete-account/route';
-import * as scaling from '@/app/api/health/scaling/route';
 
 function req(
   url: string,
@@ -225,29 +223,5 @@ describe('POST /api/founder/delete-account (ported to Prisma)', () => {
     );
     expect(res.status).toBe(500);
     expect((await res.json()).error).toBe('Account deletion failed');
-  });
-});
-
-describe('/api/health/scaling (real JWT auth)', () => {
-  it('GET 401s when the caller is not authenticated', async () => {
-    mockGetUserId.mockResolvedValue(null);
-    const res = await scaling.GET(req('/api/health/scaling', 'GET'));
-    expect(res.status).toBe(401);
-  });
-
-  it('GET returns metrics for an authenticated caller', async () => {
-    const r = req('/api/health/scaling', 'GET');
-    const res = await scaling.GET(r);
-    expect(mockGetUserId).toHaveBeenCalledWith(r);
-    expect([200, 207, 503]).toContain(res.status);
-    expect((await res.json()).resources).toBeDefined();
-  });
-
-  it('POST 401s when the caller is not authenticated', async () => {
-    mockGetUserId.mockResolvedValue(null);
-    const res = await scaling.POST(
-      req('/api/health/scaling', 'POST', { action: 'reset' })
-    );
-    expect(res.status).toBe(401);
   });
 });

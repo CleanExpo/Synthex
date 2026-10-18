@@ -3,7 +3,7 @@
  *   app/api/user/avatar/route.ts        POST NOT_PROVISIONED (no durable storage)
  *   app/api/system/models/route.ts      auth via lib/supabase-server (Prisma)
  *   lib/supabase-server.ts              query client NOT_PROVISIONED (throws)
- *   lib/security/audit-logger.ts        audit_events_immutable NOT_PROVISIONED
+ *   lib/security/audit-logger.ts        compliance events written synchronously
  */
 
 /** @jest-environment node */
@@ -35,6 +35,7 @@ jest.mock('@/lib/storage/platform-storage', () => ({
 const userUpdate = jest.fn();
 const userFindUnique = jest.fn();
 const auditCreateMany = jest.fn();
+const auditCreate = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
@@ -42,7 +43,10 @@ jest.mock('@/lib/prisma', () => ({
       update: (...a: unknown[]) => userUpdate(...a),
       findUnique: (...a: unknown[]) => userFindUnique(...a),
     },
-    auditLog: { createMany: (...a: unknown[]) => auditCreateMany(...a) },
+    auditLog: {
+      createMany: (...a: unknown[]) => auditCreateMany(...a),
+      create: (...a: unknown[]) => auditCreate(...a),
+    },
   },
 }));
 
@@ -54,11 +58,7 @@ import {
   getAuthUser,
   SupabaseClientRemovedError,
 } from '@/lib/supabase-server';
-import {
-  auditLogger,
-  ImmutableAuditUnavailableError,
-} from '@/lib/security/audit-logger';
-import { logger } from '@/lib/logger';
+import { auditLogger } from '@/lib/security/audit-logger';
 
 const USER = 'user-a';
 
@@ -180,21 +180,27 @@ describe('lib/supabase-server', () => {
   });
 });
 
-describe('auditLogger — audit_events_immutable not provisioned', () => {
-  it('reports the missing immutable table and still records to audit_logs', async () => {
-    auditCreateMany.mockResolvedValue({ count: 1 });
+describe('auditLogger — compliance categories are written, not buffered', () => {
+  it('awaits the audit_logs row before resolving', async () => {
+    auditCreate.mockResolvedValue({ id: 'a1' });
     await auditLogger.logAuth('login', USER, 'success');
-    expect(logger.error).toHaveBeenCalledWith(
-      'Failed to write immutable audit event',
-      expect.objectContaining({
-        error: expect.any(ImmutableAuditUnavailableError),
-      })
-    );
+    expect(auditCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        action: 'auth.login',
+        category: 'auth',
+        userId: USER,
+      }),
+    });
     await auditLogger.flush();
-    expect(auditCreateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: [expect.objectContaining({ action: 'auth.login', userId: USER })],
-      })
-    );
+    expect(auditCreateMany).not.toHaveBeenCalled();
+  });
+
+  it('rejects when the audit row cannot be written', async () => {
+    auditCreate.mockRejectedValue(new Error('audit db down'));
+    await expect(
+      auditLogger.logData('delete', 'competitor', 'c1', USER, 'success')
+    ).rejects.toThrow('audit db down');
+    await auditLogger.flush();
+    expect(auditCreateMany).not.toHaveBeenCalled();
   });
 });
