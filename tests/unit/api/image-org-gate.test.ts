@@ -84,16 +84,6 @@ jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: { logData: jest.fn() },
 }));
 
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({
-    from: () => ({
-      insert: () => ({
-        select: () => ({ single: () => ({ data: null, error: null }) }),
-      }),
-    }),
-  }),
-}));
-
 jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));

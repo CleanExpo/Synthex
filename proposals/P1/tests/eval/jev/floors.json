@@ -1,19 +1,19 @@
 {
   "schema": "jev-floors/1",
-  "measured_at": "2026-10-18T00:12:46.574Z",
-  "note": "measured by npm run jev:det (jev-det-20261018T001246574Z, exit 0); proposal only, adopting it into tests/eval/jev/floors.json is gated (rule B2)",
+  "measured_at": "2026-10-18T01:23:11.606Z",
+  "note": "measured by npm run jev:det (jev-det-20261018T012311606Z, exit 0); proposal only, adopting it into tests/eval/jev/floors.json is gated (rule B2)",
   "families": {
     "J1": {
       "pass_rate": 0.939
     },
     "J2": {
-      "pass_rate": 0.861
+      "pass_rate": 0.872
     },
     "J3": {
       "pass_rate": 0
     },
     "J4": {
-      "pass_rate": 0.195
+      "pass_rate": 0.22
     },
     "J7": {
       "pass_rate": 0

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 // ── Validation — optional cron body ──────────────────────────────────────────
 
@@ -18,17 +19,6 @@ const backupBodySchema = z
 // backup that did not happen.
 const NOT_PROVISIONED_MESSAGE =
   'Backups are not available: the system_backups, profiles and content_posts tables are not provisioned.';
-
-function notProvisioned(extra: Record<string, unknown> = {}) {
-  return NextResponse.json(
-    {
-      error: 'FEATURE_NOT_PROVISIONED',
-      message: NOT_PROVISIONED_MESSAGE,
-      ...extra,
-    },
-    { status: 501 }
-  );
-}
 
 // Verify cron secret for security
 function verifyCronSecret(request: NextRequest): boolean {
@@ -54,7 +44,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  return notProvisioned();
+  return notProvisionedResponse(NOT_PROVISIONED_MESSAGE);
 }
 
 export async function GET(request: NextRequest) {
@@ -74,7 +64,10 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return notProvisioned({ available: false, reason: NOT_PROVISIONED_MESSAGE });
+  return notProvisionedResponse(NOT_PROVISIONED_MESSAGE, {
+    available: false,
+    reason: NOT_PROVISIONED_MESSAGE,
+  });
 }
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';

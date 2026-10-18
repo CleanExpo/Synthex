@@ -84,20 +84,6 @@ jest.mock('@/lib/security/audit-logger', () => ({
   auditLogger: { logData: (...a: unknown[]) => mockAudit(...a) },
 }));
 
-const mockInsert = jest.fn();
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: () => ({
-    from: () => ({
-      insert: (...a: unknown[]) => {
-        mockInsert(...a);
-        return {
-          select: () => ({ single: () => ({ data: null, error: null }) }),
-        };
-      },
-    }),
-  }),
-}));
-
 jest.mock('@/lib/logger', () => ({
   logger: {
     info: jest.fn(),
