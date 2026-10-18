@@ -193,11 +193,15 @@ const checks = run('gh', [
   'api',
   `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
   '--jq',
-  '[.check_runs[] | {name, status, conclusion}]',
+  '{total: .total_count, runs: [.check_runs[] | {name, status, conclusion}]}',
 ]);
+// GitHub pages check-runs; a read whose count differs from total_count is not evidence.
 let cr = [];
+let partial = true;
 try {
-  cr = JSON.parse(checks.stdout);
+  const j = JSON.parse(checks.stdout);
+  cr = j.runs;
+  partial = j.total !== cr.length;
 } catch {}
 if (!Array.isArray(cr)) cr = []; // an unknown head yields null, not a list
 const pending = cr.filter(c => c.status !== 'completed');
@@ -212,8 +216,12 @@ const missingReq = required.filter(
 );
 gate(
   'checks',
-  cr.length > 0 && !pending.length && !failed.length && !missingReq.length,
-  `${cr.length} checks, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
+  cr.length > 0 &&
+    !partial &&
+    !pending.length &&
+    !failed.length &&
+    !missingReq.length,
+  `${cr.length} checks${partial ? ' (partial read)' : ''}, pending=${pending.map(c => c.name).join('|') || 'none'}, failed=${failed.map(c => c.name).join('|') || 'none'}, missing-required=${missingReq.join('|') || 'none'}`
 );
 const receipt = readJson(`release-receipts/${phase}.json`, null);
 let rep = null;

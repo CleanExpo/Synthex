@@ -439,7 +439,7 @@ function review() {
   const brief = path.join(os.tmpdir(), `brief-${phase}.md`);
   writeFileSync(
     brief,
-    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
+    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
   );
   const out = `release-receipts/manifests/${phase}-review.json`;
   const script = path.join(
@@ -697,16 +697,21 @@ function waitForChecks(head, timeoutMs) {
       'api',
       `repos/{owner}/{repo}/commits/${head}/check-runs?per_page=100`,
       '--jq',
-      '[.check_runs[] | {name, status, conclusion}]',
+      '{total: .total_count, runs: [.check_runs[] | {name, status, conclusion}]}',
     ]);
     let cr = [];
+    let partial = true;
     try {
-      cr = JSON.parse(r.stdout);
+      const j = JSON.parse(r.stdout);
+      cr = j.runs;
+      partial = j.total !== cr.length;
     } catch {}
     // Required contexts come from the pull_request run, which registers after the push-run
     // finishes; a head missing any of them is still pending (P-1: merge refused on PR #997).
     const required = ['Build', 'Lint', 'Protected paths', 'Receipt verify'];
     const pending = cr.filter(c => c.status !== 'completed');
+    // A partial page is still pending, never all green.
+    if (partial) pending.push({ name: 'unread check-runs' });
     for (const name of required)
       if (!cr.some(c => c.name === name)) pending.push({ name });
     const failed = cr.filter(
