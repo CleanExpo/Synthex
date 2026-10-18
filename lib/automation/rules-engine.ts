@@ -3,15 +3,23 @@
  *
  * @description Visual workflow automation with triggers, conditions, and actions
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL: Supabase URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY: Supabase service role key (SECRET)
- *
- * FAILURE MODE: Logs error and continues, notifies on critical failures
+ * DATA STORE: NOT PROVISIONED. automation_rules, automation_executions and
+ * scheduled_posts have no Prisma model. Every persistence path throws
+ * AutomationStoreNotProvisionedError instead of faking a saved rule or run.
  */
 
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 import { logger } from '@/lib/logger';
+
+/** Thrown when a path needs an automation table that has no Prisma model. */
+export class AutomationStoreNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  constructor(readonly table: string) {
+    super(
+      `Automation rules are not provisioned: table "${table}" has no Prisma model.`
+    );
+    this.name = 'AutomationStoreNotProvisionedError';
+  }
+}
 
 /** Action configuration types */
 interface NotificationConfig {
@@ -178,7 +186,13 @@ export interface RuleTrigger {
 }
 
 // Condition value can be various types
-export type ConditionValue = string | number | boolean | null | string[] | number[];
+export type ConditionValue =
+  | string
+  | number
+  | boolean
+  | null
+  | string[]
+  | number[];
 
 // Rule condition
 export interface RuleCondition {
@@ -240,7 +254,8 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
   {
     id: 'auto-publish-optimal-time',
     name: 'Auto-Publish at Optimal Time',
-    description: 'Automatically publish draft posts at the optimal time for engagement',
+    description:
+      'Automatically publish draft posts at the optimal time for engagement',
     category: 'Publishing',
     trigger: {
       type: 'schedule',
@@ -248,10 +263,21 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
     },
     conditions: [
       { id: 'c1', field: 'post.status', operator: 'equals', value: 'draft' },
-      { id: 'c2', field: 'post.scheduledTime', operator: 'not_exists', value: null, logicalOperator: 'AND' },
+      {
+        id: 'c2',
+        field: 'post.scheduledTime',
+        operator: 'not_exists',
+        value: null,
+        logicalOperator: 'AND',
+      },
     ],
     actions: [
-      { id: 'a1', type: 'schedule_post', order: 0, config: { useOptimalTime: true } },
+      {
+        id: 'a1',
+        type: 'schedule_post',
+        order: 0,
+        config: { useOptimalTime: true },
+      },
     ],
     variables: [],
   },
@@ -262,17 +288,49 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
     category: 'Monitoring',
     trigger: {
       type: 'threshold',
-      config: { metric: 'engagement_rate', threshold: 2, direction: 'below', checkInterval: 60 },
+      config: {
+        metric: 'engagement_rate',
+        threshold: 2,
+        direction: 'below',
+        checkInterval: 60,
+      },
     },
     conditions: [
-      { id: 'c1', field: 'post.status', operator: 'equals', value: 'published' },
-      { id: 'c2', field: 'post.publishedAt', operator: 'greater_than', value: 'now-24h', logicalOperator: 'AND' },
+      {
+        id: 'c1',
+        field: 'post.status',
+        operator: 'equals',
+        value: 'published',
+      },
+      {
+        id: 'c2',
+        field: 'post.publishedAt',
+        operator: 'greater_than',
+        value: 'now-24h',
+        logicalOperator: 'AND',
+      },
     ],
     actions: [
-      { id: 'a1', type: 'send_notification', order: 0, config: { type: 'low_engagement', includeMetrics: true } },
-      { id: 'a2', type: 'optimize_content', order: 1, config: { createVariation: true } },
+      {
+        id: 'a1',
+        type: 'send_notification',
+        order: 0,
+        config: { type: 'low_engagement', includeMetrics: true },
+      },
+      {
+        id: 'a2',
+        type: 'optimize_content',
+        order: 1,
+        config: { createVariation: true },
+      },
     ],
-    variables: [{ name: 'threshold', type: 'number', description: 'Engagement rate threshold (%)' }],
+    variables: [
+      {
+        name: 'threshold',
+        type: 'number',
+        description: 'Engagement rate threshold (%)',
+      },
+    ],
   },
   {
     id: 'auto-respond-comments',
@@ -284,12 +342,33 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
       config: { event: 'comment.received', eventSource: 'any' },
     },
     conditions: [
-      { id: 'c1', field: 'comment.isQuestion', operator: 'equals', value: true },
-      { id: 'c2', field: 'comment.sentiment', operator: 'not_equals', value: 'negative', logicalOperator: 'AND' },
+      {
+        id: 'c1',
+        field: 'comment.isQuestion',
+        operator: 'equals',
+        value: true,
+      },
+      {
+        id: 'c2',
+        field: 'comment.sentiment',
+        operator: 'not_equals',
+        value: 'negative',
+        logicalOperator: 'AND',
+      },
     ],
     actions: [
-      { id: 'a1', type: 'generate_caption', order: 0, config: { type: 'reply', tone: 'friendly' } },
-      { id: 'a2', type: 'request_review', order: 1, config: { priority: 'high' } },
+      {
+        id: 'a1',
+        type: 'generate_caption',
+        order: 0,
+        config: { type: 'reply', tone: 'friendly' },
+      },
+      {
+        id: 'a2',
+        type: 'request_review',
+        order: 1,
+        config: { priority: 'high' },
+      },
     ],
     variables: [],
   },
@@ -303,28 +382,35 @@ export const RULE_TEMPLATES: RuleTemplate[] = [
       config: { cron: '0 0 * * *', timezone: 'UTC' }, // Daily at midnight
     },
     conditions: [
-      { id: 'c1', field: 'post.expiryDate', operator: 'less_than', value: 'now' },
-      { id: 'c2', field: 'post.status', operator: 'equals', value: 'published', logicalOperator: 'AND' },
+      {
+        id: 'c1',
+        field: 'post.expiryDate',
+        operator: 'less_than',
+        value: 'now',
+      },
+      {
+        id: 'c2',
+        field: 'post.status',
+        operator: 'equals',
+        value: 'published',
+        logicalOperator: 'AND',
+      },
     ],
     actions: [
       { id: 'a1', type: 'archive_post', order: 0, config: {} },
-      { id: 'a2', type: 'send_notification', order: 1, config: { type: 'content_archived' } },
+      {
+        id: 'a2',
+        type: 'send_notification',
+        order: 1,
+        config: { type: 'content_archived' },
+      },
     ],
     variables: [],
   },
 ];
 
 class RulesEngine {
-  // SYN-953: lazy Supabase init.
-  private _platform: SupabaseClient | null = null;
   private runningExecutions: Map<string, ExecutionContext> = new Map();
-
-  private get platform(): SupabaseClient {
-    if (!this._platform) {
-      this._platform = createClient();
-    }
-    return this._platform;
-  }
 
   // ==================== Rule Management ====================
 
@@ -344,42 +430,7 @@ class RulesEngine {
       tags?: string[];
     }
   ): Promise<AutomationRule> {
-    try {
-      const ruleId = `rule_${Date.now()}`;
-
-      const { data: rule, error } = await this.platform
-        .from('automation_rules')
-        .insert({
-          id: ruleId,
-          user_id: userId,
-          client_id: data.clientId,
-          name: data.name,
-          description: data.description || '',
-          trigger: data.trigger,
-          conditions: data.conditions || [],
-          actions: data.actions,
-          is_active: data.isActive ?? true,
-          run_count: 0,
-          error_count: 0,
-          tags: data.tags || [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Register trigger if active
-      if (rule.is_active) {
-        await this.registerTrigger(this.mapDbToRule(rule));
-      }
-
-      return this.mapDbToRule(rule);
-    } catch (error: unknown) {
-      logger.error('Failed to create rule:', { error, userId });
-      throw error;
-    }
+    throw new AutomationStoreNotProvisionedError('automation_rules');
   }
 
   /**
@@ -396,71 +447,17 @@ class RulesEngine {
       offset?: number;
     } = {}
   ): Promise<{ rules: AutomationRule[]; total: number }> {
-    try {
-      let query = this.platform
-        .from('automation_rules')
-        .select('*', { count: 'exact' })
-        .eq('user_id', userId);
-
-      if (options.clientId) {
-        query = query.eq('client_id', options.clientId);
-      }
-
-      if (options.isActive !== undefined) {
-        query = query.eq('is_active', options.isActive);
-      }
-
-      if (options.tags && options.tags.length > 0) {
-        query = query.overlaps('tags', options.tags);
-      }
-
-      if (options.search) {
-        query = query.or(`name.ilike.%${options.search}%,description.ilike.%${options.search}%`);
-      }
-
-      query = query.order('created_at', { ascending: false });
-
-      if (options.limit) {
-        query = query.limit(options.limit);
-      }
-
-      if (options.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) throw error;
-
-      return {
-        rules: (data || []).map(this.mapDbToRule),
-        total: count || 0,
-      };
-    } catch (error: unknown) {
-      logger.error('Failed to get rules:', { error, userId });
-      throw error;
-    }
+    throw new AutomationStoreNotProvisionedError('automation_rules');
   }
 
   /**
    * Get a specific rule
    */
-  async getRule(ruleId: string, userId: string): Promise<AutomationRule | null> {
-    try {
-      const { data, error } = await this.platform
-        .from('automation_rules')
-        .select('*')
-        .eq('id', ruleId)
-        .eq('user_id', userId)
-        .single();
-
-      if (error || !data) return null;
-
-      return this.mapDbToRule(data);
-    } catch (error: unknown) {
-      logger.error('Failed to get rule:', { error, ruleId });
-      throw error;
-    }
+  async getRule(
+    ruleId: string,
+    userId: string
+  ): Promise<AutomationRule | null> {
+    throw new AutomationStoreNotProvisionedError('automation_rules');
   }
 
   /**
@@ -479,76 +476,23 @@ class RulesEngine {
       tags: string[];
     }>
   ): Promise<AutomationRule | null> {
-    try {
-      const existingRule = await this.getRule(ruleId, userId);
-      if (!existingRule) return null;
-
-      const dbUpdates: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
-      };
-
-      if (updates.name !== undefined) dbUpdates.name = updates.name;
-      if (updates.description !== undefined) dbUpdates.description = updates.description;
-      if (updates.trigger !== undefined) dbUpdates.trigger = updates.trigger;
-      if (updates.conditions !== undefined) dbUpdates.conditions = updates.conditions;
-      if (updates.actions !== undefined) dbUpdates.actions = updates.actions;
-      if (updates.isActive !== undefined) dbUpdates.is_active = updates.isActive;
-      if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
-
-      const { data, error } = await this.platform
-        .from('automation_rules')
-        .update(dbUpdates)
-        .eq('id', ruleId)
-        .eq('user_id', userId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const rule = this.mapDbToRule(data);
-
-      // Update trigger registration
-      if (updates.isActive !== undefined || updates.trigger !== undefined) {
-        if (rule.isActive) {
-          await this.registerTrigger(rule);
-        } else {
-          await this.unregisterTrigger(ruleId);
-        }
-      }
-
-      return rule;
-    } catch (error: unknown) {
-      logger.error('Failed to update rule:', { error, ruleId });
-      throw error;
-    }
+    throw new AutomationStoreNotProvisionedError('automation_rules');
   }
 
   /**
    * Delete a rule
    */
   async deleteRule(ruleId: string, userId: string): Promise<boolean> {
-    try {
-      await this.unregisterTrigger(ruleId);
-
-      const { error } = await this.platform
-        .from('automation_rules')
-        .delete()
-        .eq('id', ruleId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      return true;
-    } catch (error: unknown) {
-      logger.error('Failed to delete rule:', { error, ruleId });
-      throw error;
-    }
+    throw new AutomationStoreNotProvisionedError('automation_rules');
   }
 
   /**
    * Toggle rule active status
    */
-  async toggleRule(ruleId: string, userId: string): Promise<AutomationRule | null> {
+  async toggleRule(
+    ruleId: string,
+    userId: string
+  ): Promise<AutomationRule | null> {
     const rule = await this.getRule(ruleId, userId);
     if (!rule) return null;
 
@@ -586,7 +530,10 @@ class RulesEngine {
       this.runningExecutions.set(executionId, context);
 
       // Check conditions
-      const conditionsMet = await this.evaluateConditions(rule.conditions, context);
+      const conditionsMet = await this.evaluateConditions(
+        rule.conditions,
+        context
+      );
       if (!conditionsMet) {
         return {
           success: true,
@@ -601,18 +548,12 @@ class RulesEngine {
       }
 
       // Execute actions
-      const { executed, failed, outputs, errors } = await this.executeActions(rule.actions, context);
+      const { executed, failed, outputs, errors } = await this.executeActions(
+        rule.actions,
+        context
+      );
 
-      // Update rule stats
-      await this.platform
-        .from('automation_rules')
-        .update({
-          run_count: rule.runCount + 1,
-          last_run_at: new Date().toISOString(),
-          last_run_status: failed > 0 ? (executed > 0 ? 'partial' : 'failed') : 'success',
-          error_count: failed > 0 ? rule.errorCount + failed : rule.errorCount,
-        })
-        .eq('id', ruleId);
+      // Rule stats live in automation_rules (not provisioned); logExecution throws.
 
       // Log execution
       await this.logExecution(ruleId, executionId, {
@@ -638,6 +579,7 @@ class RulesEngine {
       };
     } catch (error: unknown) {
       this.runningExecutions.delete(executionId);
+      if (error instanceof AutomationStoreNotProvisionedError) throw error;
       logger.error('Rule execution failed:', { error, ruleId });
 
       return {
@@ -647,7 +589,12 @@ class RulesEngine {
         actionsExecuted: 0,
         actionsFailed: 1,
         outputs: {},
-        errors: [{ actionId: 'rule', error: error instanceof Error ? error.message : String(error) }],
+        errors: [
+          {
+            actionId: 'rule',
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
         duration: Date.now() - startTime,
       };
     }
@@ -660,41 +607,15 @@ class RulesEngine {
     ruleId: string,
     userId: string,
     options: { limit?: number; offset?: number } = {}
-  ): Promise<Array<{
-    id: string;
-    ruleId: string;
-    result: ExecutionResult;
-    createdAt: string;
-  }>> {
-    try {
-      let query = this.platform
-        .from('automation_executions')
-        .select('*')
-        .eq('rule_id', ruleId)
-        .order('created_at', { ascending: false });
-
-      if (options.limit) {
-        query = query.limit(options.limit);
-      }
-
-      if (options.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return (data || []).map((row: any) => ({
-        id: row.id,
-        ruleId: row.rule_id,
-        result: row.result,
-        createdAt: row.created_at,
-      }));
-    } catch (error: unknown) {
-      logger.error('Failed to get execution history:', { error, ruleId });
-      throw error;
-    }
+  ): Promise<
+    Array<{
+      id: string;
+      ruleId: string;
+      result: ExecutionResult;
+      createdAt: string;
+    }>
+  > {
+    throw new AutomationStoreNotProvisionedError('automation_executions');
   }
 
   /**
@@ -795,7 +716,10 @@ class RulesEngine {
     return result;
   }
 
-  private evaluateCondition(condition: RuleCondition, context: ExecutionContext): boolean {
+  private evaluateCondition(
+    condition: RuleCondition,
+    context: ExecutionContext
+  ): boolean {
     const fieldValue = this.getFieldValue(condition.field, context);
     const targetValue = condition.value;
 
@@ -817,9 +741,15 @@ class RulesEngine {
       case 'less_than_or_equals':
         return Number(fieldValue) <= Number(targetValue);
       case 'in':
-        return Array.isArray(targetValue) && (targetValue as unknown[]).includes(fieldValue);
+        return (
+          Array.isArray(targetValue) &&
+          (targetValue as unknown[]).includes(fieldValue)
+        );
       case 'not_in':
-        return Array.isArray(targetValue) && !(targetValue as unknown[]).includes(fieldValue);
+        return (
+          Array.isArray(targetValue) &&
+          !(targetValue as unknown[]).includes(fieldValue)
+        );
       case 'exists':
         return fieldValue !== null && fieldValue !== undefined;
       case 'not_exists':
@@ -868,12 +798,17 @@ class RulesEngine {
         executed++;
       } catch (error: unknown) {
         failed++;
-        errors.push({ actionId: action.id, error: error instanceof Error ? error.message : String(error) });
+        errors.push({
+          actionId: action.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
 
         // Handle retry
         if (action.retryCount && action.retryCount > 0) {
           for (let i = 0; i < action.retryCount; i++) {
-            await new Promise(resolve => setTimeout(resolve, action.retryDelay || 1000));
+            await new Promise(resolve =>
+              setTimeout(resolve, action.retryDelay || 1000)
+            );
             try {
               const result = await this.executeAction(action, context);
               outputs[action.id] = result;
@@ -907,22 +842,37 @@ class RulesEngine {
     return { executed, failed, outputs, errors };
   }
 
-  private async executeAction(action: RuleAction, context: ExecutionContext): Promise<ActionResult> {
+  private async executeAction(
+    action: RuleAction,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
     switch (action.type) {
       case 'send_notification':
-        return this.actionSendNotification(action.config as NotificationConfig, context);
+        return this.actionSendNotification(
+          action.config as NotificationConfig,
+          context
+        );
 
       case 'send_email':
         return this.actionSendEmail(action.config as EmailConfig, context);
 
       case 'schedule_post':
-        return this.actionSchedulePost(action.config as SchedulePostConfig, context);
+        return this.actionSchedulePost(
+          action.config as SchedulePostConfig,
+          context
+        );
 
       case 'archive_post':
-        return this.actionArchivePost(action.config as ArchivePostConfig, context);
+        return this.actionArchivePost(
+          action.config as ArchivePostConfig,
+          context
+        );
 
       case 'optimize_content':
-        return this.actionOptimizeContent(action.config as OptimizeContentConfig, context);
+        return this.actionOptimizeContent(
+          action.config as OptimizeContentConfig,
+          context
+        );
 
       case 'webhook':
         return this.actionWebhook(action.config as WebhookConfig, context);
@@ -934,49 +884,48 @@ class RulesEngine {
   }
 
   // Action implementations (simplified)
-  private async actionSendNotification(config: NotificationConfig, context: ExecutionContext): Promise<ActionResult> {
+  private async actionSendNotification(
+    config: NotificationConfig,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
     logger.info('Sending notification', { config, ruleId: context.ruleId });
     return { sent: true, type: config.type };
   }
 
-  private async actionSendEmail(config: EmailConfig, context: ExecutionContext): Promise<ActionResult> {
+  private async actionSendEmail(
+    config: EmailConfig,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
     logger.info('Sending email', { config, ruleId: context.ruleId });
     return { sent: true, to: config.to };
   }
 
-  private async actionSchedulePost(config: SchedulePostConfig, context: ExecutionContext): Promise<ActionResult> {
-    const postId = (context.triggerData.postId as string) || config.postId;
-    if (!postId) return { skipped: true };
-
-    await this.platform
-      .from('scheduled_posts')
-      .update({
-        status: 'scheduled',
-        scheduled_time: config.useOptimalTime ? new Date().toISOString() : config.scheduledTime,
-      })
-      .eq('id', postId);
-
-    return { scheduled: true, postId };
+  private async actionSchedulePost(
+    config: SchedulePostConfig,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
+    throw new AutomationStoreNotProvisionedError('scheduled_posts');
   }
 
-  private async actionArchivePost(config: ArchivePostConfig, context: ExecutionContext): Promise<ActionResult> {
-    const postId = (context.triggerData.postId as string) || config.postId;
-    if (!postId) return { skipped: true };
-
-    await this.platform
-      .from('scheduled_posts')
-      .update({ status: 'archived' })
-      .eq('id', postId);
-
-    return { archived: true, postId };
+  private async actionArchivePost(
+    config: ArchivePostConfig,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
+    throw new AutomationStoreNotProvisionedError('scheduled_posts');
   }
 
-  private async actionOptimizeContent(config: OptimizeContentConfig, context: ExecutionContext): Promise<ActionResult> {
+  private async actionOptimizeContent(
+    config: OptimizeContentConfig,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
     logger.info('Optimizing content', { config, ruleId: context.ruleId });
     return { optimized: true };
   }
 
-  private async actionWebhook(config: WebhookConfig, context: ExecutionContext): Promise<ActionResult> {
+  private async actionWebhook(
+    config: WebhookConfig,
+    context: ExecutionContext
+  ): Promise<ActionResult> {
     const response = await fetch(config.url, {
       method: config.method || 'POST',
       headers: {
@@ -997,7 +946,10 @@ class RulesEngine {
     // Would integrate with scheduler service for cron triggers
     // Would set up event listeners for event triggers
     // Would set up metric monitors for threshold triggers
-    logger.info('Registering trigger', { ruleId: rule.id, type: rule.trigger.type });
+    logger.info('Registering trigger', {
+      ruleId: rule.id,
+      type: rule.trigger.type,
+    });
   }
 
   private async unregisterTrigger(ruleId: string): Promise<void> {
@@ -1009,12 +961,7 @@ class RulesEngine {
     executionId: string,
     result: Omit<ExecutionResult, 'ruleId' | 'executionId'>
   ): Promise<void> {
-    await this.platform.from('automation_executions').insert({
-      id: executionId,
-      rule_id: ruleId,
-      result: { ...result, ruleId, executionId },
-      created_at: new Date().toISOString(),
-    });
+    throw new AutomationStoreNotProvisionedError('automation_executions');
   }
 
   private mapDbToRule(data: AutomationRuleDbRecord): AutomationRule {
