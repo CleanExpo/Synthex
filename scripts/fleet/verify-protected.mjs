@@ -80,10 +80,35 @@ export function check(base, head = 'HEAD', cwd = ROOT) {
     const r = run('git', ['show', `${ref}:${f}`], { cwd });
     return r.code === 0 ? r.stdout : null;
   };
+  // A merge commit counts as touching f only when the merge itself authored f: its blob differs from
+  // what git's own automatic merge of the two parents produces (git merge-tree). A merge that only
+  // carries commits already in base..head is judged through those commits, which must each qualify.
+  // Anything unexpected (octopus merge, merge-tree failure) counts as authored: fail closed.
+  const mergeAuthored = (sha, parents, f) => {
+    if (parents.length !== 2) return true;
+    // Exit 1 means conflicts; the tree is still written, with conflict markers in the conflicted
+    // files, so a resolved conflict in f differs from it and counts as authored.
+    const mt = run('git', ['merge-tree', '--write-tree', ...parents], { cwd });
+    const auto = mt.code <= 1 ? mt.stdout.split('\n')[0].trim() : '';
+    if (!/^[0-9a-f]{40}$/.test(auto)) return true;
+    const blob = ref =>
+      tryGit(['rev-parse', '-q', '--verify', `${ref}:${f}`], { cwd }) || '';
+    return blob(auto) !== blob(sha);
+  };
   const touchingCommits = f =>
-    (tryGit(['log', '--format=%H', `${base}..${head}`, '--', f], { cwd }) || '')
+    (
+      tryGit(['log', '--format=%H %P', `${base}..${head}`, '--', f], {
+        cwd,
+      }) || ''
+    )
       .split('\n')
-      .filter(Boolean);
+      .filter(Boolean)
+      .map(l => l.split(' '))
+      .filter(
+        ([sha, ...parents]) =>
+          parents.length < 2 || mergeAuthored(sha, parents, f)
+      )
+      .map(([sha]) => sha);
   for (const f of files) {
     if (!isProtected(f, pol)) continue;
     if (bootstrap) {
@@ -219,6 +244,11 @@ function control() {
     mkdirSync(path.dirname(path.join(dir, f)), { recursive: true });
     writeFileSync(path.join(dir, f), body);
   };
+  // A 20-line file with optional replacements, so edits at lines 1 and 20 land in separate hunks.
+  const lines = (over = {}) =>
+    Array.from({ length: 20 }, (_, k) => over[k + 1] || `L${k + 1}`).join(
+      '\n'
+    ) + '\n';
   const commit = (msg, who) => {
     g(['add', '-A'], who);
     g(['commit', '-q', '--allow-empty', '-m', msg], who);
@@ -296,6 +326,65 @@ function control() {
         g(['rm', '-q', 'release-receipts/halt/STOP-2026-10-18']);
         commit('remove the daily halt');
       }),
+      // Both sides edit the same protected file in declared commits, far apart, so the merge
+      // auto-combines them and is not TREESAME to either parent (git log lists it) though it
+      // authored nothing (diff-tree --cc is empty).
+      mergeCarriesDeclared: branch('feature/fleet-p1-merge', () => {
+        put('scripts/fleet/guard.mjs', lines());
+        commit(declared, fleet);
+        g(['checkout', '-q', '-B', 'side-declared']);
+        put('scripts/fleet/guard.mjs', lines({ 1: 'S1' }));
+        commit(declared, fleet);
+        g(['checkout', '-q', 'feature/fleet-p1-merge']);
+        put('scripts/fleet/guard.mjs', lines({ 20: 'F20' }));
+        commit(declared, fleet);
+        g(
+          [
+            'merge',
+            '-q',
+            '--no-ff',
+            'side-declared',
+            '-m',
+            'merge\n\nFleet-Role: orchestrator',
+          ],
+          fleet
+        );
+      }),
+      evilMergeEdit: branch('feature/fleet-p1-evil', () => {
+        put('scripts/fleet/guard.mjs', lines());
+        commit(declared, fleet);
+        g(['checkout', '-q', '-B', 'side-evil']);
+        put('scripts/fleet/guard.mjs', lines({ 1: 'S1' }));
+        commit(declared, fleet);
+        g(['checkout', '-q', 'feature/fleet-p1-evil']);
+        put('scripts/fleet/guard.mjs', lines({ 20: 'F20' }));
+        commit(declared, fleet);
+        g(['merge', '-q', '--no-ff', '--no-commit', 'side-evil'], fleet);
+        put(
+          'scripts/fleet/guard.mjs',
+          lines({ 1: 'S1', 10: 'EVIL', 20: 'F20' })
+        );
+        g(['add', '-A'], fleet);
+        g(['commit', '-q', '-m', 'merge\n\nFleet-Role: orchestrator'], fleet);
+      }),
+      conflictResolvedInMerge: branch('feature/fleet-p1-conflict', () => {
+        put('scripts/fleet/guard.mjs', lines());
+        commit(declared, fleet);
+        g(['checkout', '-q', '-B', 'side-conflict']);
+        put('scripts/fleet/guard.mjs', lines({ 10: 'SIDE' }));
+        commit(declared, fleet);
+        g(['checkout', '-q', 'feature/fleet-p1-conflict']);
+        put('scripts/fleet/guard.mjs', lines({ 10: 'OURS' }));
+        commit(declared, fleet);
+        try {
+          g(['merge', '-q', '--no-ff', '--no-commit', 'side-conflict'], fleet);
+        } catch {
+          // conflict expected; resolved below inside the merge commit
+        }
+        put('scripts/fleet/guard.mjs', lines({ 10: 'RESOLVED' }));
+        g(['add', '-A'], fleet);
+        g(['commit', '-q', '-m', 'merge\n\nFleet-Role: orchestrator'], fleet);
+      }),
       ownManifest: branch('feature/fleet-p1-own', () => {
         put('release-receipts/manifests/P1-gate.json', '{"head":"x"}\n');
         commit('own-phase gate manifest\n\nFleet-Role: orchestrator', fleet);
@@ -312,6 +401,9 @@ function control() {
       ledgerAppended: 0,
       haltRemoved: 1,
       ownManifest: 0,
+      mergeCarriesDeclared: 0,
+      evilMergeEdit: 1,
+      conflictResolvedInMerge: 1,
     };
     const bad = Object.keys(want).filter(k => got[k] !== want[k]);
     for (const k of bad)
@@ -326,7 +418,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-protected controls (planted floors edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier, ledger row deleted, halt removed all exit 1; own-phase manifest and fleet-appended ledger rows exit 0)`
+      `${ok ? 'PASS' : 'FAIL'} verify-protected controls (planted floors edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier, ledger row deleted, halt removed, undeclared edit or conflict resolution inside a merge all exit 1; own-phase manifest, fleet-appended ledger rows and a merge carrying a declared change exit 0)`
     );
     process.exit(ok ? 0 : 1);
   }
