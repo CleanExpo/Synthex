@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
-import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
-import { logger } from '@/lib/logger';
 
 // ── Validation — optional cron body ──────────────────────────────────────────
 
@@ -14,15 +11,25 @@ const backupBodySchema = z
   .strict()
   .optional();
 
-// Lazy-initialize Supabase admin client (avoids build-time errors)
-let platformAdmin: SupabaseClient | null = null;
+// NOT PROVISIONED: this route backed up profiles and content_posts and recorded
+// runs in system_backups. None of those three tables exist in
+// prisma/schema.prisma, and the backup payload was never stored anywhere, so both
+// handlers answer 501 FEATURE_NOT_PROVISIONED after auth rather than report a
+// backup that did not happen.
+const NOT_PROVISIONED_MESSAGE =
+  'Backups are not available: the system_backups, profiles and content_posts tables are not provisioned.';
 
-function getSupabaseAdmin(): SupabaseClient {
-  if (!platformAdmin) {
-    platformAdmin = createClient();
-  }
-  return platformAdmin;
+function notProvisioned(extra: Record<string, unknown> = {}) {
+  return NextResponse.json(
+    {
+      error: 'FEATURE_NOT_PROVISIONED',
+      message: NOT_PROVISIONED_MESSAGE,
+      ...extra,
+    },
+    { status: 501 }
+  );
 }
+
 // Verify cron secret for security
 function verifyCronSecret(request: NextRequest): boolean {
   // Guard: reject immediately if CRON_SECRET is not configured — prevents 'Bearer undefined' bypass
@@ -47,103 +54,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const timestamp = new Date().toISOString();
-    const backupData: {
-      timestamp: string;
-      tables: Record<string, unknown[]>;
-      statistics: Record<string, number>;
-    } = {
-      timestamp,
-      tables: {},
-      statistics: {},
-    };
-
-    const platform = getSupabaseAdmin();
-
-    // Backup user profiles
-    const { data: profiles, error: profilesError } = await platform
-      .from('profiles')
-      .select('*');
-
-    if (!profilesError) {
-      backupData.tables.profiles = profiles;
-      backupData.statistics.profileCount = profiles?.length || 0;
-    }
-
-    // Backup content posts
-    const { data: posts, error: postsError } = await platform
-      .from('content_posts')
-      .select('*');
-
-    if (!postsError) {
-      backupData.tables.content_posts = posts;
-      backupData.statistics.postCount = posts?.length || 0;
-    }
-
-    // Backup campaigns
-    const { data: campaigns, error: campaignsError } = await platform
-      .from('campaigns')
-      .select('*');
-
-    if (!campaignsError) {
-      backupData.tables.campaigns = campaigns;
-      backupData.statistics.campaignCount = campaigns?.length || 0;
-    }
-
-    // Backup analytics events (last 30 days only to manage size)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const { data: analytics, error: analyticsError } = await platform
-      .from('analytics_events')
-      .select('*')
-      .gte('created_at', thirtyDaysAgo.toISOString());
-
-    if (!analyticsError) {
-      backupData.tables.analytics_events = analytics;
-      backupData.statistics.analyticsCount = analytics?.length || 0;
-    }
-
-    // Store backup metadata
-    const backupMetadata = {
-      id: crypto.randomUUID(),
-      created_at: timestamp,
-      type: 'scheduled',
-      statistics: backupData.statistics,
-      status: 'completed',
-      size_bytes: JSON.stringify(backupData).length,
-    };
-
-    // In production, you would:
-    // 1. Upload to cloud storage (S3, Google Cloud Storage, etc.)
-    // 2. Store metadata in a backups table
-    // 3. Send notification on completion
-
-    // For now, we'll create a backup record
-    const { error: backupError } = await platform
-      .from('system_backups')
-      .insert(backupMetadata);
-
-    return NextResponse.json({
-      success: true,
-      backup: {
-        id: backupMetadata.id,
-        timestamp,
-        statistics: backupData.statistics,
-        size: `${(backupMetadata.size_bytes / 1024 / 1024).toFixed(2)} MB`,
-      },
-    });
-  } catch (error) {
-    logger.error('Backup failed:', error);
-    return NextResponse.json(
-      {
-        error: 'Backup failed',
-        message: sanitizeErrorForResponse(error, 'Backup operation failed'),
-      },
-      { status: 500 }
-    );
-  }
+  return notProvisioned();
 }
 
 export async function GET(request: NextRequest) {
@@ -163,36 +74,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  try {
-    const platform = getSupabaseAdmin();
-
-    // Get backup history
-    const { data: backups, error } = await platform
-      .from('system_backups')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(50);
-
-    if (error) {
-      // If table doesn't exist, return empty array
-      return NextResponse.json({
-        backups: [],
-        message: 'No backups found',
-      });
-    }
-
-    return NextResponse.json({
-      backups: backups || [],
-      count: backups?.length || 0,
-      lastBackup: backups?.[0]?.created_at || null,
-    });
-  } catch (error) {
-    logger.error('Failed to fetch backup history:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch backup history' },
-      { status: 500 }
-    );
-  }
+  return notProvisioned({ available: false, reason: NOT_PROVISIONED_MESSAGE });
 }
 // Node.js runtime required for Prisma
 export const runtime = 'nodejs';
