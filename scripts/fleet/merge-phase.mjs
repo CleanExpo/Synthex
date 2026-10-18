@@ -42,6 +42,15 @@ export function reviewBound(rep, reviewedCommit) {
     /^(PASS|APPROVE)/i.test(String(rep?.verdict || ''))
   );
 }
+// The trusted verifier copy must be today's main, never a cached ref: the fetch must succeed and
+// land exactly on the SHA that origin reports live (ls-remote). Anything else fails closed (Codex on
+// P2 31f0bdb1: a failed fetch left a stale origin/main that git archive still read).
+function trustedMainSha(fetchCode, liveSha, fetchedSha) {
+  const sha = /^[0-9a-f]{40}$/;
+  if (fetchCode !== 0 || !sha.test(liveSha || '') || fetchedSha !== liveSha)
+    return null;
+  return liveSha;
+}
 if (a.includes('--control')) {
   const c = 'b8698d17c295d0c31ddd17d452730331e84bdc37';
   const cases = [
@@ -53,10 +62,20 @@ if (a.includes('--control')) {
     ['other commit', { verdict: 'PASS', head_sha: 'a'.repeat(40) }, false],
     ['FAIL verdict', { verdict: 'FAIL', head_sha: c }, false],
   ];
-  const bad = cases.filter(([, rep, want]) => reviewBound(rep, c) !== want);
+  const m = 'c'.repeat(40);
+  const trustCases = [
+    ['fetch ok, live main', [0, m, m], m],
+    ['fetch failed, cached main', [1, m, m], null],
+    ['fetched sha is stale', [0, m, 'd'.repeat(40)], null],
+    ['live sha unreadable', [0, '', m], null],
+  ];
+  const bad = [
+    ...cases.filter(([, rep, want]) => reviewBound(rep, c) !== want),
+    ...trustCases.filter(([, args, want]) => trustedMainSha(...args) !== want),
+  ];
   for (const [name] of bad) console.log(`FAIL control: ${name}`);
   console.log(
-    `${bad.length ? 'FAIL' : 'PASS'} merge-phase review-binding control (${cases.length - bad.length}/${cases.length})`
+    `${bad.length ? 'FAIL' : 'PASS'} merge-phase review-binding and trusted-main control (${cases.length + trustCases.length - bad.length}/${cases.length + trustCases.length})`
   );
   process.exit(bad.length ? 1 : 0);
 }
@@ -242,16 +261,24 @@ const atHead = file => {
 // scripts/release, with this repo and --head as data, never from the PR checkout (a PR that
 // replaced attest-phase.mjs used to attest itself; verifier audit second pass). Same pattern as
 // the receipt-verify and protected-paths workflows.
-run('git', ['fetch', '-q', 'origin', 'main']);
+const live = run('git', ['ls-remote', 'origin', 'refs/heads/main']);
+const liveSha = live.code === 0 ? live.stdout.split(/\s/)[0] : '';
+const fetched = run('git', ['fetch', '-q', 'origin', 'main']);
+const fetchedSha = run('git', ['rev-parse', 'FETCH_HEAD']).stdout.trim();
+const mainSha = trustedMainSha(fetched.code, liveSha, fetchedSha);
 const trusted = mkdtempSync(path.join(os.tmpdir(), 'merge-trusted-'));
-const arch = run('sh', [
-  '-c',
-  `git archive origin/main scripts/fleet scripts/release | tar -x -C "${trusted}"`,
-]);
+const arch = mainSha
+  ? run('sh', [
+      '-c',
+      `git archive ${mainSha} scripts/fleet scripts/release | tar -x -C "${trusted}"`,
+    ])
+  : { code: 1, stderr: 'main not freshly fetched at its live SHA' };
 gate(
   'trusted-copy',
   arch.code === 0,
-  arch.code === 0 ? 'origin/main' : arch.stderr.trim().slice(0, 120)
+  arch.code === 0
+    ? `main ${mainSha.slice(0, 12)}`
+    : arch.stderr.trim().slice(0, 120)
 );
 const vr = run(process.execPath, [
   path.join(trusted, 'scripts/release/verify-receipt.mjs'),
