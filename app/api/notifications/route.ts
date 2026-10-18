@@ -8,6 +8,9 @@
 //      (#415), GSC monitor, proactive insights, scheduled-publish, welcome.
 //   2. Supabase `client_notifications` — first-win celebration rows consumed by
 //      FirstWinBanner / WinAnchoredConversionCard (they match `type: 'first_win'`).
+//      That table has no model in prisma/schema.prisma, so this source is
+//      reported as `sources.firstWin = { available: false, reason }` instead of
+//      being read through the throwing platform stub.
 //
 // The previous SYN-525 refactor read ONLY `client_notifications`, so everything
 // written via prisma.notification was written-but-never-shown, and it returned
@@ -16,7 +19,6 @@
 // route merges both sources into one normalised shape that satisfies every
 // consumer (bell, banners, Notification Centre, useNotifications hook).
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -41,15 +43,11 @@ interface UnifiedNotification {
   timestamp: string;
 }
 
-interface FirstWinRow {
-  id: string;
-  type: string | null;
-  title: string | null;
-  body: string | null;
-  payload: unknown;
-  read: boolean | null;
-  created_at: string;
-}
+const FIRST_WIN_UNAVAILABLE = {
+  available: false,
+  reason:
+    'FEATURE_NOT_PROVISIONED: table `client_notifications` is not provisioned',
+} as const;
 
 export async function GET(request: NextRequest) {
   try {
@@ -96,58 +94,19 @@ export async function GET(request: NextRequest) {
       timestamp: n.createdAt.toISOString(),
     }));
 
-    // 2. First-win notifications remain best-effort.
-    let fromFirstWin: UnifiedNotification[] = [];
-    let firstWinUnread = 0;
-    try {
-      const platform = createClient();
-      let query = platform
-        .from('client_notifications')
-        .select('id, type, title, body, payload, read, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-      if (unreadOnly) query = query.eq('read', false);
-
-      const { data, error } = await query;
-      if (error) {
-        logger.error('[notifications] first-win query error:', error.message);
-      } else {
-        const rows = (data ?? []) as FirstWinRow[];
-        fromFirstWin = rows.map(r => ({
-          id: r.id,
-          type: r.type ?? 'info',
-          title: r.title ?? '',
-          message: r.body ?? '',
-          read: r.read ?? false,
-          data: r.payload ?? null,
-          createdAt: r.created_at,
-          timestamp: r.created_at,
-        }));
-        firstWinUnread = rows.filter(r => !r.read).length;
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      logger.error('[notifications] first-win fetch failed:', msg);
-    }
-
-    // 3. Merge, newest first, capped at the requested limit.
-    const merged = [...fromPrisma, ...fromFirstWin]
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      .slice(0, limit);
-
-    const unreadCount = prismaUnread + firstWinUnread;
-
+    // 2. First-win notifications (`client_notifications`) are not provisioned;
+    //    the response says so in `sources.firstWin`.
     return NextResponse.json(
       {
-        notifications: merged,
-        data: merged,
-        unreadCount,
+        notifications: fromPrisma,
+        data: fromPrisma,
+        unreadCount: prismaUnread,
+        sources: {
+          notifications: { available: true },
+          firstWin: FIRST_WIN_UNAVAILABLE,
+        },
         pagination: {
-          total: merged.length,
+          total: fromPrisma.length,
           limit,
           offset: 0,
           hasMore: false,
@@ -158,12 +117,17 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error('[notifications] GET error:', msg);
-    // Keep the empty-shape contract so the UI degrades gracefully.
-    return NextResponse.json({
-      notifications: [],
-      data: [],
-      unreadCount: 0,
-      pagination: { total: 0, limit: 50, offset: 0, hasMore: false },
-    });
+    // Keep the empty shape so the UI degrades gracefully, but report the
+    // failure as an error status rather than an empty success.
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch notifications',
+        notifications: [],
+        data: [],
+        unreadCount: 0,
+        pagination: { total: 0, limit: 50, offset: 0, hasMore: false },
+      },
+      { status: 500 }
+    );
   }
 }

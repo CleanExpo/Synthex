@@ -47,8 +47,8 @@ export function toBeats(topic: string): string[] {
 }
 
 /**
- * Minimal shape of the Supabase client this module needs, so a test can supply a
- * fake without depending on `@/lib/platform/noop-client` internals.
+ * Minimal shape of the query client this module needs. The worker injects its
+ * own client; tests supply a fake.
  */
 export interface JobQueueClient {
   from(table: string): any;

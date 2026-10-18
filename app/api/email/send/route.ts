@@ -6,7 +6,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { emailService } from '@/lib/email-service';
-import { createClient } from '@/lib/platform/noop-client';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -29,13 +28,14 @@ function sanitizeHtml(html: string): string {
   return sanitizeHtmlLib(html);
 }
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+/**
+ * The email_logs table this route used to write to has no Prisma model, so the
+ * send log cannot be persisted. The response says so instead of pretending.
+ */
+const EMAIL_LOG_NOT_PROVISIONED = {
+  persisted: false,
+  reason: 'FEATURE_NOT_PROVISIONED: email_logs table is not provisioned',
+} as const;
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,25 +99,18 @@ export async function POST(request: NextRequest) {
         });
     }
 
-    // Log email send attempt
-    try {
-      await getSupabase()
-        .from('email_logs')
-        .insert({
-          to,
-          subject,
-          type: type || 'custom',
-          status: success ? 'sent' : 'failed',
-          metadata: { template, variables },
-        });
-    } catch (err) {
-      logger.error('Failed to log email:', err);
-    }
+    // Log email send attempt — email_logs is not provisioned, so record the
+    // attempt in the application log and report it as not persisted.
+    logger.warn('Email send log not persisted (email_logs not provisioned)', {
+      type: type || 'custom',
+      status: success ? 'sent' : 'failed',
+    });
 
     if (success) {
       return NextResponse.json({
         success: true,
         message: 'Email sent successfully',
+        log: EMAIL_LOG_NOT_PROVISIONED,
       });
     } else {
       throw new Error('Failed to send email');

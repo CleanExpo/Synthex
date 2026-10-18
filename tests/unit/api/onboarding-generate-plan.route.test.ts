@@ -14,7 +14,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 const getAuthUserMock = jest.fn();
-jest.mock('@/lib/platform/server', () => ({
+jest.mock('@/lib/supabase-server', () => ({
   getAuthUser: (...a: unknown[]) => getAuthUserMock(...a),
 }));
 
@@ -59,7 +59,8 @@ const VALID_ANSWERS = {
 
 const AI_PLAN = {
   headline: 'Local Leads Engine for Your Service Business',
-  summary: 'A focused 90-day plan. It builds local trust. Success is a steady lead flow.',
+  summary:
+    'A focused 90-day plan. It builds local trust. Success is a steady lead flow.',
   platforms: [
     {
       name: 'Facebook',
@@ -77,9 +78,21 @@ const AI_PLAN = {
     },
   ],
   contentPillars: [
-    { name: 'Trust', description: 'Show credibility', examples: ['Reviews', 'Certifications', 'Guarantees'] },
-    { name: 'Education', description: 'Answer questions', examples: ['FAQs', 'Tips', 'Guides'] },
-    { name: 'Proof', description: 'Show results', examples: ['Before/after', 'Case studies', 'Testimonials'] },
+    {
+      name: 'Trust',
+      description: 'Show credibility',
+      examples: ['Reviews', 'Certifications', 'Guarantees'],
+    },
+    {
+      name: 'Education',
+      description: 'Answer questions',
+      examples: ['FAQs', 'Tips', 'Guides'],
+    },
+    {
+      name: 'Proof',
+      description: 'Show results',
+      examples: ['Before/after', 'Case studies', 'Testimonials'],
+    },
   ],
   thirtyDayActions: [
     'Claim and optimise your Google Business Profile',
@@ -126,7 +139,9 @@ describe('POST /api/onboarding/generate-plan', () => {
   });
 
   it('returns 400 with details when the body fails the enum schema', async () => {
-    const res = await POST(makeRequest({ ...VALID_ANSWERS, businessType: 'invalid-type' }));
+    const res = await POST(
+      makeRequest({ ...VALID_ANSWERS, businessType: 'invalid-type' })
+    );
 
     expect(res.status).toBe(400);
     const json = await res.json();

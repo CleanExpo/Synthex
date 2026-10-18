@@ -15,25 +15,64 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createPlatformService } from '@/lib/social';
+import { createPlatformService, type PlatformCredentials } from '@/lib/social';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { decryptField } from '@/lib/security/field-encryption';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { auditLogger } from '@/lib/security/audit-logger';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+// Usage metering used to write to a Supabase `usage_tracking` table that has
+// no Prisma model. It is reported as not recorded instead of silently dropped.
+const USAGE_NOT_PROVISIONED = {
+  recorded: false,
+  reason: 'FEATURE_NOT_PROVISIONED: usage_tracking table is not provisioned',
+} as const;
+
+/** The caller's own active Threads connection, scoped to their effective org. */
+async function findThreadsConnection(userId: string) {
+  const organizationId = await getEffectiveOrganizationId(userId);
+  return prisma.platformConnection.findFirst({
+    where: {
+      userId,
+      platform: 'threads',
+      organizationId: organizationId ?? null,
+      isActive: true,
+      deletedAt: null,
+    },
+  });
 }
+
+type ThreadsConnection = NonNullable<
+  Awaited<ReturnType<typeof findThreadsConnection>>
+>;
+
+/** Decrypt stored OAuth tokens; null when the access token is unusable. */
+function toCredentials(
+  connection: ThreadsConnection
+): PlatformCredentials | null {
+  const accessToken = decryptField(connection.accessToken);
+  if (!accessToken) return null;
+  return {
+    accessToken,
+    refreshToken: connection.refreshToken
+      ? (decryptField(connection.refreshToken) ?? undefined)
+      : undefined,
+    expiresAt: connection.expiresAt ?? undefined,
+    platformUserId: connection.profileId ?? undefined,
+    platformUsername: connection.profileName ?? undefined,
+  };
+}
+
+const RECONNECT_ERROR =
+  'Threads access token could not be decrypted. Please reconnect your Threads account.';
 
 // Request validation schema
 const PostRequestSchema = z.object({
@@ -105,15 +144,9 @@ export async function POST(request: NextRequest) {
       const postData: PostRequest = validation.data;
 
       // Get user's Threads connection
-      const { data: connection, error: connectionError } = await getSupabase()
-        .from('platform_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('platform', 'threads')
-        .eq('is_active', true)
-        .single();
+      const connection = await findThreadsConnection(userId);
 
-      if (connectionError || !connection) {
+      if (!connection) {
         return NextResponse.json(
           {
             error:
@@ -123,15 +156,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const credentials = toCredentials(connection);
+      if (!credentials) {
+        return NextResponse.json({ error: RECONNECT_ERROR }, { status: 400 });
+      }
+
       // Create Threads service via factory (handles initialization + token refresh)
-      const threadsService = createPlatformService('threads', {
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
-        platformUsername: connection.platform_username,
+      const threadsService = createPlatformService('threads', credentials, {
+        connectionId: connection.id,
       });
 
       if (!threadsService) {
@@ -197,30 +229,30 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Save post to database
-      const { data: savedPost } = await getSupabase()
-        .from('social_posts')
-        .insert({
-          user_id: userId,
-          platform: 'threads',
-          content: postData.content,
-          post_id: result.postId,
-          media_urls: postData.mediaUrls || [],
-          media_type: postData.mediaType,
-          status: 'published',
-          metrics: {},
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      // Track usage
-      await getSupabase().from('usage_tracking').insert({
-        user_id: userId,
-        feature: 'threads_post',
-        count: 1,
-        timestamp: new Date().toISOString(),
-      });
+      // Save post to database (platform_posts, scoped via the caller's connection)
+      const savedPost = result.postId
+        ? await prisma.platformPost.upsert({
+            where: {
+              connectionId_platformId: {
+                connectionId: connection.id,
+                platformId: result.postId,
+              },
+            },
+            create: {
+              connectionId: connection.id,
+              platformId: result.postId,
+              content: postData.content,
+              mediaUrls: postData.mediaUrls || [],
+              status: 'published',
+              publishedAt: new Date(),
+              metadata: {
+                mediaType: postData.mediaType,
+                source: 'api/social/threads/post',
+              },
+            },
+            update: { status: 'published' },
+          })
+        : null;
 
       // Log the action
       await auditLogger.logData(
@@ -233,6 +265,8 @@ export async function POST(request: NextRequest) {
           action: 'threads_post_created',
           mediaType: postData.mediaType,
           replyControl: postData.replyControl || 'everyone',
+          usageFeature: 'threads_post',
+          usageCount: 1,
         }
       );
 
@@ -244,6 +278,8 @@ export async function POST(request: NextRequest) {
           content: postData.content,
           mediaType: postData.mediaType,
         },
+        recorded: Boolean(savedPost),
+        usage: USAGE_NOT_PROVISIONED,
       });
     } catch (error: unknown) {
       logger.error('Threads post error:', error);
@@ -294,15 +330,9 @@ export async function GET(request: NextRequest) {
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
     // Get user's Threads connection
-    const { data: connection, error: connectionError } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'threads')
-      .eq('is_active', true)
-      .single();
+    const connection = await findThreadsConnection(userId);
 
-    if (connectionError || !connection) {
+    if (!connection) {
       return NextResponse.json(
         { error: 'Threads account not connected' },
         { status: 400 }
@@ -311,14 +341,13 @@ export async function GET(request: NextRequest) {
 
     // If sync requested, fetch from Threads API
     if (syncFromPlatform) {
-      const threadsService = createPlatformService('threads', {
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
-        platformUsername: connection.platform_username,
+      const credentials = toCredentials(connection);
+      if (!credentials) {
+        return NextResponse.json({ error: RECONNECT_ERROR }, { status: 400 });
+      }
+
+      const threadsService = createPlatformService('threads', credentials, {
+        connectionId: connection.id,
       });
 
       const syncResult = threadsService
@@ -334,21 +363,27 @@ export async function GET(request: NextRequest) {
       if (syncResult.success) {
         // Update database with synced posts
         for (const post of syncResult.posts) {
-          await getSupabase().from('social_posts').upsert(
-            {
-              user_id: userId,
-              platform: 'threads',
-              post_id: post.platformId,
-              content: post.content,
-              media_urls: post.mediaUrls,
-              metrics: post.metrics,
-              published_at: post.publishedAt.toISOString(),
-              status: 'published',
+          const fields = {
+            content: post.content,
+            mediaUrls: post.mediaUrls ?? [],
+            publishedAt: post.publishedAt,
+            status: 'published',
+            metadata: { metrics: { ...post.metrics } },
+          };
+          await prisma.platformPost.upsert({
+            where: {
+              connectionId_platformId: {
+                connectionId: connection.id,
+                platformId: post.platformId,
+              },
             },
-            {
-              onConflict: 'user_id,platform,post_id',
-            }
-          );
+            create: {
+              connectionId: connection.id,
+              platformId: post.platformId,
+              ...fields,
+            },
+            update: fields,
+          });
         }
 
         return NextResponse.json({
@@ -361,18 +396,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get posts from database
-    const { data: posts, error } = await getSupabase()
-      .from('social_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'threads')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      throw error;
-    }
+    // Get posts from database (only the caller's own connection)
+    const posts = await prisma.platformPost.findMany({
+      where: { connectionId: connection.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
     return NextResponse.json({
       success: true,

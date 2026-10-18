@@ -29,9 +29,14 @@
  *   high   ≥ 15 events
  *   medium   8–14 events
  *   low    < 8 events
+ *
+ * NOT PROVISIONED: `client_journey_events` has no Prisma model in
+ * prisma/schema.prisma, so there is no engagement history to read.
+ * {@link getPreferredChannel} throws {@link ChannelHistoryNotProvisionedError}
+ * rather than presenting the email fallback as if it came from real data.
+ * The pure scoring helpers ({@link selectPreferredChannel} and friends) stay
+ * usable for when the table exists.
  */
-
-import { createClient, SupabaseClient } from '@/lib/platform/noop-client';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -61,13 +66,13 @@ export interface ChannelEvent {
 // ── Scoring weights ───────────────────────────────────────────────────────────
 
 const OUTCOME_WEIGHTS: Record<EngagementOutcome, number> = {
-  acted:     1.0,
-  replied:   0.9,
-  clicked:   0.7,
-  surveyed:  0.6,
+  acted: 1.0,
+  replied: 0.9,
+  clicked: 0.7,
+  surveyed: 0.6,
   delivered: 0.1,
   dismissed: -0.3,
-  ignored:   -0.5,
+  ignored: -0.5,
 };
 
 // ── Thresholds ────────────────────────────────────────────────────────────────
@@ -76,21 +81,25 @@ const MIN_EVENTS_PER_CHANNEL = 5;
 const CONFIDENCE_HIGH_THRESHOLD = 15;
 const CONFIDENCE_MEDIUM_THRESHOLD = 8;
 
-// ── Supabase admin singleton ──────────────────────────────────────────────────
+// ── Not-provisioned guard ─────────────────────────────────────────────────────
 
-let _admin: SupabaseClient | null = null;
+export const CHANNEL_HISTORY_TABLE = 'client_journey_events' as const;
 
-function getAdmin(): SupabaseClient {
-  if (!_admin) {
-    _admin = createClient();
+export class ChannelHistoryNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  readonly table = CHANNEL_HISTORY_TABLE;
+
+  constructor() {
+    super(
+      `Channel selection unavailable: the "${CHANNEL_HISTORY_TABLE}" table is not provisioned ` +
+        `(no Prisma model), so no engagement history exists to score.`
+    );
+    this.name = 'ChannelHistoryNotProvisionedError';
   }
-  return _admin;
 }
 
-/** @internal — only used in tests to inject a mock Supabase client */
-export function _resetAdminForTests(): void {
-  _admin = null;
-}
+/** @internal — retained for API stability; there is no client to reset. */
+export function _resetAdminForTests(): void {}
 
 // ── Channel inference ─────────────────────────────────────────────────────────
 
@@ -136,8 +145,8 @@ export function computeChannelScore(events: ChannelEvent[]): number {
   );
 
   // Theoretical bounds per event: min = -0.5 (ignored), max = 1.0 (acted)
-  const minPossible = events.length * OUTCOME_WEIGHTS.ignored;   // most negative
-  const maxPossible = events.length * OUTCOME_WEIGHTS.acted;     // most positive
+  const minPossible = events.length * OUTCOME_WEIGHTS.ignored; // most negative
+  const maxPossible = events.length * OUTCOME_WEIGHTS.acted; // most positive
 
   if (maxPossible === minPossible) return 0;
 
@@ -164,35 +173,35 @@ const EMAIL_FALLBACK: ChannelPreference = {
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
+/** One `client_journey_events` row as needed for channel scoring. */
+export interface JourneyEventRow {
+  event_type: string;
+  engagement_outcome: string | null;
+  metadata: Record<string, unknown> | null;
+}
+
 /**
  * Returns the channel the client responds to best, based on their
  * `client_journey_events` engagement history.
  *
+ * @throws ChannelHistoryNotProvisionedError — the table is not provisioned.
+ */
+export async function getPreferredChannel(
+  _clientId: string
+): Promise<ChannelPreference> {
+  throw new ChannelHistoryNotProvisionedError();
+}
+
+/**
+ * Pure scoring over a client's journey events.
+ *
  * If fewer than 5 events exist for every channel, returns the email fallback:
  *   { channel: 'email', confidence: 'low', engagementRate: 0, reason: 'insufficient_data' }
  */
-export async function getPreferredChannel(clientId: string): Promise<ChannelPreference> {
-  // Fetch all events with engagement_outcome for this client
-  let rows: Array<{
-    event_type: string;
-    engagement_outcome: string | null;
-    metadata: Record<string, unknown> | null;
-  }>;
-
-  try {
-    const { data, error } = await (getAdmin() as ReturnType<typeof createClient<Record<string, unknown>>>)
-      .from('client_journey_events')
-      .select('event_type, engagement_outcome, metadata')
-      .eq('client_id', clientId);
-
-    if (error || !data) return EMAIL_FALLBACK;
-    rows = data as typeof rows;
-  } catch {
-    return EMAIL_FALLBACK;
-  }
-
+export function selectPreferredChannel(
+  rows: JourneyEventRow[]
+): ChannelPreference {
   if (rows.length === 0) return EMAIL_FALLBACK;
-
   // Group events by inferred channel
   const channelBuckets = new Map<Channel, ChannelEvent[]>();
 
@@ -210,7 +219,11 @@ export async function getPreferredChannel(clientId: string): Promise<ChannelPref
   }
 
   // Filter channels that have at least MIN_EVENTS_PER_CHANNEL events
-  const qualifyingChannels: Array<{ channel: Channel; score: number; count: number }> = [];
+  const qualifyingChannels: Array<{
+    channel: Channel;
+    score: number;
+    count: number;
+  }> = [];
 
   for (const [channel, events] of channelBuckets.entries()) {
     if (events.length >= MIN_EVENTS_PER_CHANNEL) {

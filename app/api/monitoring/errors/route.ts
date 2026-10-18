@@ -1,20 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { createClient } from '@/lib/platform/noop-client';
 // NOTE: Static Sentry import removed (2026-03-12, Phase 114-02) — see next.config.mjs.
 import { logger } from '@/lib/logger';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-
-// SYN-953: lazy Supabase init. Eager `const platform = createClient(...)`
-// at module level crashed `next build`'s page-data collection when build
-// env lacked Supabase secrets.
-let _platform: ReturnType<typeof createClient> | null = null;
-function platform() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+import { prisma } from '@/lib/prisma';
 
 /** Error log entry structure */
 interface ErrorLogEntry {
@@ -60,21 +49,20 @@ export async function POST(request: NextRequest) {
     // Add server timestamp
     error.serverTimestamp = new Date().toISOString();
 
-    // Get user info from session if available
-    const authHeader = request.headers.get('authorization');
-    if (authHeader) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const {
-          data: { user },
-        } = await platform().auth.getUser(token);
-        if (user) {
-          error.userId = user.id;
-          error.userEmail = user.email;
-        }
-      } catch (authError) {
-        logger.error('Failed to get user from token:', authError);
+    // Attach the reporting user when a session is present (cookie or Bearer).
+    // Best-effort enrichment: anonymous client errors are still recorded.
+    try {
+      const sessionUserId = await getUserIdFromRequestOrCookies(request);
+      if (sessionUserId) {
+        error.userId = sessionUserId;
+        const user = await prisma.user.findUnique({
+          where: { id: sessionUserId },
+          select: { email: true },
+        });
+        if (user) error.userEmail = user.email;
       }
+    } catch (authError) {
+      logger.error('Failed to resolve user for error report:', authError);
     }
 
     // Store error (in production, save to database)

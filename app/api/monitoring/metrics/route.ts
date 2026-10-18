@@ -1,18 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { logger } from '@/lib/logger';
 
-// SYN-953: lazy Supabase init. Eager `const platform = createClient(...)`
-// at module level crashed `next build`'s page-data collection when build
-// env lacked Supabase secrets.
-let _platform: ReturnType<typeof createClient> | null = null;
-function platform() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
-}
+// The user and post counts were read from the Supabase `profiles` and
+// `content_posts` tables. Neither table exists in prisma/schema.prisma, so the
+// counts are reported as unavailable rather than as a fabricated zero.
+const NOT_PROVISIONED_COUNTS = {
+  activeUsers: {
+    available: false,
+    reason: 'FEATURE_NOT_PROVISIONED: table `profiles` is not provisioned',
+  },
+  requestCount: {
+    available: false,
+    reason: 'FEATURE_NOT_PROVISIONED: table `content_posts` is not provisioned',
+  },
+} as const;
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,31 +27,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get current timestamp
-    const now = new Date();
-
-    // Fetch database metrics
-    const { count: userCount } = await platform()
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
-
-    const { count: postCount } = await platform()
-      .from('content_posts')
-      .select('*', { count: 'exact', head: true });
-
-    // System metrics — use null for values that require monitoring integration,
-    // keep real data where we have it (userCount, postCount from Supabase queries above).
+    // System metrics — null for values this route cannot measure; the
+    // `unavailable` block says why the counts are missing.
     const systemMetrics = {
       system: {
         status: 'operational',
         uptime: null, // Requires monitoring integration
         responseTime: null, // Requires APM integration
         errorRate: null, // Requires error tracking
-        requestCount: postCount || 0, // Real count
-        activeUsers: userCount || 0, // Real count
+        requestCount: null, // See unavailable.requestCount
+        activeUsers: null, // See unavailable.activeUsers
       },
       database: {
-        status: 'connected', // Basic health check passed (Supabase queries above succeeded)
+        status: null, // No database probe runs in this route
         connections: null, // Requires pg_stat_activity access
         maxConnections: 100, // Configuration constant
         queryTime: null, // Requires APM integration
@@ -69,6 +59,7 @@ export async function GET(request: NextRequest) {
         lastScan: null, // Requires security scanner
         sslStatus: 'valid', // Can verify with env check
       },
+      unavailable: NOT_PROVISIONED_COUNTS,
       message:
         'Basic health check operational. Detailed metrics require monitoring integration (Datadog, Prometheus, etc.).',
     };

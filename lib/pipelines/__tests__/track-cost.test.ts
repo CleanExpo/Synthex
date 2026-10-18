@@ -3,28 +3,21 @@ import {
   trackPipelineCost,
   TrackCostParams,
 } from '../track-cost';
-import { createClient } from '@/lib/platform/noop-client';
 
-jest.mock('@/lib/platform/noop-client');
+const mockCreate = jest.fn();
 
-const mockInsert = jest.fn();
-const mockFrom = jest.fn(() => ({ insert: mockInsert }));
-const mockClient = { from: mockFrom };
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: {
+    pipelineCostLedger: { create: (...args: unknown[]) => mockCreate(...args) },
+  },
+}));
 
 beforeEach(() => {
   jest.clearAllMocks();
   jest.spyOn(console, 'info').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
   jest.spyOn(console, 'error').mockImplementation(() => {});
-  (createClient as jest.Mock).mockReturnValue(mockClient);
-  mockFrom.mockReturnValue({ insert: mockInsert });
-  process.env.LEGACY_PLATFORM_URL = 'https://fake.platform.co';
-  process.env.LEGACY_PLATFORM_SERVICE_KEY = 'fake-service-key';
-});
-
-afterEach(() => {
-  delete process.env.LEGACY_PLATFORM_URL;
-  delete process.env.LEGACY_PLATFORM_SERVICE_KEY;
 });
 
 // ──────────────────────────────────────────────────────────────
@@ -76,7 +69,7 @@ describe('calculatePipelineCost', () => {
 // ──────────────────────────────────────────────────────────────
 describe('trackPipelineCost — success', () => {
   beforeEach(() => {
-    mockInsert.mockResolvedValue({ data: null, error: null });
+    mockCreate.mockResolvedValue({ id: 'ledger-1' });
   });
 
   const baseParams: TrackCostParams = {
@@ -99,26 +92,26 @@ describe('trackPipelineCost — success', () => {
     expect(typeof log.cost_usd).toBe('number');
   });
 
-  it('inserts correct payload into Supabase', async () => {
+  it('creates the ledger row via Prisma with the mapped payload', async () => {
     await trackPipelineCost(baseParams);
-    expect(mockFrom).toHaveBeenCalledWith('pipeline_cost_ledger');
-    expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pipeline_name: 'brand-intelligence',
-        client_id: '123e4567-e89b-12d3-a456-426614174000',
-        run_id: 'run-001',
+    expect(mockCreate).toHaveBeenCalledWith({
+      data: {
+        pipelineName: 'brand-intelligence',
+        clientId: '123e4567-e89b-12d3-a456-426614174000',
+        runId: 'run-001',
         model: 'claude-haiku-4-5',
-        input_tokens: 500,
-        output_tokens: 1000,
-      })
-    );
+        inputTokens: 500,
+        outputTokens: 1000,
+        costUsd: 0.000625,
+      },
+    });
   });
 
   it('accepts null client_id for board-level pipelines', async () => {
     await trackPipelineCost({ ...baseParams, client_id: null });
-    expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({ client_id: null })
-    );
+    expect(mockCreate).toHaveBeenCalledWith({
+      data: expect.objectContaining({ clientId: null }),
+    });
   });
 });
 
@@ -136,47 +129,22 @@ describe('trackPipelineCost — DB failure', () => {
     cost_usd: 0.000175,
   };
 
-  it('does not throw on Supabase insert error', async () => {
-    mockInsert.mockResolvedValue({
-      data: null,
-      error: { code: 'PGRST001', message: 'DB down' },
-    });
+  it('does not throw when the ledger write rejects', async () => {
+    mockCreate.mockRejectedValue(new Error('DB down'));
     await expect(trackPipelineCost(baseParams)).resolves.toBeUndefined();
   });
 
-  it('logs error event on insert failure', async () => {
-    mockInsert.mockResolvedValue({
-      data: null,
-      error: { code: 'PGRST001', message: 'DB down' },
-    });
+  it('logs error event on write failure', async () => {
+    mockCreate.mockRejectedValue(new Error('DB down'));
     await trackPipelineCost(baseParams);
     const errorLog = JSON.parse((console.error as jest.Mock).mock.calls[0][0]);
     expect(errorLog.event).toBe('pipeline_cost_ledger_write_failed');
-  });
-
-  it('does not throw when createClient throws', async () => {
-    (createClient as jest.Mock).mockImplementation(() => {
-      throw new Error('Network timeout');
-    });
-    await expect(trackPipelineCost(baseParams)).resolves.toBeUndefined();
-    const errorLog = JSON.parse((console.error as jest.Mock).mock.calls[0][0]);
-    expect(errorLog.event).toBe('pipeline_cost_ledger_exception');
+    expect(errorLog.error).toBe('DB down');
   });
 
   it('still writes info log even when DB fails', async () => {
-    mockInsert.mockResolvedValue({
-      data: null,
-      error: { code: 'X', message: 'fail' },
-    });
+    mockCreate.mockRejectedValue(new Error('fail'));
     await trackPipelineCost(baseParams);
     expect(console.info).toHaveBeenCalledTimes(1);
-  });
-
-  it('skips DB write when env vars missing', async () => {
-    delete process.env.LEGACY_PLATFORM_URL;
-    await trackPipelineCost(baseParams);
-    expect(mockInsert).not.toHaveBeenCalled();
-    const warnLog = JSON.parse((console.warn as jest.Mock).mock.calls[0][0]);
-    expect(warnLog.event).toBe('pipeline_cost_ledger_skipped');
   });
 });

@@ -1,21 +1,21 @@
 /**
  * POST /api/brand-video/generate
  *
- * Queues a Brand Video Studio render job. Inserts a row into
- * `brand_video_jobs` (status='queued'); a worker
- * (scripts/brand-video-worker.ts) claims and renders it out of band.
+ * Queues a Brand Video Studio render job. Jobs live in `brand_video_jobs`,
+ * which has no Prisma model (it was a Supabase-only table removed with
+ * SYN-1070), so the job cannot be recorded. After auth, validation and brand
+ * preflight the route answers 501 FEATURE_NOT_PROVISIONED rather than
+ * pretending to queue.
  *
  * Auth: withAuth (401 no session → 403 no org). Zod-validated body per
- * CLAUDE.md. Insert runs via the service-role Supabase client (mirrors
- * lib/platform-server.ts serverDb pattern); created_by is the session user.
+ * CLAUDE.md.
  */
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit';
-import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
-import { createServerClient } from '@/lib/platform/server';
+import { notProvisionedBody } from '@/lib/api/not-provisioned';
 import {
   BRAND_VIDEO_STYLE_KEYS,
   DEFAULT_BRAND_VIDEO_STYLE,
@@ -49,7 +49,7 @@ export const POST = withAuth(async (request, { userId }) =>
       );
     }
 
-    const { brand, style, topic, count } = parsed.data;
+    const { brand } = parsed.data;
 
     // Refuse here rather than at render time. The worker resolves nothing about
     // the brand — it logs the string and applies no tokens — so an unrecognised
@@ -67,48 +67,10 @@ export const POST = withAuth(async (request, { userId }) =>
       );
     }
 
-    // Org-scope to the ACTIVE brand (getEffectiveOrganizationId resolves a
-    // multi-business owner's activeOrganizationId, not just their home org) so
-    // jobs are isolated per brand. NULL is tolerated for org-less users (the
-    // row stays visible via created_by). Kept alongside created_by.
-    const organizationId = await getEffectiveOrganizationId(userId);
-
-    const platform = createServerClient();
-    const { data, error } = await platform
-      .from('brand_video_jobs')
-      .insert({
-        // The normalised slug, not the raw input, so the column holds a value
-        // that resolves against brand-config rather than whatever was typed.
-        brand: preflight.slug,
-        style,
-        topic,
-        count,
-        status: 'queued',
-        created_by: userId,
-        organization_id: organizationId,
-      })
-      .select('id, status')
-      .single();
-
-    if (error) {
-      console.error('Failed to queue brand video job:', error);
-      return NextResponse.json(
-        { error: 'Failed to queue brand video job' },
-        { status: 500 }
-      );
-    }
-
+    // No brand_video_jobs table: say so instead of reporting a queued job.
     return NextResponse.json(
-      {
-        jobId: data.id,
-        status: data.status,
-        // Non-blocking gaps (e.g. a declared logo file that does not exist).
-        // Omitted when clean so a normal response shape does not change.
-        ...(preflight.warnings.length > 0 && {
-          warnings: preflight.warnings.map(w => w.message),
-        }),
-      },
-      { status: 201 }
+      notProvisionedBody('brand_video_jobs', 'Brand video job queueing'),
+      { status: 501 }
     );
   })
 );

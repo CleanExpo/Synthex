@@ -70,7 +70,6 @@ export const AUTH_IMPORT_PATTERNS: readonly string[] = [
   '@/lib/middleware/require-api-key', // requireApiKey() — service-to-service API key
   '@/lib/admin/verify-admin', // verifyAdmin() — admin role gate
   '@/lib/security/api-security-checker', // APISecurityChecker — JWT + session
-  '@/lib/platform/server', // createServerClient — server-side Supabase session
   '@/lib/supabase-server', // SYN-1070 compat shim — getAuthUser() delegates to jwt-utils
   'supabase.auth.getUser', // Inline Supabase token verification (header-based)
   'platformClient.auth.getUser', // JWT/platform token verification after Supabase removal

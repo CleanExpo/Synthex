@@ -17,21 +17,60 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createClient } from '@/lib/platform/noop-client';
+import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
+import { decryptField } from '@/lib/security/field-encryption';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { auditLogger } from '@/lib/security/audit-logger';
-import { createPlatformService } from '@/lib/social';
+import { createPlatformService, type PlatformCredentials } from '@/lib/social';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+// Usage metering used to write to a Supabase `usage_tracking` table that has
+// no Prisma model. It is reported as not recorded instead of silently dropped.
+const USAGE_NOT_PROVISIONED = {
+  recorded: false,
+  reason: 'FEATURE_NOT_PROVISIONED: usage_tracking table is not provisioned',
+} as const;
+
+/** The caller's own active TikTok connection, scoped to their effective org. */
+async function findTikTokConnection(userId: string) {
+  const organizationId = await getEffectiveOrganizationId(userId);
+  return prisma.platformConnection.findFirst({
+    where: {
+      userId,
+      platform: 'tiktok',
+      organizationId: organizationId ?? null,
+      isActive: true,
+      deletedAt: null,
+    },
+  });
 }
+
+type TikTokConnection = NonNullable<
+  Awaited<ReturnType<typeof findTikTokConnection>>
+>;
+
+/** Decrypt stored OAuth tokens; null when the access token is unusable. */
+function toCredentials(
+  connection: TikTokConnection
+): PlatformCredentials | null {
+  const accessToken = decryptField(connection.accessToken);
+  if (!accessToken) return null;
+  return {
+    accessToken,
+    refreshToken: connection.refreshToken
+      ? (decryptField(connection.refreshToken) ?? undefined)
+      : undefined,
+    expiresAt: connection.expiresAt ?? undefined,
+    platformUserId: connection.profileId ?? undefined,
+    platformUsername: connection.profileName ?? undefined,
+  };
+}
+
+const RECONNECT_ERROR =
+  'TikTok access token could not be decrypted. Please reconnect your TikTok account.';
 
 // Request validation schema
 const PostRequestSchema = z.object({
@@ -124,15 +163,9 @@ export async function POST(request: NextRequest) {
       const postData: PostRequest = validation.data;
 
       // Get user's TikTok connection
-      const { data: connection, error: connectionError } = await getSupabase()
-        .from('platform_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('platform', 'tiktok')
-        .eq('is_active', true)
-        .single();
+      const connection = await findTikTokConnection(userId);
 
-      if (connectionError || !connection) {
+      if (!connection) {
         return NextResponse.json(
           {
             error:
@@ -196,19 +229,15 @@ export async function POST(request: NextRequest) {
           : hashtagString;
       }
 
+      const credentials = toCredentials(connection);
+      if (!credentials) {
+        return NextResponse.json({ error: RECONNECT_ERROR }, { status: 400 });
+      }
+
       // Create TikTok service via factory
-      const service = createPlatformService(
-        'tiktok',
-        {
-          accessToken: connection.access_token,
-          refreshToken: connection.refresh_token,
-          expiresAt: connection.expires_at
-            ? new Date(connection.expires_at)
-            : undefined,
-          platformUserId: connection.platform_user_id,
-        },
-        { connectionId: connection.id }
-      );
+      const service = createPlatformService('tiktok', credentials, {
+        connectionId: connection.id,
+      });
 
       if (!service) {
         return NextResponse.json(
@@ -233,30 +262,30 @@ export async function POST(request: NextRequest) {
 
       const publishId = result.postId;
 
-      // Save post to database (status will be updated via webhook)
-      await getSupabase()
-        .from('social_posts')
-        .insert({
-          user_id: userId,
-          platform: 'tiktok',
-          content: fullCaption,
-          post_id: publishId,
-          media_urls: [postData.videoUrl],
-          media_type: 'VIDEO',
-          status: 'processing', // TikTok processes async
-          metrics: {},
-          created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
-
-      // Track usage
-      await getSupabase().from('usage_tracking').insert({
-        user_id: userId,
-        feature: 'tiktok_post',
-        count: 1,
-        timestamp: new Date().toISOString(),
-      });
+      // Save post to database (platform_posts, scoped via the caller's
+      // connection; status will be updated via webhook)
+      const savedPost = publishId
+        ? await prisma.platformPost.upsert({
+            where: {
+              connectionId_platformId: {
+                connectionId: connection.id,
+                platformId: publishId,
+              },
+            },
+            create: {
+              connectionId: connection.id,
+              platformId: publishId,
+              content: fullCaption,
+              mediaUrls: [postData.videoUrl],
+              status: 'processing', // TikTok processes async
+              metadata: {
+                mediaType: 'VIDEO',
+                source: 'api/social/tiktok/post',
+              },
+            },
+            update: { status: 'processing' },
+          })
+        : null;
 
       await auditLogger.logData(
         'create',
@@ -264,7 +293,12 @@ export async function POST(request: NextRequest) {
         publishId || '',
         userId,
         'success',
-        { action: 'tiktok_post_initiated', privacy: postData.privacy }
+        {
+          action: 'tiktok_post_initiated',
+          privacy: postData.privacy,
+          usageFeature: 'tiktok_post',
+          usageCount: 1,
+        }
       );
 
       return NextResponse.json({
@@ -275,6 +309,8 @@ export async function POST(request: NextRequest) {
           message: 'Video upload initiated. TikTok will process the video.',
           caption: fullCaption,
         },
+        recorded: Boolean(savedPost),
+        usage: USAGE_NOT_PROVISIONED,
       });
     } catch (error: unknown) {
       logger.error('TikTok post error:', error);
@@ -317,13 +353,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const syncFromPlatform = searchParams.get('sync') === 'true';
 
-    const { data: connection } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'tiktok')
-      .eq('is_active', true)
-      .single();
+    const connection = await findTikTokConnection(userId);
 
     if (!connection) {
       return NextResponse.json(
@@ -335,18 +365,12 @@ export async function GET(request: NextRequest) {
     if (syncFromPlatform) {
       // Use TikTok service to sync posts from platform
       try {
-        const service = createPlatformService(
-          'tiktok',
-          {
-            accessToken: connection.access_token,
-            refreshToken: connection.refresh_token,
-            expiresAt: connection.expires_at
-              ? new Date(connection.expires_at)
-              : undefined,
-            platformUserId: connection.platform_user_id,
-          },
-          { connectionId: connection.id }
-        );
+        const credentials = toCredentials(connection);
+        const service = credentials
+          ? createPlatformService('tiktok', credentials, {
+              connectionId: connection.id,
+            })
+          : null;
 
         if (service) {
           const syncResult = await service.syncPosts(limit);
@@ -380,15 +404,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const { data: posts, error } = await getSupabase()
-      .from('social_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'tiktok')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
+    // Stored posts for the caller's own connection only
+    const posts = await prisma.platformPost.findMany({
+      where: { connectionId: connection.id, deletedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
     return NextResponse.json({ success: true, data: posts });
   } catch (error: unknown) {

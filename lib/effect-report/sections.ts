@@ -14,7 +14,6 @@
  */
 
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
-import { SupabaseClient } from '@/lib/platform/noop-client';
 import { prisma } from '@/lib/prisma';
 import { stripHtmlToText } from '@/lib/strip-html-text';
 import type {
@@ -137,7 +136,7 @@ export async function buildAchievementSummary(
 
 export async function buildProprietaryMetrics(
   organizationId: string,
-  admin: SupabaseClient,
+  _admin: unknown,
   periodStart: Date,
   periodEnd: Date
 ): Promise<ProprietaryMetricsSection> {
@@ -172,34 +171,11 @@ export async function buildProprietaryMetrics(
     // non-fatal
   }
 
-  // GEO Score (current + QoQ delta)
-  let geoScore: number | null = null;
-  let geoScoreQoQDelta: number | null = null;
-  try {
-    const { data: geoScores } = await (
-      admin as ReturnType<
-        typeof import('@/lib/platform/noop-client').createClient<any>
-      >
-    )
-      .from('client_geo_scores')
-      .select('overall_score, scored_at')
-      .eq('organization_id', organizationId)
-      .order('scored_at', { ascending: false })
-      .limit(10);
-
-    if (geoScores && geoScores.length >= 1) {
-      const typed = geoScores as { overall_score: number; scored_at: string }[];
-      geoScore = Math.round(typed[0].overall_score);
-      const priorGeo = typed.find(
-        s => new Date(s.scored_at) <= quarterAgoStart
-      );
-      if (priorGeo) {
-        geoScoreQoQDelta = Math.round(geoScore - priorGeo.overall_score);
-      }
-    }
-  } catch {
-    // non-fatal
-  }
+  // GEO Score: `client_geo_scores` has no Prisma model (not provisioned), so
+  // the score is unavailable. null is the section's "unavailable" signal — the
+  // metric is omitted, never shown as a made-up value.
+  const geoScore: number | null = null;
+  const geoScoreQoQDelta: number | null = null;
 
   // Attribution — only show if confidence ≥ 0.80 (placeholder: not yet available)
   // SYN-622 gate: attribution validation requires 3 live GA4 clients.

@@ -5,7 +5,8 @@
  *   1. Validates input (Q3.2.4 H8 + Q3.2.5 P10 + payment gate + consent gate)
  *   2. Hashes raw address if provided (P10 binding)
  *   3. Builds the canonical event
- *   4. Persists to Supabase `contractor_onboarding_event` table (idempotent)
+ *   4. Persists via `opts.persist` (the default store is not provisioned and
+ *      throws ContractorOnboardingNotProvisionedError)
  *   5. Notifies all in-process subscribers (per-handler error isolation)
  *   6. Returns EmitResult with notification + idempotency stats
  *
@@ -207,40 +208,34 @@ function resolveAddressHash(input: ContractorOnboardedInput): string {
   return hashAddress(input.rawAddress!);
 }
 
-// ─── DEFAULT PERSISTENCE (Supabase service-role insert) ───────────────────
+// ─── DEFAULT PERSISTENCE (not provisioned) ────────────────────────────────
 
 /**
- * Default persist: writes to Supabase `contractor_onboarding_event` via
- * the service-role client. Returns 'duplicate' on UNIQUE conflict (P0001 /
- * 23505 PG codes), 'inserted' otherwise. Throws on any other failure.
- *
- * If `LEGACY_PLATFORM_SERVICE_KEY` is not configured, the persist is a no-op
- * that warns + returns 'inserted' so the rest of the pipeline still runs
- * (useful for local dev / CI without service-role creds).
+ * Thrown by the default persist: the `contractor_onboarding_event` table has
+ * no Prisma model, so there is nowhere real to write the event. Inject
+ * `opts.persist` to supply a real store.
+ */
+export class ContractorOnboardingNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  readonly table = 'contractor_onboarding_event';
+
+  constructor() {
+    super(
+      'contractor_onboarding_event is not provisioned: no table in prisma/schema.prisma, event not persisted'
+    );
+    this.name = 'ContractorOnboardingNotProvisionedError';
+  }
+}
+
+/**
+ * Default persist. The backing table is not provisioned, so it throws a
+ * {@link ContractorOnboardingNotProvisionedError} instead of pretending the
+ * write happened. Subscribers are therefore never notified for an event that
+ * was not stored.
  */
 const defaultPersist: PersistFn = async event => {
-  const { createClient } = await import('@/lib/platform/noop-client');
-
-  try {
-    const client = createClient();
-    const { error } = await client.from('contractor_onboarding_event').insert(event);
-
-    if (error?.code === '23505' || error?.code === 'P0001') {
-      return 'duplicate';
-    }
-    if (error) {
-      throw new Error(error.message ?? 'persist failed');
-    }
-    logger.warn('persist skipped', {
-      sourceOfTruthJobId: event.sourceOfTruthJobId,
-      error: null,
-    });
-    return 'inserted';
-  } catch (error) {
-    logger.warn('persist skipped', {
-      sourceOfTruthJobId: event.sourceOfTruthJobId,
-      error,
-    });
-    return 'inserted';
-  }
+  logger.warn('[contractor.onboarding] persist not provisioned', {
+    sourceOfTruthJobId: event.sourceOfTruthJobId,
+  });
+  throw new ContractorOnboardingNotProvisionedError();
 };

@@ -41,10 +41,6 @@ jest.mock('@/lib/logger', () => ({
   logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
 }));
 
-jest.mock('@/lib/platform/noop-client', () => ({
-  createClient: jest.fn(),
-}));
-
 jest.mock('@/lib/billing/require-entitlement', () => ({
   requireEntitlement: (...args: unknown[]) => mockRequireEntitlement(...args),
 }));

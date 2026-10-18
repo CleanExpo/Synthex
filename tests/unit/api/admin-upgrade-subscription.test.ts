@@ -13,9 +13,23 @@
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
-jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() } }));
+jest.mock('@/lib/logger', () => ({
+  logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
+}));
+
+const mockPrisma = {
+  user: { findUnique: jest.fn() },
+  subscription: { upsert: jest.fn() },
+  auditLog: { create: jest.fn() },
+};
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: mockPrisma,
+  prisma: mockPrisma,
+}));
 
 import { POST } from '@/app/api/admin/upgrade-subscription/route';
+import { generateToken } from '@/lib/auth/jwt-utils';
 
 const ORIGINAL_ADMIN_API_KEY = process.env.ADMIN_API_KEY;
 const TEST_ADMIN_KEY = 'test-admin-key-syn1000';
@@ -75,5 +89,102 @@ describe('POST /api/admin/upgrade-subscription — admin gate (SYN-1000)', () =>
       })
     );
     expect(res.status).toBe(403);
+  });
+});
+
+describe('POST /api/admin/upgrade-subscription — Prisma write path', () => {
+  const target = {
+    id: 'user-target',
+    email: 'user@example.com',
+    name: 'Target',
+  };
+  const sub = {
+    id: 'sub-1',
+    plan: 'pro',
+    status: 'active',
+    currentPeriodStart: new Date('2026-10-18T00:00:00Z'),
+    currentPeriodEnd: new Date('2027-10-18T00:00:00Z'),
+    maxSocialAccounts: 5,
+    maxAiPosts: 100,
+    maxPersonas: 3,
+  };
+
+  beforeEach(() => {
+    mockPrisma.subscription.upsert.mockResolvedValue(sub);
+    mockPrisma.auditLog.create.mockResolvedValue({ id: 'audit-1' });
+  });
+
+  it("upserts only the target user's subscription and audits it (admin api key)", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(target);
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/admin/upgrade-subscription',
+        headers: { 'x-admin-api-key': TEST_ADMIN_KEY },
+        body: { email: 'user@example.com', plan: 'pro' },
+      })
+    );
+    const json = await res.json();
+    expect(res.status).toBe(200);
+    expect(json.data.subscription.id).toBe('sub-1');
+
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { email: 'user@example.com' },
+      select: { id: true, email: true, name: true },
+    });
+    const upsert = mockPrisma.subscription.upsert.mock.calls[0][0];
+    expect(upsert.where).toEqual({ userId: 'user-target' });
+    expect(upsert.create.userId).toBe('user-target');
+    expect(upsert.update).toMatchObject({
+      plan: 'pro',
+      status: 'active',
+      cancelledAt: null,
+    });
+    expect(mockPrisma.auditLog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        userId: null,
+        action: 'subscription_upgraded',
+        resourceId: 'sub-1',
+      }),
+    });
+  });
+
+  it('404 and no write when the email has no user', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/admin/upgrade-subscription',
+        headers: { 'x-admin-api-key': TEST_ADMIN_KEY },
+        body: { email: 'nobody@example.com', plan: 'pro' },
+      })
+    );
+    expect(res.status).toBe(404);
+    expect(mockPrisma.subscription.upsert).not.toHaveBeenCalled();
+  });
+
+  it('403 for a JWT caller whose users.preferences role is not admin', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-plain',
+      preferences: { role: 'user' },
+    });
+    const token = generateToken({
+      userId: 'user-plain',
+      email: 'plain@example.com',
+    } as never);
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/admin/upgrade-subscription',
+        headers: { authorization: `Bearer ${token}` },
+        body: { email: 'user@example.com', plan: 'pro' },
+      })
+    );
+    expect(res.status).toBe(403);
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+      where: { id: 'user-plain' },
+      select: { id: true, preferences: true },
+    });
+    expect(mockPrisma.subscription.upsert).not.toHaveBeenCalled();
   });
 });

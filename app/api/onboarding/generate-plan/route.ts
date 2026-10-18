@@ -15,10 +15,13 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
-import { getAuthUser } from '@/lib/platform/server';
+import { getAuthUser } from '@/lib/supabase-server';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { goalsSchema, generatePlanWithAI } from '@/lib/onboarding/generate-plan';
+import {
+  goalsSchema,
+  generatePlanWithAI,
+} from '@/lib/onboarding/generate-plan';
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         { error: 'Invalid request', details: validation.error.issues },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -71,15 +74,22 @@ export async function POST(request: NextRequest) {
             goalsData: goalsPayload as unknown as Prisma.InputJsonValue,
           },
         });
-        logger.info('goalsData saved to OnboardingProgress', { userId: user.id });
+        logger.info('goalsData saved to OnboardingProgress', {
+          userId: user.id,
+        });
       }
     } catch (dbErr) {
-      logger.warn('OnboardingProgress goalsData save skipped', { error: String(dbErr) });
+      logger.warn('OnboardingProgress goalsData save skipped', {
+        error: String(dbErr),
+      });
     }
 
     return NextResponse.json(plan);
   } catch (error) {
     logger.error('Generate plan error', { error: String(error) });
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

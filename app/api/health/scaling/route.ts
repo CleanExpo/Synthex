@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
-import { getAuthUser } from '@/lib/platform/server';
+import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import {
   getAutoScalingConfig,
   getMonitoringThresholds,
@@ -169,8 +169,8 @@ function getRequestMetrics(): ScalingMetrics['requests'] {
 export async function GET(request: NextRequest) {
   try {
     // Require authentication — exposes internal operational metrics
-    const user = await getAuthUser();
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -270,8 +270,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Require authentication — prevents external manipulation of in-memory metrics
-    const user = await getAuthUser();
-    if (!user) {
+    const userId = await getUserIdFromRequestOrCookies(request);
+    if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
