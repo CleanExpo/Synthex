@@ -1,5 +1,4 @@
 import { createHash } from 'node:crypto';
-import { createClient, type SupabaseClient } from '@/lib/platform/noop-client';
 
 export const INTENTSCAPE_WIKI_BUCKET = 'intentscape-wiki';
 export const MAX_MARKDOWN_ARTIFACT_BYTES = 512 * 1024;
@@ -13,7 +12,8 @@ const SECRET_PATTERNS: ReadonlyArray<{
 }> = [
   {
     label: 'service-role credential',
-    pattern: /(?:SUPABASE_SERVICE_ROLE_KEY|LEGACY_PLATFORM_SERVICE_KEY)\s*[:=]\s*["']?[^\s"']{12,}/i,
+    pattern:
+      /(?:SUPABASE_SERVICE_ROLE_KEY|LEGACY_PLATFORM_SERVICE_KEY)\s*[:=]\s*["']?[^\s"']{12,}/i,
   },
   {
     label: 'private key',
@@ -72,6 +72,37 @@ export class MarkdownArtifactStorageError extends Error {
     super(`IntentScape Markdown ${operation} failed: ${message}`);
     this.name = 'MarkdownArtifactStorageError';
   }
+}
+
+/**
+ * The private `intentscape-wiki` bucket has no real storage backend in this
+ * deployment. Subclasses the storage error so existing callers
+ * (lib/intentscape/api.ts) still map it to a 503 instead of a fake success.
+ */
+export class MarkdownArtifactStoreNotProvisionedError extends MarkdownArtifactStorageError {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+
+  constructor(operation: 'upload' | 'download') {
+    super(
+      operation,
+      `the private "${INTENTSCAPE_WIKI_BUCKET}" bucket is not provisioned`
+    );
+    this.name = 'MarkdownArtifactStoreNotProvisionedError';
+  }
+}
+
+/** Minimal private-bucket client this store needs (Supabase Storage shape). */
+export interface MarkdownBucketClient {
+  storage: {
+    from(bucket: string): {
+      upload(
+        path: string,
+        body: Buffer,
+        options: { contentType: string; cacheControl: string; upsert: boolean }
+      ): Promise<{ error: unknown }>;
+      download(path: string): Promise<{ data: Blob | null; error: unknown }>;
+    };
+  };
 }
 
 export class MarkdownArtifactIntegrityError extends Error {
@@ -195,7 +226,7 @@ function safeStorageMessage(error: unknown): string {
 }
 
 export function createSupabaseMarkdownArtifactStore(
-  client: SupabaseClient
+  client: MarkdownBucketClient
 ): MarkdownArtifactStore {
   const bucket = client.storage.from(INTENTSCAPE_WIKI_BUCKET);
 
@@ -280,8 +311,19 @@ export function createSupabaseMarkdownArtifactStore(
   };
 }
 
+/**
+ * Production store. No private object storage is provisioned for the
+ * `intentscape-wiki` bucket, so every call throws
+ * {@link MarkdownArtifactStoreNotProvisionedError} rather than dropping the
+ * write or fabricating a read.
+ */
 export function createProductionMarkdownArtifactStore(): MarkdownArtifactStore {
-  return createSupabaseMarkdownArtifactStore(
-    createClient()
-  );
+  return {
+    async writeVersion() {
+      throw new MarkdownArtifactStoreNotProvisionedError('upload');
+    },
+    async readVersion() {
+      throw new MarkdownArtifactStoreNotProvisionedError('download');
+    },
+  };
 }

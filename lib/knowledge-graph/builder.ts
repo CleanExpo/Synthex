@@ -11,9 +11,13 @@
  *   seasonal_signals (active) → seasonal_event entities
  *   recommended_actions (last 4w) → algorithm_signal entities
  *   content_performance_profiles (SYN-631) → topic entities
+ *
+ * NOT PROVISIONED: the target tables `client_knowledge_entities` and
+ * `client_knowledge_edges` have no Prisma model in prisma/schema.prisma.
+ * {@link buildKnowledgeGraphForClient} throws
+ * {@link KnowledgeGraphNotProvisionedError} before extracting or embedding
+ * anything, so no embedding spend is incurred for writes that cannot land.
  */
-
-import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import embeddingService from '@/lib/ai/embedding-service';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
@@ -25,18 +29,34 @@ import type {
 } from '@/lib/knowledge-graph/types';
 
 // ---------------------------------------------------------------------------
-// Supabase client (service role — bypasses RLS)
-// New KG tables are not yet in the generated Supabase types, so we use an
-// untyped client (`any`) for KG operations until `platform gen types` is re-run.
+// Persistence — not provisioned
 // ---------------------------------------------------------------------------
 
-let _platform: any = null;
+export const KNOWLEDGE_GRAPH_TABLES = [
+  'client_knowledge_entities',
+  'client_knowledge_edges',
+] as const;
 
-function getSupabase(): any {
-  if (!_platform) {
-    _platform = createClient();
+export class KnowledgeGraphNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  readonly tables = KNOWLEDGE_GRAPH_TABLES;
+
+  constructor() {
+    super(
+      `Knowledge graph build unavailable: tables ${KNOWLEDGE_GRAPH_TABLES.join(', ')} ` +
+        `are not provisioned (no Prisma model). Nothing was extracted, embedded or written.`
+    );
+    this.name = 'KnowledgeGraphNotProvisionedError';
   }
-  return _platform;
+}
+
+/**
+ * Returns the knowledge-graph store. There is none: always throws.
+ * The upsert code below is kept so the build can be re-enabled once the
+ * tables are modelled.
+ */
+function getKnowledgeGraphStore(): any {
+  throw new KnowledgeGraphNotProvisionedError();
 }
 
 // ---------------------------------------------------------------------------
@@ -45,12 +65,12 @@ function getSupabase(): any {
 
 const DAYS_30 = 30 * 24 * 60 * 60 * 1000;
 const DAYS_28 = 28 * 24 * 60 * 60 * 1000;
-const DAYS_7  =  7 * 24 * 60 * 60 * 1000;
+const DAYS_7 = 7 * 24 * 60 * 60 * 1000;
 
 /** text-embedding-3-small: $0.02 / 1M tokens */
 const EMBEDDING_COST_PER_M_TOKENS = 0.02;
 /** Alert threshold per client per run */
-const COST_ALERT_THRESHOLD_USD = 0.10;
+const COST_ALERT_THRESHOLD_USD = 0.1;
 
 // ---------------------------------------------------------------------------
 // Entity text for embedding
@@ -87,7 +107,7 @@ async function extractPostEntities(
     orderBy: { publishedAt: 'desc' },
   });
 
-  return posts.map((post) => {
+  return posts.map(post => {
     const analytics = (post.analytics as Record<string, unknown>) ?? {};
     const engagementRate = (analytics.engagementRate as number) ?? 0;
     const reach = (analytics.reach as number) ?? 0;
@@ -135,7 +155,7 @@ async function extractReviewEntities(
     orderBy: { reviewTime: 'desc' },
   });
 
-  return reviews.map((review) => ({
+  return reviews.map(review => ({
     client_id: orgId,
     entity_type: 'review' as const,
     entity_name: review.comment
@@ -211,7 +231,7 @@ async function extractSeasonalEntities(
     take: 20,
   });
 
-  return signals.map((signal) => ({
+  return signals.map(signal => ({
     client_id: orgId,
     entity_type: 'seasonal_event' as const,
     entity_name: signal.opportunityLabel,
@@ -253,7 +273,13 @@ async function extractAdvisorSignalEntities(
   const entities: KnowledgeEntityInsert[] = [];
 
   for (const rec of actions) {
-    const actionList = (rec.actions as Array<{ title?: string; platform?: string; type?: string; rationale?: string }>) ?? [];
+    const actionList =
+      (rec.actions as Array<{
+        title?: string;
+        platform?: string;
+        type?: string;
+        rationale?: string;
+      }>) ?? [];
     for (const action of actionList.slice(0, 3)) {
       if (!action.title) continue;
       entities.push({
@@ -288,9 +314,15 @@ async function extractTopicEntities(
 
   if (!profile) return [];
 
-  const topics = (profile.topTopics as Array<{ topic: string; avgEngagement: number; postCount: number; platforms: string[] }>) ?? [];
+  const topics =
+    (profile.topTopics as Array<{
+      topic: string;
+      avgEngagement: number;
+      postCount: number;
+      platforms: string[];
+    }>) ?? [];
 
-  return topics.slice(0, 20).map((topic) => ({
+  return topics.slice(0, 20).map(topic => ({
     client_id: orgId,
     entity_type: 'topic' as const,
     entity_name: topic.topic,
@@ -317,7 +349,7 @@ function buildEdges(
 ): KnowledgeEdgeInsert[] {
   const edges: KnowledgeEdgeInsert[] = [];
 
-  const byType = (type: string) => entities.filter((e) => e.entity_type === type);
+  const byType = (type: string) => entities.filter(e => e.entity_type === type);
 
   const posts = byType('content_piece');
   const topics = byType('topic');
@@ -329,13 +361,17 @@ function buildEdges(
   // content_piece → outperforms_on → platform (implicit via content_piece platform)
   // We model "platform" as a topic with platform metadata — skip if no topics
   for (const post of posts) {
-    const postPlatform = (post.entity_metadata as { platform?: string }).platform;
-    const engRate = (post.entity_metadata as { engagement_rate?: number }).engagement_rate ?? 0;
+    const postPlatform = (post.entity_metadata as { platform?: string })
+      .platform;
+    const engRate =
+      (post.entity_metadata as { engagement_rate?: number }).engagement_rate ??
+      0;
     if (!postPlatform || engRate < 0.02) continue; // skip low performers
 
     // Link high-performing posts to matching topic entities on same platform
     for (const topic of topics) {
-      const topicPlatforms = (topic.entity_metadata as { platforms?: string[] }).platforms ?? [];
+      const topicPlatforms =
+        (topic.entity_metadata as { platforms?: string[] }).platforms ?? [];
       if (topicPlatforms.includes(postPlatform)) {
         edges.push({
           client_id: orgId,
@@ -355,10 +391,15 @@ function buildEdges(
 
   // algorithm_signal → algorithm_favours → topic
   for (const signal of signals) {
-    const signalPlatform = (signal.entity_metadata as { platform?: string }).platform ?? '';
+    const signalPlatform =
+      (signal.entity_metadata as { platform?: string }).platform ?? '';
     for (const topic of topics) {
-      const topicPlatforms = (topic.entity_metadata as { platforms?: string[] }).platforms ?? [];
-      if (topicPlatforms.includes(signalPlatform) || signalPlatform === 'general') {
+      const topicPlatforms =
+        (topic.entity_metadata as { platforms?: string[] }).platforms ?? [];
+      if (
+        topicPlatforms.includes(signalPlatform) ||
+        signalPlatform === 'general'
+      ) {
         edges.push({
           client_id: orgId,
           source_entity_id: signal.id,
@@ -376,7 +417,7 @@ function buildEdges(
 
   // review → supports → brand_attribute (positive reviews lift authority)
   const positiveReviews = reviews.filter(
-    (r) => ((r.entity_metadata as { rating?: number }).rating ?? 0) >= 4
+    r => ((r.entity_metadata as { rating?: number }).rating ?? 0) >= 4
   );
   for (const review of positiveReviews.slice(0, 10)) {
     for (const attr of attributes) {
@@ -407,7 +448,8 @@ function buildEdges(
         relationship_type: 'seasonal_for',
         weight: Math.min(
           1,
-          ((event.entity_metadata as { confidence_score?: number }).confidence_score ?? 50) / 100
+          ((event.entity_metadata as { confidence_score?: number })
+            .confidence_score ?? 50) / 100
         ),
         evidence: {
           event_name: event.entity_name,
@@ -437,22 +479,29 @@ export async function buildKnowledgeGraphForClient(
   orgId: string,
   runId: string
 ): Promise<KnowledgeGraphBuildResult> {
-  const platform = getSupabase();
+  // Fail before extraction and paid embedding calls.
+  const platform = getKnowledgeGraphStore();
   const now = new Date();
   const since30d = new Date(now.getTime() - DAYS_30);
   const since28d = new Date(now.getTime() - DAYS_28);
 
   // ── 1. Extract all entity types ─────────────────────────────────────────
 
-  const [postEntities, reviewEntities, authorityEntities, seasonalEntities, signalEntities, topicEntities] =
-    await Promise.all([
-      extractPostEntities(orgId, since30d),
-      extractReviewEntities(orgId, since30d),
-      extractAuthorityEntities(orgId),
-      extractSeasonalEntities(orgId),
-      extractAdvisorSignalEntities(orgId, since28d),
-      extractTopicEntities(orgId),
-    ]);
+  const [
+    postEntities,
+    reviewEntities,
+    authorityEntities,
+    seasonalEntities,
+    signalEntities,
+    topicEntities,
+  ] = await Promise.all([
+    extractPostEntities(orgId, since30d),
+    extractReviewEntities(orgId, since30d),
+    extractAuthorityEntities(orgId),
+    extractSeasonalEntities(orgId),
+    extractAdvisorSignalEntities(orgId, since28d),
+    extractTopicEntities(orgId),
+  ]);
 
   const allEntities = [
     ...postEntities,
@@ -491,7 +540,8 @@ export async function buildKnowledgeGraphForClient(
     }
   }
 
-  const embeddingCostUsd = (totalTokens / 1_000_000) * EMBEDDING_COST_PER_M_TOKENS;
+  const embeddingCostUsd =
+    (totalTokens / 1_000_000) * EMBEDDING_COST_PER_M_TOKENS;
   const costAlertTriggered = embeddingCostUsd > COST_ALERT_THRESHOLD_USD;
 
   if (costAlertTriggered) {
@@ -513,8 +563,10 @@ export async function buildKnowledgeGraphForClient(
       output_tokens: 0,
       cost_usd: embeddingCostUsd,
     })
-  ).catch((err) =>
-    logger.warn('[kg-builder] Cost tracking failed (non-fatal)', { err: String(err) })
+  ).catch(err =>
+    logger.warn('[kg-builder] Cost tracking failed (non-fatal)', {
+      err: String(err),
+    })
   );
 
   // ── 3. Upsert entities with embeddings ────────────────────────────────
@@ -540,10 +592,15 @@ export async function buildKnowledgeGraphForClient(
         onConflict: 'client_id,source_system,source_id,entity_type',
         ignoreDuplicates: false,
       })
-      .select('id,entity_type,entity_name,entity_metadata,source_system,source_id,client_id,embedding,expires_at,created_at,updated_at');
+      .select(
+        'id,entity_type,entity_name,entity_metadata,source_system,source_id,client_id,embedding,expires_at,created_at,updated_at'
+      );
 
     if (error) {
-      logger.warn('[kg-builder] Entity upsert error', { orgId, error: error.message });
+      logger.warn('[kg-builder] Entity upsert error', {
+        orgId,
+        error: error.message,
+      });
       continue;
     }
 
@@ -564,13 +621,17 @@ export async function buildKnowledgeGraphForClient(
       const { data, error } = await platform
         .from('client_knowledge_edges')
         .upsert(chunk, {
-          onConflict: 'client_id,source_entity_id,target_entity_id,relationship_type',
+          onConflict:
+            'client_id,source_entity_id,target_entity_id,relationship_type',
           ignoreDuplicates: false,
         })
         .select('id');
 
       if (error) {
-        logger.warn('[kg-builder] Edge upsert error', { orgId, error: error.message });
+        logger.warn('[kg-builder] Edge upsert error', {
+          orgId,
+          error: error.message,
+        });
         continue;
       }
 

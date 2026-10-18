@@ -1,10 +1,13 @@
 import { Blob as NodeBlob } from 'node:buffer';
-import type { SupabaseClient } from '@/lib/platform/noop-client';
 import {
+  createProductionMarkdownArtifactStore,
   createSupabaseMarkdownArtifactStore,
   INTENTSCAPE_WIKI_BUCKET,
   MarkdownArtifactIntegrityError,
+  MarkdownArtifactStorageError,
+  MarkdownArtifactStoreNotProvisionedError,
   MarkdownArtifactValidationError,
+  type MarkdownBucketClient,
 } from '@/lib/intentscape/markdown-store';
 
 interface UploadOptions {
@@ -48,7 +51,7 @@ function fixture() {
     expect(name).toBe(INTENTSCAPE_WIKI_BUCKET);
     return bucket;
   });
-  const client = { storage: { from } } as unknown as SupabaseClient;
+  const client = { storage: { from } } as unknown as MarkdownBucketClient;
   return {
     bucket,
     from,
@@ -178,5 +181,32 @@ describe('IntentScape private Markdown artifact store', () => {
         markdown: '# Context',
       })
     ).rejects.toBeInstanceOf(MarkdownArtifactIntegrityError);
+  });
+
+  it('production store says honestly that the private bucket is not provisioned', async () => {
+    const store = createProductionMarkdownArtifactStore();
+    const write = store.writeVersion({
+      organizationId: 'org_1',
+      workspaceId: 'ws_1',
+      logicalPath: 'vision/brief.md',
+      version: 1,
+      markdown: '# Brief',
+    });
+    await expect(write).rejects.toBeInstanceOf(
+      MarkdownArtifactStoreNotProvisionedError
+    );
+    // Still a storage error, so lib/intentscape/api.ts maps it to 503.
+    await expect(write).rejects.toBeInstanceOf(MarkdownArtifactStorageError);
+    await expect(write).rejects.toMatchObject({
+      code: 'FEATURE_NOT_PROVISIONED',
+    });
+    await expect(
+      store.readVersion({
+        organizationId: 'org_1',
+        workspaceId: 'ws_1',
+        storagePath: 'org_1/ws_1/vision/brief/v1-abc.md',
+        expectedHash: 'a'.repeat(64),
+      })
+    ).rejects.toBeInstanceOf(MarkdownArtifactStoreNotProvisionedError);
   });
 });
