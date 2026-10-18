@@ -236,7 +236,14 @@ if (p) {
 // Everything below is judged at --head, never from the working tree (verifier audit: a dirty
 // checkout could supply a receipt or report the head does not carry). Ledger rows are the only
 // uncommitted writes this script itself makes.
-run('git', ['fetch', '-q', 'origin', head]);
+const headFetch = run('git', ['fetch', '-q', 'origin', head]);
+gate(
+  'head-fetched',
+  headFetch.code === 0,
+  headFetch.code === 0
+    ? head.slice(0, 12)
+    : headFetch.stderr.trim().slice(0, 120)
+);
 const dirty = run('git', [
   'status',
   '--porcelain',
