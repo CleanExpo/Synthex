@@ -81,12 +81,14 @@ const RETENTION_DAYS = parseInt(
 const BATCH_SIZE = 100;
 const FLUSH_INTERVAL = 5000; // 5 seconds
 
-// Compliance-classified categories are written synchronously to the
-// append-only audit_events_immutable table (supabase/migrations
-// 20260516000005: UPDATE/DELETE blocked by trigger), and a failed write throws
-// to the caller. A row in audit_logs is kept as a secondary, searchable copy;
-// audit_logs is pruned after 90 days by cleanup(), the immutable table never.
+// Compliance-classified categories are written to audit_logs synchronously,
+// one row per call, and a failed write throws to the caller. cleanup() never
+// prunes them, so they keep their retention. The append-only copy
+// (audit_events_immutable) is not wired: whether the app may write it is
+// founder-gated (DECISIONS.md A-24), so each row says so in details.
 // Other categories ('api', 'system') keep the buffered 90-day path.
+const IMMUTABLE_COPY =
+  'FEATURE_NOT_PROVISIONED: audit_events_immutable not wired (DECISIONS.md A-24)';
 const IMMUTABLE_CATEGORIES: ReadonlySet<AuditCategory> = new Set<AuditCategory>(
   ['auth', 'security', 'data', 'compliance']
 );
@@ -109,26 +111,20 @@ class AuditLogger {
    * Log an audit event.
    *
    * Compliance-classified categories (auth/security/data/compliance) are
-   * written to audit_events_immutable before this resolves, with no buffer,
-   * and a failed write rejects so the caller cannot report success without an
-   * immutable record. The audit_logs copy that follows is secondary: its
-   * failure is logged, not thrown, because the immutable record exists.
-   * Other categories are buffered and flushed to audit_logs.
+   * written to audit_logs before this resolves, with no buffer, and a failed
+   * write rejects so the caller cannot report success without an audit row.
+   * These rows are exempt from cleanup(). Other categories are buffered and
+   * flushed to audit_logs.
    */
   async log(event: AuditEvent): Promise<void> {
     if (IMMUTABLE_CATEGORIES.has(event.category)) {
-      await this.writeImmutable(event);
-      try {
-        await prisma.auditLog.create({ data: this.toRow(event) });
-      } catch (error) {
-        logger.error(
-          'Secondary audit_logs copy failed (immutable row written)',
-          {
-            error,
-            action: event.action,
-          }
-        );
-      }
+      const row = this.toRow(event);
+      await prisma.auditLog.create({
+        data: {
+          ...row,
+          details: { ...(row.details ?? {}), immutableCopy: IMMUTABLE_COPY },
+        },
+      });
     } else {
       // Add to buffer
       this.buffer.push(event);
@@ -147,33 +143,6 @@ class AuditLogger {
       outcome: event.outcome,
       userId: event.userId,
     });
-  }
-
-  /**
-   * Append one row to audit_events_immutable. Raw SQL because the table has no
-   * Prisma model; Prisma connects as the table owner. Throws on any failure.
-   */
-  private async writeImmutable(event: AuditEvent): Promise<void> {
-    const uuid =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const actorId =
-      event.userId && uuid.test(event.userId) ? event.userId : null;
-    const payload = JSON.stringify({
-      resource: event.resource,
-      resourceId: event.resourceId ?? null,
-      category: event.category,
-      severity: event.severity,
-      outcome: event.outcome,
-      details: event.details ?? null,
-      ipAddress: event.ipAddress ?? null,
-      userAgent: event.userAgent ?? null,
-      requestId: event.requestId ?? null,
-      ...(event.userId && !actorId ? { actor: event.userId } : {}),
-    });
-    await prisma.$executeRaw`
-      INSERT INTO public.audit_events_immutable (event_type, actor_id, payload)
-      VALUES (${event.action}, ${actorId}::uuid, ${payload}::jsonb)
-    `;
   }
 
   private toRow(event: AuditEvent) {
@@ -405,9 +374,12 @@ class AuditLogger {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
 
+      // Compliance categories are never pruned: with no append-only copy wired
+      // (A-24), audit_logs is their only record.
       const result = await prisma.auditLog.deleteMany({
         where: {
           createdAt: { lt: cutoffDate },
+          category: { notIn: [...IMMUTABLE_CATEGORIES] },
         },
       });
 
