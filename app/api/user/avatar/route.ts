@@ -4,13 +4,16 @@
  * DELETE /api/user/avatar - Remove avatar image
  *
  * AUTH: Uses `getUserIdFromRequestOrCookies()` for cookie-based JWT auth.
- * STORAGE: Uses Supabase Storage for file uploads (no FK issues).
+ * STORAGE: Uses lib/storage/platform-storage (files under public/uploads/<userId>/).
  * DB: Uses Prisma `User.avatar` field (migrated from Supabase `profiles`
  * table to fix FK constraint violations for OAuth users — UNI-839).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/platform/server';
+import {
+  uploadToStorage,
+  deleteFromStorage,
+} from '@/lib/storage/platform-storage';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -54,34 +57,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
     // Convert File to ArrayBuffer then to Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const platform = createServerClient();
-
-    // Upload to Supabase Storage (file storage is fine — no FK constraints)
-    const { error: uploadError } = await platform.storage
-      .from('avatars')
-      .upload(filePath, buffer, {
-        contentType: file.type,
-        upsert: true,
-      });
-
-    if (uploadError) {
-      logger.error('Upload error:', uploadError);
-      throw uploadError;
-    }
-
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = platform.storage.from('avatars').getPublicUrl(filePath);
+    // Stored under public/uploads/<userId>/ — scoped to the caller
+    const fileExt = file.name.split('.').pop();
+    const uploaded = await uploadToStorage(
+      userId,
+      `avatar.${fileExt}`,
+      buffer,
+      file.type
+    );
+    const publicUrl = uploaded.url;
 
     // Update user avatar in Prisma (NOT Supabase profiles table)
     try {
@@ -92,7 +80,7 @@ export async function POST(request: NextRequest) {
     } catch (dbError) {
       logger.error('DB update error:', dbError);
       // Clean up uploaded file if DB update fails
-      await platform.storage.from('avatars').remove([filePath]);
+      await deleteFromStorage(uploaded.path);
       throw dbError;
     }
 
@@ -126,14 +114,11 @@ export async function DELETE(request: NextRequest) {
       select: { avatar: true },
     });
 
-    if (user?.avatar) {
-      // Extract file path from URL and delete from storage
-      const urlParts = user.avatar.split('/');
-      const fileName = urlParts[urlParts.length - 1];
-      const filePath = `avatars/${fileName}`;
-
-      const platform = createServerClient();
-      await platform.storage.from('avatars').remove([filePath]);
+    // Only delete files inside the caller's own upload folder; legacy or
+    // external avatar URLs are left untouched.
+    const ownPrefix = `/uploads/${userId}/`;
+    if (user?.avatar?.startsWith(ownPrefix) && !user.avatar.includes('..')) {
+      await deleteFromStorage(user.avatar.slice(1));
     }
 
     // Clear avatar in Prisma

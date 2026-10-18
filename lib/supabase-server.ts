@@ -1,48 +1,59 @@
 /**
  * Supabase server client compatibility shim.
  *
- * SYN-1070 removed @supabase/supabase-js. This shim provides the same exports
- * via the new platform layer so legacy routes continue to compile.
+ * SYN-1070 removed @supabase/supabase-js. getAuthUser() is real (JWT cookie +
+ * Prisma). The Supabase-style query client has no backing store, so
+ * createServerClient() and serverDb throw SupabaseClientRemovedError instead
+ * of returning empty data or dropping writes.
  */
 
-import { cookies } from 'next/headers';
 import { getUserIdFromCookies } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
-import {
-  createServerClient as _createServerClient,
-  createAuthClient,
-} from '@/lib/platform/server';
 
-// Re-export platform server client directly
-export { createServerClient } from '@/lib/platform/server';
+/** Thrown by every call into the removed Supabase-style query client. */
+export class SupabaseClientRemovedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED';
+  constructor(what: string) {
+    super(
+      `FEATURE_NOT_PROVISIONED: ${what} is unavailable; the Supabase client was removed (SYN-1070). Use prisma from '@/lib/prisma'.`
+    );
+    this.name = 'SupabaseClientRemovedError';
+  }
+}
+
+export function createServerClient(): never {
+  throw new SupabaseClientRemovedError('createServerClient()');
+}
 
 /**
  * Get the currently authenticated user from session cookies.
- * Returns null when unauthenticated.
+ * Returns null when unauthenticated. Database errors propagate rather than
+ * masquerading as "not signed in".
  */
 export async function getAuthUser(): Promise<{
   id: string;
   email?: string;
 } | null> {
-  try {
-    const userId = await getUserIdFromCookies();
-    if (!userId) return null;
+  const userId = await getUserIdFromCookies();
+  if (!userId) return null;
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true },
-    });
-    return user ?? null;
-  } catch {
-    return null;
-  }
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, email: true },
+  });
 }
 
-export const serverDb: any = {
-  from: (_table: string) => ({
-    select: async () => ({ data: [], error: null }),
-    insert: async () => ({ data: null, error: null }),
-    update: async () => ({ data: null, error: null }),
-    delete: async () => ({ data: null, error: null }),
+function removed(table: string, op: string) {
+  return async (): Promise<never> => {
+    throw new SupabaseClientRemovedError(`serverDb.from('${table}').${op}()`);
+  };
+}
+
+export const serverDb = {
+  from: (table: string) => ({
+    select: removed(table, 'select'),
+    insert: removed(table, 'insert'),
+    update: removed(table, 'update'),
+    delete: removed(table, 'delete'),
   }),
 };
