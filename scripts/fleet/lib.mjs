@@ -173,7 +173,14 @@ export function isFleetCommit(sha, pol = policy(), cwd = ROOT) {
   const parents = git(['show', '-s', '--format=%P', sha], { cwd })
     .split(' ')
     .filter(Boolean);
-  return parents.length > 1;
+  if (parents.length < 2) return false;
+  // Only a pure merge: no path differs from every parent (no evil merge content). diff-tree --cc
+  // lists exactly those paths (verifier audit second pass: an evil merge attested as AI-only).
+  const evil = tryGit(
+    ['diff-tree', '--cc', '--no-commit-id', '--name-only', sha],
+    { cwd }
+  );
+  return evil === '';
 }
 export function utcDate(d = new Date()) {
   return d.toISOString().slice(0, 10);
@@ -188,7 +195,9 @@ export function ledgerAppend(row, file) {
   );
 }
 let ledgerFetched = false;
-export function ledgerRows(file) {
+// at: read the ledger committed at that ref instead of the working tree (attest-phase judges a head,
+// never uncommitted edits; verifier audit second pass).
+export function ledgerRows(file, at = null) {
   const pol = policy();
   const rel = file || pol.ledger;
   const f = path.join(ROOT, rel);
@@ -203,7 +212,12 @@ export function ledgerRows(file) {
           return { kind: 'CORRUPT', raw: l };
         }
       });
-  const local = existsSync(f) ? parse(readFileSync(f, 'utf8')) : [];
+  const atRef = at ? tryGit(['show', `${at}:${rel}`]) : null;
+  const local = at
+    ? parse(atRef || '')
+    : existsSync(f)
+      ? parse(readFileSync(f, 'utf8'))
+      : [];
   // Rows written by scheduled runs live on the ref refs/fleet/ledger (see ledger-push.mjs), fetched
   // once per process; rows from the retired fleet-ledger branch are still read.
   const ref = pol.ledger_ref || 'refs/fleet/ledger';
