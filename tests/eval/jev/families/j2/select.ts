@@ -8,10 +8,17 @@
  * dashboards/analytics/reports/integrations/platform reads, then static paths,
  * then dynamic paths; sorted by file within each rank. The first 180 are taken
  * and returned sorted by file.
+ *
+ * The selection is FROZEN in tests/eval/jev/cases/J2/routes.json (taken once at P1 by
+ * selectRoutesFromTree). Re-deriving it on every run let the case set follow the code
+ * under test: as P2 removed noop-client imports, routes rotated out and others in, so
+ * the family could drift green without a fix. A frozen route whose file is gone stays
+ * in the count and runs INCONCLUSIVE (import fails) instead of being replaced.
  */
 import fs from 'fs';
 import path from 'path';
 import { listRoutes, type RouteInfo } from '../../runner/route-harness';
+import frozen from '../../cases/J2/routes.json';
 
 export const J2_CASE_COUNT = 180;
 const ROOT = path.join(__dirname, '../../../../..');
@@ -42,6 +49,13 @@ export function caseId(file: string): string {
 }
 
 export function selectRoutes(): J2Route[] {
+  return (
+    frozen.routes as { file: string; route: string; noop: boolean }[]
+  ).map(r => ({ ...r, methods: ['GET'], id: caseId(r.file) }));
+}
+
+/** The selection rule applied to the current tree; used once to write routes.json. */
+export function selectRoutesFromTree(): J2Route[] {
   const ranked: { rank: number; route: J2Route }[] = [];
   for (const r of listRoutes()) {
     if (!r.methods.includes('GET')) continue;

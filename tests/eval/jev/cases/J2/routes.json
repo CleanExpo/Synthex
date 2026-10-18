@@ -1,0 +1,907 @@
+{
+  "schema": "jev-j2-routes/1",
+  "frozen_at": "P1 integration tree (fleet-unit/p1/integrated @6929a819)",
+  "count": 180,
+  "routes": [
+    {
+      "file": "app/api/ab-testing/tests/route.ts",
+      "route": "/api/ab-testing/tests",
+      "noop": false
+    },
+    {
+      "file": "app/api/activity/autonomous/route.ts",
+      "route": "/api/activity/autonomous",
+      "noop": false
+    },
+    {
+      "file": "app/api/activity/route.ts",
+      "route": "/api/activity",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/model-metrics/route.ts",
+      "route": "/api/admin/model-metrics",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/oauth-preflight/route.ts",
+      "route": "/api/admin/oauth-preflight",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/org-brand-profile/route.ts",
+      "route": "/api/admin/org-brand-profile",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/platform-credentials/route.ts",
+      "route": "/api/admin/platform-credentials",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/vault/access-log/route.ts",
+      "route": "/api/admin/vault/access-log",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/vault/route.ts",
+      "route": "/api/admin/vault",
+      "noop": false
+    },
+    {
+      "file": "app/api/admin/vault/seed-all/route.ts",
+      "route": "/api/admin/vault/seed-all",
+      "noop": false
+    },
+    {
+      "file": "app/api/advisor/brief/route.ts",
+      "route": "/api/advisor/brief",
+      "noop": false
+    },
+    {
+      "file": "app/api/agency/ceo-review-queue/route.ts",
+      "route": "/api/agency/ceo-review-queue",
+      "noop": false
+    },
+    {
+      "file": "app/api/agency/hypercare-report/route.ts",
+      "route": "/api/agency/hypercare-report",
+      "noop": false
+    },
+    {
+      "file": "app/api/agency/tier1-report/route.ts",
+      "route": "/api/agency/tier1-report",
+      "noop": false
+    },
+    {
+      "file": "app/api/agency/tier2-report/route.ts",
+      "route": "/api/agency/tier2-report",
+      "noop": false
+    },
+    {
+      "file": "app/api/ai-content/sentiment/route.ts",
+      "route": "/api/ai-content/sentiment",
+      "noop": false
+    },
+    {
+      "file": "app/api/ai/calendar-jobs/route.ts",
+      "route": "/api/ai/calendar-jobs",
+      "noop": false
+    },
+    {
+      "file": "app/api/ai/chat/conversations/route.ts",
+      "route": "/api/ai/chat/conversations",
+      "noop": false
+    },
+    {
+      "file": "app/api/ai/generate-content/route.ts",
+      "route": "/api/ai/generate-content",
+      "noop": false
+    },
+    {
+      "file": "app/api/ai/pm/conversations/route.ts",
+      "route": "/api/ai/pm/conversations",
+      "noop": false
+    },
+    {
+      "file": "app/api/ai/pm/digest/route.ts",
+      "route": "/api/ai/pm/digest",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/benchmarks/route.ts",
+      "route": "/api/analytics/benchmarks",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/dashboard-stats/route.ts",
+      "route": "/api/analytics/dashboard-stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/dashboard/route.ts",
+      "route": "/api/analytics/dashboard",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/follower-growth/route.ts",
+      "route": "/api/analytics/follower-growth",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/insights/route.ts",
+      "route": "/api/analytics/insights",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/performance/route.ts",
+      "route": "/api/analytics/performance",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/predict-engagement/route.ts",
+      "route": "/api/analytics/predict-engagement",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/reports/scheduled/route.ts",
+      "route": "/api/analytics/reports/scheduled",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/route.ts",
+      "route": "/api/analytics",
+      "noop": false
+    },
+    {
+      "file": "app/api/analytics/sentiment/route.ts",
+      "route": "/api/analytics/sentiment",
+      "noop": false
+    },
+    {
+      "file": "app/api/api-keys/status/route.ts",
+      "route": "/api/api-keys/status",
+      "noop": false
+    },
+    {
+      "file": "app/api/approvals/route.ts",
+      "route": "/api/approvals",
+      "noop": false
+    },
+    {
+      "file": "app/api/audience/insights/route.ts",
+      "route": "/api/audience/insights",
+      "noop": false
+    },
+    {
+      "file": "app/api/authority/citations/route.ts",
+      "route": "/api/authority/citations",
+      "noop": false
+    },
+    {
+      "file": "app/api/authors/route.ts",
+      "route": "/api/authors",
+      "noop": false
+    },
+    {
+      "file": "app/api/auto-research/insights/route.ts",
+      "route": "/api/auto-research/insights",
+      "noop": false
+    },
+    {
+      "file": "app/api/auto-research/route.ts",
+      "route": "/api/auto-research",
+      "noop": false
+    },
+    {
+      "file": "app/api/autopilot/config/route.ts",
+      "route": "/api/autopilot/config",
+      "noop": false
+    },
+    {
+      "file": "app/api/autopilot/runs/route.ts",
+      "route": "/api/autopilot/runs",
+      "noop": false
+    },
+    {
+      "file": "app/api/autopilot/stats/route.ts",
+      "route": "/api/autopilot/stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/awards/route.ts",
+      "route": "/api/awards",
+      "noop": false
+    },
+    {
+      "file": "app/api/backlinks/analysis/route.ts",
+      "route": "/api/backlinks/analysis",
+      "noop": false
+    },
+    {
+      "file": "app/api/backlinks/prospects/route.ts",
+      "route": "/api/backlinks/prospects",
+      "noop": false
+    },
+    {
+      "file": "app/api/bayesian/spaces/route.ts",
+      "route": "/api/bayesian/spaces",
+      "noop": false
+    },
+    {
+      "file": "app/api/bayesian/status/[jobId]/route.ts",
+      "route": "/api/bayesian/status/[jobId]",
+      "noop": false
+    },
+    {
+      "file": "app/api/billing/dunning-state/route.ts",
+      "route": "/api/billing/dunning-state",
+      "noop": false
+    },
+    {
+      "file": "app/api/billing/usage/route.ts",
+      "route": "/api/billing/usage",
+      "noop": false
+    },
+    {
+      "file": "app/api/bio/route.ts",
+      "route": "/api/bio",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand-presets/route.ts",
+      "route": "/api/brand-presets",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand-profile/route.ts",
+      "route": "/api/brand-profile",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand-voice/review-queue/route.ts",
+      "route": "/api/brand-voice/review-queue",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/dna/route.ts",
+      "route": "/api/brand/dna",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/generate/route.ts",
+      "route": "/api/brand/generate",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/identity/route.ts",
+      "route": "/api/brand/identity",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/kg-check/route.ts",
+      "route": "/api/brand/kg-check",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/mentions/route.ts",
+      "route": "/api/brand/mentions",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/profile/route.ts",
+      "route": "/api/brand/profile",
+      "noop": false
+    },
+    {
+      "file": "app/api/brand/wikidata/route.ts",
+      "route": "/api/brand/wikidata",
+      "noop": false
+    },
+    {
+      "file": "app/api/businesses/route.ts",
+      "route": "/api/businesses",
+      "noop": false
+    },
+    {
+      "file": "app/api/calendar/current-week/route.ts",
+      "route": "/api/calendar/current-week",
+      "noop": false
+    },
+    {
+      "file": "app/api/calendar/live-mode-readiness/route.ts",
+      "route": "/api/calendar/live-mode-readiness",
+      "noop": false
+    },
+    {
+      "file": "app/api/campaigns/route.ts",
+      "route": "/api/campaigns",
+      "noop": false
+    },
+    {
+      "file": "app/api/client/nudges/route.ts",
+      "route": "/api/client/nudges",
+      "noop": false
+    },
+    {
+      "file": "app/api/clients/route.ts",
+      "route": "/api/clients",
+      "noop": true
+    },
+    {
+      "file": "app/api/collaborator/context/route.ts",
+      "route": "/api/collaborator/context",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/activity/route.ts",
+      "route": "/api/command-centre/activity",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/clients/route.ts",
+      "route": "/api/command-centre/clients",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/connection-spine/route.ts",
+      "route": "/api/command-centre/connection-spine",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/pending/route.ts",
+      "route": "/api/command-centre/pending",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/performance/route.ts",
+      "route": "/api/command-centre/performance",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/stats/route.ts",
+      "route": "/api/command-centre/stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/command-centre/status/route.ts",
+      "route": "/api/command-centre/status",
+      "noop": false
+    },
+    {
+      "file": "app/api/comments/route.ts",
+      "route": "/api/comments",
+      "noop": false
+    },
+    {
+      "file": "app/api/competitors/alerts/route.ts",
+      "route": "/api/competitors/alerts",
+      "noop": false
+    },
+    {
+      "file": "app/api/competitors/route.ts",
+      "route": "/api/competitors",
+      "noop": false
+    },
+    {
+      "file": "app/api/competitors/track/route.ts",
+      "route": "/api/competitors/track",
+      "noop": false
+    },
+    {
+      "file": "app/api/contacts/route.ts",
+      "route": "/api/contacts",
+      "noop": false
+    },
+    {
+      "file": "app/api/content-drafts/route.ts",
+      "route": "/api/content-drafts",
+      "noop": false
+    },
+    {
+      "file": "app/api/content-library/route.ts",
+      "route": "/api/content-library",
+      "noop": false
+    },
+    {
+      "file": "app/api/content/calendar/route.ts",
+      "route": "/api/content/calendar",
+      "noop": false
+    },
+    {
+      "file": "app/api/content/comments/route.ts",
+      "route": "/api/content/comments",
+      "noop": false
+    },
+    {
+      "file": "app/api/content/industry/templates/route.ts",
+      "route": "/api/content/industry/templates",
+      "noop": false
+    },
+    {
+      "file": "app/api/content/performance/route.ts",
+      "route": "/api/content/performance",
+      "noop": false
+    },
+    {
+      "file": "app/api/content/route.ts",
+      "route": "/api/content",
+      "noop": false
+    },
+    {
+      "file": "app/api/content/share/route.ts",
+      "route": "/api/content/share",
+      "noop": false
+    },
+    {
+      "file": "app/api/creators/route.ts",
+      "route": "/api/creators",
+      "noop": false
+    },
+    {
+      "file": "app/api/credential-coverage/route.ts",
+      "route": "/api/credential-coverage",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/authority-score/route.ts",
+      "route": "/api/dashboard/authority-score",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/awards/route.ts",
+      "route": "/api/dashboard/awards",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/bio/route.ts",
+      "route": "/api/dashboard/bio",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/brand-iq/route.ts",
+      "route": "/api/dashboard/brand-iq",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/citation/route.ts",
+      "route": "/api/dashboard/citation",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/content-intelligence/route.ts",
+      "route": "/api/dashboard/content-intelligence",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/content-score-history/route.ts",
+      "route": "/api/dashboard/content-score-history",
+      "noop": true
+    },
+    {
+      "file": "app/api/dashboard/eeat/route.ts",
+      "route": "/api/dashboard/eeat",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/experiments/route.ts",
+      "route": "/api/dashboard/experiments",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/geo-score/route.ts",
+      "route": "/api/dashboard/geo-score",
+      "noop": true
+    },
+    {
+      "file": "app/api/dashboard/geo/route.ts",
+      "route": "/api/dashboard/geo",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/onboarding-summary/route.ts",
+      "route": "/api/dashboard/onboarding-summary",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/personalisation-status/route.ts",
+      "route": "/api/dashboard/personalisation-status",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/referrals/route.ts",
+      "route": "/api/dashboard/referrals",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/roi/route.ts",
+      "route": "/api/dashboard/roi",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/sponsors/route.ts",
+      "route": "/api/dashboard/sponsors",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/stats/route.ts",
+      "route": "/api/dashboard/stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/visuals/route.ts",
+      "route": "/api/dashboard/visuals",
+      "noop": false
+    },
+    {
+      "file": "app/api/dashboard/voice/route.ts",
+      "route": "/api/dashboard/voice",
+      "noop": false
+    },
+    {
+      "file": "app/api/directories/route.ts",
+      "route": "/api/directories",
+      "noop": false
+    },
+    {
+      "file": "app/api/eeat/v2/audit/route.ts",
+      "route": "/api/eeat/v2/audit",
+      "noop": false
+    },
+    {
+      "file": "app/api/effect-report/by-period/route.ts",
+      "route": "/api/effect-report/by-period",
+      "noop": true
+    },
+    {
+      "file": "app/api/effect-report/list/route.ts",
+      "route": "/api/effect-report/list",
+      "noop": true
+    },
+    {
+      "file": "app/api/email/send/route.ts",
+      "route": "/api/email/send",
+      "noop": true
+    },
+    {
+      "file": "app/api/experiments/experiments/route.ts",
+      "route": "/api/experiments/experiments",
+      "noop": false
+    },
+    {
+      "file": "app/api/experiments/healing/route.ts",
+      "route": "/api/experiments/healing",
+      "noop": false
+    },
+    {
+      "file": "app/api/forecast/models/route.ts",
+      "route": "/api/forecast/models",
+      "noop": false
+    },
+    {
+      "file": "app/api/gamification/achievements/route.ts",
+      "route": "/api/gamification/achievements",
+      "noop": false
+    },
+    {
+      "file": "app/api/gamification/streak/route.ts",
+      "route": "/api/gamification/streak",
+      "noop": false
+    },
+    {
+      "file": "app/api/google-business/insights/route.ts",
+      "route": "/api/google-business/insights",
+      "noop": false
+    },
+    {
+      "file": "app/api/google-business/locations/route.ts",
+      "route": "/api/google-business/locations",
+      "noop": false
+    },
+    {
+      "file": "app/api/google-business/nap-audit/route.ts",
+      "route": "/api/google-business/nap-audit",
+      "noop": false
+    },
+    {
+      "file": "app/api/google-business/photos/route.ts",
+      "route": "/api/google-business/photos",
+      "noop": false
+    },
+    {
+      "file": "app/api/google-business/posts/route.ts",
+      "route": "/api/google-business/posts",
+      "noop": false
+    },
+    {
+      "file": "app/api/google-business/reviews/route.ts",
+      "route": "/api/google-business/reviews",
+      "noop": false
+    },
+    {
+      "file": "app/api/health/pipelines/route.ts",
+      "route": "/api/health/pipelines",
+      "noop": false
+    },
+    {
+      "file": "app/api/heygen/video/route.ts",
+      "route": "/api/heygen/video",
+      "noop": false
+    },
+    {
+      "file": "app/api/insights/route.ts",
+      "route": "/api/insights",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/[integrationId]/status/route.ts",
+      "route": "/api/integrations/[integrationId]/status",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/[integrationId]/sync/route.ts",
+      "route": "/api/integrations/[integrationId]/sync",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/ga4/properties/route.ts",
+      "route": "/api/integrations/ga4/properties",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/route.ts",
+      "route": "/api/integrations",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/third-party/[provider]/config/route.ts",
+      "route": "/api/integrations/third-party/[provider]/config",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/third-party/[provider]/route.ts",
+      "route": "/api/integrations/third-party/[provider]",
+      "noop": false
+    },
+    {
+      "file": "app/api/integrations/third-party/route.ts",
+      "route": "/api/integrations/third-party",
+      "noop": false
+    },
+    {
+      "file": "app/api/intelligence/competitors/route.ts",
+      "route": "/api/intelligence/competitors",
+      "noop": true
+    },
+    {
+      "file": "app/api/invoices/list/route.ts",
+      "route": "/api/invoices/list",
+      "noop": false
+    },
+    {
+      "file": "app/api/invoices/route.ts",
+      "route": "/api/invoices",
+      "noop": false
+    },
+    {
+      "file": "app/api/library/content/route.ts",
+      "route": "/api/library/content",
+      "noop": false
+    },
+    {
+      "file": "app/api/listening/keywords/route.ts",
+      "route": "/api/listening/keywords",
+      "noop": false
+    },
+    {
+      "file": "app/api/listening/mentions/route.ts",
+      "route": "/api/listening/mentions",
+      "noop": false
+    },
+    {
+      "file": "app/api/listening/route.ts",
+      "route": "/api/listening",
+      "noop": false
+    },
+    {
+      "file": "app/api/local/case-studies/route.ts",
+      "route": "/api/local/case-studies",
+      "noop": false
+    },
+    {
+      "file": "app/api/loyalty/route.ts",
+      "route": "/api/loyalty",
+      "noop": false
+    },
+    {
+      "file": "app/api/marketing-agency/agents/route.ts",
+      "route": "/api/marketing-agency/agents",
+      "noop": false
+    },
+    {
+      "file": "app/api/marketplace/products/route.ts",
+      "route": "/api/marketplace/products",
+      "noop": false
+    },
+    {
+      "file": "app/api/media/generate/video/route.ts",
+      "route": "/api/media/generate/video",
+      "noop": true
+    },
+    {
+      "file": "app/api/media/generate/voice/route.ts",
+      "route": "/api/media/generate/voice",
+      "noop": true
+    },
+    {
+      "file": "app/api/media/library/route.ts",
+      "route": "/api/media/library",
+      "noop": false
+    },
+    {
+      "file": "app/api/moderation/check/route.ts",
+      "route": "/api/moderation/check",
+      "noop": true
+    },
+    {
+      "file": "app/api/monitoring/errors/route.ts",
+      "route": "/api/monitoring/errors",
+      "noop": true
+    },
+    {
+      "file": "app/api/monthly-story/latest/route.ts",
+      "route": "/api/monthly-story/latest",
+      "noop": false
+    },
+    {
+      "file": "app/api/notifications/route.ts",
+      "route": "/api/notifications",
+      "noop": true
+    },
+    {
+      "file": "app/api/notifications/settings/route.ts",
+      "route": "/api/notifications/settings",
+      "noop": false
+    },
+    {
+      "file": "app/api/onboarding/api-credentials/route.ts",
+      "route": "/api/onboarding/api-credentials",
+      "noop": false
+    },
+    {
+      "file": "app/api/onboarding/checklist/route.ts",
+      "route": "/api/onboarding/checklist",
+      "noop": false
+    },
+    {
+      "file": "app/api/onboarding/kickstart/route.ts",
+      "route": "/api/onboarding/kickstart",
+      "noop": false
+    },
+    {
+      "file": "app/api/onboarding/progress/route.ts",
+      "route": "/api/onboarding/progress",
+      "noop": false
+    },
+    {
+      "file": "app/api/optimize/auto-schedule/route.ts",
+      "route": "/api/optimize/auto-schedule",
+      "noop": true
+    },
+    {
+      "file": "app/api/organisations/children/route.ts",
+      "route": "/api/organisations/children",
+      "noop": false
+    },
+    {
+      "file": "app/api/patterns/cached/route.ts",
+      "route": "/api/patterns/cached",
+      "noop": true
+    },
+    {
+      "file": "app/api/platforms/[platform]/metrics/route.ts",
+      "route": "/api/platforms/[platform]/metrics",
+      "noop": false
+    },
+    {
+      "file": "app/api/platforms/metrics/route.ts",
+      "route": "/api/platforms/metrics",
+      "noop": false
+    },
+    {
+      "file": "app/api/rate-limit/route.ts",
+      "route": "/api/rate-limit",
+      "noop": true
+    },
+    {
+      "file": "app/api/reports/scheduled/route.ts",
+      "route": "/api/reports/scheduled",
+      "noop": false
+    },
+    {
+      "file": "app/api/reports/templates/route.ts",
+      "route": "/api/reports/templates",
+      "noop": false
+    },
+    {
+      "file": "app/api/scheduler/stats/route.ts",
+      "route": "/api/scheduler/stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/sentinel/status/route.ts",
+      "route": "/api/sentinel/status",
+      "noop": false
+    },
+    {
+      "file": "app/api/seo/dashboard-stats/route.ts",
+      "route": "/api/seo/dashboard-stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/social/facebook/post/route.ts",
+      "route": "/api/social/facebook/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/instagram/post/route.ts",
+      "route": "/api/social/instagram/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/linkedin/post/route.ts",
+      "route": "/api/social/linkedin/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/pinterest/post/route.ts",
+      "route": "/api/social/pinterest/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/reddit/post/route.ts",
+      "route": "/api/social/reddit/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/threads/post/route.ts",
+      "route": "/api/social/threads/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/tiktok/post/route.ts",
+      "route": "/api/social/tiktok/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/twitter/post/route.ts",
+      "route": "/api/social/twitter/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/social/youtube/post/route.ts",
+      "route": "/api/social/youtube/post",
+      "noop": true
+    },
+    {
+      "file": "app/api/stats/route.ts",
+      "route": "/api/stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/teams/stats/route.ts",
+      "route": "/api/teams/stats",
+      "noop": false
+    },
+    {
+      "file": "app/api/unified/metrics/route.ts",
+      "route": "/api/unified/metrics",
+      "noop": false
+    },
+    {
+      "file": "app/api/unite-group/status/route.ts",
+      "route": "/api/unite-group/status",
+      "noop": false
+    }
+  ]
+}
