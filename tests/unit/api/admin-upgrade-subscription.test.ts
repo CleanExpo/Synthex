@@ -7,8 +7,8 @@
  * not the shared lib helper. We prove the gate without reaching Supabase:
  *   - no credentials            → 403 (returns before any Supabase call)
  *   - valid admin key, bad body → 400 (validation before any Supabase call)
- * The 200 path writes through the Supabase service-role client and is covered
- * by integration tests, not this unit gate.
+ * The 200 path upserts the subscription and its audit row in one Prisma
+ * transaction; an audit failure must leave no committed plan change.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -17,10 +17,31 @@ jest.mock('@/lib/logger', () => ({
   logger: { error: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 
+// Subscription writes that a $transaction actually committed: staged inside the
+// callback, kept only if the whole callback resolves (a rejection rolls back).
+const mockCommitted: unknown[] = [];
+const mockTxCalls: number[] = [];
 const mockPrisma = {
   user: { findUnique: jest.fn() },
   subscription: { upsert: jest.fn() },
   auditLog: { create: jest.fn() },
+  // A plain function: the jest config resets jest.fn implementations.
+  $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+    mockTxCalls.push(1);
+    const staged: unknown[] = [];
+    const tx = {
+      subscription: {
+        upsert: async (a: unknown) => {
+          staged.push(a);
+          return mockPrisma.subscription.upsert(a);
+        },
+      },
+      auditLog: { create: (a: unknown) => mockPrisma.auditLog.create(a) },
+    };
+    const result = await fn(tx);
+    mockCommitted.push(...staged);
+    return result;
+  },
 };
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -36,6 +57,8 @@ const TEST_ADMIN_KEY = 'test-admin-key-syn1000';
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockCommitted.length = 0;
+  mockTxCalls.length = 0;
   process.env.ADMIN_API_KEY = TEST_ADMIN_KEY;
 });
 
@@ -147,6 +170,23 @@ describe('POST /api/admin/upgrade-subscription — Prisma write path', () => {
         resourceId: 'sub-1',
       }),
     });
+    expect(mockCommitted).toHaveLength(1);
+  });
+
+  it('500 and no committed plan change when the audit write fails', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(target);
+    mockPrisma.auditLog.create.mockRejectedValue(new Error('audit down'));
+    const res = await POST(
+      createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/admin/upgrade-subscription',
+        headers: { 'x-admin-api-key': TEST_ADMIN_KEY },
+        body: { email: 'user@example.com', plan: 'pro' },
+      })
+    );
+    expect(res.status).toBe(500);
+    expect(mockTxCalls).toHaveLength(1);
+    expect(mockCommitted).toHaveLength(0);
   });
 
   it('404 and no write when the email has no user', async () => {

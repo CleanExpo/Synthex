@@ -49,7 +49,11 @@ function req(b: object = body) {
 beforeEach(() => {
   mockGetUserId.mockResolvedValue('user-1');
   mockPrisma.post.findMany.mockResolvedValue([]);
-  mockCreateNotification.mockResolvedValue(undefined);
+  mockCreateNotification.mockResolvedValue({
+    delivered: false,
+    reason: 'FEATURE_NOT_PROVISIONED',
+    table: 'client_notifications',
+  });
 });
 
 describe('POST /api/analytics/post-performance-sync', () => {
@@ -82,6 +86,7 @@ describe('POST /api/analytics/post-performance-sync', () => {
       { analytics: { reach: 100 } },
       { analytics: { reach: 100 } },
     ]);
+    mockCreateNotification.mockResolvedValue({ delivered: true });
     const res = await POST(req());
     const json = await res.json();
     expect(res.status).toBe(200);
@@ -90,6 +95,21 @@ describe('POST /api/analytics/post-performance-sync', () => {
       userId: 'user-1',
     });
     expect(mockCreateNotification).toHaveBeenCalledTimes(1);
+  });
+
+  it('503, never first_win_detected, when the notification was not stored', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      organization: { firstWinDetected: false },
+    });
+    mockPrisma.post.findMany.mockResolvedValue([
+      { analytics: { reach: 100 } },
+      { analytics: { reach: 100 } },
+    ]);
+    const res = await POST(req());
+    const json = await res.json();
+    expect(res.status).toBe(503);
+    expect(json.error).toBe('FEATURE_NOT_PROVISIONED');
+    expect(json.status).toBe('first_win_undelivered');
   });
 
   it('500 (not a fake success) when the DB read fails', async () => {

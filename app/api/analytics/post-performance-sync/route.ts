@@ -10,6 +10,7 @@ import {
 } from '@/lib/notifications/detect-first-win';
 import { createFirstWinNotification } from '@/lib/notifications/create-first-win-notification';
 import { logger } from '@/lib/logger';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -125,8 +126,19 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // createFirstWinNotification never throws — fire and await
-    await createFirstWinNotification(winEvent);
+    // createFirstWinNotification never throws; it reports whether the
+    // notification was stored. An unstored win is not a completed first win.
+    const delivery = await createFirstWinNotification(winEvent);
+    if (!delivery.delivered) {
+      return notProvisionedResponse(
+        `A first win was detected but its notification was not stored: the ${delivery.table} table is not provisioned.`,
+        {
+          status: 'first_win_undelivered',
+          improvementPct: winEvent.improvementPct,
+          metric: winEvent.metric,
+        }
+      );
+    }
 
     logger.info(
       `[post-performance-sync] First win: user=${userId} post=${postId} +${winEvent.improvementPct}% ${metric}`
