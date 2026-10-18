@@ -115,6 +115,13 @@ export function evaluate(f, pol = policy()) {
   return items;
 }
 
+/** The gate manifest run-phase writes ({ head, results: [{ state, ... }] }) as evaluate() reads it. */
+export function gateFromManifest(m) {
+  return m
+    ? { head: m.head, commands: Array.isArray(m.results) ? m.results : [] }
+    : null;
+}
+
 function gather() {
   const pol = policy();
   const base = opt('--base', 'origin/main');
@@ -169,7 +176,7 @@ function gather() {
     head,
     changed,
     commits,
-    gate: gate ? { head: gate.head, commands: gate.commands || [] } : null,
+    gate: gateFromManifest(gate),
     runPhaseText: existsSync(rp) ? readFileSync(rp, 'utf8') : '',
     root: ROOT,
     allowCloud: process.env.FLEET_ALLOW_CLOUD_GATE === '1',
@@ -251,6 +258,32 @@ function control() {
       'cloud sandbox with the explicit override passes',
       () =>
         state({ root: '/tmp/wt-main', allowCloud: true }, 'on-mini') === 'PASS',
+    ],
+    [
+      'a real-shaped gate manifest (results[]) bound to HEAD passes',
+      () =>
+        state(
+          {
+            gate: gateFromManifest({
+              head: 'h',
+              results: [{ cmd: 'npm test', state: 'PASS' }],
+            }),
+          },
+          'gated'
+        ) === 'PASS',
+    ],
+    [
+      'a manifest without results[] fails',
+      () =>
+        state(
+          {
+            gate: gateFromManifest({
+              head: 'h',
+              commands: [{ state: 'PASS' }],
+            }),
+          },
+          'gated'
+        ) === 'FAIL',
     ],
     [
       'open red PR fails',
