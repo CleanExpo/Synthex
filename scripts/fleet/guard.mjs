@@ -17,12 +17,63 @@ import { policy, isProtected, isMain } from './lib.mjs';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+// Shell commands as argv segments: split on shell separators and command substitution, then on
+// quote-aware whitespace. Each segment's argv0 is reduced to its basename, so /usr/bin/git is git.
+export function segments(cmd) {
+  return String(cmd)
+    .split(/;|&&|\|\||\||&|\n|\$\(|`|\)/)
+    .map(seg => {
+      const argv = [];
+      let cur = '';
+      let q = null;
+      for (const ch of seg) {
+        if (q) {
+          if (ch === q) q = null;
+          else cur += ch;
+        } else if (ch === '"' || ch === "'") q = ch;
+        else if (/\s/.test(ch)) {
+          if (cur) argv.push(cur);
+          cur = '';
+        } else cur += ch;
+      }
+      if (cur) argv.push(cur);
+      while (argv.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(argv[0]))
+        argv.shift(); // env prefixes
+      if (argv.length) argv[0] = argv[0].split('/').pop();
+      return argv;
+    })
+    .filter(a => a.length);
+}
+// git's global options before the subcommand (-C <dir>, -c <k=v>, --git-dir, --work-tree, ...).
+function gitSubcommand(argv) {
+  let i = 1;
+  while (i < argv.length && argv[i].startsWith('-')) {
+    if (
+      ['-C', '-c', '--git-dir', '--work-tree', '--namespace'].includes(argv[i])
+    )
+      i += 2;
+    else i += 1;
+  }
+  return { sub: argv[i], args: argv.slice(i + 1) };
+}
+const ROLES = [
+  'orchestrator',
+  'reader',
+  'builder',
+  'verifier',
+  'judge',
+  'releaser',
+  'scheduler',
+  'judge-runner',
+];
 export function evaluate(action, pol = policy()) {
-  const role = action.role || 'builder';
   const deny = reason => ({ decision: 'deny', reason, action });
   const allow = reason => ({ decision: 'allow', reason, action });
   if (!action || typeof action !== 'object' || !action.kind)
     return { decision: 'deny', reason: 'malformed action', action };
+  // Roles are matched case-insensitively and an unknown role is refused, never treated as allowed.
+  const role = String(action.role || 'builder').toLowerCase();
+  if (!ROLES.includes(role)) return deny(`unknown role ${action.role}`);
   switch (action.kind) {
     case 'write':
     case 'edit':
@@ -91,6 +142,54 @@ export function evaluate(action, pol = policy()) {
       }
       for (const f of pol.forbidden_commands)
         if (cmd.includes(f)) return deny(`forbidden command: ${f}`);
+      // Argv-level rules: global options, a path to git, long and short flag forms (verifier
+      // audit, second pass).
+      for (const argv of segments(action.command || '')) {
+        if (argv[0] === 'git') {
+          const { sub: g, args } = gitSubcommand(argv);
+          const flags = args.filter(a => a.startsWith('-'));
+          const shortHas = c =>
+            flags.some(a => /^-[a-zA-Z]+$/.test(a) && a.includes(c));
+          if (g === 'push') {
+            if (
+              args.some(a => a.startsWith('+') || a.startsWith(':')) ||
+              flags.some(a =>
+                /^--(force|force-with-lease|force-if-includes|delete|mirror|no-verify)\b/.test(
+                  a
+                )
+              ) ||
+              shortHas('f') ||
+              shortHas('d')
+            )
+              return deny('force, delete, mirror or unverified push');
+          }
+          if (
+            g === 'commit' &&
+            (flags.includes('--no-verify') || shortHas('n'))
+          )
+            return deny('commit without hooks (-n/--no-verify)');
+          if (g === 'reset' && flags.includes('--hard'))
+            return deny('git reset --hard');
+          if (
+            g === 'branch' &&
+            (flags.includes('--delete') || shortHas('D') || shortHas('d'))
+          )
+            return deny('branch delete');
+        }
+        if (argv[0] === 'gh') {
+          if (argv[1] === 'pr' && argv[2] === 'merge') {
+            if (role === 'releaser' && action.via === 'merge-phase')
+              return allow('gh pr merge via merge-phase (FD-3)');
+            return deny('direct gh pr merge');
+          }
+          if (
+            argv[1] === 'api' &&
+            (argv.some(a => /\/pulls\/\d+\/merge\b/.test(a)) ||
+              /mergePullRequest|enablePullRequestAutoMerge/i.test(cmd))
+          )
+            return deny('direct merge through gh api');
+        }
+      }
       // API and refspec equivalents of the forbidden merge, force-push and branch delete.
       if (/\bgh api\b/.test(cmd) && /\/pulls\/\d+\/merge\b/.test(cmd))
         return deny('direct merge through gh api');

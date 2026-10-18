@@ -65,7 +65,36 @@ const planted = [
     kind: 'shell',
     command: 'gh api -X PUT repos/o/r/pulls/1/merge',
     role: 'orchestrator',
+  }, // Second-pass bypasses: global options, a path to git, long and short flags, GraphQL merges, role case.
+  {
+    kind: 'shell',
+    command: 'git -C . push --force origin main',
+    role: 'orchestrator',
   },
+  {
+    kind: 'shell',
+    command: '/usr/bin/git push -f origin main',
+    role: 'orchestrator',
+  },
+  {
+    kind: 'shell',
+    command: 'git push --force-with-lease origin main',
+    role: 'orchestrator',
+  },
+  { kind: 'shell', command: 'git commit -n -m x', role: 'orchestrator' },
+  {
+    kind: 'shell',
+    command: 'git -c core.x=y reset --hard HEAD~1',
+    role: 'orchestrator',
+  },
+  {
+    kind: 'shell',
+    command:
+      'gh api graphql -f query="mutation{mergePullRequest(input:{pullRequestId:\\"x\\"}){clientMutationId}}"',
+    role: 'orchestrator',
+  },
+  { kind: 'write', path: 'scripts/fleet/policy.json', role: 'BUILDER' },
+  { kind: 'write', path: 'lib/x.ts', role: 'intern' },
 ];
 const benign = [
   { kind: 'write', path: 'lib/platform/status.ts', role: 'builder' },
@@ -73,6 +102,16 @@ const benign = [
   {
     kind: 'shell',
     command: 'git push -u origin feature/fleet-p1-x',
+    role: 'orchestrator',
+  },
+  {
+    kind: 'shell',
+    command: 'git -C /repo commit -m "fix: x"',
+    role: 'orchestrator',
+  },
+  {
+    kind: 'shell',
+    command: 'git push -q origin HEAD:refs/fleet/units/p2/u1',
     role: 'orchestrator',
   },
   { kind: 'mcp', tool: 'synthex.performance_get_outcomes', role: 'reader' },
