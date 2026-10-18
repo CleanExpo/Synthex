@@ -1,0 +1,22 @@
+{
+  "schema": "jev-known-gaps/1",
+  "family": "J7",
+  "gaps": {
+    "J7-GAP-P6-leads-ingest-no-outcome": {
+      "cases": ["J7-call-*", "J7-booking-*"],
+      "note": "P6. POST /api/leads accepts signed phone_call and booking signals but only writes Lead (no location id field, rawPayload only); it never calls recordMarketingAgencyOutcome, so no outcome event is written. A replayed delivery also writes a second Lead row (no idempotency key)."
+    },
+    "J7-GAP-P6-gbp-review-sync-no-outcome": {
+      "cases": ["J7-review-*"],
+      "note": "P6. GET /api/cron/gbp-monitor upserts GBPReview and snapshots per location but writes no MarketingAgencyOutcomeEvent for a new review."
+    },
+    "J7-GAP-P6-rank-snapshot-no-outcome": {
+      "cases": ["J7-rank-*"],
+      "note": "P6. GET /api/cron/rank-snapshot stores KeywordRankSnapshot (position 14 -> 4.2 in the synthetic data) but writes no outcome event, and keyword targets carry no location id."
+    },
+    "J7-GAP-P6-nap-audit-read-only": {
+      "cases": ["J7-listing-*"],
+      "note": "P6. GET /api/google-business/nap-audit detects listing drift (org name differs from GBP) but is read-only; listing drift never becomes an outcome event. Cross-cutting for all J7 gaps: recordMarketingAgencyOutcome has no caller, MarketingAgencyOutcomeEvent has no locationId column (location can only travel in metadata), and performance_get_outcomes does not select metadata, so a location id would not reach the reader."
+    }
+  }
+}

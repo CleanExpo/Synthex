@@ -1,0 +1,65 @@
+{
+  "schema": "jev-known-gaps/1",
+  "family": "J1",
+  "gaps": {
+    "J1-GAP-unauth-static-get-catalog": {
+      "cases": [
+        "J1-unauth-ai-content.translate",
+        "J1-unauth-content.variations",
+        "J1-unauth-email.send",
+        "J1-unauth-psychology.analyze",
+        "J1-unauth-reporting.generate",
+        "J1-unauth-seo.schema",
+        "J1-unauth-seo.schema-markup.templates"
+      ],
+      "note": "First exported method is a GET that returns static capability/catalogue data (languages, strategies, report types, schema templates, email provider status) with 200 to an anonymous caller. The mutating methods on the same routes are guarded."
+    },
+    "J1-GAP-unauth-db-read-before-auth": {
+      "cases": [
+        "J1-unauth-activity",
+        "J1-unauth-quotes",
+        "J1-unauth-quotes.id",
+        "J1-unauth-platforms.platform.metrics"
+      ],
+      "note": "GET reads the database for an anonymous caller. /api/activity ignores the APISecurityChecker result and runs an unscoped post/audit query (cross-tenant read with a real DB); /api/quotes and /api/quotes/[id] have no auth on GET; /api/platforms/[platform]/metrics uses PUBLIC_READ and answers 200."
+    },
+    "J1-GAP-unauth-undocumented-403": {
+      "cases": [
+        "J1-unauth-billing.subscription",
+        "J1-unauth-opportunity-proposals",
+        "J1-unauth-opportunity-proposals.id.export"
+      ],
+      "note": "Anonymous caller gets 403 ('No bearer token provided') instead of 401, and the route source does not document a 403. Denied, but with the wrong status."
+    },
+    "J1-GAP-unauth-validates-before-auth": {
+      "cases": [
+        "J1-unauth-brand.profile",
+        "J1-unauth-integrations.third-party.provider",
+        "J1-unauth-integrations.third-party.provider.config"
+      ],
+      "note": "Query/path validation runs before authentication, so an anonymous caller gets 400 (and the supported-provider list) instead of 401."
+    },
+    "J1-GAP-malformed-json-500": {
+      "cases": [
+        "J1-malformed-post-organizations",
+        "J1-malformed-patch-organizations.orgid",
+        "J1-malformed-post-approvals",
+        "J1-malformed-patch-approvals.id",
+        "J1-malformed-patch-content.id",
+        "J1-malformed-post-content-drafts",
+        "J1-malformed-post-content-library",
+        "J1-malformed-post-integrations",
+        "J1-malformed-put-integrations.third-party.provider.config",
+        "J1-malformed-post-team",
+        "J1-malformed-post-teams.members",
+        "J1-malformed-patch-teams.id.settings",
+        "J1-malformed-post-social.post"
+      ],
+      "note": "request.json() is inside the handler's catch-all, so an unparseable body becomes 500 instead of 400. Scratch check: the same routes answer 400/200/404 (not 500) to a valid '{}' body, so the 500 is the parse failure."
+    },
+    "J1-GAP-malformed-json-accepted": {
+      "cases": ["J1-malformed-post-user.api-keys"],
+      "note": "POST /api/user/api-keys swallows a JSON parse error as {} and creates a key with the default name (200) instead of rejecting the body with 400."
+    }
+  }
+}

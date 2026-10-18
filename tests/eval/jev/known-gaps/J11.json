@@ -1,0 +1,68 @@
+{
+  "schema": "jev-known-gaps/1",
+  "family": "J11",
+  "gaps": {
+    "J11-GAP-ssrf-redirect-follow": {
+      "cases": [
+        "J11-SSRF-svc-analyze-website-redirect",
+        "J11-SSRF-svc-business-vetting-redirect",
+        "J11-SSRF-route-demo-analyze-redirect",
+        "J11-SSRF-route-seo-page-analysis-redirect",
+        "J11-SSRF-route-seo-sitemap-redirect"
+      ],
+      "note": "The URL is SSRF-checked once, then fetch() runs with the default redirect:'follow'. A public URL that 302s to 169.254.169.254 or 10.x is followed with no re-check (lib/ai/website-analyzer.ts scrapeWithFetch, lib/vetting/business-vetting.ts checkSEO, app/api/demo/analyze, app/api/seo/page-analysis, app/api/seo/sitemap). lib/services/media/fetch-image-base64.ts (redirect:'error') shows the safe pattern."
+    },
+    "J11-GAP-webhook-sender-unguarded": {
+      "cases": [
+        "J11-SSRF-svc-send-webhook-internal",
+        "J11-SSRF-svc-send-webhook-redirect",
+        "J11-SSRF-svc-ping-webhook-metadata"
+      ],
+      "note": "lib/webhooks/sender.ts sendWebhook and pingWebhook call fetch(url) with no SSRF guard at delivery time and follow redirects. Only registration in app/api/webhooks/user validates the URL, so a stored URL, a DNS change after registration or a redirect reaches internal addresses."
+    },
+    "J11-GAP-oauth-returnto-backslash": {
+      "cases": [
+        "J11-REDIR-error-backslash",
+        "J11-REDIR-error-slash-backslash",
+        "J11-REDIR-error-tab-smuggle",
+        "J11-REDIR-error-newline-smuggle",
+        "J11-REDIR-expired-backslash",
+        "J11-REDIR-expired-tab-smuggle"
+      ],
+      "note": "app/api/auth/callback/[platform]/route.ts accepts returnTo when it startsWith('/') and not '//' and has no '://'. new URL() then turns '/\\evil' into '//evil' and strips tab/newline, so the redirect goes to https://evil.example. returnTo comes unvalidated from app/api/auth/oauth/[platform] ?returnTo= and is signed into state."
+    },
+    "J11-GAP-admin-model-metrics-authn-only": {
+      "cases": ["J11-SCOPE-admin-model-metrics-get"],
+      "note": "app/api/admin/model-metrics says admin-only but checks DEFAULT_POLICIES.AUTHENTICATED_READ, so any signed-in member gets platform model metrics."
+    },
+    "J11-GAP-webhook-idempotency-never-active": {
+      "cases": ["J11-WEBHOOK-stripe-replay", "J11-WEBHOOK-internal-replay"],
+      "note": "lib/webhooks/webhook-handler.ts deduplicates only when getRedisClient().isConnected. Nothing calls connect(), so isConnected stays false and the same signed Stripe/internal event is processed again inside the 5-minute signature window."
+    },
+    "J11-GAP-zapier-no-replay-protection": {
+      "cases": ["J11-WEBHOOK-zapier-replay"],
+      "note": "app/api/webhooks/zapier accepts a signature with no timestamp and keeps no delivery id, so a captured signed delivery is enqueued again on every resend."
+    },
+    "J11-GAP-resend-no-timestamp-or-id-check": {
+      "cases": [
+        "J11-WEBHOOK-resend-stale-timestamp",
+        "J11-WEBHOOK-resend-replay"
+      ],
+      "note": "app/api/webhooks/resend verifies the svix HMAC but never checks svix-timestamp freshness or remembers svix-id, so an hour-old or repeated delivery is processed (GA4 event and CVML emit run again)."
+    },
+    "J11-GAP-grade-prompt-fence-escape": {
+      "cases": [
+        "J11-INJECT-grade-prompt-fence-close-escape",
+        "J11-INJECT-grade-prompt-object-field-escape"
+      ],
+      "note": "lib/video/gates/prompt.ts wraps the candidate in <candidate-data>…</candidate-data> without neutralising a '</candidate-data>' inside it, so planted text can close the fence and sit outside it."
+    },
+    "J11-GAP-entailment-fence-escape": {
+      "cases": [
+        "J11-INJECT-entailment-excerpt-end-marker-escape",
+        "J11-INJECT-entailment-url-attribute-escape"
+      ],
+      "note": "lib/evidence/entailment.ts buildEntailmentUserMessage does not neutralise END_EVIDENCE_DATA in the excerpt, and puts the source url unescaped in a quoted attribute, so scraped content can end the evidence block early."
+    }
+  }
+}
