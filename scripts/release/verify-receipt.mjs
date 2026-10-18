@@ -111,7 +111,29 @@ export function verify(head, phase, cwd = ROOT) {
   else if (tryGit(['cat-file', '-t', reviewed], { cwd }) !== 'commit')
     problems.push('reviewed_commit is not a commit in this repo');
   else {
-    const diffRaw = tryGit(['diff', '--name-only', reviewed, sha], { cwd });
+    // No rename detection and unquoted paths, as lib.changedFiles: a reviewed file moved into the
+    // ledger after review must show its deletion (verifier audit, second pass).
+    const diffNames = (a, b) => {
+      const out = tryGit(
+        [
+          '-c',
+          'core.quotePath=false',
+          'diff',
+          '--no-renames',
+          '--name-only',
+          '-z',
+          a,
+          b,
+        ],
+        { cwd }
+      );
+      return out === null ? null : out.split('\0').filter(Boolean);
+    };
+    const rawBytes = (ref, f) => {
+      const r = run('git', ['show', `${ref}:${f}`], { cwd });
+      return r.code === 0 ? r.stdout : null;
+    };
+    const diffRaw = diffNames(reviewed, sha);
     if (diffRaw === null)
       problems.push('binding diff from reviewed commit failed');
     // Only the files the release step itself writes with the receipt may differ from the reviewed
@@ -122,25 +144,28 @@ export function verify(head, phase, cwd = ROOT) {
         n => `release-receipts/manifests/${p}-${n}`
       )
     );
-    const outside = range =>
-      (range || '')
-        .split('\n')
-        .filter(Boolean)
-        .filter(
-          f =>
-            f !== file &&
-            !releaseWritten.has(f) &&
-            !/^release-receipts\/ledger\//.test(f)
-        );
+    // Only existing *.jsonl ledger files stay exempt (and only while they grow, checked below); a
+    // new path under ledger/ is an ordinary change.
+    const ledgerFile = f =>
+      /^release-receipts\/ledger\/[^/]+\.jsonl$/.test(f) &&
+      rawBytes(reviewed, f) !== null;
+    const outside = names =>
+      (names || []).filter(
+        f => f !== file && !releaseWritten.has(f) && !ledgerFile(f)
+      );
     let extra = outside(diffRaw);
     // The ledger may only grow after review: a rewritten or truncated row (for example a
     // human-intervention row) breaks the binding (verifier audit).
-    for (const f of (diffRaw || '')
-      .split('\n')
-      .filter(x => /^release-receipts\/ledger\//.test(x))) {
-      const before = tryGit(['show', `${reviewed}:${f}`], { cwd });
-      const after = tryGit(['show', `${sha}:${f}`], { cwd });
-      if (before !== null && (after === null || !after.startsWith(before)))
+    // Untrimmed bytes, and the reviewed copy must end on a row boundary, so the last row at review
+    // cannot be edited in place (a trimmed comparison let '...}' become '...}x').
+    for (const f of (diffRaw || []).filter(ledgerFile)) {
+      const before = rawBytes(reviewed, f);
+      const after = rawBytes(sha, f);
+      if (
+        after === null ||
+        (before.length > 0 && !before.endsWith('\n')) ||
+        !after.startsWith(before)
+      )
         problems.push(`ledger ${f} rewritten after review (append-only)`);
     }
     // A merge commit on main (merge-phase merges with --merge) also carries whatever main gained
@@ -163,18 +188,10 @@ export function verify(head, phase, cwd = ROOT) {
       const pure =
         parents.length > 1 &&
         parents.some(p => {
-          if (
-            outside(tryGit(['diff', '--name-only', reviewed, p], { cwd }))
-              .length
-          )
-            return false;
+          if (outside(diffNames(reviewed, p)).length) return false;
           const others = parents.filter(o => o !== p);
           if (!others.every(onMain)) return false;
-          const merged = (
-            tryGit(['diff', '--name-only', p, sha], { cwd }) || ''
-          )
-            .split('\n')
-            .filter(Boolean);
+          const merged = diffNames(p, sha) || [];
           // A file the merge changes must come from a parent that itself changed it since the
           // merge base, as a real three-way merge would take it; equal-but-unchanged (an old main
           // ancestor, or a deletion both sides lack) is a revert, not a merge (verifier audit).
@@ -435,6 +452,19 @@ function control() {
       )
     );
     const okI = !i.ok && i.problems.some(x => x.includes('append-only'));
+    const i2 = variant({}, () =>
+      writeFileSync(
+        path.join(dir, 'release-receipts/ledger/fleet.jsonl'),
+        '{"kind":"human-intervention","phase":"P99"}x\n{"kind":"review","phase":"P99"}\n'
+      )
+    );
+    const okI2 = !i2.ok && i2.problems.some(x => x.includes('append-only'));
+    const i3 = variant({}, () =>
+      g(['mv', 'a.txt', 'release-receipts/ledger/a.txt'])
+    );
+    const okI3 =
+      !i3.ok &&
+      i3.problems.some(x => x.startsWith('diff from reviewed commit'));
     g(['checkout', '-q', '-f', '--detach', receiptHead]);
     g(['rm', '-q', 'a.txt']);
     const revertTree = g(['write-tree']);
@@ -461,7 +491,19 @@ function control() {
         x.startsWith('reviewed_commit is not a full 40-hex')
       );
     return (
-      okA && okB && okC && okD && okE && okF && okG && okH && okI && okJ && okK
+      okA &&
+      okB &&
+      okC &&
+      okD &&
+      okE &&
+      okF &&
+      okG &&
+      okH &&
+      okI &&
+      okI2 &&
+      okI3 &&
+      okJ &&
+      okK
     );
   } finally {
     rmSync(dir, { recursive: true, force: true });
