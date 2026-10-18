@@ -70,21 +70,6 @@ export interface AuditQuery {
   offset?: number;
 }
 
-/**
- * Thrown when a compliance event cannot be written to audit_events_immutable:
- * the table has no Prisma model, so the append-only ledger is not provisioned.
- * The event still goes to audit_logs through the buffered path.
- */
-export class ImmutableAuditUnavailableError extends Error {
-  readonly code = 'FEATURE_NOT_PROVISIONED';
-  constructor() {
-    super(
-      'FEATURE_NOT_PROVISIONED: the audit_events_immutable table is not provisioned; the immutable copy was not written.'
-    );
-    this.name = 'ImmutableAuditUnavailableError';
-  }
-}
-
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
@@ -96,9 +81,9 @@ const RETENTION_DAYS = parseInt(
 const BATCH_SIZE = 100;
 const FLUSH_INTERVAL = 5000; // 5 seconds
 
-// Compliance-classified categories routed to audit_events_immutable per
-// migration 20260516000001_immutable_audit_log.sql. Other categories
-// ('api', 'system') keep the existing 90-day retention path on audit_logs.
+// Compliance-classified categories are written to audit_logs synchronously,
+// one row per call, and a failed write throws to the caller. Other categories
+// ('api', 'system') keep the buffered 90-day retention path.
 const IMMUTABLE_CATEGORIES: ReadonlySet<AuditCategory> = new Set<AuditCategory>(
   ['auth', 'security', 'data', 'compliance']
 );
@@ -121,33 +106,22 @@ class AuditLogger {
    * Log an audit event.
    *
    * Compliance-classified categories (auth/security/data/compliance) are
-   * ALSO written synchronously to the append-only audit_events_immutable
-   * table so they cannot be lost in a buffer flush failure and cannot be
-   * mutated post-write. Non-compliance categories follow the existing
-   * buffer-and-flush path on audit_logs with 90-day retention.
+   * written to audit_logs before this resolves, with no buffer, and a failed
+   * write rejects so the caller cannot report success without an audit row.
+   * (audit_events_immutable has no Prisma model, so there is no append-only
+   * copy.) Other categories are buffered and flushed to audit_logs.
    */
   async log(event: AuditEvent): Promise<void> {
-    // Compliance categories: write immutably FIRST (synchronous, no buffer).
-    // If this throws we still want the existing buffered path to capture the
-    // event, so the error is logged but not rethrown.
     if (IMMUTABLE_CATEGORIES.has(event.category)) {
-      try {
-        await this.writeImmutable(event);
-      } catch (error) {
-        logger.error('Failed to write immutable audit event', {
-          error,
-          action: event.action,
-          category: event.category,
-        });
+      await prisma.auditLog.create({ data: this.toRow(event) });
+    } else {
+      // Add to buffer
+      this.buffer.push(event);
+
+      // Flush if buffer is full
+      if (this.buffer.length >= BATCH_SIZE) {
+        await this.flush();
       }
-    }
-
-    // Add to buffer
-    this.buffer.push(event);
-
-    // Flush if buffer is full
-    if (this.buffer.length >= BATCH_SIZE) {
-      await this.flush();
     }
 
     // Log to console for immediate visibility
@@ -160,13 +134,19 @@ class AuditLogger {
     });
   }
 
-  /**
-   * Write a single event to audit_events_immutable.
-   * That table (migration 20260516000001) has no Prisma model, so there is
-   * no supported writer: fail loudly with a typed error instead of pretending.
-   */
-  private async writeImmutable(_event: AuditEvent): Promise<void> {
-    throw new ImmutableAuditUnavailableError();
+  private toRow(event: AuditEvent) {
+    return {
+      action: event.action,
+      resource: event.resource,
+      resourceId: event.resourceId,
+      userId: event.userId,
+      category: event.category,
+      severity: event.severity,
+      outcome: event.outcome,
+      details: event.details as object,
+      ipAddress: event.ipAddress,
+      userAgent: event.userAgent,
+    };
   }
 
   /**
@@ -360,18 +340,7 @@ class AuditLogger {
 
     try {
       await prisma.auditLog.createMany({
-        data: events.map(event => ({
-          action: event.action,
-          resource: event.resource,
-          resourceId: event.resourceId,
-          userId: event.userId,
-          category: event.category,
-          severity: event.severity,
-          outcome: event.outcome,
-          details: event.details as object,
-          ipAddress: event.ipAddress,
-          userAgent: event.userAgent,
-        })),
+        data: events.map(event => this.toRow(event)),
         skipDuplicates: true,
       });
 

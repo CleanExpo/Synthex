@@ -105,6 +105,38 @@ describe('POST /api/rate-limit', () => {
     });
   });
 
+  it('writes the audit row before resetting, with a key fingerprint', async () => {
+    const order: string[] = [];
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-B',
+      email: 'b@example.test',
+    });
+    mockPrisma.auditLog.create.mockImplementation(async () => {
+      order.push('audit');
+    });
+    mockReset.mockImplementation(async () => {
+      order.push('reset');
+    });
+    const res = await POST(req('POST', { userId: 'user-B' }));
+    expect(res.status).toBe(200);
+    expect(order).toEqual(['audit', 'reset']);
+    const details = mockPrisma.auditLog.create.mock.calls[0][0].data.details;
+    expect(details.adminId).toBeUndefined();
+    expect(details.adminKeyFingerprint).toMatch(/^[0-9a-f]{12}$/);
+    expect(JSON.stringify(details)).not.toContain(ADMIN_KEY);
+  });
+
+  it('does not reset when the audit row cannot be written', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'user-B',
+      email: 'b@example.test',
+    });
+    mockPrisma.auditLog.create.mockRejectedValue(new Error('audit down'));
+    const res = await POST(req('POST', { userId: 'user-B' }));
+    expect(res.status).toBe(500);
+    expect(mockReset).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when the target user does not exist', async () => {
     mockPrisma.user.findUnique.mockResolvedValue(null);
     const res = await POST(req('POST', { userId: 'missing' }));

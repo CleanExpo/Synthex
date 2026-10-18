@@ -170,7 +170,7 @@ describe('approval-workflow (Prisma port)', () => {
       row(data)
     );
 
-    const req = await approvalWorkflow.approveStep('apr_1', 'user_1');
+    const req = await approvalWorkflow.approveStep('apr_1', 'user_2');
 
     expect(req.status).toBe('approved');
     expect(req.metadata.postApprovalAction).toEqual({
@@ -180,5 +180,14 @@ describe('approval-workflow (Prisma port)', () => {
     expect(mockPrisma.approvalRequest.update.mock.calls[0][0].where).toEqual({
       id: 'apr_1',
     });
+  });
+
+  it('a submitter cannot approve their own request on a wildcard step', async () => {
+    mockPrisma.approvalRequest.findFirst.mockResolvedValue(row());
+
+    await expect(
+      approvalWorkflow.approveStep('apr_1', 'user_1')
+    ).rejects.toThrow('You cannot approve your own request');
+    expect(mockPrisma.approvalRequest.update).not.toHaveBeenCalled();
   });
 });
