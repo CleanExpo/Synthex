@@ -95,6 +95,18 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Audit the request before anything changes: if this compliance write
+      // fails, nothing is charged or changed (audit-logger throws on failure).
+      await auditLogger.log({
+        userId,
+        action: 'billing.plan_change_requested',
+        resource: 'subscription',
+        category: 'compliance',
+        severity: 'medium',
+        outcome: 'warning',
+        details: { newPlan, prorationBehavior },
+      });
+
       // Read + write in a transaction to prevent concurrent plan-change races.
       // Two simultaneous requests could both read the same plan state and both
       // fire Stripe updates. The transaction re-reads with a consistency check
@@ -200,22 +212,33 @@ export async function POST(request: NextRequest) {
           throw err;
         });
 
-      // Log the plan change
-      await auditLogger.log({
-        userId,
-        action: 'billing.plan_changed',
-        resource: 'subscription',
-        resourceId: subscription.id,
-        category: 'compliance',
-        severity: 'medium',
-        outcome: 'success',
-        details: {
-          previousPlan: subscription.plan,
-          newPlan,
-          isUpgrade,
-          prorationBehavior,
-        },
-      });
+      // Log the plan change. Stripe has already changed the plan, so a failed
+      // write here must not report the change as failed: say it was not audited
+      // (the request row above exists).
+      let auditRecorded = true;
+      try {
+        await auditLogger.log({
+          userId,
+          action: 'billing.plan_changed',
+          resource: 'subscription',
+          resourceId: subscription.id,
+          category: 'compliance',
+          severity: 'medium',
+          outcome: 'success',
+          details: {
+            previousPlan: subscription.plan,
+            newPlan,
+            isUpgrade,
+            prorationBehavior,
+          },
+        });
+      } catch (auditError) {
+        auditRecorded = false;
+        logger.error('Plan changed but its audit row was not written', {
+          userId,
+          auditError,
+        });
+      }
 
       // Calculate proration preview if upgrading
       let prorationPreview: {
@@ -253,6 +276,7 @@ export async function POST(request: NextRequest) {
         },
         isUpgrade,
         prorationPreview,
+        audit: { recorded: auditRecorded },
         message: isUpgrade
           ? 'Plan upgraded successfully! New features are now available.'
           : 'Plan will be changed at the end of your current billing period.',
