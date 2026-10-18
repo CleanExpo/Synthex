@@ -535,6 +535,105 @@ function schemaCandidates(nodes, method, bindings) {
   return [...unique.values()];
 }
 
+// The status lib/api/not-provisioned.ts answers for an unprovisioned feature, read from the source
+// (never assumed). Unreadable => null, and those responses count as unresolved.
+let npStatus;
+function notProvisionedStatus() {
+  if (npStatus !== undefined) return npStatus;
+  try {
+    const src = fs.readFileSync(
+      path.join(REPO, 'lib/api/not-provisioned.ts'),
+      'utf8'
+    );
+    const m = /NOT_PROVISIONED_STATUS\s*=\s*(\d{3})/.exec(src);
+    npStatus = m ? m[1] : null;
+  } catch {
+    npStatus = null;
+  }
+  return npStatus;
+}
+
+/** A status expression: numeric literal, or the not-provisioned constant; else null. */
+function statusOf(expr) {
+  if (!expr) return null;
+  if (ts.isNumericLiteral(expr)) return expr.text;
+  if (ts.isIdentifier(expr) && expr.text === 'NOT_PROVISIONED_STATUS')
+    return notProvisionedStatus();
+  return null;
+}
+
+/**
+ * What each `return` in the handler scope answers: a status code, or 'unresolved' when the
+ * returned value is not a recognised response (a helper, a variable, a callback's value). Codex
+ * on P3 ba0d0871: the contract used to invent 200 for handlers with no literal success, so a
+ * route that only answers 503 FEATURE_NOT_PROVISIONED was documented as succeeding.
+ */
+function returnOutcomes(nodes) {
+  const out = new Set();
+  const unwrap = e => {
+    while (
+      e &&
+      (ts.isAwaitExpression(e) ||
+        ts.isParenthesizedExpression(e) ||
+        ts.isAsExpression(e) ||
+        ts.isNonNullExpression(e))
+    )
+      e = e.expression;
+    return e;
+  };
+  const optsStatus = arg => {
+    if (!arg) return '200';
+    if (!ts.isObjectLiteralExpression(arg))
+      return statusOf(arg) ?? 'unresolved';
+    const prop = arg.properties.find(
+      p =>
+        ts.isPropertyAssignment(p) &&
+        ts.isIdentifier(p.name) &&
+        p.name.text === 'status'
+    );
+    return prop ? (statusOf(prop.initializer) ?? 'unresolved') : '200';
+  };
+  const RESPONSES = ['NextResponse', 'Response'];
+  const classify = raw => {
+    const e = unwrap(raw);
+    if (!e) return 'unresolved';
+    if (ts.isCallExpression(e)) {
+      const c = e.expression;
+      if (ts.isIdentifier(c) && c.text === 'notProvisionedResponse')
+        return notProvisionedStatus() ?? 'unresolved';
+      if (
+        ts.isPropertyAccessExpression(c) &&
+        ts.isIdentifier(c.expression) &&
+        RESPONSES.includes(c.expression.text)
+      ) {
+        const m = c.name.text;
+        if (m === 'json') return optsStatus(e.arguments[1]);
+        if (m === 'redirect')
+          return e.arguments[1]
+            ? (statusOf(e.arguments[1]) ?? 'unresolved')
+            : '307';
+        if (m === 'next') return '200';
+      }
+      return 'unresolved';
+    }
+    if (ts.isNewExpression(e) && ts.isIdentifier(e.expression)) {
+      if (e.expression.text === 'ImageResponse') return '200';
+      if (RESPONSES.includes(e.expression.text))
+        return optsStatus(e.arguments?.[1]);
+    }
+    return 'unresolved';
+  };
+  const walk = n => {
+    if (ts.isReturnStatement(n) && n.expression)
+      out.add(classify(n.expression));
+    // An arrow with an expression body returns that expression (withAuth(async req => res(...))).
+    if (ts.isArrowFunction(n) && !ts.isBlock(n.body)) out.add(classify(n.body));
+    ts.forEachChild(n, walk);
+  };
+  for (const node of nodes) walk(node);
+  return [...out].sort();
+}
+
 function statusCodes(nodes) {
   const codes = new Set();
   const walk = n => {
@@ -542,9 +641,9 @@ function statusCodes(nodes) {
       ts.isPropertyAssignment(n) &&
       ts.isIdentifier(n.name) &&
       n.name.text === 'status' &&
-      ts.isNumericLiteral(n.initializer)
+      statusOf(n.initializer)
     ) {
-      codes.add(n.initializer.text);
+      codes.add(statusOf(n.initializer));
     }
     ts.forEachChild(n, walk);
   };
@@ -603,6 +702,7 @@ function analyseFile(root, rel, sourceCache, depth = 0) {
     methods.set(method, {
       candidates: schemaCandidates(nodes, method, bindings),
       statuses: statusCodes(nodes),
+      outcomes: returnOutcomes(nodes),
       sourceRel: rel,
       source,
     });
@@ -981,14 +1081,27 @@ function buildOperation(method, apiPath, params, analysis, auth, probeResults) {
   }
   if (parameters.length) op.parameters = parameters;
 
-  const success = analysis.statuses.filter(
+  const outcomes = analysis.outcomes ?? ['unresolved'];
+  const all = [...new Set([...analysis.statuses, ...outcomes])];
+  const success = all.filter(
     code => code.startsWith('2') || code.startsWith('3')
   );
-  for (const code of success.length ? success : ['200'])
+  for (const code of success.sort())
     op.responses[code] = {
       description: code.startsWith('3') ? 'Redirect' : 'Success',
     };
-  const errors = new Set(analysis.statuses.filter(code => /^[45]/.test(code)));
+  // No success status found: never invent one. If some return could not be followed, say the
+  // outcome is unresolved; if every return is an error response, document no success at all.
+  if (!success.length) {
+    if (outcomes.includes('unresolved') || outcomes.length === 0) {
+      op['x-synthex-success'] = 'unresolved';
+      op.responses.default = {
+        description:
+          'Unresolved: the generator could not determine a success response for this handler',
+      };
+    } else op['x-synthex-success'] = 'none';
+  }
+  const errors = new Set(all.filter(code => /^[45]/.test(code)));
   if (resolved.body.length || resolved.query.length || relevant.length)
     errors.add('400');
   if (auth.security.length) errors.add('401');

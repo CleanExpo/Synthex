@@ -83,6 +83,23 @@ export async function PATCH(request: Request) {
 }
 `,
   'app/api/alias/route.ts': `export { GET } from '@/app/api/items/route';\n`,
+  'app/api/unprovisioned/route.ts': `
+import { NextRequest } from 'next/server';
+import { withAuth } from '@/lib/auth/with-auth';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
+export const GET = withAuth(async (_req: NextRequest) =>
+  notProvisionedResponse('not provisioned')
+);
+export async function POST() {
+  return notProvisionedResponse('not provisioned');
+}
+`,
+  'app/api/via-helper/route.ts': `
+import { buildResponse } from '@/lib/api/build';
+export async function GET() {
+  return buildResponse({ ok: true });
+}
+`,
 };
 
 function makeFixture(): string {
@@ -142,6 +159,8 @@ describe('gen-openapi', () => {
         '/api/items/{id}',
         '/api/local-schema',
         '/api/opt/{rest}',
+        '/api/unprovisioned',
+        '/api/via-helper',
       ]);
     });
 
@@ -207,6 +226,33 @@ describe('gen-openapi', () => {
     });
   });
 
+  describe('responses', () => {
+    it('a route that only answers not-provisioned documents 503 and no success', () => {
+      for (const m of ['get', 'post']) {
+        const op = spec.paths['/api/unprovisioned'][m];
+        expect(op.responses['503']).toBeDefined();
+        expect(Object.keys(op.responses).some(c => /^[23]/.test(c))).toBe(
+          false
+        );
+        expect(op.responses.default).toBeUndefined();
+        expect(op['x-synthex-success']).toBe('none');
+      }
+    });
+    it('a success the generator cannot follow is unresolved, never an invented 200', () => {
+      const op = spec.paths['/api/via-helper'].get;
+      expect(op.responses['200']).toBeUndefined();
+      expect(op.responses.default.description).toMatch(/^Unresolved/);
+      expect(op['x-synthex-success']).toBe('unresolved');
+    });
+    it('an implicit NextResponse.json success and literal statuses are still documented', () => {
+      expect(spec.paths['/api/items'].get.responses['200']).toBeDefined();
+      expect(spec.paths['/api/items'].post.responses['201']).toBeDefined();
+      expect(
+        spec.paths['/api/items/{id}'].delete.responses['204']
+      ).toBeDefined();
+    });
+  });
+
   describe('schemas', () => {
     it('converts a module-level Zod body schema (input side)', () => {
       const op = spec.paths['/api/items'].post;
@@ -255,8 +301,8 @@ describe('gen-openapi', () => {
 
     it('passes on a fresh contract and prints both counts', () => {
       const r = run(root, '--check');
-      expect(r.out).toContain('route files: 8; exempt entries: 0');
-      expect(r.out).toContain('committed spec paths: 8');
+      expect(r.out).toContain('route files: 10; exempt entries: 0');
+      expect(r.out).toContain('committed spec paths: 10');
       expect(r.status).toBe(0);
     }, 120_000);
 
@@ -267,7 +313,7 @@ describe('gen-openapi', () => {
         'export function GET() { return new Response(); }\n'
       );
       const r = run(root, '--check');
-      expect(r.out).toContain('expected paths: 9');
+      expect(r.out).toContain('expected paths: 11');
       expect(r.out).toContain('FAIL (b)');
       expect(r.status).toBe(1);
     }, 120_000);
@@ -284,7 +330,7 @@ describe('gen-openapi', () => {
         JSON.stringify([{ file: planted, reason: 'fixture' }])
       );
       const r = run(root, '--check', '--exempt', exempt);
-      expect(r.out).toContain('route files: 9; exempt entries: 1');
+      expect(r.out).toContain('route files: 11; exempt entries: 1');
       expect(r.status).toBe(0);
     }, 120_000);
 
@@ -296,7 +342,7 @@ describe('gen-openapi', () => {
       fs.writeFileSync(file, JSON.stringify(edited));
       try {
         const r = run(root, '--check');
-        expect(r.out).toContain('committed spec paths: 7');
+        expect(r.out).toContain('committed spec paths: 9');
         expect(r.out).toContain('FAIL (a)');
         expect(r.out).toContain('FAIL (b)');
         expect(r.status).toBe(1);
