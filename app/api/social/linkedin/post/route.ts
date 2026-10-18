@@ -1,48 +1,40 @@
 /**
- * LinkedIn Posting API
+ * LinkedIn Posting API (legacy direct route)
  *
- * @description Post content to LinkedIn via LinkedIn Marketing API
+ * @description Legacy per-platform LinkedIn publishing and post history.
  *
- * ENVIRONMENT VARIABLES REQUIRED:
- * - LINKEDIN_CLIENT_ID: LinkedIn app client ID (SECRET)
- * - LINKEDIN_CLIENT_SECRET: LinkedIn app client secret (SECRET)
- * - JWT_SECRET: For verifying user authentication (CRITICAL)
+ * NOT PROVISIONED: this route recorded every publish in the `social_posts`
+ * table and metered it in `usage_tracking`. Neither table exists in
+ * prisma/schema.prisma, so publishing here would leave no record. Both
+ * methods answer 501 FEATURE_NOT_PROVISIONED after auth instead of
+ * publishing without a receipt or returning an empty history.
  *
- * FAILURE MODE: Returns error response with details
+ * Use /api/social/post — it publishes with organisation-scoped connections,
+ * campaign authority gates and PlatformPost receipts.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { LinkedInService } from '@/lib/social/linkedin-service';
 import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createClient } from '@/lib/platform/noop-client';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
-import { auditLogger } from '@/lib/security/audit-logger';
-import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
-import { scheduleViaPost } from '@/lib/social/schedule-via-post';
 
-let _platform: any = null;
-function getSupabase() {
-  if (!_platform) {
-    _platform = createClient();
-  }
-  return _platform;
+const NOT_PROVISIONED_REASON =
+  'Direct LinkedIn post history is not provisioned: the social_posts and usage_tracking tables do not exist. Use /api/social/post to publish.';
+
+function notProvisioned() {
+  return NextResponse.json(
+    {
+      error: 'FEATURE_NOT_PROVISIONED',
+      message: NOT_PROVISIONED_REASON,
+      available: false,
+      reason: NOT_PROVISIONED_REASON,
+    },
+    { status: 501 }
+  );
 }
-
-// Request validation schema
-const PostRequestSchema = z.object({
-  text: z.string().min(1).max(3000, 'Post must be 3000 characters or less'),
-  linkUrl: z.string().url().optional(),
-  mediaUrls: z.array(z.string().url()).optional(),
-  visibility: z.enum(['public', 'connections']).default('public'),
-  scheduledTime: z.string().datetime().optional(),
-});
-
-type PostRequest = z.infer<typeof PostRequestSchema>;
 
 /**
  * POST /api/social/linkedin/post
@@ -50,204 +42,9 @@ type PostRequest = z.infer<typeof PostRequestSchema>;
  */
 export async function POST(request: NextRequest) {
   return writeDefault(request, async () => {
-    try {
-      // Security check
-      const security = await APISecurityChecker.check(
-        request,
-        DEFAULT_POLICIES.AUTHENTICATED_WRITE
-      );
-
-      if (!security.allowed) {
-        return APISecurityChecker.createSecureResponse(
-          { error: security.error },
-          403
-        );
-      }
-
-      // Get user from token
-      const userId = await getUserIdFromRequestOrCookies(request);
-      if (!userId) {
-        return NextResponse.json(
-          { error: 'Authentication required' },
-          { status: 401 }
-        );
-      }
-
-      if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
-        return NextResponse.json(
-          {
-            error: 'Direct LinkedIn publishing route disabled',
-            message:
-              'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
-          },
-          { status: 409 }
-        );
-      }
-
-      // Parse and validate request body
-      const body = await request.json();
-      const validation = PostRequestSchema.safeParse(body);
-
-      if (!validation.success) {
-        return NextResponse.json(
-          {
-            error: 'Validation failed',
-            details: validation.error.flatten().fieldErrors,
-          },
-          { status: 400 }
-        );
-      }
-
-      const postData: PostRequest = validation.data;
-
-      // Get user's LinkedIn connection
-      const { data: connection, error: connectionError } = await getSupabase()
-        .from('platform_connections')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('platform', 'linkedin')
-        .eq('is_active', true)
-        .single();
-
-      if (connectionError || !connection) {
-        return NextResponse.json(
-          {
-            error:
-              'LinkedIn account not connected. Please connect your LinkedIn account first.',
-          },
-          { status: 400 }
-        );
-      }
-
-      // Initialize LinkedIn service with user credentials
-      const linkedInService = new LinkedInService();
-      linkedInService.initialize({
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-        platformUserId: connection.platform_user_id,
-        platformUsername: connection.platform_username,
-      });
-
-      // Handle scheduled posts.
-      // Route through the WORKING scheduler (Post + cron). The previous path
-      // inserted into the `scheduled_posts` table drained by a BullMQ worker
-      // that is never booted, so scheduled posts were silently lost (P1).
-      if (postData.scheduledTime) {
-        const scheduled = await scheduleViaPost({
-          userId,
-          platform: 'linkedin',
-          content: postData.text,
-          scheduledTime: new Date(postData.scheduledTime),
-          mediaUrls: postData.mediaUrls,
-          metadata: {
-            visibility: postData.visibility,
-            linkUrl: postData.linkUrl,
-          },
-        });
-
-        await auditLogger.logData(
-          'create',
-          'scheduled_post',
-          scheduled.id,
-          userId,
-          'success',
-          {
-            action: 'linkedin_post_scheduled',
-            scheduledTime: postData.scheduledTime,
-          }
-        );
-
-        return NextResponse.json({
-          success: true,
-          scheduled: true,
-          data: {
-            id: scheduled.id,
-            scheduledTime: scheduled.scheduledAt,
-            status: scheduled.status,
-          },
-        });
-      }
-
-      // Create the post
-      const result = await linkedInService.createPost({
-        text: postData.text,
-        linkUrl: postData.linkUrl,
-        mediaUrls: postData.mediaUrls,
-        visibility: postData.visibility,
-      });
-
-      if (!result.success) {
-        return NextResponse.json(
-          { error: result.error || 'Failed to create LinkedIn post' },
-          { status: 500 }
-        );
-      }
-
-      // Save post to database
-      await getSupabase().from('social_posts').insert({
-        user_id: userId,
-        platform: 'linkedin',
-        content: postData.text,
-        post_id: result.postId,
-        link_url: postData.linkUrl,
-        media_urls: postData.mediaUrls,
-        status: 'published',
-        metrics: {},
-        created_at: new Date().toISOString(),
-      });
-
-      // Track usage
-      await getSupabase().from('usage_tracking').insert({
-        user_id: userId,
-        feature: 'linkedin_post',
-        count: 1,
-        timestamp: new Date().toISOString(),
-      });
-
-      await auditLogger.logData(
-        'create',
-        'social_post',
-        result.postId,
-        userId,
-        'success',
-        {
-          action: 'linkedin_post_created',
-          visibility: postData.visibility,
-          hasLink: !!postData.linkUrl,
-        }
-      );
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          id: result.postId,
-          url: result.url,
-          text: postData.text,
-        },
-      });
-    } catch (error: unknown) {
-      logger.error('LinkedIn post error:', error);
-      const errorMessage = 'An unexpected error occurred. Please try again.';
-      return NextResponse.json(
-        { error: 'Failed to post to LinkedIn', message: errorMessage },
-        { status: 500 }
-      );
-    }
-  });
-}
-
-/**
- * GET /api/social/linkedin/post
- * Get user's LinkedIn posts
- */
-export async function GET(request: NextRequest) {
-  try {
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.AUTHENTICATED_READ
+      DEFAULT_POLICIES.AUTHENTICATED_WRITE
     );
 
     if (!security.allowed) {
@@ -265,64 +62,45 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20', 10);
-    const syncFromPlatform = searchParams.get('sync') === 'true';
-
-    const { data: connection } = await getSupabase()
-      .from('platform_connections')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'linkedin')
-      .eq('is_active', true)
-      .single();
-
-    if (!connection) {
+    if (process.env.SYNTHEX_ENABLE_LEGACY_DIRECT_SOCIAL_POSTS !== 'true') {
       return NextResponse.json(
-        { error: 'LinkedIn account not connected' },
-        { status: 400 }
+        {
+          error: 'Direct LinkedIn publishing route disabled',
+          message:
+            'Use /api/social/post so Synthex can enforce organization-scoped page ownership, campaign authority gates, and platform receipts.',
+        },
+        { status: 409 }
       );
     }
 
-    if (syncFromPlatform) {
-      const linkedInService = new LinkedInService();
-      linkedInService.initialize({
-        accessToken: connection.access_token,
-        refreshToken: connection.refresh_token,
-        expiresAt: connection.expires_at
-          ? new Date(connection.expires_at)
-          : undefined,
-      });
+    return notProvisioned();
+  });
+}
 
-      const syncResult = await linkedInService.syncPosts(limit);
+/**
+ * GET /api/social/linkedin/post
+ * Get user's LinkedIn posts
+ */
+export async function GET(request: NextRequest) {
+  const security = await APISecurityChecker.check(
+    request,
+    DEFAULT_POLICIES.AUTHENTICATED_READ
+  );
 
-      if (syncResult.success) {
-        return NextResponse.json({
-          success: true,
-          data: syncResult.posts,
-          hasMore: syncResult.hasMore,
-          synced: true,
-        });
-      }
-    }
-
-    const { data: posts, error } = await getSupabase()
-      .from('social_posts')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', 'linkedin')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, data: posts });
-  } catch (error: unknown) {
-    logger.error('Get LinkedIn posts error:', error);
-    const errorMessage = 'An unexpected error occurred. Please try again.';
-    return NextResponse.json(
-      { error: 'Failed to get LinkedIn posts', message: errorMessage },
-      { status: 500 }
+  if (!security.allowed) {
+    return APISecurityChecker.createSecureResponse(
+      { error: security.error },
+      403
     );
   }
+
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  return notProvisioned();
 }
