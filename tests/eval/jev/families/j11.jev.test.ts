@@ -15,7 +15,12 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { NextResponse } from 'next/server';
-import { classify, recordResults, type JevResult } from '../runner/record';
+import {
+  classify,
+  inconclusive,
+  recordResults,
+  type JevResult,
+} from '../runner/record';
 import {
   FakeDb,
   ORG_A_ID,
@@ -189,8 +194,7 @@ async function runCase(
   if (typeof v.ok === 'string') {
     results.push({
       ...base,
-      state: 'INCONCLUSIVE',
-      detail: `${v.ok} ${v.detail}`.trim(),
+      ...inconclusive(id, `${v.ok} ${v.detail}`.trim()),
     });
   } else {
     results.push({ ...base, ...classify(id, v.ok, v.detail) });

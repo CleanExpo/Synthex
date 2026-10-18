@@ -11,7 +11,12 @@
  * Controls: planted publishers (unapproved, double-publish, kill-switch blind,
  * cross-org) run through the SAME scenario detectors; FAIL = caught.
  */
-import { classify, recordResults, type JevResult } from '../runner/record';
+import {
+  classify,
+  inconclusive,
+  recordResults,
+  type JevResult,
+} from '../runner/record';
 
 // ── In-memory Prisma fake (boundary) ─────────────────────────────────────────
 
@@ -609,9 +614,8 @@ it('J8 publish-safety grid', async () => {
             id,
             family: 'J8',
             kind: 'case',
-            state: 'INCONCLUSIVE',
             route,
-            detail: `import failed: ${importError}`,
+            ...inconclusive(id, `import failed: ${importError}`),
           });
           continue;
         }
@@ -631,9 +635,11 @@ it('J8 publish-safety grid', async () => {
             id,
             family: 'J8',
             kind: 'case',
-            state: 'INCONCLUSIVE',
             route,
-            detail: `scenario threw: ${err instanceof Error ? err.message : String(err)}`,
+            ...inconclusive(
+              id,
+              `scenario threw: ${err instanceof Error ? err.message : String(err)}`
+            ),
           });
         }
       }

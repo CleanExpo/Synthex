@@ -100,6 +100,21 @@ export function classify(
     : { state: 'FAIL', detail };
 }
 
+/**
+ * A case the harness could not evaluate. Listed in a known gap it is
+ * KNOWN_GAP (the gap explains why it is not evaluated); otherwise it stays
+ * INCONCLUSIVE, which a hard-gate family does not accept as green.
+ */
+export function inconclusive(
+  caseId: string,
+  detail?: string
+): Pick<JevResult, 'state' | 'gap_id' | 'detail'> {
+  const gapId = knownGap(caseId);
+  return gapId
+    ? { state: 'KNOWN_GAP', gap_id: gapId, detail }
+    : { state: 'INCONCLUSIVE', detail };
+}
+
 /** Overwrite tests/eval/jev/out/<FAMILY>.jsonl with one JSON line per result. */
 export function recordResults(family: string, results: JevResult[]): void {
   for (const r of results) {
