@@ -20,136 +20,77 @@
  *   });
  */
 
-import { createClient } from '@/lib/platform/noop-client';
-import type { CalibrationState, ScoreIssueParams } from '@/lib/intelligence/types';
+import type {
+  CalibrationState,
+  ScoreIssueParams,
+} from '@/lib/intelligence/types';
 
-// ── Supabase admin singleton ──────────────────────────────────────────────────
+// ── Not provisioned ───────────────────────────────────────────────────────────
+//
+// `score_accuracy_events` and the `get_score_calibration` RPC have no Prisma
+// model, so the ledger cannot record or read. Both functions keep their
+// never-throw contract but say so explicitly instead of dropping silently.
 
-let _admin: ReturnType<typeof createClient> | null = null;
+const LEDGER_TABLE = 'score_accuracy_events';
 
-function getAdmin() {
-  if (!_admin) {
-    _admin = createClient();
-  }
-  return _admin;
+/** Explicit outcome of {@link recordScoreIssued}. */
+export interface ScoreLedgerResult {
+  recorded: false;
+  reason: 'FEATURE_NOT_PROVISIONED';
+  table: typeof LEDGER_TABLE;
 }
+
 // ── recordScoreIssued ─────────────────────────────────────────────────────────
 
 /**
- * Inserts a row into `score_accuracy_events` marking that a score was issued.
+ * Would insert a row into `score_accuracy_events` marking that a score was
+ * issued. The table is not provisioned, so it returns `recorded: false` with
+ * the reason and logs a warning — never a silent drop.
  *
- * Designed to be called as the **final step** in every scoring pipeline.
  * Never throws — a telemetry failure should not abort the scoring pipeline.
  *
  * @param params - Score issue metadata
  */
-export async function recordScoreIssued(params: ScoreIssueParams): Promise<void> {
-  try {
-    const admin = getAdmin();
-    const { error } = await (admin as ReturnType<typeof createClient<any>>)
-      .from('score_accuracy_events')
-      .insert({
-      client_id:               params.clientId,
-      score_domain:            params.domain,
-      score_value:             params.scoreValue,
-      confidence:              params.confidence,
-      calibration_data_points: params.calibrationDataPoints,
-      entity_id:               params.entityId,
-      issued_at:               new Date().toISOString(),
-      sprint_version:          params.sprintVersion ?? null,
-    });
-
-    if (error) {
-      console.error('[accuracy-ledger] recordScoreIssued insert error:', error.message);
-    }
-  } catch (err) {
-    // Telemetry failure — log and continue; never propagate
-    console.error('[accuracy-ledger] recordScoreIssued unexpected error:', err);
-  }
+export async function recordScoreIssued(
+  params: ScoreIssueParams
+): Promise<ScoreLedgerResult> {
+  console.warn(
+    `[accuracy-ledger] recordScoreIssued not recorded: ${LEDGER_TABLE} is not provisioned`,
+    { clientId: params.clientId, domain: params.domain }
+  );
+  return {
+    recorded: false,
+    reason: 'FEATURE_NOT_PROVISIONED',
+    table: LEDGER_TABLE,
+  };
 }
 
 // ── getScoreCalibration ───────────────────────────────────────────────────────
 
 /**
- * Returns the current calibration state for a client + domain pair.
+ * Returns the calibration state for a client + domain pair.
  *
- * Calls the `get_score_calibration` Supabase RPC which computes:
- * - data_points: matched outcome events
- * - accuracy_rate: fraction within 15 percentile points of actual
- * - meets_threshold: whether calibration threshold has been crossed
+ * The ledger is not provisioned, so this always returns zero data points,
+ * `meetsThreshold: false`, and a summary that says calibration is unavailable.
+ * Scoring pipelines can still produce a score; they just cannot claim it is
+ * calibrated.
  *
- * Returns a safe default `CalibrationState` on any error — scoring pipelines
- * can always produce a score even when calibration data is unavailable.
- *
- * @param clientId    - Organization UUID
+ * @param _clientId   - Organization UUID
  * @param domain      - Scoring domain ('content' | 'geo' | 'health')
  */
 export async function getScoreCalibration(
-  clientId: string,
+  _clientId: string,
   domain: 'content' | 'geo' | 'health'
 ): Promise<CalibrationState> {
   const thresholds = { content: 10, geo: 5, health: 8 } as const;
-  const thresholdRequired = thresholds[domain];
 
-  const defaultState: CalibrationState = {
-    dataPoints:        0,
-    meetsThreshold:    false,
-    thresholdRequired,
-    accuracyRate:      null,
-    firstScoredAt:     null,
-    calibrationSummary: buildSummary(domain, 0, false),
+  return {
+    dataPoints: 0,
+    meetsThreshold: false,
+    thresholdRequired: thresholds[domain],
+    accuracyRate: null,
+    firstScoredAt: null,
+    calibrationSummary:
+      'Calibration unavailable — the accuracy ledger is not provisioned',
   };
-
-  try {
-    const admin = getAdmin();
-    const { data, error } = await (admin as ReturnType<typeof createClient<any>>)
-      .rpc('get_score_calibration', {
-        p_client_id: clientId,
-        p_domain:    domain,
-      });
-
-    if (error || !data || (Array.isArray(data) && data.length === 0)) {
-      return defaultState;
-    }
-
-    const row = Array.isArray(data) ? data[0] : data;
-    const dataPoints       = (row.data_points as number) ?? 0;
-    const meetsThreshold   = (row.meets_threshold as boolean) ?? false;
-    const accuracyRate     = (row.accuracy_rate as number | null) ?? null;
-    const firstScoredAt    = (row.first_scored_at as string | null) ?? null;
-
-    return {
-      dataPoints,
-      meetsThreshold,
-      thresholdRequired: (row.threshold_required as number) ?? thresholdRequired,
-      accuracyRate,
-      firstScoredAt,
-      calibrationSummary: buildSummary(domain, dataPoints, meetsThreshold),
-    };
-  } catch (err) {
-    console.error('[accuracy-ledger] getScoreCalibration error:', err);
-    return defaultState;
-  }
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-/**
- * Builds the plain-English calibration summary shown in the score card subtitle.
- * Always returns a non-empty string.
- */
-function buildSummary(
-  domain: 'content' | 'geo' | 'health',
-  dataPoints: number,
-  meetsThreshold: boolean
-): string {
-  if (meetsThreshold && dataPoints > 0) {
-    const subject =
-      domain === 'content' ? 'your posts' :
-      domain === 'geo'     ? 'your local search data' :
-                             'your marketing activity';
-    return `Based on ${dataPoints} data points from ${subject}`;
-  }
-
-  return 'Calibration in progress — collecting data from your posts';
 }

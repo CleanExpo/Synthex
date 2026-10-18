@@ -6,21 +6,31 @@
  *   - ContentImprovementTracking.improvementRate → engagement lift (0–40 pts)
  *   - ContentPerformanceProfile.postCount → volume bonus (0–20 pts)
  *
- * Persists to `content_score_history` via Supabase admin client and records
- * to `score_accuracy_events` for accuracy-gate calibration.
+ * Would persist to `content_score_history`, which has no Prisma model (not
+ * provisioned): the week-over-week delta is reported as null (unavailable) and
+ * saveContentScore throws ContentScoreHistoryNotProvisionedError instead of
+ * dropping the write.
  *
  * @task SYN-664
  */
 
-import { createClient } from '@/lib/platform/noop-client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
 
-// ── Supabase admin client (service role — bypasses RLS) ───────────────────────
+/**
+ * Thrown by {@link saveContentScore}: `content_score_history` has no Prisma
+ * model, so the computed score cannot be stored.
+ */
+export class ContentScoreHistoryNotProvisionedError extends Error {
+  readonly code = 'FEATURE_NOT_PROVISIONED' as const;
+  readonly table = 'content_score_history';
 
-function getSupabaseAdmin() {
-  return createClient();
+  constructor() {
+    super(
+      'content_score_history is not provisioned: no table in prisma/schema.prisma, content score not saved'
+    );
+    this.name = 'ContentScoreHistoryNotProvisionedError';
+  }
 }
 
 // ── Score computation ─────────────────────────────────────────────────────────
@@ -35,7 +45,8 @@ export interface ComputedContentScore {
   organizationId: string;
   weekStart: string; // ISO date string YYYY-MM-DD
   score: number;
-  delta: number;
+  /** Change vs previous week; null when the history is unavailable. */
+  delta: number | null;
   components: ContentScoreComponents;
   dataPoints: number;
 }
@@ -88,25 +99,9 @@ export async function computeContentScore(
     volume_bonus: volumeBonus,
   };
 
-  // 4. Compute delta vs previous week
-  const prevWeekStart = new Date(weekStart.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const platformAdmin = getSupabaseAdmin();
-
-  let delta = 0;
-  if (platformAdmin) {
-    const { data: prevRow } = await platformAdmin
-      .from('content_score_history')
-      .select('score')
-      .eq('organization_id', organizationId)
-      .gte('week_start', prevWeekStart.toISOString().substring(0, 10))
-      .lt('week_start', weekStart.toISOString().substring(0, 10))
-      .limit(1)
-      .maybeSingle();
-
-    if (prevRow) {
-      delta = score - prevRow.score;
-    }
-  }
+  // 4. Delta vs previous week needs content_score_history, which is not
+  // provisioned — report it as unavailable (null), never as "no change".
+  const delta: number | null = null;
 
   return {
     organizationId,
@@ -119,55 +114,19 @@ export async function computeContentScore(
 }
 
 /**
- * Persist a computed content score to `content_score_history` and
- * the `score_accuracy_events` ledger for calibration.
+ * Persist a computed content score to `content_score_history` and the
+ * `score_accuracy_events` ledger. The history table is not provisioned, so this
+ * throws {@link ContentScoreHistoryNotProvisionedError}; the ledger is not
+ * written for a score that was not saved.
  */
 export async function saveContentScore(
   computed: ComputedContentScore
 ): Promise<void> {
-  const platformAdmin = getSupabaseAdmin();
-  if (!platformAdmin) {
-    logger.warn('content-scorer: Supabase admin unavailable — skipping save', {
-      organizationId: computed.organizationId,
-    });
-    return;
-  }
-
-  const { error } = await platformAdmin.from('content_score_history').upsert(
+  logger.warn(
+    'content-scorer: content_score_history not provisioned — score not saved',
     {
-      organization_id: computed.organizationId,
-      week_start: computed.weekStart,
-      score: computed.score,
-      delta: computed.delta,
-      components: computed.components,
-      data_points: computed.dataPoints,
-    },
-    { onConflict: 'organization_id,week_start' }
-  );
-
-  if (error) {
-    logger.error('content-scorer: upsert failed', {
       organizationId: computed.organizationId,
-      error: error.message,
-    });
-    return;
-  }
-
-  // SYN-666: record the issued score to the `score_accuracy_events` ledger as the
-  // final step (SYN-669). recordScoreIssued never throws — a telemetry failure
-  // must not abort the scoring pipeline. Mapped from `computed`:
-  //   clientId / entityId → organizationId (content outcomes measured per org)
-  //   scoreValue          → score
-  //   calibrationDataPoints → dataPoints (post count at issue time)
-  //   confidence          → high once enough posts exist, else low
-  //     (mirrors app/api/ask-synthex/route.ts: postCount >= 15 ? 'high' : 'low')
-  await recordScoreIssued({
-    clientId: computed.organizationId,
-    domain: 'content',
-    scoreValue: computed.score,
-    confidence: computed.dataPoints >= 15 ? 'high' : 'low',
-    calibrationDataPoints: computed.dataPoints,
-    entityId: computed.organizationId,
-    sprintVersion: 'sprint-8',
-  });
+    }
+  );
+  throw new ContentScoreHistoryNotProvisionedError();
 }
