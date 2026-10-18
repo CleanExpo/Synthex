@@ -13,6 +13,11 @@ import path from 'path';
 
 const SCRIPT = path.join(__dirname, '../../../scripts/api/gen-openapi.mjs');
 const SPEC = 'docs/api/openapi.generated.json';
+const SUCCESS_EXCEPTIONS = 'scripts/api/success-exceptions.json';
+const VIA_HELPER_EXCEPTION = {
+  operation: 'GET /api/via-helper',
+  reason: 'returns an imported builder the generator does not follow (fixture)',
+};
 
 const ROUTES: Record<string, string> = {
   'app/api/items/route.ts': `
@@ -114,6 +119,10 @@ function makeFixture(): string {
   );
   fs.mkdirSync(path.join(root, 'scripts/api'), { recursive: true });
   fs.writeFileSync(path.join(root, 'scripts/api/exempt-routes.json'), '[]\n');
+  fs.writeFileSync(
+    path.join(root, SUCCESS_EXCEPTIONS),
+    JSON.stringify([VIA_HELPER_EXCEPTION], null, 2) + '\n'
+  );
   return root;
 }
 
@@ -250,6 +259,56 @@ describe('gen-openapi', () => {
       expect(
         spec.paths['/api/items/{id}'].delete.responses['204']
       ).toBeDefined();
+    });
+  });
+
+  describe('success exceptions (--check)', () => {
+    const write = (root: string, list: unknown) =>
+      fs.writeFileSync(
+        path.join(root, SUCCESS_EXCEPTIONS),
+        JSON.stringify(list, null, 2) + '\n'
+      );
+    it('passes when every unresolved success is listed with a reason', () => {
+      const r = run(root, '--check');
+      expect(r.out).toContain(
+        'unresolved success responses: 1; listed exceptions: 1'
+      );
+      expect(r.status).toBe(0);
+    });
+    it('fails when a listed exception is removed', () => {
+      write(root, []);
+      try {
+        const r = run(root, '--check');
+        expect(r.out).toContain('FAIL (c)');
+        expect(r.out).toContain('unlisted: GET /api/via-helper');
+        expect(r.status).toBe(1);
+      } finally {
+        write(root, [VIA_HELPER_EXCEPTION]);
+      }
+    });
+    it('fails on a stale entry and on an entry without a real reason', () => {
+      write(root, [
+        VIA_HELPER_EXCEPTION,
+        {
+          operation: 'GET /api/items',
+          reason: 'resolved now, so this is stale',
+        },
+      ]);
+      try {
+        const r = run(root, '--check');
+        expect(r.out).toContain('stale: GET /api/items');
+        expect(r.status).toBe(1);
+      } finally {
+        write(root, [VIA_HELPER_EXCEPTION]);
+      }
+      write(root, [{ operation: 'GET /api/via-helper', reason: 'x' }]);
+      try {
+        const r = run(root, '--check');
+        expect(r.out).toContain('malformed: 1');
+        expect(r.status).toBe(1);
+      } finally {
+        write(root, [VIA_HELPER_EXCEPTION]);
+      }
     });
   });
 

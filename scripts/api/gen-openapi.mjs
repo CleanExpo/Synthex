@@ -17,6 +17,9 @@
  *
  * --check exits 1 when (a) the committed contract differs from the regenerated
  * one, or (b) the committed path count != route.ts files - exempt entries.
+ * (c) an operation whose success response is unresolved is not listed, with a
+ * reason, in scripts/api/success-exceptions.json (protected), or a listed entry
+ * is stale or malformed.
  * Exit 2 when an input cannot be read. Default exempt list:
  * scripts/api/exempt-routes.json (protected; growth travels as
  * proposals/P3/scripts/api/exempt-routes.json, rule B2).
@@ -38,6 +41,7 @@ const REPO = path.resolve(
 );
 const SPEC_REL = 'docs/api/openapi.generated.json';
 const DEFAULT_EXEMPT = 'scripts/api/exempt-routes.json';
+const DEFAULT_SUCCESS_EXCEPTIONS = 'scripts/api/success-exceptions.json';
 const AUTH_CONFIG = path.join(REPO, 'scripts/auth-coverage-config.ts');
 const PROBE_DIR = path.join(REPO, '.cache/gen-openapi');
 /** Every route file Next.js serves, the same set gen-machine-docs reads (route.tsx and route.js included). */
@@ -553,6 +557,60 @@ function notProvisionedStatus() {
   return npStatus;
 }
 
+// Shared response helpers whose status rule is read from their own source, never assumed: each entry
+// names the file and a pattern its signature must still match. A helper whose source no longer
+// matches is dropped, and its responses count as unresolved.
+const RESPONSE_HELPERS = [
+  {
+    callee: 'APISecurityChecker.createSecureResponse',
+    file: 'lib/security/api-security-checker.ts',
+    signature:
+      /static createSecureResponse<T>\(\s*data: T,\s*status: number = 200/,
+    status: { arg: 1, default: '200' },
+  },
+  {
+    callee: 'ResponseOptimizer.createResponse',
+    file: 'lib/api/response-optimizer.ts',
+    signature: /static createResponse<T>\([\s\S]{0,200}?status = 200,/,
+    status: { optionsArg: 1, default: '200' },
+  },
+  {
+    callee: 'ResponseOptimizer.createErrorResponse',
+    file: 'lib/api/response-optimizer.ts',
+    signature:
+      /static createErrorResponse\(\s*message: string,\s*status: number = 500/,
+    status: { arg: 1, default: '500' },
+  },
+];
+let verifiedHelpers;
+function responseHelpers() {
+  if (verifiedHelpers) return verifiedHelpers;
+  verifiedHelpers = new Map();
+  for (const h of RESPONSE_HELPERS) {
+    let src = '';
+    try {
+      src = fs.readFileSync(path.join(REPO, h.file), 'utf8');
+    } catch {
+      continue;
+    }
+    if (h.signature.test(src)) verifiedHelpers.set(h.callee, h);
+  }
+  return verifiedHelpers;
+}
+
+/** Every status a conditional (a ? 200 : 503, nested) can produce, or null if any branch is unknown. */
+function statusesOf(expr) {
+  let e = expr;
+  while (e && ts.isParenthesizedExpression(e)) e = e.expression;
+  if (e && ts.isConditionalExpression(e)) {
+    const a = statusesOf(e.whenTrue);
+    const b = statusesOf(e.whenFalse);
+    return a && b ? [...new Set([...a, ...b])] : null;
+  }
+  const one = statusOf(e);
+  return one ? [one] : null;
+}
+
 /** A status expression: numeric literal, or the not-provisioned constant; else null. */
 function statusOf(expr) {
   if (!expr) return null;
@@ -568,8 +626,41 @@ function statusOf(expr) {
  * on P3 ba0d0871: the contract used to invent 200 for handlers with no literal success, so a
  * route that only answers 503 FEATURE_NOT_PROVISIONED was documented as succeeding.
  */
-function returnOutcomes(nodes) {
+const CALLBACK_METHODS = new Set([
+  'map',
+  'flatMap',
+  'filter',
+  'reduce',
+  'forEach',
+  'some',
+  'every',
+  'find',
+  'findIndex',
+  'sort',
+  'then',
+  'catch',
+  'finally',
+]);
+function returnOutcomes(nodes, values = new Map()) {
   const out = new Set();
+  const why = new Set();
+  // What an unresolved return was, for the reason recorded in the contract.
+  const describe = raw => {
+    let e = raw;
+    while (
+      e &&
+      (ts.isAwaitExpression(e) ||
+        ts.isParenthesizedExpression(e) ||
+        ts.isAsExpression(e) ||
+        ts.isNonNullExpression(e))
+    )
+      e = e.expression;
+    if (ts.isCallExpression(e))
+      return `${e.expression.getText().replace(/\s+/g, '')}()`;
+    if (ts.isNewExpression(e)) return `new ${e.expression.getText()}()`;
+    if (ts.isIdentifier(e)) return `variable ${e.text}`;
+    return ts.SyntaxKind[e.kind];
+  };
   const unwrap = e => {
     while (
       e &&
@@ -584,14 +675,14 @@ function returnOutcomes(nodes) {
   const optsStatus = arg => {
     if (!arg) return '200';
     if (!ts.isObjectLiteralExpression(arg))
-      return statusOf(arg) ?? 'unresolved';
+      return statusesOf(arg) ?? 'unresolved';
     const prop = arg.properties.find(
       p =>
         ts.isPropertyAssignment(p) &&
         ts.isIdentifier(p.name) &&
         p.name.text === 'status'
     );
-    return prop ? (statusOf(prop.initializer) ?? 'unresolved') : '200';
+    return prop ? (statusesOf(prop.initializer) ?? 'unresolved') : '200';
   };
   const RESPONSES = ['NextResponse', 'Response'];
   const classify = raw => {
@@ -601,6 +692,45 @@ function returnOutcomes(nodes) {
       const c = e.expression;
       if (ts.isIdentifier(c) && c.text === 'notProvisionedResponse')
         return notProvisionedStatus() ?? 'unresolved';
+      const helper = responseHelpers().get(c.getText().replace(/\s+/g, ''));
+      if (helper) {
+        if (helper.status.arg !== undefined) {
+          const a = e.arguments[helper.status.arg];
+          return a ? (statusesOf(a) ?? 'unresolved') : helper.status.default;
+        }
+        const o = e.arguments[helper.status.optionsArg];
+        if (!o) return helper.status.default;
+        if (!ts.isObjectLiteralExpression(o)) return 'unresolved';
+        const sp = o.properties.find(
+          p =>
+            ts.isPropertyAssignment(p) &&
+            ts.isIdentifier(p.name) &&
+            p.name.text === 'status'
+        );
+        return sp
+          ? (statusesOf(sp.initializer) ?? 'unresolved')
+          : helper.status.default;
+      }
+      // A same-file function is in the handler scope (handlerScope), so its own returns are
+      // classified; the call itself adds nothing.
+      if (ts.isIdentifier(c)) {
+        const t = values.get(c.text);
+        if (
+          t &&
+          (ts.isFunctionDeclaration(t) ||
+            ts.isArrowFunction(t) ||
+            ts.isFunctionExpression(t))
+        )
+          return null;
+      }
+      // A wrapper given the handler as a function (withRateLimit(req, async () => ...)) answers
+      // with that function's returns, which are classified on their own.
+      if (
+        e.arguments.some(
+          x => ts.isArrowFunction(x) || ts.isFunctionExpression(x)
+        )
+      )
+        return null;
       if (
         ts.isPropertyAccessExpression(c) &&
         ts.isIdentifier(c.expression) &&
@@ -610,7 +740,7 @@ function returnOutcomes(nodes) {
         if (m === 'json') return optsStatus(e.arguments[1]);
         if (m === 'redirect')
           return e.arguments[1]
-            ? (statusOf(e.arguments[1]) ?? 'unresolved')
+            ? (statusesOf(e.arguments[1]) ?? 'unresolved')
             : '307';
         if (m === 'next') return '200';
       }
@@ -624,14 +754,32 @@ function returnOutcomes(nodes) {
     return 'unresolved';
   };
   const walk = n => {
-    if (ts.isReturnStatement(n) && n.expression)
-      out.add(classify(n.expression));
+    const add = expr => {
+      const o = classify(expr);
+      if (o === null) return;
+      for (const c of Array.isArray(o) ? o : [o]) out.add(c);
+      if (o === 'unresolved') why.add(describe(expr));
+    };
+    // A callback's return value is not the handler's response: skip array/promise callbacks and
+    // Promise executors (their `return x` is data, not an HTTP answer).
+    if (
+      (ts.isArrowFunction(n) || ts.isFunctionExpression(n)) &&
+      n.parent &&
+      ((ts.isCallExpression(n.parent) &&
+        ts.isPropertyAccessExpression(n.parent.expression) &&
+        CALLBACK_METHODS.has(n.parent.expression.name.text)) ||
+        (ts.isNewExpression(n.parent) &&
+          ts.isIdentifier(n.parent.expression) &&
+          n.parent.expression.text === 'Promise'))
+    )
+      return;
+    if (ts.isReturnStatement(n) && n.expression) add(n.expression);
     // An arrow with an expression body returns that expression (withAuth(async req => res(...))).
-    if (ts.isArrowFunction(n) && !ts.isBlock(n.body)) out.add(classify(n.body));
+    if (ts.isArrowFunction(n) && !ts.isBlock(n.body)) add(n.body);
     ts.forEachChild(n, walk);
   };
   for (const node of nodes) walk(node);
-  return [...out].sort();
+  return { codes: [...out].sort(), why: [...why].sort() };
 }
 
 function statusCodes(nodes) {
@@ -641,9 +789,9 @@ function statusCodes(nodes) {
       ts.isPropertyAssignment(n) &&
       ts.isIdentifier(n.name) &&
       n.name.text === 'status' &&
-      statusOf(n.initializer)
+      statusesOf(n.initializer)
     ) {
-      codes.add(statusOf(n.initializer));
+      for (const c of statusesOf(n.initializer)) codes.add(c);
     }
     ts.forEachChild(n, walk);
   };
@@ -702,7 +850,9 @@ function analyseFile(root, rel, sourceCache, depth = 0) {
     methods.set(method, {
       candidates: schemaCandidates(nodes, method, bindings),
       statuses: statusCodes(nodes),
-      outcomes: returnOutcomes(nodes),
+      ...(r => ({ outcomes: r.codes, outcomesWhy: r.why }))(
+        returnOutcomes(nodes, bindings.values)
+      ),
       sourceRel: rel,
       source,
     });
@@ -1095,6 +1245,11 @@ function buildOperation(method, apiPath, params, analysis, auth, probeResults) {
   if (!success.length) {
     if (outcomes.includes('unresolved') || outcomes.length === 0) {
       op['x-synthex-success'] = 'unresolved';
+      op['x-synthex-success-reason'] = analysis.unresolvedVia
+        ? `handler re-exported from ${analysis.via} could not be analysed`
+        : analysis.outcomesWhy?.length
+          ? `returns ${analysis.outcomesWhy.slice(0, 6).join(', ')}`
+          : 'no return statement found in the handler scope';
       op.responses.default = {
         description:
           'Unresolved: the generator could not determine a success response for this handler',
@@ -1209,7 +1364,60 @@ export async function generate({
 // Check and control
 // ---------------------------------------------------------------------------
 
-export async function check({ root = REPO, exemptFile, cache } = {}) {
+/**
+ * Operations whose success response the generator cannot resolve must be listed, with a reason, in
+ * scripts/api/success-exceptions.json (protected). Codex on P3 103eef14: --check accepted 236
+ * operations with no usable success contract. Returns what is unlisted, stale or malformed.
+ */
+export function successExceptionCheck(spec, file) {
+  let listed = [];
+  if (fs.existsSync(file)) {
+    try {
+      listed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    } catch (error) {
+      throw new InputError(
+        `success exceptions ${file} are not JSON: ${error.message}`
+      );
+    }
+    if (!Array.isArray(listed))
+      throw new InputError(`success exceptions ${file} must be a JSON array`);
+  }
+  const unresolved = [];
+  for (const [p, item] of Object.entries(spec.paths ?? {}))
+    for (const [m, op] of Object.entries(item))
+      if (
+        METHODS.includes(m.toUpperCase()) &&
+        op['x-synthex-success'] === 'unresolved'
+      )
+        unresolved.push(`${m.toUpperCase()} ${p}`);
+  const names = new Set(listed.map(e => e?.operation));
+  const malformed = listed
+    .filter(
+      e =>
+        !e ||
+        typeof e.operation !== 'string' ||
+        typeof e.reason !== 'string' ||
+        e.reason.trim().length < 10
+    )
+    .map(e => JSON.stringify(e));
+  const unlisted = unresolved.filter(o => !names.has(o));
+  const stale = [...names].filter(o => o && !unresolved.includes(o));
+  return {
+    unresolved: unresolved.length,
+    listed: listed.length,
+    unlisted,
+    stale,
+    malformed,
+    fail: unlisted.length > 0 || stale.length > 0 || malformed.length > 0,
+  };
+}
+
+export async function check({
+  root = REPO,
+  exemptFile,
+  cache,
+  successExceptionsFile = path.join(root, DEFAULT_SUCCESS_EXCEPTIONS),
+} = {}) {
   const specFile = path.join(root, SPEC_REL);
   const committedText = readText(specFile, 'committed contract');
   let committed;
@@ -1226,9 +1434,11 @@ export async function check({ root = REPO, exemptFile, cache } = {}) {
     committedPaths !== expectedPaths ||
     result.missingExempt.length > 0 ||
     result.duplicates.length > 0;
+  const success = successExceptionCheck(result.spec, successExceptionsFile);
   return {
     drift,
     countMismatch,
+    success,
     committedPaths,
     expectedPaths,
     generatedPaths: Object.keys(result.spec.paths).length,
@@ -1259,7 +1469,17 @@ function report(r, log = console.log) {
     log(
       '[gen-openapi] FAIL (b): committed path count != route files - exempt entries'
     );
-  if (!r.drift && !r.countMismatch) log('[gen-openapi] PASS');
+  if (r.success) {
+    log(
+      `[gen-openapi] unresolved success responses: ${r.success.unresolved}; listed exceptions: ${r.success.listed}`
+    );
+    if (r.success.fail)
+      log(
+        `[gen-openapi] FAIL (c): success exceptions out of date — unlisted: ${r.success.unlisted.slice(0, 5).join('; ') || 'none'}; stale: ${r.success.stale.slice(0, 5).join('; ') || 'none'}; malformed: ${r.success.malformed.length}`
+      );
+  }
+  if (!r.drift && !r.countMismatch && !r.success?.fail)
+    log('[gen-openapi] PASS');
 }
 
 function copyTree(root, dest) {
@@ -1351,7 +1571,7 @@ async function main(args) {
     if (args.includes('--check')) {
       const r = await check({ root, exemptFile });
       report(r);
-      process.exit(r.drift || r.countMismatch ? 1 : 0);
+      process.exit(r.drift || r.countMismatch || r.success?.fail ? 1 : 0);
     }
     const r = await generate({ root, exemptFile });
     fs.mkdirSync(path.join(root, path.dirname(SPEC_REL)), { recursive: true });
