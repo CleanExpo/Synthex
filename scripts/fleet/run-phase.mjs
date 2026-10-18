@@ -787,14 +787,17 @@ if (step === 'auto') {
     'release',
   ]) {
     if (s === 'integrate-all') {
-      // Builder work lives on fleet-unit/* branches; bring every PASS unit onto the phase branch
+      // Builder work lives on refs/fleet/units/* (refs, not branches); bring every PASS unit onto the phase branch
       // before the gate (CodeRabbit on PR #997: auto had no integrate step).
       const units = readJson(`release-receipts/manifests/${phase}-units.json`, {
         results: {},
       }).results;
       for (const [id, r] of Object.entries(units)) {
         if (r.state !== 'PASS') continue;
-        const c = integrate(id, r.branch || `fleet-unit/${phase}/${id}`);
+        const c = integrate(
+          id,
+          r.branch || `refs/fleet/units/${phase.toLowerCase()}/${id}`
+        );
         if (c !== 0) process.exit(c);
       }
       continue;
