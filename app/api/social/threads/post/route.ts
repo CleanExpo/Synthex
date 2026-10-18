@@ -340,6 +340,7 @@ export async function GET(request: NextRequest) {
     }
 
     // If sync requested, fetch from Threads API
+    let syncError: string | undefined;
     if (syncFromPlatform) {
       const credentials = toCredentials(connection);
       if (!credentials) {
@@ -359,6 +360,9 @@ export async function GET(request: NextRequest) {
             hasMore: false,
             error: 'Service unavailable',
           };
+      if (!syncResult.success) {
+        syncError = syncResult.error || 'Threads sync failed';
+      }
 
       if (syncResult.success) {
         // Update database with synced posts
@@ -406,6 +410,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: posts,
+      // A requested sync that failed must not look like fresh platform data.
+      ...(syncFromPlatform ? { synced: false, syncError } : {}),
     });
   } catch (error: unknown) {
     logger.error('Get Threads posts error:', error);

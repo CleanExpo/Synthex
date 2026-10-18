@@ -25,7 +25,11 @@ import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { routedCall } from '@/lib/ai/model-router';
-import { recordScoreIssued } from '@/lib/intelligence/accuracy-ledger';
+import {
+  recordScoreIssued,
+  type ScoreLedgerResult,
+} from '@/lib/intelligence/accuracy-ledger';
+import { tableUnavailable } from '@/lib/api/not-provisioned';
 import type { AuthContext } from '@/lib/auth/with-auth';
 
 // ── Feature flag ──────────────────────────────────────────────────────────────
@@ -138,26 +142,24 @@ async function retrieveClientContext(
   cutoff.setDate(cutoff.getDate() - 90);
 
   // 1. Content Performance Profiles — via PlatformPost + PlatformMetrics
-  const recentPosts = await prisma.platformPost
-    .findMany({
-      where: {
-        connection: { organizationId },
-        createdAt: { gte: cutoff },
-        status: 'published',
+  const recentPosts = await prisma.platformPost.findMany({
+    where: {
+      connection: { organizationId },
+      createdAt: { gte: cutoff },
+      status: 'published',
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 50,
+    select: {
+      id: true,
+      connection: { select: { platform: true } },
+      metrics: {
+        select: { impressions: true, engagementRate: true },
+        take: 1,
+        orderBy: { recordedAt: 'desc' },
       },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-      select: {
-        id: true,
-        connection: { select: { platform: true } },
-        metrics: {
-          select: { impressions: true, engagementRate: true },
-          take: 1,
-          orderBy: { recordedAt: 'desc' },
-        },
-      },
-    })
-    .catch(() => []);
+    },
+  });
 
   const postCount = recentPosts.length;
 
@@ -193,13 +195,11 @@ async function retrieveClientContext(
   }
 
   // 2. Health Score
-  const healthScore = await prisma.clientHealthScore
-    .findFirst({
-      where: { organizationId },
-      orderBy: { weekStart: 'desc' },
-      select: { overallScore: true, dimensions: true, weekStart: true },
-    })
-    .catch(() => null);
+  const healthScore = await prisma.clientHealthScore.findFirst({
+    where: { organizationId },
+    orderBy: { weekStart: 'desc' },
+    select: { overallScore: true, dimensions: true, weekStart: true },
+  });
 
   if (healthScore) {
     contextParts.push(
@@ -234,14 +234,12 @@ async function retrieveClientContext(
   // 4. Recommended Actions (last 4 weeks)
   const actionCutoff = new Date();
   actionCutoff.setDate(actionCutoff.getDate() - 28);
-  const advisorBriefs = await prisma.recommendedAction
-    .findMany({
-      where: { organizationId, weekStart: { gte: actionCutoff } },
-      orderBy: { weekStart: 'desc' },
-      take: 3,
-      select: { actions: true, weekStart: true },
-    })
-    .catch(() => []);
+  const advisorBriefs = await prisma.recommendedAction.findMany({
+    where: { organizationId, weekStart: { gte: actionCutoff } },
+    orderBy: { weekStart: 'desc' },
+    take: 3,
+    select: { actions: true, weekStart: true },
+  });
 
   if (advisorBriefs.length > 0) {
     contextParts.push(
@@ -366,9 +364,23 @@ const _postHandler = withAuth(
     const tier = classifyQuestion(question);
     const modelTier = tierToModelTier(tier);
 
-    // Retrieve structured context
-    const { context, sources, postCount } =
-      await retrieveClientContext(organizationId);
+    // Retrieve structured context. A failed read is not "no data": answering
+    // from an empty context would misreport the client's history.
+    let retrieved: Awaited<ReturnType<typeof retrieveClientContext>>;
+    try {
+      retrieved = await retrieveClientContext(organizationId);
+    } catch (err) {
+      console.error('[ask-synthex] context read failed:', String(err));
+      return NextResponse.json(
+        {
+          error:
+            "I couldn't read your marketing data right now — please try again shortly.",
+          answered: false,
+        },
+        { status: 500 }
+      );
+    }
+    const { context, sources, postCount } = retrieved;
 
     // Below-threshold: answer from algorithm KB only
     const effectiveContext =
@@ -377,40 +389,44 @@ const _postHandler = withAuth(
         : context;
 
     let answer: string;
-    let answered = true;
 
     try {
       answer = await callAI(question, effectiveContext, tier, postCount);
     } catch (err) {
-      answered = false;
       console.error('[ask-synthex] AI call failed:', String(err));
-      answer =
-        "I wasn't able to answer that right now — please try rephrasing your question.";
+      return NextResponse.json(
+        {
+          error:
+            "I wasn't able to answer that right now — please try rephrasing your question.",
+          answered: false,
+        },
+        { status: 502 }
+      );
     }
 
     const latencyMs = Date.now() - startMs;
 
     // Persisting the conversation is not provisioned (NOT_PROVISIONED.conversationLog).
-    if (answered) {
-      // Accuracy logging for predictive claims
-      const hasPrediction = /likely|will|should|expect|predict|probably/i.test(
-        answer
-      );
-      if (hasPrediction) {
-        recordScoreIssued({
-          clientId: organizationId,
-          domain: 'content',
-          scoreValue: 80,
-          confidence: postCount >= 15 ? 'high' : 'low',
-          calibrationDataPoints: postCount,
-          entityId: organizationId,
-          sprintVersion: 'sprint-8',
-        }).catch(() => undefined);
-      }
+    // Accuracy logging for predictive claims
+    const hasPrediction = /likely|will|should|expect|predict|probably/i.test(
+      answer
+    );
+    let scoreLedger: ScoreLedgerResult | undefined;
+    if (hasPrediction) {
+      scoreLedger = await recordScoreIssued({
+        clientId: organizationId,
+        domain: 'content',
+        scoreValue: 80,
+        confidence: postCount >= 15 ? 'high' : 'low',
+        calibrationDataPoints: postCount,
+        entityId: organizationId,
+        sprintVersion: 'sprint-8',
+      });
     }
 
     return NextResponse.json({
       answer,
+      answered: true,
       model: modelTier,
       latencyMs,
       sources: sources.map(s => ({
@@ -420,7 +436,12 @@ const _postHandler = withAuth(
       })),
       postCount,
       belowThreshold: postCount < 15,
-      notProvisioned: NOT_PROVISIONED,
+      notProvisioned: {
+        ...NOT_PROVISIONED,
+        ...(scoreLedger && !scoreLedger.recorded
+          ? { scoreLedger: tableUnavailable(scoreLedger.table) }
+          : {}),
+      },
     });
   }
 );
