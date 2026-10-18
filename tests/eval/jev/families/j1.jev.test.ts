@@ -1,5 +1,5 @@
 /**
- * J1 — Route security matrix (hard gate, 640 cases).
+ * J1 — Route security matrix (hard gate, 731 cases).
  *
  * (a) One unauthenticated probe per non-exempt route in the auth-ratchet
  *     inventory (isExemptPath, as tests/auth/route-coverage.test.ts uses it).
@@ -10,6 +10,12 @@
  *     must get 403 or 404 and leak no org-B data) and malformed-JSON probes
  *     (must get 400) on high-risk mutating routes, listed in
  *     tests/eval/jev/cases/J1/probes.json.
+ * (c) P4 machine-key variants of every (b) probe, called the way Next calls
+ *     them (proxy.ts, then the route): an org-A key with the route's scope on
+ *     an org-B id must get 403/404 and no org-B data; with the scope and a
+ *     malformed body, 400; a route no scope grants refuses every key with 403.
+ *     Plus one scope case per probed route: a key holding every scope except
+ *     the route's gets 403.
  *
  * Boundaries mocked as tests/contract/*.contract.test.ts do: @/lib/prisma (a
  * synthetic two-tenant world, ./j1/world.ts), @/lib/auth/jwt-utils cookie
@@ -33,10 +39,22 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import { classify, recordResults, type JevResult } from '../runner/record';
-import { invokeRoute, listRoutes } from '../runner/route-harness';
+import {
+  invokeRoute,
+  invokeThroughProxy,
+  listRoutes,
+} from '../runner/route-harness';
 import { isExemptPath } from '../../../../scripts/auth-coverage-config';
 import jwt from 'jsonwebtoken';
-import { B_MARKER, USER_A, resetWorld, worldState } from './j1/world';
+import crypto from 'crypto';
+import {
+  B_MARKER,
+  USER_A,
+  registerKey,
+  resetWorld,
+  worldState,
+} from './j1/world';
+import { ROUTE_SCOPES, scopesAllow } from '@/lib/auth/agent-principal';
 import probesDoc from '../cases/J1/probes.json';
 
 jest.mock('next/headers', () => {
@@ -395,6 +413,161 @@ describe('J1 (b) cross-organisation and malformed-body probes', () => {
   );
 });
 
+// ── (c) machine-key cases ─────────────────────────────────────────────────────
+const ALL_SCOPES = Object.keys(ROUTE_SCOPES);
+const keyHash = (raw: string) =>
+  crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
+const scopedKey = (scopes: string[], name: string) =>
+  registerKey(`smk_j1_${name}`, keyHash(`smk_j1_${name}`), scopes);
+
+/** The route id the allow-list uses for a probe: `<METHOD> /api/...`. */
+function routeIdOf(p: { method: string; file: string }): string {
+  return `${p.method} ${p.file.replace(/^app/, '').replace(/\/route\.ts$/, '')}`;
+}
+
+/** The scope that grants routeId, or null when no scope does. */
+function scopeOf(routeId: string): string | null {
+  return ALL_SCOPES.find(s => scopesAllow([s], routeId)) ?? null;
+}
+
+/** A key outside the route's scope (or any key, for a non-machine route): 403, no org-B data. */
+export function judgeKeyRefused(status: number, body: unknown): UnauthVerdict {
+  const leaked = JSON.stringify(body ?? null).includes(B_MARKER);
+  return {
+    passed: status === 403 && !leaked,
+    detail: `status ${status}${leaked ? ', org-B data in response' : ''}`,
+  };
+}
+
+describe('J1 (c) machine-key probes (proxy, then route)', () => {
+  beforeEach(() => {
+    resetWorld();
+    setSession(null);
+  });
+
+  it.each(probes.map(p => [`key ${p.kind} ${p.method} ${p.file}`, p] as const))(
+    '%s',
+    async (_n, p) => {
+      const id = `J1-key-${p.kind === 'cross-org' ? 'xorg' : 'malformed'}-${p.method.toLowerCase()}-${slug(p.file)}`;
+      const routeId = routeIdOf(p);
+      const scope = scopeOf(routeId);
+      const raw = scope
+        ? scopedKey([scope], scope)
+        : scopedKey(ALL_SCOPES, 'all');
+      const res = await invokeThroughProxy(p.file, p.method, {
+        params: p.params,
+        body: p.kind === 'cross-org' ? (p.body ?? undefined) : MALFORMED_JSON,
+        headers: {
+          authorization: `Bearer ${raw}`,
+          'content-type': 'application/json',
+        },
+      });
+      if (res.status === null) {
+        results.push(
+          caseRow(id, routeId, { state: 'INCONCLUSIVE', detail: res.error })
+        );
+        return;
+      }
+      if (notConfigured(res.status, res.json)) {
+        results.push(
+          caseRow(id, routeId, {
+            state: 'INCONCLUSIVE',
+            detail: `status ${res.status} service not configured (missing env)${bodyText(res.json)}`,
+          })
+        );
+        return;
+      }
+      const by = `; answered by ${res.answeredBy}`;
+      if (!scope) {
+        const v = judgeKeyRefused(res.status, res.json);
+        results.push(
+          caseRow(
+            id,
+            routeId,
+            classify(id, v.passed, `non-machine route: ${v.detail}${by}`)
+          )
+        );
+        return;
+      }
+      if (p.kind === 'cross-org') {
+        const v = judgeCrossOrg(res.status, res.json);
+        if (v.inconclusive) {
+          results.push(
+            caseRow(id, routeId, {
+              state: 'INCONCLUSIVE',
+              detail: `${v.detail}${by}`,
+            })
+          );
+          return;
+        }
+        results.push(
+          caseRow(
+            id,
+            routeId,
+            classify(
+              id,
+              v.passed,
+              `${v.detail}${by}${v.passed ? '' : bodyText(res.json)}`
+            )
+          )
+        );
+        return;
+      }
+      const v = judgeMalformed(res.status);
+      results.push(
+        caseRow(
+          id,
+          routeId,
+          classify(
+            id,
+            v.passed,
+            `${v.detail}${by}${v.passed ? '' : bodyText(res.json)}`
+          )
+        )
+      );
+    }
+  );
+
+  const routesProbed = [
+    ...new Map(probes.map(p => [routeIdOf(p), p] as const)).values(),
+  ];
+  it.each(routesProbed.map(p => [routeIdOf(p), p] as const))(
+    'key without the scope: %s',
+    async (routeId, p) => {
+      const id = `J1-key-scope-${p.method.toLowerCase()}-${slug(p.file)}`;
+      const scope = scopeOf(routeId);
+      const others = ALL_SCOPES.filter(s => s !== scope);
+      const raw = scopedKey(others, `all-but-${scope ?? 'none'}`);
+      const res = await invokeThroughProxy(p.file, p.method, {
+        params: p.params,
+        body: p.body ?? undefined,
+        headers: {
+          authorization: `Bearer ${raw}`,
+          'content-type': 'application/json',
+        },
+      });
+      if (res.status === null) {
+        results.push(
+          caseRow(id, routeId, { state: 'INCONCLUSIVE', detail: res.error })
+        );
+        return;
+      }
+      const v = judgeKeyRefused(res.status, res.json);
+      results.push(
+        caseRow(
+          id,
+          routeId,
+          classify(
+            id,
+            v.passed,
+            `${v.detail}; answered by ${res.answeredBy}${v.passed ? '' : bodyText(res.json)}`
+          )
+        )
+      );
+    }
+  );
+});
+
 // ── Positive controls: planted defects through the same detectors ─────────────
 const PLANT = 'tests/eval/jev/families/j1/planted-route.ts';
 const PLANT_URL = 'http://localhost:3000/api/jev-planted';
@@ -466,5 +639,55 @@ describe('J1 positive controls', () => {
     }
     const v = judgeMalformed(res.status);
     results.push(controlRow('J1-control-malformed-500', v.detail, !v.passed));
+  });
+});
+
+const KEY_PLANT = 'tests/eval/jev/families/j1/planted-key-route.ts';
+
+describe('J1 (c) machine-key positive controls', () => {
+  beforeEach(() => resetWorld());
+
+  it('planted route that never checks the key scopes', async () => {
+    const raw = scopedKey(['approvals'], 'control-approvals');
+    const res = await invokeRoute(KEY_PLANT, 'GET', {
+      url: PLANT_URL,
+      headers: { authorization: `Bearer ${raw}` },
+    });
+    if (res.status === null) {
+      results.push(
+        controlRow('J1-control-key-scope-bypass', String(res.error), null)
+      );
+      return;
+    }
+    const v = judgeKeyRefused(res.status, res.json);
+    results.push(
+      controlRow('J1-control-key-scope-bypass', v.detail, !v.passed)
+    );
+  });
+
+  it('planted route that takes the organisation from the request', async () => {
+    const raw = scopedKey(['organization'], 'control-organization');
+    const res = await invokeRoute(KEY_PLANT, 'PATCH', {
+      url: PLANT_URL,
+      headers: {
+        authorization: `Bearer ${raw}`,
+        'x-organization-id': 'org-B',
+      },
+      body: { name: 'JEV probe' },
+    });
+    if (res.status === null) {
+      results.push(
+        controlRow('J1-control-key-org-from-request', String(res.error), null)
+      );
+      return;
+    }
+    const v = judgeCrossOrg(res.status, res.json);
+    results.push(
+      controlRow(
+        'J1-control-key-org-from-request',
+        v.detail,
+        !v.passed && !v.inconclusive
+      )
+    );
   });
 });

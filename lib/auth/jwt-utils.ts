@@ -160,6 +160,16 @@ export async function getUserIdFromRequest(
 
   const token = authHeader.slice(7); // Remove 'Bearer ' prefix
 
+  // P4 machine key: acts as the key's user only on a route its scopes grant.
+  if (token.startsWith('smk_')) {
+    const { resolveAgentPrincipalForRequest } =
+      await import('./agent-principal');
+    const principal = await resolveAgentPrincipalForRequest(request, {
+      rateLimit: false,
+    });
+    return principal.kind === 'ok' ? principal.userId : null;
+  }
+
   try {
     const payload = verifyToken(token);
     return payload.userId || null;
@@ -285,6 +295,11 @@ export async function getUserIdFromCookies(): Promise<string | null> {
 export async function getUserIdFromRequestOrCookies(
   request: NextRequest
 ): Promise<string | null> {
+  // A presented machine key is the caller; a cookie never overrides it.
+  if (request.headers.get('authorization')?.startsWith('Bearer smk_')) {
+    return getUserIdFromRequest(request);
+  }
+
   // First try cookies (preferred for httpOnly security)
   const cookieUserId = await getUserIdFromCookies();
   if (cookieUserId) {
