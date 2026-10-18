@@ -61,4 +61,43 @@ describe('content-safety storage (NOT_PROVISIONED)', () => {
       })
     );
   });
+
+  it('without stored guidelines brand safety fails and requires human review', async () => {
+    const result = await contentSafety.moderateContent(
+      'user-1',
+      `We beat Acme on price ${Date.now()}`
+    );
+    expect(result.approved).toBe(false);
+    expect(result.requiresHumanReview).toBe(true);
+    expect(result.brandSafety.passed).toBe(false);
+    expect(result.brandSafety.score).toBe(0);
+    expect(result.brandSafety.issues).toEqual([
+      expect.objectContaining({ type: 'brand_guidelines_unavailable' }),
+    ]);
+    expect(result.brandGuidelines).toMatchObject({
+      available: false,
+      reason: expect.stringContaining('brand_guidelines'),
+    });
+  });
+
+  it('explicit guidelines are still applied and not reported unavailable', async () => {
+    const result = await contentSafety.moderateContent(
+      'user-1',
+      `A friendly post about gardening ${Date.now()}`,
+      {
+        brandGuidelines: {
+          companyName: 'Us',
+          competitors: ['Acme'],
+          blockedWords: [],
+          requiredDisclosures: [],
+          toneOfVoice: 'friendly',
+          sensitiveTopics: [],
+          approvedHashtags: [],
+          blockedHashtags: [],
+        },
+      }
+    );
+    expect(result.brandSafety.passed).toBe(true);
+    expect(result.brandGuidelines).toBeUndefined();
+  });
 });

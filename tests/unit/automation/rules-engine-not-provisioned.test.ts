@@ -78,3 +78,36 @@ describe('rulesEngine — NOT_PROVISIONED data paths', () => {
     );
   });
 });
+
+describe('rulesEngine — unwired actions fail instead of faking success', () => {
+  type ActionsRun = {
+    executed: number;
+    failed: number;
+    outputs: Record<string, unknown>;
+    errors: Array<{ actionId: string; error: string }>;
+  };
+  const engine = rulesEngine as unknown as {
+    executeActions: (a: unknown[], c: unknown) => Promise<ActionsRun>;
+  };
+
+  it.each(['send_notification', 'send_email', 'optimize_content'])(
+    '%s counts as failed and reports nothing was sent',
+    async type => {
+      const run = await engine.executeActions(
+        [{ id: 'a1', type, config: {}, order: 0 }],
+        {
+          ruleId: 'r1',
+          triggerId: 't1',
+          triggerData: {},
+          variables: {},
+          outputs: {},
+          startedAt: new Date(),
+        }
+      );
+      expect(run.executed).toBe(0);
+      expect(run.failed).toBe(1);
+      expect(run.outputs).toEqual({});
+      expect(run.errors[0].error).toContain('not provisioned');
+    }
+  );
+});
