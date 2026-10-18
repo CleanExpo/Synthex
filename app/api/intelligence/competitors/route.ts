@@ -358,28 +358,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Soft delete - set as inactive
-    const { createClient } = await import('@/lib/platform/noop-client');
-    const platform = createClient();
-
-    const { error } = await platform
-      .from('competitors')
-      .update({ is_active: false })
-      .eq('id', competitorId)
-      .eq('user_id', userId);
-
-    if (error) throw error;
-
+    // Soft delete needs the competitors table, which has no Prisma model.
+    // Say so honestly instead of reporting a delete that never happened.
     await auditLogger.logData(
       'delete',
       'intelligence',
       competitorId,
       userId,
-      'success',
-      { action: 'COMPETITOR_REMOVE' }
+      'failure',
+      { action: 'COMPETITOR_REMOVE', reason: 'FEATURE_NOT_PROVISIONED' }
     );
 
-    return APISecurityChecker.createSecureResponse({ success: true });
+    return APISecurityChecker.createSecureResponse(
+      {
+        error: 'FEATURE_NOT_PROVISIONED',
+        message:
+          'Removing competitors is not available: the competitors table is not provisioned.',
+      },
+      501
+    );
   } catch (error: unknown) {
     logger.error('Competitors DELETE error:', { error });
     return APISecurityChecker.createSecureResponse(
