@@ -5,19 +5,14 @@
  *
  * Email clients do not support POST requests. Survey responses are captured
  * by embedding signed pixel URLs as <img> tags in the email body. When the
- * email client loads the image, this route:
+ * email client loads the image, this route verifies the HMAC signature on the
+ * `t` query token and would record the score on `client_journey_events`.
  *
- *   1. Verifies HMAC signature on the `t` query token
- *   2. Updates `client_journey_events.engagement_outcome` → 'surveyed'
- *   3. Appends `pulse_score` + `pulse_responded_at` to the row's `metadata`
- *   4. Returns a 1×1 transparent GIF (no-cache headers)
- *
- * Non-fatal: DB errors are logged but the pixel is always returned so
- * the user's email client does not show a broken image.
- *
- * Signature failures always return the pixel — the failure mode is NOT
- * leaked. This blocks cross-tenant write probing while preserving the
- * email-pixel UX.
+ * NOT PROVISIONED: `client_journey_events` has no Prisma model, so the score
+ * cannot be recorded. Every request gets HTTP 501 with the 1×1 GIF body (no
+ * broken image in the email) and `X-Error: FEATURE_NOT_PROVISIONED`. The
+ * response is identical for valid and invalid tokens, so signature validity
+ * is still not leaked. Valid-but-dropped responses are logged.
  *
  * No authentication required — pixel loads come from email client image
  * fetchers which do not send session cookies.
@@ -27,7 +22,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/platform/noop-client';
 import {
   PIXEL_AUDIENCES,
   verifyJourneyToken,
@@ -40,24 +34,27 @@ const PIXEL = Buffer.from(
   'base64'
 );
 
-function getAdminClient() {
-  return createClient();
-}
-
-function pixelResponse(): NextResponse {
+function notProvisionedPixel(): NextResponse {
   return new NextResponse(PIXEL, {
-    status: 200,
+    status: 501,
     headers: {
       'Content-Type': 'image/gif',
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
       Pragma: 'no-cache',
       Expires: '0',
+      'X-Error': 'FEATURE_NOT_PROVISIONED',
     },
   });
 }
 
 function logVerifyFailure(reason: VerifyFailureReason): void {
   console.warn(`[journey/pulse] token-verify failed: ${reason}`);
+}
+
+function logDroppedPulse(clientId: string, momentId: string): void {
+  console.warn(
+    `[journey/pulse] FEATURE_NOT_PROVISIONED: client_journey_events has no data model; pulse not recorded (client ${clientId}, moment ${momentId})`
+  );
 }
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -68,68 +65,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const result = verifyJourneyToken(token, PIXEL_AUDIENCES.pulse);
     if (!result.ok) {
       logVerifyFailure(result.reason);
-      return pixelResponse();
+      return notProvisionedPixel();
     }
-    const { cid, mid, s } = result.payload;
-    await recordPulse(cid, mid, s);
-    return pixelResponse();
+    logDroppedPulse(result.payload.cid, result.payload.mid);
+    return notProvisionedPixel();
   }
 
   if (process.env.JOURNEY_PIXEL_ACCEPT_UNSIGNED === 'true') {
     const clientId = searchParams.get('client_id');
     const momentId = searchParams.get('moment_id');
-    const scoreRaw = searchParams.get('score');
     if (clientId && momentId) {
-      const score = scoreRaw !== null ? parseInt(scoreRaw, 10) : undefined;
-      const validScore =
-        score !== undefined && !isNaN(score) && score >= 1 && score <= 5
-          ? (score as 1 | 2 | 3 | 4 | 5)
-          : undefined;
-      await recordPulse(clientId, momentId, validScore);
-      return pixelResponse();
+      logDroppedPulse(clientId, momentId);
+      return notProvisionedPixel();
     }
   }
 
   logVerifyFailure('missing-token');
-  return pixelResponse();
-}
-
-async function recordPulse(
-  clientId: string,
-  momentId: string,
-  score: 1 | 2 | 3 | 4 | 5 | undefined
-): Promise<void> {
-  try {
-    const platform = getAdminClient();
-
-    const { data: existing } = await platform
-      .from('client_journey_events')
-      .select('metadata')
-      .eq('id', momentId)
-      .eq('client_id', clientId)
-      .single();
-
-    const existingMeta = (existing?.metadata ?? {}) as Record<string, unknown>;
-    const updatedMeta: Record<string, unknown> = {
-      ...existingMeta,
-      pulse_responded_at: new Date().toISOString(),
-      ...(score !== undefined ? { pulse_score: score } : {}),
-    };
-
-    const { error } = await platform
-      .from('client_journey_events')
-      .update({
-        engagement_outcome: 'surveyed',
-        metadata: updatedMeta,
-      })
-      .eq('id', momentId)
-      .eq('client_id', clientId);
-
-    if (error) {
-      console.error('[journey/pulse] DB update error:', error.message);
-    }
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[journey/pulse] Unexpected error:', msg);
-  }
+  return notProvisionedPixel();
 }
