@@ -1,8 +1,9 @@
 /**
- * Persist a provider artifact: download (3 attempts, backoff) -> Supabase
- * storage bucket 'generated-videos' -> media library row. Provider URLs expire.
+ * Persist a provider artifact: download (3 attempts, backoff) -> platform
+ * storage (lib/storage/platform-storage) -> media library row. Provider URLs
+ * expire.
  */
-import { createClient } from '@/lib/platform/noop-client';
+import { uploadToStorage } from '@/lib/storage/platform-storage';
 import { mediaLibraryService } from '@/lib/services/media-library';
 import { logger } from '@/lib/logger';
 
@@ -37,27 +38,19 @@ export async function storeArtifact(
 ): Promise<{ storedUrl: string }> {
   const buffer = await fetchWithRetry(input.sourceUrl);
 
-  const platform = createClient();
-  const path = `${input.userId}/${input.rowId}.mp4`;
-  // Fix 4: wrap ArrayBuffer in Buffer so Supabase client handles it correctly
-  const { error } = await platform.storage
-    .from('generated-videos')
-    .upload(path, Buffer.from(buffer), {
-      contentType: 'video/mp4',
-      upsert: true,
-    });
-  if (error) {
-    const message =
-      error && typeof error === 'object' && 'message' in error
-        ? String((error as { message?: unknown }).message)
-        : 'unknown upload error';
+  let storedUrl: string;
+  try {
+    const uploaded = await uploadToStorage(
+      input.userId,
+      `${input.rowId}.mp4`,
+      Buffer.from(buffer),
+      'video/mp4'
+    );
+    storedUrl = uploaded.url;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown upload error';
     throw new Error(`video upload failed: ${message}`);
   }
-
-  const { data: pub } = platform.storage
-    .from('generated-videos')
-    .getPublicUrl(path);
-  const storedUrl = pub.publicUrl;
 
   // Register in the media library; non-fatal if it fails (artifact is stored).
   await mediaLibraryService
