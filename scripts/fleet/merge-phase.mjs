@@ -14,6 +14,8 @@
  * main, so verify-receipt can re-check it after main moves), ledger row kind=merge, exit 0. Anything else exits 1 and merges nothing.
  */
 import os from 'node:os';
+import path from 'node:path';
+import { mkdtempSync } from 'node:fs';
 import {
   policy,
   run,
@@ -236,8 +238,25 @@ const atHead = file => {
     return null;
   }
 };
+// The receipt and attest checks run from main's committed copy of scripts/fleet and
+// scripts/release, with this repo and --head as data, never from the PR checkout (a PR that
+// replaced attest-phase.mjs used to attest itself; verifier audit second pass). Same pattern as
+// the receipt-verify and protected-paths workflows.
+run('git', ['fetch', '-q', 'origin', 'main']);
+const trusted = mkdtempSync(path.join(os.tmpdir(), 'merge-trusted-'));
+const arch = run('sh', [
+  '-c',
+  `git archive origin/main scripts/fleet scripts/release | tar -x -C "${trusted}"`,
+]);
+gate(
+  'trusted-copy',
+  arch.code === 0,
+  arch.code === 0 ? 'origin/main' : arch.stderr.trim().slice(0, 120)
+);
 const vr = run(process.execPath, [
-  'scripts/release/verify-receipt.mjs',
+  path.join(trusted, 'scripts/release/verify-receipt.mjs'),
+  '--repo',
+  ROOT,
   '--head',
   head,
   '--phase',
@@ -288,7 +307,7 @@ gate(
     : 'no report'
 );
 const at = run(process.execPath, [
-  'scripts/fleet/attest-phase.mjs',
+  path.join(trusted, 'scripts/fleet/attest-phase.mjs'),
   '--phase',
   phase,
   '--head',

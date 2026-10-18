@@ -24,7 +24,7 @@ const opt = (k, d) => {
   const i = a.indexOf(k);
   return i >= 0 ? a[i + 1] : d;
 };
-export function evaluate({ commits, rows, receipt }) {
+export function evaluate({ commits, rows, receipt, corrupt = 0 }) {
   const items = [];
   const human = commits.filter(c => !c.fleet);
   items.push({
@@ -34,10 +34,11 @@ export function evaluate({ commits, rows, receipt }) {
     detail: human.map(c => c.sha.slice(0, 12)).join(','),
   });
   const interventions = rows.filter(r => r.kind === 'human-intervention');
+  // An unreadable ledger row could be a human-intervention row someone corrupted: never a PASS.
   items.push({
     id: 'interventions',
-    text: `${interventions.length} human interventions in the ledger`,
-    state: interventions.length ? 'FAIL' : 'PASS',
+    text: `${interventions.length} human interventions in the ledger${corrupt ? `, ${corrupt} unreadable row(s)` : ''}`,
+    state: interventions.length || corrupt ? 'FAIL' : 'PASS',
   });
   const states = [
     receipt?.state,
@@ -81,13 +82,20 @@ if (isMain(import.meta.url)) {
       ],
       { encoding: 'utf8' }
     ).status;
+    const corruptOnly = evaluate({
+      commits: [{ sha: 'a', fleet: true }],
+      rows: [],
+      receipt: { state: 'PASS', gate: [] },
+      corrupt: 1,
+    });
     const ok =
+      corruptOnly[1].state === 'FAIL' &&
       bad[0].state === 'FAIL' &&
       bad[2].state === 'FAIL' &&
       good.every(i => i.state === 'PASS') &&
       unresolved === 2;
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} attest-phase controls (human commit and fifth state fail; fleet-only passes; unresolvable base exits 2)`
+      `${ok ? 'PASS' : 'FAIL'} attest-phase controls (human commit and fifth state fail; fleet-only passes; unresolvable base exits 2; an unreadable ledger row fails)`
     );
     process.exit(ok ? 0 : 1);
   }
@@ -114,7 +122,9 @@ if (isMain(import.meta.url)) {
     .split('\n')
     .filter(Boolean);
   const commits = shas.map(sha => ({ sha, fleet: isFleetCommit(sha) }));
-  const rows = ledgerRows().filter(r => r.phase === phase);
+  const allRows = ledgerRows(undefined, head);
+  const rows = allRows.filter(r => r.phase === phase);
+  const corrupt = allRows.filter(r => r.kind === 'CORRUPT').length;
   let receipt = null;
   try {
     receipt = JSON.parse(
@@ -122,6 +132,9 @@ if (isMain(import.meta.url)) {
     );
   } catch {}
   process.exit(
-    report(`attest-phase ${phase}`, evaluate({ commits, rows, receipt }))
+    report(
+      `attest-phase ${phase}`,
+      evaluate({ commits, rows, receipt, corrupt })
+    )
   );
 }
