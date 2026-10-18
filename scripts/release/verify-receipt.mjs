@@ -131,9 +131,17 @@ export function verify(head, phase, cwd = ROOT) {
     let extra = outside(diffRaw);
     // A merge commit on main (merge-phase merges with --merge) also carries whatever main gained
     // after the branch was cut (P0 #1005 after #998). It passes only as a PURE merge: one parent is
-    // bound to the reviewed commit, and every file the merge changes against that parent equals
-    // another parent's copy, so the merge commit itself adds nothing.
+    // bound to the reviewed commit, every file the merge changes against that parent equals another
+    // parent's copy, and every other parent is already on main, so what it brings was released on
+    // its own (CodeRabbit on PR #1015: a merge could copy unreviewed source from an arbitrary
+    // parent). No main ref to check against means not pure (fail closed).
     if (extra.length) {
+      const mainRef = ['refs/remotes/origin/main', 'refs/heads/main'].find(
+        ref => tryGit(['rev-parse', '--verify', '-q', ref], { cwd })
+      );
+      const onMain = c =>
+        Boolean(mainRef) &&
+        tryGit(['merge-base', '--is-ancestor', c, mainRef], { cwd }) !== null;
       const parents = (tryGit(['rev-parse', `${sha}^@`], { cwd }) || '')
         .split('\n')
         .filter(Boolean);
@@ -147,6 +155,7 @@ export function verify(head, phase, cwd = ROOT) {
           )
             return false;
           const others = parents.filter(o => o !== p);
+          if (!others.every(onMain)) return false;
           const merged = (
             tryGit(['diff', '--name-only', p, sha], { cwd }) || ''
           )
@@ -295,6 +304,7 @@ function control() {
     writeFileSync(path.join(dir, 'b.txt'), 'landed on main after review\n');
     g(['add', '-A']);
     g([...id, 'commit', '-q', '-m', 'main moved']);
+    g(['branch', '-f', 'main', 'HEAD']);
     g([
       ...id,
       'merge',
@@ -327,7 +337,28 @@ function control() {
     const okF =
       f.ok === false &&
       f.problems.some(x => x.startsWith('diff from reviewed commit'));
-    return okA && okB && okC && okD && okE && okF;
+    // G: a merge that copies an unreviewed source change from a parent that is not on main fails.
+    g(['checkout', '-q', '-b', 'unreviewed', reviewed]);
+    writeFileSync(path.join(dir, 'a.txt'), 'unreviewed change\n');
+    g(['add', '-A']);
+    g([...id, 'commit', '-q', '-m', 'unreviewed']);
+    g(['checkout', '-q', '--detach', receiptHead]);
+    g([
+      ...id,
+      'merge',
+      '-q',
+      '--no-ff',
+      '-X',
+      'theirs',
+      '-m',
+      'copy from unreviewed parent',
+      'unreviewed',
+    ]);
+    const gv = verify(g(['rev-parse', 'HEAD']), 'P99', dir);
+    const okG =
+      gv.ok === false &&
+      gv.problems.some(x => x.startsWith('diff from reviewed commit'));
+    return okA && okB && okC && okD && okE && okF && okG;
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -336,7 +367,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected, merge copying from an unreviewed parent rejected)`
     );
     process.exit(ok ? 0 : 1);
   }
