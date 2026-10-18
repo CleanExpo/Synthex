@@ -94,23 +94,39 @@ describe('J12 golden regressions', () => {
   });
 
   // ── Planted regressions: pre-fix code, same assertion ─────────────────────
-  function control(slug: string, sha: string, v: Verdict): JevResult {
+  function control(
+    slug: string,
+    sha: string,
+    v: Verdict,
+    planted = `pre-fix ${sha}^`
+  ): JevResult {
     return {
       id: `J12-control-${slug}`,
       family: FAMILY,
       kind: 'control',
       state: v.pass ? 'PASS' : 'FAIL',
-      detail: `planted pre-fix ${sha}^ :: ${v.detail}`,
+      detail: `planted ${planted} :: ${v.detail}`,
     };
   }
 
-  it('control: pre-fix escapeHtml (ae6e2739^) is caught', () => {
+  // ae6e2739^ was a no-op (it replaced & < > with themselves), which every
+  // assertEscapeHtml row catches. The planted escaper is the stricter mutant:
+  // & < > encoded, " and ' not, so only the quote rows can catch it.
+  it('control: escapeHtml without quote escaping (ae6e2739, SYN-862) is caught', () => {
     function escapeHtml(s?: string) {
       if (!s) return '';
-      return s.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
     }
     results.push(
-      control('escape-html', 'ae6e2739', assertEscapeHtml(escapeHtml))
+      control(
+        'escape-html',
+        'ae6e2739',
+        assertEscapeHtml(escapeHtml),
+        'ae6e2739 without quote escaping'
+      )
     );
   });
 

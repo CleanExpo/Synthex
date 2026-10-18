@@ -15,6 +15,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import { aggregate, parseArgs, DEFAULTS } from './aggregate.mjs';
 
@@ -39,8 +40,10 @@ const scope = args.families ?? Object.keys(table.families);
 for (const id of scope)
   fs.rmSync(path.join(outDir, `${id}.jsonl`), { force: true });
 
+// Node runs Jest's bin directly: a bare 'npx' spawn has no shell, so it is
+// ENOENT on Windows (npx.cmd) and wherever npx is not on PATH.
 const jestArgs = [
-  'jest',
+  createRequire(import.meta.url).resolve('jest/bin/jest'),
   '--config',
   fixture.jestConfig ?? 'config/jest/jest.jev.cjs',
   '--passWithNoTests',
@@ -54,7 +57,7 @@ if (args.families) {
     `families[\\\\/](${ids.join('|')})\\.jev\\.test\\.ts$`
   );
 }
-const jest = spawnSync('npx', jestArgs, {
+const jest = spawnSync(process.execPath, jestArgs, {
   stdio: 'inherit',
   cwd: path.join(DEFAULTS.outDir, '../../../..'),
 });

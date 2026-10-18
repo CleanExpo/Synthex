@@ -407,7 +407,9 @@ function proposalControls(dir, brokenFamiliesFile) {
  * Planted self-test for run-det.mjs, at its exit code: a family whose Jest
  * test records valid rows and then fails an assertion must not exit 0, and
  * neither may a run where a later --family never produced rows. The clean
- * twin must exit 0, so the reds are the plants, not a broken fixture.
+ * twin must exit 0, so the reds are the plants, not a broken fixture. It must
+ * also exit 0 with no npx on PATH: a bare 'npx' spawn is ENOENT there, as it
+ * is on Windows (npx.cmd needs a shell).
  */
 function runDetControls() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'jev-run-det-'));
@@ -470,9 +472,10 @@ it('records valid rows, then asserts', () => {
     ['Jest red after valid rows', ['CJ'], false],
     ['clean twin', ['CK'], true],
     ['second --family has no rows', ['CK', 'CM'], false],
+    ['clean twin, no npx on PATH', ['CK'], true, { PATH: dir }],
   ];
   let ok = true;
-  for (const [name, scope, wantZero] of scenarios) {
+  for (const [name, scope, wantZero, env] of scenarios) {
     const r = spawnSync(
       process.execPath,
       [
@@ -485,7 +488,7 @@ it('records valid rows, then asserts', () => {
         '--jest-config',
         jestConfig,
       ],
-      { encoding: 'utf8' }
+      { encoding: 'utf8', env: { ...process.env, ...env } }
     );
     const good = (r.status === 0) === wantZero;
     if (!good) ok = false;
