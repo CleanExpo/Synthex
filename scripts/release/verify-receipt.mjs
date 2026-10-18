@@ -231,6 +231,11 @@ export function verify(head, phase, cwd = ROOT) {
         const j = JSON.parse(rep);
         const bound = String(j.head_sha || j.head || '');
         if (!bound) problems.push('review report names no head');
+        // The report must name its reviewer. That it is the reviewer's own output (not a file
+        // written after review) needs a signed reviewer attestation: DECISIONS.md OPEN-4 (Codex on
+        // P2 92bf3185).
+        if (!String(j.reviewer_agent || j.lane || '').trim())
+          problems.push('review report names no reviewer');
         else if (bound !== String(r.reviewed_commit))
           problems.push(
             'review report does not name the reviewed commit (full 40-hex SHA required)'
@@ -355,6 +360,7 @@ function control() {
       JSON.stringify({
         head_sha: reviewed,
         verdict: 'PASS',
+        reviewer_agent: 'control',
         blocking_findings: [],
       })
     );
@@ -444,6 +450,18 @@ function control() {
       return verify(g(['rev-parse', 'HEAD']), 'P99', dir);
     };
     const h = variant({ review_report: null });
+    const anon = variant({}, () =>
+      writeFileSync(
+        path.join(dir, report),
+        JSON.stringify({
+          head_sha: reviewed,
+          verdict: 'PASS',
+          blocking_findings: [],
+        })
+      )
+    );
+    const okAnon =
+      !anon.ok && anon.problems.some(x => x.includes('names no reviewer'));
     const okH = !h.ok && h.problems.some(x => x.includes('no review report'));
     const i = variant({}, () =>
       writeFileSync(
@@ -503,7 +521,8 @@ function control() {
       okI2 &&
       okI3 &&
       okJ &&
-      okK
+      okK &&
+      okAnon
     );
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -513,7 +532,7 @@ if (isMain(import.meta.url)) {
   if (args.includes('--control')) {
     const ok = control();
     console.log(
-      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected, merge copying from an unreviewed parent rejected, no review report / ledger rewrite / old-ancestor revert / short reviewed_commit rejected)`
+      `${ok ? 'PASS' : 'FAIL'} verify-receipt negative control (absent receipt rejected, receipt-only head passes, post-review change rejected, pure merge with a moved main passes, change inside the merge rejected, other manifest changed after review rejected, merge copying from an unreviewed parent rejected, no review report / ledger rewrite / old-ancestor revert / short reviewed_commit and an unnamed reviewer rejected)`
     );
     process.exit(ok ? 0 : 1);
   }
