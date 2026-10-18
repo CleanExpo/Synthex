@@ -4,16 +4,17 @@
  * DELETE /api/user/avatar - Remove avatar image
  *
  * AUTH: Uses `getUserIdFromRequestOrCookies()` for cookie-based JWT auth.
- * STORAGE: Uses lib/storage/platform-storage (files under public/uploads/<userId>/).
+ * STORAGE: NOT PROVISIONED. No durable object storage is configured, and
+ * local disk (public/uploads) does not survive restarts or reach other
+ * instances, so POST answers 503 FEATURE_NOT_PROVISIONED and saves nothing.
+ * DELETE still clears User.avatar and removes the caller's legacy local file.
  * DB: Uses Prisma `User.avatar` field (migrated from Supabase `profiles`
  * table to fix FK constraint violations for OAuth users — UNI-839).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  uploadToStorage,
-  deleteFromStorage,
-} from '@/lib/storage/platform-storage';
+import { deleteFromStorage } from '@/lib/storage/platform-storage';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 import { prisma } from '@/lib/prisma';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
@@ -57,40 +58,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert File to ArrayBuffer then to Buffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Stored under public/uploads/<userId>/ — scoped to the caller
-    const fileExt = file.name.split('.').pop();
-    const uploaded = await uploadToStorage(
-      userId,
-      `avatar.${fileExt}`,
-      buffer,
-      file.type
+    // No durable storage: refuse rather than acknowledge an upload that a
+    // restart or another instance would lose.
+    return notProvisionedResponse(
+      'Avatar upload is not available: durable file storage is not provisioned.'
     );
-    const publicUrl = uploaded.url;
-
-    // Update user avatar in Prisma (NOT Supabase profiles table)
-    try {
-      await prisma.user.update({
-        where: { id: userId },
-        data: { avatar: publicUrl },
-      });
-    } catch (dbError) {
-      logger.error('DB update error:', dbError);
-      // Clean up uploaded file if DB update fails
-      await deleteFromStorage(uploaded.path);
-      throw dbError;
-    }
-
-    return NextResponse.json({
-      success: true,
-      avatarUrl: publicUrl,
-      // Legacy snake_case alias for backward compatibility
-      avatar_url: publicUrl,
-      message: 'Avatar uploaded successfully',
-    });
   } catch (error: unknown) {
     logger.error('Avatar upload error:', error);
     return NextResponse.json(
