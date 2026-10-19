@@ -31,6 +31,23 @@ export interface UserProviderCredentials {
   provider: string;
 }
 
+/**
+ * Per-call options for generateContent (P5 / M10).
+ *
+ * costLedger 'caller': the caller receipts the generation itself (the AI
+ * Governor's receipt), so the generator must not write its own
+ * pipeline_cost_ledger row for the same provider calls — one row per call.
+ */
+export interface GenerateContentOptions {
+  costLedger?: 'self' | 'caller';
+}
+
+/** Provider-reported token usage, summed over every call one generation made. */
+interface UsageMeter {
+  inputTokens: number;
+  outputTokens: number;
+}
+
 // Business context used to personalise the AI system prompt
 interface OrgContext {
   businessName: string;
@@ -126,6 +143,8 @@ export interface GeneratedContent {
     model: string;
     tokens: number;
     processingTime: number;
+    /** Provider-reported usage summed over the generation's calls. */
+    usage?: { inputTokens: number; outputTokens: number };
   };
 }
 
@@ -185,11 +204,13 @@ export class AIContentGenerator {
    *   actor/tenant context. Internal callers use systemGenerationContext().
    * @param userCredentials - Optional user-supplied API key; when provided it
    *   overrides the platform-level key for this request only.
+   * @param options - See GenerateContentOptions (Governor-wrapped callers).
    */
   async generateContent(
     request: ContentRequest,
     ctx: GenerationContext,
-    userCredentials?: UserProviderCredentials
+    userCredentials?: UserProviderCredentials,
+    options: GenerateContentOptions = {}
   ): Promise<GeneratedContent> {
     requireGenerationContext(ctx, 'AIContentGenerator.generateContent');
     // Context is authoritative for the tenant: when the request carries no
@@ -308,6 +329,8 @@ export class AIContentGenerator {
         })
       : this.client;
 
+    const usage: UsageMeter = { inputTokens: 0, outputTokens: 0 };
+
     try {
       // Generate main content
       let mainContent = await this.callAI(
@@ -317,7 +340,8 @@ export class AIContentGenerator {
         thinkingEffort,
         orgContext,
         request.orgId ?? null,
-        request.type
+        request.type,
+        usage
       );
 
       // Inject E-E-A-T layout signals for SEO articles (SYN-478)
@@ -353,7 +377,8 @@ export class AIContentGenerator {
         mainContent,
         request,
         aiClient,
-        orgContext
+        orgContext,
+        usage
       );
 
       // Extract hashtags and emojis
@@ -387,13 +412,16 @@ export class AIContentGenerator {
       }).catch(() => {});
 
       // Org-attributed cost ledger row (SYN-MCP-003) — fire-and-forget,
-      // never blocks or fails the generation.
-      recordGenerationCost(ctx, {
-        pipelineName: 'content-generation',
-        model,
-        inputTokens: Math.round(estimatedTokens * 0.4),
-        outputTokens: Math.round(estimatedTokens * 0.6),
-      }).catch(() => {});
+      // never blocks or fails the generation. Skipped when the caller's
+      // Governor receipt is this generation's ledger row.
+      if (options.costLedger !== 'caller') {
+        recordGenerationCost(ctx, {
+          pipelineName: 'content-generation',
+          model,
+          inputTokens: Math.round(estimatedTokens * 0.4),
+          outputTokens: Math.round(estimatedTokens * 0.6),
+        }).catch(() => {});
+      }
 
       const posted =
         request.type === 'post' ? sanitizeSocialPost(mainContent) : mainContent;
@@ -419,6 +447,7 @@ export class AIContentGenerator {
           model,
           tokens: estimatedTokens,
           processingTime,
+          usage: { ...usage },
         },
       };
     } catch (error) {
@@ -677,7 +706,8 @@ Generate content that will maximize engagement and shares.
     thinking?: 'low' | 'medium' | 'high' | 'max',
     orgContext?: OrgContext | null,
     orgId?: string | null,
-    taskType?: string
+    taskType?: string,
+    usage?: UsageMeter
   ): Promise<string> {
     // 3-layer prompt system (SYN-515): prefer the layered Core+Client prompt when
     // the org has opted in (BrandOperatingSystem / ClientProfile). When it yields
@@ -718,6 +748,11 @@ Generate content that will maximize engagement and shares.
           : {}),
       });
 
+      if (usage && response.usage) {
+        usage.inputTokens += response.usage.prompt_tokens ?? 0;
+        usage.outputTokens += response.usage.completion_tokens ?? 0;
+      }
+
       const content = response.choices[0]?.message?.content;
       if (!content) {
         throw new Error('No content generated');
@@ -745,7 +780,8 @@ Generate content that will maximize engagement and shares.
     originalContent: string,
     request: ContentRequest,
     aiClient: AIProvider,
-    orgContext?: OrgContext | null
+    orgContext?: OrgContext | null,
+    usage?: UsageMeter
   ): Promise<ContentVariation[]> {
     const variations: ContentVariation[] = [];
 
@@ -774,7 +810,8 @@ Keep the same message but change the style and tone.
           undefined,
           orgContext ?? null,
           request.orgId ?? null,
-          request.type
+          request.type,
+          usage
         );
         variations.push({
           id: `var-${crypto.randomUUID()}`,
@@ -993,12 +1030,12 @@ Keep the same message but change the style and tone.
    */
   async batchGenerate(
     requests: ContentRequest[],
-    ctx: GenerationContext
+    ctx: GenerationContext,
+    generate: (request: ContentRequest) => Promise<GeneratedContent> = r =>
+      this.generateContent(r, ctx)
   ): Promise<GeneratedContent[]> {
     requireGenerationContext(ctx, 'AIContentGenerator.batchGenerate');
-    return mapWithConcurrency(requests, BATCH_CONCURRENCY_LIMIT, request =>
-      this.generateContent(request, ctx)
-    );
+    return mapWithConcurrency(requests, BATCH_CONCURRENCY_LIMIT, generate);
   }
 
   /**
@@ -1015,7 +1052,9 @@ Keep the same message but change the style and tone.
     days: number,
     platforms: string[],
     postsPerDay: number,
-    ctx: GenerationContext
+    ctx: GenerationContext,
+    generate: (request: ContentRequest) => Promise<GeneratedContent> = r =>
+      this.generateContent(r, ctx)
   ): Promise<Map<string, GeneratedContent[]>> {
     requireGenerationContext(ctx, 'AIContentGenerator.generateContentCalendar');
     const organizationId = isSystemOrganization(ctx.organizationId)
@@ -1032,24 +1071,21 @@ Keep the same message but change the style and tone.
 
       for (const platform of platforms) {
         for (let post = 0; post < postsPerDay; post++) {
-          const content = await this.generateContent(
-            {
-              type: 'post',
-              platform: platform as ContentRequest['platform'],
-              tone: (
-                [
-                  'professional',
-                  'casual',
-                  'inspirational',
-                ] as ContentRequest['tone'][]
-              )[post % 3],
-              includeHashtags: true,
-              includeEmojis: true,
-              includeCTA: post === postsPerDay - 1, // CTA on last post
-              orgId: organizationId,
-            },
-            ctx
-          );
+          const content = await generate({
+            type: 'post',
+            platform: platform as ContentRequest['platform'],
+            tone: (
+              [
+                'professional',
+                'casual',
+                'inspirational',
+              ] as ContentRequest['tone'][]
+            )[post % 3],
+            includeHashtags: true,
+            includeEmojis: true,
+            includeCTA: post === postsPerDay - 1, // CTA on last post
+            orgId: organizationId,
+          });
 
           dayContent.push(content);
         }
