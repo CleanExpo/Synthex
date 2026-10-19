@@ -79,8 +79,8 @@ export interface ReferenceSetOption {
 }
 
 // Batch generation (spec 2026-07-12 Part E) — a `variants: 3` POST to the
-// same endpoint. Batch responses carry no imageBase64 (Vercel 4.5MB response
-// cap), so base64-provider variants render via mediaAssetImageSrc() instead.
+// same endpoint. Batch responses carry imageBase64 only for variants with no
+// imageUrl (base64-provider output; Vercel 4.5MB response cap).
 export interface BatchImage extends ImageResult {
   generationId: string;
   mediaAssetId?: string;
@@ -284,6 +284,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
             success: boolean;
             provider: ImageProvider;
             imageUrl?: string;
+            imageBase64?: string;
             mediaAssetId?: string;
             metadata?: {
               seed?: number;
@@ -301,6 +302,7 @@ export function useImageGeneration(): UseImageGenerationReturn {
             success: img.success,
             provider: img.provider,
             imageUrl: img.imageUrl,
+            imageBase64: img.imageBase64,
             mediaAssetId: img.mediaAssetId,
             metadata: img.metadata,
             grounded: img.grounded,

@@ -313,9 +313,15 @@ function VariantCell({
     );
   }
 
+  // Base64-only variants (no hosted URL) render from their bytes, as the
+  // single-image preview does; the asset endpoint is used only with an id.
   const src =
     image.imageUrl ??
-    (image.mediaAssetId ? mediaAssetImageSrc(image.mediaAssetId) : undefined);
+    (image.imageBase64
+      ? `data:image/png;base64,${image.imageBase64}`
+      : image.mediaAssetId
+        ? mediaAssetImageSrc(image.mediaAssetId)
+        : undefined);
   const isRanked = verdict?.state === 'ranked';
   const isRejected = verdict?.state === 'rejected';
 

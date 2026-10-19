@@ -422,7 +422,11 @@ async function _handlePost(request: NextRequest) {
         }
       );
 
-      // (3) respond — NO imageBase64 (Vercel 4.5MB limit, spec Part B).
+      // (3) respond — imageBase64 ONLY for variants with no imageUrl (the
+      // Gemini escape hatch returns bytes, not a hosted URL). Without it such a
+      // variant is a success with nothing to show: there is no mediaAssetId
+      // (media_assets is not provisioned). URL-backed variants stay slim
+      // because of the Vercel 4.5MB response limit (spec Part B).
       const anySuccess = results.some(r => r.success);
       if (!anySuccess) {
         // ALL variants blocked (Real Images Only, no owned coverage or
@@ -454,6 +458,7 @@ async function _handlePost(request: NextRequest) {
           success: r.success,
           provider: r.provider,
           imageUrl: r.imageUrl,
+          ...(!r.imageUrl && r.imageBase64 && { imageBase64: r.imageBase64 }),
           metadata: r.metadata,
           grounded: r.grounded,
           referenceSet: r.referenceSet,
