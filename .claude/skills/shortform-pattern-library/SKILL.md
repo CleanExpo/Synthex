@@ -158,7 +158,9 @@ Run `harness/analyze.py` on the rendered master and fail the cut if any line fai
 ## 8. Refresh the corpus
 
 ```bash
-# scratch dir with playwright@1.64.1 installed; whisper ggml-base.en model downloaded
+# scratch dir: npm i playwright@1.64.1 (Chromium 156 used on 19/10/2026)
+# model: curl -L -o ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+#        expected SHA-1 137c40403d78fd54d454da0f9bd998f78703390c (shasum -a 1); whisper-cli from brew whisper-cpp
 NODE_PATH=<scratch>/node_modules node harness/harvest.cjs grid  <data> <handle> [...]
 NODE_PATH=<scratch>/node_modules node harness/harvest.cjs reels <data> <list.json>
 python3 -I harness/analyze.py <data> <ggml-base.en.bin>

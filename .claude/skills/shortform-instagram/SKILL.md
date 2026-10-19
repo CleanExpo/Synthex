@@ -125,7 +125,8 @@ Scorecard per Reel, read at 24 h and 7 d:
 ## 10. Gate checklist (feeds Gate A / Gate B)
 
 - [ ] 9:16 clean master, no foreign watermark, no border
-- [ ] Subject on screen in frame 1, text hook visible by 0.5 s (pattern library)
+- [ ] Subject (ideally a face) on screen and moving in frame 1; ≤8-word text hook on screen from
+      0.0 s unless the format is deliberately wordless (pattern library §2)
 - [ ] All text inside the safe zone with the Reels UI overlaid
 - [ ] Burned-in captions match the transcript
 - [ ] Original or licensed audio; `is_ai_generated` set correctly
