@@ -94,10 +94,19 @@ interface QuoteFilters {
 
 /**
  * GET /api/quotes
- * Retrieve quotes with optional filtering
+ * Retrieve the authenticated user's quotes with optional filtering
  */
 export async function GET(request: NextRequest) {
   try {
+    const userId = await extractUserId(request);
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
 
     // Parse query parameters
@@ -123,8 +132,8 @@ export async function GET(request: NextRequest) {
       filters.limit = 1;
     }
 
-    // Build where clause
-    const where: Record<string, unknown> = {};
+    // Build where clause — scoped to the caller's own quotes
+    const where: Record<string, unknown> = { userId };
 
     if (filters.category) {
       where.category = filters.category;
