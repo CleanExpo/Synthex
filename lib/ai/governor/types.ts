@@ -18,6 +18,9 @@
  */
 
 import type { ModelConfig } from '@/lib/ai/model-registry';
+import type { GovernorMode } from './mode';
+
+export type { GovernorMode } from './mode';
 
 /**
  * Providers the Governor mediates. Deliberately NOT the registry's own
@@ -131,6 +134,11 @@ export interface GovernorProvenance {
   };
   /** Populated when the Governor refused or the provider threw. */
   errorClass?: string;
+  /**
+   * Shadow mode only: the refusal the Governor WOULD have made in enforcing
+   * mode. The call ran anyway; this row is still its single receipt.
+   */
+  shadowRefusal?: { outcome: GovernorRefusal; reason: string };
   decidedAt: string;
 }
 
@@ -139,6 +147,12 @@ export interface ProviderCallResult<T> {
   data: T;
   inputTokens: number;
   outputTokens: number;
+  /**
+   * The model the call actually used, when the caller knows it. The receipt
+   * records and prices this id; an id the registry does not list is recorded
+   * at cost 0 with errorClass 'unpriced_model', never guessed.
+   */
+  modelId?: string;
 }
 
 /**
@@ -147,9 +161,12 @@ export interface ProviderCallResult<T> {
  * that reads a platform key from the environment.
  */
 export interface ResolvedCallContext {
-  model: ModelConfig;
+  mode: GovernorMode;
+  /** Null only in shadow mode, when registry resolution failed or was not reached. */
+  model: ModelConfig | null;
   provider: GovernorProvider;
-  apiKey: string;
+  /** Null only in shadow mode, when BYOK did not resolve or was not reached. */
+  apiKey: string | null;
   organizationId: string;
   brandSlug: string;
   runner: string;
@@ -169,7 +186,15 @@ export interface GovernedCallInput<T> {
   runId?: string;
   /** Pre-spend estimate used for the budget check. */
   estimate: { inputTokens: number; outputTokens: number };
-  /** The actual provider call. Only reached once every gate has passed. */
+  /**
+   * Absent means 'enforcing'. In 'shadow' a would-be refusal is logged and
+   * receipted, and the call still runs. Routes pass GOVERNOR_MODE.
+   */
+  mode?: GovernorMode;
+  /**
+   * The actual provider call. In enforcing mode only reached once every gate
+   * has passed; in shadow mode always reached.
+   */
   execute: (ctx: ResolvedCallContext) => Promise<ProviderCallResult<T>>;
 }
 

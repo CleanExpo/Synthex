@@ -12,7 +12,7 @@
  * suite.
  */
 
-import { getLatestModel } from '@/lib/ai/model-registry';
+import { getLatestModel, getModels } from '@/lib/ai/model-registry';
 import { estimateCostUsd } from '@/lib/ai/governor/model';
 
 jest.mock('@/lib/prisma', () => ({
@@ -39,7 +39,13 @@ jest.mock('@/lib/logger', () => ({
 
 import { prisma } from '@/lib/prisma';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
-import { governedCall, checkBudget, writeReceipt } from '@/lib/ai/governor';
+import {
+  governedCall,
+  governedRouteCall,
+  checkBudget,
+  writeReceipt,
+  GOVERNOR_MODE,
+} from '@/lib/ai/governor';
 import {
   ALL_PROVIDERS,
   BRAND,
@@ -583,5 +589,213 @@ describe('isolating controls for redundant guards', () => {
     expect(row.inputTokens).toBe(0);
     expect(row.outputTokens).toBe(0);
     expect(Number.isFinite(receipt.costUsd)).toBe(true);
+  });
+});
+
+/**
+ * P5 — shadow mode. SEAM: governedCall with `mode`, observed through the
+ * provider call (execute), the single ledger row, and the logger.
+ * Catches: a shadow call that blocks, a second (refusal) row, an unlogged
+ * would-be refusal, a mis-priced or guessed model. Misses: route wiring.
+ */
+describe('shadow mode', () => {
+  const exhausted = () => {
+    mocks.prisma.orgBudgetPolicy.findUnique.mockResolvedValue({
+      dailyCeilingUsd: 10,
+      providerDailyCeilingsUsd: null,
+      enforcementMode: 'enforce',
+    });
+    mocks.prisma.pipelineCostLedger.groupBy.mockResolvedValue([
+      { provider: 'anthropic', _sum: { costUsd: 10 } },
+    ]);
+  };
+  const shadowCall = (
+    execute: jest.Mock,
+    overrides: Partial<Parameters<typeof governedCall>[0]> = {}
+  ) =>
+    governedCall({
+      organizationId: ORG_ID,
+      brandSlug: BRAND,
+      runner: RUNNER,
+      provider: 'anthropic',
+      model: { kind: 'latest' },
+      pipelineName: 'governor-shadow-test',
+      estimate: ESTIMATE,
+      execute,
+      mode: 'shadow',
+      ...overrides,
+    });
+  const ok = (extra: Record<string, unknown> = {}) =>
+    jest.fn().mockResolvedValue({
+      data: 'served',
+      inputTokens: 1000,
+      outputTokens: 1000,
+      ...extra,
+    });
+
+  it('a budget refusal it WOULD make still runs the provider call once', async () => {
+    exhausted();
+    const execute = ok();
+
+    const result = await shadowCall(execute);
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(result.ok).toBe(true);
+    expect(result.ok && result.data).toBe('served');
+  });
+
+  it('logs the would-be refusal with its outcome and reason', async () => {
+    exhausted();
+
+    await shadowCall(ok());
+
+    const { logger } = jest.requireMock('@/lib/logger');
+    const [message, meta] = (logger.warn as jest.Mock).mock.calls[0];
+    expect(message).toContain('would refuse');
+    expect(meta.outcome).toBe('refused_budget_exhausted');
+    expect(String(meta.reason)).toContain('org_daily_exhausted');
+  });
+
+  it('writes exactly ONE completed receipt carrying the would-be refusal', async () => {
+    exhausted();
+
+    await shadowCall(ok());
+
+    expect(mocks.prisma.pipelineCostLedger.create).toHaveBeenCalledTimes(1);
+    const row = receiptRow(mocks)!;
+    expect(row.outcome).toBe('completed');
+    const prov = row.provenance as Record<string, unknown>;
+    expect(prov.shadowRefusal).toEqual({
+      outcome: 'refused_budget_exhausted',
+      reason: expect.stringContaining('org_daily_exhausted'),
+    });
+  });
+
+  it('hands execute a null key when BYOK did not resolve, and no platform key', async () => {
+    mocks.prisma.aPICredential.findMany.mockResolvedValue([]);
+    const execute = ok();
+
+    await shadowCall(execute);
+
+    expect(execute.mock.calls[0][0].apiKey).toBeNull();
+    expect(execute.mock.calls[0][0].mode).toBe('shadow');
+    const prov = receiptRow(mocks)!.provenance as Record<string, unknown>;
+    expect(prov.shadowRefusal).toMatchObject({
+      outcome: 'refused_byok_missing',
+    });
+  });
+
+  it('hands execute a null model when registry resolution failed', async () => {
+    const execute = ok();
+
+    await shadowCall(execute, {
+      model: { kind: 'registered', modelId: 'not-a-registered-model' },
+    });
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(execute.mock.calls[0][0].model).toBeNull();
+  });
+
+  it('prices the model the provider reports from the registry', async () => {
+    // A registered model other than the one the Governor resolved, priced
+    // differently, so the receipt can only be right if it prices what ran.
+    const latest = getLatestModel('anthropic');
+    const used = getModels('anthropic').find(
+      m =>
+        m.id !== latest.id &&
+        m.costPer1kTokens.input !== latest.costPer1kTokens.input
+    )!;
+
+    await shadowCall(ok({ modelId: used.id }));
+
+    const row = receiptRow(mocks)!;
+    expect(row.model).toBe(used.id);
+    expect(row.costUsd).toBeCloseTo(
+      used.costPer1kTokens.input + used.costPer1kTokens.output,
+      6
+    );
+  });
+
+  it('records an unregistered reported model at cost 0 as unpriced_model, never a guess', async () => {
+    await shadowCall(ok({ modelId: 'route-legacy-model-x' }));
+
+    const row = receiptRow(mocks)!;
+    expect(row.model).toBe('route-legacy-model-x');
+    expect(row.costUsd).toBe(0);
+    expect((row.provenance as Record<string, unknown>).errorClass).toBe(
+      'unpriced_model'
+    );
+  });
+
+  it('still records a provider error as failed_provider_error, one row', async () => {
+    exhausted();
+    const execute = jest.fn().mockRejectedValue(new Error('provider down'));
+
+    const result = await shadowCall(execute);
+
+    expect(result.outcome).toBe('failed_provider_error');
+    expect(mocks.prisma.pipelineCostLedger.create).toHaveBeenCalledTimes(1);
+    expect(receiptRow(mocks)!.outcome).toBe('failed_provider_error');
+  });
+
+  it('a call every gate permits carries no would-be refusal', async () => {
+    await shadowCall(ok());
+
+    const prov = receiptRow(mocks)!.provenance as Record<string, unknown>;
+    expect(prov.shadowRefusal).toBeUndefined();
+    const { logger } = jest.requireMock('@/lib/logger');
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('enforcing mode, explicit or absent, still refuses (control: planted failure is caught)', async () => {
+    exhausted();
+    const execute = ok();
+
+    const explicit = await shadowCall(execute, { mode: 'enforcing' });
+    const absent = await shadowCall(execute, { mode: undefined });
+
+    expect(explicit.outcome).toBe('refused_budget_exhausted');
+    expect(absent.outcome).toBe('refused_budget_exhausted');
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('GOVERNOR_MODE ships as shadow', () => {
+    expect(GOVERNOR_MODE).toBe('shadow');
+  });
+
+  it('governedRouteCall runs the route call in GOVERNOR_MODE and returns its data', async () => {
+    exhausted();
+    const execute = ok();
+
+    const data = await governedRouteCall({
+      organizationId: ORG_ID,
+      brandSlug: BRAND,
+      runner: RUNNER,
+      provider: 'anthropic',
+      model: { kind: 'latest' },
+      pipelineName: 'governor-shadow-test',
+      estimate: ESTIMATE,
+      execute,
+    });
+
+    expect(data).toBe('served');
+    expect(execute.mock.calls[0][0].mode).toBe(GOVERNOR_MODE);
+  });
+
+  it('governedRouteCall rethrows the route call’s own error', async () => {
+    const boom = new Error('route provider failed');
+
+    await expect(
+      governedRouteCall({
+        organizationId: ORG_ID,
+        brandSlug: BRAND,
+        runner: RUNNER,
+        provider: 'anthropic',
+        model: { kind: 'latest' },
+        pipelineName: 'governor-shadow-test',
+        estimate: ESTIMATE,
+        execute: jest.fn().mockRejectedValue(boom),
+      })
+    ).rejects.toBe(boom);
   });
 });
