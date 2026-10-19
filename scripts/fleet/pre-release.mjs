@@ -98,19 +98,24 @@ export function evaluate(f, pol = policy()) {
     state: onMini || f.allowCloud ? 'PASS' : 'FAIL',
     detail: f.root,
   });
+  // Red PRs are reported at once (founder rule), but the PR of the branch under review never
+  // blocks its own review (CodeRabbit on #1024: that deadlocks the fix round), and an unreadable
+  // PR list is reported without blocking.
+  const others = (f.redPrs || []).filter(p => p.branch !== f.branch);
+  const own = (f.redPrs || []).filter(p => p.branch === f.branch);
   items.push({
     id: 'visible-red',
     text:
       f.redPrs === null
-        ? 'open PR checks unreadable'
-        : `${f.redPrs.length} open PR(s) with a failing check`,
-    state:
-      f.redPrs === null
-        ? 'INCONCLUSIVE'
-        : f.redPrs.length === 0
-          ? 'PASS'
-          : 'FAIL',
-    detail: (f.redPrs || []).map(p => `#${p.number} ${p.failed}`).join('; '),
+        ? 'open PR checks unreadable (reported, not blocking)'
+        : `${others.length} other open PR(s) with a failing check${own.length ? `; this branch's own PR is red (reported, being fixed)` : ''}`,
+    state: others.length === 0 ? 'PASS' : 'FAIL',
+    detail: (f.redPrs || [])
+      .map(
+        p =>
+          `#${p.number}${p.branch === f.branch ? ' (this branch)' : ''} ${p.failed}`
+      )
+      .join('; '),
   });
   return items;
 }
@@ -130,11 +135,20 @@ function gather() {
     tryGit(['rev-parse', '--abbrev-ref', 'HEAD']) || opt('--branch', '');
   const m = /^feature\/fleet-p(-?\d+)-/.exec(branch);
   const phase = opt('--phase', m ? `P${m[1]}` : null);
-  const changed = (
-    tryGit(['diff', '--name-only', '--no-renames', '-z', base, head]) || ''
-  )
-    .split('\0')
-    .filter(Boolean);
+  const changed =
+    // Three-dot: only the branch's own changes since the merge base; main's later edits would
+    // otherwise read as reverts and trip the protected-path rule (CodeRabbit on #1024).
+    (
+      tryGit([
+        'diff',
+        '--name-only',
+        '--no-renames',
+        '-z',
+        `${base}...${head}`,
+      ]) || ''
+    )
+      .split('\0')
+      .filter(Boolean);
   const commits = (tryGit(['rev-list', `${base}..${head}`]) || '')
     .split('\n')
     .filter(Boolean)
@@ -149,13 +163,14 @@ function gather() {
     '--state',
     'open',
     '--json',
-    'number,statusCheckRollup',
+    'number,headRefName,statusCheckRollup',
   ]);
   let redPrs = null;
   try {
     redPrs = JSON.parse(pr.stdout)
       .map(p => ({
         number: p.number,
+        branch: p.headRefName,
         failed: (p.statusCheckRollup || [])
           .filter(c =>
             [
@@ -294,8 +309,24 @@ function control() {
         ) === 'FAIL',
     ],
     [
-      'unreadable PR list is inconclusive, not pass',
-      () => state({ redPrs: null }, 'visible-red') === 'INCONCLUSIVE',
+      'unreadable PR list is reported, not blocking',
+      () => state({ redPrs: null }, 'visible-red') === 'PASS',
+    ],
+    [
+      "this branch's own red PR does not block its review",
+      () =>
+        state(
+          {
+            redPrs: [
+              {
+                number: 1024,
+                branch: 'feature/fleet-p3-contract',
+                failed: 'CodeQL',
+              },
+            ],
+          },
+          'visible-red'
+        ) === 'PASS',
     ],
   ];
   const bad = cases.filter(([, fn]) => !fn());
