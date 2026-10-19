@@ -7,8 +7,8 @@ and "going public" are out of scope (P10 retired). Never raise them as blockers.
 quotas and per-organisation attribution ARE in scope as safety infrastructure.
 
 **Metric of record.** Synthex earns nothing itself. It succeeds when a Unite Group business gains paying
-customers or MRR (Unite-Group `NORTH-STAR.md`). Focus until 18/11/2026 (FD-10): CARSI paid enrolments and
-RestoreAssist trials. In every handoff, name the client metric the change moves, or say "none: internal
+customers or MRR (Unite-Group `NORTH-STAR.md`). Fleet direction for 30 days from 19/10/2026 (FD-10): autonomous marketing for CARSI
+(paid enrolments) and RestoreAssist (trial sign-ups). In every handoff, name the client metric the change moves, or say "none: internal
 plumbing". Per-client metric definitions and where each is read: OPEN, not yet recorded here.
 
 **Authority.** `docs/governance/CONSTITUTION.md` overrides this file. Decisions: `DECISIONS.md` (FD-\* rows
