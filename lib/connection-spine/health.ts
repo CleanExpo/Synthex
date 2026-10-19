@@ -187,7 +187,7 @@ function mapUniteGroupTransport(
       status: 'action_required',
       detail: 'Witness receiver is configured but not reachable.',
       action:
-        'Check the Unite-Group /api/events deployment and the events URL.',
+        'Check the Unite-Group /api/webhooks/synthex receiver and the events URL.',
     };
   }
   return {
