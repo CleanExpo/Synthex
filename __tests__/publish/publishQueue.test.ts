@@ -365,40 +365,53 @@ describe('processPublishQueue', () => {
 
     await processPublishQueue();
 
-    // The crash-recovery reclaim runs every pass (releases items stranded in
-    // 'publishing' by a worker that died before resolving them).
+    // The crash-recovery reclaim runs every pass. A row stranded in
+    // 'publishing' may already be live, so it is surfaced as failed with NO
+    // retry (nextRetryAt null) and an outcome-unknown error — never re-sent
+    // automatically (P5, at-most-once).
     expect(mockPublishQueueItem.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: 'publishing' }),
         data: expect.objectContaining({
           status: 'failed',
-          nextRetryAt: expect.any(Date),
+          nextRetryAt: null,
+          lastError: expect.stringMatching(/outcome unknown/i),
         }),
       })
     );
   });
 
-  it('a reclaimed (failed) item becomes due and publishes on the same pass', async () => {
-    // Repro: an item was stranded in 'publishing' (worker crashed). The reclaim
-    // flips it to 'failed' + nextRetryAt<=now; the due-fetch then returns it and
-    // it publishes normally — proving the post is no longer silently lost.
-    // One stale item reclaimed, then the per-item claim succeeds — both
-    // updateMany calls report count 1.
-    mockPublishQueueItem.updateMany.mockResolvedValue({ count: 1 });
-    mockPublishQueueItem.findMany.mockResolvedValue([
-      {
-        ...BASE_QUEUE_ITEM,
-        status: 'failed',
-        attempts: 0,
-        nextRetryAt: new Date(Date.now() - 1000),
-      },
-    ]);
+  it('a reclaimed (outcome-unknown) item is never selected or claimed again', async () => {
+    // At-most-once (P5): reclaim leaves nextRetryAt null, and both the due-fetch
+    // and the per-item claim only take a 'failed' row whose nextRetryAt is due,
+    // so a post that may already be live is never dispatched a second time.
+    mockPublishQueueItem.findMany.mockResolvedValue([BASE_QUEUE_ITEM]);
 
-    const result = await processPublishQueue();
+    await processPublishQueue();
 
-    // updateMany fires twice: the start-of-pass reclaim + the per-item claim.
-    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledTimes(2);
-    expect(result.published).toBe(1);
+    expect(mockPublishQueueItem.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: expect.arrayContaining([
+            expect.objectContaining({
+              status: 'failed',
+              nextRetryAt: { lte: expect.any(Date) },
+            }),
+          ]),
+        },
+      })
+    );
+    expect(mockPublishQueueItem.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: BASE_QUEUE_ITEM.id,
+          OR: expect.arrayContaining([
+            { status: 'failed', nextRetryAt: { lte: expect.any(Date) } },
+          ]),
+        }),
+        data: { status: 'publishing' },
+      })
+    );
   });
 
   it('publishes successfully and marks item published', async () => {
@@ -499,7 +512,10 @@ describe('processPublishQueue', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           id: BASE_QUEUE_ITEM.id,
-          status: { in: ['pending', 'failed'] },
+          OR: [
+            { status: 'pending' },
+            { status: 'failed', nextRetryAt: { lte: expect.any(Date) } },
+          ],
         }),
         data: expect.objectContaining({ status: 'publishing' }),
       })
