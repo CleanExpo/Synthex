@@ -484,6 +484,22 @@ export class APISecurityChecker {
         return { isValid: false, error: 'No bearer token provided' };
       }
 
+      // P4 machine key: the key's user, only on a route its scopes grant.
+      if (token.startsWith('smk_')) {
+        const { resolveAgentPrincipalForRequest } =
+          await import('@/lib/auth/agent-principal');
+        const principal = await resolveAgentPrincipalForRequest(request, {
+          rateLimit: false,
+        });
+        return principal.kind === 'granted'
+          ? { isValid: true, userId: principal.userId, userRole: 'user' }
+          : {
+              isValid: false,
+              error:
+                principal.kind === 'denied' ? principal.code : 'Invalid token',
+            };
+      }
+
       const jwtSecret = getEnv('JWT_SECRET');
       if (!jwtSecret) {
         return { isValid: false, error: 'JWT_SECRET is not configured' };
