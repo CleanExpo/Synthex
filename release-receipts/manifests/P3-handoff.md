@@ -1,6 +1,6 @@
 # Handoff P3 (contract)
 
-Reviewed commit: 5ed1e82e6a4b0c34195dac55153cfbfb27ad6503
+Reviewed commit: 1ca09de179e94c475080bcbcf7f760d4d5e94d96
 Receipt: release-receipts/P3.json
 Gate manifest: release-receipts/manifests/P3-gate.json
 Review: release-receipts/manifests/P3-review.json

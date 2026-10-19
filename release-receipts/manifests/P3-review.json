@@ -1,0 +1,107 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "p3-review-2026-10-19",
+  "base_sha": "c7eac8e7757db87ac978e30e9d222c1f90934f98",
+  "head_sha": "1ca09de179e94c475080bcbcf7f760d4d5e94d96",
+  "reviewed_at": "2026-10-19T02:43:25.588403+00:00",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "summary": "P3 lands the machine contract: a generated OpenAPI 3.1 spec covering 774 route files, an exception ledger (39 entries) for routes the generator cannot follow statically, generated llms.txt / error-codes / rate-limits tables, an openapi-drift CI job, the lib/storage/object-storage helper behind avatar upload, video archive and private references (FD-7), and the pre-release fleet check that gates merges behind protected/squashed/gated/trailers/one-sweep/on-mini/visible-red. Definition of done: gen-openapi --check PASS (774 paths, 39 unresolved, 39 listed); jev:det J1 PASS 643/643. No P0 or P1 defects observed.",
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "coverage.reviewed plus coverage.not_reviewed name every path returned by `git diff --name-only c7eac8e7757d..1ca09de179e9` exactly once (37 entries) and nothing else. No file silently dropped, no invented path."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Spec docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md (P3 row: 'Machine contract M3, M7 in part') + 2026-10-17-vibe-to-leader-amendments.md (AM-1..AM-5). M3 satisfied: scripts/api/gen-openapi.mjs produces docs/api/openapi.generated.json + docs/api/openapi.yaml covering 774 route.ts files. M7 satisfied: docs/api/error-codes.md, docs/api/rate-limits.md, public/llms.txt are generated and committed; .github/workflows/openapi-drift.yml runs gen-openapi.mjs --check + gen-machine-docs.mjs --check. AM-1 satisfied: scripts/fleet/selftest.mjs proves Cloudroom isolation. AM-2 satisfied: scripts/fleet/pre-release.mjs gates on the merge-phase check. AM-4 satisfied: scripts/fleet/policy.json is in the repo. AM-5 satisfied: scripts/fleet/verify-protected.mjs recognises `Fleet-Role: orchestrator` + `Protected-Change: <reason>` trailers, used on 5ed1e82e6a4b which added scripts/api/success-exceptions.json to protected_paths. AM-3 (P10 billing) is explicitly deferred per the amendment."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "Diff to scripts/fleet/policy.json adds scripts/api/success-exceptions.json to protected_paths; no entry was removed. scripts/fleet/pre-release.mjs adds 7 gates (protected, squashed, gated, trailers, one-sweep, on-mini, visible-red) without weakening any prior check. scripts/api/gen-openapi.mjs --check refuses to pass when an unresolved success response is not listed in scripts/api/success-exceptions.json (strict direction). scripts/fleet/verify-protected.mjs now judges merge commits on what the merge itself authored (git merge-tree --write-tree), a tightening, not a weakening."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "N/A",
+      "reason": "No mutants were planted or run in this P3 review. Mutation testing is a follow-up lane (Codex / MiniMax on the cloud sandbox or the mini) per the fleet's lane plan, not part of the P3 deliverable; a planted mutant is judged by an agent that has not seen the source under test, so doing it from this review session would conflate reviewer and implementer.",
+      "evidence": "Inspected the diff for planted mutants (none) and the checklist/mutants field; the only P3-change in scripts/fleet/lib.mjs is the MAX_BUFFER raise (legitimate, evidence: `const MAX_BUFFER = 512 * 1024 * 1024;`). No other planted-mutant-shaped diff lines.",
+      "mutants": []
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "`node scripts/api/gen-openapi.mjs --control` catches the baseline, a planted-route case and a deleted-spec-entry case (3/3). `node scripts/api/gen-machine-docs.mjs --control` PASS. `node scripts/fleet/verify-protected.mjs --control` PASS (13/13 controls, including the new mergeAuthored case using `git merge-tree --write-tree`). `node scripts/fleet/pre-release.mjs --control` PASS (13/13). tests/unit/storage/object-storage-client-guard.test.ts (147 lines) fails if a non-server file imports lib/storage/object-storage (PASS at HEAD)."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "Definition of done run from a clean worktree (HEAD = 1ca09de179e9): `node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json` -> 'route files: 774; exempt entries: 0; expected paths: 774; committed spec paths: 774; regenerated paths: 774; unresolved success responses: 39; listed exceptions: 39; PASS'. `npm run jev:det -- --family J1` -> 'Tests: 643 passed, 643 total' / 'PASS J1 PASS cases=640 pass=601 fail=0 known_gap=39 inconclusive=0 controls=3/3'. `node scripts/api/gen-machine-docs.mjs --check` -> up to date. `npm run type-check` -> exit 0. `npm run lint` -> exit 0."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "All semantic changes are additive. New files (13): lib/storage/object-storage.ts, scripts/api/gen-openapi.mjs, scripts/api/gen-machine-docs.mjs, scripts/api/success-exceptions.json, proposals/P3/scripts/api/exempt-routes.json, plus the 5 new tests and 3 new docs/api/* generated artefacts. Edited files: app/api/user/avatar/route.ts (now uploads to avatars bucket via the helper; FEATURE_NOT_PROVISIONED 503 path preserved when credentials are missing), lib/ai/structured-output.ts (added inputJsonSchema with io:'input', draft-2020-12, in tools array only), lib/services/ai/reference-library-private.ts (fails closed on non-signed URLs), lib/services/ai/video/artifact-store.ts (isAllowedImageHost + assertExternalUrlSafe + redirect:'error' on the download), scripts/fleet/{lib,pre-release,run-phase,selftest,verify-protected}.mjs (new gates + buffer raise), scripts/fleet/policy.json (added success-exceptions.json), vercel.json (removed git.deploymentEnabled block per FD-9), package.json, .prettierignore, .github/workflows/openapi-drift.yml, DECISIONS.md. No production route other than the avatar was modified; no protected path was removed from policy.json."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "No new outbound network call. lib/services/ai/video/artifact-store.ts calls fetch(input.sourceUrl) only after isAllowedImageHost(url) and assertExternalUrlSafe(url), and sets redirect:'error' so a 3xx hop off an allowed fal host throws. lib/storage/object-storage.ts uses a server-side @supabase/supabase-js client built lazily with SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY, over HTTPS only. The client-guard test (tests/unit/storage/object-storage-client-guard.test.ts) blocks the helper from being imported by any non-server file. scripts/api/gen-openapi.mjs and scripts/api/gen-machine-docs.mjs read the source tree and write docs/api/* + public/llms.txt; no network. .github/workflows/openapi-drift.yml runs `npm ci` + `npx prisma generate` + the two generators; no extra network beyond the npm registry fetch from `npm ci` against the committed lockfile."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      ".github/workflows/openapi-drift.yml",
+      ".prettierignore",
+      "DECISIONS.md",
+      "app/api/user/avatar/route.ts",
+      "docs/api/error-codes.md",
+      "docs/api/openapi.generated.json",
+      "docs/api/openapi.yaml",
+      "docs/api/rate-limits.md",
+      "lib/ai/structured-output.ts",
+      "lib/services/ai/reference-library-private.ts",
+      "lib/services/ai/video/artifact-store.ts",
+      "lib/storage/object-storage.ts",
+      "package.json",
+      "proposals/P3/scripts/api/exempt-routes.json",
+      "public/llms.txt",
+      "release-receipts/manifests/P3-handoff.md",
+      "release-receipts/manifests/policy-hash.json",
+      "scripts/api/gen-machine-docs.mjs",
+      "scripts/api/gen-openapi.mjs",
+      "scripts/api/success-exceptions.json",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/pre-release.mjs",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "tests/unit/ai/private-reference-bound.test.ts",
+      "tests/unit/ai/reference-library-private-storage.test.ts",
+      "tests/unit/ai/video-artifact-store.test.ts",
+      "tests/unit/api-contract/gen-openapi.test.ts",
+      "tests/unit/api-contract/machine-docs.test.ts",
+      "tests/unit/api/not-provisioned/p2-u17-stub-retirement.test.ts",
+      "tests/unit/storage/object-storage-client-guard.test.ts",
+      "tests/unit/storage/object-storage.test.ts",
+      "vercel.json"
+    ],
+    "not_reviewed": [
+      {
+        "path": ".claude/hooks/pre-compact-context.py",
+        "reason": "Pre-existing Claude hook tooling, not part of the P3 contract deliverable; out of scope of M3 / M7 / FD-7."
+      },
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "Append-only fleet ledger log (*.jsonl per the brief's not_reviewed rule) — not source under review."
+      }
+    ]
+  },
+  "head": "1ca09de179e94c475080bcbcf7f760d4d5e94d96",
+  "lane": "minimax"
+}
