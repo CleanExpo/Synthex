@@ -287,9 +287,9 @@ const CLAIM_WHERE = {
 };
 
 const LINK_AUTHORITY =
-  'https://carsi.au/courses?utm_source=linkedin&utm_medium=social&utm_campaign=carsi-restoration-training-authority-2026-06-11&utm_content=d1';
+  'https://carsi.au/courses?utm_source=synthex&utm_medium=linkedin&utm_campaign=carsi-restoration-training-authority-2026-06-11&utm_content=d1';
 const LINK_STUDIO =
-  'https://carsi.au/courses?utm_source=linkedin&utm_medium=social&utm_campaign=studio-carsi&utm_content=d1';
+  'https://carsi.au/courses?utm_source=synthex&utm_medium=linkedin&utm_campaign=studio-carsi&utm_content=d1';
 
 function scheduleInput(h: ReturnType<typeof harness>, call = 0) {
   return h.schedule.mock.calls[call][0] as {
@@ -563,7 +563,7 @@ describe('approveAndScheduleStudioDraft', () => {
     const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
 
     const link =
-      'https://carsi.au/courses?utm_source=twitter&utm_medium=social&utm_campaign=studio-carsi&utm_content=d1';
+      'https://carsi.au/courses?utm_source=synthex&utm_medium=twitter&utm_campaign=studio-carsi&utm_content=d1';
     const input = scheduleInput(h);
     expect(input.content.endsWith(`\n\n${link}`)).toBe(true);
     expect(input.metadata.linkUrl).toBeUndefined();
@@ -1815,7 +1815,7 @@ describe('buildStudioFunnelLink', () => {
         draftId: 'd9',
       })
     ).toBe(
-      'https://restoreassist.com.au/pricing?ref=li&utm_source=linkedin&utm_medium=social&utm_campaign=studio-restoreassist&utm_content=d9'
+      'https://restoreassist.com.au/pricing?ref=li&utm_source=synthex&utm_medium=linkedin&utm_campaign=studio-restoreassist&utm_content=d9'
     );
   });
 

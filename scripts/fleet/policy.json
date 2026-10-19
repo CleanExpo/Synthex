@@ -152,7 +152,7 @@
       "may": ["edit-in-own-sandbox", "npm-scripts", "tests"],
       "may_not": [
         "install",
-        "git push",
+        "git push (except its own unit hand-off: git push origin HEAD:refs/fleet/units/<phase>/<unit>, A-26)",
         "gh",
         "protected-paths",
         "secrets",
@@ -309,19 +309,6 @@
         "node scripts/release/verify-waterline.mjs"
       ],
       "rollback": "none needed, read-only"
-    },
-    {
-      "id": "P10",
-      "slug": "billing",
-      "closes": "FD-4: ready for payments (Stripe test mode)",
-      "dod": [
-        "npm run jev:det -- --family J13",
-        "node scripts/billing/check-test-mode.mjs",
-        "npm run type-check",
-        "npm run lint",
-        "npm test"
-      ],
-      "rollback": "revert; live keys never set"
     }
   ],
   "tracked_env_allow": {

@@ -1,7 +1,8 @@
 /**
  * Unite-Group Connection Status API
  *
- * GET  /api/unite-group/status — owner-only: configuration state + live reachability ping
+ * GET  /api/unite-group/status — owner-only: configuration state, live reachability
+ *      ping, and the last event delivery outcome on this server instance
  * POST /api/unite-group/status — owner-only: fire a test event and return latency
  *
  * Used by UniteGroupWidget and the integrations settings tab to show the real-time
@@ -23,14 +24,15 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import {
+  UNITE_GROUP_EVENTS_PATH,
+  getLastUniteGroupDelivery,
+} from '@/lib/unite-group-connector';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const UNITE_GROUP_URL = process.env.UNITE_GROUP_EVENTS_URL;
-const UNITE_GROUP_KEY = process.env.UNITE_GROUP_EVENTS_API_KEY;
 
 /** All event types Synthex pushes to Unite-Group (sourced from UniteGroupEvent union). */
 const EVENT_TYPES = [
@@ -80,6 +82,8 @@ export async function GET(request: NextRequest) {
   const authResult = await verifyOwner(request);
   if (authResult instanceof NextResponse) return authResult;
 
+  const UNITE_GROUP_URL = process.env.UNITE_GROUP_EVENTS_URL;
+  const UNITE_GROUP_KEY = process.env.UNITE_GROUP_EVENTS_API_KEY;
   const configured = Boolean(UNITE_GROUP_URL && UNITE_GROUP_KEY);
 
   // Derive display-safe domain (no credentials)
@@ -107,11 +111,15 @@ export async function GET(request: NextRequest) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 3_000);
       try {
-        const res = await fetch(`${UNITE_GROUP_URL}/api/events`, {
-          method: 'HEAD',
-          headers: { 'x-api-key': UNITE_GROUP_KEY },
-          signal: controller.signal,
-        });
+        const res = await fetch(
+          `${UNITE_GROUP_URL}${UNITE_GROUP_EVENTS_PATH}`,
+          {
+            method: 'HEAD',
+            redirect: 'manual',
+            headers: { 'x-api-key': UNITE_GROUP_KEY },
+            signal: controller.signal,
+          }
+        );
         // Any HTTP response means the server is reachable (even 4xx)
         reachable = res.status > 0;
       } finally {
@@ -123,12 +131,21 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Last event delivery: a non-2xx or network failure is reported, never hidden.
+  const last = configured ? getLastUniteGroupDelivery() : null;
+  const delivery = !configured
+    ? { state: 'not_configured' as const }
+    : !last
+      ? { state: 'no_delivery_yet' as const }
+      : { state: last.ok ? ('ok' as const) : ('failing' as const), ...last };
+
   return NextResponse.json({
     configured,
     reachable,
     domain,
     pullEndpoint,
     eventTypes: [...EVENT_TYPES],
+    delivery,
   });
 }
 
@@ -137,6 +154,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const authResult = await verifyOwner(request);
   if (authResult instanceof NextResponse) return authResult;
+
+  const UNITE_GROUP_URL = process.env.UNITE_GROUP_EVENTS_URL;
+  const UNITE_GROUP_KEY = process.env.UNITE_GROUP_EVENTS_API_KEY;
 
   if (!UNITE_GROUP_URL || !UNITE_GROUP_KEY) {
     return NextResponse.json(
@@ -153,8 +173,9 @@ export async function POST(request: NextRequest) {
 
     let statusCode: number | undefined;
     try {
-      const res = await fetch(`${UNITE_GROUP_URL}/api/events`, {
+      const res = await fetch(`${UNITE_GROUP_URL}${UNITE_GROUP_EVENTS_PATH}`, {
         method: 'POST',
+        redirect: 'manual',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': UNITE_GROUP_KEY,
@@ -172,7 +193,9 @@ export async function POST(request: NextRequest) {
     }
 
     const latencyMs = Date.now() - startTime;
-    const success = statusCode !== undefined && statusCode < 500;
+    // Only a 2xx is an accepted event; a 3xx login redirect or 4xx is not.
+    const success =
+      statusCode !== undefined && statusCode >= 200 && statusCode < 300;
 
     return NextResponse.json({ success, latencyMs, statusCode });
   } catch (err) {

@@ -92,7 +92,44 @@ export function decide(
   return { action: 'pass' };
 }
 
-export function proxy(request: NextRequest) {
+/**
+ * P4 machine principal gate: a `Bearer smk_…` key on any /api route except
+ * the MCP transport (its own tool scopes) is resolved here, so a key outside
+ * its route allow-list gets 403 whatever the route's own auth helper answers.
+ * The route helpers re-resolve the key (lib/auth/jwt-utils.ts,
+ * lib/security/api-security-checker.ts) to obtain the key's user. Loaded
+ * lazily so ordinary requests never load the database client.
+ */
+export async function agentGate(
+  request: NextRequest
+): Promise<NextResponse | null> {
+  const { pathname } = request.nextUrl;
+  if (!pathname.startsWith('/api/') || /^\/api\/mcp(\/|$)/.test(pathname))
+    return null;
+  if (!request.headers.get('authorization')?.startsWith('Bearer smk_'))
+    return null;
+  const { resolveAgentPrincipalForRequest } =
+    await import('@/lib/auth/agent-principal');
+  const principal = await resolveAgentPrincipalForRequest(request);
+  if (principal.kind !== 'denied') return null;
+  return NextResponse.json(
+    {
+      error:
+        principal.status === 401
+          ? 'Unauthorized'
+          : principal.status === 429
+            ? 'Too Many Requests'
+            : 'Forbidden',
+      code: principal.code,
+    },
+    { status: principal.status }
+  );
+}
+
+export async function proxy(request: NextRequest) {
+  const denied = await agentGate(request);
+  if (denied) return denied;
+
   const cookies = request.cookies.getAll();
   const token = cookies.find(c => c.name === 'auth-token')?.value;
   const decision = decide(
@@ -111,6 +148,10 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Every API path, extension-suffixed ones included (/api/x/abc.json): the
+    // machine-key gate and its per-key rate limit must see them (CodeRabbit on
+    // #1025). The static-asset exclusion below applies to pages only.
+    '/api/:path*',
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|css|js|map|txt|xml|json)$).*)',
   ],
 };

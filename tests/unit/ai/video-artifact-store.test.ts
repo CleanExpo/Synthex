@@ -37,8 +37,16 @@ jest.mock('@/lib/storage/platform-storage', () => ({
 }));
 // The private-address check does DNS; the allowlist under test runs first.
 let mockUnsafe = false;
+// Number of upcoming checks that fail transiently (DNS lookup error).
+let mockDnsFailures = 0;
+let mockDnsChecks = 0;
 jest.mock('@/lib/security/validate-url', () => ({
   assertExternalUrlSafe: async () => {
+    mockDnsChecks++;
+    if (mockDnsFailures > 0) {
+      mockDnsFailures--;
+      throw new Error('getaddrinfo EAI_AGAIN');
+    }
     if (mockUnsafe) throw new Error('private address');
   },
 }));
@@ -75,6 +83,8 @@ beforeEach(() => {
   process.env.SUPABASE_URL = 'https://proj.supabase.co';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-key';
   mockUnsafe = false;
+  mockDnsFailures = 0;
+  mockDnsChecks = 0;
   global.fetch = jest.fn(async () => ok()) as never;
   mockUpload.mockResolvedValue({ data: {}, error: null });
   mockCreateAsset.mockResolvedValue({});
@@ -163,9 +173,36 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
   });
 
   it('refuses a fal host that resolves to a private address', async () => {
+    jest.useFakeTimers();
     mockUnsafe = true;
-    await expect(storeArtifact(INPUT)).rejects.toThrow('private address');
+    const p = storeArtifact(INPUT);
+    const assertion = expect(p).rejects.toThrow('private address');
+    await jest.runAllTimersAsync();
+    await assertion;
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('retries a transient DNS-check failure, then fetches once', async () => {
+    jest.useFakeTimers();
+    mockDnsFailures = 1;
+    const p = storeArtifact(INPUT);
+    const assertion = expect(p).resolves.toEqual({ storedUrl: STORED });
+    await jest.runAllTimersAsync();
+    await assertion;
+    expect(mockDnsChecks).toBe(2);
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('a DNS check that always fails never fetches', async () => {
+    jest.useFakeTimers();
+    mockDnsFailures = 99;
+    const p = storeArtifact(INPUT);
+    const assertion = expect(p).rejects.toThrow('EAI_AGAIN');
+    await jest.runAllTimersAsync();
+    await assertion;
+    expect(mockDnsChecks).toBe(3);
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockUpload).not.toHaveBeenCalled();
   });
 
   it('rebuilds the URL from the constant host, keeping only path and query', async () => {
@@ -194,15 +231,24 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
   });
 
   it('refuses an oversized artifact by declared size before reading it', async () => {
-    const read = jest.fn(async () => new ArrayBuffer(4));
-    global.fetch = (async () => ({
-      ok: true,
-      status: 200,
-      headers: { get: () => String(MAX_ARTIFACT_BYTES + 1) },
-      arrayBuffer: read,
-    })) as never;
+    let reads = 0;
+    let fetches = 0;
+    global.fetch = (async () => {
+      fetches++;
+      return {
+        ok: true,
+        status: 200,
+        headers: { get: () => String(MAX_ARTIFACT_BYTES + 1) },
+        arrayBuffer: async () => {
+          reads++;
+          return new ArrayBuffer(4);
+        },
+      };
+    }) as never;
     await expect(storeArtifact(INPUT)).rejects.toThrow('artifact too large');
-    expect(read).not.toHaveBeenCalled();
+    expect(reads).toBe(0);
+    // A size-cap refusal is final: exactly one attempt, no retry.
+    expect(fetches).toBe(1);
     expect(mockUpload).not.toHaveBeenCalled();
   });
 

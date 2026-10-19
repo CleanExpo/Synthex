@@ -21,7 +21,9 @@
  *
  * Usage:
  *   node scripts/api/gen-machine-docs.mjs            write the files
- *   node scripts/api/gen-machine-docs.mjs --check    exit 1 on drift
+ *   node scripts/api/gen-machine-docs.mjs --check    exit 1 on drift; exit 2
+ *     (INCONCLUSIVE) when the installed zod/typescript/prettier differ from
+ *     package-lock.json
  *   node scripts/api/gen-machine-docs.mjs --control  planted negative control:
  *     copy the inputs to a temp dir, require --check to pass on the faithful
  *     copy, plant a new error code, and require --check to fail.
@@ -35,6 +37,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import * as prettier from 'prettier';
 import ts from 'typescript';
+import { toolchainMismatch } from './toolchain-versions.mjs';
 
 const SCRIPT = fileURLToPath(import.meta.url);
 const DEFAULT_ROOT = path.resolve(path.dirname(SCRIPT), '../..');
@@ -1010,6 +1013,11 @@ async function main(argv) {
   const root = rootIdx === -1 ? DEFAULT_ROOT : path.resolve(argv[rootIdx + 1]);
   if (argv.includes('--control')) return control(root);
   if (argv.includes('--check')) {
+    const mismatch = toolchainMismatch(root, DEFAULT_ROOT);
+    if (mismatch) {
+      console.error(`[gen-machine-docs] INCONCLUSIVE: ${mismatch}; run npm ci`);
+      return 2;
+    }
     const drift = await check(root);
     if (drift.length) {
       console.error(

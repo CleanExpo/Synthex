@@ -242,7 +242,7 @@ describe('GET /api/unite-group/status', () => {
       expect(body.domain).toBe('nexus.unite.group');
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://nexus.unite.group/api/events',
+        'https://nexus.unite.group/api/webhooks/synthex',
         expect.objectContaining({
           method: 'HEAD',
           headers: expect.objectContaining({
@@ -338,7 +338,7 @@ describe('POST /api/unite-group/status', () => {
       expect(body.statusCode).toBe(200);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://nexus.unite.group/api/events',
+        'https://nexus.unite.group/api/webhooks/synthex',
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({

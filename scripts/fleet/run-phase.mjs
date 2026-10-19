@@ -36,7 +36,7 @@ import {
   changedFiles,
   STATES,
 } from './lib.mjs';
-import { evaluate as guard } from './guard.mjs';
+import { evaluate as guard, unitRefAllowed } from './guard.mjs';
 import { scanForSecrets, haltOnHit } from './secret-scan.mjs';
 import { spawnUnit, waitForUnits } from './fanout.mjs';
 import {
@@ -249,6 +249,15 @@ function integrate(unitArg, refArg) {
   if (!unit || !ref) {
     log('FAIL', 'need --unit and --branch');
     return 2;
+  }
+  // A unit is integrated only from its own hand-off ref, refs/fleet/units/<phase>/<unit>, so one
+  // unit's ref can never stand in for another's (CodeRabbit, major, on #1025).
+  if (!unitRefAllowed(phase, unit, ref)) {
+    log(
+      'FAIL',
+      `unit ${unit} must be integrated from refs/fleet/units/${String(phase).toLowerCase()}/${unit}, not ${ref}`
+    );
+    return 1;
   }
   git(['fetch', '-q', 'origin', ref]);
   const files = changedFiles('HEAD', 'FETCH_HEAD');
@@ -518,7 +527,7 @@ function review() {
   const brief = path.join(os.tmpdir(), `brief-${phase}.md`);
   writeFileSync(
     brief,
-    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-5: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase, policy in-repo, orchestrator protected-change trailer). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nTrust root: who authored a commit, a fleet trailer or a committed review report is author-supplied until the founder decides on a fleet signing key (DECISIONS.md OPEN-4); do not re-raise that boundary itself, judge everything else and report EVERY blocking finding in one report.\nCoverage: the review tool hides *.log and *.jsonl files (for example release-receipts/ledger/fleet.jsonl) from the diff and names them in diff_coverage.excluded_files. List each one in coverage.not_reviewed with that reason; a PASS must account for every changed file.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
+    `# Independent review brief: Synthex ${phase} ${ph.slug}\n\nSpec: docs/superpowers/specs/2026-10-17-vibe-to-leader-design.md, phase ${phase} (closes ${ph.closes}), AS AMENDED by docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md (founder-ratified amendments AM-1..AM-7: Cloudroom substrate, fleet merges through merge-phase.mjs, P10 billing phase (retired by AM-7), policy in-repo, orchestrator protected-change trailer, the Mission Control loop as J3, P10 retired under FD-8). Judge spec fidelity against the amended spec; a finding that restates an amended rule is answered by the amendments file and is not blocking. DECISIONS.md holds the founder's verbatim words.\nRelease order (rule B3): review comes before the receipt. release-receipts/${phase}.json at the reviewed head may be a stale receipt from an earlier review cycle; it is not under review. The release step rewrites it bound to this head, and verify-receipt plus merge-phase re-check that binding at the pushed head. A stale receipt is not a finding; a defect in verify-receipt's binding logic is.\nTrust root: who authored a commit, a fleet trailer or a committed review report is author-supplied until the founder decides on a fleet signing key (DECISIONS.md OPEN-4); do not re-raise that boundary itself, judge everything else and report EVERY blocking finding in one report.\nCoverage: the review tool hides *.log and *.jsonl files (for example release-receipts/ledger/fleet.jsonl) from the diff and names them in diff_coverage.excluded_files. List each one in coverage.not_reviewed with that reason; a PASS must account for every changed file.\nDefinition of done: ${ph.dod.join('; ')}.\nReview the diff ${base.slice(0, 12)}..${head.slice(0, 12)} for correctness, security (cross-tenant, secrets, injection), honest-status (no 2xx-with-empty-data), containment (protected paths, controls that can fail), and fidelity to the amended spec. Report schema 1 or 2 JSON with verdict PASS or FAIL and findings; cite file and line for each.\n`
   );
   const out = `release-receipts/manifests/${phase}-review.json`;
   const script = path.join(

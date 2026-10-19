@@ -2,8 +2,7 @@
  * SYN-MCP-004-1 (SYN-1080) — app/api/mcp/auth.ts scoped key registry.
  *
  * Covers the acceptance criteria: hash verify (sha-256 DB lookup), expired /
- * revoked keys rejected, legacy env-map fallback flagged behind
- * SYNTHEX_MCP_LEGACY_KEYS (and the old SYNTHEX_MCP_KEYS var no longer read).
+ * revoked keys rejected, and no environment-held key is ever read (P4/R16).
  */
 import { createHash } from 'crypto';
 
@@ -28,11 +27,7 @@ jest.mock('@/lib/prisma', () => ({
   default: prismaMock,
 }));
 
-import {
-  resolveOrgFromBearer,
-  hashMcpKey,
-  LEGACY_SCOPES,
-} from '@/app/api/mcp/auth';
+import { resolveOrgFromBearer, hashMcpKey } from '@/app/api/mcp/auth';
 
 const RAW_KEY = 'smk_test_raw_key_abc123';
 const KEY_HASH = createHash('sha256').update(RAW_KEY, 'utf8').digest('hex');
@@ -167,8 +162,8 @@ describe('resolveOrgFromBearer — DB key registry', () => {
   });
 });
 
-describe('resolveOrgFromBearer — legacy env-map fallback', () => {
-  it('resolves a legacy key behind SYNTHEX_MCP_LEGACY_KEYS with wildcard scopes', async () => {
+describe('resolveOrgFromBearer — no environment-held keys (P4/R16)', () => {
+  it('ignores a planted SYNTHEX_MCP_LEGACY_KEYS entry', async () => {
     mockFindUnique.mockResolvedValue(null);
     process.env.SYNTHEX_MCP_LEGACY_KEYS = JSON.stringify({
       'legacy-key': {
@@ -177,20 +172,6 @@ describe('resolveOrgFromBearer — legacy env-map fallback', () => {
         label: 'claude-code',
       },
     });
-
-    const caller = await resolveOrgFromBearer('Bearer legacy-key');
-
-    expect(caller).toEqual({
-      organizationId: 'org-legacy',
-      userId: 'user-legacy',
-      label: 'claude-code',
-      scopes: [...LEGACY_SCOPES],
-    });
-    expect(caller?.scopes).toEqual(['*']);
-  });
-
-  it('rejects when the legacy flag env is unset', async () => {
-    mockFindUnique.mockResolvedValue(null);
     expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
   });
 
@@ -206,26 +187,7 @@ describe('resolveOrgFromBearer — legacy env-map fallback', () => {
     expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
   });
 
-  it('rejects a key missing from the legacy map', async () => {
-    process.env.SYNTHEX_MCP_LEGACY_KEYS = JSON.stringify({
-      'other-key': { organizationId: 'o', userId: 'u', label: 'l' },
-    });
-    expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
-  });
-
-  it('rejects a malformed legacy map without throwing', async () => {
-    process.env.SYNTHEX_MCP_LEGACY_KEYS = 'not-json{';
-    expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
-  });
-
-  it('rejects a legacy entry missing organizationId/userId', async () => {
-    process.env.SYNTHEX_MCP_LEGACY_KEYS = JSON.stringify({
-      'legacy-key': { label: 'broken' },
-    });
-    expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
-  });
-
-  it('falls back to the legacy map when the DB is unavailable (cutover safety)', async () => {
+  it('denies when the key lookup DB is unavailable, even with a planted env key', async () => {
     mockFindUnique.mockRejectedValue(new Error('db down'));
     process.env.SYNTHEX_MCP_LEGACY_KEYS = JSON.stringify({
       'legacy-key': {
@@ -234,8 +196,7 @@ describe('resolveOrgFromBearer — legacy env-map fallback', () => {
         label: 'claude-code',
       },
     });
-    const caller = await resolveOrgFromBearer('Bearer legacy-key');
-    expect(caller?.organizationId).toBe('org-legacy');
+    expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
   });
 });
 
@@ -271,17 +232,10 @@ describe('resolveOrgFromBearer — suspended-org gate (Track B offboard)', () =>
     expect(caller?.organizationId).toBe('org-1');
   });
 
-  it('gates the LEGACY env-map path on org status too', async () => {
-    mockFindUnique.mockResolvedValue(null);
-    mockOrgFindUnique.mockResolvedValue({ status: 'suspended' });
-    process.env.SYNTHEX_MCP_LEGACY_KEYS = JSON.stringify({
-      'legacy-key': {
-        organizationId: 'org-legacy',
-        userId: 'user-legacy',
-        label: 'claude-code',
-      },
-    });
+  it('denies a VALID key when the organization check errors (fail closed)', async () => {
+    mockFindUnique.mockResolvedValue(dbRecord());
+    mockOrgFindUnique.mockRejectedValue(new Error('db down'));
 
-    expect(await resolveOrgFromBearer('Bearer legacy-key')).toBeNull();
+    expect(await resolveOrgFromBearer(`Bearer ${RAW_KEY}`)).toBeNull();
   });
 });

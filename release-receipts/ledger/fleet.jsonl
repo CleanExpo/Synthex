@@ -136,3 +136,12 @@
 {"ts":"2026-10-19T02:58:02.300Z","kind":"policy-hash","previous":"a43e70f5ce4497ced73a9473a93a2d02aa2ddba079c82c57da343ed4195fe37b","sha256":"f2a56eaa9b7e9a6366560e26ae5019efaeb8ac3b8e71e75d8e0d8e4d5105e852","source":"check-bootstrap --record"}
 {"ts":"2026-10-19T03:18:50.005Z","kind":"gate","phase":"P3","head":"0bdff06e283280810fb7a40f9f6388a9d1970b40","pass":7,"total":7}
 {"ts":"2026-10-19T03:30:09.578Z","kind":"review","phase":"P3","head":"0bdff06e283280810fb7a40f9f6388a9d1970b40","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-19T03:58:04.306Z","kind":"policy-hash","previous":"f2a56eaa9b7e9a6366560e26ae5019efaeb8ac3b8e71e75d8e0d8e4d5105e852","sha256":"ec00598ac111eff944e5e2ecbd93487f44437b87075aaf5d76b33bec64c801e3","source":"check-bootstrap --record"}
+{"ts":"2026-10-19T04:06:56.778Z","kind":"integrate","phase":"P4","unit":"core","files":15,"head":"c5e89b3033735b4d3d1a242840499f54dd31f5e4"}
+{"ts":"2026-10-19T04:09:39.625Z","kind":"integrate","phase":"P4","unit":"fixes","files":10,"head":"f3e4541e3ae789b3ed46c5c044c40f97277cb8f0"}
+{"ts":"2026-10-19T05:45:29.789Z","kind":"policy-hash","previous":"ec00598ac111eff944e5e2ecbd93487f44437b87075aaf5d76b33bec64c801e3","sha256":"c894affc0451a22f584c16424a6998c75c3012348ab269520bcde691d80556f0","source":"check-bootstrap --record"}
+{"ts":"2026-10-19T05:54:19.734Z","kind":"gate","phase":"P4","head":"67744b1a1d65590dcbdfd2c43612f1802e2ea5d5","pass":8,"total":8}
+{"ts":"2026-10-19T06:22:11.885Z","kind":"review","phase":"P4","head":"67744b1a1d65590dcbdfd2c43612f1802e2ea5d5","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-19T07:07:52.605Z","kind":"receipt-retired","phase":"P4","head":"6dd10a791e929709814c3fbde90a5cdb32300a0f","reviewed":"67744b1a1d65590dcbdfd2c43612f1802e2ea5d5","files":["release-receipts/P4.json","release-receipts/manifests/P4-review.json","release-receipts/manifests/P4-gate.json"]}
+{"ts":"2026-10-19T07:17:15.525Z","kind":"gate","phase":"P4","head":"a72d073dcc680db45100a3aae050362329968030","pass":8,"total":8}
+{"ts":"2026-10-19T07:34:25.331Z","kind":"review","phase":"P4","head":"a72d073dcc680db45100a3aae050362329968030","lane":"minimax","verdict":"PASS"}
