@@ -325,6 +325,10 @@ class RollbackSignal extends Error {
  * The funnel link a post carries: the business funnel tagged so the click is
  * attributable back to this draft on this platform. Null when the business has
  * no funnel — a missing link is reported, never invented.
+ *
+ * Tagging matches the client attribution contract: utm_source=synthex (who sent
+ * the visitor), utm_medium=<platform>, utm_campaign=<slug>, utm_content=<draft>.
+ * RestoreAssist's first-touch attribution keys on source=synthex.
  */
 export function buildStudioFunnelLink(
   funnelUrl: string | null,
@@ -337,8 +341,8 @@ export function buildStudioFunnelLink(
 ): string | null {
   if (!funnelUrl) return null;
   return buildUtmUrl(funnelUrl, {
-    source: tag.platform,
-    medium: 'social',
+    source: 'synthex',
+    medium: tag.platform,
     campaign: tag.campaign ?? `studio-${tag.clientSlug}`,
     content: tag.draftId,
   });

@@ -110,7 +110,7 @@ import { publishToLinkedIn } from '@/lib/publish/platformAdapters/linkedin';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
 
 const LINK =
-  'https://carsi.au/courses?utm_source=linkedin&utm_medium=social&utm_campaign=studio-carsi&utm_content=d1';
+  'https://carsi.au/courses?utm_source=synthex&utm_medium=linkedin&utm_campaign=studio-carsi&utm_content=d1';
 
 function linkedinManifest() {
   return buildApprovedCampaignAuthorityManifest({
