@@ -166,3 +166,46 @@ export async function pushUniteGroupEvent(
     console.error('[unite-group] Failed to push event:', event.type);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Mission Control witness events (SPM G3, DECISIONS A-25 / AM-6)
+// ---------------------------------------------------------------------------
+
+/** The steps of a marketing job Mission Control shows. */
+export type WitnessStep = 'planned' | 'drafted' | 'held' | 'approved';
+
+export interface WitnessEventInput {
+  step: WitnessStep;
+  /** Stable id of the job or draft the step happened to. */
+  id: string;
+  /** What `id` names, so Mission Control can tell a campaign from a draft. */
+  kind: 'campaign' | 'studio_draft' | 'post';
+  /** Null for a personal (no-organisation) campaign. */
+  organizationId: string | null;
+  /** Only when the work came from Mission Control. Never invented. */
+  missionId?: string;
+}
+
+/**
+ * Emit `synthex.<step>` for a step that has already succeeded. Fire-and-forget:
+ * never throws and never rejects, so it cannot fail or block the user's action.
+ * A failed delivery is recorded as the last delivery outcome (see
+ * GET /api/unite-group/status), not swallowed.
+ */
+export function emitWitnessEvent(input: WitnessEventInput): void {
+  const type = `synthex.${input.step}`;
+  pushUniteGroupEvent({
+    type,
+    id: input.id,
+    kind: input.kind,
+    organizationId: input.organizationId,
+    ...(input.missionId ? { missionId: input.missionId } : {}),
+  }).catch(err => {
+    lastDelivery = {
+      ok: false,
+      eventType: type,
+      error: err instanceof Error ? err.message : String(err),
+      at: new Date().toISOString(),
+    };
+  });
+}

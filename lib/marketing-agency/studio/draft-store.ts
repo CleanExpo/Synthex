@@ -8,6 +8,7 @@
 
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { emitWitnessEvent } from '@/lib/unite-group-connector';
 import type { Prisma } from '@prisma/client';
 
 /** Minimal slice of the Prisma StudioContentDraft delegate we use (injectable for tests). */
@@ -29,6 +30,35 @@ export interface SaveStudioDraftInput {
   videoUrl?: string;
   dedupeKey?: string;
   metadata?: Prisma.InputJsonObject;
+  /**
+   * Set only when Mission Control started this job. Kept in the draft's
+   * existing `metadata` JSON (`metadata.missionId`) so the approval's witness
+   * event carries it too; never invented.
+   */
+  missionId?: string;
+}
+
+/**
+ * Mission Control witness for a saved draft. A new row is a new Studio job
+ * (planned); every save that wrote content produced a draft (drafted) and left
+ * it in `awaiting_approval`, Studio's approval hold (held). Fired only after
+ * the write succeeded; never throws.
+ */
+function witnessSavedDraft(
+  row: { id: string } | null | undefined,
+  input: SaveStudioDraftInput,
+  isNew: boolean
+): void {
+  if (!row?.id) return;
+  const base = {
+    id: row.id,
+    kind: 'studio_draft' as const,
+    organizationId: input.organizationId,
+    missionId: input.missionId,
+  };
+  if (isNew) emitWitnessEvent({ step: 'planned', ...base });
+  emitWitnessEvent({ step: 'drafted', ...base });
+  emitWitnessEvent({ step: 'held', ...base });
 }
 
 /**
@@ -52,16 +82,20 @@ export async function saveStudioDraft(
     videoId: input.videoId ?? null,
     videoUrl: input.videoUrl ?? null,
     dedupeKey: input.dedupeKey ?? null,
-    metadata: input.metadata,
+    metadata: input.missionId
+      ? { ...(input.metadata ?? {}), missionId: input.missionId }
+      : input.metadata,
   };
 
   if (!input.dedupeKey) {
-    return delegate.create({
+    const created = await delegate.create({
       data: {
         ...data,
         status: 'awaiting_approval',
       },
     });
+    witnessSavedDraft(created, input, true);
+    return created;
   }
 
   // The status predicate lives IN the write, never in a read before it: a
@@ -79,12 +113,16 @@ export async function saveStudioDraft(
     data,
   });
   if (updated.count > 0) {
-    return delegate.findFirst({ where: key });
+    const resaved = await delegate.findFirst({ where: key });
+    witnessSavedDraft(resaved, input, false);
+    return resaved;
   }
   try {
-    return await delegate.create({
+    const created = await delegate.create({
       data: { ...data, status: 'awaiting_approval' },
     });
+    witnessSavedDraft(created, input, true);
+    return created;
   } catch (error) {
     if ((error as { code?: string })?.code !== 'P2002') throw error;
     const existing = await delegate.findFirst({ where: key });

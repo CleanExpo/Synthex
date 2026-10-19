@@ -3,6 +3,8 @@
  * Off (enabled: false) is enforced by the cron query. On never auto-sends.
  */
 
+import { emitWitnessEvent } from '@/lib/unite-group-connector';
+
 /**
  * The Phase 7 hold. While this is true, autopilot never marks a post
  * 'scheduled', whatever the quality gate decided.
@@ -40,4 +42,24 @@ export function autopilotPostStatus(
 ): 'scheduled' | 'draft' {
   if (HOLD_FOR_REVIEW) return 'draft';
   return decision === 'schedule' ? 'scheduled' : 'draft';
+}
+
+/**
+ * Mission Control witness for a Post autopilot has written: it was drafted,
+ * and a `draft` status means the hold kept it for a human (held). Call only
+ * after the write succeeded. Autopilot is cron-started, never Mission Control,
+ * so no missionId is sent. Never throws.
+ */
+export function witnessAutopilotPost(post: {
+  postId: string;
+  organizationId: string;
+  status: 'scheduled' | 'draft';
+}): void {
+  const base = {
+    id: post.postId,
+    kind: 'post' as const,
+    organizationId: post.organizationId,
+  };
+  emitWitnessEvent({ step: 'drafted', ...base });
+  if (post.status === 'draft') emitWitnessEvent({ step: 'held', ...base });
 }

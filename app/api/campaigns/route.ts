@@ -20,7 +20,10 @@ import {
 } from '@/lib/multi-business/business-scope';
 import type { EffectiveQueryFilter } from '@/lib/multi-business/types';
 import { z } from 'zod';
-import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
+import {
+  emitWitnessEvent,
+  pushUniteGroupEvent,
+} from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
 import { writeDefault } from '@/lib/rate-limit';
@@ -70,6 +73,9 @@ const campaignCreateSchema = z.object({
   // SYN-847: active child-brand org the campaign is created against. When
   // omitted, the route falls back to the user's effective (default) org.
   organizationId: z.string().min(1).optional(),
+  // Set only when Mission Control started this campaign; carried on the
+  // synthex.planned witness event and nowhere else (not stored).
+  missionId: z.string().min(1).max(200).optional(),
   platform: z.enum([
     'twitter',
     'linkedin',
@@ -236,6 +242,7 @@ export async function POST(request: NextRequest) {
         content,
         settings,
         organizationId: requestedOrganizationId,
+        missionId,
       } = validationResult.data;
 
       // Resolve org ID for scoping (SYN-847). When the client passes the active
@@ -283,6 +290,16 @@ export async function POST(request: NextRequest) {
         });
 
         return created;
+      });
+
+      // Mission Control witness: fired after the create committed; it never
+      // throws, so it cannot fail the create.
+      emitWitnessEvent({
+        step: 'planned',
+        id: campaign.id,
+        kind: 'campaign',
+        organizationId: campaign.organizationId ?? null,
+        missionId,
       });
 
       // ── Cache invalidation ──────────────────────────────────────────────────

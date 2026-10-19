@@ -105,6 +105,7 @@ import {
   type OrgAutoPublishGate,
 } from '@/lib/publish/safetyChecks';
 import { buildUtmUrl } from '@/lib/utm/build-utm-url';
+import { emitWitnessEvent } from '@/lib/unite-group-connector';
 import { approveStudioDraft } from './draft-store';
 import type { ResolvedStudioClient } from './clients';
 
@@ -511,8 +512,12 @@ export async function approveAndScheduleStudioDraft(
   if (reserved.length > 0) throw new InvalidClearanceError(reserved);
 
   let signal: RollbackSignal;
+  // Read from the draft's metadata inside the transaction; only a draft that
+  // Mission Control started carries one.
+  let missionId: string | undefined;
+  let committed: ApproveAndScheduleResult;
   try {
-    return await runInTransaction(async tx => {
+    committed = await runInTransaction(async tx => {
       // The per-statement budget, enforced by the server for this transaction
       // only. First, so every statement below is covered. `SET` takes no bound
       // parameter, so the statement is built from a compile-time constant and
@@ -625,6 +630,10 @@ export async function approveAndScheduleStudioDraft(
       }
 
       const metadata = asJsonObject(draft.metadata);
+      missionId =
+        typeof metadata.missionId === 'string' && metadata.missionId
+          ? metadata.missionId
+          : undefined;
       // Deduplicated: a repeated entry in settings.studio.platforms is one
       // platform, not a second Post and a second round trip.
       const platforms = Array.from(
@@ -891,6 +900,18 @@ export async function approveAndScheduleStudioDraft(
 
       return { approved: true, outcome: 'approved', scheduled, skipped };
     });
+    // Mission Control witness, after the approval committed. Never throws, so
+    // it cannot turn a committed approval into a failure.
+    if (committed.approved) {
+      emitWitnessEvent({
+        step: 'approved',
+        id,
+        kind: 'studio_draft',
+        organizationId,
+        missionId,
+      });
+    }
+    return committed;
   } catch (error) {
     if (error instanceof RollbackSignal) {
       signal = error;

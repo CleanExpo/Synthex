@@ -29,6 +29,7 @@ import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import {
   autopilotPostStatus,
   holdAutopilotForReview,
+  witnessAutopilotPost,
 } from '@/lib/autopilot/hold-for-review';
 import { serializeError } from '@/lib/observability/serialize-error';
 
@@ -863,6 +864,12 @@ async function generateSlotContent(input: SlotInput): Promise<{
       },
     },
     select: { id: true },
+  });
+
+  witnessAutopilotPost({
+    postId: post.id,
+    organizationId: input.orgId,
+    status: postStatus,
   });
 
   return { postId: post.id, score: bestScore, status: postStatus };
