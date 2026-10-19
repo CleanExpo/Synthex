@@ -80,6 +80,8 @@ function mediaGenerationContext(
 }
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { tableUnavailable } from '@/lib/api/not-provisioned';
+import { QuotaExceededError } from '@/lib/services/ai/video/types';
+import { UnpricedModelError } from '@/lib/services/ai/image/registry';
 
 // NOT_PROVISIONED: prisma/schema.prisma has no media_assets model, so
 // saveToLibrary cannot persist. Responses say so via `library` instead of
@@ -118,6 +120,43 @@ async function resolveOwningOrganization(
     );
   }
   return organizationId;
+}
+
+/**
+ * The spend meter's fail-closed refusals, mapped to honest statuses, or null
+ * for any other error. holdImageSpend throws all three before a provider call,
+ * and they propagate out of generateImage / generateBatch / generateVariations:
+ * - QuotaExceededError: the org's shared media budget cap → 429 naming the cap
+ * - UnpricedModelError: a deprecated/unpriced model pin → 422
+ *   (registry.ts documents 422 for it)
+ * - RangeError "image variants must be…" from the meter → 422
+ * Its message says "Video budget" (the class is shared), so the image message
+ * is composed here from its fields.
+ */
+function meterRefusalResponse(error: unknown): NextResponse | null {
+  if (error instanceof QuotaExceededError) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error: `Media budget cap exceeded (${error.cap}): $${error.spentUsd.toFixed(2)} spent of $${error.limitUsd.toFixed(2)} limit. No image was generated.`,
+        cap: error.cap,
+      },
+      429
+    );
+  }
+  if (error instanceof UnpricedModelError) {
+    return APISecurityChecker.createSecureResponse(
+      { success: false, error: error.message, blocked: true },
+      422
+    );
+  }
+  if (error instanceof RangeError && /variants must be/.test(error.message)) {
+    return APISecurityChecker.createSecureResponse(
+      { success: false, error: error.message },
+      422
+    );
+  }
+  return null;
 }
 
 // Request validation schema
@@ -494,6 +533,9 @@ async function _handlePost(request: NextRequest) {
       );
     }
 
+    const refusal = meterRefusalResponse(error);
+    if (refusal) return refusal;
+
     logger.error('Image generation error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -607,6 +649,9 @@ export async function PUT(request: NextRequest) {
         400
       );
     }
+
+    const refusal = meterRefusalResponse(error);
+    if (refusal) return refusal;
 
     logger.error('Image variations error:', { error });
     return APISecurityChecker.createSecureResponse(
