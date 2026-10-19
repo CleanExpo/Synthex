@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Merge per-reel meta/metrics/observed into references/corpus.json and print aggregates.
+"""Merge per-reel meta/metrics/observed into references/corpus-reels.jsonl and write the
+aggregates to references/corpus.json.
 
 Usage: python3 -I build_corpus.py <datadir> <out corpus.json>
 
@@ -111,9 +112,12 @@ def main(datadir, out):
           if r["observed"] and (r["observed"].get("hook_text") or {}).get("present")]
     agg["hook_text_cap_height_pct"] = q(ch)
 
-    doc = {"schema": "synthex.shortform.corpus/1", "built_from": "harness/harvest.cjs + analyze.py + vision breakdown",
-           "sample_note": "Stratified, not random: latest-12 reels per public profile, logged out, kept if views >= 1M, capped per account. Views as shown on the profile grid on observed_at.",
-           "count": len(reels), "ok": len(ok), "aggregates": agg, "reels": reels}
+    # Per-reel rows go to a sibling JSON Lines file (one reel per line); this file keeps the aggregates.
+    rows = Path(out).with_name("corpus-reels.jsonl")
+    rows.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in reels))
+    doc = {"schema": "synthex.shortform.corpus/2", "built_from": "harness/harvest.cjs + analyze.py + vision breakdown",
+           "sample_note": "Stratified, not random: latest-12 reels per public profile, logged out, kept if views >= 1M, capped per account; control_low = same accounts' reels under 500K. Views as shown on the profile grid on observed_at.",
+           "reels_file": rows.name, "count": len(reels), "ok": len(ok), "control_low": len(ctl), "aggregates": agg}
     Path(out).write_text(json.dumps(doc, indent=1, ensure_ascii=False))
     print(json.dumps({"count": len(reels), "ok": len(ok), "control_low": len(ctl), "observed": agg["observed_n"],
                       "strata": {s: v["n"] for s, v in agg["by_stratum"].items()}}))

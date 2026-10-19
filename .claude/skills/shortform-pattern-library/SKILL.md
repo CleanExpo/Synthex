@@ -12,12 +12,21 @@ metadata:
   author: synthex
   version: 1.0.0
   type: pattern-library
-  triggers: [viral patterns, hook, retention, what makes a reel go viral, craft gate, pattern library]
+  triggers:
+    [
+      viral patterns,
+      hook,
+      retention,
+      what makes a reel go viral,
+      craft gate,
+      pattern library,
+    ]
 ---
 
 # Short-form pattern library
 
-Built 2026-10-19 from `references/corpus.json` (94 reels, every one measured and broken down).
+Built 2026-10-19 from `references/corpus.json` (aggregates) and `references/corpus-reels.jsonl`
+(one row per reel: 94 at 1M+ plus 41 controls, every one measured and broken down).
 Method, limits and how to refresh: section 8. Published third-party evidence:
 `references/published-evidence-2026-10.md`. Platform rules: `shortform-instagram`,
 `shortform-tiktok`, `shortform-facebook`, `shortform-youtube-shorts`, `shortform-linkedin`.
@@ -27,17 +36,17 @@ production rules drawn from them are **[INFERENCE]**; anything from the web is c
 
 ## 1. What the 1M+ corpus measured
 
-| Measure | p25 | **median** | p75 | n | Instrument |
-|---|---|---|---|---|---|
-| Views (profile grid, 19/10/2026) | 2.0M | **4.1M** | 10.6M | 94 | grid text |
-| Length (s) | 21.6 | **38.8** | 65.0 | 94 | ffprobe |
-| First spoken word (s) | 0.02 | **0.05** | 0.14 | 59 voiced | whisper.cpp |
-| Speech rate (words/s) | 2.0 | **3.0** | 3.6 | 59 voiced | whisper.cpp |
-| Average shot length (s) | 2.6 | **5.1** | 11.5 | 94 | ffmpeg scene > 0.3 (lower bound) |
-| Hard cuts in first 3 s | 0 | **0** | 1 | 94 | same |
-| Loudness (LUFS, delivered) | −14.6 | **−14.2** | −14.1 | 92 | EBU R128 |
-| Hook-text words (when present) | 4 | **5.5** | 8 | 42 | vision |
-| Hook-text cap height (% frame) | 2.0 | **2.5** | 4.0 | 42 | vision estimate |
+| Measure                          | p25   | **median** | p75   | n         | Instrument                       |
+| -------------------------------- | ----- | ---------- | ----- | --------- | -------------------------------- |
+| Views (profile grid, 19/10/2026) | 2.0M  | **4.1M**   | 10.6M | 94        | grid text                        |
+| Length (s)                       | 21.6  | **38.8**   | 65.0  | 94        | ffprobe                          |
+| First spoken word (s)            | 0.02  | **0.05**   | 0.14  | 59 voiced | whisper.cpp                      |
+| Speech rate (words/s)            | 2.0   | **3.0**    | 3.6   | 59 voiced | whisper.cpp                      |
+| Average shot length (s)          | 2.6   | **5.1**    | 11.5  | 94        | ffmpeg scene > 0.3 (lower bound) |
+| Hard cuts in first 3 s           | 0     | **0**      | 1     | 94        | same                             |
+| Loudness (LUFS, delivered)       | −14.6 | **−14.2**  | −14.1 | 92        | EBU R128                         |
+| Hook-text words (when present)   | 4     | **5.5**    | 8     | 42        | vision                           |
+| Hook-text cap height (% frame)   | 2.0   | **2.5**    | 4.0   | 42        | vision estimate                  |
 
 **Trades / cleaning / restoration subset (n=38, median 3.75M views):** median length 38.6 s,
 **median shot 3.3 s** (faster than the corpus), median 12.5 cuts, 34 of 38 open already moving,
@@ -66,13 +75,13 @@ reel from these accounts shares, and traits that separated the hits.
 
 ### Tier 2: what separated hits from the same accounts' misses (test these)
 
-| Trait | 1M+ (n=70) | under-500K (n=41) | Rule **[INFERENCE]** |
-|---|---|---|---|
-| A face visible in frame 1 | **71%** | 51% | Open on a person (expert, worker, customer reacting), not an empty scene |
-| Short hook-text overlay present | **54%** | 32% | Add one: ≤8 words (median 5.5), small (cap height 2.5–4% of frame), top of frame, on screen from 0.0 s |
-| Comedy / relatable skit | **26%** | 7% | Make some content about the crew and the trade, not the job |
-| Transformation / before-after | 9% | 17% | Do not rely on the before/after alone; pair it with a face and a text hook |
-| Loop-back ending | 10% | 5% | Weak signal; worth testing on 6–15 s satisfying cuts |
+| Trait                           | 1M+ (n=70) | under-500K (n=41) | Rule **[INFERENCE]**                                                                                   |
+| ------------------------------- | ---------- | ----------------- | ------------------------------------------------------------------------------------------------------ |
+| A face visible in frame 1       | **71%**    | 51%               | Open on a person (expert, worker, customer reacting), not an empty scene                               |
+| Short hook-text overlay present | **54%**    | 32%               | Add one: ≤8 words (median 5.5), small (cap height 2.5–4% of frame), top of frame, on screen from 0.0 s |
+| Comedy / relatable skit         | **26%**    | 7%                | Make some content about the crew and the trade, not the job                                            |
+| Transformation / before-after   | 9%         | 17%               | Do not rely on the before/after alone; pair it with a face and a text hook                             |
+| Loop-back ending                | 10%        | 5%                | Weak signal; worth testing on 6–15 s satisfying cuts                                                   |
 
 Each gap is roughly 2–3 standard errors on these sample sizes, and 11 traits were tested, so
 read them as **hypotheses ranked for testing**, not laws. Test each with Instagram Trial Reels
@@ -89,16 +98,17 @@ read them as **hypotheses ranked for testing**, not laws. Test each with Instagr
 
 ## 3. Archetypes that hit (counts in corpus)
 
-| Archetype | All (94) | Trades/cleaning (38) | Producer note |
-|---|---|---|---|
-| Comedy / relatable skit | 21 | 13 | Crew personality: "Boss: … / Us:" top captions; apprentice vs journeyman labels; trade-pay rankings drive comments |
-| Story | 15 | 2 | Cold open on the strongest line, context after |
-| Did-you-know / explainer | 10 | 0 | Expert answers a question asked by someone else (stranger, audience, stitched clip) |
-| Transformation / before-after | 9 | 8 | Open on the worst of it already being worked on; flash the "before" once more; end on the clean frame |
-| Tutorial / steps | 7 | 6 | Numbered top-of-frame step cards, no voice needed |
-| Review / demo | 6 | 3 | Off-label product use travels (gap foam cooler, 7.8M) |
+| Archetype                     | All (94) | Trades/cleaning (38) | Producer note                                                                                                      |
+| ----------------------------- | -------- | -------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Comedy / relatable skit       | 21       | 13                   | Crew personality: "Boss: … / Us:" top captions; apprentice vs journeyman labels; trade-pay rankings drive comments |
+| Story                         | 15       | 2                    | Cold open on the strongest line, context after                                                                     |
+| Did-you-know / explainer      | 10       | 0                    | Expert answers a question asked by someone else (stranger, audience, stitched clip)                                |
+| Transformation / before-after | 9        | 8                    | Open on the worst of it already being worked on; flash the "before" once more; end on the clean frame              |
+| Tutorial / steps              | 7        | 6                    | Numbered top-of-frame step cards, no voice needed                                                                  |
+| Review / demo                 | 6        | 3                    | Off-label product use travels (gap foam cooler, 7.8M)                                                              |
 
 Trade-specific formats worth stealing the **structure** of (never the footage):
+
 - **Live-risk single take**: fixed camera, the risky job in one shot (valve swap on a live tank,
   40.3M). Stakes come from physics, not editing.
 - **Satisfying close-up loop**: 6–14 s extreme close-up of hands on material, no words, last frame
@@ -170,15 +180,15 @@ python3 -I harness/build_corpus.py <data> references/corpus.json
 
 Logged out, no cookies, 3–6 s jitter. Every target writes a status record; blocked pages are
 `BLOCKED_*`, never silently empty. Media stays in the scratch data dir and is never committed or
-re-published; `corpus.json` keeps structure plus the first 3 s of speech only.
+re-published; the corpus keeps structure plus the first 3 s of speech only.
 Refresh quarterly, or when a platform announces a ranking change.
 
 ## 9. How the hit-versus-miss comparison was built
 
 - **Control set:** for each account that contributed a 1M+ reel, its highest-viewed reels that
   stayed **under 500K** in the same latest-12 grid (1 per account, 2 for trade/cleaning accounts):
-  41 reels from 28 accounts, median 268K views. Stored in `corpus.json` with `stratum:
-  control_low` and kept out of every 1M+ aggregate.
+  41 reels from 28 accounts, median 268K views. Stored in `corpus-reels.jsonl` with `stratum:
+control_low` and kept out of every 1M+ aggregate.
 - **Same instruments**, and the vision pass was **blind**: control observers read only frames and
   measurements, never the view count.
 - **Comparison** uses only 1M+ reels from those same 28 accounts (n=70), so account size and house
@@ -186,4 +196,3 @@ Refresh quarterly, or when a platform announces a ranking change.
   and `aggregates.control_low`.
 - **Limits:** small n; 11 traits tested without correction; "under 500K" from big accounts is
   still a large audience, so this compares good with great, not good with bad.
-
