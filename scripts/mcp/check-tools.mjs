@@ -13,11 +13,12 @@
  */
 import { tsImport } from 'tsx/esm/api';
 import { z } from 'zod';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
+// fileURLToPath decodes %20, so the registry loads from a repo path containing spaces.
 const ROOT = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
+  path.dirname(fileURLToPath(import.meta.url)),
   '../..'
 );
 const REGISTRY = path.join(ROOT, 'lib/services/ai/studio-tools/index.ts');
