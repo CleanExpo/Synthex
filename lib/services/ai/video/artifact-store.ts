@@ -44,6 +44,9 @@ export class ArtifactStorageNotProvisionedError extends Error {
  * The download URL rebuilt from a constant fal media host: only the path and
  * query come from the webhook payload. https only; no credentials or port.
  */
+/** Largest generated video stored (fal clips are tens of MB). */
+export const MAX_ARTIFACT_BYTES = 200 * 1024 * 1024;
+
 export function falMediaUrl(url: string): string {
   let parsed: URL;
   try {
@@ -77,7 +80,15 @@ async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
         signal: AbortSignal.timeout(60000),
       });
       if (!res.ok) throw new Error(`download ${res.status}`);
-      return await res.arrayBuffer();
+      // Refuse an oversized artifact before reading it, and again by actual
+      // size (a missing or false content-length must not bypass the cap).
+      const declared = Number(res.headers?.get?.('content-length') ?? '0');
+      if (declared > MAX_ARTIFACT_BYTES)
+        throw new Error(`artifact too large: ${declared} bytes`);
+      const body = await res.arrayBuffer();
+      if (body.byteLength > MAX_ARTIFACT_BYTES)
+        throw new Error(`artifact too large: ${body.byteLength} bytes`);
+      return body;
     } catch (err) {
       lastErr = err;
       // Only sleep when there are more attempts remaining.

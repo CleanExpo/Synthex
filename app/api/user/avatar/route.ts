@@ -41,6 +41,31 @@ const EXT_BY_TYPE: Record<string, string> = {
 };
 
 /**
+ * The image type the bytes actually are (magic numbers), or null. The upload
+ * trusts this, never the client-declared file.type (CodeRabbit on #1024).
+ */
+export function sniffImageType(buf: Buffer): string | null {
+  if (
+    buf.length >= 8 &&
+    buf
+      .subarray(0, 8)
+      .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  )
+    return 'image/png';
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff)
+    return 'image/jpeg';
+  const head6 = buf.subarray(0, 6).toString('latin1');
+  if (head6 === 'GIF87a' || head6 === 'GIF89a') return 'image/gif';
+  if (
+    buf.length >= 12 &&
+    buf.subarray(0, 4).toString('latin1') === 'RIFF' &&
+    buf.subarray(8, 12).toString('latin1') === 'WEBP'
+  )
+    return 'image/webp';
+  return null;
+}
+
+/**
  * The caller's own object key inside the avatars bucket, or null when the
  * stored avatar URL is anything else (another user's, external, legacy).
  */
@@ -83,20 +108,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // The bytes decide the type: a file declared image/png must really be one.
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const detected = sniffImageType(bytes);
+    if (!detected || EXT_BY_TYPE[detected] !== EXT_BY_TYPE[file.type]) {
+      return NextResponse.json(
+        { error: 'File content is not the image type it claims to be.' },
+        { status: 400 }
+      );
+    }
+
     // Read before the row is overwritten, so the old object can be removed.
     const previous = await prisma.user.findUnique({
       where: { id: userId },
       select: { avatar: true },
     });
 
-    const path = `${userId}/${Date.now()}.${ext}`;
-    await upload(
-      BUCKET,
-      path,
-      Buffer.from(await file.arrayBuffer()),
-      file.type,
-      { upsert: false }
-    );
+    const path = `${userId}/${Date.now()}.${EXT_BY_TYPE[detected]}`;
+    await upload(BUCKET, path, bytes, detected, { upsert: false });
     const avatarUrl = publicUrl(BUCKET, path);
 
     try {

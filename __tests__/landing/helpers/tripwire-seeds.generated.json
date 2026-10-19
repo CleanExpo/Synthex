@@ -1,8 +1,23 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1083,
+  "count": 1087,
   "seeds": [
+    {
+      "text": "- [Error codes](docs/api/error-codes.md): 11 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
+    {
+      "text": "- [OpenAPI document](docs/api/openapi.generated.json): the generated OpenAPI contract for the routes under /api/.",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
+    {
+      "text": "- [Rate limits](docs/api/rate-limits.md): 40 limiters, their limits and windows, and the routes that use them.",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
     {
       "text": "- Audit log + GDPR/Privacy compliance built in",
       "file": "public/llms.txt",
@@ -3717,6 +3732,11 @@
       "text": "Paste your website URL and Synthex analyses your brand voice, colours, and tone in under 60 seconds.",
       "file": "app/agencies/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "Paths below are repository paths.",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
     },
     {
       "text": "Peak Time",

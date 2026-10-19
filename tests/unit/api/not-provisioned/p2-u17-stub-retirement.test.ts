@@ -73,7 +73,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-import { POST, DELETE } from '@/app/api/user/avatar/route';
+import { POST, DELETE, sniffImageType } from '@/app/api/user/avatar/route';
 import { GET as getModels } from '@/app/api/system/models/route';
 import {
   createServerClient,
@@ -88,10 +88,21 @@ const USER = 'user-a';
 const PUBLIC = 'https://proj.supabase.co/storage/v1/object/public/avatars';
 const ENV = { ...process.env };
 
-function avatarRequest(file?: { name: string; type: string; size: number }) {
+// Real magic numbers per declared type, so the route's byte check sees a true image.
+const MAGIC: Record<string, number[]> = {
+  'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0],
+  'image/jpeg': [0xff, 0xd8, 0xff, 0xe0, 0],
+  'image/gif': [...Buffer.from('GIF89a'), 0],
+  'image/webp': [...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBP')],
+};
+function avatarRequest(
+  file?: { name: string; type: string; size: number },
+  bytes?: number[]
+) {
   const blob = file && {
     ...file,
-    arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    arrayBuffer: async () =>
+      new Uint8Array(bytes ?? MAGIC[file.type] ?? [1, 2, 3]).buffer,
   };
   return {
     formData: async () => ({ get: () => blob ?? null }),
@@ -251,6 +262,31 @@ describe('POST /api/user/avatar (avatars bucket)', () => {
     );
     expect(res.status).toBe(400);
     expect(mockStorageUpload).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/user/avatar byte check', () => {
+  it('400 and no upload when the bytes are not the declared image type', async () => {
+    for (const [type, bytes] of [
+      ['image/png', [0x3c, 0x68, 0x74, 0x6d, 0x6c, 0x3e]],
+      ['image/jpeg', MAGIC['image/png']],
+      [
+        'image/webp',
+        [...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WAVE')],
+      ],
+    ] as const) {
+      const res = await POST(
+        avatarRequest({ name: 'x', type, size: 10 }, [...bytes])
+      );
+      expect(res.status).toBe(400);
+    }
+    expect(mockUpload).not.toHaveBeenCalled();
+  });
+
+  it('detects each supported type from its magic number', () => {
+    for (const t of ['image/png', 'image/jpeg', 'image/gif', 'image/webp'])
+      expect(sniffImageType(Buffer.from(MAGIC[t]))).toBe(t);
+    expect(sniffImageType(Buffer.from('<svg>'))).toBeNull();
   });
 });
 

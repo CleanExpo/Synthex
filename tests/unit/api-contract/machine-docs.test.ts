@@ -216,7 +216,7 @@ describe('gen-machine-docs', () => {
     expect(md).toContain('- `/api/epsilon` (app/api/epsilon/route.ts)');
   });
 
-  it('keeps the llms.txt preamble, links the contract docs, and stays under 200 lines', () => {
+  it('keeps the llms.txt preamble, names the contract docs by repository path, and stays under 200 lines', () => {
     execFileSync(process.execPath, [SCRIPT, '--root', root]);
     const txt = read(root, 'public/llms.txt');
     expect(
@@ -225,9 +225,11 @@ describe('gen-machine-docs', () => {
       )
     ).toBe(true);
     expect(txt.match(/<!-- Machine contract: generated/g)).toHaveLength(1);
-    expect(txt).toContain('(docs/api/openapi.generated.json)');
-    expect(txt).toContain('(docs/api/error-codes.md)');
-    expect(txt).toContain('(docs/api/rate-limits.md)');
+    expect(txt).toContain('`docs/api/openapi.generated.json`');
+    expect(txt).toContain('`docs/api/error-codes.md`');
+    expect(txt).toContain('`docs/api/rate-limits.md`');
+    // Repository paths, never site-relative links that 404 on synthex.social.
+    expect(txt).not.toMatch(/\]\(docs\/api\//);
     expect(txt).toContain('- ALPHA_DENIED: HTTP 403');
     expect(txt.split('\n').length).toBeLessThan(200);
     const real = fs.readFileSync(path.join(ROOT, 'public/llms.txt'), 'utf8');

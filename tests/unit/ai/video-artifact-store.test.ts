@@ -52,6 +52,7 @@ jest.mock('@/lib/services/media-library', () => ({
 import {
   storeArtifact,
   falMediaUrl,
+  MAX_ARTIFACT_BYTES,
   ArtifactStorageNotProvisionedError,
 } from '@/lib/services/ai/video/artifact-store';
 
@@ -190,6 +191,19 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
     expect(() => falMediaUrl('https://fal.media.evil.com/x.mp4')).toThrow(
       'not an allowed fal media host'
     );
+  });
+
+  it('refuses an oversized artifact by declared size before reading it', async () => {
+    const read = jest.fn(async () => new ArrayBuffer(4));
+    global.fetch = (async () => ({
+      ok: true,
+      status: 200,
+      headers: { get: () => String(MAX_ARTIFACT_BYTES + 1) },
+      arrayBuffer: read,
+    })) as never;
+    await expect(storeArtifact(INPUT)).rejects.toThrow('artifact too large');
+    expect(read).not.toHaveBeenCalled();
+    expect(mockUpload).not.toHaveBeenCalled();
   });
 
   it('never follows a redirect', async () => {

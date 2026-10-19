@@ -933,10 +933,12 @@ function runChild(jobFile, resultFile) {
     };
     if (process.env.npm_config_cache)
       env.npm_config_cache = process.env.npm_config_cache;
+    // Node itself with the tsx loader: no npx resolution step, and the same
+    // Node binary that runs the generator (CodeRabbit on #1024).
     const child = spawn(
-      'npx',
+      process.execPath,
       [
-        '--no-install',
+        '--import',
         'tsx',
         fileURLToPath(import.meta.url),
         '--probe-child',
@@ -959,10 +961,19 @@ function runChild(jobFile, resultFile) {
     }, 1000);
     let stderr = '';
     child.stderr.on('data', chunk => (stderr = (stderr + chunk).slice(-2000)));
-    child.on('close', code => {
+    // A spawn failure (missing binary, EAGAIN) settles the probe as failed
+    // instead of leaving the promise pending or throwing.
+    let settled = false;
+    const done = result => {
+      if (settled) return;
+      settled = true;
       clearInterval(timer);
-      resolve({ code, stderr });
-    });
+      resolve(result);
+    };
+    child.on('error', error =>
+      done({ code: -1, stderr: `spawn failed: ${error.message}` })
+    );
+    child.on('close', code => done({ code, stderr }));
   });
 }
 
