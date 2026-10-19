@@ -54,6 +54,7 @@ import {
   estimateCalendarGenerationCostUsd,
   getOrgSpendSnapshot,
   OrgBudgetExceededError,
+  OrgBudgetUnavailableError,
   previewBudget,
   releaseReservation,
   reserveBudget,
@@ -120,23 +121,25 @@ describe('budget-enforcer', () => {
     expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
-  it('fails OPEN with a warn when the policy read errors (e.g. missing table P2021)', async () => {
+  it('fails CLOSED with a warn when the policy read errors (e.g. missing table P2021)', async () => {
     mockPolicyFindUnique.mockRejectedValue(
       new Error('The table `public.org_budget_policies` does not exist')
     );
-    const reservation = await reserveBudget(CTX, 1.0);
-    expect(reservation).toBeNull();
+    await expect(reserveBudget(CTX, 1.0)).rejects.toThrow(
+      OrgBudgetUnavailableError
+    );
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       expect.stringContaining('policy read failed'),
       expect.objectContaining({ organizationId: ORG })
     );
   });
 
-  it('fails OPEN (skip) when the ledger window read errors', async () => {
+  it('fails CLOSED when the ledger window read errors', async () => {
     mockPolicyFindUnique.mockResolvedValue(policyRow());
     mockLedgerAggregate.mockRejectedValue(new Error('connection refused'));
-    const reservation = await reserveBudget(CTX, 1.0);
-    expect(reservation).toBeNull();
+    await expect(reserveBudget(CTX, 1.0)).rejects.toThrow(
+      OrgBudgetUnavailableError
+    );
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       expect.stringContaining('ledger window read failed'),
       expect.anything()

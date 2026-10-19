@@ -30,7 +30,9 @@ import {
 import {
   commitActual,
   estimateCalendarGenerationCostUsd,
+  BUDGET_UNAVAILABLE,
   OrgBudgetExceededError,
+  OrgBudgetUnavailableError,
   releaseReservation,
   reserveBudget,
   type OrgBudgetReservation,
@@ -327,6 +329,22 @@ export async function POST(request: NextRequest) {
             orgEstimatedCostUsd
           );
         } catch (orgBudgetError) {
+          if (orgBudgetError instanceof OrgBudgetUnavailableError) {
+            if (acquiredIdempotencyKey) {
+              await releaseIdempotencyKey(
+                IDEMPOTENCY_SCOPE,
+                userId,
+                acquiredIdempotencyKey
+              ).catch(() => {});
+            }
+            return NextResponse.json(
+              {
+                error: BUDGET_UNAVAILABLE,
+                message: orgBudgetError.message,
+              },
+              { status: 503 }
+            );
+          }
           if (orgBudgetError instanceof OrgBudgetExceededError) {
             // Free the idempotency key — otherwise a retry after the window
             // resets (or the ceiling is raised) would 409 for 24h.
@@ -696,6 +714,15 @@ export async function GET(request: NextRequest) {
           estimateCalendarGenerationCostUsd(days, platforms, postsPerDay)
         );
       } catch (orgBudgetError) {
+        if (orgBudgetError instanceof OrgBudgetUnavailableError) {
+          return NextResponse.json(
+            {
+              error: BUDGET_UNAVAILABLE,
+              message: orgBudgetError.message,
+            },
+            { status: 503 }
+          );
+        }
         if (orgBudgetError instanceof OrgBudgetExceededError) {
           return NextResponse.json(
             {
