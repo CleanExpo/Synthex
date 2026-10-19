@@ -26,6 +26,19 @@ import { buildTacticRewritePrompt } from '@/lib/geo/tactic-prompts';
 import type { GEOTactic } from '@/lib/geo/types';
 import { subscriptionService } from '@/lib/stripe/subscription-service';
 import { logger } from '@/lib/logger';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+} from '@/lib/ai/governor';
+import {
+  estimateTokens,
+  governorProviderFor,
+  governorRefusalResponse,
+  resolveGovernorScope,
+  unwrapGoverned,
+} from '@/lib/ai/route-governance';
 
 // ─── Rate limiter — 20 req/min for AI rewrite calls ───────────────────────────
 
@@ -122,40 +135,99 @@ export async function POST(request: NextRequest) {
     section,
   });
 
-  // 6. Stream response via AI provider
+  // 6. Stream response via AI provider, through the Governor
   const aiProvider = getAIProvider();
+  const provider = governorProviderFor(aiProvider.name);
+  const scope = provider ? await resolveGovernorScope(userId) : null;
+  if (provider && !scope && GOVERNOR_MODE !== 'shadow') {
+    return governorRefusalResponse(
+      new GovernorRefusedError('refused_flag_missing', 'no organisation')
+    );
+  }
 
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder();
 
       try {
-        const tokenStream = aiProvider.stream({
-          model: aiProvider.models.balanced,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: user },
-          ],
-          temperature: 0.3,
-          max_tokens: 4000,
-        });
-
-        for await (const text of tokenStream) {
-          if (text) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
-            );
+        const messages = [
+          { role: 'system' as const, content: system },
+          { role: 'user' as const, content: user },
+        ];
+        // Streams report no usage: tokens are estimated at ~4 chars a token.
+        const callProvider = async (
+          client: typeof aiProvider,
+          model: string
+        ): Promise<ProviderCallResult<void>> => {
+          let outputChars = 0;
+          for await (const text of client.stream({
+            model,
+            messages,
+            temperature: 0.3,
+            max_tokens: 4000,
+          })) {
+            if (text) {
+              outputChars += text.length;
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ text })}\n\n`)
+              );
+            }
           }
+          return {
+            data: undefined,
+            inputTokens: estimateTokens(system + user),
+            outputTokens: Math.ceil(outputChars / 4),
+            modelId: model,
+          };
+        };
+
+        if (!provider || !scope) {
+          // Ollama (local, ungoverned) or no organisation in shadow mode.
+          await callProvider(aiProvider, aiProvider.models.balanced);
+        } else {
+          let providerError: { error: unknown } | null = null;
+          const result = await governedCall<void>({
+            organizationId: scope.organizationId,
+            brandSlug: scope.brandSlug,
+            runner: 'geo-rewrite',
+            provider,
+            model: { kind: 'registered', modelId: aiProvider.models.balanced },
+            pipelineName: 'geo-rewrite',
+            estimate: {
+              inputTokens: estimateTokens(system + user),
+              outputTokens: 4000,
+            },
+            mode: GOVERNOR_MODE,
+            execute: async ctx => {
+              try {
+                return await callProvider(
+                  ctx.apiKey
+                    ? getAIProvider({ apiKey: ctx.apiKey, provider })
+                    : aiProvider,
+                  ctx.model?.id ?? aiProvider.models.balanced
+                );
+              } catch (error) {
+                providerError = { error };
+                throw error;
+              }
+            },
+          });
+          unwrapGoverned(result, providerError);
         }
 
         controller.enqueue(encoder.encode('data: [DONE]\n\n'));
         controller.close();
       } catch (error) {
         logger.error('GEO rewrite streaming error', { error, tactic, userId });
+        const refusal =
+          error instanceof GovernorRefusedError
+            ? {
+                error: 'Rewrite refused by the spend governor',
+                code: error.outcome,
+              }
+            : { error: 'Rewrite failed. Please try again.' };
         controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({ error: 'Rewrite failed. Please try again.' })}\n\n`
-          )
+          encoder.encode(`data: ${JSON.stringify(refusal)}\n\n`)
         );
         controller.close();
       }
