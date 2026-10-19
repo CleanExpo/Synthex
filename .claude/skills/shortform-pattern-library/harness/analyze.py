@@ -60,10 +60,14 @@ def loudness(audio):
 
 def transcribe(audio, model, d):
     wav = d / "audio16k.wav"
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(audio), "-ar", "16000", "-ac", "1", str(wav)])
     base = d / "transcript"
     p = base.with_suffix(".json")
-    p.unlink(missing_ok=True)  # never let a previous run's transcript stand in for this one
+    wav.unlink(missing_ok=True)  # never let a previous run's WAV or transcript stand in for this one
+    p.unlink(missing_ok=True)
+    c = run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(audio), "-ar", "16000", "-ac", "1", str(wav)])
+    if c.returncode != 0 or not wav.exists():
+        wav.unlink(missing_ok=True)
+        return None, f"audio conversion failed (exit {c.returncode}): {c.stderr[-200:]}"
     r = run(["whisper-cli", "-m", str(model), "-f", str(wav), "-oj", "-of", str(base), "-ml", "1", "-np"])
     wav.unlink(missing_ok=True)
     if r.returncode != 0 or not p.exists():
@@ -83,13 +87,16 @@ def sheet(video, times, out, cols):
     """Tile frames at given timestamps into one image (270px wide each)."""
     tmp = out.parent / "_f"
     tmp.mkdir(exist_ok=True)
+    for old in tmp.glob("*.jpg"):
+        old.unlink()  # frames left by a crashed earlier run must not count as captured
     out.unlink(missing_ok=True)
     kept = []  # timestamps actually captured, numbered contiguously so the tile input has no gaps
     for t in times:
         f = tmp / f"{len(kept):02d}.jpg"
-        run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1",
-             "-vf", "scale=270:-2", str(f)])
-        if f.exists():
+        f.unlink(missing_ok=True)
+        r = run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1",
+                 "-vf", "scale=270:-2", str(f)])
+        if r.returncode == 0 and f.exists():
             kept.append(round(t, 2))
     if kept:
         rows = -(-len(kept) // cols)
