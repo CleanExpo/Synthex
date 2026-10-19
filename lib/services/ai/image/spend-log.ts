@@ -319,7 +319,7 @@ export async function reserveSpend(params: {
   organizationId: string;
   initiatedBy: InitiatedBy;
   amountUsd: number;
-  mediaType?: 'image' | 'video';
+  mediaType?: 'image' | 'video' | 'audio';
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult> {
@@ -361,7 +361,7 @@ export async function reserveSpendBatch(params: {
    * created. Settling both at zero forgot real spend and returned the
    * headroom (release review, pass 2).
    */
-  mediaType: 'image' | 'video';
+  mediaType: 'image' | 'video' | 'audio';
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult[]> {
@@ -590,7 +590,7 @@ export interface RecordAttemptParams {
   attemptKey: string;
   holdId: string;
   organizationId: string;
-  mediaType: 'image' | 'video';
+  mediaType: 'image' | 'video' | 'audio';
   provider: string;
   modelId: string;
   status?: 'submitted' | 'succeeded' | 'failed';
@@ -834,7 +834,7 @@ export async function findStaleReservations(
      * means no proof in either direction (SYN-1115 round-8).
      */
     hasOwnerRow: boolean;
-    /** 'image' | 'video', or null for holds reserved before the column existed. */
+    /** 'image' | 'video' | 'audio', or null for holds reserved before the column existed. */
     mediaType: string | null;
   }>
 > {

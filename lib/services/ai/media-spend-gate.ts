@@ -21,10 +21,11 @@
  *    provider produced nothing. Both share the hold's finalize key, so a replay
  *    no-ops and only the first terminal outcome stands.
  *
- * Holds are recorded with mediaType 'image': the spend log's type is a
- * synchronous/asynchronous switch for the stale sweep, and these calls are
- * synchronous with no owner row — exactly the image shape, which the sweep
- * charges at the full reservation if a request dies before settling.
+ * Holds are recorded with mediaType 'audio' so spend reports can tell voice
+ * and avatar spend from images. For the stale sweep only 'video' is special
+ * (asynchronous, owner row); 'audio' calls are synchronous with no owner row,
+ * so like images the sweep charges the full reservation if a request dies
+ * before settling.
  */
 import { randomUUID } from 'crypto';
 import {
@@ -136,7 +137,7 @@ export async function holdMediaSpendBatch(
       organizationId: params.organizationId,
       initiatedBy: params.initiatedBy,
       perHoldUsd,
-      mediaType: 'image',
+      mediaType: 'audio',
     });
   } catch (error) {
     if (error instanceof QuotaExceededError) {

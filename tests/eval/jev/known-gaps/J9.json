@@ -1,10 +1,5 @@
 {
   "schema": "jev-known-gaps/1",
   "family": "J9",
-  "gaps": {
-    "J9-GAP-voice-avatar-no-media-hold": {
-      "cases": ["J9-route-heygen-video", "J9-route-media-generate-voice"],
-      "note": "app/api/media/generate/voice/route.ts (ElevenLabs) and app/api/heygen/video/route.ts (ElevenLabs + HeyGen) take no media-quota hold before the provider call and make no text-provider call, so neither the Governor nor the media quota gates their spend (found by P5 unit routes-media). P5 unit voice-avatar-spend-gate closes it."
-    }
-  }
+  "gaps": {}
 }
