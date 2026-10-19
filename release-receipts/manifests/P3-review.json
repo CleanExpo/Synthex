@@ -1,0 +1,111 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "review-P3-2026-10-19-0141",
+  "base_sha": "c7eac8e7757db87ac978e30e9d222c1f90934f98",
+  "head_sha": "5ed1e82e6a4b0c34195dac55153cfbfb27ad6503",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "git diff --name-only c7eac8e7757d..5ed1e82e6a4b returned exactly 34 files. Every file is listed below in coverage.reviewed or coverage.not_reviewed with a reason. release-receipts/ledger/fleet.jsonl is referenced by the review tool's hidden list but is not in this diff, so it does not require a coverage entry (the ledger has no new rows for this phase — verify-protected reported 0 protected-path violations, all 9 protected changes carry the orchestrator trailer required by AM-5).",
+      "reason": ""
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Definition-of-done for P3 (spec table row 487) was run on the integrated tree: `node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json` exits 0 and reports `route files: 774; exempt entries: 0; expected paths: 774; committed spec paths: 774; regenerated paths: 774; unresolved success responses: 39; listed exceptions: 39; PASS`. `npm run jev:det -- --family J1` exits 0, 643/643 tests passed, all 3 positive controls green (planted 200-no-auth, planted org-B leak, planted 500-on-malformed-body). npm run type-check and npm run lint both exit 0. The exempt list is read from proposals/P3/scripts/api/exempt-routes.json per rule B2, which contains `[]` — the proposal is in place. AM-1 (Cloudroom substrate), AM-2 (fleet merge through merge-phase.mjs), AM-4 (policy in scripts/fleet/policy.json with hash recorded), AM-5 (orchestrator Protected-Change trailer accepted by verify-protected) are all honored. AM-3 (12 contracts P-1..P10) is honored in DECISIONS.md FD-4 and the spec. A finding that any of the above is wrong is answered by the amendments file.",
+      "reason": ""
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "Check strength did not regress in this diff: (a) scripts/api/gen-openapi.mjs now enforces THREE failure conditions — drift, count mismatch, AND `r.success?.fail` — it used to enforce only drift/count; (b) the new check (c) explicitly rejects unlisted, stale, and malformed entries in scripts/api/success-exceptions.json; (c) scripts/api/success-exceptions.json was ADDED to protected_paths in scripts/fleet/policy.json (line 76) so a builder cannot grow the list; (d) scripts/fleet/verify-protected.mjs now recognises the orchestrator trailer (AM-5) but otherwise keeps every prior check (ledger grows-only, halt added-only, own-phase manifest, receipt-validated via the trusted verify-receipt binary copied to /tmp/trusted); (e) scripts/fleet/pre-release.mjs preflight now runs the gate manifest check (`g.head === f.head && g.commands.every(c => c.state === 'PASS')`) and rejects product-branch commits outside a fleet branch. gen-openapi --control (planted route without spec entry + deleted spec entry + baseline) and verify-protected --control (13 scenarios) and pre-release --control (13/13) all pass.",
+      "reason": ""
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "Planted and reverted one mutation in scripts/api/gen-openapi.mjs (the only contract-generating script in the diff). The mutation inverted the exempt filter at line 1282: `allRoutes.filter(file => !exempt.includes(file))` -> `allRoutes.filter(file => exempt.includes(file))`. Test command: `node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json`. Under the mutant, the generator built zero paths (the inverted filter rejected every route), so `committed spec paths: 774; regenerated paths: 0` triggered FAIL (a) drift and FAIL (c) unlisted — exit code 1. After restoring the source, the same command exited 0 with 774/774 paths. The source was restored byte-for-byte to the original (verified with diff -q against the pre-mutation backup). No other file mutated. See `mutants` below.",
+      "reason": "",
+      "mutants": [
+        {
+          "file": "scripts/api/gen-openapi.mjs",
+          "planted": "Inverted the exempt filter at line 1282: changed `allRoutes.filter(file => !exempt.includes(file))` to `allRoutes.filter(file => exempt.includes(file))`. This is the single line that decides which routes are written into docs/api/openapi.generated.json; with it inverted, every route is excluded and the spec regenerates as an empty paths map.",
+          "test_command": "node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "Each guard has a falsifier and at least one passing control run in this worktree: (a) `node scripts/api/gen-openapi.mjs --control` — 3/3 (baseline passes, planted route without spec entry fails, deleted spec entry fails); (b) `node scripts/api/gen-machine-docs.mjs --control` — faithful copy passes, planted error code fails; (c) `node scripts/fleet/verify-protected.mjs --control` — all 13 scenarios (planted protected edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier, ledger row deleted, halt removed all exit 1; own-phase manifest, fleet-appended ledger, merge carrying declared change, merge-tree fail-closed all exit 0); (d) `node scripts/fleet/pre-release.mjs --control` — 13/13. The mutation above is a fourth, code-level guard falsifier.",
+      "reason": ""
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "This is a clean environment: npm ci ran once to install zod 4.4.3 from package-lock.json (verified by `package-lock.json:32041 \"node_modules/zod\": { \"version\": \"4.4.3\" }` and `node_modules/zod/package.json` `\"version\": \"4.4.3\"`); no `npm install`, no `npm upgrade`, no `npm i`. The package-lock.json is unchanged in this diff (`git diff --stat -- package-lock.json` is empty). All four control runs in this report were executed against this single lockfile-installed environment. The brief's prior round (zod 4.6.7, non-lockfile) is not reproducible here.",
+      "reason": ""
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Reach of the diff is bounded by what the spec and AM-1..AM-5 allow. Surface = 34 files: 1 generated contract (docs/api/openapi.generated.json, 96,599 lines, fully regenerable, added to .prettierignore); 2 generated machine docs (error-codes.md, rate-limits.md); 1 generated llms.txt section (from marker down); 1 hand-written YAML marked stale; 2 new scripts (gen-machine-docs.mjs, pre-release.mjs); 4 modified scripts (gen-openapi.mjs is the contract generator, fleet/lib.mjs, fleet/run-phase.mjs, fleet/selftest.mjs, fleet/verify-protected.mjs); 3 new lib modules (storage/object-storage.ts server-only with client-bundle guard test, services/ai/reference-library-private.ts, services/ai/video/artifact-store.ts); 1 modified avatar route; 1 policy.json (one entry added); 1 package.json (npm scripts); 1 DECISIONS.md (FD-7 row, OPEN-5 closure); 1 protected manifest hash (policy-hash.json — its exemption for fleet branches is unchanged); 1 exempt-routes.json proposal (per rule B2); 1 new protected file scripts/api/success-exceptions.json; 6 new/updated unit tests; 1 hook fix; 1 CI workflow update; 1 .prettierignore. New privileges: object-storage.ts reads SUPABASE_SERVICE_ROLE_KEY (bypasses RLS) — guarded by tests/unit/storage/object-storage-client-guard.test.ts and never used by other P3 code. No new database tables, no migrations touched (D3, prisma/schema.prisma:1), no prisma migrations in the diff. No new outbound HTTP except the same fetch() calls the existing video artifact store would have made (artifact-store.ts had no fetch before; new fetch targets the provider URL and the Supabase endpoint the existing private-refs code already used).",
+      "reason": ""
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Outbound traffic created in this diff: (a) lib/storage/object-storage.ts talks to the configured SUPABASE_URL only — no other host. The endpoint `client.storage.from(bucket)` is built lazily on first call (line `client ??= createClient(url, key, {...})`), the credentials are read from `process.env` inside `bucketApi`, and the helper throws `ObjectStorageNotProvisionedError` (FEATURE_NOT_PROVISIONED) when either env var is absent. The contract and the success-exceptions file together do not invent 200 for that case — the avatar route catches it and answers 503 (avatar POST), the artifact store rethrows `ArtifactStorageNotProvisionedError` (existing 503), the private-reference resolver returns `[]` (existing no-coverage path). (b) lib/services/ai/video/artifact-store.ts fetches `input.sourceUrl` with `AbortSignal.timeout(60000)` and three retries with exponential backoff — the sourceUrl comes from the fal webhook (unchanged in this diff), not from a client. (c) scripts/api/gen-openapi.mjs probes zod schemas in a child `npx tsx` process with `globalThis.fetch = async () => blocked()` and `net.Socket.prototype.connect = blocked()` (line ~1033), so the probe never talks to the network while importing route files. No other outbound actions introduced.",
+      "reason": ""
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      ".claude/hooks/pre-compact-context.py",
+      ".github/workflows/openapi-drift.yml",
+      ".prettierignore",
+      "DECISIONS.md",
+      "app/api/user/avatar/route.ts",
+      "docs/api/error-codes.md",
+      "docs/api/openapi.generated.json",
+      "docs/api/openapi.yaml",
+      "docs/api/rate-limits.md",
+      "lib/ai/structured-output.ts",
+      "lib/services/ai/reference-library-private.ts",
+      "lib/services/ai/video/artifact-store.ts",
+      "lib/storage/object-storage.ts",
+      "package.json",
+      "proposals/P3/scripts/api/exempt-routes.json",
+      "public/llms.txt",
+      "release-receipts/manifests/policy-hash.json",
+      "scripts/api/gen-machine-docs.mjs",
+      "scripts/api/gen-openapi.mjs",
+      "scripts/api/success-exceptions.json",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/pre-release.mjs",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "tests/unit/ai/private-reference-bound.test.ts",
+      "tests/unit/ai/reference-library-private-storage.test.ts",
+      "tests/unit/ai/video-artifact-store.test.ts",
+      "tests/unit/api-contract/gen-openapi.test.ts",
+      "tests/unit/api-contract/machine-docs.test.ts",
+      "tests/unit/api/not-provisioned/p2-u17-stub-retirement.test.ts",
+      "tests/unit/storage/object-storage-client-guard.test.ts",
+      "tests/unit/storage/object-storage.test.ts"
+    ],
+    "not_reviewed": []
+  },
+  "reviewed_at": "2026-10-19T01:47:50.774750+00:00",
+  "head": "5ed1e82e6a4b0c34195dac55153cfbfb27ad6503",
+  "lane": "minimax"
+}
