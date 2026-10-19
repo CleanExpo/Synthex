@@ -24,7 +24,15 @@ import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
-import { routedCall } from '@/lib/ai/model-router';
+import { routeTask } from '@/lib/ai/model-router';
+import { TIER_ESCALATION, TIER_MODELS } from '@/lib/ai/routing-config';
+import { governedCall, GOVERNOR_MODE } from '@/lib/ai/governor';
+import {
+  estimateTextTokens,
+  governedRouteResult,
+  governorRefusalResponse,
+  resolveOrgBrandSlug,
+} from '@/lib/ai/governor-route-support';
 import {
   recordScoreIssued,
   type ScoreLedgerResult,
@@ -265,20 +273,22 @@ async function retrieveClientContext(
 // ── AI call ───────────────────────────────────────────────────────────────────
 
 async function callAI(
+  organizationId: string,
   question: string,
   contextBlock: string,
   tier: ConversationTier,
   postCount: number
 ): Promise<string> {
-  const client = new Anthropic({
-    apiKey: process.env.OPENROUTER_API_KEY,
-    baseURL: 'https://openrouter.ai/api/v1',
-    defaultHeaders: {
-      'HTTP-Referer':
-        process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-      'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-    },
-  });
+  const makeClient = (apiKey: string | undefined) =>
+    new Anthropic({
+      apiKey,
+      baseURL: 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer':
+          process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
+        'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
+      },
+    });
 
   const belowThreshold = postCount < 15;
   const systemPrompt = [
@@ -296,24 +306,63 @@ async function callAI(
     .filter(Boolean)
     .join('\n');
 
-  return await routedCall({
-    task: {
-      taskType: tierToTaskType(tier),
-      inputTokenEstimate: systemPrompt.length / 4 + question.length / 4,
-      qualityThreshold: tier === 'simple' ? 'medium' : 'high',
-    },
-    execute: async modelId => {
-      const response = await client.messages.create({
-        model: modelId,
-        max_tokens: 300,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: question }],
-      });
-      const block = response.content[0];
-      if (block.type !== 'text') throw new Error('Unexpected response type');
-      return block.text;
-    },
+  const MAX_TOKENS = 300;
+  const task = {
+    taskType: tierToTaskType(tier),
+    inputTokenEstimate: systemPrompt.length / 4 + question.length / 4,
+    qualityThreshold: tier === 'simple' ? 'medium' : 'high',
+  } as const;
+  const routed = routeTask(task);
+
+  // Spend gate (M10). The model router still picks the tier and escalates on a
+  // provider failure, but the Governor writes the single ledger receipt
+  // (routedCall's own ledger write is not used, so there is one row per call).
+  const call = governedRouteResult(async ctx => {
+    const client = makeClient(ctx.apiKey ?? process.env.OPENROUTER_API_KEY);
+    let tierName: keyof typeof TIER_MODELS | null = routed.tier;
+    let lastError: unknown;
+    while (tierName !== null) {
+      const modelId = TIER_MODELS[tierName].modelId;
+      try {
+        const response = await client.messages.create({
+          model: modelId,
+          max_tokens: MAX_TOKENS,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: question }],
+        });
+        const block = response.content[0];
+        if (block.type !== 'text') throw new Error('Unexpected response type');
+        return {
+          data: block.text,
+          modelId,
+          inputTokens: response.usage?.input_tokens ?? 0,
+          outputTokens: response.usage?.output_tokens ?? 0,
+        };
+      } catch (err) {
+        lastError = err;
+        tierName = TIER_ESCALATION[tierName];
+      }
+    }
+    throw new Error(
+      `ModelRouter: all tiers exhausted for task "${task.taskType}". Last error: ${String(lastError)}`
+    );
   });
+  return call.unwrap(
+    await governedCall({
+      organizationId,
+      brandSlug: await resolveOrgBrandSlug(organizationId),
+      runner: 'ask-synthex',
+      provider: 'openrouter',
+      model: { kind: 'registered', modelId: routed.model },
+      pipelineName: 'ask-synthex',
+      estimate: estimateTextTokens(
+        systemPrompt.length + question.length,
+        MAX_TOKENS
+      ),
+      mode: GOVERNOR_MODE,
+      execute: call.execute,
+    })
+  );
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
@@ -391,8 +440,16 @@ const _postHandler = withAuth(
     let answer: string;
 
     try {
-      answer = await callAI(question, effectiveContext, tier, postCount);
+      answer = await callAI(
+        organizationId,
+        question,
+        effectiveContext,
+        tier,
+        postCount
+      );
     } catch (err) {
+      const refusal = governorRefusalResponse(err);
+      if (refusal) return refusal;
       console.error('[ask-synthex] AI call failed:', String(err));
       return NextResponse.json(
         {

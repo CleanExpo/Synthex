@@ -20,8 +20,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
+import { governedCall, GOVERNOR_MODE } from '@/lib/ai/governor';
+import {
+  estimateTextTokens,
+  governedRouteResult,
+} from '@/lib/ai/governor-route-support';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
+import { SYSTEM_ORGANIZATION_ID } from '@/lib/ai/generation-context';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 // ── Config ─────────────────────────────────────────────────────────────────────
@@ -204,13 +210,9 @@ async function analyseResults(
     .map(r => `Title: ${r.title}\nSnippet: ${r.snippet}\nURL: ${r.url}`)
     .join('\n\n---\n\n');
 
-  const response = await getAI().complete({
-    model: 'claude-haiku-4-5-20251001', // Use cheapest model for monitoring tasks
-    max_tokens: 512,
-    messages: [
-      {
-        role: 'user',
-        content: `You are analysing search results for evidence of a ${platform} algorithm update in the last 30 days.
+  const MODEL = 'claude-haiku-4-5-20251001'; // cheapest model for monitoring tasks
+  const MAX_TOKENS = 512;
+  const prompt = `You are analysing search results for evidence of a ${platform} algorithm update in the last 30 days.
 
 Search results:
 ${snippets}
@@ -223,10 +225,37 @@ Respond with a JSON object ONLY:
   "affectedSignals": ["list", "of", "affected", "signal", "plain-english-names"] (or [])
 }
 
-Only set detected=true if there is clear evidence of an algorithm change, not just general SEO discussion.`,
-      },
-    ],
+Only set detected=true if there is clear evidence of an algorithm change, not just general SEO discussion.`;
+
+  // Spend gate (M10). This platform cron has no tenant, so the receipt is
+  // booked to the system org under the Synthex brand (no per-org record exists).
+  const call = governedRouteResult(async ctx => {
+    const provider = ctx.apiKey ? new AnthropicProvider(ctx.apiKey) : getAI();
+    const data = await provider.complete({
+      model: ctx.model?.id ?? MODEL,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return {
+      data,
+      modelId: data.model || undefined,
+      inputTokens: data.usage?.prompt_tokens ?? 0,
+      outputTokens: data.usage?.completion_tokens ?? 0,
+    };
   });
+  const response = call.unwrap(
+    await governedCall({
+      organizationId: SYSTEM_ORGANIZATION_ID,
+      brandSlug: 'synthex',
+      runner: 'internal-algorithm-freshness-monitor',
+      provider: 'anthropic',
+      model: { kind: 'registered', modelId: MODEL },
+      pipelineName: 'internal-algorithm-freshness-monitor',
+      estimate: estimateTextTokens(prompt.length, MAX_TOKENS),
+      mode: GOVERNOR_MODE,
+      execute: call.execute,
+    })
+  );
 
   const content = response.choices[0]?.message?.content ?? '';
   if (!content) return { detected: false };
