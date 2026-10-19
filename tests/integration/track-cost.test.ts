@@ -67,12 +67,12 @@ describe('calculatePipelineCost', () => {
     ).toBeCloseTo(0.02, 4);
   });
 
-  it('falls back to Sonnet pricing for unknown model and logs a warning', () => {
+  it('records an unknown model at 0 USD and logs a warning naming it', () => {
     const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const cost = calculatePipelineCost('claude-unknown-99', 10_000, 2_000);
-    expect(cost).toBeCloseTo(0.06, 4); // Sonnet fallback
+    expect(cost).toBe(0);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('pipeline_cost_unknown_model')
+      expect.stringContaining('claude-unknown-99')
     );
     warnSpy.mockRestore();
   });

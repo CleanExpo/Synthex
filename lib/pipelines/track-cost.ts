@@ -20,14 +20,16 @@
  * At 1,000 clients × 3 weekly pipelines, monthly AI compute reaches ~$6k/mo.
  * Without this ledger, that figure is unauditable. See scripts/cost-report.sql.
  *
- * Model pricing (per 1M tokens):
- *   claude-opus-4-6:   $5.00 input / $25.00 output
- *   claude-sonnet-4-6: $3.00 input / $15.00 output
- *   claude-haiku-4-5:  $1.00 input /  $5.00 output
- *   claude-opus-4-8:   $5.00 input / $25.00 output
- *   claude-sonnet-5:   $2.00 input / $10.00 output (intro; $3.00/$15.00 from 2026-09-01)
- *   claude-fable-5:    $10.00 input / $50.00 output (future-proofing only — not routable)
+ * Model pricing comes from lib/ai/model-registry.ts (costPer1kTokens), the same
+ * registry the Governor resolves models from; there is no private rate table.
  */
+
+import {
+  getModel,
+  getModels,
+  type AIProvider,
+  type ModelConfig,
+} from '@/lib/ai/model-registry';
 
 export interface TrackCostParams {
   /** e.g. 'brand-intelligence', 'weekly-digest', 'authority-score', 'video-script' */
@@ -50,39 +52,56 @@ export interface TrackCostParams {
   error_code?: string;
 }
 
-/** Token-to-cost rates (USD per 1M tokens). Source: Anthropic pricing 2026-03. */
-const MODEL_RATES: Record<string, { input: number; output: number }> = {
-  'claude-opus-4-6': { input: 5.0, output: 25.0 },
-  'claude-sonnet-4-6': { input: 3.0, output: 15.0 },
-  'claude-haiku-4-5': { input: 1.0, output: 5.0 },
-  'claude-opus-4-8': { input: 5.0, output: 25.0 },
-  // Intro pricing through 2026-08-31; rises to $3.00/$15.00 per MTok on 2026-09-01.
-  'claude-sonnet-5': { input: 2.0, output: 10.0 },
-  // Future-proofing only — not a routable default (Wave 3 is Board-gated).
-  'claude-fable-5': { input: 10.0, output: 50.0 },
-  // Legacy aliases
-  'claude-haiku-4-5-20251001': { input: 1.0, output: 5.0 },
-};
+const PROVIDERS: AIProvider[] = [
+  'anthropic',
+  'openai',
+  'google',
+  'openrouter',
+  'ollama',
+];
 
 /**
- * Calculate cost in USD for a given model and token counts.
- * Falls back to Sonnet pricing for unknown models with a warning.
+ * Look a model up in the single model registry (the one the Governor reads).
+ * Exact id first; otherwise a dated registry id for an undated alias
+ * (claude-haiku-4-5 -> claude-haiku-4-5-20251001). Rates are never guessed.
+ */
+function findRegistryModel(model: string): ModelConfig | null {
+  for (const provider of PROVIDERS) {
+    const exact = getModel(provider, model);
+    if (exact) return exact;
+  }
+  for (const provider of PROVIDERS) {
+    const dated = getModels(provider).find(m => m.id.startsWith(`${model}-`));
+    if (dated) return dated;
+  }
+  return null;
+}
+
+/**
+ * Calculate cost in USD for a given model and token counts, priced from the
+ * model registry. A model the registry does not know is recorded at 0 USD with
+ * a warning naming it — never at a guessed rate.
  */
 export function calculatePipelineCost(
   model: string,
   inputTokens: number,
   outputTokens: number
 ): number {
-  const rates = MODEL_RATES[model] ?? MODEL_RATES['claude-sonnet-4-6'];
-  if (!MODEL_RATES[model]) {
+  const config = findRegistryModel(model);
+  if (!config) {
     console.warn(
       JSON.stringify({
         event: 'pipeline_cost_unknown_model',
         model,
-        fallback: 'claude-sonnet-4-6',
+        recorded_cost_usd: 0,
       })
     );
+    return 0;
   }
+  const rates = {
+    input: config.costPer1kTokens.input * 1000,
+    output: config.costPer1kTokens.output * 1000,
+  };
   return parseFloat(
     (
       (inputTokens / 1_000_000) * rates.input +
