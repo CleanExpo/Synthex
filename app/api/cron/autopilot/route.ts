@@ -31,12 +31,28 @@ import {
   holdAutopilotForReview,
 } from '@/lib/autopilot/hold-for-review';
 import { serializeError } from '@/lib/observability/serialize-error';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+} from '@/lib/ai/governor';
+import {
+  generationEstimate,
+  generationProvider,
+  generatorCallResult,
+  governedData,
+  governorCredentials,
+} from '@/lib/ai/governed-generation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300; // 5 minutes
 
 const MAX_REGENERATION_ATTEMPTS = 2;
+
+/** AI Governor identity for autopilot generations (P5 / M10). */
+const GOVERNOR_RUNNER = 'cron-autopilot';
+const GOVERNOR_PIPELINE = 'content-generation';
 
 // ── Time budget ─────────────────────────────────────────────────────────────
 // Vercel terminates the function at `maxDuration` with no opportunity to write
@@ -94,6 +110,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
+            slug: true,
             industry: true,
             brandDna: {
               select: {
@@ -355,6 +372,8 @@ export async function GET(request: NextRequest) {
               offerings,
               campaignId: campaign.id,
               orgId: org.id,
+              // Organisations carry no brandSlug; the org slug is the brand.
+              brandSlug: org.slug ?? org.id,
               userId,
               runId: created.id,
               autoApproveThreshold: config.autoApproveThreshold,
@@ -569,6 +588,8 @@ interface SlotInput {
   offerings: string[];
   campaignId: string;
   orgId: string;
+  /** Brand the Governor receipts this organisation's generations under. */
+  brandSlug: string;
   userId: string;
   runId: string;
   autoApproveThreshold: number;
@@ -666,18 +687,47 @@ async function generateSlotContent(input: SlotInput): Promise<{
       };
 
       // SYN-MCP-003: server-built context — org/user from the cron slot
-      // input, traceId = the autopilot run id.
-      const generated = await withDeadline(
-        input.generator.generateContent(request, {
+      // input, traceId = the autopilot run id. One governed call (one
+      // receipt) per organisation-scoped generation.
+      let providerError: { error: unknown } | undefined;
+      const governed = await withDeadline(
+        governedCall({
           organizationId: input.orgId,
-          userId: input.userId,
-          taskId: input.runId,
-          traceId: input.runId,
-          autonomyLevel: 'autonomous',
+          brandSlug: input.brandSlug,
+          runner: GOVERNOR_RUNNER,
+          provider: generationProvider(null),
+          model: { kind: 'latest' },
+          pipelineName: GOVERNOR_PIPELINE,
+          runId: input.runId,
+          estimate: generationEstimate(request.type),
+          mode: GOVERNOR_MODE,
+          execute: async governor => {
+            try {
+              return generatorCallResult(
+                await input.generator.generateContent(
+                  request,
+                  {
+                    organizationId: input.orgId,
+                    userId: input.userId,
+                    taskId: input.runId,
+                    traceId: input.runId,
+                    autonomyLevel: 'autonomous',
+                  },
+                  governorCredentials(governor, null),
+                  // The Governor receipt is this generation's only ledger row.
+                  { costLedger: 'caller' }
+                )
+              );
+            } catch (error) {
+              providerError = { error };
+              throw error;
+            }
+          },
         }),
         input.deadlineAt - attemptStartedAt,
         `generateContent attempt ${attempt} (${input.slot.platform})`
       );
+      const generated = governedData(governed, providerError);
       const gate = evaluateContent(
         generated.content,
         input.slot.platform,
@@ -725,7 +775,19 @@ async function generateSlotContent(input: SlotInput): Promise<{
       const msLeft = input.deadlineAt - Date.now();
       if (msLeft < SINGLE_CALL_MS) break;
       if (gate.decision !== 'reject' && !input.retryAffordable) break;
-    } catch {
+    } catch (error) {
+      // An enforcing Governor refusal is final for this slot: record it with
+      // its code and do not retry into the same refusal.
+      if (error instanceof GovernorRefusedError) {
+        logger.warn('cron:autopilot:governor-refused', {
+          orgId: input.orgId,
+          runId: input.runId,
+          platform: input.slot.platform,
+          code: error.outcome,
+          reason: error.reason,
+        });
+        break;
+      }
       // Continue to next attempt
     }
   }

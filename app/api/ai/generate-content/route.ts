@@ -5,7 +5,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { aiContentGenerator } from '@/lib/ai/content-generator';
+import {
+  aiContentGenerator,
+  type ContentRequest,
+  type GeneratedContent,
+  type UserProviderCredentials,
+} from '@/lib/ai/content-generator';
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
 import { contentScorer } from '@/lib/ai/content-scorer';
 import { authMonitor } from '@/lib/auth/monitoring';
@@ -21,7 +26,6 @@ import {
   enforceBudgetPreflight,
   estimateContentGenerationCostUsd,
   GenerationBudgetExceededError,
-  recordGenerationCost,
   releaseIdempotencyKey,
   storeIdempotentResponse,
   systemGenerationContext,
@@ -37,9 +41,80 @@ import {
   reserveBudget,
   type OrgBudgetReservation,
 } from '@/lib/ai/budget-enforcer';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+  type ResolvedCallContext,
+} from '@/lib/ai/governor';
+import {
+  generationEstimate,
+  generationProvider,
+  generatorCallResult,
+  governedData,
+  governorBrandSlug,
+  governorCredentials,
+  governorRefusalResponse,
+} from '@/lib/ai/governed-generation';
 
 /** Tenant-scoped idempotency namespace for this route. */
 const IDEMPOTENCY_SCOPE = 'generate-content';
+
+/** AI Governor identity for this route's generations (P5 / M10). */
+const GOVERNOR_RUNNER = 'ai-generate-content';
+const GOVERNOR_PIPELINE = 'content-generation';
+
+/**
+ * One generation through the AI Governor in GOVERNOR_MODE: exactly one
+ * receipt (the generation's pipeline_cost_ledger row) per generation.
+ */
+async function governedGeneration<T>(
+  ctx: GenerationContext,
+  userCreds: UserProviderCredentials | null,
+  type: string | undefined,
+  execute: (governor: ResolvedCallContext) => Promise<ProviderCallResult<T>>
+): Promise<T> {
+  let providerError: { error: unknown } | undefined;
+  const result = await governedCall<T>({
+    organizationId: ctx.organizationId,
+    brandSlug: await governorBrandSlug(ctx.organizationId),
+    runner: GOVERNOR_RUNNER,
+    provider: generationProvider(userCreds),
+    model: { kind: 'latest' },
+    pipelineName: GOVERNOR_PIPELINE,
+    runId: ctx.traceId,
+    estimate: generationEstimate(type),
+    mode: GOVERNOR_MODE,
+    execute: async governor => {
+      try {
+        return await execute(governor);
+      } catch (error) {
+        providerError = { error };
+        throw error;
+      }
+    },
+  });
+  return governedData(result, providerError);
+}
+
+/** generateContent with the Governor's receipt as its only ledger row. */
+function governedGenerate(
+  request: ContentRequest,
+  ctx: GenerationContext,
+  userCreds: UserProviderCredentials | null
+): Promise<GeneratedContent> {
+  return governedGeneration(ctx, userCreds, request.type, async governor =>
+    generatorCallResult(
+      await aiContentGenerator.generateContent(
+        request,
+        ctx,
+        governorCredentials(governor, userCreds),
+        { costLedger: 'caller' }
+      )
+    )
+  );
+}
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
@@ -376,7 +451,9 @@ export async function POST(request: NextRequest) {
             // Pass the resolved org into each child the same way the single
             // path does (ContentRequest.orgId) so brand context engages.
             batchRequests.map(item => ({ ...item, orgId: organizationId })),
-            generationContext
+            generationContext,
+            // One Governor receipt per child generation.
+            child => governedGenerate(child, generationContext, userCreds)
           );
           // Per-child usage accounting (was previously untracked).
           await UsageTracker.track(userId, 'ai_posts', results.length);
@@ -400,124 +477,126 @@ export async function POST(request: NextRequest) {
         }
 
         // Try to use ClientBrandedContentService (new service that uses client's API keys)
-        let generatedContent;
-        try {
-          // When the user explicitly selected a trained persona, use the
-          // persona-aware generator: ClientBrandedContentService applies the
-          // org BrandDNA but cannot apply a specific persona's voice.
-          if (organizationId && topic && !personaId) {
-            // Use new branded content service
-            const brandedResult = await ClientBrandedContentService.generate({
-              orgId: organizationId,
-              userId: userId,
-              platform,
-              prompt: topic,
-              contentType: type === 'reel' ? 'post' : type,
-              tone,
-              targetLength: length,
-              includeHashtags,
-              includeEmojis,
-              customInstructions: keywords?.join(', '),
-            });
+        const singleRequest: ContentRequest = {
+          type,
+          platform,
+          topic,
+          tone,
+          keywords,
+          targetAudience,
+          length,
+          includeEmojis,
+          includeHashtags,
+          includeCTA,
+          personaId,
+          orgId: organizationId,
+        };
+        // The whole generation (branded service, or the generator fallback)
+        // is one governed call with one receipt.
+        const generatedContent = await governedGeneration<unknown>(
+          generationContext,
+          userCreds,
+          type,
+          async governor => {
+            try {
+              // When the user explicitly selected a trained persona, use the
+              // persona-aware generator: ClientBrandedContentService applies the
+              // org BrandDNA but cannot apply a specific persona's voice.
+              if (organizationId && topic && !personaId) {
+                // Use new branded content service
+                const brandedResult =
+                  await ClientBrandedContentService.generate({
+                    orgId: organizationId,
+                    userId: userId,
+                    platform,
+                    prompt: topic,
+                    contentType: type === 'reel' ? 'post' : type,
+                    tone,
+                    targetLength: length,
+                    includeHashtags,
+                    includeEmojis,
+                    customInstructions: keywords?.join(', '),
+                  });
 
-            // Convert to expected format. Scores come from the real content
-            // scorer (pure, no AI cost) — never mock values (CLAUDE.md: no
-            // mock/stub data in product surfaces). SYN-1050 Phase 1.
-            const primaryScore = contentScorer.score(
-              brandedResult.content,
-              platform
-            );
-            generatedContent = {
-              id: crypto.randomUUID?.() ?? Date.now().toString(),
-              content: brandedResult.content,
-              platform,
-              variations: brandedResult.variations.map((v, i) => ({
-                id: `var-${i}`,
-                content: v,
-                style: 'alternative',
-                score: Math.round(contentScorer.score(v, platform).overall),
-              })),
-              hashtags: [],
-              emojis: [],
-              hooks: [],
-              cta: undefined,
-              // Deprecated aliases + honest heuristic names (SYN-MCP-003).
-              estimatedEngagement: Math.round(
-                primaryScore.dimensions.engagement.score
-              ),
-              viralScore: Math.round(primaryScore.overall),
-              heuristicEngagement: Math.round(
-                primaryScore.dimensions.engagement.score
-              ),
-              heuristicViralScore: Math.round(primaryScore.overall),
-              metadata: {
-                generatedAt: new Date(),
-                model: brandedResult.model,
-                tokens: brandedResult.metadata.tokensUsed ?? 0,
-                processingTime: 0,
-              },
-            };
+                // Convert to expected format. Scores come from the real content
+                // scorer (pure, no AI cost) — never mock values (CLAUDE.md: no
+                // mock/stub data in product surfaces). SYN-1050 Phase 1.
+                const primaryScore = contentScorer.score(
+                  brandedResult.content,
+                  platform
+                );
+                const brandedContent = {
+                  id: crypto.randomUUID?.() ?? Date.now().toString(),
+                  content: brandedResult.content,
+                  platform,
+                  variations: brandedResult.variations.map((v, i) => ({
+                    id: `var-${i}`,
+                    content: v,
+                    style: 'alternative',
+                    score: Math.round(contentScorer.score(v, platform).overall),
+                  })),
+                  hashtags: [],
+                  emojis: [],
+                  hooks: [],
+                  cta: undefined,
+                  // Deprecated aliases + honest heuristic names (SYN-MCP-003).
+                  estimatedEngagement: Math.round(
+                    primaryScore.dimensions.engagement.score
+                  ),
+                  viralScore: Math.round(primaryScore.overall),
+                  heuristicEngagement: Math.round(
+                    primaryScore.dimensions.engagement.score
+                  ),
+                  heuristicViralScore: Math.round(primaryScore.overall),
+                  metadata: {
+                    generatedAt: new Date(),
+                    model: brandedResult.model,
+                    tokens: brandedResult.metadata.tokensUsed ?? 0,
+                    processingTime: 0,
+                  },
+                };
 
-            // Org-attributed cost ledger row for the branded path (the
-            // aiContentGenerator path records its own) — never blocking.
-            const brandedTokens = brandedResult.metadata.tokensUsed ?? 0;
-            recordGenerationCost(generationContext, {
-              pipelineName: 'content-generation',
-              model: brandedResult.model,
-              inputTokens: Math.round(brandedTokens * 0.4),
-              outputTokens: Math.round(brandedTokens * 0.6),
-            }).catch(() => {});
-          } else {
-            // Persona-aware / fallback generator (supports personaId + orgId)
-            generatedContent = await aiContentGenerator.generateContent(
-              {
-                type,
-                platform,
-                topic,
-                tone,
-                keywords,
-                targetAudience,
-                length,
-                includeEmojis,
-                includeHashtags,
-                includeCTA,
-                personaId,
-                orgId: organizationId,
-              },
-              generationContext,
-              userCreds ?? undefined
-            );
-          }
-        } catch (brandedContentError) {
-          // Graceful degradation: fall back to old service if new service fails
-          logger.warn(
-            'ClientBrandedContentService failed, falling back to aiContentGenerator',
-            {
-              error:
-                brandedContentError instanceof Error
-                  ? brandedContentError.message
-                  : String(brandedContentError),
+                // The service reports one total; split it as the branded ledger
+                // row always has. This receipt is the path's only ledger row.
+                const brandedTokens = brandedResult.metadata.tokensUsed ?? 0;
+                return {
+                  data: brandedContent,
+                  inputTokens: Math.round(brandedTokens * 0.4),
+                  outputTokens: Math.round(brandedTokens * 0.6),
+                  modelId: brandedResult.model,
+                };
+              }
+              // Persona-aware / fallback generator (supports personaId + orgId)
+              return generatorCallResult(
+                await aiContentGenerator.generateContent(
+                  singleRequest,
+                  generationContext,
+                  governorCredentials(governor, userCreds),
+                  { costLedger: 'caller' }
+                )
+              );
+            } catch (brandedContentError) {
+              // Graceful degradation: fall back to old service if new service fails
+              logger.warn(
+                'ClientBrandedContentService failed, falling back to aiContentGenerator',
+                {
+                  error:
+                    brandedContentError instanceof Error
+                      ? brandedContentError.message
+                      : String(brandedContentError),
+                }
+              );
+              return generatorCallResult(
+                await aiContentGenerator.generateContent(
+                  singleRequest,
+                  generationContext,
+                  governorCredentials(governor, userCreds),
+                  { costLedger: 'caller' }
+                )
+              );
             }
-          );
-          generatedContent = await aiContentGenerator.generateContent(
-            {
-              type,
-              platform,
-              topic,
-              tone,
-              keywords,
-              targetAudience,
-              length,
-              includeEmojis,
-              includeHashtags,
-              includeCTA,
-              personaId,
-              orgId: organizationId,
-            },
-            generationContext,
-            userCreds ?? undefined
-          );
-        }
+          }
+        );
 
         // SYN-1053 Phase 3: flag (never block) low-quality variations. Works
         // for BOTH the branded branch (variations already carry a numeric
@@ -580,7 +659,9 @@ export async function POST(request: NextRequest) {
         await commitActual(orgBudgetReservation);
         return NextResponse.json(envelope);
       } catch (error) {
-        logger.error('Content generation API error', { error });
+        if (!(error instanceof GovernorRefusedError)) {
+          logger.error('Content generation API error', { error });
+        }
 
         // Failed generation: release the org budget reservation — the
         // estimated spend never happened. Never throws.
@@ -595,6 +676,11 @@ export async function POST(request: NextRequest) {
             userId,
             acquiredIdempotencyKey
           ).catch(() => {});
+        }
+
+        // Enforcing Governor refusal: an honest refusal with its code.
+        if (error instanceof GovernorRefusedError) {
+          return governorRefusalResponse(error);
         }
 
         // Track error
@@ -744,7 +830,9 @@ export async function GET(request: NextRequest) {
         days,
         platforms,
         postsPerDay,
-        calendarContext
+        calendarContext,
+        // One Governor receipt per calendar post (platform key, as before).
+        post => governedGenerate(post, calendarContext, null)
       );
 
       // Convert Map to object for JSON serialization
@@ -778,6 +866,9 @@ export async function GET(request: NextRequest) {
       logger.error('Calendar generation error', { error });
       // Failed generation: release the org budget reservation. Never throws.
       await releaseReservation(calendarBudgetReservation);
+      if (error instanceof GovernorRefusedError) {
+        return governorRefusalResponse(error);
+      }
       return NextResponse.json(
         { error: 'Failed to generate content calendar' },
         { status: 500 }

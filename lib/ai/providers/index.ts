@@ -43,7 +43,8 @@ type ProviderName = 'openai' | 'openrouter' | 'anthropic' | 'google' | 'ollama';
 /** Default provider used when AI_PROVIDER is unset (OpenAI-only direction). */
 const DEFAULT_PROVIDER: ProviderName = 'openai';
 
-function resolvePlatformProviderName(): ProviderName {
+/** The platform provider getAIProvider() would build, without building it. */
+export function resolvePlatformProviderName(): ProviderName {
   const configured = process.env.AI_PROVIDER as ProviderName | undefined;
   if (configured && providerFactories[configured]) return configured;
   if (process.env.OPENAI_API_KEY?.trim()) return 'openai';
