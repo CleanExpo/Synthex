@@ -15,28 +15,25 @@ import {
 } from '@/lib/ai/governor';
 
 /**
- * The brand the org already has: HermesConfig.brandSlug when the org runs
- * HERMES, otherwise the organisation's own slug (no other per-org brand field
- * exists), otherwise the id. Always the org's server-side record, never input.
+ * The one organisation -> brand rule every governed call uses (RunnerFlag
+ * kill-switches and budgets key on it): HermesConfig.brandSlug when the org
+ * runs HERMES, otherwise the organisation's own slug (no other per-org brand
+ * field exists), otherwise the id. Always the org's server-side record, never
+ * input. A read error propagates: a guessed brand would dodge its kill-switch.
  */
 export async function resolveOrgBrandSlug(
   organizationId: string
 ): Promise<string> {
-  try {
-    const hermes = await prisma.hermesConfig.findUnique({
-      where: { organizationId },
-      select: { brandSlug: true },
-    });
-    if (hermes?.brandSlug) return hermes.brandSlug;
-    const org = await prisma.organization.findUnique({
-      where: { id: organizationId },
-      select: { slug: true },
-    });
-    return org?.slug ?? organizationId;
-  } catch {
-    // A brand lookup failure must not break the route's own call.
-    return organizationId;
-  }
+  const hermes = await prisma.hermesConfig.findUnique({
+    where: { organizationId },
+    select: { brandSlug: true },
+  });
+  if (hermes?.brandSlug) return hermes.brandSlug;
+  const org = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: { slug: true },
+  });
+  return org?.slug ?? organizationId;
 }
 
 /** Pre-spend estimate: ~4 characters per token in, the route's max_tokens out. */

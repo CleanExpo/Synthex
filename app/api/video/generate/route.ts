@@ -27,6 +27,7 @@ import {
   GOVERNOR_PROVIDERS,
   type GovernorProvider,
 } from '@/lib/ai/governor';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
@@ -458,7 +459,7 @@ async function completeScript(
 
   return governedRouteCall({
     organizationId,
-    brandSlug: 'synthex',
+    brandSlug: await resolveOrgBrandSlug(organizationId),
     runner: 'video-script',
     pipelineName: 'video-script',
     provider,

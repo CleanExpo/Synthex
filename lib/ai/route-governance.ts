@@ -9,7 +9,6 @@
  */
 
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import {
   GovernorRefusedError,
@@ -17,10 +16,11 @@ import {
   type GovernorProvider,
   type GovernorRefusal,
 } from '@/lib/ai/governor';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 
 export interface GovernorScope {
   organizationId: string;
-  /** The organisation's slug: orgs carry no separate brand slug of their own. */
+  /** The organisation's brand, from resolveOrgBrandSlug. */
   brandSlug: string;
 }
 
@@ -48,11 +48,10 @@ export async function resolveGovernorScope(
 ): Promise<GovernorScope | null> {
   const organizationId = await getEffectiveOrganizationId(userId);
   if (!organizationId) return null;
-  const org = await prisma.organization.findUnique({
-    where: { id: organizationId },
-    select: { slug: true },
-  });
-  return { organizationId, brandSlug: org?.slug ?? organizationId };
+  return {
+    organizationId,
+    brandSlug: await resolveOrgBrandSlug(organizationId),
+  };
 }
 
 /** Rough token count for a pre-spend estimate (about four characters a token). */
