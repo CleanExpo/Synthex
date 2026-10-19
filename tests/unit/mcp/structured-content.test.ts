@@ -9,8 +9,9 @@
  */
 
 // --- mock the heavy transitive imports of the studio-tools registry ---
+const mockSubmitGenerativeVideo = jest.fn();
 jest.mock('@/lib/services/ai/video/generation-service', () => ({
-  submitGenerativeVideo: jest.fn(),
+  submitGenerativeVideo: (...a: unknown[]) => mockSubmitGenerativeVideo(...a),
 }));
 
 const mockClaimFindMany = jest.fn();
@@ -22,6 +23,11 @@ const mockProfileFindUnique = jest.fn();
 const mockOutcomeFindMany = jest.fn();
 const mockLedgerFindMany = jest.fn();
 const mockOrgFindUnique = jest.fn();
+const mockLedgerGroupBy = jest.fn();
+const mockMediaSpendGroupBy = jest.fn();
+const mockVideoFindFirst = jest.fn();
+const mockVideoFindMany = jest.fn();
+const mockCheckDatabaseHealth = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -50,8 +56,21 @@ jest.mock('@/lib/prisma', () => ({
     },
     pipelineCostLedger: {
       findMany: (...a: unknown[]) => mockLedgerFindMany(...a),
+      groupBy: (...a: unknown[]) => mockLedgerGroupBy(...a),
+    },
+    mediaSpendEvent: {
+      groupBy: (...a: unknown[]) => mockMediaSpendGroupBy(...a),
+    },
+    videoGeneration: {
+      findFirst: (...a: unknown[]) => mockVideoFindFirst(...a),
+      findMany: (...a: unknown[]) => mockVideoFindMany(...a),
     },
   },
+  checkDatabaseHealth: (...a: unknown[]) => mockCheckDatabaseHealth(...a),
+}));
+const mockCacheHealth = jest.fn();
+jest.mock('@/lib/redis-unified', () => ({
+  healthCheck: (...a: unknown[]) => mockCacheHealth(...a),
 }));
 
 // SYN-MCP-007b boundaries: queue + Linear + retriever registry. The tools'
@@ -79,22 +98,47 @@ const mockGetAvailableRetrievers = jest.fn();
 jest.mock('@/lib/evidence/retriever', () => ({
   getAvailableRetrievers: (...a: unknown[]) => mockGetAvailableRetrievers(...a),
 }));
+// Creative/media boundaries (P5): the tools' REAL execute() runs; only the
+// provider, queue, storage and network edges are doubled.
+const mockGetBrandFragment = jest.fn();
 jest.mock('@/lib/services/ai/video/cards/brand-cards', () => ({
-  getBrandFragment: jest.fn(),
+  getBrandFragment: (...a: unknown[]) => mockGetBrandFragment(...a),
 }));
+const mockDeriveSocialCut = jest.fn();
 jest.mock('@/lib/video/social-derivation', () => ({
-  deriveSocialCut: jest.fn(),
+  deriveSocialCut: (...a: unknown[]) => mockDeriveSocialCut(...a),
 }));
+const mockQuotaSnapshot = jest.fn();
 jest.mock('@/lib/services/ai/video/quota', () => ({
-  quotaSnapshot: jest.fn(),
+  quotaSnapshot: (...a: unknown[]) => mockQuotaSnapshot(...a),
 }));
+const mockGenerateImage = jest.fn();
 jest.mock('@/lib/services/ai/image-generation', () => ({
-  generateImage: jest.fn(),
+  generateImage: (...a: unknown[]) => mockGenerateImage(...a),
 }));
+const mockGetAssets = jest.fn();
 jest.mock('@/lib/services/media-library', () => ({
-  mediaLibraryService: {},
+  mediaLibraryService: {
+    getAssets: (...a: unknown[]) => mockGetAssets(...a),
+  },
 }));
-jest.mock('@/lib/ai/providers', () => ({ getAIProvider: jest.fn() }));
+const mockComplete = jest.fn();
+jest.mock('@/lib/ai/providers', () => ({
+  getAIProvider: () => ({ complete: (...a: unknown[]) => mockComplete(...a) }),
+}));
+const mockGenerateSiteForOrg = jest.fn();
+jest.mock('@/lib/ai-websites/generate-for-org', () => {
+  class GbpConnectionMissingError extends Error {}
+  return {
+    generateSiteForOrg: (...a: unknown[]) => mockGenerateSiteForOrg(...a),
+    GbpConnectionMissingError,
+  };
+});
+jest.mock('@/lib/security/validate-url', () => ({
+  assertExternalUrlSafe: async (u: string) => {
+    if (u.includes('169.254')) throw new Error('private address');
+  },
+}));
 // NOTE: prompt-layer-builder is intentionally NOT mocked here —
 // context_preview_layered_prompt must conform through the REAL builder.
 
@@ -139,6 +183,20 @@ beforeEach(() => {
   mockAddJob.mockResolvedValue({ id: 'mock-job' });
   mockLinearIssue.mockResolvedValue(null);
   mockGetAvailableRetrievers.mockReturnValue([]);
+  mockLedgerGroupBy.mockResolvedValue([]);
+  mockMediaSpendGroupBy.mockResolvedValue([]);
+  mockVideoFindFirst.mockResolvedValue(null);
+  mockVideoFindMany.mockResolvedValue([]);
+  mockCheckDatabaseHealth.mockResolvedValue({ healthy: true, latency: 5 });
+  mockCacheHealth.mockResolvedValue({ status: 'healthy', connection: 'redis' });
+  mockQuotaSnapshot.mockResolvedValue({
+    spentUsd: 12.5,
+    monthlyBudgetUsd: 75,
+    spentTodayUsd: 1.2,
+    dailyBudgetUsd: 10,
+    warning: false,
+  });
+  mockGetBrandFragment.mockResolvedValue(null);
 });
 
 describe('per-tool structuredContent validates against the declared outputSchema', () => {
@@ -605,9 +663,13 @@ describe('outputSchema declaration discipline (spike caveat)', () => {
     }
   });
 
-  it('creative tools do NOT declare outputSchema yet (returns embed Dates/provider passthroughs — never blanket-add)', () => {
-    for (const t of ALL_MCP_TOOLS.filter(x => x.scope === 'creative')) {
-      expect(t.outputSchema).toBeUndefined();
+  it('P5: every registered tool declares an outputSchema that converts to an object JSON Schema (as tools/list does)', () => {
+    for (const t of ALL_MCP_TOOLS) {
+      expect([t.name, Boolean(t.outputSchema)]).toEqual([t.name, true]);
+      const json = z.toJSONSchema(t.outputSchema as z.ZodTypeAny, {
+        io: 'output',
+      });
+      expect([t.name, json.type]).toEqual([t.name, 'object']);
     }
   });
 
@@ -616,5 +678,419 @@ describe('outputSchema declaration discipline (spike caveat)', () => {
     expect(() =>
       (t.outputSchema as z.ZodTypeAny).parse({ claims: 'not-an-array' })
     ).toThrow();
+  });
+});
+
+/**
+ * P5 — creative_* and media_* outputs.
+ * SEAM: each tool's real execute() through ALL_MCP_TOOLS, validated with its
+ * declared outputSchema exactly as the SDK validates structuredContent, and
+ * JSON round-tripped (what crosses the wire). Catches: Date / Decimal leaking
+ * into structuredContent, a schema that rejects a real return (success and
+ * honest-failure paths). Misses: provider internals (doubled at the edge).
+ */
+describe('P5 creative + media tools: real returns validate against outputSchema', () => {
+  /** Validate the raw return AND prove it is JSON-stable (no Date/Decimal). */
+  async function validateWire(name: string, args: unknown) {
+    const out = await executeAndValidate(name, args);
+    expect(JSON.parse(JSON.stringify(out))).toEqual(out);
+    return out;
+  }
+  const decimal = (v: string) => ({ toString: () => v, toJSON: () => v });
+
+  it('derive_cuts — one entry per cut, publish stays human-gated', async () => {
+    mockDeriveSocialCut
+      .mockResolvedValueOnce({ assetId: 'a1', subjectLost: false })
+      .mockResolvedValueOnce({ assetId: 'a2', subjectLost: true });
+    const cut = {
+      target: '9:16',
+      maxSec: 30,
+      captionPlacement: 'upper',
+      caption: 'c',
+    };
+    const out = await validateWire('derive_cuts', {
+      heroAssetId: 'h1',
+      cuts: [
+        { ...cut, platform: 'tiktok' },
+        { ...cut, platform: 'youtube', youtube: { title: 't' } },
+      ],
+    });
+    expect(out).toEqual({
+      heroAssetId: 'h1',
+      cuts: [
+        {
+          platform: 'tiktok',
+          assetId: 'a1',
+          subjectLost: false,
+          publishState: 'queued_human_gated',
+        },
+        {
+          platform: 'youtube',
+          assetId: 'a2',
+          subjectLost: true,
+          publishState: 'queued_human_gated',
+        },
+      ],
+    });
+  });
+
+  it('list_cards — REAL catalogs, with and without a brand card', async () => {
+    const out = await validateWire('list_cards', {});
+    expect(out).toMatchObject({ brandCard: null, quota: { warning: false } });
+    mockGetBrandFragment.mockResolvedValue('brand fragment');
+    await expect(validateWire('list_cards', {})).resolves.toMatchObject({
+      brandCard: { organizationId: 'org1' },
+    });
+  });
+
+  it('generate_video — submitted jobs (grounded and not) plus budgetWarning', async () => {
+    mockSubmitGenerativeVideo.mockResolvedValue([
+      {
+        id: 'v1',
+        providerJobId: 'p1',
+        batchGroupId: 'b1',
+        model: 'm',
+        estimatedCostUsd: 0.42,
+        status: 'generating',
+      },
+      {
+        id: 'v2',
+        providerJobId: 'p2',
+        batchGroupId: 'b1',
+        model: 'm',
+        estimatedCostUsd: 0.42,
+        status: 'generating',
+        grounded: true,
+        referenceSet: 'restoration',
+        groundedSubject: 'mould',
+        groundedVendor: 'own',
+      },
+    ]);
+    const out = await validateWire('generate_video', {
+      prompt: 'water damage reveal',
+      methodCardId: 'product-reveal',
+    });
+    expect(out).toMatchObject({
+      budgetWarning: false,
+      jobs: [{ id: 'v1' }, { id: 'v2' }],
+    });
+  });
+
+  it('generate_image — success, blocked and ungrounded results all conform', async () => {
+    for (const result of [
+      {
+        success: true,
+        imageUrl: 'https://x/i.png',
+        provider: 'gemini',
+        grounded: true,
+        referenceSet: 'restoration',
+        refCount: 3,
+        metadata: { model: 'm', width: 1024, height: 1024, loraApplied: true },
+        estimatedCostUsd: 0.04,
+        warnings: ['w'],
+      },
+      {
+        success: false,
+        provider: 'gemini',
+        blocked: true,
+        error: 'no owned reference covers "boat"',
+        estimatedCostUsd: 0.04,
+      },
+      {
+        success: false,
+        provider: 'stability',
+        error: 'missing key',
+        neverReachedProvider: true,
+      },
+    ]) {
+      mockGenerateImage.mockResolvedValue(result);
+      await expect(
+        validateWire('generate_image', { prompt: 'a mould treatment' })
+      ).resolves.toEqual({ result });
+    }
+  });
+
+  it('get_job — Date and Decimal columns normalised to ISO string / number; null when absent', async () => {
+    mockVideoFindFirst.mockResolvedValue({
+      id: 'v1',
+      status: 'rendered',
+      videoUrl: 'https://x/v.mp4',
+      errorMessage: null,
+      model: 'fal-ai/wan-25',
+      batchGroupId: null,
+      estimatedCostUsd: decimal('0.4200'),
+      actualCostUsd: null,
+      createdAt: new Date('2026-10-01T00:00:00Z'),
+    });
+    await expect(validateWire('get_job', { id: 'v1' })).resolves.toEqual({
+      job: {
+        id: 'v1',
+        status: 'rendered',
+        videoUrl: 'https://x/v.mp4',
+        errorMessage: null,
+        model: 'fal-ai/wan-25',
+        batchGroupId: null,
+        estimatedCostUsd: 0.42,
+        actualCostUsd: null,
+        createdAt: '2026-10-01T00:00:00.000Z',
+      },
+    });
+    mockVideoFindFirst.mockResolvedValue(null);
+    await expect(validateWire('get_job', { id: 'nope' })).resolves.toEqual({
+      job: null,
+    });
+  });
+
+  it('list_jobs — createdAt as ISO string', async () => {
+    mockVideoFindMany.mockResolvedValue([
+      {
+        id: 'v1',
+        status: 'generating',
+        videoUrl: null,
+        methodCardId: 'product-reveal',
+        batchGroupId: 'b1',
+        createdAt: new Date('2026-10-02T00:00:00Z'),
+      },
+    ]);
+    await expect(validateWire('list_jobs', {})).resolves.toEqual({
+      jobs: [
+        {
+          id: 'v1',
+          status: 'generating',
+          videoUrl: null,
+          methodCardId: 'product-reveal',
+          batchGroupId: 'b1',
+          createdAt: '2026-10-02T00:00:00.000Z',
+        },
+      ],
+    });
+  });
+
+  it('search_media_library — asset shape conforms', async () => {
+    mockGetAssets.mockResolvedValue({
+      assets: [
+        {
+          id: 'm1',
+          userId: 'u1',
+          type: 'image',
+          provider: 'fal',
+          status: 'completed',
+          url: 'https://x/m.png',
+          metadata: {},
+          tags: ['a'],
+          isFavorite: false,
+          isArchived: false,
+          usageCount: 0,
+          createdAt: '2026-10-01T00:00:00.000Z',
+          updatedAt: '2026-10-01T00:00:00.000Z',
+        },
+      ],
+      total: 1,
+    });
+    await expect(
+      validateWire('search_media_library', { search: 'mould' })
+    ).resolves.toMatchObject({ total: 1 });
+  });
+
+  it('list_reference_sets — REAL manifest', async () => {
+    const out = await validateWire('list_reference_sets', {});
+    expect(Array.isArray(out.sets)).toBe(true);
+  });
+
+  it('draft_caption — drafted, empty completion and job-not-found conform', async () => {
+    mockVideoFindFirst.mockResolvedValue({
+      inputPrompt: 'p',
+      enhancedPrompt: null,
+      methodCardId: null,
+    });
+    mockComplete.mockResolvedValue({
+      choices: [{ message: { content: ' A caption ' } }],
+    });
+    await expect(
+      validateWire('draft_caption', { jobId: 'v1', platform: 'linkedin' })
+    ).resolves.toEqual({ caption: 'A caption' });
+    mockComplete.mockResolvedValue({ choices: [] });
+    await expect(
+      validateWire('draft_caption', { jobId: 'v1', platform: 'linkedin' })
+    ).resolves.toEqual({ caption: null });
+    mockVideoFindFirst.mockResolvedValue(null);
+    await expect(
+      validateWire('draft_caption', { jobId: 'v9', platform: 'linkedin' })
+    ).resolves.toEqual({ caption: null, error: 'job not found' });
+  });
+
+  it('generate_site_from_gbp — generated section and missing-GBP refusal conform', async () => {
+    mockGenerateSiteForOrg.mockResolvedValue({
+      profile: { name: 'Acme', services: [{}, {}], reviews: [] },
+      result: {
+        ok: true,
+        slug: 'water-damage',
+        canonicalUrl: 'https://acme.example/water-damage',
+        html: '<section></section>',
+        jsonLd: { '@context': 'https://schema.org', '@graph': [] },
+        copy: {
+          headline: 'h',
+          intro: 'i',
+          bodyParagraphs: ['b'],
+          faqs: [{ question: 'q', answer: 'a' }],
+        },
+        validations: [{ rule: 'aid-rule', severity: 'warn', message: 'm' }],
+      },
+    });
+    await expect(
+      validateWire('generate_site_from_gbp', { locationId: 'l1' })
+    ).resolves.toMatchObject({
+      ok: true,
+      profile: { name: 'Acme', servicesCount: 2, hasReviews: false },
+    });
+    const { GbpConnectionMissingError } = jest.requireMock(
+      '@/lib/ai-websites/generate-for-org'
+    );
+    mockGenerateSiteForOrg.mockRejectedValue(
+      new GbpConnectionMissingError('no GBP connected')
+    );
+    await expect(
+      validateWire('generate_site_from_gbp', { locationId: 'l1' })
+    ).resolves.toEqual({ ok: false, error: 'no GBP connected' });
+  });
+
+  describe('media_* over the worker', () => {
+    const realFetch = global.fetch;
+    const worker = (status: number, body: unknown) => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: status < 400,
+        status,
+        json: async () => body,
+      }) as never;
+    };
+    beforeEach(() => {
+      process.env.MEDIA_WORKER_URL = 'https://worker.test';
+    });
+    afterEach(() => {
+      global.fetch = realFetch;
+      delete process.env.MEDIA_WORKER_URL;
+    });
+    const url = { videoUrl: 'https://cdn.example/v.mp4' };
+
+    it('media_probe — ffprobe JSON, worker error, unconfigured worker and SSRF rejection conform', async () => {
+      worker(200, {
+        format: { duration: '6.0', format_name: 'mp4' },
+        streams: [{ codec_name: 'h264', width: 1080 }],
+      });
+      await expect(validateWire('media_probe', url)).resolves.toMatchObject({
+        format: { duration: '6.0' },
+      });
+      worker(500, { error: 'ffprobe failed' });
+      await expect(validateWire('media_probe', url)).resolves.toEqual({
+        error: 'ffprobe failed',
+      });
+      await expect(
+        validateWire('media_probe', { videoUrl: 'http://169.254.169.254/x' })
+      ).resolves.toMatchObject({ error: expect.stringMatching(/rejected/) });
+      delete process.env.MEDIA_WORKER_URL;
+      await expect(validateWire('media_probe', url)).resolves.toMatchObject({
+        error: expect.stringMatching(/not configured/),
+      });
+    });
+
+    it('media_extract_frames — frames and not-provisioned upload conform', async () => {
+      worker(200, {
+        success: true,
+        count: 1,
+        frames: [{ name: 'frame_001.jpg', base64: 'AAAA' }],
+      });
+      await expect(
+        validateWire('media_extract_frames', url)
+      ).resolves.toMatchObject({ count: 1 });
+      worker(503, {
+        error: 'FEATURE_NOT_PROVISIONED',
+        message: 'bucket missing',
+      });
+      await expect(
+        validateWire('media_extract_frames', {
+          ...url,
+          upload: { industry: 'restoration', subjectKey: 'mould' },
+        })
+      ).resolves.toEqual({ error: 'FEATURE_NOT_PROVISIONED' });
+    });
+
+    it('media_transcode — bytes conform', async () => {
+      worker(200, { success: true, bytes: 3, base64: 'AAAA' });
+      await expect(validateWire('media_transcode', url)).resolves.toEqual({
+        success: true,
+        bytes: 3,
+        base64: 'AAAA',
+      });
+    });
+  });
+
+  it('a creative schema violation throws as the SDK would (control: planted failure is caught)', () => {
+    // A get_job return that still carries a raw Date must be rejected.
+    const schema = tool('get_job').outputSchema as z.ZodTypeAny;
+    expect(schema).toBeDefined();
+    expect(() =>
+      schema.parse({
+        job: {
+          id: 'v1',
+          status: 's',
+          videoUrl: null,
+          errorMessage: null,
+          model: null,
+          batchGroupId: null,
+          estimatedCostUsd: null,
+          actualCostUsd: null,
+          createdAt: new Date(),
+        },
+      })
+    ).toThrow(z.ZodError);
+  });
+});
+
+describe('M11 ops_* outputs validate against outputSchema', () => {
+  it('ops_get_platform_health — healthy and degraded', async () => {
+    await executeAndValidate('ops_get_platform_health', {});
+    mockCheckDatabaseHealth.mockResolvedValue({
+      healthy: false,
+      latency: 1,
+      error: 'x',
+    });
+    mockCacheHealth.mockResolvedValue({ status: 'weird', connection: 'redis' });
+    await expect(
+      executeAndValidate('ops_get_platform_health', {})
+    ).resolves.toMatchObject({ status: 'unhealthy' });
+  });
+
+  it('ops_get_org_spend_totals — populated, empty and not-provisioned sources', async () => {
+    mockLedgerGroupBy.mockResolvedValue([
+      {
+        provider: 'openai',
+        pipelineName: 'content',
+        _sum: { costUsd: 0.3 },
+        _count: { _all: 2 },
+      },
+    ]);
+    mockMediaSpendGroupBy.mockResolvedValue([
+      {
+        mediaType: 'image',
+        _sum: { deltaUsd: { toString: () => '0.04' } },
+        _count: { _all: 1 },
+      },
+    ]);
+    await executeAndValidate('ops_get_org_spend_totals', {});
+    mockLedgerGroupBy.mockResolvedValue([]);
+    mockMediaSpendGroupBy.mockRejectedValue(
+      Object.assign(new Error('missing'), { code: 'P2021' })
+    );
+    await expect(
+      executeAndValidate('ops_get_org_spend_totals', {})
+    ).resolves.toMatchObject({
+      totalUsd: 0,
+      pipelineLedger: { available: true, runs: 0 },
+      mediaSpend: { available: false },
+    });
+  });
+
+  it('ops_list_cron_outcomes — not provisioned', async () => {
+    await executeAndValidate('ops_list_cron_outcomes', {});
   });
 });

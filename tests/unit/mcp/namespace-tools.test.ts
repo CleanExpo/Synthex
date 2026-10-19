@@ -20,6 +20,9 @@ const mockProfileFindUnique = jest.fn();
 const mockOutcomeFindMany = jest.fn();
 const mockLedgerFindMany = jest.fn();
 const mockOrgFindUnique = jest.fn();
+const mockLedgerGroupBy = jest.fn();
+const mockMediaSpendGroupBy = jest.fn();
+const mockCheckDatabaseHealth = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -48,8 +51,17 @@ jest.mock('@/lib/prisma', () => ({
     },
     pipelineCostLedger: {
       findMany: (...a: unknown[]) => mockLedgerFindMany(...a),
+      groupBy: (...a: unknown[]) => mockLedgerGroupBy(...a),
+    },
+    mediaSpendEvent: {
+      groupBy: (...a: unknown[]) => mockMediaSpendGroupBy(...a),
     },
   },
+  checkDatabaseHealth: (...a: unknown[]) => mockCheckDatabaseHealth(...a),
+}));
+const mockCacheHealth = jest.fn();
+jest.mock('@/lib/redis-unified', () => ({
+  healthCheck: (...a: unknown[]) => mockCacheHealth(...a),
 }));
 
 // SYN-MCP-007b: queue + Linear + retriever registry boundaries. Plain arrow
@@ -124,6 +136,10 @@ beforeEach(() => {
   mockAddJob.mockResolvedValue({ id: 'mock-job' });
   mockLinearIssue.mockResolvedValue(null);
   mockGetAvailableRetrievers.mockReturnValue([]);
+  mockLedgerGroupBy.mockResolvedValue([]);
+  mockMediaSpendGroupBy.mockResolvedValue([]);
+  mockCheckDatabaseHealth.mockResolvedValue({ healthy: true, latency: 12 });
+  mockCacheHealth.mockResolvedValue({ status: 'healthy', connection: 'redis' });
   mockBuildLayeredPrompt.mockResolvedValue({
     systemPrompt: null,
     core: null,
@@ -159,6 +175,7 @@ describe('v1 registry invariant (machine-enforced absence)', () => {
         'performance',
         'tasks',
         'research',
+        'ops',
       ]).toContain(t.scope);
       expect(['free', 'metered', 'expensive']).toContain(t.costClass);
       expect(t.description.length).toBeGreaterThan(10);
@@ -693,5 +710,205 @@ describe('defence-in-depth scope enforcement at execution', () => {
     await expect(
       executeStudioTool('approvals_list_pending', {}, ctx)
     ).resolves.toEqual({ claims: [], total: 0 });
+  });
+});
+
+/**
+ * M11 ops_* — read-only operations tools.
+ * SEAM: executeStudioTool(name, args, ctx) with Prisma, the DB health probe and
+ * the cache client doubled at the boundary. Catches: spend read across orgs, a
+ * failed read reported as zero spend, cron outcomes faked as an empty list,
+ * secrets or env var names in health output, ops reachable without the ops
+ * scope. Misses: real SQL semantics of groupBy (no live Postgres here).
+ */
+describe('M11 ops_* — org-scoped, honest, secret-free reads', () => {
+  const tableMissing = () =>
+    Object.assign(new Error('relation does not exist'), { code: 'P2021' });
+
+  /** A failed read must surface as available:false on every spend source. */
+  async function failedReadIsHonest(
+    run: () => Promise<Record<string, unknown>>
+  ) {
+    mockLedgerGroupBy.mockRejectedValue(tableMissing());
+    mockMediaSpendGroupBy.mockRejectedValue(tableMissing());
+    const out = (await run()) as Record<string, { available?: boolean }>;
+    for (const source of ['pipelineLedger', 'mediaSpend']) {
+      if (out[source]?.available !== false)
+        throw new Error(`${source} reported success after a failed read`);
+    }
+  }
+
+  it('ops_get_org_spend_totals scopes BOTH spend sources to the caller org and the date range', async () => {
+    await executeStudioTool(
+      'ops_get_org_spend_totals',
+      { from: '2026-10-01', to: '2026-10-07' },
+      ctx
+    );
+    const range = {
+      gte: new Date('2026-10-01T00:00:00.000Z'),
+      lt: new Date('2026-10-08T00:00:00.000Z'),
+    };
+    expect(mockLedgerGroupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { clientId: 'org1', createdAt: range },
+      })
+    );
+    expect(mockMediaSpendGroupBy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizationId: 'org1', windowAt: range },
+      })
+    );
+  });
+
+  it('ops_get_org_spend_totals totals by provider and by pipeline', async () => {
+    mockLedgerGroupBy.mockResolvedValue([
+      {
+        provider: 'anthropic',
+        pipelineName: 'content',
+        _sum: { costUsd: 1.5 },
+        _count: { _all: 3 },
+      },
+      {
+        provider: 'anthropic',
+        pipelineName: 'governor',
+        _sum: { costUsd: 0.25 },
+        _count: { _all: 1 },
+      },
+      {
+        provider: null,
+        pipelineName: 'content',
+        _sum: { costUsd: 0.5 },
+        _count: { _all: 2 },
+      },
+    ]);
+    mockMediaSpendGroupBy.mockResolvedValue([
+      { mediaType: 'video', _sum: { deltaUsd: '4.2000' }, _count: { _all: 2 } },
+      { mediaType: null, _sum: { deltaUsd: '0.1000' }, _count: { _all: 1 } },
+    ]);
+    const out = await executeStudioTool(
+      'ops_get_org_spend_totals',
+      { from: '2026-10-01', to: '2026-10-07' },
+      ctx
+    );
+    expect(out).toMatchObject({
+      organizationId: 'org1',
+      from: '2026-10-01',
+      to: '2026-10-07',
+      totalUsd: 6.55,
+      pipelineLedger: {
+        available: true,
+        totalUsd: 2.25,
+        runs: 6,
+        byProvider: [
+          { provider: 'anthropic', costUsd: 1.75, runs: 4 },
+          { provider: 'unknown', costUsd: 0.5, runs: 2 },
+        ],
+        byPipeline: [
+          { pipelineName: 'content', costUsd: 2, runs: 5 },
+          { pipelineName: 'governor', costUsd: 0.25, runs: 1 },
+        ],
+      },
+      mediaSpend: {
+        available: true,
+        totalUsd: 4.3,
+        events: 3,
+        byMediaType: [
+          { mediaType: 'video', costUsd: 4.2 },
+          { mediaType: 'unknown', costUsd: 0.1 },
+        ],
+      },
+    });
+  });
+
+  it('ops_get_org_spend_totals: a missing table is reported as not provisioned, never as zero spend', async () => {
+    await failedReadIsHonest(() =>
+      executeStudioTool('ops_get_org_spend_totals', {}, ctx)
+    );
+  });
+
+  it('ops_get_org_spend_totals (control: planted failure is caught) — a reader that swallows errors into zeros fails the check', async () => {
+    const planted = async () => {
+      try {
+        await mockLedgerGroupBy();
+      } catch {
+        // PLANTED DEFECT: failed read becomes an empty success.
+      }
+      return {
+        pipelineLedger: { available: true, totalUsd: 0 },
+        mediaSpend: { available: true, totalUsd: 0 },
+      };
+    };
+    await expect(failedReadIsHonest(planted)).rejects.toThrow(
+      /reported success after a failed read/
+    );
+  });
+
+  it('ops_get_org_spend_totals: any other read error propagates instead of reading as zero', async () => {
+    mockLedgerGroupBy.mockRejectedValue(new Error('connection reset'));
+    await expect(
+      executeStudioTool('ops_get_org_spend_totals', {}, ctx)
+    ).rejects.toThrow(/connection reset/);
+  });
+
+  it('ops_get_org_spend_totals rejects an inverted date range', async () => {
+    await expect(
+      executeStudioTool(
+        'ops_get_org_spend_totals',
+        { from: '2026-10-07', to: '2026-10-01' },
+        ctx
+      )
+    ).rejects.toThrow(/from.*after.*to/i);
+    expect(mockLedgerGroupBy).not.toHaveBeenCalled();
+  });
+
+  it('ops_list_cron_outcomes: no table records cron runs, so it answers not provisioned (not an empty list)', async () => {
+    const out = await executeStudioTool('ops_list_cron_outcomes', {}, ctx);
+    expect(out).toEqual({
+      available: false,
+      reason: expect.stringMatching(/^FEATURE_NOT_PROVISIONED/),
+    });
+  });
+
+  it('ops_get_platform_health reports health without secrets, env var names or DB error text', async () => {
+    const sentinel = 'jevsentinel-OPS-HEALTH-000000000000001';
+    process.env.CRON_SECRET = sentinel;
+    mockCheckDatabaseHealth.mockResolvedValue({
+      healthy: false,
+      latency: 7,
+      error: `connect failed postgresql://u:${sentinel}@db.internal:5432/x`,
+    });
+    try {
+      const out = await executeStudioTool('ops_get_platform_health', {}, ctx);
+      expect(out).toMatchObject({
+        status: 'unhealthy',
+        checks: { database: { status: 'unhealthy' } },
+      });
+      const text = JSON.stringify(out);
+      expect(text).not.toContain(sentinel);
+      expect(text).not.toContain('postgresql://');
+      expect(text).not.toContain('CRON_SECRET');
+      expect(text).not.toMatch(/DATABASE_URL|NEXTAUTH|SUPABASE/);
+    } finally {
+      delete process.env.CRON_SECRET;
+    }
+  });
+
+  it('ops_* are read-only, live under the ops scope only, and are refused to a creative key', async () => {
+    const ops = ALL_MCP_TOOLS.filter(t => t.name.startsWith('ops_'));
+    expect(ops.map(t => t.name).sort()).toEqual([
+      'ops_get_org_spend_totals',
+      'ops_get_platform_health',
+      'ops_list_cron_outcomes',
+    ]);
+    for (const t of ops)
+      expect(t).toMatchObject({ scope: 'ops', riskClass: 'read' });
+    await expect(
+      executeStudioTool(
+        'ops_get_org_spend_totals',
+        {},
+        { ...ctx, scopes: ['creative'] }
+      )
+    ).rejects.toThrow(/not permitted/i);
+    expect(mockLedgerGroupBy).not.toHaveBeenCalled();
   });
 });
