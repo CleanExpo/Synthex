@@ -83,21 +83,22 @@ def sheet(video, times, out, cols):
     """Tile frames at given timestamps into one image (270px wide each)."""
     tmp = out.parent / "_f"
     tmp.mkdir(exist_ok=True)
-    frames = []
-    for i, t in enumerate(times):
-        f = tmp / f"{i:02d}.jpg"
+    out.unlink(missing_ok=True)
+    kept = []  # timestamps actually captured, numbered contiguously so the tile input has no gaps
+    for t in times:
+        f = tmp / f"{len(kept):02d}.jpg"
         run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1",
              "-vf", "scale=270:-2", str(f)])
         if f.exists():
-            frames.append(f)
-    if frames:
-        rows = -(-len(frames) // cols)
+            kept.append(round(t, 2))
+    if kept:
+        rows = -(-len(kept) // cols)
         run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", "1", "-i", str(tmp / "%02d.jpg"),
              "-vf", f"tile={cols}x{rows}:padding=4:color=white", "-frames:v", "1", str(out)])
     for f in tmp.glob("*.jpg"):
         f.unlink()
     tmp.rmdir()
-    return [round(t, 2) for t in times[:len(frames)]]
+    return kept if out.exists() else []  # no sheet image means no frames to review
 
 
 def main(outdir, model):
@@ -185,6 +186,7 @@ def single(video, model, workdir):
     if out.get("first_word_at_s") is None and (out.get("word_count") or 0) > 0:
         errors.append("first_word_at_s not measured")
     errors += [f"{k} empty" for k in ("hook_frames_t", "sheet_frames_t") if not out.get(k)]
+    errors += [f"{img} missing" for img in ("hook.jpg", "sheet.jpg") if not (d / img).exists()]
     if errors:
         print("QA FAIL: " + "; ".join(errors), file=sys.stderr)
     sys.exit(0 if out.get("status") == "OK" and not errors else 1)
