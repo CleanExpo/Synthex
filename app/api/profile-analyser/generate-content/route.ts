@@ -29,9 +29,9 @@ import {
 } from '@/lib/ai/governor';
 import {
   governedData,
-  governorBrandSlug,
   governorRefusalResponse,
 } from '@/lib/ai/governed-generation';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import type { ProfileData, SupportedPlatform } from '../route';
 
 /** AI Governor identity for this route's generation (P5 / M10). */
@@ -312,7 +312,7 @@ async function handlePost(
     let providerError: { error: unknown } | undefined;
     const governed = await governedCall({
       organizationId,
-      brandSlug: await governorBrandSlug(organizationId),
+      brandSlug: await resolveOrgBrandSlug(organizationId),
       runner: GOVERNOR_RUNNER,
       provider: 'openrouter',
       model: { kind: 'latest' },

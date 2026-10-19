@@ -55,6 +55,8 @@ jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
     user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) },
+    hermesConfig: { findUnique: async () => null },
+    organization: { findUnique: async () => null },
     orgBudgetPolicy: {
       findUnique: (...a: unknown[]) => mockPolicyFindUnique(...a),
     },
@@ -65,6 +67,8 @@ jest.mock('@/lib/prisma', () => ({
   },
   default: {
     user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) },
+    hermesConfig: { findUnique: async () => null },
+    organization: { findUnique: async () => null },
     orgBudgetPolicy: {
       findUnique: (...a: unknown[]) => mockPolicyFindUnique(...a),
     },

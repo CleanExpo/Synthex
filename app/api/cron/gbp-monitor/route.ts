@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import {
   getReviews,
   getInsights,
@@ -47,7 +48,7 @@ async function generatePendingSuggestions(): Promise<void> {
     take: 10,
     include: {
       location: { select: { locationName: true } },
-      organization: { select: { name: true, industry: true, slug: true } },
+      organization: { select: { name: true, industry: true } },
     },
   });
 
@@ -107,7 +108,7 @@ async function generatePendingSuggestions(): Promise<void> {
         let providerError: { error: unknown } | null = null;
         const governed = await governedCall<string>({
           organizationId: review.organizationId,
-          brandSlug: review.organization.slug,
+          brandSlug: await resolveOrgBrandSlug(review.organizationId),
           runner: 'gbp-monitor',
           provider,
           model: { kind: 'registered', modelId: ai.models.fast },

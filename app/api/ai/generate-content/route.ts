@@ -53,10 +53,10 @@ import {
   generationProvider,
   generatorCallResult,
   governedData,
-  governorBrandSlug,
   governorCredentials,
   governorRefusalResponse,
 } from '@/lib/ai/governed-generation';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 
 /** Tenant-scoped idempotency namespace for this route. */
 const IDEMPOTENCY_SCOPE = 'generate-content';
@@ -78,7 +78,7 @@ async function governedGeneration<T>(
   let providerError: { error: unknown } | undefined;
   const result = await governedCall<T>({
     organizationId: ctx.organizationId,
-    brandSlug: await governorBrandSlug(ctx.organizationId),
+    brandSlug: await resolveOrgBrandSlug(ctx.organizationId),
     runner: GOVERNOR_RUNNER,
     provider: generationProvider(userCreds),
     model: { kind: 'latest' },

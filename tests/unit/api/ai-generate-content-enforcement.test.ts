@@ -55,13 +55,19 @@ jest.mock('@/lib/ai/api-credential-injector', () => ({
 jest.mock('@/lib/prisma', () => ({
   // Interop default is this object: the budget enforcer reads it with no policy row.
   orgBudgetPolicy: { findUnique: async () => null },
+  hermesConfig: { findUnique: async () => null },
+  organization: { findUnique: async () => null },
   prisma: {
     orgBudgetPolicy: { findUnique: async () => null },
     user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) },
+    hermesConfig: { findUnique: async () => null },
+    organization: { findUnique: async () => null },
   },
   default: {
     orgBudgetPolicy: { findUnique: async () => null },
     user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) },
+    hermesConfig: { findUnique: async () => null },
+    organization: { findUnique: async () => null },
   },
 }));
 

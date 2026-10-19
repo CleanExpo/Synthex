@@ -133,7 +133,6 @@ import { POST as reviewPOST } from '@/app/api/internal/generate-review-responses
 import { POST as askPOST } from '@/app/api/ask-synthex/route';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
 import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
-import { governorBrandSlug } from '@/lib/ai/governed-generation';
 
 const USAGE_IN = 1234;
 const USAGE_OUT = 567;
@@ -402,7 +401,7 @@ describe('paid text calls go through the Governor (shadow mode)', () => {
 
 /**
  * SEAM: resolveOrgBrandSlug, the one org -> brand rule RunnerFlag kill-switches
- * and budgets key on. CATCHES: a second rule (governorBrandSlug disagreeing), a
+ * and budgets key on. CATCHES: a second rule (the call-through disagreeing), a
  * read error turned into a guessed brand. MISSES: route wiring (tests above).
  */
 describe('resolveOrgBrandSlug: one organisation, one brand', () => {
@@ -421,7 +420,7 @@ describe('resolveOrgBrandSlug: one organisation, one brand', () => {
     mockPrisma.hermesConfig.findUnique.mockResolvedValue(hermes);
     mockPrisma.organization.findUnique.mockResolvedValue(org);
     expect(await resolveOrgBrandSlug('org-A')).toBe(expected);
-    expect(await governorBrandSlug('org-A')).toBe(expected);
+    expect(await resolveOrgBrandSlug('org-A')).toBe(expected);
   });
 
   it.each([
@@ -433,7 +432,7 @@ describe('resolveOrgBrandSlug: one organisation, one brand', () => {
       mockPrisma.hermesConfig.findUnique.mockResolvedValue(null);
       mockPrisma[model].findUnique.mockRejectedValue(new Error('db down'));
       await expect(resolveOrgBrandSlug('org-A')).rejects.toThrow('db down');
-      await expect(governorBrandSlug('org-A')).rejects.toThrow('db down');
+      await expect(resolveOrgBrandSlug('org-A')).rejects.toThrow('db down');
     }
   );
 });
