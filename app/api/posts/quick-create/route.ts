@@ -34,10 +34,10 @@ import {
   generationProvider,
   generatorCallResult,
   governedData,
-  governorBrandSlug,
   governorCredentials,
   governorRefusalResponse,
 } from '@/lib/ai/governed-generation';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
           variations: string[];
         }>({
           organizationId: orgId,
-          brandSlug: await governorBrandSlug(orgId),
+          brandSlug: await resolveOrgBrandSlug(orgId),
           runner: GOVERNOR_RUNNER,
           provider: generationProvider(userCreds),
           model: { kind: 'latest' },

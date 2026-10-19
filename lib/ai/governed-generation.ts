@@ -11,7 +11,6 @@
 
 import { NextResponse } from 'next/server';
 import { resolvePlatformProviderName } from '@/lib/ai/providers';
-import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import type {
   GeneratedContent,
   UserProviderCredentials,
@@ -40,17 +39,6 @@ export function generationProvider(
   return (GOVERNOR_PROVIDERS as readonly string[]).includes(name)
     ? (name as GovernorProvider)
     : 'openai';
-}
-
-/**
- * The brandSlug a receipt carries for an organisation: the one rule in
- * resolveOrgBrandSlug, so a generation and a route call for the same org
- * share one RunnerFlag and one budget.
- */
-export async function governorBrandSlug(
-  organizationId: string
-): Promise<string> {
-  return resolveOrgBrandSlug(organizationId);
 }
 
 /** Prompt-side tokens per provider call (system + brand context + prompt). */
