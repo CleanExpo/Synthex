@@ -2,7 +2,9 @@
 
 Date: 18 October 2026. Author: research-next-level fleet unit (Fleet-Role: reader). Base: `origin/fleet-unit/p2/base` at `7453ab44`.
 
-Scope. This note adds to the vibe-to-leader spec and its amendments. It does not re-open anything the spec settles: the finish line, the 14-competitor set, the Top-25 enablers, the SWOT, M1 to M14, the JEV harness, P-1 to P9, and amendment AM-3 (P10 billing in Stripe test mode). "Owned use" means the founder's own businesses run their marketing on Synthex and stop paying for outside tools that do the same job.
+> **Framing correction (19 October 2026).** Synthex is Unite-Group Nexus's internal AI marketing agency, not a client-facing product. P10 billing was retired (AM-7, DECISIONS A-25), so the Stripe and billing references below are historical. "Client" in this note means a Unite-Group business (for example CARSI or RestoreAssist), and the competitor set is a capability benchmark, not a market to win.
+
+Scope. This note adds to the vibe-to-leader spec and its amendments. It does not re-open anything the spec settles: the finish line, the 14-competitor set, the Top-25 enablers, the SWOT, M1 to M14, the JEV harness, P-1 to P9, and amendment AM-3 (P10 billing in Stripe test mode, since retired by AM-7). "Owned use" means the founder's own businesses run their marketing on Synthex and stop paying for outside tools that do the same job.
 
 Evidence tags follow `.claude/rules/fabel-evidence-standard.md`. A URL tagged VERIFIED was opened directly on 18 October 2026, either with WebFetch or with `curl` on the `.md` form of the page. Search snippets alone are tagged UNCONFIRMED. Vendor prices and feature claims are what the vendor says. They are leads, not facts (spec U5).
 
