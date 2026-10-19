@@ -186,7 +186,16 @@ function autopilotConfig() {
   };
 }
 
+const ORIGINAL_ENV = { ...process.env };
+
+afterEach(() => {
+  process.env = { ...ORIGINAL_ENV };
+});
+
 beforeEach(() => {
+  // The generate-content and quick-create routes answer 503 before any AI
+  // call when no platform key is configured; the provider itself is faked.
+  process.env.OPENAI_API_KEY = 'PLACEHOLDER-NOT-A-KEY';
   mockDb.ledger = [];
   mockDb.overrides = {
     user: { findUnique: () => ({ organizationId: 'org-1' }) },
