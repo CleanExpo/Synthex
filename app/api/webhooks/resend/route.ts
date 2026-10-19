@@ -14,6 +14,8 @@
  *   Uses svix-style HMAC-SHA256 verification:
  *     message = `${svix-id}.${svix-timestamp}.${rawBody}`
  *     signature = HMAC-SHA256(secret, message) — compared to svix-signature header
+ *   Replay protection: svix-timestamp must be within 5 minutes, and each
+ *   svix-id is processed once (remembered for 24h).
  *
  * Required env vars:
  *   RESEND_WEBHOOK_SECRET   — from Resend dashboard → Webhooks → Signing secret
@@ -26,6 +28,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { emit } from '@/lib/measurement/emit';
+import { getRedisClient } from '@/lib/redis-client';
+
+const TIMESTAMP_TOLERANCE_SECONDS = 5 * 60;
+const DEDUP_TTL_SECONDS = 86400;
 
 // ── GA4 Measurement Protocol ──────────────────────────────────────────────────
 
@@ -139,6 +145,23 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
+  const timestampSeconds = Number(svixTimestamp);
+  if (
+    !Number.isFinite(timestampSeconds) ||
+    Math.abs(Date.now() / 1000 - timestampSeconds) > TIMESTAMP_TOLERANCE_SECONDS
+  ) {
+    return NextResponse.json(
+      { error: 'Webhook timestamp out of tolerance' },
+      { status: 401 }
+    );
+  }
+
+  const dedupKey = `webhook:idem:resend:${svixId}`;
+  const redis = getRedisClient();
+  if (await redis.get(dedupKey)) {
+    return NextResponse.json({ ok: true, duplicate: true });
+  }
+
   // Parse body
   let event: Record<string, unknown>;
   try {
@@ -206,6 +229,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       }
     }
   }
+
+  await redis.set(dedupKey, '1', DEDUP_TTL_SECONDS);
 
   return NextResponse.json({ ok: true, type: eventType ?? 'ignored' });
 }

@@ -39,9 +39,15 @@ export async function GET(
     // Security check
     const security = await APISecurityChecker.check(
       request,
-      DEFAULT_POLICIES.PUBLIC_READ
+      DEFAULT_POLICIES.AUTHENTICATED_READ
     );
     const userId = security.context.userId;
+    if (!security.allowed || !userId) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error || 'Authentication required' },
+        401
+      );
+    }
 
     // Get time range
     const { searchParams } = new URL(request.url);
@@ -51,21 +57,18 @@ export async function GET(
     startDate.setDate(startDate.getDate() - days);
 
     // Get platform connection
-    const connection = userId
-      ? await prisma.platformConnection.findFirst({
-          where: {
-            userId,
-            platform: { equals: platform, mode: 'insensitive' },
-            isActive: true,
-          },
-        })
-      : null;
+    const connection = await prisma.platformConnection.findFirst({
+      where: {
+        userId,
+        platform: { equals: platform, mode: 'insensitive' },
+        isActive: true,
+      },
+    });
 
-    // Get posts for this platform
-    const campaignFilter = userId ? { campaign: { userId } } : {};
+    // Get the caller's posts for this platform
     const posts = await prisma.post.findMany({
       where: {
-        ...campaignFilter,
+        campaign: { userId },
         platform: { equals: platform, mode: 'insensitive' },
         createdAt: { gte: startDate },
       },

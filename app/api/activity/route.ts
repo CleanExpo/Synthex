@@ -78,6 +78,14 @@ export async function GET(request: NextRequest) {
       DEFAULT_POLICIES.AUTHENTICATED_READ
     );
 
+    const userId = security.context.userId;
+    if (!security.allowed || !userId) {
+      return APISecurityChecker.createSecureResponse(
+        { error: security.error || 'Authentication required' },
+        401
+      );
+    }
+
     // Get limit from query params
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10), 50);
@@ -87,10 +95,12 @@ export async function GET(request: NextRequest) {
       10
     );
 
-    // Build user filter if authenticated
-    const userId = security.context.userId;
-    const userFilter = userId ? { userId } : {};
-    const campaignFilter = userId ? { campaign: { userId } } : {};
+    // Every query is scoped to the authenticated user
+    const campaignFilter = { campaign: { userId } };
+    const auditFilter = {
+      userId,
+      category: { in: ['data', 'auth'] },
+    };
 
     // Fetch recent activities from multiple sources + counts for pagination
     const [posts, auditLogs, postCount, auditCount] = await Promise.all([
@@ -114,31 +124,19 @@ export async function GET(request: NextRequest) {
         },
       }),
 
-      // Audit logs for user (if authenticated)
-      userId
-        ? prisma.auditLog.findMany({
-            where: {
-              userId,
-              category: { in: ['data', 'auth'] },
-            },
-            orderBy: { createdAt: 'desc' },
-            take: limit,
-            skip: offset,
-          })
-        : Promise.resolve([]),
+      // Audit logs for user
+      prisma.auditLog.findMany({
+        where: auditFilter,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
 
       // Total post count for pagination
       prisma.post.count({ where: campaignFilter }),
 
       // Total audit log count for pagination
-      userId
-        ? prisma.auditLog.count({
-            where: {
-              userId,
-              category: { in: ['data', 'auth'] },
-            },
-          })
-        : Promise.resolve(0),
+      prisma.auditLog.count({ where: auditFilter }),
     ]);
 
     // Transform posts to activity items

@@ -48,7 +48,10 @@ jest.mock('@/lib/prisma', () => ({
   prisma: {
     quote: {
       findUnique: (...a: unknown[]) => mockQuoteFindUnique(...a),
+      // GET reads via a scoped findFirst and bumps usage via updateMany
+      findFirst: (...a: unknown[]) => mockQuoteFindUnique(...a),
       update: (...a: unknown[]) => mockQuoteUpdate(...a),
+      updateMany: (...a: unknown[]) => mockQuoteUpdate(...a),
       delete: (...a: unknown[]) => mockQuoteDelete(...a),
     },
   },

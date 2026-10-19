@@ -10,7 +10,10 @@
  * Returns overall score (0-100) and component scores.
  */
 
-import { validateExternalUrl } from '@/lib/security/validate-url';
+import {
+  fetchExternalUrl,
+  validateExternalUrl,
+} from '@/lib/security/validate-url';
 
 export interface VettingInput {
   businessName: string;
@@ -96,7 +99,7 @@ async function checkSEO(
   }
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchExternalUrl(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; SynthexBot/1.0)',
       },
@@ -117,7 +120,7 @@ async function checkSEO(
     // Check for robots.txt by fetching it directly
     try {
       const robotsUrl = new URL('/robots.txt', url).href;
-      const robotsRes = await fetch(robotsUrl, {
+      const robotsRes = await fetchExternalUrl(robotsUrl, {
         signal: AbortSignal.timeout(5000),
       });
       if (robotsRes.ok) {
@@ -215,7 +218,7 @@ async function checkAEO(
   let score = 0;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchExternalUrl(url, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
     });
 
