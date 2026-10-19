@@ -27,6 +27,17 @@ jest.mock('@/lib/storage/platform-storage', () => ({
     .fn()
     .mockRejectedValue(new Error('no storage in tests')),
 }));
+// Rendered cuts belong in durable object storage (DECISIONS.md FD-7), not the
+// serverless filesystem. The real not-provisioned error class is kept.
+const mockObjectUpload = jest.fn();
+const mockPublicUrl = jest.fn();
+jest.mock('@/lib/storage/object-storage', () => ({
+  ...jest.requireActual('@/lib/storage/object-storage'),
+  upload: (...a: unknown[]) => mockObjectUpload(...a),
+  publicUrl: (...a: unknown[]) => mockPublicUrl(...a),
+}));
+import { uploadToStorage } from '@/lib/storage/platform-storage';
+import { ObjectStorageNotProvisionedError } from '@/lib/storage/object-storage';
 
 import {
   pctBoxToPixels,
@@ -37,6 +48,7 @@ import {
   claimSocialCut,
   renderSocialCut,
   processPendingSocialCuts,
+  defaultIo,
   type RendererIo,
   type RenderPlan,
 } from '@/lib/video/social-cut-renderer';
@@ -256,6 +268,66 @@ describe('renderSocialCut()', () => {
     expect(result.status).toBe('failed');
     expect(io.download).not.toHaveBeenCalled();
     expect(io.transcode).not.toHaveBeenCalled();
+  });
+});
+
+describe('defaultIo.upload', () => {
+  it('stores the cut in object storage bucket generated-videos, not the local filesystem', async () => {
+    mockPublicUrl.mockReturnValue(
+      'https://sb.example/storage/v1/object/public/generated-videos/user-001/social-cuts/social-cut-cut-001.mp4'
+    );
+    mockObjectUpload.mockResolvedValue(undefined);
+    const buffer = Buffer.from('cut');
+
+    const result = await defaultIo.upload(
+      'user-001',
+      'social-cut-cut-001.mp4',
+      buffer,
+      'video/mp4'
+    );
+
+    expect(mockObjectUpload).toHaveBeenCalledWith(
+      'generated-videos',
+      'user-001/social-cuts/social-cut-cut-001.mp4',
+      buffer,
+      'video/mp4',
+      { upsert: true }
+    );
+    expect(result.url).toBe(
+      'https://sb.example/storage/v1/object/public/generated-videos/user-001/social-cuts/social-cut-cut-001.mp4'
+    );
+    expect(uploadToStorage).not.toHaveBeenCalled();
+  });
+
+  it('fails the cut with a not-provisioned reason when storage credentials are missing', async () => {
+    mockPublicUrl.mockImplementation(() => {
+      throw new ObjectStorageNotProvisionedError();
+    });
+    const io = fakeIo({ upload: defaultIo.upload });
+
+    const result = await renderSocialCut(PENDING_ASSET, io);
+
+    expect(result.status).toBe('failed');
+    expect(result.error).toMatch(/FEATURE_NOT_PROVISIONED/);
+    expect(result.error).toMatch(/not stored/);
+    expect(mockObjectUpload).not.toHaveBeenCalled();
+    expect(uploadToStorage).not.toHaveBeenCalled();
+    const update = mockVideoAsset.update.mock.calls[0][0];
+    expect(update.data.status).toBe('failed');
+    expect(update.data.metadata.renderError).toMatch(/FEATURE_NOT_PROVISIONED/);
+  });
+
+  it('fails the cut when the storage upload itself errors', async () => {
+    mockPublicUrl.mockReturnValue('https://sb.example/x.mp4');
+    mockObjectUpload.mockRejectedValue(
+      new Error('object storage upload failed')
+    );
+    const io = fakeIo({ upload: defaultIo.upload });
+
+    const result = await renderSocialCut(PENDING_ASSET, io);
+
+    expect(result.status).toBe('failed');
+    expect(result.error).toContain('object storage upload failed');
   });
 });
 

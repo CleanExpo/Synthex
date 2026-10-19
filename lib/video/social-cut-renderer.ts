@@ -21,12 +21,19 @@ import * as path from 'path';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { uploadToStorage } from '@/lib/storage/platform-storage';
+import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
+import {
+  ObjectStorageNotProvisionedError,
+  publicUrl,
+  upload,
+} from '@/lib/storage/object-storage';
 import type {
   SocialCutBox,
   SocialCutTrim,
   SocialCutCaptionPlacement,
 } from './social-derivation';
+
+const SOCIAL_CUT_BUCKET = 'generated-videos';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -279,7 +286,26 @@ export const defaultIo: RendererIo = {
     });
   },
   async upload(userId, fileName, buffer, mimeType) {
-    return uploadToStorage(userId, fileName, buffer, mimeType);
+    // Durable object storage (DECISIONS.md FD-7), the bucket fal output uses
+    // (artifact-store.ts). The serverless filesystem does not keep files.
+    const storagePath = `${userId}/social-cuts/${fileName}`;
+    // Resolving the URL first needs no network and fails fast when storage
+    // is not provisioned, so the row fails with that reason.
+    let url: string;
+    try {
+      url = publicUrl(SOCIAL_CUT_BUCKET, storagePath);
+    } catch (err) {
+      if (err instanceof ObjectStorageNotProvisionedError) {
+        throw new Error(
+          `${FEATURE_NOT_PROVISIONED}: durable video storage is not provisioned; the social cut was not stored.`
+        );
+      }
+      throw err;
+    }
+    await upload(SOCIAL_CUT_BUCKET, storagePath, buffer, mimeType, {
+      upsert: true,
+    });
+    return { url };
   },
 };
 
