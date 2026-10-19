@@ -31,7 +31,16 @@ module.exports = {
   // Scope discovery to known test roots only.
   // Prevents `.claude/worktrees/*/tests/` from being picked up when running
   // `npm test` from the main repo (was the source of 12+ duplicate suite failures).
-  roots: ['<rootDir>/tests', '<rootDir>/__tests__'],
+  // app/ and lib/ are roots too, so `--findRelatedTests <source file>` can map
+  // a route or lib module to its tests (with tests/ only, Jest's file map held
+  // no source files and every related-tests run matched nothing). Tests under
+  // app/ and lib/ stay out of this profile via testPathIgnorePatterns.
+  roots: [
+    '<rootDir>/tests',
+    '<rootDir>/__tests__',
+    '<rootDir>/app',
+    '<rootDir>/lib',
+  ],
 
   // Use testRegex (path-separator-agnostic) instead of testMatch glob
   testRegex: [
@@ -49,6 +58,7 @@ module.exports = {
   ],
 
   testPathIgnorePatterns: [
+    '<rootDir>/(app|lib)/',
     '/node_modules/',
     '/dist/',
     '/coverage/',
