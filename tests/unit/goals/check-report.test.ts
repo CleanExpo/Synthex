@@ -216,6 +216,13 @@ describe('check-report state classifiers', () => {
         run('x: 1 of 2 PASS, 0 FAIL, 1 INCONCLUSIVE, 0 DISABLED')
       ).state
     ).toBe('INCONCLUSIVE');
+    // Some items passed but others were DISABLED: measured, not fully.
+    expect(
+      call(
+        'classifyCommand',
+        run('x: 1 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 1 DISABLED')
+      ).state
+    ).toBe('INCONCLUSIVE');
     // A summary that counted zero items checked nothing.
     expect(
       call(

@@ -514,6 +514,12 @@ function classifySummary(m) {
         why: `exit 0 but 0 of ${total} PASS, all DISABLED — nothing checked`,
       };
   }
+  // Some items passed but others never ran: measured, not fully.
+  if (n > 0 && d > 0)
+    return {
+      state: 'INCONCLUSIVE',
+      why: `exit 0 but ${n} of ${total} PASS, ${d} DISABLED — not fully measured`,
+    };
   return { state: 'PASS', why: 'exit 0' };
 }
 
@@ -1205,6 +1211,11 @@ export function controls() {
   add(
     "exit 0 + '1 of 2 PASS, 1 INCONCLUSIVE' summary is INCONCLUSIVE, not PASS",
     classifyCommand(run0('x: 1 of 2 PASS, 0 FAIL, 1 INCONCLUSIVE, 0 DISABLED'))
+      .state === 'INCONCLUSIVE'
+  );
+  add(
+    "exit 0 + '1 of 2 PASS, 1 DISABLED' summary is INCONCLUSIVE, not PASS",
+    classifyCommand(run0('x: 1 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 1 DISABLED'))
       .state === 'INCONCLUSIVE'
   );
   add(
