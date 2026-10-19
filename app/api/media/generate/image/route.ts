@@ -1,7 +1,8 @@
 /**
  * AI Image Generation API
  *
- * @description Generate images using AI (Stability AI, DALL-E, Gemini)
+ * @description Generate images using AI (Gemini; Stability AI and DALL-E are
+ * deprecated and unpriced in lib/services/ai/image/registry.ts, so not offered)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - STABILITY_API_KEY: Stability AI API key (SECRET)
@@ -27,6 +28,7 @@ import {
   enhancePrompt,
   getOptimalDimensions,
   NO_REFERENCES_BLOCK_ERROR,
+  offeredImageProviders,
   ImageGenerationOptions,
   ImageGenerationResult,
 } from '@/lib/services/ai/image-generation';
@@ -725,7 +727,9 @@ export async function GET(request: NextRequest) {
       'cinematic',
       'minimalist',
     ],
-    providers: ['stability', 'dalle', 'gemini'],
+    // Only providers the meter will price; deprecated/unpriced ones always
+    // fail closed, so offering them only produced a guaranteed error.
+    providers: offeredImageProviders(),
     referenceSets,
   });
 }

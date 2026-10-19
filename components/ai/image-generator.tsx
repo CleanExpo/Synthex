@@ -121,16 +121,30 @@ const ASPECT_RATIOS: { id: AspectRatio; label: string }[] = [
 ];
 
 // Provider options
-const PROVIDERS: {
+interface ProviderOption {
   id: ImageProvider | 'auto';
   label: string;
   description: string;
-}[] = [
-  { id: 'auto', label: 'Auto', description: 'Best available provider' },
-  { id: 'stability', label: 'Stability AI', description: 'Stable Diffusion 3' },
-  { id: 'dalle', label: 'DALL·E 3', description: 'OpenAI' },
-  { id: 'gemini', label: 'Gemini', description: 'Google Imagen' },
-];
+}
+
+const PROVIDER_LABELS: Partial<Record<ImageProvider, ProviderOption>> = {
+  gemini: { id: 'gemini', label: 'Gemini', description: 'Google Imagen' },
+};
+
+/**
+ * Auto plus only the providers GET /api/media/generate/image advertises (the
+ * registry's non-deprecated, priced entries). Stability AI and DALL-E 3 are
+ * deprecated and unpriced, so a pin to either always failed.
+ */
+export function providerOptions(available: ImageProvider[]): ProviderOption[] {
+  return [
+    { id: 'auto', label: 'Auto', description: 'Best available provider' },
+    ...available.flatMap(p => {
+      const option = PROVIDER_LABELS[p];
+      return option ? [option] : [];
+    }),
+  ];
+}
 
 // Constants
 const MAX_PROMPT_LENGTH = 4000;
@@ -186,6 +200,7 @@ export function ImageGenerator({
     error,
     blocked,
     clearError,
+    availableProviders,
     availableReferenceSets,
     fetchPlatformDimensions,
   } = useImageGeneration();
@@ -563,7 +578,7 @@ export function ImageGenerator({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent variant="glass-solid">
-                    {PROVIDERS.map(provider => (
+                    {providerOptions(availableProviders).map(provider => (
                       <SelectItem key={provider.id} value={provider.id}>
                         <div className="flex items-center gap-2">
                           <span>{provider.label}</span>

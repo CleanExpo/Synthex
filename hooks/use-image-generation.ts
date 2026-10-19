@@ -160,8 +160,10 @@ export function useImageGeneration(): UseImageGenerationReturn {
     'cinematic',
     'minimalist',
   ]);
+  // Empty until GET /api/media/generate/image answers: it advertises only the
+  // registry's non-deprecated, priced providers (Auto is always offered).
   const [availableProviders, setAvailableProviders] = useState<ImageProvider[]>(
-    ['stability', 'dalle', 'gemini']
+    []
   );
   const [availableReferenceSets, setAvailableReferenceSets] = useState<
     ReferenceSetOption[]
