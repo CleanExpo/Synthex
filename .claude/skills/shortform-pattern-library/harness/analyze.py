@@ -160,13 +160,20 @@ def single(video, model, workdir):
     d = Path(workdir) / "reels" / stem
     d.mkdir(parents=True, exist_ok=True)
     (d / "metrics.json").unlink(missing_ok=True)
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-c", "copy", "-an", str(d / "video.mp4")])
+    v = run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-c", "copy", "-an", str(d / "video.mp4")])
+    status = "OK" if v.returncode == 0 and (d / "video.mp4").exists() else "ERROR_UNREADABLE_MASTER"
     a = run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-vn", "-c:a", "aac", str(d / "audio.m4a")])
     if a.returncode != 0:
         (d / "audio.m4a").unlink(missing_ok=True)  # no audio track: recorded as audio null, not silence
-    (d / "meta.json").write_text(json.dumps({"code": stem, "status": "OK", "source": str(src)}))
+    meta = {"code": stem, "status": status, "source": str(src)}
+    if status != "OK":
+        meta["error"] = v.stderr[-300:]
+    (d / "meta.json").write_text(json.dumps(meta))
     main(workdir, model)
-    print((d / "metrics.json").read_text())
+    out = json.loads((d / "metrics.json").read_text())
+    print(json.dumps(out, indent=2))
+    # A QA gate must fail loudly on a master it could not read, never pass it as measured.
+    sys.exit(0 if out.get("status") == "OK" and not out.get("probe_error") else 1)
 
 
 if __name__ == "__main__":
