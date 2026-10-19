@@ -149,6 +149,14 @@ function gitSubcommand(argv) {
 // (P2 ref hand-off; refs cannot be PR heads). Exactly `git push [-q] origin <HEAD|sha>:refs/fleet/units/
 // p<n>/<unit>`, optionally after `cd <dir>`; no other flag, ref, segment or wrapper.
 export function builderHandoffPush(command) {
+  // The whole command must be exactly this shape: no VAR=value prefix, wrapper or git -c option,
+  // because any of those can redirect the push (GIT_CONFIG_* / url.*.insteadOf). CodeRabbit on #1025.
+  if (
+    !/^\s*(cd\s+[^\s;&|`$()<>]+\s*&&\s*)?git\s+push(\s+-q)?\s+origin\s+(HEAD|[0-9a-f]{7,40}):refs\/fleet\/units\/p-?\d{1,2}\/[a-z0-9][a-z0-9-]{0,63}\s*$/.test(
+      String(command || '')
+    )
+  )
+    return false;
   const argvs = segments(command || '').flatMap(x => unwrap(x));
   const rest = argvs.filter(a => !(a[0] === 'cd' && a.length === 2));
   if (rest.length !== 1) return false;
