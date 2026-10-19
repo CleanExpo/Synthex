@@ -2287,6 +2287,16 @@
             },
             "description": "Authentication required"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
           "500": {
             "content": {
               "application/json": {
@@ -2310,7 +2320,7 @@
           "admin"
         ],
         "x-synthex-auth": [
-          "@/lib/security/api-security-checker"
+          "@/lib/admin/verify-admin"
         ],
         "x-synthex-schema": "none"
       },
