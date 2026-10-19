@@ -3,7 +3,7 @@
   "families": {
     "J1": {
       "name": "Route security matrix",
-      "expected_cases": 640,
+      "expected_cases": 731,
       "hard_gate": true
     },
     "J2": {
@@ -38,7 +38,7 @@
     },
     "J11": {
       "name": "Attack payloads",
-      "expected_cases": 140,
+      "expected_cases": 165,
       "hard_gate": true
     },
     "J12": {
