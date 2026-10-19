@@ -20,7 +20,13 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
-import { getAIProvider } from '@/lib/ai/providers';
+import { getAIProvider, type AIProvider } from '@/lib/ai/providers';
+import {
+  governedRouteCall,
+  GovernorRefusedError,
+  GOVERNOR_PROVIDERS,
+  type GovernorProvider,
+} from '@/lib/ai/governor';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
@@ -293,19 +299,11 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
     const scriptPrompt = buildScriptPrompt(topic, style, duration, styleConfig);
 
     try {
-      const response = await aiProvider.complete({
-        model: aiProvider.models.balanced,
-        messages: [
-          {
-            role: 'system',
-            content:
-              'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.',
-          },
-          { role: 'user', content: scriptPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      });
+      const response = await completeScript(
+        aiProvider,
+        scriptPrompt,
+        organizationId
+      );
 
       const scriptText = response.choices[0]?.message?.content || '';
 
@@ -374,6 +372,20 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
         },
       });
 
+      // Enforcing Governor only: the call was refused before any spend.
+      if (aiError instanceof GovernorRefusedError) {
+        return APISecurityChecker.createSecureResponse(
+          {
+            success: false,
+            error: 'AI call refused by the spend governor',
+            code: 'governor_refused',
+            outcome: aiError.outcome,
+            videoId: videoGen.id,
+          },
+          403
+        );
+      }
+
       return APISecurityChecker.createSecureResponse(
         {
           success: false,
@@ -396,6 +408,84 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
 // =============================================================================
 // Helpers
 // =============================================================================
+
+const SCRIPT_SYSTEM_PROMPT =
+  'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.';
+const SCRIPT_MAX_TOKENS = 2000;
+
+/** The Governor's provider id for an AIProvider, or null for an ungoverned local one (Ollama). */
+function governorProviderOf(ai: AIProvider): GovernorProvider | null {
+  const id = ai.name.toLowerCase();
+  return (GOVERNOR_PROVIDERS as readonly string[]).includes(id)
+    ? (id as GovernorProvider)
+    : null;
+}
+
+/**
+ * The script's paid text call, through the AI Governor in GOVERNOR_MODE (P5,
+ * spec M10): one pipeline_cost_ledger row per call with the real model and
+ * token usage. The Governor's resolved model and brand key are used when it
+ * has them; otherwise (shadow mode) the route keeps its own.
+ */
+async function completeScript(
+  aiProvider: AIProvider,
+  scriptPrompt: string,
+  organizationId: string | null
+) {
+  const messages = [
+    { role: 'system' as const, content: SCRIPT_SYSTEM_PROMPT },
+    { role: 'user' as const, content: scriptPrompt },
+  ];
+  const call = (ai: AIProvider, model: string) =>
+    ai.complete({
+      model,
+      messages,
+      temperature: 0.7,
+      max_tokens: SCRIPT_MAX_TOKENS,
+    });
+
+  const provider = governorProviderOf(aiProvider);
+  if (!provider || !organizationId) {
+    // A local provider spends nothing. A user with no organisation cannot be
+    // receipted; logged so the gap is visible until enforcing mode refuses it.
+    if (provider) {
+      logger.warn('video script: no organisation, call not governed', {
+        provider,
+      });
+    }
+    return call(aiProvider, aiProvider.models.balanced);
+  }
+
+  return governedRouteCall({
+    organizationId,
+    brandSlug: 'synthex',
+    runner: 'video-script',
+    pipelineName: 'video-script',
+    provider,
+    model: { kind: 'registered', modelId: aiProvider.models.balanced },
+    estimate: {
+      inputTokens: Math.ceil(
+        (SCRIPT_SYSTEM_PROMPT.length + scriptPrompt.length) / 4
+      ),
+      outputTokens: SCRIPT_MAX_TOKENS,
+    },
+    execute: async ctx => {
+      const ai = ctx.apiKey
+        ? getAIProvider({ apiKey: ctx.apiKey, provider })
+        : aiProvider;
+      const response = await call(
+        ai,
+        ctx.model?.id ?? aiProvider.models.balanced
+      );
+      return {
+        data: response,
+        inputTokens: response.usage?.prompt_tokens ?? 0,
+        outputTokens: response.usage?.completion_tokens ?? 0,
+        modelId: response.model,
+      };
+    },
+  });
+}
 
 function buildScriptPrompt(
   topic: string,
