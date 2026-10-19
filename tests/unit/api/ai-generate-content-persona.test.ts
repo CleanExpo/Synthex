@@ -39,10 +39,8 @@ jest.mock('@/lib/services/client-branded-content', () => ({
 
 // Auth + API-key gate + rate-limit wrappers — pass straight through.
 jest.mock('@/lib/middleware/require-api-key', () => ({
-  requireApiKey: (
-    _req: unknown,
-    handler: (userId: string) => unknown
-  ) => handler('test-user-id'),
+  requireApiKey: (_req: unknown, handler: (userId: string) => unknown) =>
+    handler('test-user-id'),
 }));
 jest.mock('@/lib/middleware/rate-limiter', () => ({
   withRateLimit: (_req: unknown, fn: () => unknown) => fn(),
@@ -58,8 +56,16 @@ jest.mock('@/lib/ai/api-credential-injector', () => ({
 // Prisma — user lookup resolves the org for the request.
 const mockUserFindUnique = jest.fn();
 jest.mock('@/lib/prisma', () => ({
-  prisma: { user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) } },
-  default: { user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) } },
+  // Interop default is this object: the budget enforcer reads it with no policy row.
+  orgBudgetPolicy: { findUnique: async () => null },
+  prisma: {
+    orgBudgetPolicy: { findUnique: async () => null },
+    user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) },
+  },
+  default: {
+    orgBudgetPolicy: { findUnique: async () => null },
+    user: { findUnique: (...a: unknown[]) => mockUserFindUnique(...a) },
+  },
 }));
 
 jest.mock('@/lib/auth/monitoring', () => ({
@@ -260,9 +266,9 @@ describe('POST /api/ai/generate-content — persona forwarding', () => {
     // scores below the strong CTA one, so it is no "less flagged" than it.
     expect(data.variations[1].score).toBeLessThan(data.variations[0].score);
     // The strong variation is never MORE flagged than the weak one.
-    expect(
-      Number(data.variations[0].belowThreshold)
-    ).toBeLessThanOrEqual(Number(data.variations[1].belowThreshold));
+    expect(Number(data.variations[0].belowThreshold)).toBeLessThanOrEqual(
+      Number(data.variations[1].belowThreshold)
+    );
 
     // flaggedCount matches the number of belowThreshold variations and flags
     // at least the weak one.

@@ -29,7 +29,9 @@ import {
 } from '@/lib/ai/generation-context';
 import {
   estimateCalendarGenerationCostUsd,
+  BUDGET_UNAVAILABLE,
   OrgBudgetExceededError,
+  OrgBudgetUnavailableError,
   previewBudget,
 } from '@/lib/ai/budget-enforcer';
 
@@ -143,6 +145,22 @@ export async function POST(request: NextRequest) {
           estimateCalendarGenerationCostUsd(days, platforms, postsPerDay)
         );
       } catch (orgBudgetError) {
+        if (orgBudgetError instanceof OrgBudgetUnavailableError) {
+          if (acquiredIdempotencyKey) {
+            await releaseIdempotencyKey(
+              IDEMPOTENCY_SCOPE,
+              userId,
+              acquiredIdempotencyKey
+            ).catch(() => {});
+          }
+          return NextResponse.json(
+            {
+              error: BUDGET_UNAVAILABLE,
+              message: orgBudgetError.message,
+            },
+            { status: 503 }
+          );
+        }
         if (orgBudgetError instanceof OrgBudgetExceededError) {
           if (acquiredIdempotencyKey) {
             await releaseIdempotencyKey(
