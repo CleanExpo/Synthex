@@ -8070,6 +8070,16 @@
               }
             },
             "description": "Internal server error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
           }
         },
         "security": [
@@ -8779,6 +8789,16 @@
             },
             "description": "Internal server error"
           },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
+          },
           "default": {
             "description": "Unresolved: the generator could not determine a success response for this handler"
           }
@@ -8801,7 +8821,7 @@
         ],
         "x-synthex-schema": "none",
         "x-synthex-success": "unresolved",
-        "x-synthex-success-reason": "returns Math.min(), variable lo, variable response"
+        "x-synthex-success-reason": "returns Math.min(), execute(), generatorCallResult(), governedData(), governorRefusalResponse(), variable lo"
       },
       "post": {
         "operationId": "post_ai_generate_content",

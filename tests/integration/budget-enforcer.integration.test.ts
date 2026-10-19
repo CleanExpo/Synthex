@@ -35,6 +35,8 @@ jest.mock('@/lib/prisma', () => {
 // LLM calls are mocked in every sandbox test (live keys are L3 human-gated).
 jest.mock('@/lib/ai/providers', () => ({
   getAIProvider: jest.fn(),
+  // P5: the governed generation path asks which provider it bills to.
+  resolvePlatformProviderName: jest.fn(() => 'openai'),
 }));
 
 jest.mock('@/lib/obsidian/client-knowledge-base', () => ({
