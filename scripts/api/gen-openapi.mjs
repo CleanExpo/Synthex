@@ -20,7 +20,8 @@
  * (c) an operation whose success response is unresolved is not listed, with a
  * reason, in scripts/api/success-exceptions.json (protected), or a listed entry
  * is stale or malformed.
- * Exit 2 when an input cannot be read. Default exempt list:
+ * Exit 2 when an input cannot be read, or (INCONCLUSIVE) when the installed
+ * zod/typescript/prettier differ from package-lock.json. Default exempt list:
  * scripts/api/exempt-routes.json (protected; growth travels as
  * proposals/P3/scripts/api/exempt-routes.json, rule B2).
  *
@@ -34,6 +35,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import ts from 'typescript';
+import { toolchainMismatch } from './toolchain-versions.mjs';
 
 const REPO = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -1580,6 +1582,11 @@ async function main(args) {
       process.exit(ok ? 0 : 1);
     }
     if (args.includes('--check')) {
+      const mismatch = toolchainMismatch(root, REPO);
+      if (mismatch) {
+        console.error(`[gen-openapi] INCONCLUSIVE: ${mismatch}; run npm ci`);
+        process.exit(2);
+      }
       const r = await check({ root, exemptFile });
       report(r);
       process.exit(r.drift || r.countMismatch || r.success?.fail ? 1 : 0);

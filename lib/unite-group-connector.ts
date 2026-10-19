@@ -10,14 +10,36 @@
  * - Never throws — all errors are swallowed and logged only.
  * - No-op when UNITE_GROUP_EVENTS_URL or UNITE_GROUP_EVENTS_API_KEY env vars are absent (safe for local dev).
  * - Always call with `void` — never await in hot paths.
+ * - Posts to {UNITE_GROUP_EVENTS_URL}/api/webhooks/synthex and never follows a
+ *   redirect: a 3xx (e.g. a login redirect) is a failed delivery, not success.
+ * - The last delivery outcome is kept in memory (per server instance, no
+ *   table) and reported by GET /api/unite-group/status, so a dropped event is
+ *   visible instead of silent.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - UNITE_GROUP_EVENTS_URL: Base URL of the Unite-Group API (e.g. https://unite-group.unite-group.com.au)
  * - UNITE_GROUP_EVENTS_API_KEY: API key for Unite-Group authentication
  */
 
-const UNITE_GROUP_URL = process.env.UNITE_GROUP_EVENTS_URL;
-const UNITE_GROUP_KEY = process.env.UNITE_GROUP_EVENTS_API_KEY;
+/** Receiver path on Unite-Group for Synthex events. */
+export const UNITE_GROUP_EVENTS_PATH = '/api/webhooks/synthex';
+
+export interface UniteGroupDeliveryOutcome {
+  ok: boolean;
+  eventType: string;
+  /** HTTP status, when a response arrived. */
+  statusCode?: number;
+  /** Network error message, when no response arrived. */
+  error?: string;
+  at: string;
+}
+
+let lastDelivery: UniteGroupDeliveryOutcome | null = null;
+
+/** The most recent delivery attempt on this server instance, or null. */
+export function getLastUniteGroupDelivery(): UniteGroupDeliveryOutcome | null {
+  return lastDelivery;
+}
 
 // ---------------------------------------------------------------------------
 // Types
@@ -78,6 +100,12 @@ export type UniteGroupEvent =
     }
   | { type: string; [key: string]: unknown };
 
+/**
+ * Set missionId only when the work came from Mission Control; it is sent as-is
+ * and omitted otherwise.
+ */
+export type UniteGroupEventInput = UniteGroupEvent & { missionId?: string };
+
 // ---------------------------------------------------------------------------
 // Core function
 // ---------------------------------------------------------------------------
@@ -88,27 +116,52 @@ export type UniteGroupEvent =
  * @param event - The event payload to send.
  */
 export async function pushUniteGroupEvent(
-  event: UniteGroupEvent
+  event: UniteGroupEventInput
 ): Promise<void> {
-  if (!UNITE_GROUP_URL || !UNITE_GROUP_KEY) {
+  const url = process.env.UNITE_GROUP_EVENTS_URL;
+  const key = process.env.UNITE_GROUP_EVENTS_API_KEY;
+  if (!url || !key) {
     // No-op in local dev when env vars are absent
     return;
   }
 
+  const { missionId, ...rest } = event;
   try {
-    await fetch(`${UNITE_GROUP_URL}/api/events`, {
+    const res = await fetch(`${url}${UNITE_GROUP_EVENTS_PATH}`, {
       method: 'POST',
+      redirect: 'manual',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': UNITE_GROUP_KEY,
+        'x-api-key': key,
       },
       body: JSON.stringify({
-        ...event,
+        ...rest,
+        ...(missionId ? { missionId } : {}),
         source: 'synthex',
         timestamp: new Date().toISOString(),
       }),
     });
-  } catch {
+    const ok = res.status >= 200 && res.status < 300;
+    lastDelivery = {
+      ok,
+      eventType: event.type,
+      statusCode: res.status,
+      at: new Date().toISOString(),
+    };
+    if (!ok) {
+      console.error(
+        '[unite-group] Event not accepted:',
+        event.type,
+        res.status
+      );
+    }
+  } catch (err) {
+    lastDelivery = {
+      ok: false,
+      eventType: event.type,
+      error: err instanceof Error ? err.message : String(err),
+      at: new Date().toISOString(),
+    };
     // fire-and-forget: never throw, only log
     console.error('[unite-group] Failed to push event:', event.type);
   }

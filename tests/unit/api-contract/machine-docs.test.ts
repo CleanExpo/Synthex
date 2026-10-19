@@ -263,6 +263,20 @@ export async function GET() { return NextResponse.json({ error: 'ZETA_NEW' }, { 
     expect(res.stderr).toContain('docs/api/error-codes.md');
   });
 
+  it('--check is INCONCLUSIVE (exit 2) when installed prettier disagrees with the lockfile', () => {
+    const lock = JSON.parse(read(ROOT, 'package-lock.json'));
+    lock.packages['node_modules/prettier'] = { version: '0.0.0-planted' };
+    write(root, 'package-lock.json', JSON.stringify(lock));
+    const res = run(['--check', '--root', root]);
+    expect(res.stderr).toMatch(
+      /\[gen-machine-docs\] INCONCLUSIVE: installed prettier \S+ != lockfile 0\.0\.0-planted; run npm ci/
+    );
+    expect(res.status).toBe(2);
+    // The real lockfile matches the installed packages: --check is as before.
+    write(root, 'package-lock.json', read(ROOT, 'package-lock.json'));
+    expect(run(['--check', '--root', root]).status).toBe(0);
+  });
+
   it('--check fails when a limiter value changes', () => {
     const rel = 'lib/rate-limit/presets.ts';
     write(root, rel, read(root, rel).replace('60_000, 5)', '60_000, 6)'));
