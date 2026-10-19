@@ -36,7 +36,7 @@ import {
   changedFiles,
   STATES,
 } from './lib.mjs';
-import { evaluate as guard } from './guard.mjs';
+import { evaluate as guard, unitRefAllowed } from './guard.mjs';
 import { scanForSecrets, haltOnHit } from './secret-scan.mjs';
 import { spawnUnit, waitForUnits } from './fanout.mjs';
 import {
@@ -249,6 +249,15 @@ function integrate(unitArg, refArg) {
   if (!unit || !ref) {
     log('FAIL', 'need --unit and --branch');
     return 2;
+  }
+  // A unit is integrated only from its own hand-off ref, refs/fleet/units/<phase>/<unit>, so one
+  // unit's ref can never stand in for another's (CodeRabbit, major, on #1025).
+  if (!unitRefAllowed(phase, unit, ref)) {
+    log(
+      'FAIL',
+      `unit ${unit} must be integrated from refs/fleet/units/${String(phase).toLowerCase()}/${unit}, not ${ref}`
+    );
+    return 1;
   }
   git(['fetch', '-q', 'origin', ref]);
   const files = changedFiles('HEAD', 'FETCH_HEAD');
