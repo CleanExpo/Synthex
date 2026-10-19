@@ -179,8 +179,12 @@ def single(video, model, workdir):
     # Every core craft measurement must have actually run; a missing one fails the gate.
     # (word_count 0 is a real measurement for a music-only render; None is not.)
     errors = [k for k in ("probe_error", "cuts_error", "speech_error", "audio_note") if out.get(k)]
-    errors += [f"{k} not measured" for k in ("duration_s", "cut_count", "integrated_lufs", "word_count")
-               if out.get(k) is None]
+    required = ("duration_s", "width", "height", "fps", "cut_count", "avg_shot_len_s", "cuts_first_3s",
+                "integrated_lufs", "word_count", "words_per_sec")
+    errors += [f"{k} not measured" for k in required if out.get(k) is None]
+    if out.get("first_word_at_s") is None and (out.get("word_count") or 0) > 0:
+        errors.append("first_word_at_s not measured")
+    errors += [f"{k} empty" for k in ("hook_frames_t", "sheet_frames_t") if not out.get(k)]
     if errors:
         print("QA FAIL: " + "; ".join(errors), file=sys.stderr)
     sys.exit(0 if out.get("status") == "OK" and not errors else 1)
