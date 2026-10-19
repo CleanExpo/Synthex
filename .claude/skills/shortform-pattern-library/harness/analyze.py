@@ -5,6 +5,11 @@ Usage: python3 -I analyze.py <outdir> <whisper-model.bin>
 Reads  <outdir>/reels/<code>/{meta.json,video.mp4,audio.m4a}
 Writes <outdir>/reels/<code>/{metrics.json,hook.jpg,sheet.jpg,transcript.json}
 
+Single render (harness N13 craft QA on our own master):
+       python3 -I analyze.py --single <video.mp4> <whisper-model.bin> <workdir>
+Stages the file as <workdir>/reels/<stem>/ (video copy + extracted audio + meta.json),
+measures it the same way, and prints that reel's metrics.json.
+
 Requires ffmpeg/ffprobe and whisper-cli (whisper.cpp) on PATH. A measurement that
 could not run is recorded as null with a reason, never as zero.
 """
@@ -20,12 +25,19 @@ def run(cmd):
 
 
 def probe(video):
+    """Stream facts, or all-null with probe_error when ffprobe fails (never zero)."""
     r = run(["ffprobe", "-v", "error", "-print_format", "json", "-show_streams", "-show_format", str(video)])
-    j = json.loads(r.stdout or "{}")
-    v = next((s for s in j.get("streams", []) if s.get("codec_type") == "video"), {})
+    try:
+        j = json.loads(r.stdout or "{}") if r.returncode == 0 else {}
+    except json.JSONDecodeError:
+        j = {}
+    v = next((s for s in j.get("streams", []) if s.get("codec_type") == "video"), None)
+    if not v:
+        return {"width": None, "height": None, "fps": None, "duration_s": None,
+                "probe_error": "ffprobe failed or found no video stream"}
     num, den = (v.get("r_frame_rate", "0/1").split("/") + ["1"])[:2]
-    return {"width": v.get("width"), "height": v.get("height"),
-            "fps": round(int(num) / max(int(den), 1), 2),
+    fps = round(int(num) / int(den), 2) if num.isdigit() and den.isdigit() and int(num) and int(den) else None
+    return {"width": v.get("width"), "height": v.get("height"), "fps": fps,
             "duration_s": float(j.get("format", {}).get("duration", 0) or 0) or None}
 
 
@@ -138,8 +150,27 @@ def main(outdir, model):
         m["sheet_frames_t"] = sheet(video, body + [max(dur - 0.3, 0)], d / "sheet.jpg", cols=6)
         (d / "metrics.json").write_text(json.dumps(m, indent=2))
         print(d.name, m.get("duration_s"), "cuts", m["cut_count"], "lufs", m.get("integrated_lufs"),
-              "wps", m.get("words_per_sec"))
+              "wps", m.get("words_per_sec"), file=sys.stderr)
+
+
+def single(video, model, workdir):
+    """Stage one finished video in the reels/<stem>/ layout, measure it, print its metrics."""
+    src = Path(video).resolve()
+    stem = re.sub(r"[^A-Za-z0-9_-]", "_", src.stem) or "render"
+    d = Path(workdir) / "reels" / stem
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "metrics.json").unlink(missing_ok=True)
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-c", "copy", "-an", str(d / "video.mp4")])
+    a = run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-vn", "-c:a", "aac", str(d / "audio.m4a")])
+    if a.returncode != 0:
+        (d / "audio.m4a").unlink(missing_ok=True)  # no audio track: recorded as audio null, not silence
+    (d / "meta.json").write_text(json.dumps({"code": stem, "status": "OK", "source": str(src)}))
+    main(workdir, model)
+    print((d / "metrics.json").read_text())
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    if sys.argv[1] == "--single":
+        single(sys.argv[2], sys.argv[3], sys.argv[4])
+    else:
+        main(sys.argv[1], sys.argv[2])
