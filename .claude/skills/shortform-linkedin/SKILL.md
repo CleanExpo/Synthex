@@ -88,10 +88,13 @@ property managers, restoration owners), and the client metric moved (trial sign-
 
 ## 7. Gate checklist
 
-- [ ] Post text written from the transcript; same single point as the video
-- [ ] No engagement bait; first line is not "I"
-- [ ] Credentialed face on screen by 2 s; practitioner tone
-- [ ] SRT uploaded (English) **and** captions burned in
-- [ ] 9:16 or 4:5; 60–150 s unless the idea needs less
-- [ ] API version newer than 202511
-- [ ] Footage owned and grounded (real-images-only)
+Hard gates ([P] or Synthex rule; a miss blocks the cut):
+- [ ] Post text written from the transcript; same single point as the video [P feed change, Mar 2026]
+- [ ] No engagement bait [P]; first line is not "I" [Synthex rule, platform-content-adaptor]
+- [ ] SRT uploaded (English only) [P] and captions burned in [Synthex rule]
+- [ ] Aspect within 1:2.4–2.4:1 [P]; API version newer than 202511 [P]
+- [ ] Footage owned and grounded (real-images-only) [Synthex rule]
+
+Advisory ([S] or house style; warn, do not block):
+- [ ] Credentialed face on screen by 2 s; practitioner tone [house style]
+- [ ] 60–150 s unless the idea needs less [S brand data]

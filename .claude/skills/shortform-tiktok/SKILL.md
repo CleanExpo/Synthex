@@ -107,11 +107,14 @@ client metric moved.
 
 ## 9. Gate checklist
 
-- [ ] Spoken hook lands by 3 s; point made by 6 s
-- [ ] On-screen text ≤10 words/s; inside the central safe area
-- [ ] Clean master, no Instagram or CapCut watermark
-- [ ] CML or licensed audio; `is_aigc` correct
-- [ ] Cover frame chosen (`video_cover_timestamp_ms`) and legible
-- [ ] Caption leads with the search phrase; 3–5 specific hashtags
-- [ ] Publishing path matches audit status (draft/inbox until audited)
-- [ ] Footage is owned and grounded (real-images-only)
+Hard gates ([P] or Synthex rule; a miss blocks the cut):
+- [ ] Own footage, no Instagram or CapCut watermark [Synthex rule]
+- [ ] CML or licensed audio with Music Usage Confirmation shown [P]; `is_aigc` correct [P]
+- [ ] Cover frame chosen via `video_cover_timestamp_ms` [P]
+- [ ] Publishing path matches audit status: draft/inbox until audited [P]
+- [ ] Footage is owned and grounded (real-images-only) [Synthex rule]
+
+Advisory (ads guidance, [S] or house style; warn, do not block):
+- [ ] Spoken hook by 3 s, point by 6 s; on-screen text ≤10 words/s [P, but written for ads]
+- [ ] Text inside the central safe area [S pixel figures]
+- [ ] Caption leads with the search phrase; 3–5 specific hashtags [house style]

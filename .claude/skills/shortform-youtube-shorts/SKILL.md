@@ -104,9 +104,13 @@ gained, related-video click-through, and the client metric moved.
 
 ## 10. Gate checklist
 
-- [ ] ≤3 min, 9:16; loop-back ending considered
-- [ ] Title = search phrase, ≤100 chars
-- [ ] No claimed music on a Short over 60 s
-- [ ] Script and perspective differ from the channel's last 10 Shorts (inauthentic-content rule)
-- [ ] `containsSyntheticMedia` correct; footage owned and grounded (real-images-only)
-- [ ] Uploaded unlisted for human review
+Hard gates ([P] or Synthex rule; a miss blocks the cut):
+- [ ] ≤3 min and vertical or square [P]
+- [ ] No claimed music on a Short over 60 s [P]
+- [ ] Script and perspective differ from the channel's last 10 Shorts (inauthentic-content rule) [P]
+- [ ] `containsSyntheticMedia` correct [P]; footage owned and grounded (real-images-only) [Synthex rule]
+- [ ] Title ≤100 chars [Synthex code limit]; uploaded unlisted for human review [Synthex rule]
+
+Advisory ([S] or house style; warn, do not block):
+- [ ] Title is the search phrase [house style]
+- [ ] Loop-back ending considered [S view-count change]

@@ -124,12 +124,14 @@ Scorecard per Reel, read at 24 h and 7 d:
 
 ## 10. Gate checklist (feeds Gate A / Gate B)
 
-- [ ] 9:16 clean master, no foreign watermark, no border
-- [ ] Subject (ideally a face) on screen and moving in frame 1; ≤8-word text hook on screen from
-      0.0 s unless the format is deliberately wordless (pattern library §2)
-- [ ] All text inside the safe zone with the Reels UI overlaid
-- [ ] Burned-in captions match the transcript
-- [ ] Original or licensed audio; `is_ai_generated` set correctly
-- [ ] ≤5 specific hashtags; search phrase in voice, text and caption line 1
-- [ ] New format → Trial Reel
-- [ ] Footage is owned and grounded (real-images-only)
+Hard gates ([P] or Synthex rule; a miss blocks the cut):
+- [ ] 9:16 clean master, no foreign watermark, no border [P ranking explainer]
+- [ ] Original or licensed audio [Synthex rule]; `is_ai_generated` set correctly [P]
+- [ ] Burned-in captions match the transcript [Synthex rule]
+- [ ] New format ships as a Trial Reel first [Synthex rule]
+- [ ] Footage is owned and grounded (real-images-only) [Synthex rule]
+
+Advisory ([S] or corpus hypothesis; warn, do not block, until re-verified):
+- [ ] Subject (ideally a face) moving in frame 1; ≤8-word text hook from 0.0 s unless deliberately wordless [corpus tier 2]
+- [ ] All text inside the safe zone with the Reels UI overlaid [no official pixel spec]
+- [ ] ≤5 specific hashtags [S]; search phrase in voice, text and caption line 1 [S]

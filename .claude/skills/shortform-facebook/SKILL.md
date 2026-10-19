@@ -93,9 +93,13 @@ and the client metric moved (UTM on the first-comment link).
 
 ## 8. Gate checklist
 
-- [ ] 9:16, 3–90 s if API-published
-- [ ] Burned-in captions; sound-off legible
-- [ ] Clean master, no foreign watermark, no border
-- [ ] Caption: no link, ≤5 hashtags, sentence case, local place name where relevant
-- [ ] `is_ai_generated` correct; footage owned and grounded (real-images-only)
-- [ ] Page risk status checked this month
+Hard gates ([P] or Synthex rule; a miss blocks the cut):
+- [ ] 9:16, 3–90 s if API-published [P]
+- [ ] Clean master, no foreign watermark, no border [P unoriginal-content post]
+- [ ] Caption: no link, ≤5 hashtags, minimal capitals [P unoriginal-content post]
+- [ ] `is_ai_generated` correct [P]; footage owned and grounded (real-images-only) [Synthex rule]
+- [ ] Page risk status checked this month [Synthex rule]
+
+Advisory ([S]; warn, do not block):
+- [ ] Burned-in captions, sound-off legible [S, dated sound-off data]
+- [ ] Local place name in the caption where relevant [house style]
