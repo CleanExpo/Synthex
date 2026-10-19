@@ -169,6 +169,13 @@ describe('check-report state classifiers', () => {
       ).state
     ).toBe('FAIL');
     expect(call('classifyCommand', run('no summary here')).state).toBe('PASS');
+    // A summary that counted zero items checked nothing.
+    expect(
+      call(
+        'classifyCommand',
+        run('x: 0 of 0 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED')
+      ).state
+    ).toBe('INCONCLUSIVE');
     // A later all-PASS summary must not hide an earlier nothing-checked or FAIL one.
     expect(
       call(

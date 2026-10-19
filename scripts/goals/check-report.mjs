@@ -496,6 +496,11 @@ function classifySummary(m) {
   const [n, total, f, i, d] = m.slice(2).map(Number);
   if (f > 0)
     return { state: 'FAIL', why: `exit 0 but summary reports ${f} FAIL` };
+  if (total === 0)
+    return {
+      state: 'INCONCLUSIVE',
+      why: 'exit 0 but summary reports 0 items — nothing checked',
+    };
   if (total > 0 && n === 0) {
     if (i > 0)
       return {
@@ -549,12 +554,12 @@ function collectG1(ctx) {
     : phases;
   const receipts = (ids.ok ? ids.value : []).map(id => {
     const file = `release-receipts/${id}.json`;
-    const c = runRaw('git', ['cat-file', '-e', `${MAIN}:${file}`]);
-    let present;
-    if (c.code === 0) present = ok(true);
-    else if (/does not exist|exists on disk, but not in/.test(c.stderr))
-      present = ok(false);
-    else present = bad(`cat-file exit ${c.code}: ${lastLine(c.stderr)}`);
+    // ls-tree answers by exit code and stdout, not git's translated stderr text.
+    const c = runRaw('git', ['ls-tree', '--name-only', MAIN, '--', file]);
+    const present =
+      c.code === 0
+        ? ok(c.stdout.trim() === file)
+        : bad(`ls-tree exit ${c.code}: ${lastLine(c.stderr)}`);
     if (!present.ok || !present.value) return { id, present };
     const added = gitText([
       'log',
@@ -1188,6 +1193,11 @@ export function controls() {
   add(
     "exit 0 + '0 of 2 PASS, 1 INCONCLUSIVE' summary is INCONCLUSIVE",
     classifyCommand(run0('x: 0 of 2 PASS, 0 FAIL, 1 INCONCLUSIVE, 1 DISABLED'))
+      .state === 'INCONCLUSIVE'
+  );
+  add(
+    "exit 0 + '0 of 0 PASS' summary is INCONCLUSIVE, not PASS",
+    classifyCommand(run0('x: 0 of 0 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED'))
       .state === 'INCONCLUSIVE'
   );
   add(
