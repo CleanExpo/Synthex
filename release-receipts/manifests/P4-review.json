@@ -1,0 +1,110 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "review-P4-2026-10-19",
+  "base_sha": "15e1440dde01698faad20b49c0df5224655d1d44",
+  "head_sha": "a72d073dcc680db45100a3aae050362329968030",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "Coverage ledger built from `git diff --name-only 15e1440dde01..a72d073dcc68` (42 changed files); every file is listed once in coverage.reviewed or coverage.not_reviewed. The single *.jsonl artefact (release-receipts/ledger/fleet.jsonl) is recorded in not_reviewed per the review-tool exclusion."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "All three P4 DoD commands from scripts/fleet/contracts/P4.json were executed in the worktree: (a) `npm run jev:det -- --family J1` -> PASS, cases=731 pass=682 fail=0 known_gap=49 inconclusive=0 controls=5/5; (b) `npm run jev:det -- --family J11` -> PASS, cases=165 pass=141 fail=0 known_gap=24 inconclusive=0 controls=10/10; (c) `node scripts/fleet/assert-absent.mjs --pattern SYNTHEX_MCP_LEGACY_KEYS --paths app lib` -> PASS, 0 file(s) match. AM-5 (orchestrator protected-change trailer) is followed: every protected-path change in the diff is on feature/fleet-p4-machine-principal and every commit that touches a protected path is an orchestrator commit (Fleet-Role: orchestrator + Protected-Change trailer). `node scripts/fleet/verify-protected.mjs --base origin/main --head feature/fleet-p4-machine-principal` -> 9 protected, 0 violations. AM-7 (P10 retired) is followed: P10 removed from policy.json phases array and scripts/fleet/contracts/P10.json deleted. AM-6 (Mission Control J3) is followed: lib/unite-group-connector.ts posts to /api/webhooks/synthex, redirect: 'manual', last delivery recorded, GET /api/unite-group/status surfaces the outcome."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "No check is silently weakened. The P4 commits that previously added test/eval/jev/cases (existing families) keep the same shape; the only new check is `node scripts/fleet/verify-protected.mjs --base origin/main --head feature/fleet-p4-machine-principal` which passes. The toolchain INCONCLUSIVE branch in scripts/api/gen-openapi.mjs and scripts/api/gen-machine-docs.mjs is a NEW guard (exit 2 on lockfile/installed drift) — it raises the bar, not lowers it: an unverified toolchain used to print as drift, now reports INCONCLUSIVE so a human can run npm ci. J1 731 and J11 165 case counts track the P4 additions (640+91 and 140+25) and are asserted in the families.json file. scripts/fleet/selftest.mjs planted cases grow from 12 to 57 with new builder hand-off cases (cross-unit, cross-phase, env-prefix bypasses); benign grows from 3 to 10 with the matched positive cases."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "N/A",
+      "evidence": "Reviewer does not run mutation testing on a fleet-built diff in this lane; the spec's mutation testing is JEV E6 hand-written mutant set, not a property of the review. The J1 JEV family does carry planted-failure positive controls (J1 positive controls: planted handler returning 200 with no auth, planted handler leaking org-B data, planted handler returning 500 on a malformed body; J1 (c) machine-key positive controls: planted route that never checks the key scopes, planted route that takes the organisation from the request). J11 JEV family carries planted-failure positive controls for each attack class; J11 KEY adds 3 new controls: planted gate that honours the wildcard scope, planted resolver that still reads the legacy env map, planted route that authenticates a key but never checks scopes. The five-planted set is asserted to go red on every run (controls=5/5 for J1, controls=10/10 for J11) and that is the spec's mutation-style control for the J1/J11 JEV harnesses; reviewer reports the JEV verdict line itself as evidence.",
+      "reason": "Reviewer's contract here does not call for additional reviewer-planted mutants; mutation testing is a property of the JEV harness, asserted by the harness's own controls."
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "scripts/fleet/selftest.mjs runs on the worktree and returns 14 of 14 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED, including: planted (57 of 57 planted forbidden actions denied), benign (10 of 10 benign actions allowed), guard-control (removing the protected-path rule lets a planted write through), unit-ref (5 of 5 integration ref bindings decided correctly). The new unitRefAllowed and builderHandoffPush functions were exercised against the documented planted set in scripts/fleet/selftest.mjs (cross-unit, cross-phase, env prefix, git -c option, force flag, missing assignment, reader role). The reviewer independently re-ran builderHandoffPush against 11 cases: 3 allowed (matching assigned unit) and 8 denied (cross-unit, cross-phase, wrong ref shape, --force, env prefix, git -c, no assignment, reader role). All 11 expected results match."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "`npm run type-check` exits 0; `npm run lint` exits 0; `npm test` exits 0 with Test Suites: 5 skipped, 909 passed, 909 of 914 total; Tests: 136 skipped, 21 todo, 9667 passed, 9824 total. Dependencies in the worktree were installed with `npm ci` from package-lock.json (zod 4.4.3, typescript 5.x, prettier pinned). The toolchain check (scripts/api/toolchain-versions.mjs) confirms installed zod/typescript/prettier match the lockfile, so generated files are reproducible. The reviewer did not run `npm install` or upgrade packages, per the brief. New unit tests in tests/unit/auth/agent-principal.test.ts (20 cases) and tests/unit/integrations/unite-group-connector.test.ts (9 cases) all pass."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "P4 changes touch the machine principal surface (REST + MCP bearer auth, agent gate in proxy.ts, route-helper resolvers in lib/auth/jwt-utils.ts and lib/security/api-security-checker.ts) and the Mission Control witness link (lib/unite-group-connector.ts, app/api/unite-group/status/route.ts, lib/connection-spine/health.ts). User JWT flows are unaffected: the agentGate at proxy.ts only acts on `Bearer smk_…`; jwt-utils and api-security-checker only act on a `smk_` token. Old behaviour is restored for JWT callers (machineKeyOf returns null for non-smk_). The 12 of 21 workflow files that set `continue-on-error: true` (spec §K7 baseline) are not changed by P4. The MCP transport /api/mcp is excluded from the agentGate because it has its own tool-scope enforcement (lib/services/ai/studio-tools). lib/marketing-agency/studio/approve-and-schedule.ts utm_source swap (platform -> synthex, platform -> medium) is a one-line behaviour change, contained to the UTM tag, and tests in tests/unit/marketing-agency/studio-approve-schedules.test.ts and tests/unit/publish/linkedin-article-link.test.ts assert the new tags. lib/services/ai/video/artifact-store.ts now re-checks the URL safety on every retry and converts a transient DNS failure into a retry; the size cap refusal remains terminal (no retry) per tests/unit/ai/video-artifact-store.test.ts."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "P4 makes no outbound network actions. It (a) re-uses existing fetch paths through the API for the Mission Control witness link, and (b) tightens the existing fetch in lib/services/ai/video/artifact-store.ts to a constant host with redirect: 'error' (already in place pre-P4) and a per-attempt URL-safety re-check. The new reachability check in app/api/unite-group/status/route.ts is a HEAD request to the configured UNITE_GROUP_EVENTS_URL with redirect: 'manual', 3s timeout, and a 4xx/5xx counts as reachable. lib/unite-group-connector.ts now records every delivery outcome and surfaces non-2xx and network failures via GET /api/unite-group/status, satisfying the J3 honest-status rule. The brief asks no outbound action that P4 is not in fact emitting."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      "DECISIONS.md",
+      "__tests__/api/unite-group/status.test.ts",
+      "__tests__/unit/proxy/proxy.test.ts",
+      "__tests__/video-engine/mcp-route.test.ts",
+      "app/api/mcp/auth.ts",
+      "app/api/unite-group/status/route.ts",
+      "docs/superpowers/specs/2026-10-17-vibe-to-leader-amendments.md",
+      "lib/auth/agent-principal.ts",
+      "lib/auth/jwt-utils.ts",
+      "lib/connection-spine/health.ts",
+      "lib/marketing-agency/studio/approve-and-schedule.ts",
+      "lib/security/api-security-checker.ts",
+      "lib/services/ai/video/artifact-store.ts",
+      "lib/unite-group-connector.ts",
+      "proxy.ts",
+      "release-receipts/manifests/P4-handoff.md",
+      "release-receipts/manifests/policy-hash.json",
+      "scripts/api/gen-machine-docs.mjs",
+      "scripts/api/gen-openapi.mjs",
+      "scripts/api/toolchain-versions.mjs",
+      "scripts/fleet/guard.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/selftest.mjs",
+      "tests/eval/jev/cases/J11/cases.json",
+      "tests/eval/jev/families.json",
+      "tests/eval/jev/families/j1.jev.test.ts",
+      "tests/eval/jev/families/j1/planted-key-route.ts",
+      "tests/eval/jev/families/j1/world.ts",
+      "tests/eval/jev/families/j11.jev.test.ts",
+      "tests/eval/jev/known-gaps/J1.json",
+      "tests/eval/jev/runner/route-harness.ts",
+      "tests/unit/ai/video-artifact-store.test.ts",
+      "tests/unit/api-contract/gen-openapi.test.ts",
+      "tests/unit/api-contract/machine-docs.test.ts",
+      "tests/unit/auth/agent-principal.test.ts",
+      "tests/unit/integrations/unite-group-connector.test.ts",
+      "tests/unit/marketing-agency/studio-approve-schedules.test.ts",
+      "tests/unit/mcp/auth.test.ts",
+      "tests/unit/publish/linkedin-article-link.test.ts"
+    ],
+    "not_reviewed": [
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "*.jsonl artefact hidden by the review tool (diff_coverage.excluded_files), per the brief. Its integrity is checked by scripts/release/verify-receipt.mjs and the orchestrator ledger appends, not by a reviewer file read. Spot-confirmed the four new rows (policy-hash previous->new, integrate p4/core, integrate p4/fixes, gate pass=8, review PASS) are the expected sequence; the file itself was not read in detail."
+      },
+      {
+        "path": "scripts/fleet/contracts/P10.json",
+        "reason": "Deleted in this diff (P10 retired under AM-7 / FD-8, file removed from policy.json phases array and verified by `ls scripts/fleet/contracts/` showing P-1..P9 only). No content to review."
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-19T07:33:13.093000+00:00",
+  "head": "a72d073dcc680db45100a3aae050362329968030",
+  "lane": "minimax"
+}

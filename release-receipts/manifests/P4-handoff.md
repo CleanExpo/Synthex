@@ -1,6 +1,6 @@
 # Handoff P4 (machine-principal)
 
-Reviewed commit: 67744b1a1d65590dcbdfd2c43612f1802e2ea5d5
+Reviewed commit: a72d073dcc680db45100a3aae050362329968030
 Receipt: release-receipts/P4.json
 Gate manifest: release-receipts/manifests/P4-gate.json
 Review: release-receipts/manifests/P4-review.json
