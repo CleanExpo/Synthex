@@ -34,6 +34,8 @@ import {
   finalizeSpend,
   spendSnapshot,
 } from '@/lib/services/ai/image/spend-log';
+import { logger } from '@/lib/logger';
+import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 import { InitiatedBy } from './types';
 
 /**
@@ -101,7 +103,7 @@ export async function settleQuota(
   actualUsd: number,
   initiatedBy: InitiatedBy
 ): Promise<boolean> {
-  return finalizeSpend({
+  const wrote = await finalizeSpend({
     holdId,
     organizationId,
     initiatedBy,
@@ -109,6 +111,29 @@ export async function settleQuota(
     actualUsd,
     kind: 'settle',
   });
+
+  // One ledger for all spend (spec M10/M11): mirror the image path. Written only
+  // when THIS call wrote the terminal event, so a replayed webhook (finalize
+  // returns false) cannot add a second row. Non-fatal and after the settle: the
+  // spend log is the money-safety record, the ledger is the audit record.
+  if (wrote && actualUsd > 0) {
+    try {
+      await trackPipelineCost({
+        pipeline_name: 'video-generation',
+        client_id: organizationId,
+        run_id: holdId,
+        // Per-model identity lives on video_generations; the ledger keys on the run.
+        model: 'fal-video',
+        // Video is billed per second, not tokens; the columns are NOT NULL.
+        input_tokens: 0,
+        output_tokens: 0,
+        cost_usd: actualUsd,
+      });
+    } catch (error) {
+      logger.error('video spend: ledger write failed', { holdId, error });
+    }
+  }
+  return wrote;
 }
 
 /**
