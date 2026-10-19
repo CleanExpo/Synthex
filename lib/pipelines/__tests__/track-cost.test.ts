@@ -42,11 +42,18 @@ describe('calculatePipelineCost', () => {
     ).toBeCloseTo(6, 4);
   });
 
-  it('falls back to sonnet pricing for unknown model', () => {
-    expect(calculatePipelineCost('gpt-4o', 1_000_000, 1_000_000)).toBeCloseTo(
-      18,
-      4
-    );
+  it('prices a non-Anthropic registry model at its own rate', () => {
+    // gpt-4-o-mini: $0.15 in / $0.60 out per 1M => 0.75
+    expect(
+      calculatePipelineCost('gpt-4-o-mini', 1_000_000, 1_000_000)
+    ).toBeCloseTo(0.75, 4);
+  });
+
+  it('records an unknown model at 0 USD and warns naming the model', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(calculatePipelineCost('gpt-4o', 1_000_000, 1_000_000)).toBe(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('gpt-4o'));
+    warnSpy.mockRestore();
   });
 
   it('returns 0 for zero tokens', () => {
