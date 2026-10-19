@@ -23,6 +23,7 @@ import { PERFORMANCE_TOOLS } from './performance-tools';
 import { TASKS_TOOLS } from './tasks-tools';
 import { RESEARCH_TOOLS } from './research-tools';
 import { MEDIA_TOOLS } from './media-tools';
+import { OPS_TOOLS } from './ops-tools';
 import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-service';
 import { METHOD_CARDS } from '@/lib/services/ai/video/cards/method-cards';
 import {
@@ -158,14 +159,202 @@ const DeriveCutsArgs = z.object({
     .max(8),
 });
 
+// ── Output schemas (P5) ─────────────────────────────────────────────────────
+// Each matches what the handler really returns (contract-tested in
+// tests/unit/mcp/structured-content.test.ts). Rows are normalised to JSON
+// values (Date → ISO string, Decimal → number) because the SDK validates the
+// raw return. Static catalogs and provider results are z.looseObject: the
+// fields agents rely on are typed, extra fields pass through.
+
+const Quota = z.object({
+  spentUsd: z.number(),
+  monthlyBudgetUsd: z.number(),
+  spentTodayUsd: z.number(),
+  dailyBudgetUsd: z.number(),
+  warning: z.boolean(),
+});
+
+const DeriveCutsOutput = z.object({
+  heroAssetId: z.string(),
+  cuts: z.array(
+    z.object({
+      platform: z.string(),
+      assetId: z.string(),
+      subjectLost: z.boolean(),
+      publishState: z.literal('queued_human_gated'),
+    })
+  ),
+});
+
+const ListCardsOutput = z.object({
+  methodCards: z.array(z.looseObject({ id: z.string(), name: z.string() })),
+  viralCards: z.array(z.looseObject({ id: z.string(), label: z.string() })),
+  viralSafeZone: z.looseObject({
+    bottomReservedPct: z.number(),
+    rightReservedPct: z.number(),
+    captionMaxLines: z.number(),
+    captionLeadMs: z.number(),
+    mutedLegible: z.boolean(),
+  }),
+  modifierChips: z.array(
+    z.looseObject({ id: z.string(), category: z.string(), name: z.string() })
+  ),
+  brandCard: z.object({ organizationId: z.string() }).nullable(),
+  models: z.array(
+    z.looseObject({
+      id: z.string(),
+      name: z.string(),
+      tier: z.string(),
+      costPerSecondUsd: z.number(),
+    })
+  ),
+  quota: Quota,
+});
+
+const GenerateVideoOutput = z.object({
+  jobs: z.array(
+    z.object({
+      id: z.string(),
+      providerJobId: z.string(),
+      batchGroupId: z.string(),
+      model: z.string(),
+      estimatedCostUsd: z.number(),
+      status: z.literal('generating'),
+      grounded: z.boolean().optional(),
+      referenceSet: z.string().optional(),
+      groundedSubject: z.string().optional(),
+      groundedVendor: z.string().optional(),
+    })
+  ),
+  budgetWarning: z.boolean(),
+});
+
+const GenerateImageOutput = z.object({
+  result: z.looseObject({
+    success: z.boolean(),
+    provider: z.string(),
+    imageUrl: z.string().optional(),
+    imageBase64: z.string().optional(),
+    error: z.string().optional(),
+    blocked: z.boolean().optional(),
+    grounded: z.boolean().optional(),
+    referenceSet: z.string().optional(),
+    refCount: z.number().optional(),
+    warnings: z.array(z.string()).optional(),
+    estimatedCostUsd: z.number().optional(),
+    metadata: z.looseObject({ model: z.string() }).optional(),
+  }),
+});
+
+const GetJobOutput = z.object({
+  job: z
+    .object({
+      id: z.string(),
+      status: z.string(),
+      videoUrl: z.string().nullable(),
+      errorMessage: z.string().nullable(),
+      model: z.string().nullable(),
+      batchGroupId: z.string().nullable(),
+      estimatedCostUsd: z.number().nullable(),
+      actualCostUsd: z.number().nullable(),
+      createdAt: z.string(),
+    })
+    .nullable(),
+});
+
+const ListJobsOutput = z.object({
+  jobs: z.array(
+    z.object({
+      id: z.string(),
+      status: z.string(),
+      videoUrl: z.string().nullable(),
+      methodCardId: z.string().nullable(),
+      batchGroupId: z.string().nullable(),
+      createdAt: z.string(),
+    })
+  ),
+});
+
+const SearchMediaOutput = z.object({
+  assets: z.array(
+    z.looseObject({
+      id: z.string(),
+      type: z.string(),
+      provider: z.string(),
+      status: z.string(),
+      url: z.string().optional(),
+      tags: z.array(z.string()),
+      createdAt: z.string(),
+      updatedAt: z.string(),
+    })
+  ),
+  total: z.number(),
+});
+
+const ListReferenceSetsOutput = z.object({
+  sets: z.array(
+    z.object({
+      industry: z.string(),
+      label: z.string(),
+      subjects: z.array(
+        z.object({
+          key: z.string(),
+          label: z.string(),
+          count: z.number(),
+          rights: z.string(),
+          vendor: z.string().optional(),
+          rightsBasis: z.string().optional(),
+          previewImage: z.string().optional(),
+        })
+      ),
+    })
+  ),
+});
+
+const DraftCaptionOutput = z.object({
+  caption: z.string().nullable(),
+  error: z.string().optional(),
+});
+
+/** One object for both outcomes: a generated section, or ok:false + error. */
+const GenerateSiteFromGbpOutput = z.object({
+  ok: z.boolean(),
+  error: z.string().optional(),
+  slug: z.string().optional(),
+  canonicalUrl: z.string().optional(),
+  html: z.string().optional(),
+  jsonLd: z.record(z.string(), z.unknown()).optional(),
+  copy: z
+    .object({
+      headline: z.string(),
+      intro: z.string(),
+      bodyParagraphs: z.array(z.string()),
+      faqs: z.array(z.object({ question: z.string(), answer: z.string() })),
+    })
+    .optional(),
+  validations: z
+    .array(
+      z.object({ rule: z.string(), severity: z.string(), message: z.string() })
+    )
+    .optional(),
+  profile: z
+    .object({
+      name: z.string(),
+      servicesCount: z.number(),
+      hasReviews: z.boolean(),
+    })
+    .optional(),
+});
+
+/** Prisma Decimal (or null) → number (or null) for JSON-stable output. */
+const toNumber = (d: { toString(): string } | null) =>
+  d === null ? null : Number(d.toString());
+
 /**
  * The creative_* namespace — the original phase-1 tool set. Names are
  * byte-identical to phase 1 (legacy wildcard callers see no change).
- * outputSchema is deliberately NOT declared on these yet: their returns
- * embed Date instances and provider/registry passthroughs, and SDK 1.29.0
- * throws at call time on any structuredContent mismatch (spike 2026-07-10).
- * Schemas land per-tool once returns are normalised, each behind a
- * contract test — never blanket-added.
+ * P5: every tool declares its outputSchema (above), each behind a contract
+ * test; returns are normalised to JSON values first.
  */
 export const STUDIO_TOOLS: StudioTool[] = [
   {
@@ -176,6 +365,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Derive platform-native cuts from a rendered hero video (nexus-viral 1→8). Each cut is a centred crop + tail trim + caption plan landing in video_assets as a pending render; the social-cut-render cron produces the file. Publish stays human-gated — this never posts.',
     schema: DeriveCutsArgs,
+    outputSchema: DeriveCutsOutput,
     // Gate B enforcement is inherited for free: deriveSocialCut() now calls
     // assertGatePassed(heroAssetId, 'broadcast') fail-closed before it writes
     // any row (SYN-1094, lib/video/social-derivation.ts), so this tool blocks
@@ -215,6 +405,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'List method cards, viral method cards (nexus-viral shot grammar + 9:16 safe zone), modifier chips, the org brand card, model tiers with costs and capability profiles, and current quota state.',
     schema: z.object({}),
+    outputSchema: ListCardsOutput,
     execute: async (_args, ctx) => ({
       methodCards: METHOD_CARDS,
       viralCards: VIRAL_METHOD_CARDS,
@@ -235,6 +426,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Submit a generative video job (async — returns job ids immediately; poll get_job). Defaults: draft tier, 9:16, 6s, 1 variant. Premium tier must be explicit. Response includes budgetWarning when the org is at 80%+ of a cap — self-throttle when true. Grounding is ON BY DEFAULT (Real Images Only): the I2V seed auto-resolves from the owned reference library for the detected subject unless an explicit imageUrl is given — pass referenceSet to pin an industry, or useReferences:false as the audited escape hatch back to a synthetic (ungrounded) first frame. When no owned reference covers the subject (or the chosen tier has no image-capable model for it) and no imageUrl was given, the call is BLOCKED — relay the thrown error message to the user verbatim rather than retrying blind; it names the missing subject so the reference library can grow.',
     schema: GenerateVideoArgs,
+    outputSchema: GenerateVideoOutput,
     execute: async (args, ctx) => {
       const a = GenerateVideoArgs.parse(args);
       const jobs = await submitGenerativeVideo({ ...a, ...ctx });
@@ -250,6 +442,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       "Generate an image. Grounding is ON BY DEFAULT (Real Images Only): the owned reference library is auto-detected from the prompt (or pinned via referenceSet) and the industry's trained LoRA is auto-applied — pass loraId to pin a specific one, an explicit id always wins over auto-selection. When no owned reference covers the subject, the call is BLOCKED: relay the returned error message verbatim rather than retrying blind or inventing a substitute — it names the missing subject so the reference library can grow. useReferences:false is the explicit, audited escape hatch back to the legacy text-only providers (Stability/DALL-E/Gemini); its result is stamped grounded:false with an UNGROUNDED warning.",
     schema: GenerateImageArgs,
+    outputSchema: GenerateImageOutput,
     execute: async (args, ctx) => {
       const a = GenerateImageArgs.parse(args);
       // SYN-MCP-003: the tool context (org + user + initiator) becomes the
@@ -278,6 +471,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Fetch one video job by id (status, videoUrl when rendered, error when failed). Org-scoped.',
     schema: GetJobArgs,
+    outputSchema: GetJobOutput,
     execute: async (args, ctx) => {
       const { id } = GetJobArgs.parse(args);
       const job = await prisma.videoGeneration.findFirst({
@@ -294,7 +488,14 @@ export const STUDIO_TOOLS: StudioTool[] = [
           createdAt: true,
         },
       });
-      return { job };
+      return {
+        job: job && {
+          ...job,
+          estimatedCostUsd: toNumber(job.estimatedCostUsd),
+          actualCostUsd: toNumber(job.actualCostUsd),
+          createdAt: job.createdAt.toISOString(),
+        },
+      };
     },
   },
   {
@@ -305,6 +506,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'List recent generative video jobs for the org, optionally by batchGroupId.',
     schema: ListJobsArgs,
+    outputSchema: ListJobsOutput,
     execute: async (args, ctx) => {
       const a = ListJobsArgs.parse(args);
       const jobs = await prisma.videoGeneration.findMany({
@@ -324,7 +526,9 @@ export const STUDIO_TOOLS: StudioTool[] = [
           createdAt: true,
         },
       });
-      return { jobs };
+      return {
+        jobs: jobs.map(j => ({ ...j, createdAt: j.createdAt.toISOString() })),
+      };
     },
   },
   {
@@ -335,6 +539,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Search the media library (e.g. find an image asset to use as I2V input).',
     schema: SearchMediaArgs,
+    outputSchema: SearchMediaOutput,
     execute: async (args, ctx) => {
       const a = SearchMediaArgs.parse(args);
       // getAssets(userId, options) returns { assets, total } — extract both
@@ -357,6 +562,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'List the owned reference-image sets (industry, subjects, counts) available to ground image generation. Use to discover a referenceSet id for generate_image.',
     schema: z.object({}),
+    outputSchema: ListReferenceSetsOutput,
     execute: async () => {
       const { listReferenceSets } =
         await import('@/lib/services/ai/reference-library');
@@ -371,6 +577,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     description:
       'Draft a platform caption for a rendered video using cheap-LLM routing. Does NOT publish.',
     schema: DraftCaptionArgs,
+    outputSchema: DraftCaptionOutput,
     execute: async (args, ctx) => {
       const a = DraftCaptionArgs.parse(args);
       const job = await prisma.videoGeneration.findFirst({
@@ -405,6 +612,7 @@ export const STUDIO_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'metered',
     schema: GenerateSiteFromGbpArgs,
+    outputSchema: GenerateSiteFromGbpOutput,
     execute: async (args, ctx) => {
       const a = GenerateSiteFromGbpArgs.parse(args);
       try {
@@ -463,7 +671,8 @@ function assertV1RiskInvariant(tools: StudioTool[]): StudioTool[] {
  * Every tool the MCP server can expose — creative_* (the original 8, names
  * unchanged) + the SYN-MCP-007 read/draft namespaces + the SYN-MCP-007b
  * tasks_* and research_* namespaces + the media_* tools (creative-scope thin
- * clients over the Railway media-worker). The load-time risk guard covers all.
+ * clients over the Railway media-worker) + the M11 ops_* reads. The load-time
+ * risk guard covers all.
  */
 export const ALL_MCP_TOOLS: StudioTool[] = assertV1RiskInvariant([
   ...STUDIO_TOOLS,
@@ -473,6 +682,7 @@ export const ALL_MCP_TOOLS: StudioTool[] = assertV1RiskInvariant([
   ...TASKS_TOOLS,
   ...RESEARCH_TOOLS,
   ...MEDIA_TOOLS,
+  ...OPS_TOOLS,
 ]);
 
 /**

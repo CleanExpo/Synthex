@@ -65,6 +65,9 @@ beforeEach(() => {
     inputPrompt: 'p',
     enhancedPrompt: 'ep',
     methodCardId: 'product-reveal',
+    estimatedCostUsd: null,
+    actualCostUsd: null,
+    createdAt: new Date('2026-10-01T00:00:00Z'),
   });
   mockFindMany.mockResolvedValue([]);
   mockGetAssets.mockResolvedValue({ assets: [{ id: 'asset-1' }], total: 1 });

@@ -88,6 +88,13 @@ const RESEARCH_NAMES = [
 // without changing the STUDIO_TOOLS set asserted below.
 const MEDIA_NAMES = ['media_probe', 'media_extract_frames', 'media_transcode'];
 
+// M11 ops_* — read-only operations namespace (scope 'ops').
+const OPS_NAMES = [
+  'ops_get_platform_health',
+  'ops_get_org_spend_totals',
+  'ops_list_cron_outcomes',
+];
+
 // Everything a creative-scoped key resolves to = the STUDIO_TOOLS creative set
 // plus the media_* tools.
 const CREATIVE_SCOPE_NAMES = [...CREATIVE_NAMES, ...MEDIA_NAMES];
@@ -112,7 +119,7 @@ describe('isScopeCovered', () => {
 });
 
 describe('toolsForScopes (per-key tools/list contract)', () => {
-  it('wildcard key sees ALL tools (creative 13 + all new namespaces = 27)', () => {
+  it('wildcard key sees ALL tools (creative 13 + all new namespaces + ops 3 = 30)', () => {
     const names = toolsForScopes(['*']).map(t => t.name);
     expect(names.sort()).toEqual(
       [
@@ -120,10 +127,11 @@ describe('toolsForScopes (per-key tools/list contract)', () => {
         ...NEW_NAMESPACE_NAMES,
         ...TASKS_NAMES,
         ...RESEARCH_NAMES,
+        ...OPS_NAMES,
       ].sort()
     );
     expect(names).toHaveLength(ALL_MCP_TOOLS.length);
-    expect(names).toHaveLength(27);
+    expect(names).toHaveLength(30);
   });
 
   it('legacy wildcard caller keeps the original 8 creative tools available', () => {
@@ -199,6 +207,23 @@ describe('toolsForScopes (per-key tools/list contract)', () => {
       expect(LEGACY_CREATIVE_NAMES).not.toContain(n);
       expect(NEW_NAMESPACE_NAMES).not.toContain(n);
     }
+  });
+
+  it('M11: an ops-scoped key sees exactly the 3 ops_* tools; no other key without ops or * sees them', () => {
+    expect(
+      toolsForScopes(['ops'])
+        .map(t => t.name)
+        .sort()
+    ).toEqual([...OPS_NAMES].sort());
+    const nonOps = toolsForScopes([
+      'creative',
+      'approvals',
+      'context',
+      'performance',
+      'tasks',
+      'research',
+    ]).map(t => t.name);
+    for (const n of OPS_NAMES) expect(nonOps).not.toContain(n);
   });
 
   it('zero-registration path is safe: filtering to nothing never throws', () => {
