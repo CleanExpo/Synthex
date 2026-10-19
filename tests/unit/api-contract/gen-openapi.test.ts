@@ -349,6 +349,35 @@ describe('gen-openapi', () => {
     }, 120_000);
   });
 
+  describe('--check toolchain versions', () => {
+    const lock = () => path.join(root, 'package-lock.json');
+    afterEach(() => fs.rmSync(lock(), { force: true }));
+
+    it('a lockfile that disagrees with installed zod is INCONCLUSIVE (exit 2), not drift', () => {
+      fs.writeFileSync(
+        lock(),
+        JSON.stringify({
+          packages: { 'node_modules/zod': { version: '0.0.0-planted' } },
+        })
+      );
+      const r = run(root, '--check');
+      expect(r.out).toMatch(
+        /\[gen-openapi\] INCONCLUSIVE: installed zod \S+ != lockfile 0\.0\.0-planted; run npm ci/
+      );
+      expect(r.status).toBe(2);
+    });
+
+    it('matching versions check as before', () => {
+      fs.copyFileSync(
+        path.join(__dirname, '../../../package-lock.json'),
+        lock()
+      );
+      const r = run(root, '--check');
+      expect(r.out).not.toContain('INCONCLUSIVE');
+      expect(r.status).toBe(0);
+    });
+  });
+
   describe('--check counts', () => {
     const planted = 'app/api/planted/route.ts';
     afterEach(() => {

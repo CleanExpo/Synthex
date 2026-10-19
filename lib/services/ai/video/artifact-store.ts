@@ -66,15 +66,20 @@ export function falMediaUrl(url: string): string {
   return `https://${host}${parsed.pathname}${parsed.search}`;
 }
 
+/** The artifact exceeds MAX_ARTIFACT_BYTES; retrying cannot shrink it. */
+class ArtifactTooLargeError extends Error {}
+
 async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
   // The URL arrives in the fal webhook payload: download only from a constant
   // fal media host, after the shared private-address check, and never follow a
   // redirect off it (CodeQL js/request-forgery).
   const safeUrl = falMediaUrl(url);
-  await assertExternalUrlSafe(safeUrl);
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
+      // Checked before every attempt: a transient DNS failure is retried, and
+      // no attempt fetches a URL that has not just passed the check.
+      await assertExternalUrlSafe(safeUrl);
       const res = await fetch(safeUrl, {
         redirect: 'error',
         signal: AbortSignal.timeout(60000),
@@ -84,12 +89,17 @@ async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
       // size (a missing or false content-length must not bypass the cap).
       const declared = Number(res.headers?.get?.('content-length') ?? '0');
       if (declared > MAX_ARTIFACT_BYTES)
-        throw new Error(`artifact too large: ${declared} bytes`);
+        throw new ArtifactTooLargeError(
+          `artifact too large: ${declared} bytes`
+        );
       const body = await res.arrayBuffer();
       if (body.byteLength > MAX_ARTIFACT_BYTES)
-        throw new Error(`artifact too large: ${body.byteLength} bytes`);
+        throw new ArtifactTooLargeError(
+          `artifact too large: ${body.byteLength} bytes`
+        );
       return body;
     } catch (err) {
+      if (err instanceof ArtifactTooLargeError) throw err;
       lastErr = err;
       // Only sleep when there are more attempts remaining.
       if (i < attempts - 1) {
