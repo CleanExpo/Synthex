@@ -132,6 +132,8 @@ import { POST as advisorPOST } from '@/app/api/internal/generate-advisor-brief/r
 import { POST as reviewPOST } from '@/app/api/internal/generate-review-responses/route';
 import { POST as askPOST } from '@/app/api/ask-synthex/route';
 import { decryptApiKey } from '@/lib/encryption/api-key-encryption';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
+import { governorBrandSlug } from '@/lib/ai/governed-generation';
 
 const USAGE_IN = 1234;
 const USAGE_OUT = 567;
@@ -267,6 +269,13 @@ describe('paid text calls go through the Governor (shadow mode)', () => {
   });
 
   it('internal/algorithm-freshness-monitor: one receipt per provider call', async () => {
+    // The system org's brand comes from the same resolver as any tenant's.
+    mockPrisma.hermesConfig.findUnique.mockImplementation(
+      async ({ where }: { where: { organizationId: string } }) =>
+        where.organizationId === 'system'
+          ? { brandSlug: 'platform-brand' }
+          : null
+    );
     jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -294,7 +303,7 @@ describe('paid text calls go through the Governor (shadow mode)', () => {
       runner: 'internal-algorithm-freshness-monitor',
       model: 'claude-haiku-4-5-20251001',
       clientId: 'system',
-      brandSlug: 'synthex',
+      brandSlug: 'platform-brand',
     });
   });
 
@@ -389,4 +398,42 @@ describe('paid text calls go through the Governor (shadow mode)', () => {
     mockPrisma.pipelineCostLedger.create({ data: { planted: true } });
     expect(() => onlyReceipt()).toThrow();
   });
+});
+
+/**
+ * SEAM: resolveOrgBrandSlug, the one org -> brand rule RunnerFlag kill-switches
+ * and budgets key on. CATCHES: a second rule (governorBrandSlug disagreeing), a
+ * read error turned into a guessed brand. MISSES: route wiring (tests above).
+ */
+describe('resolveOrgBrandSlug: one organisation, one brand', () => {
+  const ORG_ROW = { slug: 'org-a-slug' };
+  it.each([
+    ['Hermes brand wins', { brandSlug: 'ra' }, ORG_ROW, 'ra'],
+    ['org slug when no Hermes config', null, ORG_ROW, 'org-a-slug'],
+    [
+      'org slug when Hermes brand is empty',
+      { brandSlug: null },
+      ORG_ROW,
+      'org-a-slug',
+    ],
+    ['org id when no Hermes config and no org row', null, null, 'org-A'],
+  ])('%s', async (_name, hermes, org, expected) => {
+    mockPrisma.hermesConfig.findUnique.mockResolvedValue(hermes);
+    mockPrisma.organization.findUnique.mockResolvedValue(org);
+    expect(await resolveOrgBrandSlug('org-A')).toBe(expected);
+    expect(await governorBrandSlug('org-A')).toBe(expected);
+  });
+
+  it.each([
+    ['Hermes read', 'hermesConfig'],
+    ['organisation read', 'organization'],
+  ] as const)(
+    'a failed %s is an error, not a guessed brand',
+    async (_n, model) => {
+      mockPrisma.hermesConfig.findUnique.mockResolvedValue(null);
+      mockPrisma[model].findUnique.mockRejectedValue(new Error('db down'));
+      await expect(resolveOrgBrandSlug('org-A')).rejects.toThrow('db down');
+      await expect(governorBrandSlug('org-A')).rejects.toThrow('db down');
+    }
+  );
 });

@@ -21,6 +21,7 @@ const mockPrisma = {
   aPICredential: { findMany: jest.fn() },
   orgBudgetPolicy: { findUnique: jest.fn() },
   pipelineCostLedger: { groupBy: jest.fn(), create: mockLedgerCreate },
+  hermesConfig: { findUnique: jest.fn() },
   organization: { findUnique: jest.fn() },
   sentimentAnalysis: { create: jest.fn() },
   contentComment: { update: jest.fn() },
@@ -227,6 +228,7 @@ function allowGovernor() {
 beforeEach(() => {
   mockLedgerCreate.mockResolvedValue({ id: 'l1' });
   mockPrisma.pipelineCostLedger.groupBy.mockResolvedValue([]);
+  mockPrisma.hermesConfig.findUnique.mockResolvedValue(null);
   mockPrisma.organization.findUnique.mockResolvedValue({
     slug: SLUG,
     name: 'Acme',
@@ -265,6 +267,21 @@ describe('ai-content/sentiment', () => {
       runner: 'ai-content-sentiment',
       inputTokens: 123,
       outputTokens: 45,
+    });
+  });
+
+  it('receipts under the org HermesConfig brand when it has one', async () => {
+    mockPrisma.hermesConfig.findUnique.mockResolvedValue({
+      brandSlug: 'acme-hermes',
+    });
+    mockProviderComplete.mockResolvedValue(
+      completion('{"sentiment":"positive","score":80,"confidence":0.9}')
+    );
+    const POST = await loadRoute(ROUTE, 'POST');
+    expect((await POST(req() as never)).status).toBe(200);
+    expect(ledgerRows()[0]).toMatchObject({
+      clientId: ORG,
+      brandSlug: 'acme-hermes',
     });
   });
 

@@ -24,6 +24,7 @@ import { governedCall, GOVERNOR_MODE } from '@/lib/ai/governor';
 import {
   estimateTextTokens,
   governedRouteResult,
+  resolveOrgBrandSlug,
 } from '@/lib/ai/governor-route-support';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -228,7 +229,8 @@ Respond with a JSON object ONLY:
 Only set detected=true if there is clear evidence of an algorithm change, not just general SEO discussion.`;
 
   // Spend gate (M10). This platform cron has no tenant, so the receipt is
-  // booked to the system org under the Synthex brand (no per-org record exists).
+  // booked to the system org, its brand from the same resolver as any org.
+  // P9: the system org needs a RunnerFlag and budget row before GOVERNOR_MODE is enforcing.
   const call = governedRouteResult(async ctx => {
     const provider = ctx.apiKey ? new AnthropicProvider(ctx.apiKey) : getAI();
     const data = await provider.complete({
@@ -246,7 +248,7 @@ Only set detected=true if there is clear evidence of an algorithm change, not ju
   const response = call.unwrap(
     await governedCall({
       organizationId: SYSTEM_ORGANIZATION_ID,
-      brandSlug: 'synthex',
+      brandSlug: await resolveOrgBrandSlug(SYSTEM_ORGANIZATION_ID),
       runner: 'internal-algorithm-freshness-monitor',
       provider: 'anthropic',
       model: { kind: 'registered', modelId: MODEL },

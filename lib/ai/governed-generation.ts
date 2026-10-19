@@ -10,9 +10,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
 import { resolvePlatformProviderName } from '@/lib/ai/providers';
-import { isSystemOrganization } from '@/lib/ai/generation-context';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import type {
   GeneratedContent,
   UserProviderCredentials,
@@ -44,31 +43,14 @@ export function generationProvider(
 }
 
 /**
- * The brandSlug a receipt carries for an organisation.
- *
- * Organisations have no brandSlug column, so the organisation's own slug is
- * the brand identifier (RunnerFlag rows are keyed the same way). A failed
- * lookup falls back to the organisation id so the receipt still names who
- * spent; the system sentinel stays 'system'.
+ * The brandSlug a receipt carries for an organisation: the one rule in
+ * resolveOrgBrandSlug, so a generation and a route call for the same org
+ * share one RunnerFlag and one budget.
  */
 export async function governorBrandSlug(
   organizationId: string
 ): Promise<string> {
-  if (isSystemOrganization(organizationId)) return organizationId;
-  try {
-    const { prisma } = await import('@/lib/prisma');
-    const org = await prisma.organization.findUnique({
-      where: { id: organizationId },
-      select: { slug: true },
-    });
-    return org?.slug ?? organizationId;
-  } catch (error) {
-    logger.warn('governed-generation: brand slug lookup failed', {
-      organizationId,
-      error: error instanceof Error ? error.message : String(error),
-    });
-    return organizationId;
-  }
+  return resolveOrgBrandSlug(organizationId);
 }
 
 /** Prompt-side tokens per provider call (system + brand context + prompt). */

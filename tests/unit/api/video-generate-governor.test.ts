@@ -33,7 +33,19 @@ jest.mock('@/lib/prisma', () => {
       return { createdAt: new Date(0), ...row };
     },
   };
-  const prisma = { ...base, videoGeneration };
+  // The org's brand records: HermesConfig first, then the organisation slug.
+  const hermesConfig = {
+    findUnique: async () =>
+      (globalThis as { __hermesBrand?: string }).__hermesBrand
+        ? {
+            brandSlug: (globalThis as { __hermesBrand?: string }).__hermesBrand,
+          }
+        : null,
+  };
+  const organization = {
+    findUnique: async () => ({ slug: 'org-video-slug' }),
+  };
+  const prisma = { ...base, videoGeneration, hermesConfig, organization };
   return { __esModule: true, default: prisma, prisma };
 });
 jest.mock('@/lib/logger', () =>
@@ -109,12 +121,13 @@ import { NextRequest } from 'next/server';
 import { resetState, state } from '../../eval/jev/families/j9/fake-db';
 
 const ORG = 'org-video-1';
+const BRAND = 'water-co';
 
 function seedGovernor(): void {
   const s = state();
   s.runnerFlags.push({
     organizationId: ORG,
-    brandSlug: 'synthex',
+    brandSlug: BRAND,
     runner: 'video-script',
     enabled: true,
     killSwitch: false,
@@ -157,6 +170,7 @@ beforeEach(() => {
   provider.calls = [];
   provider.fail = null;
   (globalThis as { __org?: string | null }).__org = ORG;
+  (globalThis as { __hermesBrand?: string }).__hermesBrand = BRAND;
 });
 
 describe('POST /api/video/generate (script mode) through the Governor', () => {
@@ -169,6 +183,7 @@ describe('POST /api/video/generate (script mode) through the Governor', () => {
       expect.objectContaining({
         pipelineName: 'video-script',
         clientId: ORG,
+        brandSlug: BRAND,
         model: 'claude-sonnet-5',
         inputTokens: 321,
         outputTokens: 654,
