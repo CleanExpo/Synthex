@@ -148,6 +148,10 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    // Every API path, extension-suffixed ones included (/api/x/abc.json): the
+    // machine-key gate and its per-key rate limit must see them (CodeRabbit on
+    // #1025). The static-asset exclusion below applies to pages only.
+    '/api/:path*',
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?|ttf|otf|css|js|map|txt|xml|json)$).*)',
   ],
 };

@@ -12,7 +12,7 @@
  * `proxy.ts` at the project root.
  */
 
-import { decide, decodeAuthTokenPayload } from '@/proxy';
+import { decide, decodeAuthTokenPayload, config } from '@/proxy';
 
 describe('SYN-792 — middleware decision logic', () => {
   describe('auth pages (short-circuit — the redirect-loop fix)', () => {
@@ -217,5 +217,24 @@ describe('SYN-792 — middleware decision logic', () => {
         expect(decide(path, '', []).action).toBe('pass');
       }
     );
+  });
+});
+
+describe('proxy matcher (CodeRabbit on #1025)', () => {
+  // Next's '/api/:path*' matches /api and everything under it.
+  const apiMatcher = /^\/api(?:\/.*)?$/;
+  const pageMatcher = new RegExp(
+    `^${(config.matcher as string[]).find(m => m.startsWith('/(('))}$`
+  );
+
+  it('sends extension-suffixed API paths through the proxy', () => {
+    expect(config.matcher).toContain('/api/:path*');
+    for (const p of ['/api/contacts/abc.json', '/api/report.csv.txt', '/api/x'])
+      expect(apiMatcher.test(p)).toBe(true);
+  });
+
+  it('the page matcher alone would skip them, which is why /api/:path* is listed', () => {
+    expect(pageMatcher.test('/api/contacts/abc.json')).toBe(false);
+    expect(pageMatcher.test('/dashboard')).toBe(true);
   });
 });
