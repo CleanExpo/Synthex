@@ -9,7 +9,7 @@
  * metadata. A storage error also throws, so a video is never marked
  * 'rendered' at a URL that holds nothing.
  */
-import { isAllowedImageHost } from '@/lib/services/media/fetch-image-base64';
+import { FAL_MEDIA_HOSTS } from '@/lib/services/media/fetch-image-base64';
 import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
 import {
@@ -40,17 +40,39 @@ export class ArtifactStorageNotProvisionedError extends Error {
   }
 }
 
-async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
-  // The URL arrives in the fal webhook payload: download only from fal's media
-  // hosts over https, after the shared private-address check, and never follow
-  // a redirect off them (CodeQL js/request-forgery).
-  if (!isAllowedImageHost(url))
+/**
+ * The download URL rebuilt from a constant fal media host: only the path and
+ * query come from the webhook payload. https only; no credentials or port.
+ */
+export function falMediaUrl(url: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
     throw new Error('artifact host is not an allowed fal media host');
-  await assertExternalUrlSafe(url);
+  }
+  const host = FAL_MEDIA_HOSTS.find(h => h === parsed.hostname);
+  if (
+    parsed.protocol !== 'https:' ||
+    !host ||
+    parsed.username ||
+    parsed.password ||
+    parsed.port
+  )
+    throw new Error('artifact host is not an allowed fal media host');
+  return `https://${host}${parsed.pathname}${parsed.search}`;
+}
+
+async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
+  // The URL arrives in the fal webhook payload: download only from a constant
+  // fal media host, after the shared private-address check, and never follow a
+  // redirect off it (CodeQL js/request-forgery).
+  const safeUrl = falMediaUrl(url);
+  await assertExternalUrlSafe(safeUrl);
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await fetch(url, {
+      const res = await fetch(safeUrl, {
         redirect: 'error',
         signal: AbortSignal.timeout(60000),
       });

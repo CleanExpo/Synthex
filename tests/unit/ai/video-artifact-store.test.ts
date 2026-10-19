@@ -51,6 +51,7 @@ jest.mock('@/lib/services/media-library', () => ({
 
 import {
   storeArtifact,
+  falMediaUrl,
   ArtifactStorageNotProvisionedError,
 } from '@/lib/services/ai/video/artifact-store';
 
@@ -145,6 +146,10 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
     'https://evil.example/v.mp4',
     'http://v3.fal.media/files/abc/v.mp4',
     'https://fal.media.evil.example/v.mp4',
+    'https://fal.media.evil.com/v.mp4',
+    'https://fal.media@evil.com/v.mp4',
+    'https://v3.fal.media:8443/files/v.mp4',
+    'https://other.fal.media/files/v.mp4',
     'https://169.254.169.254/latest/meta-data',
   ])('refuses %s before any request', async sourceUrl => {
     await expect(storeArtifact({ ...INPUT, sourceUrl })).rejects.toThrow(
@@ -158,6 +163,22 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
     mockUnsafe = true;
     await expect(storeArtifact(INPUT)).rejects.toThrow('private address');
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('rebuilds the URL from the constant host, keeping only path and query', async () => {
+    await storeArtifact({
+      ...INPUT,
+      sourceUrl: 'https://v3b.fal.media/files/a/v.mp4?x=1#frag',
+    });
+    expect((global.fetch as jest.Mock).mock.calls[0][0]).toBe(
+      'https://v3b.fal.media/files/a/v.mp4?x=1'
+    );
+  });
+
+  it('a lookalike hostname is never an allowed host', () => {
+    expect(() => falMediaUrl('https://fal.media.evil.com/x.mp4')).toThrow(
+      'not an allowed fal media host'
+    );
   });
 
   it('never follows a redirect', async () => {

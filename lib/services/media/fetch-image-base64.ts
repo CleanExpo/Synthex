@@ -1,6 +1,17 @@
 import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 
 export const ALLOWED_IMAGE_HOSTS = ['fal.media', 'fal.run'] as const;
+// Exact fal hosts that serve generated media. Downloads rebuild their URL from
+// this constant, so the host never comes from caller input (CodeQL
+// js/request-forgery treats only a constant host as sanitised).
+export const FAL_MEDIA_HOSTS = [
+  'fal.media',
+  'v2.fal.media',
+  'v3.fal.media',
+  'v3b.fal.media',
+  'fal.run',
+  'cdn.fal.run',
+] as const;
 const DEFAULT_MAX_BYTES = 15 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 20_000;
 
