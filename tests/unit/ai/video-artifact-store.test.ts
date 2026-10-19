@@ -150,6 +150,8 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
     'https://fal.media@evil.com/v.mp4',
     'https://v3.fal.media:8443/files/v.mp4',
     'https://other.fal.media/files/v.mp4',
+    'https://cdn.fal.run/v.mp4',
+    'https://storage.googleapis.com/falserverless/v.mp4',
     'https://169.254.169.254/latest/meta-data',
   ])('refuses %s before any request', async sourceUrl => {
     await expect(storeArtifact({ ...INPUT, sourceUrl })).rejects.toThrow(
@@ -174,6 +176,15 @@ describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
       'https://v3b.fal.media/files/a/v.mp4?x=1'
     );
   });
+
+  it.each(['fal.media', 'v3.fal.media', 'v3b.fal.media'])(
+    'accepts the documented fal host %s',
+    host => {
+      expect(falMediaUrl(`https://${host}/files/b/x/v.mp4`)).toBe(
+        `https://${host}/files/b/x/v.mp4`
+      );
+    }
+  );
 
   it('a lookalike hostname is never an allowed host', () => {
     expect(() => falMediaUrl('https://fal.media.evil.com/x.mp4')).toThrow(
