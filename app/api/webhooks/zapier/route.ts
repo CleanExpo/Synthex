@@ -6,16 +6,21 @@
  * GET: Health check endpoint for Zapier.
  *
  * SECURITY: All webhooks must have valid signatures.
+ * Replay protection: a signed timestamp header must be within 5 minutes.
+ * Zapier sends no delivery id, so a delivery is deduplicated on a hash of
+ * timestamp + body for 24h; the same body sent again without a timestamp
+ * inside that window is treated as a replay.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - ZAPIER_WEBHOOK_SECRET: HMAC-SHA256 secret for signature verification
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import { logger } from '@/lib/logger';
 import { eventQueue } from '@/lib/webhooks/event-queue';
+import { getRedisClient } from '@/lib/redis-client';
 import type { WebhookEventType } from '@/lib/webhooks/types';
 
 // ============================================================================
@@ -92,6 +97,17 @@ function verifyZapierSignature(
   }
 }
 
+const TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
+const DEDUP_TTL_SECONDS = 86400;
+
+/** Accepts seconds or milliseconds since epoch. */
+function isFreshTimestamp(timestamp: string): boolean {
+  const value = Number(timestamp);
+  if (!Number.isFinite(value)) return false;
+  const ms = value < 1e12 ? value * 1000 : value;
+  return Math.abs(Date.now() - ms) <= TIMESTAMP_TOLERANCE_MS;
+}
+
 // ============================================================================
 // GET — Health check
 // ============================================================================
@@ -126,6 +142,33 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized', message: 'Invalid webhook signature' },
         { status: 401 }
       );
+    }
+
+    if (timestamp && !isFreshTimestamp(timestamp)) {
+      logger.warn('Stale Zapier webhook timestamp');
+      return NextResponse.json(
+        {
+          error: 'Unauthorized',
+          message: 'Webhook timestamp out of tolerance',
+        },
+        { status: 401 }
+      );
+    }
+
+    const dedupKey = `webhook:idem:zapier:${createHash('sha256')
+      .update(`${timestamp ?? ''}.${rawBody}`)
+      .digest('hex')}`;
+    const redis = getRedisClient();
+    const existingEventId = await redis.get(dedupKey);
+    if (existingEventId) {
+      logger.info('Duplicate Zapier webhook delivery, skipping', {
+        existingEventId,
+      });
+      return NextResponse.json({
+        success: true,
+        eventId: existingEventId,
+        duplicate: true,
+      });
     }
 
     // Parse body
@@ -181,6 +224,8 @@ export async function POST(request: NextRequest) {
         correlationId: payload.zapier_hook_id,
       }
     );
+
+    await redis.set(dedupKey, eventId, DEDUP_TTL_SECONDS);
 
     logger.info('Zapier webhook received and enqueued', {
       eventId,

@@ -2,23 +2,20 @@
  * GET /api/admin/model-metrics
  *
  * Returns last 4 weeks of ModelMetric grouped by model + contentType.
- * Admin-only (requires ADMIN role via APISecurityChecker).
+ * Admin-only via the shared verifyAdmin gate (x-admin-api-key or admin-role JWT).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  APISecurityChecker,
-  DEFAULT_POLICIES,
-} from '@/lib/security/api-security-checker';
+import { verifyAdmin } from '@/lib/admin/verify-admin';
 import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
-  const security = await APISecurityChecker.check(
-    request,
-    DEFAULT_POLICIES.AUTHENTICATED_READ
-  );
-  if (!security.allowed) {
-    return NextResponse.json({ error: security.error }, { status: 401 });
+  const auth = await verifyAdmin(request);
+  if (!auth.isAdmin) {
+    return NextResponse.json(
+      { error: 'Forbidden', message: auth.error ?? 'Admin access required' },
+      { status: 403 }
+    );
   }
 
   const fourWeeksAgo = new Date(Date.now() - 28 * 86400000);
