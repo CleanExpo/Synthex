@@ -70,7 +70,9 @@ export const STALE_CLAIM_MS = 15 * 60 * 1000; // 15 minutes
 // without further casting — same convention as `jsonSafe` in the cron route.
 function mergeMetadata(existing: unknown, patch: Record<string, unknown>): any {
   const base =
-    existing !== null && typeof existing === 'object' && !Array.isArray(existing)
+    existing !== null &&
+    typeof existing === 'object' &&
+    !Array.isArray(existing)
       ? (existing as Record<string, unknown>)
       : {};
   return JSON.parse(JSON.stringify({ ...base, ...patch }));
@@ -157,7 +159,9 @@ export async function releasePostClaim(
  *
  * Returns the number of posts reclaimed. Run at the start of each cron pass.
  */
-export async function reclaimStalePublishingPosts(now: Date = new Date()): Promise<number> {
+export async function reclaimStalePublishingPosts(
+  now: Date = new Date()
+): Promise<number> {
   const cutoff = new Date(now.getTime() - STALE_CLAIM_MS);
 
   // `updatedAt` is bumped by Prisma's @updatedAt on the claim write, so a post
@@ -184,33 +188,39 @@ export async function reclaimStalePublishingPosts(now: Date = new Date()): Promi
 }
 
 /**
- * Release any PublishQueueItem abandoned in `'publishing'` back to a retryable
- * state so it becomes due again on the next queue pass.
+ * Recorded on a queue item whose worker died mid-publish. Says what is known
+ * (nothing about the platform call) and what a person must do before retrying.
+ */
+export const UNKNOWN_OUTCOME_ERROR =
+  'Publish outcome unknown: the worker stopped while publishing (crash/timeout), ' +
+  'so the post may already be live. Check the platform before retrying; it will not be retried automatically.';
+
+/**
+ * Move any PublishQueueItem abandoned in `'publishing'` to a terminal,
+ * honest state: `'failed'` with `nextRetryAt = null` and `UNKNOWN_OUTCOME_ERROR`.
  *
- * THE BUG THIS CLOSES (the "stranded queue item"):
+ * WHY NOT RETRY IT (J8 at-most-once, JEV gap
+ * J8-GAP-reclaim-redispatch-after-worker-death):
  * `processPublishQueue` marks an item `'publishing'` BEFORE dispatching to the
- * platform adapter, then transitions it out (`published`/`failed`/`held`) only
- * AFTER the post-dispatch DB write completes. If the Edge Function times out, the
- * serverless instance is killed, or that final DB write fails, the row is left in
- * `'publishing'`. The queue's due-fetch only ever selects `'pending'` or
- * `'failed'` rows, so a `'publishing'` row is never re-examined — the scheduled
- * post is silently stranded forever, with no retry, no hold, and no notification.
- *
- * This is the queue-side analogue of `reclaimStalePublishingPosts` (which covers
- * the separate `Post` + cron publisher path). A stale item is released to
- * `'failed'` with `nextRetryAt = now`, which the existing
- * `{ status: 'failed', nextRetryAt: { lte: now } }` due-fetch picks up on the
- * next run and retries through the normal attempt/backoff machinery.
+ * platform adapter and writes `'published'` only AFTER the adapter returns. A
+ * worker that dies in between (function timeout, killed instance, failed
+ * final write) leaves the row in `'publishing'` with no record of whether the
+ * platform call already succeeded. Re-dispatching it could post the same
+ * content twice, so a stale row is never made due again. It is surfaced
+ * instead: the queue's due-fetch selects only `failed` rows with
+ * `nextRetryAt <= now`, and `claimQueueItemForPublish` refuses a `failed` row
+ * without a due `nextRetryAt`, so nothing re-sends it until a person has
+ * checked the platform. Rows that failed BEFORE dispatch (the adapter returned
+ * an error) are written by `processPublishQueue` with a future `nextRetryAt`
+ * and keep their normal retry.
  *
  * Conditional on `status: 'publishing'` AND `updatedAt < cutoff` so a row a
  * worker is still actively publishing (its `updatedAt` was just bumped by the
- * claim write) is never yanked out from under it — the cutoff (STALE_CLAIM_MS,
- * 15 min) comfortably exceeds the publisher's 300s maxDuration. `attempts` is
- * deliberately NOT incremented: the prior attempt's outcome is unknown (it may
- * have succeeded on-platform), so we surface it for one more pass rather than
- * silently burning a retry, while `lastError` records why it was reclaimed.
+ * claim write) is never touched — the cutoff (STALE_CLAIM_MS, 15 min)
+ * comfortably exceeds the publisher's 300s maxDuration. `attempts` is not
+ * incremented: the attempt's outcome is unknown.
  *
- * Returns the number of items reclaimed. Run at the start of each queue pass.
+ * Returns the number of items moved. Run at the start of each queue pass.
  */
 export async function reclaimStalePublishingQueueItems(
   now: Date = new Date()
@@ -224,17 +234,19 @@ export async function reclaimStalePublishingQueueItems(
     },
     data: {
       status: 'failed',
-      nextRetryAt: now,
-      lastError:
-        'Reclaimed: stranded in publishing (worker crashed/timed out before resolving)',
+      nextRetryAt: null,
+      lastError: UNKNOWN_OUTCOME_ERROR,
     },
   });
 
   if (result.count > 0) {
-    logger.warn('[publish-claim] Reclaimed stale publishing queue items', {
-      count: result.count,
-      cutoff: cutoff.toISOString(),
-    });
+    logger.warn(
+      '[publish-claim] Stale publishing queue items need a manual platform check',
+      {
+        count: result.count,
+        cutoff: cutoff.toISOString(),
+      }
+    );
   }
   return result.count;
 }
@@ -264,14 +276,21 @@ export async function reclaimStalePublishingQueueItems(
  *
  * Returns `true` iff THIS worker won the claim. A loser MUST NOT publish.
  */
-export async function claimQueueItemForPublish(itemId: string): Promise<boolean> {
+export async function claimQueueItemForPublish(
+  itemId: string
+): Promise<boolean> {
   const result = await prisma.publishQueueItem.updateMany({
     where: {
       id: itemId,
       // Only a row still in a due state can be claimed. A row another worker
       // already flipped to 'publishing' (or that reached a terminal state) is
-      // excluded, so the loser's updateMany matches nothing.
-      status: { in: ['pending', 'failed'] },
+      // excluded, so the loser's updateMany matches nothing. A 'failed' row is
+      // due only once its retry time has come; one with no retry time (outcome
+      // unknown, see reclaimStalePublishingQueueItems) is never claimable.
+      OR: [
+        { status: 'pending' },
+        { status: 'failed', nextRetryAt: { lte: new Date() } },
+      ],
     },
     data: {
       status: PUBLISHING_STATUS,
@@ -280,9 +299,12 @@ export async function claimQueueItemForPublish(itemId: string): Promise<boolean>
 
   const won = result.count === 1;
   if (!won) {
-    logger.warn('[publish-claim] Lost queue-item claim race (already claimed)', {
-      itemId,
-    });
+    logger.warn(
+      '[publish-claim] Lost queue-item claim race (already claimed)',
+      {
+        itemId,
+      }
+    );
   }
   return won;
 }

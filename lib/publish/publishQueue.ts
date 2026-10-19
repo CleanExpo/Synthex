@@ -5,8 +5,9 @@
  *
  * Called by the Supabase Edge Function every 15 minutes.
  *
- * Each pass first reclaims any item stranded in 'publishing' by a crashed/timed-
- * out prior worker (releases it to 'failed' so the due-fetch retries it), then:
+ * Each pass first surfaces any item stranded in 'publishing' by a crashed/timed-
+ * out prior worker ('failed', no retry, outcome unknown — never re-sent
+ * automatically, see reclaimStalePublishingQueueItems), then:
  *
  * Flow per queue item:
  *  1. Run five safety gates (safetyChecks.ts)
@@ -342,11 +343,11 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
 
   const now = new Date();
 
-  // Crash recovery: release any item stranded in 'publishing' by a worker that
-  // died/timed out before resolving it. The due-fetch below only selects
-  // 'pending'/'failed' rows, so a stuck 'publishing' row would otherwise never
-  // be retried and the scheduled post would be silently lost. Reclaim flips it
-  // back to 'failed' with nextRetryAt=now so this same pass re-queues it.
+  // Crash recovery: surface any item stranded in 'publishing' by a worker that
+  // died/timed out before resolving it. Its platform call may already have
+  // succeeded, so it is NOT re-dispatched (at-most-once): reclaim moves it to
+  // 'failed' with nextRetryAt=null and an "outcome unknown, check the platform"
+  // error, which the due-fetch below and the claim both skip.
   await reclaimStalePublishingQueueItems(now);
 
   // Fetch items that are due: pending or failed-with-retry-ready. The
@@ -417,7 +418,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     }
 
     // ── Atomically claim → 'publishing' ────────────────────────────────────
-    // Conditional updateMany (status still 'pending'/'failed') — exactly one
+    // Conditional updateMany (status still 'pending'/'failed'-and-due) — exactly one
     // concurrent worker wins and proceeds; any overlapping pass / retry / second
     // instance loses the race here and skips WITHOUT publishing. Replaces the
     // old unconditional update, which gave no mutual exclusion and let two

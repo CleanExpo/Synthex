@@ -163,56 +163,116 @@ describe('reclaimStalePublishingPosts', () => {
 });
 
 describe('reclaimStalePublishingQueueItems', () => {
-  it('releases queue items stuck in publishing past the stale window to failed+retry', async () => {
-    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 2 });
-    const now = new Date('2030-06-01T12:00:00.000Z');
-
-    const count = await reclaimStalePublishingQueueItems(now);
-
-    expect(count).toBe(2);
-    const arg = mockPrisma.publishQueueItem.updateMany.mock.calls[0][0];
-    // Only ever touch rows stranded in 'publishing'...
-    expect(arg.where.status).toBe(PUBLISHING_STATUS);
-    // ...and only ones older than the stale window — never yank an in-flight worker.
-    expect(arg.where.updatedAt.lt).toEqual(
-      new Date(now.getTime() - STALE_CLAIM_MS)
+  // SEAM: reclaimStalePublishingQueueItems + claimQueueItemForPublish, driven
+  // against a minimal in-memory publishQueueItem row (Prisma is the boundary).
+  // Catches: a row whose platform call may already have succeeded (worker died
+  // in 'publishing') being made claimable/due again → double post (JEV J8
+  // crash-retry). Misses: the processPublishQueue due-fetch itself (JEV J8).
+  type QRow = Record<string, unknown>;
+  const matches = (row: QRow, where: Record<string, any>): boolean =>
+    Object.entries(where).every(([k, cond]) => {
+      if (k === 'OR') return (cond as any[]).some(w => matches(row, w));
+      const v = row[k] as any;
+      if (cond && typeof cond === 'object' && !(cond instanceof Date)) {
+        if ('in' in cond && !cond.in.includes(v)) return false;
+        if ('lt' in cond && !(v != null && v < cond.lt)) return false;
+        if ('lte' in cond && !(v != null && v <= cond.lte)) return false;
+        return true;
+      }
+      return v === cond;
+    });
+  function useRows(rows: QRow[]) {
+    mockPrisma.publishQueueItem.updateMany.mockImplementation(
+      async ({ where, data }: { where: Record<string, any>; data: QRow }) => {
+        const hit = rows.filter(r => matches(r, where));
+        hit.forEach(r => Object.assign(r, data, { updatedAt: new Date() }));
+        return { count: hit.length };
+      }
     );
-    // Released to 'failed' with nextRetryAt=now so the queue's due-fetch
-    // (status:'failed', nextRetryAt<=now) picks it up on this same pass.
-    expect(arg.data.status).toBe('failed');
-    expect(arg.data.nextRetryAt).toEqual(now);
-    expect(arg.data.lastError).toEqual(expect.stringContaining('Reclaimed'));
+  }
+  const now = new Date('2030-06-01T12:00:00.000Z');
+  const staleRow = (): QRow => ({
+    id: 'qi1',
+    status: PUBLISHING_STATUS,
+    nextRetryAt: null,
+    lastError: null,
+    attempts: 0,
+    updatedAt: new Date(now.getTime() - STALE_CLAIM_MS - 1000),
   });
 
-  it('does NOT increment attempts (the prior attempt outcome is unknown)', async () => {
-    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 1 });
-    await reclaimStalePublishingQueueItems(new Date());
-    const arg = mockPrisma.publishQueueItem.updateMany.mock.calls[0][0];
-    expect(arg.data.attempts).toBeUndefined();
+  it('a row stranded in publishing (outcome unknown) can never be claimed again', async () => {
+    const row = staleRow();
+    useRows([row]);
+
+    await expect(reclaimStalePublishingQueueItems(now)).resolves.toBe(1);
+
+    await expect(claimQueueItemForPublish('qi1')).resolves.toBe(false);
   });
 
-  it('reports 0 when nothing is stale', async () => {
-    mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 0 });
-    await expect(
-      reclaimStalePublishingQueueItems(new Date())
-    ).resolves.toBe(0);
+  it('marks it failed with no scheduled retry and says a person must check the platform', async () => {
+    const row = staleRow();
+    useRows([row]);
+
+    await reclaimStalePublishingQueueItems(now);
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        status: 'failed',
+        nextRetryAt: null,
+        attempts: 0,
+        lastError: expect.stringMatching(
+          /outcome unknown.*check the platform/i
+        ),
+      })
+    );
+  });
+
+  it('leaves a row still inside the stale window to its worker', async () => {
+    const row = { ...staleRow(), updatedAt: new Date(now.getTime() - 60_000) };
+    useRows([row]);
+
+    await expect(reclaimStalePublishingQueueItems(now)).resolves.toBe(0);
+    expect(row.status).toBe(PUBLISHING_STATUS);
+  });
+
+  it('a row that failed BEFORE dispatch keeps its normal retry once due', async () => {
+    const row: QRow = {
+      id: 'qi1',
+      status: 'failed',
+      lastError: 'Publish failed',
+      attempts: 1,
+      nextRetryAt: new Date(Date.now() - 1000),
+    };
+    useRows([row]);
+
+    await expect(claimQueueItemForPublish('qi1')).resolves.toBe(true);
+  });
+
+  it('(control: planted failure is caught) a failed row with no retry time stays unclaimable', async () => {
+    // The planted defect is the old reclaim (nextRetryAt=now). Rows written
+    // that way must be claimable, proving the claim test above can go red.
+    const planted: QRow = {
+      ...staleRow(),
+      status: 'failed',
+      nextRetryAt: new Date(),
+    };
+    const unknown: QRow = { ...staleRow(), id: 'qi2', status: 'failed' };
+    useRows([planted, unknown]);
+
+    await expect(claimQueueItemForPublish('qi1')).resolves.toBe(true);
+    await expect(claimQueueItemForPublish('qi2')).resolves.toBe(false);
   });
 });
 
 describe('claimQueueItemForPublish', () => {
-  it('issues a conditional updateMany gated on the row still being due (pending/failed)', async () => {
+  it('issues a single conditional updateMany on the item that flips it to publishing', async () => {
     mockPrisma.publishQueueItem.updateMany.mockResolvedValue({ count: 1 });
 
     await claimQueueItemForPublish('qi1');
 
     expect(mockPrisma.publishQueueItem.updateMany).toHaveBeenCalledTimes(1);
     const arg = mockPrisma.publishQueueItem.updateMany.mock.calls[0][0];
-    expect(arg.where).toEqual(
-      expect.objectContaining({
-        id: 'qi1',
-        status: { in: ['pending', 'failed'] },
-      })
-    );
+    expect(arg.where).toEqual(expect.objectContaining({ id: 'qi1' }));
     expect(arg.data.status).toBe(PUBLISHING_STATUS);
   });
 
