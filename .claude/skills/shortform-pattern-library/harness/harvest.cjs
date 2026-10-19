@@ -19,6 +19,8 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 // Handles and reel codes become file names, so only Instagram's own character sets are accepted.
 const HANDLE_RE = /^[A-Za-z0-9._]{1,30}$/;
 const CODE_RE = /^[A-Za-z0-9_-]{5,40}$/;
+// Media is only captured and downloaded from Instagram's own CDN hosts.
+const CDN_HOST_RE = /(^|\.)(cdninstagram\.com|fbcdn\.net)$/;
 
 function parseViews(t) {
   const m = String(t || '').trim().toLowerCase().replace(/,/g, '').match(/^([\d.]+)\s*([kmb]?)/);
@@ -65,8 +67,17 @@ function decodeTag(u) {
 
 async function reels(ctx, outdir, list) {
   for (const item of list) {
-    const code = (String(item.url || '').match(/\/reel\/([^/?#]+)/) || [])[1];
-    if (!code || !CODE_RE.test(code)) { console.log(JSON.stringify(item.url), 'INVALID_REEL_URL skipped'); continue; }
+    // Only https://www.instagram.com/[<handle>/]reel/<code>/ is accepted; the page is loaded from the
+    // URL rebuilt out of the validated parts, never from the raw input.
+    let parsed = null;
+    try { parsed = new URL(String(item.url || '')); } catch { parsed = null; }
+    const m = parsed && parsed.protocol === 'https:' && parsed.hostname === 'www.instagram.com'
+      && parsed.pathname.match(/^\/(?:([A-Za-z0-9._]{1,30})\/)?reel\/([A-Za-z0-9_-]{5,40})\/?$/);
+    const code = m ? m[2] : null;
+    if (!code || !CODE_RE.test(code) || (m[1] && !HANDLE_RE.test(m[1]))) {
+      console.log(JSON.stringify(item.url), 'INVALID_REEL_URL skipped'); continue;
+    }
+    const pageUrl = `https://www.instagram.com/${m[1] ? m[1] + '/' : ''}reel/${code}/`;
     const dir = path.join(outdir, 'reels', code);
     fs.mkdirSync(dir, { recursive: true });
     const metaPath = path.join(dir, 'meta.json');
@@ -76,12 +87,14 @@ async function reels(ctx, outdir, list) {
     const media = new Map();
     page.on('response', r => {
       if (!(r.headers()['content-type'] || '').includes('video')) return;
-      const u = new URL(r.url()); u.searchParams.delete('bytestart'); u.searchParams.delete('byteend');
+      const u = new URL(r.url());
+      if (u.protocol !== 'https:' || !CDN_HOST_RE.test(u.hostname)) return;
+      u.searchParams.delete('bytestart'); u.searchParams.delete('byteend');
       const base = u.origin + u.pathname;
       if (!media.has(base)) media.set(base, { url: u.toString(), ...decodeTag(u.toString()) });
     });
     try {
-      await page.goto(item.url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+      await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
       await page.waitForTimeout(7000);
       if (/accounts\/login/.test(page.url())) throw new Error('BLOCKED_LOGIN_WALL');
       Object.assign(meta, await page.evaluate(() => {
