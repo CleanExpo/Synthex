@@ -176,7 +176,13 @@ def single(video, model, workdir):
     out = json.loads((d / "metrics.json").read_text())
     print(json.dumps(out, indent=2))
     # A QA gate must fail loudly on a master it could not read, never pass it as measured.
-    errors = [k for k in ("probe_error", "cuts_error", "speech_error") if out.get(k)]
+    # Every core craft measurement must have actually run; a missing one fails the gate.
+    # (word_count 0 is a real measurement for a music-only render; None is not.)
+    errors = [k for k in ("probe_error", "cuts_error", "speech_error", "audio_note") if out.get(k)]
+    errors += [f"{k} not measured" for k in ("duration_s", "cut_count", "integrated_lufs", "word_count")
+               if out.get(k) is None]
+    if errors:
+        print("QA FAIL: " + "; ".join(errors), file=sys.stderr)
     sys.exit(0 if out.get("status") == "OK" and not errors else 1)
 
 
