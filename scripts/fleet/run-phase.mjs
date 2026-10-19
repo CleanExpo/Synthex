@@ -39,6 +39,7 @@ import {
 import { evaluate as guard, unitRefAllowed } from './guard.mjs';
 import { scanForSecrets, haltOnHit } from './secret-scan.mjs';
 import { spawnUnit, waitForUnits } from './fanout.mjs';
+import { reviewLanes } from './lanes.mjs';
 import {
   existsSync,
   rmSync,
@@ -535,8 +536,7 @@ function review() {
     '.claude/skills/pr-release-gate/scripts/independent_review.py'
   );
   let last = null;
-  for (const lane of pol.review.lanes_in_order) {
-    if (pol.review.never.includes(lane)) continue;
+  for (const lane of reviewLanes(pol)) {
     // A report left by an earlier attempt must never be read as this lane's (verifier audit).
     rmSync(path.join(ROOT, out), { force: true });
     let r;
@@ -603,14 +603,7 @@ function review() {
           ],
           {
             timeout: 1800000,
-            env: model
-              ? {
-                  PR_GATE_OPENROUTER_MODEL: model,
-                  ...(pol.review.openrouter_paid_ok
-                    ? { PR_GATE_OPENROUTER_PAID_OK: '1' }
-                    : {}),
-                }
-              : {},
+            env: model ? { PR_GATE_OPENROUTER_MODEL: model } : {},
           }
         );
         appendFileSync(
@@ -640,7 +633,15 @@ function review() {
       rep.head = head;
       rep.lane = rep.lane || lane;
       writeJson(out, rep);
-      ledgerAppend({ kind: 'review', phase, head, lane, verdict: rep.verdict });
+      ledgerAppend({
+        kind: 'review',
+        phase,
+        head,
+        lane,
+        model: rep.model || (lane === 'codex' ? 'codex-chatgpt-plan' : null),
+        paid_ok_env: Boolean(process.env.PR_GATE_OPENROUTER_PAID_OK),
+        verdict: rep.verdict,
+      });
       log(
         /^(PASS|APPROVE)/i.test(String(rep.verdict)) ? 'PASS' : 'FAIL',
         `${lane}: ${rep.verdict} bound to ${head.slice(0, 12)}`

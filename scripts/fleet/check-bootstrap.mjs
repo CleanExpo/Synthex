@@ -29,6 +29,7 @@ import {
   tryGit,
 } from './lib.mjs';
 import { existsSync } from 'node:fs';
+import { meteredKeysPresent } from './lanes.mjs';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -81,13 +82,14 @@ add(
   `recorded=${rec2 ? rec2.sha256.slice(0, 12) : 'none'} current=${h.slice(0, 12)} STOP=${halt.security}`
 );
 // 3
+const metered = meteredKeysPresent(process.env);
 add(
   3,
-  'model access for judged runs: Claude Max plan through Cloudroom child threads (no API key required, A-18)',
-  'PASS',
-  process.env.ANTHROPIC_API_KEY
-    ? 'an API key is also present (value not printed)'
-    : 'Max plan; metered key not required'
+  'model access for judged runs: Claude Max plan through Cloudroom child threads, and no metered provider key in the environment (founder 2026-10-19: subscription only)',
+  metered.length ? 'FAIL' : 'PASS',
+  metered.length
+    ? `metered provider key present (names only): ${metered.join(', ')}`
+    : 'Max plan; no metered provider key present'
 );
 // 4
 const gh = run('gh', ['api', 'user', '--jq', '.login']);
