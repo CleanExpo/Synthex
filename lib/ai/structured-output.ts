@@ -18,6 +18,7 @@
  */
 
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
+import { toJSONSchema } from 'zod';
 import type { ZodType, infer as ZodInfer } from 'zod';
 import type {
   AIMessage,
@@ -48,6 +49,23 @@ export function structuredOutput<Schema extends ZodType>(
     parse: (content: string): ZodInfer<Schema> =>
       format.parse(content) as ZodInfer<Schema>,
   };
+}
+
+/**
+ * Plain JSON Schema (draft 2020-12) for what a caller may SEND to a schema —
+ * the input side, so `.default()` fields stay optional and enums stay enums.
+ *
+ * `structuredOutput()` is shaped for Anthropic output enforcement (constraints
+ * folded into descriptions, every key required), which is wrong for a request
+ * contract. The published API contract (scripts/api/gen-openapi.mjs, P3) uses
+ * this instead; same zod v4 generator underneath. Throws on schemas JSON
+ * Schema cannot represent (e.g. custom refinements with no input type).
+ */
+export function inputJsonSchema(schema: ZodType): Record<string, unknown> {
+  return toJSONSchema(schema, {
+    io: 'input',
+    target: 'draft-2020-12',
+  }) as Record<string, unknown>;
 }
 
 // ---------------------------------------------------------------------------

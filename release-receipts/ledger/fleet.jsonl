@@ -120,3 +120,19 @@
 {"ts":"2026-10-18T14:16:59.159Z","kind":"review","phase":"P2","head":"52043c5f91503bdce047c994175d8d3facc48248","lane":"codex","verdict":"FAIL"}
 {"ts":"2026-10-18T14:25:10.899Z","kind":"review","phase":"P2","head":"ecaa0c3c0d3f894763d928331709a511d9002f4c","lane":"codex","verdict":"PASS"}
 {"ts":"2026-10-18T14:27:21.873Z","kind":"gate","phase":"P2","head":"ecaa0c3c0d3f894763d928331709a511d9002f4c","pass":10,"total":10}
+{"ts":"2026-10-18T15:22:42.482Z","kind":"integrate","phase":"P3","unit":"contract","files":13,"head":"74bff0ff54e91e075f19608bf2a967a263172507"}
+{"ts":"2026-10-18T15:26:05.677Z","kind":"integrate","phase":"P3","unit":"object-storage-r2","files":11,"head":"d7e1b065238373af6e46487ae7631379178a61c6"}
+{"ts":"2026-10-18T15:44:15.618Z","kind":"review","phase":"P3","head":"ba0d0871dbc4507be120016513e0d96fef16ac79","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T15:56:30.380Z","kind":"review","phase":"P3","head":"103eef144a2194104d0770f722ebfc8f5649f2c7","lane":"codex","verdict":"FAIL"}
+{"ts":"2026-10-18T16:02:10.659Z","kind":"policy-hash","previous":"8e5d73acd4ebfae3908d007dd60dab0a38e188eb957c4a43f94080d5e238899c","sha256":"a43e70f5ce4497ced73a9473a93a2d02aa2ddba079c82c57da343ed4195fe37b","source":"check-bootstrap --record"}
+{"ts":"2026-10-19T00:00:47.497Z","kind":"gate","phase":"P3","head":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503","pass":7,"total":7}
+{"ts":"2026-10-19T00:35:59.596Z","kind":"review","phase":"P3","head":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503","state":"INCONCLUSIVE","detail":"every lane unavailable"}
+{"ts":"2026-10-19T01:49:51.184Z","kind":"review","phase":"P3","head":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-19T01:50:00.733Z","kind":"note","phase":"P3","head":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503","what":"MiniMax round 1 (11:38 AEST) FAIL, 1 P0: committed OpenAPI spec not byte-stable. Cause: the review worktree had zod 4.6.7 from a non-lockfile install; package-lock pins 4.4.3 (gate and CI use npm ci). After npm ci in the review worktree, --check passed there; round 2 at the same head PASS. Report kept at hot/tmp/fleet/review-P3-minimax-round1.json. Follow-up queued for P4: generators report INCONCLUSIVE on a dependency version mismatch."}
+{"ts":"2026-10-19T02:29:30.347Z","kind":"receipt-retired","phase":"P3","head":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","reviewed":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503","files":["release-receipts/P3.json","release-receipts/manifests/P3-review.json","release-receipts/manifests/P3-gate.json"]}
+{"ts":"2026-10-19T02:33:58.281Z","kind":"gate","phase":"P3","head":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","pass":7,"total":7}
+{"ts":"2026-10-19T02:44:55.703Z","kind":"review","phase":"P3","head":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-19T02:51:00.158Z","kind":"receipt-retired","phase":"P3","head":"a9ee100445623a661ff45bcc9a9dd4b46b86f20b","reviewed":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","files":["release-receipts/P3.json","release-receipts/manifests/P3-review.json","release-receipts/manifests/P3-gate.json"]}
+{"ts":"2026-10-19T02:58:02.300Z","kind":"policy-hash","previous":"a43e70f5ce4497ced73a9473a93a2d02aa2ddba079c82c57da343ed4195fe37b","sha256":"f2a56eaa9b7e9a6366560e26ae5019efaeb8ac3b8e71e75d8e0d8e4d5105e852","source":"check-bootstrap --record"}
+{"ts":"2026-10-19T03:18:50.005Z","kind":"gate","phase":"P3","head":"0bdff06e283280810fb7a40f9f6388a9d1970b40","pass":7,"total":7}
+{"ts":"2026-10-19T03:30:09.578Z","kind":"review","phase":"P3","head":"0bdff06e283280810fb7a40f9f6388a9d1970b40","lane":"minimax","verdict":"PASS"}

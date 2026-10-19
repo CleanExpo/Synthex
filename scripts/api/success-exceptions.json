@@ -1,0 +1,158 @@
+[
+  {
+    "operation": "POST /api/admin/health",
+    "reason": "status is computed at runtime from the health probe result, not a literal. Generator saw: returns NextResponse.json(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/admin/private-refs",
+    "reason": "returns a value the generator cannot follow statically. Generator saw: returns BinaryExpression, FalseKeyword. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/ai/generate-content",
+    "reason": "status is computed at runtime from the generation outcome. Generator saw: returns Math.min(), variable lo, variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/auth/link/google",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/auth/login",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns BinaryExpression, variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/auth/logout",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns unauthorizedResponse(), variable res. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/auth/oauth/google",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/auth/oauth/google/callback",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns BinaryExpression, NullKeyword, ObjectLiteralExpression, response.json(), variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/auth/refresh",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/auth/signup",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/auth/unified-login",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/auth/user",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns unauthorizedResponse(), variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/backup",
+    "reason": "returns a value the generator cannot follow statically. Generator saw: returns BinaryExpression, FalseKeyword. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/credential-intake",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns ObjectLiteralExpression, PropertyAccessExpression, variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/credential-intake",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns ObjectLiteralExpression, PropertyAccessExpression, provider.split('-').map(part=>part.slice(0,1).toUpperCase()+part.slice(1)).join(), variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/cron/analyze-patterns",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/cron/analyze-patterns",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/generate/diagram",
+    "reason": "status is computed at runtime from the generation outcome. Generator saw: returns NextResponse.json(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/generate/plot",
+    "reason": "status is computed at runtime from the generation outcome. Generator saw: returns NextResponse.json(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/health/auth",
+    "reason": "status is computed at runtime from the health probe result, not a literal. Generator saw: returns NextResponse.json(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/health/ready",
+    "reason": "status is computed at runtime from the health probe result, not a literal. Generator saw: returns NextResponse.json(), ObjectLiteralExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/health/redis",
+    "reason": "status is computed at runtime from the health probe result, not a literal. Generator saw: returns NextResponse.json(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/health/redis-simple",
+    "reason": "status is computed at runtime from the health probe result, not a literal. Generator saw: returns NextResponse.json(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/health/scaling",
+    "reason": "status is computed at runtime from the health probe result, not a literal. Generator saw: returns NextResponse.json(), ObjectLiteralExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/internal/build-knowledge-graph",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/internal/compute-content-scores",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/internal/deliver-win-notifications",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/internal/refresh-journey-analytics",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/internal/score-accuracy-matcher",
+    "reason": "returns the auth guard result's response (auth.response) when the cron/internal secret is rejected; the guard's status is not visible in this file. Generator saw: returns PropertyAccessExpression. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/invite/accept",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "DELETE /api/mcp/{transport}",
+    "reason": "delegates to the MCP transport handler built at request time (buildHandler), which owns the status. Generator saw: returns ObjectLiteralExpression, buildHandler(caller)(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/mcp/{transport}",
+    "reason": "delegates to the MCP transport handler built at request time (buildHandler), which owns the status. Generator saw: returns ObjectLiteralExpression, buildHandler(caller)(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/mcp/{transport}",
+    "reason": "delegates to the MCP transport handler built at request time (buildHandler), which owns the status. Generator saw: returns ObjectLiteralExpression, buildHandler(caller)(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/og/effect-report",
+    "reason": "returns a value the generator cannot follow statically. Generator saw: returns ObjectLiteralExpression, variable tenant. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/onboarding/complete",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns generateToken(), unauthorizedResponse(), variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/patterns/cached",
+    "reason": "returns an imported auth helper (unauthorizedResponse) whose status lives in another module. Generator saw: returns unauthorizedResponse(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "POST /api/settings/api-credentials",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns BinaryExpression, variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/social/twitter/post",
+    "reason": "returns an imported auth helper (unauthorizedResponse) whose status lives in another module. Generator saw: returns unauthorizedResponse(). Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  },
+  {
+    "operation": "GET /api/v1/connections/status",
+    "reason": "builds the response object in a local variable (to attach session cookies or headers) and returns that variable; its status is set where it is built. Generator saw: returns variable response. Reviewed 18/10/2026 (P3, Codex finding on 103eef14)."
+  }
+]

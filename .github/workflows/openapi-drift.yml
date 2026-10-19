@@ -1,6 +1,6 @@
 name: OpenAPI Drift
 
-# Fails when a route has no spec entry (P3 onward). Before scripts/api/gen-openapi.mjs exists
+# Fails when a route has no spec entry, or the machine docs drift from the routes (P3 onward). Before scripts/api/gen-openapi.mjs exists
 # the job records DISABLED and exits 0, so Phase -1 to P2 are not blocked by a P3 deliverable.
 
 on:
@@ -20,8 +20,18 @@ jobs:
       - uses: actions/setup-node@v5
         with:
           node-version: '22'
+          cache: 'npm'
+      # The generators parse routes with typescript and format with prettier.
+      - run: npm ci --legacy-peer-deps --ignore-scripts
+      # Route probes import modules that load @prisma/client; --ignore-scripts skips its
+      # postinstall, and without the generated client every probe fails and the spec drifts.
+      - run: npx prisma generate
       - run: |
           if [ ! -f scripts/api/gen-openapi.mjs ]; then echo "DISABLED openapi-drift: scripts/api/gen-openapi.mjs not yet delivered (P3)"; exit 0; fi
           EX="scripts/api/exempt-routes.json"
           if [ -f proposals/P3/scripts/api/exempt-routes.json ]; then EX="proposals/P3/scripts/api/exempt-routes.json"; fi
           node scripts/api/gen-openapi.mjs --check --exempt "$EX"
+      # The machine-readable docs (llms.txt, error codes, rate limits) must match the routes too.
+      - run: |
+          if [ ! -f scripts/api/gen-machine-docs.mjs ]; then echo "DISABLED machine-docs drift: not yet delivered (P3)"; exit 0; fi
+          node scripts/api/gen-machine-docs.mjs --check

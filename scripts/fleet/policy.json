@@ -73,6 +73,8 @@
     "scripts/truth/**",
     "scripts/jev/**",
     "scripts/api/exempt-routes.json",
+    "scripts/api/success-exceptions.json",
+    "proposals/P3/scripts/api/exempt-routes.json",
     "scripts/check-repo-controls.mjs",
     "release-receipts/**",
     "tests/eval/jev/floors.json",

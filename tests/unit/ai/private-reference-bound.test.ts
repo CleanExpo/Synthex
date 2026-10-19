@@ -29,7 +29,8 @@
  * subject with no references at all, the caller's existing no-coverage path
  * blocks the run, which is the correct fail-closed outcome.
  *
- * ZERO SPEND: pure selection; the private store is not provisioned.
+ * ZERO SPEND: pure selection; storage is exercised with credentials removed
+ * here and with a mocked client in reference-library-private-storage.test.ts.
  */
 
 import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
@@ -101,6 +102,9 @@ describe('private references obey the priced megapixel bound', () => {
 
 describe('private reference storage is not provisioned', () => {
   it('reports the bucket unavailable and resolves no URLs', async () => {
+    const env = { ...process.env };
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     const { logger } = await import('@/lib/logger');
     const warn = jest.spyOn(logger, 'warn').mockImplementation(() => undefined);
 
@@ -113,5 +117,6 @@ describe('private reference storage is not provisioned', () => {
       })
     );
     warn.mockRestore();
+    process.env = env;
   });
 });

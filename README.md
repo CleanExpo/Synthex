@@ -17,7 +17,7 @@
 
 Synthex is Unite Group's in-house AI marketing-automation platform. It is an **internal application**, not a public SaaS product — it runs Unite Group's own social, content, SEO and reporting workflows across the group's portfolio of brands.
 
-It is deployed at synthex.social for internal operators. Public sign-up, subscription billing, pricing and "going public" are out of scope and are never treated as launch blockers (see `CLAUDE.md` Identity for the canonical framing).
+It is deployed at synthex.social for internal operators. Public sign-up, subscription billing, pricing and "going public" are out of scope and are never treated as launch blockers (see the root `CLAUDE.md`, "What Synthex is", for the canonical framing; DECISIONS.md FD-8).
 
 > Note: sections further down this README still carry legacy public-SaaS marketing copy (usage claims, pricing/demo calls-to-action, an MIT-licence section). Those are inconsistent with the internal-application canon above and are flagged for a follow-up rewrite; only the header has been corrected here.
 

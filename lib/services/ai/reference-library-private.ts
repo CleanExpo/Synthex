@@ -7,19 +7,25 @@
  * generation time we mint short-lived SIGNED URLs so fal can fetch them for
  * grounding, and nobody else can.
  *
- * NOT PROVISIONED: the repo has no private storage helper (the only real
- * one, lib/storage/platform-storage, writes under public/, which would leak
- * these photos). Until a private store exists, resolution reports the
- * reference-library-private bucket as unavailable (logged with the reason)
- * and returns [] — the result callers already handle by falling back to
- * public/text-only grounding. Never an error, never a leak.
+ * Storage goes through lib/storage/object-storage (DECISIONS.md FD-7). When
+ * storage credentials are missing, or the manifest or signing fails,
+ * resolution logs the bucket as unavailable (with the reason) and returns []
+ * — the result callers already handle by falling back to public/text-only
+ * grounding. Never an error to the generator, never a public URL.
  */
 import { logger } from '@/lib/logger';
 import { tableUnavailable } from '@/lib/api/not-provisioned';
+import {
+  ObjectStorageNotProvisionedError,
+  download,
+  signedUrls,
+} from '@/lib/storage/object-storage';
 
 import { MAX_REFERENCE_MEGAPIXELS } from '@/lib/services/ai/image/registry';
 
 const BUCKET = 'reference-library-private';
+const MANIFEST_PATH = '_private-manifest.json';
+const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1h — covers a generation, then expires
 
 interface PrivateImage {
   path: string;
@@ -113,17 +119,36 @@ export function selectPrivatePaths(
 
 /**
  * Resolve short-lived signed URLs for the owned private images of an industry.
- * The private bucket is not provisioned, so this logs the unavailable reason
- * and returns [] (never throws, never signs or leaks anything).
+ * Missing storage credentials or any read/sign failure logs the bucket as
+ * unavailable and returns [] (never throws, never returns a public URL).
  */
 export async function resolvePrivateReferenceUrls(
   industry: string | null | undefined,
   max = 4
 ): Promise<string[]> {
   if (!industry || max <= 0) return [];
-  logger.warn('private reference grounding unavailable', {
-    industry,
-    ...tableUnavailable(BUCKET),
-  });
-  return [];
+  try {
+    const manifest = JSON.parse(
+      (await download(BUCKET, MANIFEST_PATH)).toString('utf8')
+    ) as PrivateManifest;
+    const paths = selectPrivatePaths(manifest, industry, max);
+    if (paths.length === 0) return [];
+    const urls = await signedUrls(BUCKET, paths, SIGNED_URL_TTL_SECONDS);
+    // Fail closed if anything other than a signed object URL comes back.
+    if (urls.some(u => !u.includes('/object/sign/'))) {
+      throw new Error('signing returned a URL that is not a signed URL');
+    }
+    return urls;
+  } catch (err) {
+    logger.warn('private reference grounding unavailable', {
+      industry,
+      ...(err instanceof ObjectStorageNotProvisionedError
+        ? tableUnavailable(BUCKET)
+        : {
+            available: false as const,
+            reason: err instanceof Error ? err.message : String(err),
+          }),
+    });
+    return [];
+  }
 }

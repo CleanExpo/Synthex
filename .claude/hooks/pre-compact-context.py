@@ -71,14 +71,9 @@ def main() -> None:
 
     write_state_snapshot(project_dir, session_id)
 
-    output = {
-        "hookSpecificOutput": {
-            "hookEventName": "PreCompact",
-            "additionalContext": build_compaction_guidance()
-        }
-    }
-
-    print(json.dumps(output))
+    # PreCompact has no hookSpecificOutput schema; plain stdout is the
+    # supported channel for compaction guidance.
+    print(build_compaction_guidance())
     sys.exit(0)
 
 

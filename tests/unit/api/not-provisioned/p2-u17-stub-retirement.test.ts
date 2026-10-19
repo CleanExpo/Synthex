@@ -1,6 +1,7 @@
 /**
  * P2 u17 — retire lib/platform/server from:
- *   app/api/user/avatar/route.ts        POST NOT_PROVISIONED (no durable storage)
+ *   app/api/user/avatar/route.ts        avatars bucket via object-storage (FD-7);
+ *                                       NOT_PROVISIONED without credentials
  *   app/api/system/models/route.ts      auth via lib/supabase-server (Prisma)
  *   lib/supabase-server.ts              query client NOT_PROVISIONED (throws)
  *   lib/security/audit-logger.ts        compliance events written synchronously, never pruned
@@ -23,6 +24,26 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
   getUserIdFromRequestOrCookies: (...a: unknown[]) =>
     mockUserIdFromRequest(...a),
   getUserIdFromCookies: (...a: unknown[]) => mockUserIdFromCookies(...a),
+}));
+
+// Supabase Storage (FD-7). resetMocks wipes jest.fn implementations, so the
+// client shape is plain functions that delegate to per-test mocks.
+const mockStorageUpload = jest.fn();
+const mockStorageRemove = jest.fn();
+jest.mock('@supabase/supabase-js', () => ({
+  createClient: () => ({
+    storage: {
+      from: (bucket: string) => ({
+        upload: (...a: unknown[]) => mockStorageUpload(bucket, ...a),
+        remove: (...a: unknown[]) => mockStorageRemove(bucket, ...a),
+        getPublicUrl: (path: string) => ({
+          data: {
+            publicUrl: `https://proj.supabase.co/storage/v1/object/public/${bucket}/${path}`,
+          },
+        }),
+      }),
+    },
+  }),
 }));
 
 const mockUpload = jest.fn();
@@ -52,7 +73,7 @@ jest.mock('@/lib/prisma', () => ({
   },
 }));
 
-import { POST, DELETE } from '@/app/api/user/avatar/route';
+import { POST, DELETE, sniffImageType } from '@/app/api/user/avatar/route';
 import { GET as getModels } from '@/app/api/system/models/route';
 import {
   createServerClient,
@@ -61,13 +82,27 @@ import {
   SupabaseClientRemovedError,
 } from '@/lib/supabase-server';
 import { auditLogger } from '@/lib/security/audit-logger';
+import { logger } from '@/lib/logger';
 
 const USER = 'user-a';
+const PUBLIC = 'https://proj.supabase.co/storage/v1/object/public/avatars';
+const ENV = { ...process.env };
 
-function avatarRequest(file?: { name: string; type: string; size: number }) {
+// Real magic numbers per declared type, so the route's byte check sees a true image.
+const MAGIC: Record<string, number[]> = {
+  'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0],
+  'image/jpeg': [0xff, 0xd8, 0xff, 0xe0, 0],
+  'image/gif': [...Buffer.from('GIF89a'), 0],
+  'image/webp': [...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WEBP')],
+};
+function avatarRequest(
+  file?: { name: string; type: string; size: number },
+  bytes?: number[]
+) {
   const blob = file && {
     ...file,
-    arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+    arrayBuffer: async () =>
+      new Uint8Array(bytes ?? MAGIC[file.type] ?? [1, 2, 3]).buffer,
   };
   return {
     formData: async () => ({ get: () => blob ?? null }),
@@ -77,42 +112,241 @@ function avatarRequest(file?: { name: string; type: string; size: number }) {
 beforeEach(() => {
   jest.clearAllMocks();
   mockUserIdFromRequest.mockResolvedValue(USER);
+  process.env.SUPABASE_URL = 'https://proj.supabase.co';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-key';
+  mockStorageUpload.mockResolvedValue({ data: {}, error: null });
+  mockStorageRemove.mockResolvedValue({ data: [], error: null });
 });
 
 afterAll(async () => {
+  process.env = ENV;
   await auditLogger.shutdown();
 });
 
-describe('POST /api/user/avatar (durable storage not provisioned)', () => {
+describe('POST /api/user/avatar (avatars bucket)', () => {
   it('401 without a user and never touches storage', async () => {
     mockUserIdFromRequest.mockResolvedValue(null);
     const res = await POST(
       avatarRequest({ name: 'a.png', type: 'image/png', size: 10 })
     );
     expect(res.status).toBe(401);
+    expect(mockStorageUpload).not.toHaveBeenCalled();
     expect(mockUpload).not.toHaveBeenCalled();
   });
 
-  it('503 FEATURE_NOT_PROVISIONED: saves nothing to disk or the user row', async () => {
+  it('uploads under the caller, extension from the MIME type, and saves the public URL', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
+    userUpdate.mockResolvedValue({});
+    const res = await POST(
+      avatarRequest({ name: 'evil.php', type: 'image/webp', size: 10 })
+    );
+    expect(res.status).toBe(200);
+    const url = `${PUBLIC}/${USER}/1700000000000.webp`;
+    expect(await res.json()).toMatchObject({ avatarUrl: url, avatar_url: url });
+    expect(mockStorageUpload).toHaveBeenCalledWith(
+      'avatars',
+      `${USER}/1700000000000.webp`,
+      expect.any(Buffer),
+      { contentType: 'image/webp', upsert: false }
+    );
+    expect(userUpdate).toHaveBeenCalledWith({
+      where: { id: USER },
+      data: { avatar: url },
+    });
+    expect(mockUpload).not.toHaveBeenCalled();
+  });
+
+  it('500 on a storage upload error and saves nothing', async () => {
+    mockStorageUpload.mockResolvedValue({
+      data: null,
+      error: { message: 'bucket full' },
+    });
+    const res = await POST(
+      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
+    );
+    expect(res.status).toBe(500);
+    expect(userUpdate).not.toHaveBeenCalled();
+  });
+
+  it('500 on a DB failure and removes the uploaded object', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(42);
+    userUpdate.mockRejectedValue(new Error('db down'));
+    const res = await POST(
+      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
+    );
+    expect(res.status).toBe(500);
+    expect(mockStorageRemove).toHaveBeenCalledWith('avatars', [
+      `${USER}/42.png`,
+    ]);
+  });
+
+  it('500 on a DB failure never removes the previous avatar', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(42);
+    userFindUnique.mockResolvedValue({ avatar: `${PUBLIC}/${USER}/1.png` });
+    userUpdate.mockRejectedValue(new Error('db down'));
+    await POST(avatarRequest({ name: 'me.png', type: 'image/png', size: 10 }));
+    expect(mockStorageRemove.mock.calls).toEqual([
+      ['avatars', [`${USER}/42.png`]],
+    ]);
+  });
+
+  it("after a successful save removes the caller's previous bucket object", async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(42);
+    userFindUnique.mockResolvedValue({ avatar: `${PUBLIC}/${USER}/1.png` });
+    userUpdate.mockResolvedValue({});
+    const res = await POST(
+      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
+    );
+    expect(res.status).toBe(200);
+    expect(mockStorageRemove.mock.calls).toEqual([
+      ['avatars', [`${USER}/1.png`]],
+    ]);
+    expect(userUpdate.mock.invocationCallOrder[0]).toBeLessThan(
+      mockStorageRemove.mock.invocationCallOrder[0]
+    );
+  });
+
+  it.each([
+    ['another user', `${PUBLIC}/user-b/1.png`],
+    ['a prefix-sharing user', `${PUBLIC}/${USER}x/1.png`],
+    ['a traversal', `${PUBLIC}/${USER}/../user-b/1.png`],
+    [
+      'another bucket',
+      `https://proj.supabase.co/storage/v1/object/public/generated-videos/${USER}/1.png`,
+    ],
+    ['a legacy file', `/uploads/${USER}/1.png`],
+  ])("a save never removes %s's previous object", async (_label, avatar) => {
+    userFindUnique.mockResolvedValue({ avatar });
+    userUpdate.mockResolvedValue({});
+    const res = await POST(
+      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
+    );
+    expect(res.status).toBe(200);
+    expect(mockStorageRemove).not.toHaveBeenCalled();
+  });
+
+  it('a failed previous-avatar removal is logged and the save still succeeds', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(42);
+    userFindUnique.mockResolvedValue({ avatar: `${PUBLIC}/${USER}/1.png` });
+    userUpdate.mockResolvedValue({});
+    mockStorageRemove.mockResolvedValue({
+      data: null,
+      error: { message: 'denied' },
+    });
+    const res = await POST(
+      avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).avatarUrl).toBe(`${PUBLIC}/${USER}/42.png`);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Previous avatar cleanup failed',
+      expect.objectContaining({ avatar: `${PUBLIC}/${USER}/1.png` })
+    );
+  });
+
+  it('503 FEATURE_NOT_PROVISIONED without credentials: saves nothing', async () => {
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     const res = await POST(
       avatarRequest({ name: 'me.png', type: 'image/png', size: 10 })
     );
     expect(res.status).toBe(503);
     expect((await res.json()).error).toBe('FEATURE_NOT_PROVISIONED');
+    expect(mockStorageUpload).not.toHaveBeenCalled();
     expect(mockUpload).not.toHaveBeenCalled();
     expect(userUpdate).not.toHaveBeenCalled();
   });
 
-  it('still validates input before answering not-provisioned', async () => {
+  it('still validates input before touching storage', async () => {
     const res = await POST(
       avatarRequest({ name: 'a.txt', type: 'text/plain', size: 10 })
     );
     expect(res.status).toBe(400);
+    expect(mockStorageUpload).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/user/avatar byte check', () => {
+  it('400 and no upload when the bytes are not the declared image type', async () => {
+    for (const [type, bytes] of [
+      ['image/png', [0x3c, 0x68, 0x74, 0x6d, 0x6c, 0x3e]],
+      ['image/jpeg', MAGIC['image/png']],
+      [
+        'image/webp',
+        [...Buffer.from('RIFF'), 0, 0, 0, 0, ...Buffer.from('WAVE')],
+      ],
+    ] as const) {
+      const res = await POST(
+        avatarRequest({ name: 'x', type, size: 10 }, [...bytes])
+      );
+      expect(res.status).toBe(400);
+    }
+    expect(mockUpload).not.toHaveBeenCalled();
+  });
+
+  it('detects each supported type from its magic number', () => {
+    for (const t of ['image/png', 'image/jpeg', 'image/gif', 'image/webp'])
+      expect(sniffImageType(Buffer.from(MAGIC[t]))).toBe(t);
+    expect(sniffImageType(Buffer.from('<svg>'))).toBeNull();
   });
 });
 
 describe('DELETE /api/user/avatar', () => {
-  it("deletes only a file in the caller's own folder", async () => {
+  it("removes the caller's own bucket object and clears the row", async () => {
+    userFindUnique.mockResolvedValue({ avatar: `${PUBLIC}/${USER}/1.png` });
+    userUpdate.mockResolvedValue({});
+    const res = await DELETE({} as never);
+    expect(res.status).toBe(200);
+    expect(mockStorageRemove).toHaveBeenCalledWith('avatars', [
+      `${USER}/1.png`,
+    ]);
+    expect(userUpdate).toHaveBeenCalledWith({
+      where: { id: USER },
+      data: { avatar: null },
+    });
+  });
+
+  it.each([
+    ['another user', `${PUBLIC}/user-b/1.png`],
+    ['a prefix-sharing user', `${PUBLIC}/${USER}x/1.png`],
+    ['a traversal', `${PUBLIC}/${USER}/../user-b/1.png`],
+    ['a nested path', `${PUBLIC}/${USER}/sub/1.png`],
+    [
+      'another bucket',
+      `https://proj.supabase.co/storage/v1/object/public/generated-videos/${USER}/1.png`,
+    ],
+    [
+      'another host',
+      `https://evil.test/storage/v1/object/public/avatars/${USER}/1.png`,
+    ],
+  ])("never removes %s's object", async (_label, avatar) => {
+    userFindUnique.mockResolvedValue({ avatar });
+    userUpdate.mockResolvedValue({});
+    await DELETE({} as never);
+    expect(mockStorageRemove).not.toHaveBeenCalled();
+  });
+
+  it('500 and keeps the row when the storage remove fails', async () => {
+    userFindUnique.mockResolvedValue({ avatar: `${PUBLIC}/${USER}/1.png` });
+    mockStorageRemove.mockResolvedValue({
+      data: null,
+      error: { message: 'denied' },
+    });
+    const res = await DELETE({} as never);
+    expect(res.status).toBe(500);
+    expect(userUpdate).not.toHaveBeenCalled();
+  });
+
+  it('without credentials still clears legacy files and the row', async () => {
+    delete process.env.SUPABASE_URL;
+    userFindUnique.mockResolvedValue({ avatar: `/uploads/${USER}/1.png` });
+    userUpdate.mockResolvedValue({});
+    const res = await DELETE({} as never);
+    expect(res.status).toBe(200);
+    expect(mockStorageRemove).not.toHaveBeenCalled();
+    expect(mockDelete).toHaveBeenCalledWith(`uploads/${USER}/1.png`);
+  });
+
+  it("deletes only a legacy file in the caller's own folder", async () => {
     userFindUnique.mockResolvedValue({
       avatar: `/uploads/${USER}/1-avatar.png`,
     });

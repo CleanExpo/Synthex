@@ -1,15 +1,26 @@
 /**
- * Persist a provider artifact (provider URLs expire).
+ * Persist a provider artifact (provider URLs expire): download (3 attempts,
+ * backoff) -> object storage bucket 'generated-videos' (lib/storage/
+ * object-storage, DECISIONS.md FD-7) -> media library row.
  *
- * NOT PROVISIONED: no durable object storage is configured. Local disk
- * (lib/storage/platform-storage, public/uploads) does not survive restarts
- * or reach other instances, so storing there would mark a video 'rendered'
- * at a URL that later 404s. storeArtifact therefore throws, and the fal
+ * Without storage credentials storeArtifact throws
+ * ArtifactStorageNotProvisionedError before downloading anything, and the fal
  * webhook records the generation as failed with the provider URL kept in
- * metadata (the same outcome main had when this went through the noop
- * client).
+ * metadata. A storage error also throws, so a video is never marked
+ * 'rendered' at a URL that holds nothing.
  */
+import { FAL_MEDIA_HOSTS } from '@/lib/services/media/fetch-image-base64';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
+import {
+  ObjectStorageNotProvisionedError,
+  publicUrl,
+  upload,
+} from '@/lib/storage/object-storage';
+import { mediaLibraryService } from '@/lib/services/media-library';
+import { logger } from '@/lib/logger';
+
+const BUCKET = 'generated-videos';
 
 export interface StoreArtifactInput {
   sourceUrl: string;
@@ -29,8 +40,101 @@ export class ArtifactStorageNotProvisionedError extends Error {
   }
 }
 
+/**
+ * The download URL rebuilt from a constant fal media host: only the path and
+ * query come from the webhook payload. https only; no credentials or port.
+ */
+/** Largest generated video stored (fal clips are tens of MB). */
+export const MAX_ARTIFACT_BYTES = 200 * 1024 * 1024;
+
+export function falMediaUrl(url: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error('artifact host is not an allowed fal media host');
+  }
+  const host = FAL_MEDIA_HOSTS.find(h => h === parsed.hostname);
+  if (
+    parsed.protocol !== 'https:' ||
+    !host ||
+    parsed.username ||
+    parsed.password ||
+    parsed.port
+  )
+    throw new Error('artifact host is not an allowed fal media host');
+  return `https://${host}${parsed.pathname}${parsed.search}`;
+}
+
+async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
+  // The URL arrives in the fal webhook payload: download only from a constant
+  // fal media host, after the shared private-address check, and never follow a
+  // redirect off it (CodeQL js/request-forgery).
+  const safeUrl = falMediaUrl(url);
+  await assertExternalUrlSafe(safeUrl);
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(safeUrl, {
+        redirect: 'error',
+        signal: AbortSignal.timeout(60000),
+      });
+      if (!res.ok) throw new Error(`download ${res.status}`);
+      // Refuse an oversized artifact before reading it, and again by actual
+      // size (a missing or false content-length must not bypass the cap).
+      const declared = Number(res.headers?.get?.('content-length') ?? '0');
+      if (declared > MAX_ARTIFACT_BYTES)
+        throw new Error(`artifact too large: ${declared} bytes`);
+      const body = await res.arrayBuffer();
+      if (body.byteLength > MAX_ARTIFACT_BYTES)
+        throw new Error(`artifact too large: ${body.byteLength} bytes`);
+      return body;
+    } catch (err) {
+      lastErr = err;
+      // Only sleep when there are more attempts remaining.
+      if (i < attempts - 1) {
+        await new Promise(r => setTimeout(r, 1000 * 2 ** i));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 export async function storeArtifact(
-  _input: StoreArtifactInput
+  input: StoreArtifactInput
 ): Promise<{ storedUrl: string }> {
-  throw new ArtifactStorageNotProvisionedError();
+  const path = `${input.userId}/${input.rowId}.mp4`;
+
+  // Resolving the URL first needs no network and fails fast when storage is
+  // not provisioned, so nothing is downloaded that cannot be kept.
+  let storedUrl: string;
+  try {
+    storedUrl = publicUrl(BUCKET, path);
+  } catch (err) {
+    if (err instanceof ObjectStorageNotProvisionedError) {
+      throw new ArtifactStorageNotProvisionedError();
+    }
+    throw err;
+  }
+
+  const buffer = await fetchWithRetry(input.sourceUrl);
+  await upload(BUCKET, path, Buffer.from(buffer), 'video/mp4', {
+    upsert: true,
+  });
+
+  // Register in the media library; non-fatal if it fails (artifact is stored).
+  await mediaLibraryService
+    .createAsset(input.userId, {
+      type: 'video',
+      provider: 'fal',
+      url: storedUrl,
+      externalId: input.rowId,
+      prompt: input.prompt,
+      metadata: input.metadata ?? {},
+    })
+    .catch(e =>
+      logger.error('media library registration failed (non-fatal)', { e })
+    );
+
+  return { storedUrl };
 }

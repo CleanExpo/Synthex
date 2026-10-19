@@ -1,0 +1,129 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "minimax/MiniMax-M3",
+  "reviewer_session_id": "p3-contract-review-2026-10-19",
+  "base_sha": "c7eac8e7757db87ac978e30e9d222c1f90934f98",
+  "head_sha": "0bdff06e283280810fb7a40f9f6388a9d1970b40",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "42 files in `git diff --name-only c7eac8e7757d..0bdff06e2832`; every one accounted for in coverage.reviewed (41) or coverage.not_reviewed (1, the release-receipts/ledger/fleet.jsonl excluded by the brief's *.jsonl rule). Files reviewed under app/lib/scripts/tests/docs/workflows: root CLAUDE.md CI guard restores the founder file; docs/api/openapi.generated.json + llms.txt + error-codes.md + rate-limits.md regenerate from routes; gen-openapi.mjs/probe child has network disabled and reads not-provisioned constant + auth-coverage-config.ts source; success-exceptions.json lists 39 routes with reasons + generator saw clauses; pre-release.mjs evaluates 7 rules including visible-red + on-mini + three-dot diff; verify-protected.mjs uses git merge-tree per AM-2/AM-5; object-storage.ts throws ObjectStorageNotProvisionedError without env; artifact-store.ts rebuilds URL from FAL_MEDIA_HOSTS constant + redirect:'error' + size cap declared+body; avatar/route.ts uses ownAvatarKey regex; storage client-guard test is a static check."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Amended spec M3 (P3) is closed by feat(api): generated OpenAPI 3.1 contract, llms.txt index, error-code and rate-limit tables (3fb450d8a). Definition-of-done commands pass: `node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json` exited 0 with 774/774 paths and 39/39 success exceptions (output logged); `npm run jev:det -- --family J1` reports `PASS J1 PASS cases=640 pass=601 fail=0 known_gap=39 inconclusive=0 controls=3/3`. M7 (structured error codes) is closed in part by success-exceptions.json + docs/api/error-codes.md (11 codes). AM-1/AM-2/AM-4/AM-5 are honoured: protected-path edits are carried by orchestrator-trailer commits (policy.json, success-exceptions.json, proposals/P3/scripts/api/exempt-routes.json, vercel.json, CLAUDE.md, multiple script files) — every trailer verified by `git log --format=%B`. AM-5 trailer format (Fleet-Role: orchestrator + Protected-Change: ...) is present on each protected-path commit and parseable by verify-protected.mjs, which now uses merge-tree to attribute author of merge commits (falsification-safe per mutation-control)."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "The exact-head gateguard is tightened (ba0d0871d: pre-release reads results[]), success-exceptions added and refused-by-check when missing (5ed1e82e6 / 103eef144), drift job installs deps and generates Prisma client (12baf9901 + cdd2d9d69), and verify-protected is no longer bloated by inherited commits (34d7bb03a — judge the merge itself, not ancestors). All pre-existing JEV floors unchanged (J1 known_gap=39 stays, controls 3/3). No prior gate that previously refused a defect was relaxed; the boot guard for root CLAUDE.md (b2d7d97f5) is a strict gate that closes a regression."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "Three mutants planted and run; all three were caught by the existing control/test suite. See mutants below.",
+      "mutants": [
+        {
+          "file": "lib/services/ai/video/artifact-store.ts",
+          "planted": "Removed the host whitelist check inside falMediaUrl() — drop the `!host ||` clause so any non-credentialed https URL is accepted, regardless of host",
+          "test_command": "npx jest --config config/jest/jest.worktree.cjs tests/unit/ai/video-artifact-store.test.ts",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        },
+        {
+          "file": "lib/services/ai/video/artifact-store.ts",
+          "planted": "Commented out both MAX_ARTIFACT_BYTES checks (declared-size pre-read and body-length post-read) so a Content-Length: 999999999 response is fully buffered and uploaded",
+          "test_command": "npx jest --config config/jest/jest.worktree.cjs tests/unit/ai/video-artifact-store.test.ts",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        },
+        {
+          "file": "scripts/fleet/verify-protected.mjs",
+          "planted": "Replaced mergeAuthored() body with `return false` so a merge commit can never be deemed to have authored a protected path — the trailer-gate is then bypassed",
+          "test_command": "node scripts/fleet/verify-protected.mjs --control",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "(a) `node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json` ran in this worktree against the lockfile-installed deps and exited 0 (774/774 + 39/39), with `--control` ran in the unit suite passing 24/24. (b) The negative control for gen-openapi (`exits 2 when an input cannot be read`) and for success-exceptions (`fails when a spec entry is deleted` / `an exempt entry removes the route from both sides`) are exercised in tests/unit/api-contract/gen-openapi.test.ts. (c) verify-protected.mjs --control exits 0 with all 8 negative floors (planted floors edit, rename out, non-ASCII workflow, manifest rewrite, human-declared change, replaced verifier, ledger row deleted, halt removed, undeclared-edit-in-merge, conflict-resolved-in-merge) refusing — caught the planted mergeAuthored mutant. (d) gen-openapi probe child has `globalThis.fetch = async () => blocked();` (line 1048) so no network call from probing; zod schemas are read as text then materialized in a controlled child. (e) The `tests/unit/storage/object-storage-client-guard.test.ts` static guard refuses any client module (any file starting with 'use client' or under components/ or hooks/) from importing `lib/storage/object-storage` by static analysis — the SUPABASE_SERVICE_ROLE_KEY never reaches a browser bundle."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "Dependencies installed by `npm ci` (worktree setup honours the lockfile, brief confirms). `npm run type-check` exited 0; `npm run lint` exited 0; `npm run jev:det -- --family J1` exited 0 with `PASS J1 PASS cases=640 pass=601 fail=0 known_gap=39 inconclusive=0 controls=3/3`; `node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json` exited 0 (`[gen-openapi] PASS`); pre-release.mjs --control exited 0 (14/14); verify-protected.mjs --control exited 0 (all floors); selftest.mjs receives the new pre-release.mjs into its controls list (1295b761c). Lockfile-respecting path: zod 4.4.3 in the lockfile. No `npm install` or upgrade was performed during this review."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Protected paths (policy.json, scripts/api/*, scripts/fleet/*, release-receipts/**, .github/workflows/*, CLAUDE.md) were only touched by Fleet-Role: orchestrator commits carrying AM-5 Protected-Change trailers (commit bodies verified). verify-protected.mjs's merge-tree rewrite (34d7bb03a) plus the 3-dot diff in pre-release.mjs (1295b761c) prevents a merge commit from inheriting protection-bypass blame from its parents — tested by falsification above. fal.media CDN list is exactly the documented+observed set (v3b/v3/fal.media from `https://fal.ai/docs/documentation/model-apis/fal-cdn` per the commit message; storage helper is single-tenant per bucket; avatar upload uses `Date.now()` so a same-millisecond overwrite is possible only within one user and is documented as so; reference-library-private.ts uses signedUrls exclusively with a '/object/sign/' presence check so a returned public URL cannot masquerade as signed."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Two outbound traffic paths exist and both are confined: (a) artifact-store.ts fetch goes only to the validated fal media host (FAL_MEDIA_HOSTS constant; redirect:'error'; AbortSignal.timeout; size cap; assertExternalUrlSafe), no credentials, no port — falsified. (b) object-storage.ts talks to SUPABASE_URL with SUPABASE_SERVICE_ROLE_KEY; the client is built lazily, throws ObjectStorageNotProvisionedError if env missing, and is gatewayed by tests/unit/storage/object-storage-client-guard.test.ts (no client module can import it). Reference-library-private.ts now downloads a JSON manifest from Supabase Storage and signs the listed paths; the helper refuses anything that does not include `/object/sign/` so a public URL cannot be returned (defence-in-depth for fal). No outbound URLs accept user input directly anywhere in the diff."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      ".claude/hooks/pre-compact-context.py",
+      ".github/workflows/ci.yml",
+      ".github/workflows/openapi-drift.yml",
+      ".prettierignore",
+      "CLAUDE.md",
+      "DECISIONS.md",
+      "README.md",
+      "__tests__/landing/helpers/tripwire-seeds.generated.json",
+      "app/api/user/avatar/route.ts",
+      "docs/api/error-codes.md",
+      "docs/api/openapi.generated.json",
+      "docs/api/openapi.yaml",
+      "docs/api/rate-limits.md",
+      "lib/ai/structured-output.ts",
+      "lib/services/ai/reference-library-private.ts",
+      "lib/services/ai/video/artifact-store.ts",
+      "lib/services/media/fetch-image-base64.ts",
+      "lib/storage/object-storage.ts",
+      "package.json",
+      "proposals/P3/scripts/api/exempt-routes.json",
+      "public/llms.txt",
+      "release-receipts/manifests/P3-handoff.md",
+      "release-receipts/manifests/policy-hash.json",
+      "scripts/api/gen-machine-docs.mjs",
+      "scripts/api/gen-openapi.mjs",
+      "scripts/api/success-exceptions.json",
+      "scripts/fleet/lib.mjs",
+      "scripts/fleet/policy.json",
+      "scripts/fleet/pre-release.mjs",
+      "scripts/fleet/run-phase.mjs",
+      "scripts/fleet/selftest.mjs",
+      "scripts/fleet/verify-protected.mjs",
+      "tests/unit/ai/private-reference-bound.test.ts",
+      "tests/unit/ai/reference-library-private-storage.test.ts",
+      "tests/unit/ai/video-artifact-store.test.ts",
+      "tests/unit/api-contract/gen-openapi.test.ts",
+      "tests/unit/api-contract/machine-docs.test.ts",
+      "tests/unit/api/not-provisioned/p2-u17-stub-retirement.test.ts",
+      "tests/unit/storage/object-storage-client-guard.test.ts",
+      "tests/unit/storage/object-storage.test.ts",
+      "vercel.json"
+    ],
+    "not_reviewed": [
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "Brief excludes *.jsonl files (release-receipts/ledger) from review, named in diff_coverage.excluded_files. Append-only ledger written by the merge-phase; mechanical, no schema change in this diff."
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-19T03:19:12.632187+00:00",
+  "head": "0bdff06e283280810fb7a40f9f6388a9d1970b40",
+  "lane": "minimax"
+}
