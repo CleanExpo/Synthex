@@ -25,7 +25,18 @@ import {
   getVoiceSettings,
   getCharacterQuota,
   DEFAULT_VOICES,
+  DEFAULT_SPEECH_MODEL,
+  DEFAULT_STREAM_MODEL,
+  priceSpeechUsd,
 } from '@/lib/services/ai/voice-generation';
+import {
+  holdMediaSpend,
+  holdMediaSpendBatch,
+  mediaSpendRefusal,
+  releaseMediaSpend,
+  resolveMediaSpendOwner,
+  settleMediaSpend,
+} from '@/lib/services/ai/media-spend-gate';
 import { logger } from '@/lib/logger';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import {
@@ -182,6 +193,9 @@ export async function POST(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'generate';
+  const spendCaller = isServiceRequest
+    ? ({ isService: true } as const)
+    : ({ isService: false, userId } as const);
 
   try {
     const body = await request.json();
@@ -208,20 +222,34 @@ export async function POST(request: NextRequest) {
           voiceId = DEFAULT_VOICES[validated.voiceName];
         }
 
+        // Price and hold BEFORE the provider call (spec M10).
+        const modelId = validated.modelId ?? DEFAULT_STREAM_MODEL;
+        const costUsd = priceSpeechUsd(modelId, validated.text);
+        const hold = await holdMediaSpend({
+          ...(await resolveMediaSpendOwner(spendCaller)),
+          heldUsd: costUsd,
+          pipeline: 'voice-generation',
+          model: modelId,
+        });
+
         const stream = await generateSpeechStream({
           text: validated.text,
           voiceId,
-          modelId: validated.modelId,
+          modelId,
           stability: validated.stability,
           similarityBoost: validated.similarityBoost,
         });
 
         if (!stream) {
+          await releaseMediaSpend(hold);
           return APISecurityChecker.createSecureResponse(
             { error: 'Failed to generate speech stream' },
             500
           );
         }
+
+        // ElevenLabs accepted the request and bills its characters.
+        await settleMediaSpend(hold, costUsd);
 
         // Return streaming response
         return new NextResponse(stream, {
@@ -252,10 +280,20 @@ export async function POST(request: NextRequest) {
           voiceId = DEFAULT_VOICES[validated.voiceName];
         }
 
+        // Price and hold BEFORE the provider call (spec M10).
+        const modelId = validated.modelId ?? DEFAULT_SPEECH_MODEL;
+        const costUsd = priceSpeechUsd(modelId, validated.text);
+        const hold = await holdMediaSpend({
+          ...(await resolveMediaSpendOwner(spendCaller)),
+          heldUsd: costUsd,
+          pipeline: 'voice-generation',
+          model: modelId,
+        });
+
         const result = await generateSpeech({
           text: validated.text,
           voiceId,
-          modelId: validated.modelId,
+          modelId,
           stability: effectiveStability,
           similarityBoost: effectiveSimilarityBoost,
           style: effectiveStyle,
@@ -264,6 +302,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!result.success) {
+          await releaseMediaSpend(hold);
           logger.error('Speech generation failed', {
             error: result.error,
             userId,
@@ -273,6 +312,8 @@ export async function POST(request: NextRequest) {
             500
           );
         }
+
+        await settleMediaSpend(hold, costUsd);
 
         const libraryRequested =
           !isServiceRequest && validated.saveToLibrary && !!result.audioBase64;
@@ -308,6 +349,13 @@ export async function POST(request: NextRequest) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.issues },
         400
+      );
+    }
+    const refusal = mediaSpendRefusal(error);
+    if (refusal) {
+      return APISecurityChecker.createSecureResponse(
+        refusal.body,
+        refusal.status
       );
     }
 
@@ -547,10 +595,25 @@ export async function PUT(request: NextRequest) {
       .max(10)
       .parse(body.requests || []);
 
+    // Price every request, then hold the whole batch BEFORE the first provider
+    // call: admitted or refused as one unit, settled or released per request.
+    const modelIds = requests.map(r => r.modelId ?? DEFAULT_SPEECH_MODEL);
+    const costs = requests.map((r, i) => priceSpeechUsd(modelIds[i], r.text));
+    const holds =
+      requests.length === 0
+        ? []
+        : await holdMediaSpendBatch({
+            ...(await resolveMediaSpendOwner({ isService: false, userId })),
+            perHoldUsd: Math.max(...costs),
+            count: requests.length,
+            pipeline: 'voice-generation',
+            model: 'elevenlabs-tts',
+          });
+
     const results = [];
     let totalCharacters = 0;
 
-    for (const req of requests) {
+    for (const [i, req] of requests.entries()) {
       // Resolve voice ID
       let voiceId = req.voiceId;
       if (!voiceId && req.voiceName) {
@@ -560,7 +623,7 @@ export async function PUT(request: NextRequest) {
       const result = await generateSpeech({
         text: req.text,
         voiceId,
-        modelId: req.modelId,
+        modelId: modelIds[i],
         stability: req.stability,
         similarityBoost: req.similarityBoost,
         style: req.style,
@@ -571,7 +634,10 @@ export async function PUT(request: NextRequest) {
       results.push(result);
 
       if (result.success) {
+        await settleMediaSpend({ ...holds[i], model: modelIds[i] }, costs[i]);
         totalCharacters += result.characterCount || 0;
+      } else {
+        await releaseMediaSpend(holds[i]);
       }
 
       // Small delay between requests to avoid rate limiting
@@ -608,6 +674,13 @@ export async function PUT(request: NextRequest) {
       return APISecurityChecker.createSecureResponse(
         { error: 'Validation error', details: error.issues },
         400
+      );
+    }
+    const refusal = mediaSpendRefusal(error);
+    if (refusal) {
+      return APISecurityChecker.createSecureResponse(
+        refusal.body,
+        refusal.status
       );
     }
 

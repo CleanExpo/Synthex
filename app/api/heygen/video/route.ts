@@ -17,8 +17,23 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { createHeyGenClient } from '@/lib/marketing-agency/heygen/client';
-import { generateSpeech } from '@/lib/services/ai/voice-generation';
+import {
+  createHeyGenClient,
+  mp3DurationSeconds,
+  priceAvatarVideoUsd,
+} from '@/lib/marketing-agency/heygen/client';
+import {
+  generateSpeech,
+  priceSpeechUsd,
+} from '@/lib/services/ai/voice-generation';
+import {
+  holdMediaSpend,
+  mediaSpendRefusal,
+  releaseMediaSpend,
+  resolveMediaSpendOwner,
+  settleMediaSpend,
+  MediaSpendRefusedError,
+} from '@/lib/services/ai/media-spend-gate';
 import { uploadToStorage } from '@/lib/storage/platform-storage';
 
 const RequestSchema = z.object({
@@ -43,6 +58,7 @@ export const dynamic = 'force-dynamic';
 async function _handlePost(request: NextRequest) {
   // ── Auth ────────────────────────────────────────────────────────────
   const serviceAuth = validateServiceToken(request);
+  let userId: string | undefined;
 
   if (!serviceAuth.valid) {
     // No valid service token — fall back to a REAL authenticated user.
@@ -58,6 +74,7 @@ async function _handlePost(request: NextRequest) {
         403
       );
     }
+    userId = security.context.userId;
   }
 
   // ── Validate ────────────────────────────────────────────────────────
@@ -94,67 +111,107 @@ async function _handlePost(request: NextRequest) {
       };
 
   try {
-    // ── Step 1: Get audio URL ─────────────────────────────────────────
-    let audioUrl: string;
-
+    // ── Spend gate (spec M10) ─────────────────────────────────────────
+    // HeyGen bills by seconds of video, which is the length of the audio. Audio
+    // the caller supplies has no length we can read before spending, so it
+    // cannot be priced and is refused rather than guessed (fail closed).
     if (validated.audioUrl) {
-      // Caller already has audio (e.g. pre-generated ElevenLabs MP3)
-      audioUrl = validated.audioUrl;
-    } else {
-      // Generate ElevenLabs audio -> upload to Supabase Storage
-      const voiceResult = await generateSpeech({
-        text: validated.script,
-        voiceId:
-          validated.voiceId ||
-          process.env.ELEVENLABS_VOICE_ID ||
-          'aGkVQvWUZi16EH8aZJvT', // CEO clone
-        modelId: 'eleven_multilingual_v2',
-        stability: 0.55,
-        similarityBoost: 0.8,
-        style: 0.25,
-        outputFormat: 'mp3_44100_128',
-      });
-
-      if (!voiceResult.success || !voiceResult.audioBase64) {
-        return APISecurityChecker.createSecureResponse(
-          {
-            error: 'ElevenLabs audio generation failed',
-            details: voiceResult.error,
-          },
-          500
-        );
-      }
-
-      // Decode base64 -> Buffer
-      const audioBuffer = Buffer.from(voiceResult.audioBase64, 'base64');
-
-      // Upload to Supabase Storage (service account)
-      const uploadResult = await uploadToStorage(
-        'system:heygen-video-pipeline',
-        `heygen-audio-${Date.now()}.mp3`,
-        audioBuffer,
-        'audio/mpeg'
+      throw new MediaSpendRefusedError(
+        'media_unpriced',
+        422,
+        'Caller-supplied audio cannot be priced before spend (its length is unknown). Omit audioUrl so the pipeline generates and measures the audio.'
       );
-
-      audioUrl = uploadResult.url;
     }
+    const owner = await resolveMediaSpendOwner(
+      serviceAuth.valid
+        ? { isService: true }
+        : { isService: false, userId: userId ?? '' }
+    );
+
+    // ── Step 1: ElevenLabs audio -> Supabase Storage public URL ───────
+    const speechModel = 'eleven_multilingual_v2' as const;
+    const speechUsd = priceSpeechUsd(speechModel, validated.script);
+    const speechHold = await holdMediaSpend({
+      ...owner,
+      heldUsd: speechUsd,
+      pipeline: 'voice-generation',
+      model: speechModel,
+    });
+    const voiceResult = await generateSpeech({
+      text: validated.script,
+      voiceId:
+        validated.voiceId ||
+        process.env.ELEVENLABS_VOICE_ID ||
+        'aGkVQvWUZi16EH8aZJvT', // CEO clone
+      modelId: speechModel,
+      stability: 0.55,
+      similarityBoost: 0.8,
+      style: 0.25,
+      outputFormat: 'mp3_44100_128',
+    });
+
+    if (!voiceResult.success || !voiceResult.audioBase64) {
+      // success without audio still made a billed call; only a failure is free.
+      if (voiceResult.success) await settleMediaSpend(speechHold, speechUsd);
+      else await releaseMediaSpend(speechHold);
+      return APISecurityChecker.createSecureResponse(
+        {
+          error: 'ElevenLabs audio generation failed',
+          details: voiceResult.error,
+        },
+        500
+      );
+    }
+
+    await settleMediaSpend(speechHold, speechUsd);
+
+    // Decode base64 -> Buffer
+    const audioBuffer = Buffer.from(voiceResult.audioBase64, 'base64');
+    const audioSeconds = mp3DurationSeconds(audioBuffer.length);
+
+    // Upload to Supabase Storage (service account)
+    const uploadResult = await uploadToStorage(
+      'system:heygen-video-pipeline',
+      `heygen-audio-${Date.now()}.mp3`,
+      audioBuffer,
+      'audio/mpeg'
+    );
+
+    const audioUrl = uploadResult.url;
 
     // ── Step 2: HeyGen avatar video with audio lip-sync ────────────────
     const client = createHeyGenClient();
 
-    const job = await client.createAvatarVideo({
-      avatarId: validated.avatarId,
-      script: validated.script,
-      audioUrl, // ElevenLabs audio for lip-sync
-      consent,
-      dimension:
-        validated.aspectRatio === '9:16'
-          ? { width: 720, height: 1280 }
-          : validated.aspectRatio === '1:1'
-            ? { width: 720, height: 720 }
-            : { width: 1280, height: 720 },
-      ...(validated.title ? { title: validated.title } : {}),
+    // Priced from the measured audio length, held before the HeyGen request.
+    const videoUsd = priceAvatarVideoUsd(audioSeconds);
+    const videoHold = await holdMediaSpend({
+      ...owner,
+      heldUsd: videoUsd,
+      pipeline: 'heygen-avatar-video',
+      model: 'heygen-avatar-iii',
     });
+
+    let job: Awaited<ReturnType<typeof client.createAvatarVideo>>;
+    try {
+      job = await client.createAvatarVideo({
+        avatarId: validated.avatarId,
+        script: validated.script,
+        audioUrl, // ElevenLabs audio for lip-sync
+        consent,
+        dimension:
+          validated.aspectRatio === '9:16'
+            ? { width: 720, height: 1280 }
+            : validated.aspectRatio === '1:1'
+              ? { width: 720, height: 720 }
+              : { width: 1280, height: 720 },
+        ...(validated.title ? { title: validated.title } : {}),
+      });
+    } catch (err) {
+      // HeyGen refused the job (or never received it): nothing was rendered.
+      await releaseMediaSpend(videoHold);
+      throw err;
+    }
+    await settleMediaSpend(videoHold, videoUsd);
 
     return APISecurityChecker.createSecureResponse(
       {
@@ -168,6 +225,13 @@ async function _handlePost(request: NextRequest) {
       202
     );
   } catch (err: unknown) {
+    const refusal = mediaSpendRefusal(err);
+    if (refusal) {
+      return APISecurityChecker.createSecureResponse(
+        refusal.body,
+        refusal.status
+      );
+    }
     console.error('[heygen/video] Pipeline error:', err);
     return APISecurityChecker.createSecureResponse(
       {
