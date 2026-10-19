@@ -764,6 +764,195 @@
           "shape": "draft-output"
         }
       ]
+    },
+    "KEY": {
+      "count": 25,
+      "property": "P4 machine principal: an org-A key (smk_\u2026) called the way Next calls a route (proxy.ts, then the handler) never reaches a route its named scopes do not grant (403), '*' grants nothing, revoked/expired/env-held keys are 401, a suspended org or a key whose user left the key's org is 403, and an org-B id or org-B header yields no org-B data. No write other than the key's lastUsedAt stamp.",
+      "cases": [
+        {
+          "slug": "content-key-on-team-settings",
+          "scopes": ["content"],
+          "file": "app/api/teams/[id]/settings/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "content-key-on-invoices",
+          "scopes": ["content"],
+          "file": "app/api/invoices/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "team-key-on-content",
+          "scopes": ["team"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "approvals-key-on-integrations",
+          "scopes": ["approvals"],
+          "file": "app/api/integrations/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "billing-key-on-organization",
+          "scopes": ["billing"],
+          "file": "app/api/organizations/[orgId]/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "organization-key-deletes-organization",
+          "scopes": ["organization"],
+          "file": "app/api/organizations/[orgId]/route.ts",
+          "method": "DELETE",
+          "expect": 403
+        },
+        {
+          "slug": "approvals-key-decides-approval",
+          "scopes": ["approvals"],
+          "file": "app/api/approvals/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "content-key-publishes",
+          "scopes": ["content"],
+          "file": "app/api/social/post/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "billing-key-changes-plan",
+          "scopes": ["billing"],
+          "file": "app/api/stripe/change-plan/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "team-key-mints-api-key",
+          "scopes": ["team"],
+          "file": "app/api/user/api-keys/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "integrations-key-offboards-client",
+          "scopes": ["integrations"],
+          "file": "app/api/command-centre/clients/[id]/offboard/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "mcp-tool-scope-on-rest",
+          "scopes": ["creative"],
+          "file": "app/api/content-drafts/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "provisioning-scope-on-rest",
+          "scopes": ["provisioning"],
+          "file": "app/api/teams/invite/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "content-key-method-not-granted",
+          "scopes": ["content"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "GET",
+          "expect": 403
+        },
+        {
+          "slug": "wildcard-on-content",
+          "scopes": ["*"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "wildcard-on-invoice-send",
+          "scopes": ["*"],
+          "file": "app/api/invoices/[id]/send/route.ts",
+          "method": "POST",
+          "expect": 403
+        },
+        {
+          "slug": "wildcard-plus-named-on-role",
+          "scopes": ["*", "approvals"],
+          "file": "app/api/teams/members/[memberId]/role/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "wildcard-on-unlisted-route",
+          "scopes": ["*"],
+          "file": "app/api/admin/audit-log/route.ts",
+          "method": "GET",
+          "expect": 403
+        },
+        {
+          "slug": "legacy-env-key-rest",
+          "legacy": true,
+          "scopes": [],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 401
+        },
+        {
+          "slug": "legacy-env-key-mcp",
+          "legacy": true,
+          "mcp": true,
+          "scopes": [],
+          "file": "app/api/mcp/auth.ts",
+          "method": "MCP",
+          "expect": 401
+        },
+        {
+          "slug": "revoked-key",
+          "revoked": true,
+          "scopes": ["content"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 401
+        },
+        {
+          "slug": "expired-key",
+          "expired": true,
+          "scopes": ["content"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 401
+        },
+        {
+          "slug": "suspended-org-key",
+          "suspended": true,
+          "scopes": ["content"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "key-user-moved-org",
+          "userId": "user-b",
+          "scopes": ["content"],
+          "file": "app/api/content/[id]/route.ts",
+          "method": "PATCH",
+          "expect": 403
+        },
+        {
+          "slug": "request-names-org-b",
+          "orgHeader": true,
+          "scopes": ["organization"],
+          "file": "app/api/organizations/[orgId]/route.ts",
+          "method": "PATCH",
+          "expect": "refused"
+        }
+      ]
     }
   }
 }

@@ -53,9 +53,18 @@
         "J1-malformed-post-team",
         "J1-malformed-post-teams.members",
         "J1-malformed-patch-teams.id.settings",
-        "J1-malformed-post-social.post"
+        "J1-malformed-post-social.post",
+        "J1-key-malformed-patch-organizations.orgid",
+        "J1-key-malformed-post-approvals",
+        "J1-key-malformed-patch-content.id",
+        "J1-key-malformed-post-content-drafts",
+        "J1-key-malformed-post-content-library",
+        "J1-key-malformed-post-integrations",
+        "J1-key-malformed-put-integrations.third-party.provider.config",
+        "J1-key-malformed-post-teams.members",
+        "J1-key-malformed-patch-teams.id.settings"
       ],
-      "note": "request.json() is inside the handler's catch-all, so an unparseable body becomes 500 instead of 400. Scratch check: the same routes answer 400/200/404 (not 500) to a valid '{}' body, so the 500 is the parse failure."
+      "note": "request.json() is inside the handler's catch-all, so an unparseable body becomes 500 instead of 400. Scratch check: the same routes answer 400/200/404 (not 500) to a valid '{}' body, so the 500 is the parse failure. The J1-key-malformed-* cases are the same routes reached with a scoped P4 machine key: the key passes proxy.ts and the route helpers, then the same parse failure answers 500."
     },
     "J1-GAP-malformed-json-accepted": {
       "cases": ["J1-malformed-post-user.api-keys"],
@@ -75,6 +84,10 @@
         "J1-malformed-post-stripe.change-plan"
       ],
       "note": "Billing/Stripe routes check configuration before authentication: an unauthenticated request reaches 'not configured' (503; GET /api/invoices even answers 200 {error:'Billing not configured', invoices:[]}) instead of 401, and the malformed-body probes get 503 before the body is validated. P10 must put auth first."
+    },
+    "J1-GAP-key-admin-only-before-body": {
+      "cases": ["J1-key-malformed-post-team"],
+      "note": "POST /api/team checks DEFAULT_POLICIES.ADMIN_ONLY before reading the body. A machine principal carries role 'user' (as a real sign-in JWT does: no role claim), so a team-scoped key gets 403 'Admin access required' and the malformed body is never parsed. The session variant (admin-role JWT) is J1-GAP-malformed-json-500. Follow-up: decide whether ADMIN_ONLY should resolve the key's organisation role."
     }
   }
 }

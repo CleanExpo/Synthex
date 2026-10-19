@@ -1,9 +1,10 @@
 /**
- * J11 — Attack payloads (hard gate). 140 cases + 7 planted-defect controls.
+ * J11 — Attack payloads (hard gate). 165 cases + 10 planted-defect controls.
  *
  * Case list and per-class properties: tests/eval/jev/cases/J11/cases.json.
  * Classes: SSRF (30), REDIR (20), SCOPE (20), TENANT (20), WEBHOOK (15),
- * SECRET (15), INJECT (20). Each class has one detector; its control plants a
+ * SECRET (15), INJECT (20), KEY (25, P4 machine-key scope escalation).
+ * Each class has one detector; its control plants a
  * real defect of that kind and runs the SAME detector (FAIL = caught).
  *
  * Boundaries doubled (as the contract tests do): @/lib/prisma (synthetic
@@ -1367,8 +1368,222 @@ describe('J11 INJECT', () => {
   });
 });
 
+// ════════════════════════════════════════════════════════════════════════════
+// KEY (25) — P4 machine principal: scope escalation, wildcard, legacy env key
+// ════════════════════════════════════════════════════════════════════════════
+
+const keyHash = (raw: string) =>
+  crypto.createHash('sha256').update(raw, 'utf8').digest('hex');
+
+/** Seed an org-A McpApiKey row (user-a) and return its raw key. */
+function seedKey(db: FakeDb, raw: string, overrides: Row = {}): string {
+  db.table('mcpApiKey').length = 0;
+  db.table('mcpApiKey').push({
+    id: `key-${raw}`,
+    keyHash: keyHash(raw),
+    organizationId: 'org-A',
+    userId: 'user-a',
+    label: raw,
+    scopes: [],
+    expiresAt: null,
+    revokedAt: null,
+    ...overrides,
+  });
+  return raw;
+}
+
+/** proxy.ts first, then the route when the proxy passes the request on. */
+async function callThroughProxy(
+  file: string,
+  method: string,
+  opts: Parameters<typeof callRoute>[2]
+): Promise<CallResult & { by: 'proxy' | 'route' }> {
+  const proxyMod = loadModule('proxy.ts') as { proxy: unknown };
+  const pr = await callHandler(
+    { [method]: proxyMod.proxy },
+    file,
+    method,
+    opts
+  );
+  if (pr.status === null || pr.headers['x-middleware-next'] !== '1')
+    return { ...pr, by: 'proxy' };
+  return { ...(await callRoute(file, method, opts)), by: 'route' };
+}
+
+/** Refused with the expected status, no tenant data, no write but the lastUsedAt stamp. */
+function keyDetector(
+  r: CallResult,
+  db: FakeDb,
+  expect: number | 'refused'
+): Verdict {
+  const failed = loadingFailed(r);
+  if (failed) return { ok: failed, detail: '' };
+  const leaked =
+    r.text.includes(ORG_B_MARKER) || r.text.includes('J11-ORG-A-OWN-MARKER');
+  const writes = db.writes.filter(w => w.model !== 'mcpApiKey');
+  const statusOk =
+    expect === 'refused'
+      ? r.status === 403 || r.status === 404
+      : r.status === expect;
+  const detail = `status ${r.status} (want ${expect})${leaked ? ', tenant data in body' : ''}${writes.length ? `, writes ${writes.map(w => `${w.model}.${w.op}`).join(',')}` : ''}`;
+  return { ok: statusOk && !leaked && writes.length === 0, detail };
+}
+
+interface KeyCase {
+  slug: string;
+  scopes: string[];
+  file: string;
+  method: string;
+  expect: number | 'refused';
+  legacy?: boolean;
+  mcp?: boolean;
+  revoked?: boolean;
+  expired?: boolean;
+  suspended?: boolean;
+  userId?: string;
+  orgHeader?: boolean;
+}
+
+const LEGACY_RAW = 'smk_j11_planted_legacy_env_key';
+
+describe('J11 KEY', () => {
+  afterEach(() => setEnv({ SYNTHEX_MCP_LEGACY_KEYS: undefined }));
+
+  it('machine keys never escalate past their named scopes', async () => {
+    for (const c of C.KEY.cases as KeyCase[]) {
+      await runCase(`J11-KEY-${c.slug}`, c.file, async () => {
+        if (!routeExists(c.file))
+          return { ok: 'route file missing', detail: c.file };
+        const db = fresh();
+        let raw: string;
+        if (c.legacy) {
+          // A raw key held only in the retired env map: no McpApiKey row.
+          raw = LEGACY_RAW;
+          setEnv({
+            SYNTHEX_MCP_LEGACY_KEYS: JSON.stringify({
+              [raw]: { organizationId: 'org-A', userId: 'user-a', label: 'x' },
+            }),
+          });
+        } else {
+          raw = seedKey(db, `smk_j11_${c.slug}`, {
+            scopes: c.scopes,
+            ...(c.revoked ? { revokedAt: new Date('2026-01-01') } : {}),
+            ...(c.expired ? { expiresAt: new Date(Date.now() - 1000) } : {}),
+            ...(c.userId ? { userId: c.userId } : {}),
+          });
+        }
+        if (c.suspended)
+          db.table('organization').find(o => o.id === 'org-A')!.status =
+            'suspended';
+        if (c.mcp) {
+          const auth = loadModule('app/api/mcp/auth.ts') as {
+            resolveOrgFromBearer(h: string): Promise<unknown>;
+          };
+          const caller = await auth.resolveOrgFromBearer(`Bearer ${raw}`);
+          return {
+            ok: caller === null,
+            detail:
+              caller === null
+                ? 'MCP caller null (401)'
+                : 'MCP accepted the env-held key',
+          };
+        }
+        const r = await callThroughProxy(c.file, c.method, {
+          headers: {
+            authorization: `Bearer ${raw}`,
+            ...(c.orgHeader ? { 'x-organization-id': 'org-B' } : {}),
+          },
+          params: { id: ORG_B_ID, orgId: 'org-B', memberId: ORG_B_ID },
+          body: c.method === 'GET' || c.method === 'DELETE' ? undefined : {},
+        });
+        const v = keyDetector(r, db, c.expect);
+        return { ...v, detail: `${v.detail}; answered by ${r.by}` };
+      });
+    }
+  });
+
+  const plantedCall = async (
+    handler: (req: { headers: Headers }) => Promise<Response>,
+    raw: string
+  ) =>
+    callHandler({ GET: handler }, 'planted', 'GET', {
+      headers: { authorization: `Bearer ${raw}` },
+    });
+
+  it('control: planted gate that honours the wildcard scope', async () => {
+    const db = fresh();
+    const raw = seedKey(db, 'smk_j11_ctrl_wildcard', { scopes: ['*'] });
+    const ap = loadModule(
+      'lib/auth/agent-principal.ts'
+    ) as typeof import('@/lib/auth/agent-principal');
+    const planted = async (req: { headers: Headers }) => {
+      const found = await ap.lookupMachineKey(ap.machineKeyOf(req as never)!);
+      // PLANTED DEFECT: '*' treated as every scope.
+      if (
+        !found.ok ||
+        !(
+          found.key.scopes.includes('*') ||
+          ap.scopesAllow(found.key.scopes, 'PATCH /api/content/[id]')
+        )
+      )
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      return NextResponse.json({ ok: true });
+    };
+    control(
+      'J11-CTRL-key-wildcard-honoured',
+      keyDetector(await plantedCall(planted, raw), db, 403),
+      'planted wildcard gate'
+    );
+  });
+
+  it('control: planted resolver that still reads the legacy env map', async () => {
+    const db = fresh();
+    setEnv({
+      SYNTHEX_MCP_LEGACY_KEYS: JSON.stringify({
+        [LEGACY_RAW]: { organizationId: 'org-A', userId: 'user-a' },
+      }),
+    });
+    const planted = async (req: { headers: Headers }) => {
+      const raw = req.headers.get('authorization')?.slice(7) ?? '';
+      // PLANTED DEFECT: an env-held plaintext key authenticates.
+      const map = JSON.parse(process.env.SYNTHEX_MCP_LEGACY_KEYS ?? '{}');
+      if (!map[raw])
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({
+        ok: true,
+        organizationId: map[raw].organizationId,
+      });
+    };
+    control(
+      'J11-CTRL-key-legacy-env-reader',
+      keyDetector(await plantedCall(planted, LEGACY_RAW), db, 401),
+      'planted legacy env reader'
+    );
+  });
+
+  it('control: planted route that authenticates a key but never checks scopes', async () => {
+    const db = fresh();
+    const raw = seedKey(db, 'smk_j11_ctrl_unscoped', { scopes: ['approvals'] });
+    const ap = loadModule(
+      'lib/auth/agent-principal.ts'
+    ) as typeof import('@/lib/auth/agent-principal');
+    const planted = async (req: { headers: Headers }) => {
+      const found = await ap.lookupMachineKey(ap.machineKeyOf(req as never)!);
+      // PLANTED DEFECT: authentication only, no scope check.
+      if (!found.ok)
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ ok: true });
+    };
+    control(
+      'J11-CTRL-key-scope-unchecked',
+      keyDetector(await plantedCall(planted, raw), db, 403),
+      'planted scope-blind route'
+    );
+  });
+});
+
 // ── Shape guard: the case file must declare exactly the expected counts ──────
-it('J11 case file declares 140 cases', () => {
+it('J11 case file declares 165 cases', () => {
   const declared =
     C.SSRF.guard.length +
     C.SSRF.service.length +
@@ -1378,6 +1593,7 @@ it('J11 case file declares 140 cases', () => {
     C.TENANT.cases.length +
     C.WEBHOOK.cases.length +
     C.SECRET.cases.length +
-    C.INJECT.cases.length;
-  expect(declared).toBe(140);
+    C.INJECT.cases.length +
+    C.KEY.cases.length;
+  expect(declared).toBe(165);
 });
