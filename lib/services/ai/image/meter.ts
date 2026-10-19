@@ -298,6 +298,32 @@ export interface ImageSpendHold {
 }
 
 /**
+ * Price the hold for `count` images: pure, no I/O. holdImageSpend reserves
+ * exactly `heldUsd`; the read-only quote returns the same numbers.
+ */
+export function priceImageHold(options: MeteredImageOptions, count: number) {
+  // Dearest plausible candidate — throws UnpricedModelError for any uncostable
+  // candidate, so a pin to a deprecated/unpriced provider fails CLOSED here,
+  // before the provider is reached.
+  const model = resolveCostModel(options);
+  const dimensions = resolveOutputDimensions(options);
+  const referenceImageCount = options.referenceImageCount ?? 0;
+  const perImageUsd = estimateImageCostUsd(model, {
+    ...dimensions,
+    referenceImageCount,
+  });
+  // Reserve for the WORST CASE the chain can run, not for one call per variant.
+  // Over-reserving costs nothing: settlement charges what actually ran and the
+  // remainder is returned by the same terminal event. Under-reserving breaks
+  // the ceiling, which is the only thing standing between a runaway batch and
+  // the organisation's budget.
+  const callsPerVariant = maxProviderCallsPerVariant(options);
+  const heldUsd =
+    Math.round(perImageUsd * count * callsPerVariant * 10000) / 10000;
+  return { model, perImageUsd, dimensions, referenceImageCount, heldUsd };
+}
+
+/**
  * Estimate and hold for `count` images BEFORE any provider call.
  *
  * Throws `UnpricedModelError` when the model cannot be costed and
@@ -317,24 +343,8 @@ export async function holdImageSpend(
     );
   }
 
-  // Dearest plausible candidate — throws UnpricedModelError for any uncostable
-  // candidate, so a pin to a deprecated/unpriced provider fails CLOSED here,
-  // before the provider is reached.
-  const model = resolveCostModel(options);
-  const dimensions = resolveOutputDimensions(options);
-  const referenceImageCount = options.referenceImageCount ?? 0;
-  const perImageUsd = estimateImageCostUsd(model, {
-    ...dimensions,
-    referenceImageCount,
-  });
-  // Reserve for the WORST CASE the chain can run, not for one call per variant.
-  // Over-reserving costs nothing: settlement charges what actually ran and the
-  // remainder is returned by the same terminal event. Under-reserving breaks
-  // the ceiling, which is the only thing standing between a runaway batch and
-  // the organisation's budget.
-  const callsPerVariant = maxProviderCallsPerVariant(options);
-  const heldUsd =
-    Math.round(perImageUsd * count * callsPerVariant * 10000) / 10000;
+  const { perImageUsd, dimensions, referenceImageCount, heldUsd } =
+    priceImageHold(options, count);
 
   // Reserve in the append-only log. The ceiling check and the event insert
   // happen in ONE transaction under the quota row lock, so concurrent
