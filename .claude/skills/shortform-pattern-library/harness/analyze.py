@@ -62,11 +62,13 @@ def transcribe(audio, model, d):
     wav = d / "audio16k.wav"
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(audio), "-ar", "16000", "-ac", "1", str(wav)])
     base = d / "transcript"
+    p = base.with_suffix(".json")
+    p.unlink(missing_ok=True)  # never let a previous run's transcript stand in for this one
     r = run(["whisper-cli", "-m", str(model), "-f", str(wav), "-oj", "-of", str(base), "-ml", "1", "-np"])
     wav.unlink(missing_ok=True)
-    p = base.with_suffix(".json")
-    if not p.exists():
-        return None, f"whisper failed: {r.stderr[-200:]}"
+    if r.returncode != 0 or not p.exists():
+        p.unlink(missing_ok=True)
+        return None, f"whisper failed (exit {r.returncode}): {r.stderr[-200:]}"
     segs = json.loads(p.read_text(errors="replace")).get("transcription", [])
     words = []
     for s in segs:
@@ -159,7 +161,8 @@ def single(video, model, workdir):
     stem = re.sub(r"[^A-Za-z0-9_-]", "_", src.stem) or "render"
     d = Path(workdir) / "reels" / stem
     d.mkdir(parents=True, exist_ok=True)
-    (d / "metrics.json").unlink(missing_ok=True)
+    for old in ("metrics.json", "transcript.json", "hook.jpg", "sheet.jpg", "video.mp4", "audio.m4a"):
+        (d / old).unlink(missing_ok=True)  # every QA run measures this render only
     v = run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-c", "copy", "-an", str(d / "video.mp4")])
     status = "OK" if v.returncode == 0 and (d / "video.mp4").exists() else "ERROR_UNREADABLE_MASTER"
     a = run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-vn", "-c:a", "aac", str(d / "audio.m4a")])
@@ -173,7 +176,8 @@ def single(video, model, workdir):
     out = json.loads((d / "metrics.json").read_text())
     print(json.dumps(out, indent=2))
     # A QA gate must fail loudly on a master it could not read, never pass it as measured.
-    sys.exit(0 if out.get("status") == "OK" and not out.get("probe_error") else 1)
+    errors = [k for k in ("probe_error", "cuts_error", "speech_error") if out.get(k)]
+    sys.exit(0 if out.get("status") == "OK" and not errors else 1)
 
 
 if __name__ == "__main__":
