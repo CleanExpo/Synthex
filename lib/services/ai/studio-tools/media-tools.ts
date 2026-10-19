@@ -19,9 +19,11 @@
  * private/link-local/metadata block) BEFORE it reaches the worker. A rejected
  * URL surfaces as this tool's explicit `error` field, no request is made.
  *
- * outputSchema is deliberately omitted: ffprobe returns free-form JSON, and a
- * declared structuredContent shape is SDK-validated at call time (throws on
- * mismatch — types.ts caveat). Only declare shapes proven by a contract test.
+ * outputSchema (P5): the worker's JSON passes through, so each schema types
+ * the fields services/media-worker/server.mjs sends (and the `{ error }` of
+ * every failure path) as a z.looseObject — ffprobe's free-form format/stream
+ * metadata passes through unchanged. Contract-tested in
+ * tests/unit/mcp/structured-content.test.ts.
  */
 import { z } from 'zod';
 import { assertExternalUrlSafe } from '@/lib/security/validate-url';
@@ -69,6 +71,30 @@ const TranscodeArgs = z.object({
   maxWidth: z.number().int().min(64).max(3840).optional(),
   /** H.264 CRF (18 = high quality/large, 30 = smaller). */
   crf: z.number().int().min(0).max(51).optional(),
+});
+
+const WorkerError = { error: z.string().optional() };
+
+const ProbeOutput = z.looseObject({
+  ...WorkerError,
+  format: z.record(z.string(), z.unknown()).optional(),
+  streams: z.array(z.record(z.string(), z.unknown())).optional(),
+});
+
+const ExtractOutput = z.looseObject({
+  ...WorkerError,
+  success: z.boolean().optional(),
+  count: z.number().optional(),
+  frames: z
+    .array(z.object({ name: z.string(), base64: z.string() }))
+    .optional(),
+});
+
+const TranscodeOutput = z.looseObject({
+  ...WorkerError,
+  success: z.boolean().optional(),
+  bytes: z.number().optional(),
+  base64: z.string().optional(),
 });
 
 function workerBase(): string {
@@ -135,6 +161,7 @@ export const MEDIA_TOOLS: StudioTool[] = [
     riskClass: 'read',
     costClass: 'free',
     schema: ProbeArgs,
+    outputSchema: ProbeOutput,
     execute: async args => {
       const a = ProbeArgs.parse(args);
       return callWorker('/probe', { videoUrl: a.videoUrl }, 90_000);
@@ -148,6 +175,7 @@ export const MEDIA_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'free',
     schema: ExtractArgs,
+    outputSchema: ExtractOutput,
     execute: async args => {
       const a = ExtractArgs.parse(args);
       return callWorker(
@@ -172,6 +200,7 @@ export const MEDIA_TOOLS: StudioTool[] = [
     riskClass: 'draft',
     costClass: 'free',
     schema: TranscodeArgs,
+    outputSchema: TranscodeOutput,
     execute: async args => {
       const a = TranscodeArgs.parse(args);
       return callWorker(
