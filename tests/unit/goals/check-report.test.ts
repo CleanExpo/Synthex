@@ -169,6 +169,23 @@ describe('check-report state classifiers', () => {
       ).state
     ).toBe('FAIL');
     expect(call('classifyCommand', run('no summary here')).state).toBe('PASS');
+    // A later all-PASS summary must not hide an earlier nothing-checked or FAIL one.
+    expect(
+      call(
+        'classifyCommand',
+        run(
+          'first: 0 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 2 DISABLED\nlater: 2 of 2 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED'
+        )
+      ).state
+    ).toBe('DISABLED');
+    expect(
+      call(
+        'classifyCommand',
+        run(
+          'a: 0 of 1 PASS, 1 FAIL, 0 INCONCLUSIVE, 0 DISABLED\nb: 0 of 2 PASS, 0 FAIL, 2 INCONCLUSIVE, 0 DISABLED\nc: 3 of 3 PASS, 0 FAIL, 0 INCONCLUSIVE, 0 DISABLED'
+        )
+      ).state
+    ).toBe('FAIL');
     const g8 = call('classifyG8', {
       cmds: [
         { label: 'a', present: true, run: run('ok') },

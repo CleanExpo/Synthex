@@ -479,25 +479,34 @@ export function classifyCommand(run) {
       why: run.timedOut ? 'timed out' : run.spawnError || 'no exit code',
     };
   if (run.code !== 0) return { state: 'FAIL', why: `exit ${run.code}` };
-  const lines = String(run.output ?? run.tail ?? '').split('\n');
-  let m = null;
-  for (const l of lines) m = SUMMARY_RE.exec(l.trim()) || m;
-  if (m) {
-    const [n, total, f, i, d] = m.slice(2).map(Number);
-    if (f > 0)
-      return { state: 'FAIL', why: `exit 0 but summary reports ${f} FAIL` };
-    if (total > 0 && n === 0) {
-      if (i > 0)
-        return {
-          state: 'INCONCLUSIVE',
-          why: `exit 0 but 0 of ${total} PASS, ${i} INCONCLUSIVE`,
-        };
-      if (d === total)
-        return {
-          state: 'DISABLED',
-          why: `exit 0 but 0 of ${total} PASS, all DISABLED — nothing checked`,
-        };
-    }
+  // Every summary line counts and the worst one wins: a later all-PASS line must not
+  // hide an earlier FAIL or nothing-checked line.
+  const rank = { PASS: 0, DISABLED: 1, INCONCLUSIVE: 2, FAIL: 3 };
+  let worst = { state: 'PASS', why: 'exit 0' };
+  for (const l of String(run.output ?? run.tail ?? '').split('\n')) {
+    const m = SUMMARY_RE.exec(l.trim());
+    if (!m) continue;
+    const s = classifySummary(m);
+    if (rank[s.state] > rank[worst.state]) worst = s;
+  }
+  return worst;
+}
+
+function classifySummary(m) {
+  const [n, total, f, i, d] = m.slice(2).map(Number);
+  if (f > 0)
+    return { state: 'FAIL', why: `exit 0 but summary reports ${f} FAIL` };
+  if (total > 0 && n === 0) {
+    if (i > 0)
+      return {
+        state: 'INCONCLUSIVE',
+        why: `exit 0 but 0 of ${total} PASS, ${i} INCONCLUSIVE`,
+      };
+    if (d === total)
+      return {
+        state: 'DISABLED',
+        why: `exit 0 but 0 of ${total} PASS, all DISABLED — nothing checked`,
+      };
   }
   return { state: 'PASS', why: 'exit 0' };
 }
