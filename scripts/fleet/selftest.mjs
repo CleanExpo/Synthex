@@ -120,6 +120,15 @@ const planted = [
       'orchestrator',
       'curl -X PUT https://api.github.com/repos/o/r/pulls/1/merge',
     ],
+    // Builder hand-off is exactly one shape (A-26); everything around it stays denied.
+    ['builder', 'git push origin HEAD:feature/fleet-p4-machine-principal'],
+    ['builder', 'git push --force origin HEAD:refs/fleet/units/p4/core'],
+    [
+      'builder',
+      'git push origin HEAD:refs/fleet/units/p4/core && git push origin HEAD:main',
+    ],
+    ['builder', 'git push origin HEAD:refs/fleet/ledger'],
+    ['builder', 'git push origin HEAD:refs/fleet/units/p4/core main'],
   ].map(([role, command]) => ({ kind: 'shell', command, role })),
 ];
 const benign = [
@@ -143,6 +152,17 @@ const benign = [
   { kind: 'mcp', tool: 'synthex.performance_get_outcomes', role: 'reader' },
   { kind: 'shell', command: 'command git status', role: 'orchestrator' },
   { kind: 'shell', command: 'gh -R o/r pr view 12', role: 'releaser' },
+  {
+    kind: 'shell',
+    command: 'git push origin HEAD:refs/fleet/units/p4/core',
+    role: 'builder',
+  },
+  {
+    kind: 'shell',
+    command:
+      'cd /tmp/wt-p4-core && git push -q origin HEAD:refs/fleet/units/p4/fixes',
+    role: 'builder',
+  },
 ];
 const denied = planted
   .map(a => evaluate(a, pol))

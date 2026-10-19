@@ -145,6 +145,24 @@ function gitSubcommand(argv) {
   }
   return { sub: argv[i], args: argv.slice(i + 1) };
 }
+// The one push a builder may make (DECISIONS A-26): its unit hand-off to refs/fleet/units/<phase>/<unit>
+// (P2 ref hand-off; refs cannot be PR heads). Exactly `git push [-q] origin <HEAD|sha>:refs/fleet/units/
+// p<n>/<unit>`, optionally after `cd <dir>`; no other flag, ref, segment or wrapper.
+export function builderHandoffPush(command) {
+  const argvs = segments(command || '').flatMap(x => unwrap(x));
+  const rest = argvs.filter(a => !(a[0] === 'cd' && a.length === 2));
+  if (rest.length !== 1) return false;
+  const a = rest[0];
+  if (a[0] !== 'git' || a[1] !== 'push') return false;
+  const args = a.slice(2).filter(t => t !== '-q');
+  return (
+    args.length === 2 &&
+    args[0] === 'origin' &&
+    /^(HEAD|[0-9a-f]{7,40}):refs\/fleet\/units\/p-?\d{1,2}\/[a-z0-9][a-z0-9-]{0,63}$/.test(
+      args[1]
+    )
+  );
+}
 const ROLES = [
   'orchestrator',
   'reader',
@@ -222,6 +240,8 @@ export function evaluate(action, pol = policy()) {
       const words = cmd.split(/[\s;&|()]+/).filter(Boolean);
       if (role === 'reader' || role === 'judge')
         return deny(`${role} holds no shell`);
+      if (role === 'builder' && builderHandoffPush(action.command))
+        return allow('builder unit hand-off push to refs/fleet/units (A-26)');
       // The one sanctioned merge path (FD-3): releaser through merge-phase.mjs. Checked before the
       // forbidden-substring loop so the exemption is reachable (independent review r1, B-3).
       if (/\bgh pr merge\b/.test(cmd)) {

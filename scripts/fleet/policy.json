@@ -152,7 +152,7 @@
       "may": ["edit-in-own-sandbox", "npm-scripts", "tests"],
       "may_not": [
         "install",
-        "git push",
+        "git push (except its own unit hand-off: git push origin HEAD:refs/fleet/units/<phase>/<unit>, A-26)",
         "gh",
         "protected-paths",
         "secrets",
