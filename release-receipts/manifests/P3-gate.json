@@ -1,0 +1,66 @@
+{
+  "phase": "P3",
+  "head": "0bdff06e283280810fb7a40f9f6388a9d1970b40",
+  "tree": "37c51837ef0ece6f917918563c0a491700a08c72",
+  "at": "2026-10-19T03:18:50.003Z",
+  "results": [
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:507:28) |       at Object.<anonymous> (app/api/ai-content/hashtags/route.ts:26:1) |       at __tests__/landing/public-claims-api.test.ts:408:24"
+    },
+    {
+      "cmd": "$NODE_DIR/npx prisma validate",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Loaded Prisma config from prisma.config.ts. |  | Prisma schema loaded from prisma/schema.prisma."
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS   scripts/fleet/verify-protected.mjs — orchestrator protected-change declared in 1 commit(s), checked by review + CI + merge-phase | PASS   vercel.json — orchestrator protected-change declared in 1 commit(s), checked by review + CI + merge-phase | verify-protected: 42 changed files, 14 protected, 0 violations"
+    },
+    {
+      "cmd": "$NODE scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json",
+      "kind": "dod",
+      "id": "P3-C1",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "[gen-openapi] committed spec paths: 774; regenerated paths: 774 | [gen-openapi] unresolved success responses: 39; listed exceptions: 39 | [gen-openapi] PASS"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run jev:det -- --family J1",
+      "kind": "dod",
+      "id": "P3-C2",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Time:        17.329 s | Ran all test suites matching /families[\\\\/](j1)\\.jev\\.test\\.ts$/i. | Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?"
+    }
+  ]
+}

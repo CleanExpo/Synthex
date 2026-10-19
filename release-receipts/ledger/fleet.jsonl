@@ -132,3 +132,7 @@
 {"ts":"2026-10-19T02:29:30.347Z","kind":"receipt-retired","phase":"P3","head":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","reviewed":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503","files":["release-receipts/P3.json","release-receipts/manifests/P3-review.json","release-receipts/manifests/P3-gate.json"]}
 {"ts":"2026-10-19T02:33:58.281Z","kind":"gate","phase":"P3","head":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","pass":7,"total":7}
 {"ts":"2026-10-19T02:44:55.703Z","kind":"review","phase":"P3","head":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","lane":"minimax","verdict":"PASS"}
+{"ts":"2026-10-19T02:51:00.158Z","kind":"receipt-retired","phase":"P3","head":"a9ee100445623a661ff45bcc9a9dd4b46b86f20b","reviewed":"1ca09de179e94c475080bcbcf7f760d4d5e94d96","files":["release-receipts/P3.json","release-receipts/manifests/P3-review.json","release-receipts/manifests/P3-gate.json"]}
+{"ts":"2026-10-19T02:58:02.300Z","kind":"policy-hash","previous":"a43e70f5ce4497ced73a9473a93a2d02aa2ddba079c82c57da343ed4195fe37b","sha256":"f2a56eaa9b7e9a6366560e26ae5019efaeb8ac3b8e71e75d8e0d8e4d5105e852","source":"check-bootstrap --record"}
+{"ts":"2026-10-19T03:18:50.005Z","kind":"gate","phase":"P3","head":"0bdff06e283280810fb7a40f9f6388a9d1970b40","pass":7,"total":7}
+{"ts":"2026-10-19T03:30:09.578Z","kind":"review","phase":"P3","head":"0bdff06e283280810fb7a40f9f6388a9d1970b40","lane":"minimax","verdict":"PASS"}
