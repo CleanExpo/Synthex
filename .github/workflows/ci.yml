@@ -23,6 +23,12 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
+      # Root CLAUDE.md is the instruction file agents load. A cleanup commit deleted it once
+      # (29287beed, 18/08/2026) and nothing noticed; it must exist as a real file (FD-8).
+      - name: Root CLAUDE.md present
+        run: |
+          if [ ! -f CLAUDE.md ] || [ -L CLAUDE.md ]; then echo "::error::root CLAUDE.md is missing or a symlink"; exit 1; fi
+          grep -q "INTERNAL AI-driven marketing agency" CLAUDE.md || { echo "::error::root CLAUDE.md lost the internal-agency rule (FD-8)"; exit 1; }
       - run: npm ci --legacy-peer-deps
       - run: npm run lint
 
