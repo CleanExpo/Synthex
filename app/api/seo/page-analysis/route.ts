@@ -12,7 +12,10 @@ import {
 } from '@/lib/security/api-security-checker';
 import { logger } from '@/lib/logger';
 import { stripHtmlToText } from '@/lib/strip-html-text';
-import { assertExternalUrlSafe } from '@/lib/security/validate-url';
+import {
+  assertExternalUrlSafe,
+  fetchExternalUrl,
+} from '@/lib/security/validate-url';
 
 const RequestSchema = z.object({
   url: z.string().url('Invalid URL provided'),
@@ -24,7 +27,7 @@ function stripBodyHtml(input: string): string {
 }
 
 async function analyzePageSEO(url: string) {
-  const res = await fetch(url, {
+  const res = await fetchExternalUrl(url, {
     headers: { 'User-Agent': 'SynthexBot/1.0 (+https://synthex.social)' },
     signal: AbortSignal.timeout(15000),
   });

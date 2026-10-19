@@ -10,7 +10,10 @@
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import { stripHtmlToText } from '@/lib/strip-html-text';
-import { validateExternalUrl } from '@/lib/security/validate-url';
+import {
+  fetchExternalUrl,
+  validateExternalUrl,
+} from '@/lib/security/validate-url';
 
 // ============================================================================
 // TYPES
@@ -160,7 +163,7 @@ async function scrapeWithFetch(url: string): Promise<ScrapeResult> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(url, {
+    const response = await fetchExternalUrl(url, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'SynthexBot/1.0 (https://synthex.social)',
