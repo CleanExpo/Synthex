@@ -125,7 +125,7 @@ Status of each item:
 
 ### Hook checks to add to `tools/claude-hooks`
 
-Every enforcing check is a `command` hook with `onFailure: "block"`. H14 and H15 are advisory exceptions. Each one ships with a planted positive control in `selftest.mjs`.
+Every enforcing check uses a `command` hook. Set `onFailure: "block"` only for events that honour it; H12's `Stop` and `TaskCompleted` hooks must block through an event-supported result and include a failure-path control. H14 and H15 are advisory exceptions. Each check ships with a planted positive control in `selftest.mjs`.
 
 | ID  | Event and matcher                                          | Check                                                                                                                                           | Planted control                                            |
 | --- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
