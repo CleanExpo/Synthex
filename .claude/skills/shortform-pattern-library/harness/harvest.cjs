@@ -16,6 +16,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const jitter = () => 3000 + Math.floor(Math.random() * 3000);
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
 
+// Handles and reel codes become file names, so only Instagram's own character sets are accepted.
+const HANDLE_RE = /^[A-Za-z0-9._]{1,30}$/;
+const CODE_RE = /^[A-Za-z0-9_-]{5,40}$/;
+
 function parseViews(t) {
   const m = String(t || '').trim().toLowerCase().replace(/,/g, '').match(/^([\d.]+)\s*([kmb]?)/);
   if (!m) return null;
@@ -25,6 +29,7 @@ function parseViews(t) {
 async function grid(ctx, outdir, handles) {
   fs.mkdirSync(path.join(outdir, 'grids'), { recursive: true });
   for (const h of handles) {
+    if (!HANDLE_RE.test(h) || h === '.' || h === '..') { console.log(JSON.stringify(h), 'INVALID_HANDLE skipped'); continue; }
     const rec = { handle: h, observed_at: new Date().toISOString(), status: 'OK', reels: [] };
     const page = await ctx.newPage();
     try {
@@ -60,7 +65,8 @@ function decodeTag(u) {
 
 async function reels(ctx, outdir, list) {
   for (const item of list) {
-    const code = item.url.match(/\/reel\/([^/]+)/)[1];
+    const code = (String(item.url || '').match(/\/reel\/([^/?#]+)/) || [])[1];
+    if (!code || !CODE_RE.test(code)) { console.log(JSON.stringify(item.url), 'INVALID_REEL_URL skipped'); continue; }
     const dir = path.join(outdir, 'reels', code);
     fs.mkdirSync(dir, { recursive: true });
     const metaPath = path.join(dir, 'meta.json');

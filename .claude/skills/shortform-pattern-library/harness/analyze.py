@@ -30,8 +30,11 @@ def probe(video):
 
 
 def cuts(video):
+    """Hard-cut times, or None when ffmpeg failed (a failed read is unknown, never zero cuts)."""
     r = run(["ffmpeg", "-hide_banner", "-i", str(video), "-filter:v",
              f"select='gt(scene,{SCENE_THRESHOLD})',showinfo", "-f", "null", "-"])
+    if r.returncode != 0:
+        return None
     return [round(float(t), 2) for t in re.findall(r"pts_time:([\d.]+)", r.stderr)]
 
 
@@ -101,9 +104,14 @@ def main(outdir, model):
         dur = m["duration_s"] or 0
         c = cuts(video)
         m["cut_times"] = c
-        m["cut_count"] = len(c)
-        m["avg_shot_len_s"] = round(dur / (len(c) + 1), 2) if dur else None
-        m["cuts_first_3s"] = sum(1 for t in c if t <= 3)
+        if c is None:
+            m["cut_count"] = m["avg_shot_len_s"] = m["cuts_first_3s"] = None
+            m["cuts_error"] = "ffmpeg scene detection failed"
+            c = []  # body sheet then falls back to a single mid-reel frame
+        else:
+            m["cut_count"] = len(c)
+            m["avg_shot_len_s"] = round(dur / (len(c) + 1), 2) if dur else None
+            m["cuts_first_3s"] = sum(1 for t in c if t <= 3)
         if audio.exists():
             m.update(loudness(audio))
             words, err = transcribe(audio, model, d)
