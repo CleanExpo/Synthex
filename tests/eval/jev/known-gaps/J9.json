@@ -2,30 +2,9 @@
   "schema": "jev-known-gaps/1",
   "family": "J9",
   "gaps": {
-    "J9-GAP-P5-routes-bypass-governor": {
-      "cases": ["J9-route-*"],
-      "note": "governedCall has no production caller (spec P5 detail: git grep -l governedCall -- app lib lists only lib/ai/governor/index.ts). Every frozen spending route reaches its provider without the Governor. P5 wires it, shadow mode first."
-    },
-    "J9-GAP-P5-governor-shadow-mode-absent": {
-      "cases": ["J9-gov-shadow-mode-logs-not-blocks-*"],
-      "note": "GovernedCallInput has no shadow mode: governedCall always enforces, so a would-be refusal blocks instead of logging and proceeding. P5 adds shadow mode; the flip to enforcing is a human act in P9."
-    },
-    "J9-GAP-legacy-text-budget-fail-open": {
-      "cases": [
-        "J9-legacy-reserve-policy-read-error-*",
-        "J9-legacy-reserve-ledger-read-error-*",
-        "J9-legacy-preview-policy-read-error-*",
-        "J9-legacy-preview-ledger-read-error-*"
-      ],
-      "note": "lib/ai/budget-enforcer.ts documents a fail-open doctrine: a policy or ledger read error makes reserveBudget return null and previewBudget return, so the text spend proceeds unbudgeted. Spec M10 requires fail-closed on a budget read error; P5 moves text spend onto the fail-closed Governor."
-    },
-    "J9-GAP-video-spend-outside-cost-ledger": {
-      "cases": ["J9-vid-settle-in-cost-ledger"],
-      "note": "Video settlement (app/api/video/webhook/fal/route.ts via settleQuota) writes only media_spend_events; no pipeline_cost_ledger row is written, while image settlement does (meter.ts trackPipelineCost). Video spend is therefore invisible to ledger-based budgets and cost reports."
-    },
-    "J9-GAP-track-cost-non-anthropic-rate-fallback": {
-      "cases": ["J9-ledger-rate-openai-latest"],
-      "note": "lib/pipelines/track-cost.ts calculatePipelineCost prices any model missing from its Anthropic-only MODEL_RATES at claude-sonnet-4-6 rates, so a non-Anthropic call is recorded at a cost different from its registry price (gpt-4-o-mini at 1M/1M tokens: 18 USD recorded vs 0.75 USD)."
+    "J9-GAP-voice-avatar-no-media-hold": {
+      "cases": ["J9-route-heygen-video", "J9-route-media-generate-voice"],
+      "note": "app/api/media/generate/voice/route.ts (ElevenLabs) and app/api/heygen/video/route.ts (ElevenLabs + HeyGen) take no media-quota hold before the provider call and make no text-provider call, so neither the Governor nor the media quota gates their spend (found by P5 unit routes-media). P5 unit voice-avatar-spend-gate closes it."
     }
   }
 }

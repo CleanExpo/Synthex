@@ -1295,7 +1295,7 @@ async function routeCases(): Promise<void> {
   for (const file of [...routes].sort()) {
     await runCase(
       `J9-route-${routeSlug(file)}`,
-      `${file}: its paid provider call goes through governedCall`,
+      `${file}: its paid provider call goes through the Governor, or (media only) the fail-closed media quota`,
       async () => {
         const abs = path.join(ROOT, file);
         if (!fs.existsSync(abs)) throw new Error(`route file missing: ${file}`);
@@ -1374,6 +1374,38 @@ async function controls(): Promise<void> {
         refused: false,
       });
     }
+  );
+
+  await runControl(
+    'J9-ctl-media-route-also-calls-provider',
+    'planted media route imports the gated image entry but also calls fal directly',
+    async () =>
+      routeUsesGovernor(
+        [
+          "import { generateImage } from '@/lib/services/ai/image-generation';",
+          'export async function POST() {',
+          "  await generateImage({ prompt: 'x' } as never);",
+          "  const r = await fetch('https://fal.run/fal-ai/flux', { method: 'POST' });",
+          '  return Response.json(await r.json());',
+          '}',
+        ].join('\n')
+      )
+  );
+
+  await runControl(
+    'J9-ctl-route-imports-governor-never-calls',
+    'planted route imports governedRouteCall but calls the provider SDK directly',
+    async () =>
+      routeUsesGovernor(
+        [
+          "import { governedRouteCall } from '@/lib/ai/governor';",
+          "import Anthropic from '@anthropic-ai/sdk';",
+          'export async function POST() {',
+          '  const client = new Anthropic();',
+          "  return Response.json(await client.messages.create({ model: 'x', max_tokens: 1, messages: [] }));",
+          '}',
+        ].join('\n')
+      )
   );
 
   await runControl(
