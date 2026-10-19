@@ -7,10 +7,25 @@ const mockFinalizeSpend = jest.fn();
 // SYN-1115 round-7: the sweep now READS provider attempts to decide what a
 // dead run cost, instead of writing it off at -held.
 const mockSettlementAmount = jest.fn();
+const mockRecordAttempt = jest.fn();
 jest.mock('@/lib/services/ai/image/spend-log', () => ({
   findStaleReservations: (...a: unknown[]) => mockFindStale(...(a as [])),
   finalizeSpend: (...a: unknown[]) => mockFinalizeSpend(...(a as [])),
   settlementAmountUsd: (...a: unknown[]) => mockSettlementAmount(...(a as [])),
+  recordAttempt: (...a: unknown[]) => mockRecordAttempt(...(a as [])),
+  videoAttemptKey: (hold: string, job: string) => `${hold}:${job}`,
+}));
+// A stale job may have been COMPLETED by fal with only the webhook lost, so
+// the sweep asks fal before failing it.
+const mockGetFalStatus = jest.fn();
+const mockGetFalResult = jest.fn();
+jest.mock('@/lib/services/ai/video/fal-adapter', () => ({
+  getFalStatus: (...a: unknown[]) => mockGetFalStatus(...a),
+  getFalResult: (...a: unknown[]) => mockGetFalResult(...a),
+}));
+const mockStoreArtifact = jest.fn();
+jest.mock('@/lib/services/ai/video/artifact-store', () => ({
+  storeArtifact: (...a: unknown[]) => mockStoreArtifact(...a),
 }));
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -45,6 +60,13 @@ beforeEach(() => {
   mockFinalizeSpend.mockResolvedValue(true);
   mockSettlementAmount.mockResolvedValue(0);
   mockSettleQuota.mockResolvedValue(true);
+  mockRecordAttempt.mockResolvedValue(undefined);
+  // Default: fal cannot be reached, so the outcome is unknown.
+  mockGetFalStatus.mockRejectedValue(new Error('FAL_API_KEY not configured'));
+  mockGetFalResult.mockRejectedValue(new Error('FAL_API_KEY not configured'));
+  mockStoreArtifact.mockResolvedValue({
+    storedUrl: 'https://store.example/generated-videos/u1/r1.mp4',
+  });
 });
 
 describe('GET /api/cron/video-sweep', () => {
@@ -274,8 +296,12 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
         organizationId: 'org1',
         spendHoldId: 'hold-1',
         providerJobId: 'fal-req-1',
+        model: 'fal-ai/veo3.1',
         estimatedCostUsd: 0.3,
         initiatedBy: 'studio',
+        // Past the recovery window and fal cannot say it finished, so the job
+        // is declared dead and its submit charged.
+        createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
       },
     ]);
     // No attempt row survived, so settlement falls back to the reservation
@@ -400,5 +426,145 @@ describe('GET /api/cron/video-sweep — stale spend reservations', () => {
     expect(mockFinalizeSpend).toHaveBeenCalledWith(
       expect.objectContaining({ holdId: 'hold-1', actualUsd: 0, kind: 'sweep' })
     );
+  });
+});
+
+// A job fal COMPLETED whose webhook was lost used to be failed and charged
+// with the finished video thrown away; a late webhook then no-oped on the
+// status guard. The sweep now asks fal first and recovers it through the same
+// completion path the webhook uses.
+describe('GET /api/cron/video-sweep — asks fal before failing', () => {
+  const youngRow = {
+    id: 'r1',
+    userId: 'u1',
+    organizationId: 'org1',
+    spendHoldId: 'hold-1',
+    providerJobId: 'fal-req-1',
+    model: 'fal-ai/veo3.1',
+    durationSeconds: 6,
+    estimatedCostUsd: 0.3,
+    initiatedBy: 'studio',
+    enhancedPrompt: 'a prompt',
+    batchGroupId: null,
+    metadata: {},
+    createdAt: new Date(Date.now() - 45 * 60 * 1000),
+  };
+
+  const failedTransition = () =>
+    mockUpdateMany.mock.calls.find(c => c[0].data.status === 'failed');
+
+  it('RECOVERS a video fal completed: stores it, marks it rendered, settles once', async () => {
+    mockFindMany.mockResolvedValue([youngRow]);
+    mockGetFalStatus.mockResolvedValue('COMPLETED');
+    mockGetFalResult.mockResolvedValue({
+      videoUrl: 'https://v3.fal.media/files/out.mp4',
+      raw: {},
+    });
+
+    const res = await GET(req('Bearer cron-secret'));
+    await expect(res.json()).resolves.toMatchObject({ swept: 0, recovered: 1 });
+
+    expect(mockGetFalStatus).toHaveBeenCalledWith('fal-ai/veo3.1', 'fal-req-1');
+    expect(mockStoreArtifact).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceUrl: 'https://v3.fal.media/files/out.mp4',
+        userId: 'u1',
+        rowId: 'r1',
+      })
+    );
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'r1', status: 'generating' },
+        data: expect.objectContaining({
+          status: 'rendered',
+          videoUrl: 'https://store.example/generated-videos/u1/r1.mp4',
+        }),
+      })
+    );
+    expect(failedTransition()).toBeUndefined();
+    expect(mockSettleQuota).toHaveBeenCalledTimes(1);
+    expect(mockSettleQuota.mock.calls[0].slice(0, 2)).toEqual([
+      'org1',
+      'hold-1',
+    ]);
+    expect(mockRelease).not.toHaveBeenCalled();
+  });
+
+  it('does not settle when a late webhook already won the rendered transition', async () => {
+    mockFindMany.mockResolvedValue([youngRow]);
+    mockGetFalStatus.mockResolvedValue('COMPLETED');
+    mockGetFalResult.mockResolvedValue({
+      videoUrl: 'https://v3.fal.media/files/out.mp4',
+      raw: {},
+    });
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockSettleQuota).not.toHaveBeenCalled();
+    expect(mockRelease).not.toHaveBeenCalled();
+  });
+
+  it('LEAVES a job fal is still rendering for the next sweep', async () => {
+    mockFindMany.mockResolvedValue([youngRow]);
+    mockGetFalStatus.mockResolvedValue('IN_PROGRESS');
+
+    const res = await GET(req('Bearer cron-secret'));
+    await expect(res.json()).resolves.toMatchObject({ swept: 0 });
+
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+    expect(mockSettleQuota).not.toHaveBeenCalled();
+    expect(mockRelease).not.toHaveBeenCalled();
+  });
+
+  it('LEAVES a young job when fal cannot be asked, rather than failing a video that may exist', async () => {
+    mockFindMany.mockResolvedValue([youngRow]);
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockUpdateMany).not.toHaveBeenCalled();
+    expect(mockSettleQuota).not.toHaveBeenCalled();
+  });
+
+  it('fails a job still unresolved past the max age, keeping the existing charge', async () => {
+    mockFindMany.mockResolvedValue([
+      { ...youngRow, createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000) },
+    ]);
+    mockGetFalStatus.mockResolvedValue('IN_QUEUE');
+    mockSettlementAmount.mockResolvedValue(0.3);
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(failedTransition()).toBeDefined();
+    expect(mockSettleQuota).toHaveBeenCalledWith(
+      'org1',
+      'hold-1',
+      0.3,
+      0.3,
+      'studio'
+    );
+  });
+
+  it('fails a job fal finished WITHOUT a video, keeping the existing charge', async () => {
+    mockFindMany.mockResolvedValue([youngRow]);
+    mockGetFalStatus.mockResolvedValue('COMPLETED');
+    mockGetFalResult.mockResolvedValue({ videoUrl: undefined, raw: {} });
+    mockSettlementAmount.mockResolvedValue(0.3);
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockStoreArtifact).not.toHaveBeenCalled();
+    expect(failedTransition()).toBeDefined();
+    expect(mockSettleQuota).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not ask fal about a job it never accepted', async () => {
+    mockFindMany.mockResolvedValue([{ ...youngRow, providerJobId: null }]);
+
+    await GET(req('Bearer cron-secret'));
+
+    expect(mockGetFalStatus).not.toHaveBeenCalled();
+    expect(failedTransition()).toBeDefined();
+    expect(mockRelease).toHaveBeenCalledWith('org1', 'hold-1', 0.3, 'studio');
   });
 });

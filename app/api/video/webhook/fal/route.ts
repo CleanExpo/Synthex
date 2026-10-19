@@ -10,25 +10,13 @@ import {
   verifyWebhookToken,
   parseFalWebhook,
 } from '@/lib/services/ai/video/fal-adapter';
-import { settleQuota, releaseQuota } from '@/lib/services/ai/video/quota';
+import { releaseQuota } from '@/lib/services/ai/video/quota';
 import { captureServerException } from '@/lib/observability/sentry-server';
-import {
-  recordAttempt,
-  videoAttemptKey,
-} from '@/lib/services/ai/image/spend-log';
-import { storeArtifact } from '@/lib/services/ai/video/artifact-store';
-import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
-import { VIDEO_MODELS } from '@/lib/services/ai/video/registry';
+import { completeFalSuccess } from '@/lib/services/ai/video/fal-completion';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-
-function objectMetadata(meta: unknown): Record<string, unknown> {
-  return meta !== null && typeof meta === 'object' && !Array.isArray(meta)
-    ? (meta as Record<string, unknown>)
-    : {};
-}
 
 /**
  * A generation row reached settlement with no owning organisation (SYN-1115).
@@ -130,110 +118,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Derived OUTSIDE the try below: a successful webhook means fal completed and
-  // billed the generation, so this figure is owed whether or not our own
-  // download and storage then succeed (release review, pass 2).
-  const spec = VIDEO_MODELS.find(m => m.id === row.model);
-  const actualUsd = spec
-    ? Math.round(spec.costPerSecondUsd * (row.durationSeconds ?? 6) * 10000) /
-      10000
-    : heldUsd;
-
   if (result.ok && result.videoUrl) {
-    try {
-      const { storedUrl } = await storeArtifact({
-        sourceUrl: result.videoUrl,
-        userId: row.userId,
-        rowId: row.id,
-        prompt: row.enhancedPrompt ?? undefined,
-        metadata: { model: row.model, batchGroupId: row.batchGroupId },
-      });
-
-      // Atomic status-guarded transition — prevents double-processing.
-      const transitioned = await prisma.videoGeneration.updateMany({
-        where: { id: row.id, status: 'generating' },
-        data: {
-          status: 'rendered',
-          videoUrl: storedUrl,
-          actualCostUsd: actualUsd,
-          metadata: {
-            ...objectMetadata(row.metadata),
-            providerUrl: result.videoUrl,
-          },
-        },
-      });
-      if (transitioned.count === 0) {
-        return NextResponse.json({ ok: true, idempotent: true });
-      }
-      // Record what this specific job actually cost (SYN-1115 round-7), so
-      // settlement and the sweep read evidence instead of guessing.
-      if (row.spendHoldId && row.organizationId) {
-        await recordAttempt({
-          attemptKey: videoAttemptKey(row.spendHoldId, result.providerJobId),
-          holdId: row.spendHoldId,
-          organizationId: row.organizationId,
-          mediaType: 'video',
-          provider: 'fal',
-          modelId: row.model ?? 'unknown',
-          status: 'succeeded',
-          costUsd: actualUsd,
-          providerJobId: row.providerJobId ?? undefined,
-        }).catch(e =>
-          logger.error('could not record video attempt outcome', { e })
-        );
-      }
-
-      // Finalise the reservation. Keyed on the hold, so a replayed webhook
-      // conflicts on the unique index and no-ops — the compensating unclaim
-      // this route used to need is gone (SYN-1115 round-6).
-      if (row.spendHoldId && row.organizationId) {
-        await settleQuota(
-          row.organizationId,
-          row.spendHoldId,
-          heldUsd,
-          actualUsd,
-          initiatedBy
-        );
-      }
-    } catch (err) {
-      logger.error('artifact persistence failed', { rowId: row.id, err });
-
-      const transitioned = await prisma.videoGeneration.updateMany({
-        where: { id: row.id, status: 'generating' },
-        data: {
-          status: 'failed',
-          errorMessage:
-            err instanceof Error &&
-            (err as { code?: string }).code === FEATURE_NOT_PROVISIONED
-              ? err.message
-              : 'artifact download/storage failed',
-          metadata: {
-            ...objectMetadata(row.metadata),
-            providerUrl: result.videoUrl,
-          },
-        },
-      });
-      if (transitioned.count === 0) {
-        return NextResponse.json({ ok: true, idempotent: true });
-      }
-      if (row.spendHoldId && row.organizationId) {
-        // SETTLE, do not release. This branch is reached only from a SUCCESSFUL
-        // fal webhook — the provider completed the generation and billed for
-        // it; what failed is OUR download or storage. Releasing handed the
-        // money back, took the hold's terminal key so nothing could correct it,
-        // and reopened daily and monthly admission headroom for spend that
-        // really happened (release review, pass 2).
-        //
-        // The artifact is lost, which is a product failure worth the 'failed'
-        // status above; the spend is not, and the two are separate facts.
-        await settleQuota(
-          row.organizationId,
-          row.spendHoldId,
-          heldUsd,
-          actualUsd,
-          initiatedBy
-        );
-      }
+    // Shared with the video-sweep cron, which recovers jobs whose webhook was
+    // lost; the status guard inside keeps the two paths idempotent.
+    const outcome = await completeFalSuccess(
+      row,
+      result.providerJobId,
+      result.videoUrl
+    );
+    if (outcome === 'idempotent') {
+      return NextResponse.json({ ok: true, idempotent: true });
     }
   } else {
     const transitioned = await prisma.videoGeneration.updateMany({
