@@ -33,19 +33,19 @@ describe('task-routing — default decisions', () => {
     const choice = routeIntent('draft-blog-post');
     expect(choice.provider).toBe('openrouter');
     expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
-    // Output cost: $0.28 / 1M = $0.00028 / 1k.
-    expect(choice.estimatedCostPer1k).toBeCloseTo(0.00028, 6);
+    // Output cost: $0.182 / 1M = $0.000182 / 1k.
+    expect(choice.estimatedCostPer1k).toBeCloseTo(0.000182, 6);
   });
 
   it('code-review routes to Claude Sonnet, falls back to Opus', () => {
     const choice = routeIntent('code-review');
     expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
-    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4-8');
+    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4.8');
   });
 
   it('high-stakes-creative routes to Opus with no fallback', () => {
     const choice = routeIntent('high-stakes-creative');
-    expect(choice.modelId).toBe('anthropic/claude-opus-4-8');
+    expect(choice.modelId).toBe('anthropic/claude-opus-4.8');
     expect(choice.fallback).toEqual([]);
   });
 
@@ -64,7 +64,7 @@ describe('task-routing — default decisions', () => {
     expect(choice.triangulate).toBe(true);
     expect(choice.panel).toHaveLength(3);
     const ids = choice.panel?.map(p => p.modelId) ?? [];
-    expect(ids).toContain('anthropic/claude-opus-4-8');
+    expect(ids).toContain('anthropic/claude-opus-4.8');
   });
 });
 
@@ -83,7 +83,7 @@ describe('task-routing — quality overrides', () => {
   it('quality:"high" upgrades classify-text to Claude Sonnet', () => {
     const choice = routeIntent('classify-text', { quality: 'high' });
     expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
-    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4-8');
+    expect(choice.fallback[0]?.modelId).toBe('anthropic/claude-opus-4.8');
   });
 
   it('quality:"high" leaves senior-strategy-draft unchanged (already Sonnet)', () => {
@@ -101,7 +101,7 @@ describe('task-routing — budget ceiling', () => {
   });
 
   it('budgetCeiling:0.001 drops code-review from Sonnet to DeepSeek Flash', () => {
-    // Sonnet costs $0.015 / 1k > 0.001 ceiling. Falls back through chain.
+    // Sonnet costs $0.01 / 1k > 0.001 ceiling. Falls back through chain.
     const choice = routeIntent('code-review', { budgetCeiling: 0.001 });
     // code-review's fallback chain doesn't include DeepSeek directly,
     // so it stays on Sonnet (chain unchanged) — exercising the

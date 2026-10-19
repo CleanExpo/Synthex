@@ -68,7 +68,7 @@ export class OpenRouterClient {
     creative: 'anthropic/claude-sonnet-5',
 
     // Best quality for complex multi-step tasks
-    premium: 'anthropic/claude-opus-4-8',
+    premium: 'anthropic/claude-opus-4.8',
 
     // Code and structured tasks: Gemini 2.5 Flash
     code: 'google/gemini-2.5-flash',
@@ -102,10 +102,14 @@ export class OpenRouterClient {
         transforms: ['middle-out'],
         route: 'fallback',
         // Handle thinking parameters
-        ...(request.thinking ? { 
-          thinking: request.thinking,
-          ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-        } : {}),
+        ...(request.thinking
+          ? {
+              thinking: request.thinking,
+              ...(request.thinkingDisplay === 'omitted'
+                ? { thinking_display: 'omitted' }
+                : {}),
+            }
+          : {}),
         // Handle cache parameter
         ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
       };
@@ -166,10 +170,14 @@ export class OpenRouterClient {
       ...request,
       stream: true,
       // Handle thinking parameters for streaming
-      ...(request.thinking ? { 
-        thinking: request.thinking,
-        ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-      } : {}),
+      ...(request.thinking
+        ? {
+            thinking: request.thinking,
+            ...(request.thinkingDisplay === 'omitted'
+              ? { thinking_display: 'omitted' }
+              : {}),
+          }
+        : {}),
       // Handle cache parameter for streaming
       ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
     };
@@ -245,11 +253,11 @@ export class OpenRouterClient {
     const pricing: Record<string, { prompt: number; completion: number }> = {
       'openai/gpt-3.5-turbo': { prompt: 0.5, completion: 1.5 },
       'openai/gpt-4-turbo': { prompt: 10, completion: 30 },
-      'anthropic/claude-haiku-4-5': { prompt: 0.8, completion: 4 },
-      'anthropic/claude-sonnet-4-6': { prompt: 3, completion: 15 },
+      'anthropic/claude-haiku-4.5': { prompt: 1, completion: 5 },
+      'anthropic/claude-sonnet-4.6': { prompt: 3, completion: 15 },
       // Intro pricing through 2026-08-31; rises to $3/$15 per MTok on 2026-09-01.
       'anthropic/claude-sonnet-5': { prompt: 2, completion: 10 },
-      'anthropic/claude-opus-4-8': { prompt: 5, completion: 25 },
+      'anthropic/claude-opus-4.8': { prompt: 5, completion: 25 },
       'google/gemini-flash-1.5-8b': { prompt: 0, completion: 0 }, // Free tier
       'deepseek/deepseek-coder': { prompt: 0.14, completion: 0.28 },
     };

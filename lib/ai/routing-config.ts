@@ -50,19 +50,19 @@ export const TIER_MODELS: Record<
   { modelId: string; costPerMTokInput: number; costPerMTokOutput: number }
 > = {
   simple: {
-    modelId: 'anthropic/claude-haiku-4-5',
-    costPerMTokInput: 0.8,
-    costPerMTokOutput: 4.0,
+    modelId: 'anthropic/claude-haiku-4.5',
+    costPerMTokInput: 1.0,
+    costPerMTokOutput: 5.0,
   },
   standard: {
     modelId: 'anthropic/claude-sonnet-5',
-    costPerMTokInput: 3.0,
-    costPerMTokOutput: 15.0,
+    costPerMTokInput: 2.0,
+    costPerMTokOutput: 10.0,
   },
   complex: {
     modelId: 'anthropic/claude-opus-4.8', // OpenRouter id uses a dot; hyphen form is not listed
-    costPerMTokInput: 15.0,
-    costPerMTokOutput: 75.0,
+    costPerMTokInput: 5.0,
+    costPerMTokOutput: 25.0,
   },
 };
 

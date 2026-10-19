@@ -51,7 +51,7 @@ export class AnthropicProvider implements AIProvider {
     fast: 'claude-haiku-4-5-20251001',
     balanced: 'claude-sonnet-5',
     creative: 'claude-sonnet-5',
-    premium: 'claude-opus-4-8',
+    premium: 'claude-opus-5',
     code: 'claude-sonnet-5',
     free: 'claude-haiku-4-5-20251001',
   };

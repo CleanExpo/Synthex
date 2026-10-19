@@ -373,7 +373,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
 
   openrouter: [
     {
-      id: 'anthropic/claude-opus-4-6',
+      id: 'anthropic/claude-opus-4.6',
       provider: 'openrouter',
       name: 'Claude Opus 4.6 (via OpenRouter)',
       releaseDate: new Date('2026-03-01'),
@@ -386,14 +386,14 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
         'adaptive-thinking',
       ],
       contextWindow: 1000000,
-      costPer1kTokens: { input: 0.015, output: 0.075 },
+      costPer1kTokens: { input: 0.005, output: 0.025 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
       isDeprecated: false,
     },
     {
-      id: 'anthropic/claude-sonnet-4-6',
+      id: 'anthropic/claude-sonnet-4.6',
       provider: 'openrouter',
       name: 'Claude Sonnet 4.6 (via OpenRouter)',
       releaseDate: new Date('2026-03-01'),
@@ -413,21 +413,22 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       isDeprecated: false,
     },
     {
-      id: 'anthropic/claude-haiku-4-5',
+      id: 'anthropic/claude-haiku-4.5',
       provider: 'openrouter',
       name: 'Claude Haiku 4.5 (via OpenRouter)',
       releaseDate: new Date('2025-10-01'),
       tier: 'production',
       capabilities: ['text', 'vision', 'tools', 'streaming'],
       contextWindow: 200000,
-      costPer1kTokens: { input: 0.0008, output: 0.004 },
+      costPer1kTokens: { input: 0.001, output: 0.005 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
       isDeprecated: false,
     },
-    // Model-router standard/complex tiers (lib/ai/routing-config.ts). Ids and prices read from
-    // https://openrouter.ai/api/v1/models on 2026-10-19 (USD per token x 1000). Tier 'production'
+    // OpenRouter ids and prices below were read from
+    // https://openrouter.ai/api/v1/models on 2026-10-19 (dot-version ids; hyphen forms are not listed).
+    // Model-router standard/complex tiers (lib/ai/routing-config.ts) read from the same listing (USD per token x 1000). Tier 'production'
     // so getLatestModel('openrouter') is unchanged.
     {
       id: 'anthropic/claude-sonnet-5',
@@ -494,7 +495,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       tier: 'production',
       capabilities: ['text', 'vision', 'tools', 'streaming', 'thinking'],
       contextWindow: 1048576,
-      costPer1kTokens: { input: 0.000075, output: 0.0003 },
+      costPer1kTokens: { input: 0.0003, output: 0.0025 },
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
@@ -525,7 +526,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       tier: 'latest',
       capabilities: ['text', 'tools', 'streaming'],
       contextWindow: 1000000,
-      costPer1kTokens: { input: 0.00014, output: 0.00028 },
+      costPer1kTokens: { input: 0.000091, output: 0.000182 },
       supportsVision: false,
       supportsTools: true,
       supportsStreaming: true,
@@ -539,7 +540,7 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       tier: 'latest',
       capabilities: ['text', 'tools', 'streaming'],
       contextWindow: 1000000,
-      costPer1kTokens: { input: 0.000435, output: 0.00087 },
+      costPer1kTokens: { input: 0.00095526, output: 0.00191052 },
       supportsVision: false,
       supportsTools: true,
       supportsStreaming: true,

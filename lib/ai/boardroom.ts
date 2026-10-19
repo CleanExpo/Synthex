@@ -112,7 +112,7 @@ const DEFAULT_SYNTHESISER: BoardroomPanellist = {
 
 const DEFAULT_ESCALATION_SYNTHESISER: BoardroomPanellist = {
   provider: 'openrouter',
-  modelId: 'anthropic/claude-opus-4-8',
+  modelId: 'anthropic/claude-opus-4.8',
 };
 
 /**

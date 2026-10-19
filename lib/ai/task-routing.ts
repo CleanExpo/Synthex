@@ -151,7 +151,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'deepseek/deepseek-v4-flash',
-      cost: 0.00028,
+      cost: 0.000182,
     },
     fallback: [{ provider: 'ollama', modelId: 'gemma4:e4b' }],
   },
@@ -159,7 +159,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'deepseek/deepseek-v4-flash',
-      cost: 0.00028,
+      cost: 0.000182,
     },
     fallback: [
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
@@ -169,7 +169,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'deepseek/deepseek-v4-flash',
-      cost: 0.00028,
+      cost: 0.000182,
     },
     fallback: [
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
@@ -179,7 +179,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'deepseek/deepseek-v4-flash',
-      cost: 0.00028,
+      cost: 0.000182,
     },
     fallback: [
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
@@ -189,7 +189,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'deepseek/deepseek-v4-flash',
-      cost: 0.00028,
+      cost: 0.000182,
     },
     fallback: [
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
@@ -201,30 +201,30 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'anthropic/claude-sonnet-5',
-      cost: 0.015,
+      cost: 0.01,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4.8' },
     ],
   },
   'brand-voice-enforce': {
     primary: {
       provider: 'openrouter',
       modelId: 'anthropic/claude-sonnet-5',
-      cost: 0.015,
+      cost: 0.01,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4.8' },
     ],
   },
   'senior-strategy-draft': {
     primary: {
       provider: 'openrouter',
       modelId: 'anthropic/claude-sonnet-5',
-      cost: 0.015,
+      cost: 0.01,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4.8' },
     ],
   },
 
@@ -233,10 +233,10 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     primary: {
       provider: 'openrouter',
       modelId: 'anthropic/claude-sonnet-5',
-      cost: 0.015,
+      cost: 0.01,
     },
     fallback: [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4.8' },
     ],
     triangulate: true,
     panel: [
@@ -248,15 +248,15 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
   'architecture-decision': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-opus-4-8',
-      cost: 0.075,
+      modelId: 'anthropic/claude-opus-4.8',
+      cost: 0.025,
     },
     fallback: [],
     triangulate: true,
     panel: [
       { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4.8' },
     ],
   },
 
@@ -264,8 +264,8 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
   'high-stakes-creative': {
     primary: {
       provider: 'openrouter',
-      modelId: 'anthropic/claude-opus-4-8',
-      cost: 0.075,
+      modelId: 'anthropic/claude-opus-4.8',
+      cost: 0.025,
     },
     // No fallback — high-stakes work doesn't get auto-downgraded.
     fallback: [],
@@ -292,15 +292,15 @@ export function routeIntent(
   let fallback = entry.fallback.slice();
 
   // ── Quality override ──────────────────────────────────────────────
-  if (opts.quality === 'high' && primary.cost < 0.015) {
+  if (opts.quality === 'high' && primary.cost < 0.01) {
     // Force-upgrade to Sonnet if the matrix routed cheaper than senior.
     primary = {
       provider: 'openrouter',
       modelId: 'anthropic/claude-sonnet-5',
-      cost: 0.015,
+      cost: 0.01,
     };
     fallback = [
-      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
+      { provider: 'openrouter', modelId: 'anthropic/claude-opus-4.8' },
     ];
   } else if (opts.quality === 'low' && primary.provider !== 'ollama') {
     // Force-downgrade to local. If the intent has a Gemma fallback,
@@ -331,7 +331,7 @@ export function routeIntent(
         f => f.modelId === 'deepseek/deepseek-v4-flash'
       );
       if (cheapCloud) {
-        primary = { ...cheapCloud, cost: 0.00028 };
+        primary = { ...cheapCloud, cost: 0.000182 };
         fallback = entry.fallback.filter(
           f => f.modelId !== 'deepseek/deepseek-v4-flash'
         );
@@ -349,7 +349,7 @@ export function routeIntent(
       primary = {
         provider: 'openrouter',
         modelId: 'deepseek/deepseek-v4-flash',
-        cost: 0.00028,
+        cost: 0.000182,
       };
       fallback = [
         { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-pro' },
