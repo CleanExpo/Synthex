@@ -547,6 +547,17 @@ export function classifyG8(e) {
 
 // ---------------------------------------------------------------- collectors (I/O)
 
+/**
+ * Whether `file` exists at `ref`. ls-tree answers by exit code and stdout, so the result does not
+ * depend on git's (locale-translated) stderr text. `run` is injectable for tests.
+ */
+export function receiptPresence(file, ref = MAIN, run = runRaw) {
+  const c = run('git', ['ls-tree', '--name-only', ref, '--', file]);
+  return c.code === 0
+    ? ok(String(c.stdout).trim() === file)
+    : bad(`ls-tree exit ${c.code}: ${lastLine(c.stderr)}`);
+}
+
 function collectG1(ctx) {
   const phases = parseJson(gitShow('scripts/fleet/policy.json'), 'policy.json');
   const ids = phases.ok
@@ -554,12 +565,7 @@ function collectG1(ctx) {
     : phases;
   const receipts = (ids.ok ? ids.value : []).map(id => {
     const file = `release-receipts/${id}.json`;
-    // ls-tree answers by exit code and stdout, not git's translated stderr text.
-    const c = runRaw('git', ['ls-tree', '--name-only', MAIN, '--', file]);
-    const present =
-      c.code === 0
-        ? ok(c.stdout.trim() === file)
-        : bad(`ls-tree exit ${c.code}: ${lastLine(c.stderr)}`);
+    const present = receiptPresence(file);
     if (!present.ok || !present.value) return { id, present };
     const added = gitText([
       'log',

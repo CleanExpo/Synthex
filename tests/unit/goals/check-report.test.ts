@@ -42,6 +42,36 @@ process.stdout.write(JSON.stringify(typeof v === 'function' ? v(...args) : v));`
 
 const ok = (value: unknown) => ({ ok: true, value });
 const bad = (error: string) => ({ ok: false, error });
+
+/**
+ * receiptPresence with a fake git that answers like git does under a non-English locale:
+ * ls-tree prints the path (present) or nothing (absent) and exits 0; cat-file exits 128 with
+ * translated stderr. A detector that regex-matches English stderr cannot read this as absent.
+ */
+function receiptPresenceWithFakeGit(file: string, tracked: string[]): any {
+  const code = `const m = await import(${JSON.stringify(pathToFileURL(SCRIPT).href)});
+const [file, tracked] = JSON.parse(process.argv[1]);
+const fake = (cmd, args) => {
+  if (args[0] === 'ls-tree') {
+    const f = args[args.length - 1];
+    return { code: 0, stdout: tracked.includes(f) ? f + '\\n' : '', stderr: '' };
+  }
+  if (args[0] === 'cat-file') {
+    const f = String(args[args.length - 1]).split(':').slice(1).join(':');
+    return tracked.includes(f)
+      ? { code: 0, stdout: '', stderr: '' }
+      : { code: 128, stdout: '', stderr: "fatal: Pfad '" + f + "' existiert nicht in 'origin/main'" };
+  }
+  return { code: 2, stdout: '', stderr: 'unexpected git call' };
+};
+process.stdout.write(JSON.stringify(m.receiptPresence(file, 'origin/main', fake)));`;
+  const out = execFileSync(
+    'node',
+    ['--input-type=module', '-e', code, JSON.stringify([file, tracked])],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }
+  );
+  return JSON.parse(out);
+}
 const IDS = [
   'P-1',
   'P0',
@@ -152,6 +182,16 @@ describe('check-report state classifiers', () => {
         ],
       }).state
     ).toBe('INCONCLUSIVE');
+  });
+
+  it('G1 reads an absent receipt as absent whatever language git speaks', () => {
+    const tracked = ['release-receipts/P0.json'];
+    expect(
+      receiptPresenceWithFakeGit('release-receipts/P0.json', tracked)
+    ).toEqual(ok(true));
+    expect(
+      receiptPresenceWithFakeGit('release-receipts/P5.json', tracked)
+    ).toEqual(ok(false));
   });
 
   it('a fleet summary outranks exit 0 for G8 commands', () => {
