@@ -8,7 +8,11 @@
 
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { emitWitnessEvent } from '@/lib/unite-group-connector';
+import {
+  emitPostLifecycleEvent,
+  emitWitnessEvent,
+  studioDraftApproveUrl,
+} from '@/lib/unite-group-connector';
 import type { Prisma } from '@prisma/client';
 
 /** Minimal slice of the Prisma StudioContentDraft delegate we use (injectable for tests). */
@@ -50,6 +54,23 @@ function witnessSavedDraft(
   isNew: boolean
 ): void {
   if (!row?.id) return;
+  // The Mission Control calendar's view of the same save: one post, drafted
+  // and awaiting approval. Before approval a Studio post is its draft, so the
+  // draft id is the postId and every target platform is listed.
+  const post = {
+    postId: row.id,
+    missionId: input.missionId,
+    platform: input.platforms.join(',') || null,
+    business: input.clientSlug,
+    scheduledAt: null,
+    publishedAt: null,
+    text: input.script,
+    mediaThumbnailUrls: input.videoUrl ? [input.videoUrl] : [],
+    postUrl: null,
+    approveUrl: studioDraftApproveUrl(input.clientSlug, row.id),
+  };
+  void emitPostLifecycleEvent({ step: 'drafted', ...post });
+  void emitPostLifecycleEvent({ step: 'awaiting_approval', ...post });
   const base = {
     id: row.id,
     kind: 'studio_draft' as const,

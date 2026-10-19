@@ -30,7 +30,12 @@ import {
   type PlatformCredentials,
 } from '@/lib/social';
 import { decryptFieldSafe } from '@/lib/security/field-encryption';
-import { pushUniteGroupEvent } from '@/lib/unite-group-connector';
+import {
+  emitPostLifecycleEvent,
+  postApproveUrl,
+  pushUniteGroupEvent,
+  type PostLifecycleStep,
+} from '@/lib/unite-group-connector';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign-authority-manifest';
@@ -323,7 +328,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const errorMessage = `Platform '${platform}' is not supported`;
         logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           history: [
             ...existingHistory,
             {
@@ -357,7 +362,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const errorMessage = 'Post content is empty';
         logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           history: [
             ...existingHistory,
             {
@@ -453,6 +458,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             }),
           },
         });
+        uniteGroupPushes.push(witnessPost('awaiting_approval', post));
         await createNotification(
           userId,
           'post_approval_required',
@@ -521,7 +527,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         );
 
         // No connection is not retryable — fail permanently
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           history: [
             ...existingHistory,
             {
@@ -561,7 +567,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           'Failed to decrypt access token for platform connection';
         logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           history: [
             ...existingHistory,
             {
@@ -616,7 +622,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         const errorMessage = `Could not instantiate service for platform '${platform}'`;
         logger.error(`[publish-scheduled] Post ${post.id}: ${errorMessage}`);
 
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           history: [
             ...existingHistory,
             {
@@ -667,12 +673,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       });
 
       if (postResult.success) {
+        const publishedAt = new Date();
         // Mark post as published and store platform identifiers + history
         await prisma.post.update({
           where: { id: post.id },
           data: {
             status: 'published',
-            publishedAt: new Date(),
+            publishedAt,
             analytics: {
               platformPostId: postResult.postId ?? null,
               platformPostUrl: postResult.url ?? null,
@@ -725,6 +732,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             platform,
             postId: post.id,
             ...(orgSlug ? { orgSlug } : {}),
+          })
+        );
+        uniteGroupPushes.push(
+          witnessPost('published', post, {
+            publishedAt,
+            postUrl: postResult.url ?? null,
           })
         );
 
@@ -793,7 +806,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         }
 
         // Non-retryable or max retries exceeded — permanent failure
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           retryCount,
           finalFailure: true,
           history: [
@@ -897,7 +910,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
       // Permanent failure
       try {
-        await markPostFailed(post.id, errorMessage, {
+        await markPostFailed(uniteGroupPushes, post, errorMessage, {
           retryCount,
           finalFailure: true,
           history: [
@@ -982,10 +995,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
  * Accepts optional extra metadata to merge (e.g. history, retryCount).
  */
 async function markPostFailed(
-  postId: string,
+  pending: Promise<void>[],
+  post: WitnessedPost,
   errorMessage: string,
   extraMetadata?: Record<string, unknown>
 ): Promise<void> {
+  const postId = post.id;
   // Fetch current metadata to merge rather than overwrite
   const current = await prisma.post.findUnique({
     where: { id: postId },
@@ -1010,6 +1025,56 @@ async function markPostFailed(
         ...(extraMetadata ?? {}),
       }),
     },
+  });
+  pending.push(witnessPost('failed', post, { error: errorMessage }));
+}
+
+/** The due-post fields a Mission Control post event is built from. */
+interface WitnessedPost {
+  id: string;
+  content: string;
+  platform: string | null;
+  metadata: unknown;
+  scheduledAt: Date | null;
+  campaign: { platform: string; organizationId: string | null };
+}
+
+/**
+ * Mission Control calendar event for a post state this cron has just written.
+ * Never rejects; pushed onto the run's settled Unite-Group deliveries.
+ */
+async function witnessPost(
+  step: PostLifecycleStep,
+  post: WitnessedPost,
+  extra: { publishedAt?: Date; postUrl?: string | null; error?: string } = {}
+): Promise<void> {
+  const metadata =
+    post.metadata !== null &&
+    typeof post.metadata === 'object' &&
+    !Array.isArray(post.metadata)
+      ? (post.metadata as Record<string, unknown>)
+      : {};
+  const images = Array.isArray(metadata.images)
+    ? metadata.images.filter((url): url is string => typeof url === 'string')
+    : [];
+  await emitPostLifecycleEvent({
+    step,
+    postId: post.id,
+    ...(typeof metadata.missionId === 'string' && metadata.missionId
+      ? { missionId: metadata.missionId }
+      : {}),
+    platform: (post.platform || post.campaign.platform).toLowerCase(),
+    business: (await getOrgSlug(post.campaign.organizationId)) ?? null,
+    scheduledAt: post.scheduledAt,
+    publishedAt: extra.publishedAt ?? null,
+    text: post.content,
+    mediaThumbnailUrls: images,
+    postUrl: extra.postUrl ?? null,
+    approveUrl: postApproveUrl(post.id),
+    ...(extra.error ? { error: extra.error } : {}),
+    ...(typeof metadata.studioDraftId === 'string'
+      ? { studioDraftId: metadata.studioDraftId }
+      : {}),
   });
 }
 

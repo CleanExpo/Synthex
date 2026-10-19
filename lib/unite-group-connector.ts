@@ -193,19 +193,136 @@ export interface WitnessEventInput {
  * GET /api/unite-group/status), not swallowed.
  */
 export function emitWitnessEvent(input: WitnessEventInput): void {
-  const type = `synthex.${input.step}`;
-  pushUniteGroupEvent({
-    type,
+  void deliverWitness({
+    type: `synthex.${input.step}`,
     id: input.id,
     kind: input.kind,
     organizationId: input.organizationId,
     ...(input.missionId ? { missionId: input.missionId } : {}),
-  }).catch(err => {
+  });
+}
+
+/** Push that never rejects; a failure is recorded as the last delivery. */
+function deliverWitness(event: UniteGroupEventInput): Promise<void> {
+  return pushUniteGroupEvent(event).catch(err => {
     lastDelivery = {
       ok: false,
-      eventType: type,
+      eventType: event.type,
       error: err instanceof Error ? err.message : String(err),
       at: new Date().toISOString(),
     };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Post lifecycle events for the Mission Control calendar (DECISIONS FD-11)
+// ---------------------------------------------------------------------------
+
+/** The states of one post Mission Control's /founder/calendar shows. */
+export type PostLifecycleStep =
+  | 'drafted'
+  | 'awaiting_approval'
+  | 'approved'
+  | 'scheduled'
+  | 'published'
+  | 'failed';
+
+/** The most post text an event carries. */
+export const POST_EVENT_TEXT_MAX = 5000;
+const POST_EVENT_ERROR_MAX = 300;
+
+export interface PostLifecycleEventInput {
+  step: PostLifecycleStep;
+  /** The Post id, or the Studio draft id before approval creates Posts. */
+  postId: string;
+  /** Only when Mission Control started the work. Never invented. */
+  missionId?: string;
+  platform: string | null;
+  /** Organisation or client name/slug the post is for. */
+  business: string | null;
+  scheduledAt: Date | string | null;
+  publishedAt: Date | string | null;
+  text: string;
+  mediaThumbnailUrls: string[];
+  /** The live platform URL once published. */
+  postUrl: string | null;
+  /** Absolute link to the Synthex screen where this post is approved. */
+  approveUrl: string;
+  /** post.failed only: why, short and scrubbed. */
+  error?: string;
+  /** A Post scheduled from a Studio draft names that draft. */
+  studioDraftId?: string;
+}
+
+function appBaseUrl(): string {
+  return (process.env.NEXT_PUBLIC_APP_URL || 'https://synthex.social').replace(
+    /\/+$/,
+    ''
+  );
+}
+
+/** Calendar review screen for a Post (no per-post page; `post` names it). */
+export function postApproveUrl(postId: string): string {
+  return `${appBaseUrl()}/dashboard/calendar?post=${encodeURIComponent(postId)}`;
+}
+
+/** Studio approval board for a client (no per-draft page; `draft` names it). */
+export function studioDraftApproveUrl(
+  clientSlug: string,
+  draftId: string
+): string {
+  return `${appBaseUrl()}/dashboard/marketing-agency/${encodeURIComponent(
+    clientSlug
+  )}/studio?draft=${encodeURIComponent(draftId)}`;
+}
+
+function toIsoOrNull(value: Date | string | null): string | null {
+  if (value === null) return null;
+  return typeof value === 'string' ? value : value.toISOString();
+}
+
+function truncateText(text: string): string {
+  if (text.length <= POST_EVENT_TEXT_MAX) return text;
+  const cut = text.slice(0, POST_EVENT_TEXT_MAX);
+  // Never end on half of a surrogate pair.
+  return /[\uD800-\uDBFF]$/.test(cut) ? cut.slice(0, -1) : cut;
+}
+
+/** Short failure reason with anything token-shaped removed. */
+function scrubError(error: string): string {
+  return error
+    .replace(/bearer\s+\S+/gi, 'Bearer [redacted]')
+    .replace(
+      /\b(access_token|refresh_token|token|api_key|apikey|key|secret|password)=[^&\s]+/gi,
+      '$1=[redacted]'
+    )
+    .slice(0, POST_EVENT_ERROR_MAX);
+}
+
+/**
+ * Emit `post.<step>` for a post state that has already been reached. Resolves
+ * once the delivery settles and never rejects, so it cannot fail or block the
+ * post action; a cron can await it before its instance freezes. A failed
+ * delivery is recorded as the last delivery outcome.
+ */
+export function emitPostLifecycleEvent(
+  input: PostLifecycleEventInput
+): Promise<void> {
+  return deliverWitness({
+    type: `post.${input.step}`,
+    postId: input.postId,
+    ...(input.missionId ? { missionId: input.missionId } : {}),
+    platform: input.platform,
+    business: input.business,
+    scheduledAt: toIsoOrNull(input.scheduledAt),
+    publishedAt: toIsoOrNull(input.publishedAt),
+    text: truncateText(input.text),
+    mediaThumbnailUrls: input.mediaThumbnailUrls,
+    postUrl: input.postUrl,
+    approveUrl: input.approveUrl,
+    ...(input.step === 'failed'
+      ? { error: scrubError(input.error ?? 'unknown') }
+      : {}),
+    ...(input.studioDraftId ? { studioDraftId: input.studioDraftId } : {}),
   });
 }

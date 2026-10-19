@@ -122,6 +122,9 @@ afterAll(() => {
 const settle = () => new Promise(resolve => setTimeout(resolve, 0));
 
 const ofType = (type: string) => sent.filter(event => event.type === type);
+// Post lifecycle events (post.*) ride the same saves; see post-lifecycle-events.test.ts.
+const witness = () =>
+  sent.filter(event => String(event.type).startsWith('synthex.'));
 
 // ── planned: POST /api/campaigns ────────────────────────────────────────────
 
@@ -206,12 +209,12 @@ describe('drafted + held — Studio draft save', () => {
     await settle();
 
     expect(row?.id).toBe('draft-1');
-    expect(sent.map(event => event.type)).toEqual([
+    expect(witness().map(event => event.type)).toEqual([
       'synthex.planned',
       'synthex.drafted',
       'synthex.held',
     ]);
-    for (const event of sent) {
+    for (const event of witness()) {
       expect(event).toMatchObject({
         id: 'draft-1',
         kind: 'studio_draft',
@@ -238,8 +241,8 @@ describe('drafted + held — Studio draft save', () => {
     );
     await settle();
 
-    expect(sent).toHaveLength(3);
-    for (const event of sent) expect(event.missionId).toBe('mission-7');
+    expect(witness()).toHaveLength(3);
+    for (const event of witness()) expect(event.missionId).toBe('mission-7');
     expect(stored.metadata).toEqual({ a: 1, missionId: 'mission-7' });
   });
 
@@ -277,14 +280,19 @@ describe('drafted + held — autopilot', () => {
       postId: 'post-9',
       organizationId: 'org-dr',
       status: 'draft',
+      platform: 'linkedin',
+      business: 'Disaster Recovery',
+      text: 'Copy',
+      scheduledAt: null,
+      mediaUrls: [],
     });
     await settle();
 
-    expect(sent.map(event => event.type)).toEqual([
+    expect(witness().map(event => event.type)).toEqual([
       'synthex.drafted',
       'synthex.held',
     ]);
-    for (const event of sent) {
+    for (const event of witness()) {
       expect(event).toMatchObject({
         id: 'post-9',
         kind: 'post',
@@ -348,14 +356,14 @@ describe('approved — Studio approval', () => {
     await settle();
 
     expect(result.outcome).toBe('approved');
-    expect(sent).toHaveLength(1);
-    expect(sent[0]).toMatchObject({
+    expect(witness()).toHaveLength(1);
+    expect(witness()[0]).toMatchObject({
       type: 'synthex.approved',
       id: 'd1',
       kind: 'studio_draft',
       organizationId: 'org-carsi',
     });
-    expect(sent[0]).not.toHaveProperty('missionId');
+    expect(witness()[0]).not.toHaveProperty('missionId');
   });
 
   it('carries the missionId stored on the draft', async () => {

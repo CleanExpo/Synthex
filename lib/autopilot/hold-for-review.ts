@@ -3,7 +3,11 @@
  * Off (enabled: false) is enforced by the cron query. On never auto-sends.
  */
 
-import { emitWitnessEvent } from '@/lib/unite-group-connector';
+import {
+  emitPostLifecycleEvent,
+  emitWitnessEvent,
+  postApproveUrl,
+} from '@/lib/unite-group-connector';
 
 /**
  * The Phase 7 hold. While this is true, autopilot never marks a post
@@ -54,7 +58,31 @@ export function witnessAutopilotPost(post: {
   postId: string;
   organizationId: string;
   status: 'scheduled' | 'draft';
+  platform: string;
+  /** The organisation's name. */
+  business: string;
+  text: string;
+  scheduledAt: Date | null;
+  mediaUrls: string[];
 }): void {
+  // Mission Control calendar: drafted, then held for approval or (hold off
+  // and the gate passed) scheduled.
+  const lifecycle = {
+    postId: post.postId,
+    platform: post.platform,
+    business: post.business,
+    scheduledAt: post.scheduledAt,
+    publishedAt: null,
+    text: post.text,
+    mediaThumbnailUrls: post.mediaUrls,
+    postUrl: null,
+    approveUrl: postApproveUrl(post.postId),
+  };
+  void emitPostLifecycleEvent({ step: 'drafted', ...lifecycle });
+  void emitPostLifecycleEvent({
+    step: post.status === 'draft' ? 'awaiting_approval' : 'scheduled',
+    ...lifecycle,
+  });
   const base = {
     id: post.postId,
     kind: 'post' as const,

@@ -870,6 +870,11 @@ async function generateSlotContent(input: SlotInput): Promise<{
     postId: post.id,
     organizationId: input.orgId,
     status: postStatus,
+    platform: input.slot.platform,
+    business: input.businessName,
+    text: bestContent,
+    scheduledAt: postStatus === 'scheduled' ? scheduledAt : null,
+    mediaUrls: images,
   });
 
   return { postId: post.id, score: bestScore, status: postStatus };

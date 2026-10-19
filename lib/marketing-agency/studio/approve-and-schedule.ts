@@ -105,7 +105,12 @@ import {
   type OrgAutoPublishGate,
 } from '@/lib/publish/safetyChecks';
 import { buildUtmUrl } from '@/lib/utm/build-utm-url';
-import { emitWitnessEvent } from '@/lib/unite-group-connector';
+import {
+  emitPostLifecycleEvent,
+  emitWitnessEvent,
+  postApproveUrl,
+  studioDraftApproveUrl,
+} from '@/lib/unite-group-connector';
 import { approveStudioDraft } from './draft-store';
 import type { ResolvedStudioClient } from './clients';
 
@@ -515,6 +520,11 @@ export async function approveAndScheduleStudioDraft(
   // Read from the draft's metadata inside the transaction; only a draft that
   // Mission Control started carries one.
   let missionId: string | undefined;
+  // What the post lifecycle events need, captured inside the transaction.
+  let approvedDraft:
+    | { script: string; platforms: string[]; videoUrl: string | null }
+    | undefined;
+  const postText = new Map<string, string>();
   let committed: ApproveAndScheduleResult;
   try {
     committed = await runInTransaction(async tx => {
@@ -645,6 +655,11 @@ export async function approveAndScheduleStudioDraft(
       );
       const scheduledAt = input.scheduledAt ?? now();
       const approvedAt = now().toISOString();
+      approvedDraft = {
+        script: draft.script,
+        platforms,
+        videoUrl: draft.videoUrl,
+      };
       const scheduled: ScheduledStudioPost[] = [];
       const skipped: SkippedStudioPlatform[] = [];
 
@@ -754,6 +769,9 @@ export async function approveAndScheduleStudioDraft(
               idempotencyKey: `studio:${draft.id}:${platform}`,
               clientSlug: draft.clientSlug,
               topic: draft.topic,
+              // Threads the Mission Control mission to this Post's publish
+              // and failure events.
+              ...(missionId ? { missionId } : {}),
               ...(authorityCampaignId ? { authorityCampaignId } : {}),
               ...(linkUrl && asCard ? { linkUrl } : {}),
             },
@@ -766,6 +784,7 @@ export async function approveAndScheduleStudioDraft(
           scheduledAt: post.scheduledAt,
           linkUrl,
         });
+        postText.set(post.id, content);
       };
 
       let current: string | null = null;
@@ -902,6 +921,40 @@ export async function approveAndScheduleStudioDraft(
     });
     // Mission Control witness, after the approval committed. Never throws, so
     // it cannot turn a committed approval into a failure.
+    if (committed.approved && approvedDraft) {
+      // Mission Control calendar: the draft was approved, then each Post this
+      // approval created is scheduled (a reused Post was scheduled earlier).
+      const media = approvedDraft.videoUrl ? [approvedDraft.videoUrl] : [];
+      const lifecycle = {
+        missionId,
+        business: input.client.clientSlug,
+        publishedAt: null,
+        mediaThumbnailUrls: media,
+        postUrl: null,
+      };
+      void emitPostLifecycleEvent({
+        step: 'approved',
+        ...lifecycle,
+        postId: id,
+        platform: approvedDraft.platforms.join(',') || null,
+        scheduledAt: committed.scheduled[0]?.scheduledAt ?? null,
+        text: approvedDraft.script,
+        approveUrl: studioDraftApproveUrl(input.client.clientSlug, id),
+      });
+      for (const post of committed.scheduled) {
+        if (post.reused) continue;
+        void emitPostLifecycleEvent({
+          step: 'scheduled',
+          ...lifecycle,
+          postId: post.postId,
+          platform: post.platform,
+          scheduledAt: post.scheduledAt,
+          text: postText.get(post.postId) ?? approvedDraft.script,
+          approveUrl: postApproveUrl(post.postId),
+          studioDraftId: id,
+        });
+      }
+    }
     if (committed.approved) {
       emitWitnessEvent({
         step: 'approved',
