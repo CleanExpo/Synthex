@@ -9,6 +9,8 @@
  * metadata. A storage error also throws, so a video is never marked
  * 'rendered' at a URL that holds nothing.
  */
+import { isAllowedImageHost } from '@/lib/services/media/fetch-image-base64';
+import { assertExternalUrlSafe } from '@/lib/security/validate-url';
 import { FEATURE_NOT_PROVISIONED } from '@/lib/api/not-provisioned';
 import {
   ObjectStorageNotProvisionedError,
@@ -39,10 +41,19 @@ export class ArtifactStorageNotProvisionedError extends Error {
 }
 
 async function fetchWithRetry(url: string, attempts = 3): Promise<ArrayBuffer> {
+  // The URL arrives in the fal webhook payload: download only from fal's media
+  // hosts over https, after the shared private-address check, and never follow
+  // a redirect off them (CodeQL js/request-forgery).
+  if (!isAllowedImageHost(url))
+    throw new Error('artifact host is not an allowed fal media host');
+  await assertExternalUrlSafe(url);
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(60000) });
+      const res = await fetch(url, {
+        redirect: 'error',
+        signal: AbortSignal.timeout(60000),
+      });
       if (!res.ok) throw new Error(`download ${res.status}`);
       return await res.arrayBuffer();
     } catch (err) {

@@ -70,7 +70,13 @@ const GENERATED_NOTE =
 const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const toPosix = p => p.split(path.sep).join('/');
 const routesText = n => `${n} route${n === 1 ? '' : 's'}`;
-const mdCell = s => String(s).replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+// Escape backslashes before pipes, so a cell ending in \ cannot un-escape the next | (CodeQL js/incomplete-sanitization).
+const mdCell = s =>
+  String(s)
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 function walk(dir, out = []) {
   if (!fs.existsSync(dir)) return out;

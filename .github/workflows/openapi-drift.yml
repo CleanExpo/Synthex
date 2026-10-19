@@ -23,6 +23,9 @@ jobs:
           cache: 'npm'
       # The generators parse routes with typescript and format with prettier.
       - run: npm ci --legacy-peer-deps --ignore-scripts
+      # Route probes import modules that load @prisma/client; --ignore-scripts skips its
+      # postinstall, and without the generated client every probe fails and the spec drifts.
+      - run: npx prisma generate
       - run: |
           if [ ! -f scripts/api/gen-openapi.mjs ]; then echo "DISABLED openapi-drift: scripts/api/gen-openapi.mjs not yet delivered (P3)"; exit 0; fi
           EX="scripts/api/exempt-routes.json"

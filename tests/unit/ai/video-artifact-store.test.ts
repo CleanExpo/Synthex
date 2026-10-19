@@ -35,6 +35,13 @@ const mockLocalUpload = jest.fn();
 jest.mock('@/lib/storage/platform-storage', () => ({
   uploadToStorage: (...a: unknown[]) => mockLocalUpload(...a),
 }));
+// The private-address check does DNS; the allowlist under test runs first.
+let mockUnsafe = false;
+jest.mock('@/lib/security/validate-url', () => ({
+  assertExternalUrlSafe: async () => {
+    if (mockUnsafe) throw new Error('private address');
+  },
+}));
 const mockCreateAsset = jest.fn();
 jest.mock('@/lib/services/media-library', () => ({
   mediaLibraryService: {
@@ -49,7 +56,7 @@ import {
 
 const ENV = { ...process.env };
 const INPUT = {
-  sourceUrl: 'https://provider.test/v.mp4',
+  sourceUrl: 'https://v3.fal.media/files/abc/v.mp4',
   userId: 'user_1',
   rowId: 'vid_1',
   prompt: 'p',
@@ -65,6 +72,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.SUPABASE_URL = 'https://proj.supabase.co';
   process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-key';
+  mockUnsafe = false;
   global.fetch = jest.fn(async () => ok()) as never;
   mockUpload.mockResolvedValue({ data: {}, error: null });
   mockCreateAsset.mockResolvedValue({});
@@ -130,4 +138,32 @@ describe('storeArtifact', () => {
       expect(mockCreateAsset).not.toHaveBeenCalled();
     }
   );
+});
+
+describe('storeArtifact source URL guard (CodeQL js/request-forgery)', () => {
+  it.each([
+    'https://evil.example/v.mp4',
+    'http://v3.fal.media/files/abc/v.mp4',
+    'https://fal.media.evil.example/v.mp4',
+    'https://169.254.169.254/latest/meta-data',
+  ])('refuses %s before any request', async sourceUrl => {
+    await expect(storeArtifact({ ...INPUT, sourceUrl })).rejects.toThrow(
+      'not an allowed fal media host'
+    );
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(mockUpload).not.toHaveBeenCalled();
+  });
+
+  it('refuses a fal host that resolves to a private address', async () => {
+    mockUnsafe = true;
+    await expect(storeArtifact(INPUT)).rejects.toThrow('private address');
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('never follows a redirect', async () => {
+    await storeArtifact(INPUT);
+    expect((global.fetch as jest.Mock).mock.calls[0][1]).toMatchObject({
+      redirect: 'error',
+    });
+  });
 });
