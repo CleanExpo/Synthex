@@ -4,8 +4,8 @@
  * Pins the behaviour deltas introduced by routing this route through
  * AnthropicProvider instead of a direct @anthropic-ai/sdk client:
  *  - multi-text-block responses are joined ('' separator) before JSON.parse
- *  - a missing usage block skips the cost-ledger write entirely (fail closed —
- *    no zero-cost rows)
+ *  - the Governor writes the one cost-ledger receipt (P5 / M10); the route no
+ *    longer writes its own, and a missing usage block records zero tokens
  *  - a missing API key rejects before any SDK call or ledger write
  */
 
@@ -39,13 +39,31 @@ jest.mock('next/server', () => {
 // ── Auth + rate-limit mocks ───────────────────────────────────────────────────
 
 jest.mock('@/lib/auth/with-auth', () => ({
-  withAuth: (handler: (req: unknown, auth: { userId: string }) => unknown) => {
-    return async (req: unknown) => handler(req, { userId: 'user-42' });
+  withAuth: (
+    handler: (req: unknown, auth: { clientId: string }) => unknown
+  ) => {
+    return async (req: unknown) => handler(req, { clientId: 'org-42' });
   },
 }));
 
 jest.mock('@/lib/rate-limit/rate-limiter', () => ({
   withRateLimit: (_req: unknown, fn: () => unknown) => fn(),
+}));
+
+// ── Prisma mock (Governor control plane + its single ledger receipt) ─────────
+
+const mockPrisma = {
+  hermesConfig: { findUnique: jest.fn() },
+  organization: { findUnique: jest.fn() },
+  runnerFlag: { findMany: jest.fn() },
+  aPICredential: { findMany: jest.fn() },
+  orgBudgetPolicy: { findUnique: jest.fn() },
+  pipelineCostLedger: { groupBy: jest.fn(), create: jest.fn() },
+};
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: mockPrisma,
+  prisma: mockPrisma,
 }));
 
 // ── Cost-ledger mock ──────────────────────────────────────────────────────────
@@ -108,11 +126,20 @@ beforeEach(() => {
   jest.resetModules();
   jest.clearAllMocks();
   mockApiKey = 'test-key';
+  mockPrisma.hermesConfig.findUnique.mockResolvedValue(null);
+  mockPrisma.organization.findUnique.mockResolvedValue({ slug: 'org-42-slug' });
+  mockPrisma.runnerFlag.findMany.mockResolvedValue([]);
+  mockPrisma.aPICredential.findMany.mockResolvedValue([]);
+  mockPrisma.orgBudgetPolicy.findUnique.mockResolvedValue(null);
+  mockPrisma.pipelineCostLedger.groupBy.mockResolvedValue([]);
+  mockPrisma.pipelineCostLedger.create.mockResolvedValue({ id: 'l1' });
+  jest.spyOn(console, 'info').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
 
 afterEach(() => {
+  (console.info as jest.Mock).mockRestore();
   (console.warn as jest.Mock).mockRestore();
   (console.error as jest.Mock).mockRestore();
 });
@@ -142,15 +169,19 @@ describe('POST /api/brand-iq/next-steps — provider-layer edges (RA-3028)', () 
       'Lean on friendly captions.',
       'Replicate last top post.',
     ]);
-    expect(mockTrackPipelineCost).toHaveBeenCalledTimes(1);
-    expect(mockTrackPipelineCost.mock.calls[0][0]).toMatchObject({
-      pipeline_name: 'brand-iq-next-steps',
-      input_tokens: 100,
-      output_tokens: 40,
+    expect(mockTrackPipelineCost).not.toHaveBeenCalled();
+    expect(mockPrisma.pipelineCostLedger.create).toHaveBeenCalledTimes(1);
+    expect(
+      mockPrisma.pipelineCostLedger.create.mock.calls[0][0].data
+    ).toMatchObject({
+      pipelineName: 'brand-iq-next-steps',
+      clientId: 'org-42',
+      inputTokens: 100,
+      outputTokens: 40,
     });
   });
 
-  it('skips the cost-ledger write when the provider returns no usage (fail closed)', async () => {
+  it('records a zero-token receipt (not a priced guess) when the provider returns no usage', async () => {
     mockAnthropicCreate.mockResolvedValue(
       sdkMessage([{ type: 'text', text: '["A.","B.","C."]' }])
     );
@@ -162,10 +193,10 @@ describe('POST /api/brand-iq/next-steps — provider-layer edges (RA-3028)', () 
     expect(res.status).toBe(200);
     expect(json.nextSteps).toEqual(['A.', 'B.', 'C.']);
     expect(mockTrackPipelineCost).not.toHaveBeenCalled();
-    expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('skipping cost-ledger write'),
-      expect.objectContaining({ runId: expect.any(String) })
-    );
+    expect(mockPrisma.pipelineCostLedger.create).toHaveBeenCalledTimes(1);
+    expect(
+      mockPrisma.pipelineCostLedger.create.mock.calls[0][0].data
+    ).toMatchObject({ inputTokens: 0, outputTokens: 0, costUsd: 0 });
   });
 
   it('returns 500 and writes no ledger row when the API key is missing', async () => {

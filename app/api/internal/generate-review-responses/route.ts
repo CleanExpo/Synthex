@@ -18,6 +18,12 @@ import type { ReviewIntelligenceMetadata } from '@/lib/pipelines/metadata-schema
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
+import { governedCall, GOVERNOR_MODE } from '@/lib/ai/governor';
+import {
+  estimateTextTokens,
+  governedRouteResult,
+  resolveOrgBrandSlug,
+} from '@/lib/ai/governor-route-support';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 
 export const runtime = 'nodejs';
@@ -60,6 +66,7 @@ interface GeneratedResponse {
 }
 
 async function generateReviewResponse(
+  organizationId: string,
   orgName: string,
   review: PendingReview
 ): Promise<GeneratedResponse> {
@@ -92,11 +99,36 @@ Respond with JSON only:
   "confidence": <0.0-1.0, your confidence this reply is high quality>
 }`;
 
-  const response = await getAI().complete({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 300,
-    messages: [{ role: 'user', content: prompt }],
+  const MODEL = 'claude-haiku-4-5-20251001';
+  const MAX_TOKENS = 300;
+  // Spend gate (M10): the Governor writes the single cost-ledger receipt.
+  const call = governedRouteResult(async ctx => {
+    const provider = ctx.apiKey ? new AnthropicProvider(ctx.apiKey) : getAI();
+    const data = await provider.complete({
+      model: ctx.model?.id ?? MODEL,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return {
+      data,
+      modelId: data.model || undefined,
+      inputTokens: data.usage?.prompt_tokens ?? 0,
+      outputTokens: data.usage?.completion_tokens ?? 0,
+    };
   });
+  const response = call.unwrap(
+    await governedCall({
+      organizationId,
+      brandSlug: await resolveOrgBrandSlug(organizationId),
+      runner: 'internal-generate-review-responses',
+      provider: 'anthropic',
+      model: { kind: 'registered', modelId: MODEL },
+      pipelineName: 'internal-generate-review-responses',
+      estimate: estimateTextTokens(prompt.length, MAX_TOKENS),
+      mode: GOVERNOR_MODE,
+      execute: call.execute,
+    })
+  );
 
   const content = response.choices[0]?.message?.content ?? '';
   if (!content) {
@@ -148,6 +180,7 @@ const reviewIntelligenceRunner = createEdgeFunctionRunner<
     for (const review of pending) {
       try {
         const { suggestion, confidence } = await generateReviewResponse(
+          clientId,
           input.orgName,
           review
         );

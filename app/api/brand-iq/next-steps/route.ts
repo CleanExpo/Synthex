@@ -1,7 +1,13 @@
 // SYN-527: Generate Brand IQ Next Steps via Claude haiku
 import { NextRequest, NextResponse } from 'next/server';
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
-import { trackPipelineCost } from '@/lib/pipelines/track-cost';
+import { governedCall, GOVERNOR_MODE } from '@/lib/ai/governor';
+import {
+  estimateTextTokens,
+  governedRouteResult,
+  governorRefusalResponse,
+  resolveOrgBrandSlug,
+} from '@/lib/ai/governor-route-support';
 import { withAuth } from '@/lib/auth/with-auth';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
@@ -14,7 +20,7 @@ import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 // authenticated session cannot issue unbounded Claude-Haiku calls. The
 // rate limiter is tier-aware (resolveVerifiedTier) so paid tiers get
 // higher caps.
-const _postHandler = withAuth(async (req, { userId }) => {
+const _postHandler = withAuth(async (req, { clientId: organizationId }) => {
   try {
     const body = await req.json();
     const { voiceScore, resonanceScore, topAttributes, bestWindow } = body;
@@ -38,34 +44,38 @@ Rules:
 
 Example format: ["Step one here.", "Step two here.", "Step three here."]`;
 
-    const message = await client.complete({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }],
-    });
-
-    // Track cost — fail closed: a missing usage block means we cannot price
-    // the call, so skip the ledger write rather than recording zero-cost rows.
-    if (message.usage) {
-      const inputTokens = message.usage.prompt_tokens;
-      const outputTokens = message.usage.completion_tokens;
-      const costUsd = inputTokens * 0.0000008 + outputTokens * 0.000004;
-
-      await trackPipelineCost({
-        pipeline_name: 'brand-iq-next-steps',
-        client_id: userId,
-        run_id: runId,
-        model: 'claude-haiku-4-5',
-        input_tokens: inputTokens,
-        output_tokens: outputTokens,
-        cost_usd: costUsd,
+    const MODEL = 'claude-haiku-4-5-20251001';
+    const MAX_TOKENS = 200;
+    // Spend gate (M10): the Governor writes the single cost-ledger receipt for
+    // this call. The organisation is the verified auth org, never the body.
+    const call = governedRouteResult(async ctx => {
+      const provider = ctx.apiKey ? new AnthropicProvider(ctx.apiKey) : client;
+      const data = await provider.complete({
+        model: ctx.model?.id ?? MODEL,
+        max_tokens: MAX_TOKENS,
+        messages: [{ role: 'user', content: prompt }],
       });
-    } else {
-      console.warn(
-        'brand-iq next-steps: provider returned no usage data; skipping cost-ledger write',
-        { runId }
-      );
-    }
+      return {
+        data,
+        modelId: data.model || undefined,
+        inputTokens: data.usage?.prompt_tokens ?? 0,
+        outputTokens: data.usage?.completion_tokens ?? 0,
+      };
+    });
+    const message = call.unwrap(
+      await governedCall({
+        organizationId,
+        brandSlug: await resolveOrgBrandSlug(organizationId),
+        runner: 'brand-iq-next-steps',
+        provider: 'anthropic',
+        model: { kind: 'registered', modelId: MODEL },
+        pipelineName: 'brand-iq-next-steps',
+        runId,
+        estimate: estimateTextTokens(prompt.length, MAX_TOKENS),
+        mode: GOVERNOR_MODE,
+        execute: call.execute,
+      })
+    );
 
     const rawText = message.choices[0]?.message?.content || '[]';
     let nextSteps: string[] = [];
@@ -85,6 +95,8 @@ Example format: ["Step one here.", "Step two here.", "Step three here."]`;
 
     return NextResponse.json({ nextSteps });
   } catch (err) {
+    const refusal = governorRefusalResponse(err);
+    if (refusal) return refusal;
     console.error('brand-iq next-steps error:', err);
     return NextResponse.json(
       { error: 'Failed to generate next steps' },
