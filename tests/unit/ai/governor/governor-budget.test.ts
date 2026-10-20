@@ -727,6 +727,27 @@ describe('shadow mode', () => {
     );
   });
 
+  it('records BOTH conditions when an unpriced model also returns unusable token counts', async () => {
+    // errorClass stays the single pricing verdict; the sanitised counts are
+    // recorded alongside it rather than overwritten by it.
+    await shadowCall(
+      ok({ modelId: 'route-legacy-model-x', inputTokens: Number.NaN })
+    );
+
+    const prov = receiptRow(mocks)!.provenance as Record<string, unknown>;
+    expect(prov.errorClass).toBe('unpriced_model');
+    expect(prov.tokenCountVerdict).toBe(
+      'provider_returned_unusable_token_counts'
+    );
+  });
+
+  it('control: usable token counts carry no token-count verdict', async () => {
+    await shadowCall(ok({ modelId: 'route-legacy-model-x' }));
+
+    const prov = receiptRow(mocks)!.provenance as Record<string, unknown>;
+    expect(prov).not.toHaveProperty('tokenCountVerdict');
+  });
+
   it('still records a provider error as failed_provider_error, one row', async () => {
     exhausted();
     const execute = jest.fn().mockRejectedValue(new Error('provider down'));

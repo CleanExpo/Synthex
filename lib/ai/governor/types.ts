@@ -135,6 +135,12 @@ export interface GovernorProvenance {
   /** Populated when the Governor refused or the provider threw. */
   errorClass?: string;
   /**
+   * Set whenever the provider's token counts were unusable (NaN, negative)
+   * and recorded as 0, whatever errorClass says — an 'unpriced_model' receipt
+   * must not hide it.
+   */
+  tokenCountVerdict?: 'provider_returned_unusable_token_counts';
+  /**
    * Shadow mode only: the refusal the Governor WOULD have made in enforcing
    * mode. The call ran anyway; this row is still its single receipt.
    */

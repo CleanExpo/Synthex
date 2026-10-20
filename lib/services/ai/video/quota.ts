@@ -33,10 +33,20 @@ import {
   reserveSpendBatch,
   finalizeSpend,
   spendSnapshot,
+  reserveKey,
+  finalizeKey,
 } from '@/lib/services/ai/image/spend-log';
 import { logger } from '@/lib/logger';
-import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 import { InitiatedBy } from './types';
+
+/** pipeline_cost_ledger.pipeline_name for video spend; run_id is the hold id. */
+export const VIDEO_LEDGER_PIPELINE = 'video-generation';
+
+/**
+ * How far back the video sweep looks for a charged hold with no ledger row.
+ * Covers a ledger outage of up to two days; the sweep runs every 15 minutes.
+ */
+export const VIDEO_LEDGER_BACKFILL_LOOKBACK_MS = 48 * 60 * 60 * 1000;
 
 /**
  * Reserve `estimateUsd` before any provider spend.
@@ -112,28 +122,151 @@ export async function settleQuota(
     kind: 'settle',
   });
 
-  // One ledger for all spend (spec M10/M11): mirror the image path. Written only
-  // when THIS call wrote the terminal event, so a replayed webhook (finalize
-  // returns false) cannot add a second row. Non-fatal and after the settle: the
-  // spend log is the money-safety record, the ledger is the audit record.
-  if (wrote && actualUsd > 0) {
+  // One ledger for all spend (spec M10/M11): mirror the image path. The row is
+  // keyed on the hold, so this runs on a replay too (finalize returns false)
+  // and backfills a row an earlier settle failed to write, without adding a
+  // second one. Non-fatal and after the settle: the spend log is the
+  // money-safety record, the ledger is the audit record. A failure here is
+  // repaired by the video sweep (backfillVideoSpendLedger), because a webhook
+  // replay stops at the job's status guard and never reaches this call.
+  if (actualUsd > 0) {
     try {
-      await trackPipelineCost({
-        pipeline_name: 'video-generation',
-        client_id: organizationId,
-        run_id: holdId,
-        // Per-model identity lives on video_generations; the ledger keys on the run.
-        model: 'fal-video',
-        // Video is billed per second, not tokens; the columns are NOT NULL.
-        input_tokens: 0,
-        output_tokens: 0,
-        cost_usd: actualUsd,
-      });
+      await ensureVideoSpendLedgerRow(holdId);
     } catch (error) {
-      logger.error('video spend: ledger write failed', { holdId, error });
+      logger.error(
+        'video spend: ledger write failed — the sweep backfills it',
+        {
+          holdId,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
     }
   }
   return wrote;
+}
+
+/**
+ * Make sure a CHARGED video hold has its pipeline_cost_ledger row.
+ *
+ * Idempotent on (VIDEO_LEDGER_PIPELINE, run_id = holdId): a row already there
+ * is left alone. The amount and timestamp come from the spend log, not the
+ * caller — the hold's reserve plus its terminal settle/sweep event — so the
+ * audit row always matches what the money-safety record charged, whichever
+ * path (settle or sweep) finalised it, and lands in the budget window the
+ * spend happened in. A release, an uncharged hold, a hold not yet finalised
+ * or a non-video hold writes nothing.
+ *
+ * Throws when a read or the write fails; callers decide whether that is fatal.
+ * The check-then-insert is not atomic (the ledger has no unique key on
+ * run_id): two concurrent calls for one hold could both write. A duplicate
+ * row is the lesser evil next to a missing one, and the callers are a webhook
+ * already serialised by its job's status guard and a single cron sweep.
+ */
+export async function ensureVideoSpendLedgerRow(
+  holdId: string
+): Promise<'written' | 'present' | 'not_charged'> {
+  const { default: prisma } = await import('@/lib/prisma');
+  const [reserve, final] = await Promise.all([
+    prisma.mediaSpendEvent.findUnique({
+      where: { eventKey: reserveKey(holdId) },
+      select: { deltaUsd: true, organizationId: true, mediaType: true },
+    }),
+    prisma.mediaSpendEvent.findUnique({
+      where: { eventKey: finalizeKey(holdId) },
+      select: { kind: true, deltaUsd: true, createdAt: true },
+    }),
+  ]);
+  if (
+    !reserve ||
+    !final ||
+    final.kind === 'release' ||
+    (reserve.mediaType !== null && reserve.mediaType !== 'video')
+  ) {
+    return 'not_charged';
+  }
+
+  // finalizeSpend stores actual - held, so held + that delta is the charge.
+  const actualUsd =
+    Math.round((Number(reserve.deltaUsd) + Number(final.deltaUsd)) * 10000) /
+    10000;
+  if (!(actualUsd > 0)) return 'not_charged';
+
+  const existing = await prisma.pipelineCostLedger.findFirst({
+    where: { pipelineName: VIDEO_LEDGER_PIPELINE, runId: holdId },
+    select: { id: true },
+  });
+  if (existing) return 'present';
+
+  await prisma.pipelineCostLedger.create({
+    data: {
+      pipelineName: VIDEO_LEDGER_PIPELINE,
+      clientId: reserve.organizationId,
+      runId: holdId,
+      // Per-model identity lives on video_generations; the ledger keys on the run.
+      model: 'fal-video',
+      // Video is billed per second, not tokens; the columns are NOT NULL.
+      inputTokens: 0,
+      outputTokens: 0,
+      costUsd: actualUsd,
+      createdAt: final.createdAt,
+    },
+  });
+  logger.info('video spend: ledger row written', {
+    holdId,
+    costUsd: actualUsd,
+    finalisedBy: final.kind,
+  });
+  return 'written';
+}
+
+/**
+ * Durable repair for a ledger write that failed after its spend was settled.
+ * Finds video holds finalised since `since` with a positive charge and no
+ * ledger row, and writes each one. Run by the video sweep every pass; a hold
+ * whose write fails again is simply found again next pass.
+ *
+ * Returns the number of rows written.
+ */
+export async function backfillVideoSpendLedger(
+  since: Date,
+  limit = 200
+): Promise<number> {
+  const { default: prisma } = await import('@/lib/prisma');
+  const rows = await prisma.$queryRaw<Array<{ hold_id: string }>>`
+    SELECT f.hold_id
+    FROM media_spend_events f
+    JOIN media_spend_events r
+      ON r.hold_id = f.hold_id AND r.kind = 'reserve'
+    WHERE f.kind IN ('settle', 'sweep')
+      AND f.created_at >= ${since}
+      AND r.media_type = 'video'
+      AND r.delta_usd + f.delta_usd > 0
+      AND NOT EXISTS (
+        SELECT 1 FROM pipeline_cost_ledger l
+        WHERE l.pipeline_name = ${VIDEO_LEDGER_PIPELINE}
+          AND l.run_id = f.hold_id
+      )
+    ORDER BY f.created_at ASC
+    LIMIT ${limit}
+  `;
+
+  let written = 0;
+  for (const { hold_id: holdId } of rows) {
+    try {
+      if ((await ensureVideoSpendLedgerRow(holdId)) === 'written') written++;
+    } catch (error) {
+      logger.error('video spend: ledger backfill failed — retrying next pass', {
+        holdId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  if (written > 0) {
+    logger.warn('video spend: backfilled missing ledger rows', {
+      count: written,
+    });
+  }
+  return written;
 }
 
 /**

@@ -82,6 +82,101 @@ describe('calculatePipelineCost', () => {
   });
 });
 
+// ─── calculatePipelineCost: dated-alias fallback ────────────────────────────
+//
+// The fallback exists for date-stamped ids only. A bare prefix match let an
+// unregistered id borrow a DIFFERENT model's rate: 'claude-3-5' priced as
+// 'claude-3-5-sonnet', 'gpt-4' as whichever of 'gpt-4-turbo' / 'gpt-4-o' /
+// 'gpt-4-o-mini' came first. An unknown model must record 0 and warn.
+
+describe('calculatePipelineCost — dated-alias fallback', () => {
+  // gpt-4-o: $5 in / $15 out per 1M; gpt-4-o-mini: $0.15 / $0.60.
+  const GPT_4O = 5 + 15;
+  const GPT_4O_MINI = 0.15 + 0.6;
+
+  it('positive control: an exact registered id prices at its own rate', () => {
+    expect(calculatePipelineCost('gpt-4-o', 1_000_000, 1_000_000)).toBeCloseTo(
+      GPT_4O,
+      4
+    );
+    expect(
+      calculatePipelineCost('gpt-4-o-mini', 1_000_000, 1_000_000)
+    ).toBeCloseTo(GPT_4O_MINI, 4);
+  });
+
+  it('an unregistered prefix of ONE registered id records 0, not that model’s rate', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(calculatePipelineCost('claude-3-5', 1_000_000, 1_000_000)).toBe(0);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('claude-3-5'));
+    warnSpy.mockRestore();
+  });
+
+  it('an unregistered prefix of SEVERAL registered ids records 0', () => {
+    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(calculatePipelineCost('gpt-4', 1_000_000, 1_000_000)).toBe(0);
+    warnSpy.mockRestore();
+  });
+
+  it('an undated alias still resolves to its dated registry id', () => {
+    // claude-haiku-4-5 -> claude-haiku-4-5-20251001 ($1 / $5 per 1M).
+    expect(
+      calculatePipelineCost('claude-haiku-4-5', 1_000_000, 1_000_000)
+    ).toBeCloseTo(6, 4);
+  });
+
+  it('a dated variant of a registered id resolves to that id (YYYY-MM-DD)', () => {
+    expect(
+      calculatePipelineCost('gpt-4-o-2024-08-06', 1_000_000, 1_000_000)
+    ).toBeCloseTo(GPT_4O, 4);
+    expect(
+      calculatePipelineCost('gpt-4-o-mini-2024-07-18', 1_000_000, 1_000_000)
+    ).toBeCloseTo(GPT_4O_MINI, 4);
+  });
+
+  it('a dated variant of a registered id resolves to that id (YYYYMMDD)', () => {
+    // claude-sonnet-4-6: $3 / $15 per 1M.
+    expect(
+      calculatePipelineCost('claude-sonnet-4-6-20260115', 1_000_000, 1_000_000)
+    ).toBeCloseTo(18, 4);
+  });
+
+  it('an undated alias matching TWO dated registry ids is ambiguous and records 0', () => {
+    jest.isolateModules(() => {
+      jest.doMock('@/lib/ai/model-registry', () => {
+        const model = (id: string, input: number) => ({
+          id,
+          provider: 'anthropic',
+          costPer1kTokens: { input, output: input },
+        });
+        const models = [
+          model('claude-x-1-20250101', 0.001),
+          model('claude-x-1-20260101', 0.002),
+        ];
+        return {
+          getModel: (_p: string, id: string) =>
+            models.find(m => m.id === id) ?? null,
+          getModels: (p: string) => (p === 'anthropic' ? models : []),
+        };
+      });
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const isolated =
+        require('@/lib/pipelines/track-cost') as typeof import('@/lib/pipelines/track-cost');
+      expect(
+        isolated.calculatePipelineCost('claude-x-1', 1_000_000, 1_000_000)
+      ).toBe(0);
+      // Control: each dated id still prices exactly.
+      expect(
+        isolated.calculatePipelineCost(
+          'claude-x-1-20260101',
+          1_000_000,
+          1_000_000
+        )
+      ).toBeCloseTo(4, 4);
+      warnSpy.mockRestore();
+    });
+  });
+});
+
 // ─── trackPipelineCost ──────────────────────────────────────────────────────
 
 describe('trackPipelineCost', () => {

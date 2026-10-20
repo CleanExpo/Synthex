@@ -210,9 +210,12 @@ export const UNKNOWN_OUTCOME_ERROR =
  * instead: the queue's due-fetch selects only `failed` rows with
  * `nextRetryAt <= now`, and `claimQueueItemForPublish` refuses a `failed` row
  * without a due `nextRetryAt`, so nothing re-sends it until a person has
- * checked the platform. Rows that failed BEFORE dispatch (the adapter returned
- * an error) are written by `processPublishQueue` with a future `nextRetryAt`
- * and keep their normal retry.
+ * checked the platform. Rows that failed BEFORE dispatch — a handled skip, or
+ * a read that threw between the claim and the dispatch — and rows whose
+ * adapter returned an error are written by `processPublishQueue` with a future
+ * `nextRetryAt` and keep their normal retry. Only a row whose pre-dispatch
+ * retry write ALSO failed (database down) reaches this reclaim without having
+ * dispatched; it is treated as unknown too, the safe direction.
  *
  * Conditional on `status: 'publishing'` AND `updatedAt < cutoff` so a row a
  * worker is still actively publishing (its `updatedAt` was just bumped by the

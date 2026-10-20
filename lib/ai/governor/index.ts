@@ -225,6 +225,13 @@ export async function governedCall<T>(
       : tokensWereUsable
         ? undefined
         : 'provider_returned_unusable_token_counts';
+    // Recorded on its own, so an unpriced model cannot hide the sanitised
+    // counts behind its errorClass.
+    const tokenVerdict = tokensWereUsable
+      ? {}
+      : {
+          tokenCountVerdict: 'provider_returned_unusable_token_counts' as const,
+        };
 
     const outcome: GovernorOutcome = 'completed';
     const receipt = await writeReceipt({
@@ -240,8 +247,8 @@ export async function governedCall<T>(
       costUsd: priced ? estimateCostUsd(priced, inputTokens, outputTokens) : 0,
       outcome,
       provenance: errorClass
-        ? { ...provenance, modelId: usedModelId, errorClass }
-        : { ...provenance, modelId: usedModelId },
+        ? { ...provenance, modelId: usedModelId, errorClass, ...tokenVerdict }
+        : { ...provenance, modelId: usedModelId, ...tokenVerdict },
     });
 
     return { ok: true, outcome, data: result.data, receipt };

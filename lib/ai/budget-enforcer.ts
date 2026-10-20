@@ -27,10 +27,15 @@
  *                   the existing recordGenerationCost, so nothing is
  *                   double-counted for longer than the ledger-write gap).
  *
- * FAIL-CLOSED ON READ ERRORS (spec M10): a policy or ledger/counter read
- * ERROR (missing table, connection failure, ...) refuses the spend with
+ * FAIL-CLOSED ON READ ERRORS (spec M10): a policy or ledger read ERROR
+ * (missing table, connection failure, ...) refuses the spend with
  * OrgBudgetUnavailableError (routes answer HTTP 503) — an unreadable budget
- * is never treated as an absent one. A missing policy ROW is not an error:
+ * is never treated as an absent one. The in-flight COUNTERS are not covered:
+ * the Redis wrapper (lib/redis-client.ts) never throws and falls back to a
+ * per-instance memory cache during an outage, so reserveBudget then proceeds
+ * with in-flight counted per instance, not shared. The ledger SUM still
+ * bounds settled spend; only concurrent reservations across instances can
+ * jointly overshoot until Redis returns. A missing policy ROW is not an error:
  * the org keeps the env defaults, or no enforcement at all. A breach under a
  * live OrgBudgetPolicy row with enforcementMode='enforce' throws
  * OrgBudgetExceededError (HTTP 402). With zero policy rows and the env

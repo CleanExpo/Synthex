@@ -60,21 +60,41 @@ const PROVIDERS: AIProvider[] = [
   'ollama',
 ];
 
-/**
- * Look a model up in the single model registry (the one the Governor reads).
- * Exact id first; otherwise a dated registry id for an undated alias
- * (claude-haiku-4-5 -> claude-haiku-4-5-20251001). Rates are never guessed.
- */
-function findRegistryModel(model: string): ModelConfig | null {
+/** A trailing date stamp: -YYYYMMDD or -YYYY-MM-DD. */
+const DATED_SUFFIX = /-(?:\d{8}|\d{4}-\d{2}-\d{2})$/;
+
+function findExactModel(model: string): ModelConfig | null {
   for (const provider of PROVIDERS) {
     const exact = getModel(provider, model);
     if (exact) return exact;
   }
-  for (const provider of PROVIDERS) {
-    const dated = getModels(provider).find(m => m.id.startsWith(`${model}-`));
-    if (dated) return dated;
-  }
   return null;
+}
+
+/**
+ * Look a model up in the single model registry (the one the Governor reads).
+ * Exact id first. The only fallback is a DATE STAMP on one side of the match:
+ *   - a dated id for a registered undated one
+ *     (gpt-4-o-2024-08-06 -> gpt-4-o);
+ *   - the one dated registry id for an undated alias
+ *     (claude-haiku-4-5 -> claude-haiku-4-5-20251001).
+ * A bare prefix is not a match ('gpt-4' must not borrow the rate of
+ * 'gpt-4-o-mini'), and an alias with more than one dated registry id is
+ * ambiguous. Either way the model is unknown and recorded at 0. Rates are
+ * never guessed.
+ */
+function findRegistryModel(model: string): ModelConfig | null {
+  const exact = findExactModel(model);
+  if (exact) return exact;
+
+  if (DATED_SUFFIX.test(model)) {
+    return findExactModel(model.replace(DATED_SUFFIX, ''));
+  }
+
+  const dated = PROVIDERS.flatMap(provider => getModels(provider)).filter(
+    m => DATED_SUFFIX.test(m.id) && m.id.replace(DATED_SUFFIX, '') === model
+  );
+  return dated.length === 1 ? dated[0] : null;
 }
 
 /**
