@@ -131,7 +131,18 @@ export async function settleQuota(
   // replay stops at the job's status guard and never reaches this call.
   if (actualUsd > 0) {
     try {
-      await ensureVideoSpendLedgerRow(holdId);
+      // First settle: the amount and organisation are in hand, so write the row
+      // directly. Replay: check the spend log and the ledger before writing.
+      if (wrote) {
+        await writeVideoLedgerRow(
+          holdId,
+          organizationId,
+          actualUsd,
+          new Date()
+        );
+      } else {
+        await ensureVideoSpendLedgerRow(holdId);
+      }
     } catch (error) {
       logger.error(
         'video spend: ledger write failed — the sweep backfills it',
@@ -197,26 +208,42 @@ export async function ensureVideoSpendLedgerRow(
   });
   if (existing) return 'present';
 
-  await prisma.pipelineCostLedger.create({
-    data: {
-      pipelineName: VIDEO_LEDGER_PIPELINE,
-      clientId: reserve.organizationId,
-      runId: holdId,
-      // Per-model identity lives on video_generations; the ledger keys on the run.
-      model: 'fal-video',
-      // Video is billed per second, not tokens; the columns are NOT NULL.
-      inputTokens: 0,
-      outputTokens: 0,
-      costUsd: actualUsd,
-      createdAt: final.createdAt,
-    },
-  });
+  await writeVideoLedgerRow(
+    holdId,
+    reserve.organizationId,
+    actualUsd,
+    final.createdAt
+  );
   logger.info('video spend: ledger row written', {
     holdId,
     costUsd: actualUsd,
     finalisedBy: final.kind,
   });
   return 'written';
+}
+
+/** Write one video pipeline_cost_ledger row. Throws when the write fails. */
+async function writeVideoLedgerRow(
+  holdId: string,
+  organizationId: string,
+  costUsd: number,
+  createdAt: Date
+): Promise<void> {
+  const { default: prisma } = await import('@/lib/prisma');
+  await prisma.pipelineCostLedger.create({
+    data: {
+      pipelineName: VIDEO_LEDGER_PIPELINE,
+      clientId: organizationId,
+      runId: holdId,
+      // Per-model identity lives on video_generations; the ledger keys on the run.
+      model: 'fal-video',
+      // Video is billed per second, not tokens; the columns are NOT NULL.
+      inputTokens: 0,
+      outputTokens: 0,
+      costUsd,
+      createdAt,
+    },
+  });
 }
 
 /**
