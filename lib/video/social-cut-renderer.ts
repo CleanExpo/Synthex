@@ -93,8 +93,15 @@ export interface RendererIo {
     buffer: Buffer,
     mimeType: string
   ) => Promise<{ url: string }>;
-  /** The founder's brand kit; absent or null renders the unbranded look. */
-  brandKit?: (userId: string) => Promise<RenderBrandKit | null>;
+  /**
+   * The brand kit of the organisation the cut was made for (its
+   * metadata.organizationId, else the founder's own); absent or null renders
+   * the unbranded look.
+   */
+  brandKit?: (
+    userId: string,
+    organizationId: string | null
+  ) => Promise<RenderBrandKit | null>;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -439,8 +446,17 @@ export async function renderSocialCut(
     await io.download(heroUrl, inPath);
     const dims = await io.probe(inPath);
     // Branding is styling, not a precondition: a failed lookup renders unbranded.
+    // The organisation deriveSocialCut recorded; brand the cut as that client.
+    const cutOrganizationId =
+      asset.metadata &&
+      typeof asset.metadata === 'object' &&
+      !Array.isArray(asset.metadata) &&
+      typeof (asset.metadata as Record<string, unknown>).organizationId ===
+        'string'
+        ? ((asset.metadata as Record<string, unknown>).organizationId as string)
+        : null;
     const kit = io.brandKit
-      ? await io.brandKit(asset.founderId).catch(() => null)
+      ? await io.brandKit(asset.founderId, cutOrganizationId).catch(() => null)
       : null;
     const filters = buildVideoFilters(plan, dims, kit);
     await io.transcode({

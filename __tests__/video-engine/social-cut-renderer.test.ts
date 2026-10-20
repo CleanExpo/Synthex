@@ -260,14 +260,21 @@ describe('buildVideoFilters() on the installed ffmpeg', () => {
     for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
   });
 
-  it.each([
-    ['unbranded', 'plain', null],
-    ['branded', 'space and, comma', BRANDED],
-    ['branded', 'co:lon', BRANDED],
-    ['branded', "apo'strophe", BRANDED],
-    ['branded', 'back\\slash', BRANDED],
-    ['branded', 'semi;colon [brackets]', BRANDED],
-  ])(
+  // ':' is not allowed in a Windows file name and '\' is its path separator,
+  // so those two folder names can only be made on POSIX.
+  const isWindows = process.platform === 'win32';
+  it.each(
+    [
+      ['unbranded', 'plain', null],
+      ['branded', 'space and, comma', BRANDED],
+      ['branded', 'co:lon', BRANDED],
+      ['branded', "apo'strophe", BRANDED],
+      ['branded', 'back\\slash', BRANDED],
+      ['branded', 'semi;colon [brackets]', BRANDED],
+    ].filter(
+      ([, dirName]) => !isWindows || !/[:\\]/.test(dirName as string)
+    ) as Array<[string, string, typeof BRANDED | null]>
+  )(
     'renders a %s caption frame from a font dir named %p',
     (_l, dirName, kit) => {
       const fontDir = fs.mkdtempSync(path.join(os.tmpdir(), `${dirName} `));
@@ -392,7 +399,20 @@ describe('renderSocialCut()', () => {
     expect(update.data.metadata.renderError).toContain('ffmpeg exploded');
   });
 
-  it('burns the founder org brand colour into the caption', async () => {
+  it('brands the cut as the organisation it was made for, not the founder home org', async () => {
+    const brandKit = jest.fn(async () => null);
+    const io = fakeIo({ brandKit });
+    await renderSocialCut(
+      {
+        ...PENDING_ASSET,
+        metadata: { ...METADATA, organizationId: 'org-client-b' },
+      },
+      io
+    );
+    expect(brandKit).toHaveBeenCalledWith('user-001', 'org-client-b');
+  });
+
+  it('burns the cut organisation brand colour into the caption', async () => {
     const brandKit = jest.fn(async () => ({
       primaryColor: '#1d4ed8',
       source: 'preset' as const,
@@ -401,7 +421,7 @@ describe('renderSocialCut()', () => {
     const result = await renderSocialCut(PENDING_ASSET, io);
 
     expect(result.status).toBe('ready');
-    expect(brandKit).toHaveBeenCalledWith('user-001');
+    expect(brandKit).toHaveBeenCalledWith('user-001', 'org-001');
     const { filters } = (io.transcode as jest.Mock).mock.calls[0][0];
     expect(filters.find((f: string) => f.startsWith('drawtext='))).toContain(
       ':boxcolor=0x1d4ed8@0.85:'
