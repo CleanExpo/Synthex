@@ -15,6 +15,13 @@ const mockPrisma = {
   platformPost: { findMany: jest.fn() },
   clientHealthScore: { findFirst: jest.fn() },
   recommendedAction: { findMany: jest.fn() },
+  // Governor control plane + its single ledger receipt (P5 / M10)
+  hermesConfig: { findUnique: jest.fn() },
+  organization: { findUnique: jest.fn() },
+  runnerFlag: { findMany: jest.fn() },
+  aPICredential: { findMany: jest.fn() },
+  orgBudgetPolicy: { findUnique: jest.fn() },
+  pipelineCostLedger: { groupBy: jest.fn(), create: jest.fn() },
 };
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -30,10 +37,32 @@ jest.mock('@/lib/auth/with-auth', () => ({
 jest.mock('@/lib/rate-limit/rate-limiter', () => ({
   withRateLimit: (_req: unknown, fn: () => unknown) => fn(),
 }));
+// The provider SDK is the faked boundary; the router and Governor run for real.
 const mockRoutedCall = jest.fn();
-jest.mock('@/lib/ai/model-router', () => ({
-  routedCall: (...a: unknown[]) => mockRoutedCall(...a),
+jest.mock('@anthropic-ai/sdk', () => ({
+  __esModule: true,
+  default: class {
+    messages = { create: (...a: unknown[]) => mockRoutedCall(...a) };
+  },
 }));
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+jest.mock('@/lib/encryption/api-key-encryption', () => ({
+  decryptApiKey: jest.fn(),
+}));
+
+function sdkText(text: string) {
+  return {
+    content: [{ type: 'text', text }],
+    usage: { input_tokens: 10, output_tokens: 5 },
+  };
+}
 const mockRecordScoreIssued = jest.fn();
 jest.mock('@/lib/intelligence/accuracy-ledger', () => ({
   recordScoreIssued: (...a: unknown[]) => mockRecordScoreIssued(...a),
@@ -45,7 +74,15 @@ beforeEach(() => {
   mockPrisma.platformPost.findMany.mockResolvedValue([]);
   mockPrisma.clientHealthScore.findFirst.mockResolvedValue(null);
   mockPrisma.recommendedAction.findMany.mockResolvedValue([]);
-  mockRoutedCall.mockResolvedValue('Post on Tuesdays.');
+  mockPrisma.hermesConfig.findUnique.mockResolvedValue(null);
+  mockPrisma.organization.findUnique.mockResolvedValue({ slug: 'org-a' });
+  mockPrisma.runnerFlag.findMany.mockResolvedValue([]);
+  mockPrisma.aPICredential.findMany.mockResolvedValue([]);
+  mockPrisma.orgBudgetPolicy.findUnique.mockResolvedValue(null);
+  mockPrisma.pipelineCostLedger.groupBy.mockResolvedValue([]);
+  mockPrisma.pipelineCostLedger.create.mockResolvedValue({ id: 'l1' });
+  jest.spyOn(console, 'info').mockImplementation(() => undefined);
+  mockRoutedCall.mockResolvedValue(sdkText('Post on Tuesdays.'));
   mockRecordScoreIssued.mockResolvedValue({
     recorded: false,
     reason: 'FEATURE_NOT_PROVISIONED',
@@ -113,7 +150,7 @@ describe('POST /api/ask-synthex — failures are not answers', () => {
   });
 
   it('reports the unrecorded score ledger write for a predictive answer', async () => {
-    mockRoutedCall.mockResolvedValue('You will likely see growth.');
+    mockRoutedCall.mockResolvedValue(sdkText('You will likely see growth.'));
     const res = await ask();
     expect(res.status).toBe(200);
     const json = await res.json();

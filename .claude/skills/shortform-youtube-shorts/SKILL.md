@@ -21,13 +21,13 @@ Tags: **[P]** official page read, **[S]** secondary. Craft numbers live in **sho
 
 ## 1. Deliverable spec
 
-| Item | Rule |
-|---|---|
+| Item           | Rule                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Classification | Square or vertical **and ≤3 min** = a Short (from 15 Oct 2024) [P]: https://support.google.com/youtube/answer/15424877. There is no "Short" flag in the API; aspect and length decide |
-| Aspect | 9:16, 1080×1920 master |
-| Upload | `videos.insert`, max 256 GB [P] |
-| Thumbnail | Custom Shorts thumbnails reported rolling out from Jul 2026 [S]. Until confirmed for the channel, pick a strong frame and put the title text on it |
-| Safe zone | None published [gap]. Same central-safe-area rule as TikTok/Reels; YouTube's title and channel bar sits bottom-left |
+| Aspect         | 9:16, 1080×1920 master                                                                                                                                                                |
+| Upload         | `videos.insert`, max 256 GB [P]                                                                                                                                                       |
+| Thumbnail      | Custom Shorts thumbnails reported rolling out from Jul 2026 [S]. Until confirmed for the channel, pick a strong frame and put the title text on it                                    |
+| Safe zone      | None published [gap]. Same central-safe-area rule as TikTok/Reels; YouTube's title and channel bar sits bottom-left                                                                   |
 
 ## 2. What distribution rewards
 
@@ -48,6 +48,7 @@ Tags: **[P]** official page read, **[S]** secondary. Craft numbers live in **sho
 ## 4. Music and copyright
 
 From https://support.google.com/youtube/answer/13486873 [P]:
+
 - **Shorts longer than 1 minute with an active copyright claim are blocked.**
 - YouTube Audio Library tracks won't receive a Content ID claim.
 - Synthex default: voice + Audio Library or Artlist-licensed bed. Never a commercial track over 60 s.
@@ -55,6 +56,7 @@ From https://support.google.com/youtube/answer/13486873 [P]:
 ## 5. Inauthentic and reused content (monetisation)
 
 From https://support.google.com/youtube/answer/1311392 (updated 15 Jul 2025) [P]:
+
 - "Repetitious content" is now **"inauthentic content"**: mass-produced, templated or repetitive work,
   including AI content from generic templates that lacks the creator's perspective.
 - Reused content (compilations from other platforms, unmodified re-uploads) is not allowed, even with
@@ -66,6 +68,7 @@ footage and expert perspective per Short. A channel full of near-identical AI ex
 ## 6. AI disclosure
 
 From https://support.google.com/youtube/answer/14328491 [P]:
+
 - Disclose realistic altered or synthetic content: a real person saying something they didn't, a
   realistic scene that never happened, an altered real event.
 - Not required: captions, colour, upscaling, script or title help, animation, your own voice clone
@@ -85,13 +88,14 @@ From https://support.google.com/youtube/answer/14328491 [P]:
 ## 8. Upload (Data API v3)
 
 From https://developers.google.com/youtube/v3/docs/videos/insert (updated 15 Oct 2026) [P]:
+
 - `videos.insert` with `snippet` (title, description, tags, categoryId) and `status`
   (`privacyStatus`, `selfDeclaredMadeForKids`, `containsSyntheticMedia`).
 - Quota: the page now shows `videos.insert` in its **own bucket of 100 calls/day**, and says uploads
   from unverified projects are **not** forced private. Both reverse older documented behaviour and were
   read through a summarising fetch; **re-verify on the live page before a batch** [P, re-check].
-Code: `lib/video/youtube-uploader.ts`, `lib/publish/platformAdapters/youtube.ts`. Default
-`privacyStatus=unlisted` for review, human flips to public.
+  Code: `lib/video/youtube-uploader.ts`, `lib/publish/platformAdapters/youtube.ts`. Default
+  `privacyStatus=unlisted` for review, human flips to public.
 
 ## 9. Measure (Analytics API)
 
@@ -105,6 +109,7 @@ gained, related-video click-through, and the client metric moved.
 ## 10. Gate checklist
 
 Hard gates ([P] or Synthex rule; a miss blocks the cut):
+
 - [ ] ≤3 min and vertical or square [P]
 - [ ] No claimed music on a Short over 60 s [P]
 - [ ] Script and perspective differ from the channel's last 10 Shorts (inauthentic-content rule) [P]
@@ -112,5 +117,6 @@ Hard gates ([P] or Synthex rule; a miss blocks the cut):
 - [ ] Title ≤100 chars [Synthex code limit]; uploaded unlisted for human review [Synthex rule]
 
 Advisory ([S] or house style; warn, do not block):
+
 - [ ] Title is the search phrase [house style]
 - [ ] Loop-back ending considered [S view-count change]

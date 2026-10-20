@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1100,
+  "count": 1115,
   "seeds": [
     {
       "text": "- [Error codes](docs/api/error-codes.md): 11 structured error codes, with HTTP status and meaning.",
@@ -29,6 +29,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "- Error codes, `docs/api/error-codes.md`: 11 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "c4468de4"
+    },
+    {
       "text": "- Parent Organisation: Unite-Group (https://unite-group.com.au)",
       "file": "public/llms.txt",
       "firstSeen": "base"
@@ -37,6 +42,11 @@
       "text": "- Powered by Next.js 15 (verifiable via signed source manifests)",
       "file": "public/llms.txt",
       "firstSeen": "base"
+    },
+    {
+      "text": "- SERVICE_NOT_CONFIGURED: HTTP 501 ## Rate limits",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
     },
     {
       "text": "- Support: contact form, with human follow-up within 1 business day",
@@ -2094,6 +2104,46 @@
       "firstSeen": "base"
     },
     {
+      "text": "claude-fable-5",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-fable-5 claude-haiku-4-5-20251001",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-haiku-4-5",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-haiku-4-5-20251001 pipeline_cost",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-haiku-4-5 claude-opus-4-8",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-opus-4-6 claude-sonnet-4-6",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-sonnet-4-6 claude-haiku-4-5",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "claude-sonnet-5 claude-fable-5",
+      "file": "lib/pipelines/track-cost.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "Clicks 12,456",
       "file": "app/analytics/AnalyticsClient.tsx",
       "firstSeen": "base"
@@ -2829,6 +2879,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Generated from the route source of 774 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
+    {
       "text": "Generate strategic brand identities using 50+ psychological principles for maximum market impact",
       "file": "app/brand-generator/page.tsx",
       "firstSeen": "base"
@@ -3276,6 +3331,11 @@
     {
       "text": "Learns your brand from your website URL in 60s",
       "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ledger window read failed — skipping enforcement (fail-open)",
+      "file": "lib/ai/budget-enforcer.ts",
       "firstSeen": "base"
     },
     {
@@ -3859,6 +3919,11 @@
       "firstSeen": "0328e421"
     },
     {
+      "text": "policy read failed — proceeding log-only (fail-open)",
+      "file": "lib/ai/budget-enforcer.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "Portfolio-wide · 21-item audit checklist · YMYL rules · Google Helpful Content alignment",
       "file": "lib/quick-access/items.ts",
       "firstSeen": "base"
@@ -3916,6 +3981,11 @@
     {
       "text": "pre-launch",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "preview read failed — skipping (fail-open)",
+      "file": "lib/ai/budget-enforcer.ts",
       "firstSeen": "base"
     },
     {
@@ -4521,6 +4591,11 @@
     {
       "text": "Storyboard — NIR explainer (90s LinkedIn)",
       "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/StoryboardPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "streaming google/gemini-3.1-flash",
+      "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
     },
     {

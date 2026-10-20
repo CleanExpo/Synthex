@@ -21,6 +21,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AnthropicProvider } from '@/lib/ai/providers/anthropic-provider';
+import { governedCall, GOVERNOR_MODE } from '@/lib/ai/governor';
+import {
+  estimateTextTokens,
+  governedRouteResult,
+  resolveOrgBrandSlug,
+} from '@/lib/ai/governor-route-support';
 import { Prisma } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
@@ -329,11 +335,36 @@ ${algorithmContext}
 
 Return ONLY the JSON array. No preamble, no explanation.`;
 
-  const response = await getAI().complete({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1024,
-    messages: [{ role: 'user', content: prompt }],
+  const MODEL = 'claude-sonnet-4-6';
+  const MAX_TOKENS = 1024;
+  // Spend gate (M10): the Governor writes the single cost-ledger receipt.
+  const call = governedRouteResult(async gctx => {
+    const provider = gctx.apiKey ? new AnthropicProvider(gctx.apiKey) : getAI();
+    const data = await provider.complete({
+      model: gctx.model?.id ?? MODEL,
+      max_tokens: MAX_TOKENS,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return {
+      data,
+      modelId: data.model || undefined,
+      inputTokens: data.usage?.prompt_tokens ?? 0,
+      outputTokens: data.usage?.completion_tokens ?? 0,
+    };
   });
+  const response = call.unwrap(
+    await governedCall({
+      organizationId: ctx.organizationId,
+      brandSlug: await resolveOrgBrandSlug(ctx.organizationId),
+      runner: 'internal-generate-advisor-brief',
+      provider: 'anthropic',
+      model: { kind: 'registered', modelId: MODEL },
+      pipelineName: 'internal-generate-advisor-brief',
+      estimate: estimateTextTokens(prompt.length, MAX_TOKENS),
+      mode: GOVERNOR_MODE,
+      execute: call.execute,
+    })
+  );
 
   const content = response.choices[0]?.message?.content ?? '';
   if (!content) throw new Error('Unexpected Claude response type');

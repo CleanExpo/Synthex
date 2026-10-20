@@ -38,7 +38,17 @@ jest.mock('@/lib/billing/require-entitlement', () => ({
 const mockClone = jest.fn();
 const mockDelete = jest.fn();
 const mockGenerateSpeech = jest.fn();
+// Speech spend is held by the media quota (P5, spec M10): the real spend log
+// runs on the J9 in-memory database, attributed to one organisation.
+jest.mock('@/lib/prisma', () =>
+  jest.requireActual('../../../eval/jev/families/j9/fake-db').prismaModule()
+);
+jest.mock('@/lib/multi-business/business-scope', () => ({
+  getEffectiveOrganizationId: async () => 'org-u1',
+}));
+
 jest.mock('@/lib/services/ai/voice-generation', () => ({
+  ...jest.requireActual('@/lib/services/ai/voice-generation'),
   generateSpeech: (...a: unknown[]) => mockGenerateSpeech(...a),
   generateSpeechStream: jest.fn(),
   cloneVoice: (...a: unknown[]) => mockClone(...a),

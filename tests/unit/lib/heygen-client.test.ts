@@ -79,7 +79,11 @@ describe('createHeyGenClient.createAvatarVideo', () => {
       audioUrl: 'https://cdn.example.com/voice.mp3',
     });
 
-    expect(job).toEqual({ id: 'vid_abc', provider: 'heygen', status: 'queued' });
+    expect(job).toEqual({
+      id: 'vid_abc',
+      provider: 'heygen',
+      status: 'queued',
+    });
     const [url, init] = fetchImpl.mock.calls[0];
     expect(url).toBe('https://api.heygen.com/v2/video/generate');
     expect(init.method).toBe('POST');
@@ -129,9 +133,11 @@ describe('createHeyGenClient.createAvatarVideo', () => {
 
 describe('createHeyGenClient.getVideoStatus', () => {
   it('maps a completed status with the video url', async () => {
-    const fetchImpl = jest.fn().mockResolvedValue(
-      res({ data: { status: 'completed', video_url: 'https://cdn/v.mp4' } })
-    );
+    const fetchImpl = jest
+      .fn()
+      .mockResolvedValue(
+        res({ data: { status: 'completed', video_url: 'https://cdn/v.mp4' } })
+      );
     const client = createHeyGenClient({ apiKey: 'k', fetchImpl });
     const job = await client.getVideoStatus('vid_abc');
     expect(job.status).toBe('completed');
@@ -153,7 +159,9 @@ describe('createHeyGenClient.waitForCompletion', () => {
       .fn()
       .mockResolvedValueOnce(res({ data: { status: 'processing' } }))
       .mockResolvedValueOnce(
-        res({ data: { status: 'completed', video_url: 'https://cdn/final.mp4' } })
+        res({
+          data: { status: 'completed', video_url: 'https://cdn/final.mp4' },
+        })
       );
     const client = createHeyGenClient({ apiKey: 'k', fetchImpl });
 
@@ -166,5 +174,70 @@ describe('createHeyGenClient.waitForCompletion', () => {
     expect(job.status).toBe('completed');
     expect(job.videoUrl).toBe('https://cdn/final.mp4');
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+});
+
+/**
+ * Whether HeyGen may have created (and billed) a job is what decides if the
+ * caller can return its spend hold. Only an explicit refusal proves no job.
+ */
+describe('createHeyGenClient.createAvatarVideo — dispatched flag', () => {
+  const failWith = async (fetchImpl: jest.Mock) => {
+    const client = createHeyGenClient({ apiKey: 'k', fetchImpl });
+    return client.createAvatarVideo(baseReq).then(
+      () => {
+        throw new Error('expected a rejection');
+      },
+      (error: unknown) => error
+    );
+  };
+
+  it('a 4xx refusal is NOT dispatched: HeyGen answered and created no job', async () => {
+    const error = await failWith(
+      jest
+        .fn()
+        .mockResolvedValue(
+          res({ error: 'bad avatar' }, { ok: false, status: 400 })
+        )
+    );
+    expect(error).toBeInstanceOf(HeyGenApiError);
+    expect((error as HeyGenApiError).dispatched).toBe(false);
+  });
+
+  it('a 5xx is dispatched: the job may exist', async () => {
+    const error = await failWith(
+      jest.fn().mockResolvedValue(res('upstream', { ok: false, status: 500 }))
+    );
+    expect((error as HeyGenApiError).dispatched).toBe(true);
+  });
+
+  it('a 2xx without data.video_id is dispatched', async () => {
+    const error = await failWith(
+      jest.fn().mockResolvedValue(res({ data: {} }))
+    );
+    expect((error as HeyGenApiError).dispatched).toBe(true);
+  });
+
+  it('a 2xx whose body is not JSON is dispatched, and typed', async () => {
+    const error = await failWith(
+      jest.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => {
+          throw new SyntaxError('Unexpected token <');
+        },
+        text: async () => '<html>',
+      } as unknown as Response)
+    );
+    expect(error).toBeInstanceOf(HeyGenApiError);
+    expect((error as HeyGenApiError).dispatched).toBe(true);
+  });
+
+  it('a network error (response lost) is dispatched, and typed', async () => {
+    const error = await failWith(
+      jest.fn().mockRejectedValue(new TypeError('fetch failed'))
+    );
+    expect(error).toBeInstanceOf(HeyGenApiError);
+    expect((error as HeyGenApiError).dispatched).toBe(true);
   });
 });

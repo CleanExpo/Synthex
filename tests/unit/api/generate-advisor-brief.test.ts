@@ -63,6 +63,7 @@ jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     organization: { findMany: mockOrgFindMany, findUnique: mockOrgFindUnique },
+    hermesConfig: { findUnique: async () => null },
     recommendedAction: {
       findUnique: mockRecommendedActionFindUnique,
       create: mockRecommendedActionCreate,

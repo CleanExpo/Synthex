@@ -16,7 +16,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { releaseQuota, settleQuota } from '@/lib/services/ai/video/quota';
+import {
+  backfillMediaSpendLedger,
+  ensureVideoSpendLedgerRow,
+  releaseQuota,
+  settleQuota,
+  VIDEO_LEDGER_BACKFILL_LOOKBACK_MS,
+} from '@/lib/services/ai/video/quota';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
@@ -24,6 +30,7 @@ import {
   getFalStatus,
 } from '@/lib/services/ai/video/fal-adapter';
 import { completeFalSuccess } from '@/lib/services/ai/video/fal-completion';
+import { ensureMediaSpendLedgerRow } from '@/lib/services/ai/media-spend-gate';
 import {
   finalizeSpend,
   findStaleReservations,
@@ -210,7 +217,26 @@ export async function GET(request: NextRequest) {
 
   const reconciledHolds = await reconcileStaleReservations(cutoff);
 
-  return NextResponse.json({ swept, recovered, reconciledHolds });
+  // Durable repair for the audit ledger: a settle or sweep whose ledger write
+  // failed left its spend settled but unrecorded, and a webhook replay never
+  // reaches settleQuota again. Never fails the sweep; next pass retries.
+  let ledgerBackfilled = 0;
+  try {
+    ledgerBackfilled = await backfillMediaSpendLedger(
+      new Date(Date.now() - VIDEO_LEDGER_BACKFILL_LOOKBACK_MS)
+    );
+  } catch (error) {
+    logger.error('video spend ledger backfill failed — retrying next pass', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return NextResponse.json({
+    swept,
+    recovered,
+    reconciledHolds,
+    ledgerBackfilled,
+  });
 }
 
 /**
@@ -323,6 +349,26 @@ async function reconcileStaleReservations(cutoff: Date): Promise<number> {
             holdId: reservation.holdId,
             actualUsd,
           });
+          // A charged video or audio sweep is spend like any settle, so it
+          // gets the pipeline_cost_ledger row settleQuota / settleMediaSpend
+          // write. Image holds keep their own ledger path (image/meter.ts)
+          // and are not written here.
+          // A failed write is not a failed finalise: the backfill at the end
+          // of this sweep, or the next pass, writes it.
+          const ensureLedgerRow =
+            reservation.mediaType === 'video'
+              ? ensureVideoSpendLedgerRow
+              : reservation.mediaType === 'audio'
+                ? ensureMediaSpendLedgerRow
+                : null;
+          if (ensureLedgerRow) {
+            await ensureLedgerRow(reservation.holdId).catch(error =>
+              logger.error('media spend sweep: ledger write failed', {
+                holdId: reservation.holdId,
+                error: error instanceof Error ? error.message : String(error),
+              })
+            );
+          }
         }
       }
     } catch (error) {

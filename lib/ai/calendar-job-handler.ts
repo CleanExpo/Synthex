@@ -104,8 +104,9 @@ export function registerCalendarGenerationHandler(): void {
       // (days × platforms × postsPerDay provider calls) — reserve the
       // worst-case cost against the org's ceilings BEFORE the first call.
       // A queue-side breach is a typed job failure (job.error via the
-      // queue), not an HTTP response. Fail-closed only under an enforcing
-      // policy row; absent policy (or read failure) is log-only.
+      // queue), not an HTTP response. Fail-closed under an enforcing policy
+      // row and on a budget read failure (OrgBudgetUnavailableError, P5);
+      // an absent policy row is log-only.
       let budgetReservation;
       try {
         budgetReservation = await reserveBudget(

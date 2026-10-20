@@ -426,6 +426,37 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsStreaming: true,
       isDeprecated: false,
     },
+    // Model-router standard/complex tiers (lib/ai/routing-config.ts). Ids and prices read from
+    // https://openrouter.ai/api/v1/models on 2026-10-19 (USD per token x 1000). Tier 'production'
+    // so getLatestModel('openrouter') is unchanged.
+    {
+      id: 'anthropic/claude-sonnet-5',
+      provider: 'openrouter',
+      name: 'Claude Sonnet 5 (via OpenRouter)',
+      releaseDate: new Date('2026-07-01'),
+      tier: 'production',
+      capabilities: ['text', 'vision', 'tools', 'streaming', 'thinking'],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.002, output: 0.01 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
+    {
+      id: 'anthropic/claude-opus-4.8',
+      provider: 'openrouter',
+      name: 'Claude Opus 4.8 (via OpenRouter)',
+      releaseDate: new Date('2026-05-27'),
+      tier: 'production',
+      capabilities: ['text', 'vision', 'tools', 'streaming', 'thinking'],
+      contextWindow: 1000000,
+      costPer1kTokens: { input: 0.005, output: 0.025 },
+      supportsVision: true,
+      supportsTools: true,
+      supportsStreaming: true,
+      isDeprecated: false,
+    },
     // SYN-786 — Google Cloud Next 2026: Gemini 3.1 preview via OpenRouter.
     {
       id: 'google/gemini-3.1-flash',

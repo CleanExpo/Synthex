@@ -8080,6 +8080,16 @@
               }
             },
             "description": "Internal server error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
           }
         },
         "security": [
@@ -8789,6 +8799,16 @@
             },
             "description": "Internal server error"
           },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
+          },
           "default": {
             "description": "Unresolved: the generator could not determine a success response for this handler"
           }
@@ -8811,7 +8831,7 @@
         ],
         "x-synthex-schema": "none",
         "x-synthex-success": "unresolved",
-        "x-synthex-success-reason": "returns Math.min(), variable lo, variable response"
+        "x-synthex-success-reason": "returns Math.min(), execute(), generatorCallResult(), governedData(), governorRefusalResponse(), variable lo"
       },
       "post": {
         "operationId": "post_ai_generate_content",
@@ -57006,6 +57026,203 @@
         "x-synthex-schema-reason": "body: schema `folderSchema` is not a module-level binding"
       },
       "x-synthex-route-file": "app/api/media/library/route.ts"
+    },
+    "/api/media/quote": {
+      "post": {
+        "operationId": "post_media_quote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "aspectRatio": {
+                        "enum": [
+                          "1:1",
+                          "16:9",
+                          "9:16",
+                          "4:3",
+                          "3:4"
+                        ],
+                        "type": "string"
+                      },
+                      "count": {
+                        "default": 1,
+                        "maximum": 8,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "height": {
+                        "maximum": 4096,
+                        "minimum": 64,
+                        "type": "integer"
+                      },
+                      "kind": {
+                        "const": "image",
+                        "type": "string"
+                      },
+                      "loraId": {
+                        "maxLength": 100,
+                        "type": "string"
+                      },
+                      "model": {
+                        "maxLength": 100,
+                        "type": "string"
+                      },
+                      "provider": {
+                        "enum": [
+                          "stability",
+                          "dalle",
+                          "gemini"
+                        ],
+                        "type": "string"
+                      },
+                      "referenceImageCount": {
+                        "maximum": 16,
+                        "minimum": 0,
+                        "type": "integer"
+                      },
+                      "useReferences": {
+                        "type": "boolean"
+                      },
+                      "width": {
+                        "maximum": 4096,
+                        "minimum": 64,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "properties": {
+                      "aspectRatio": {
+                        "default": "9:16",
+                        "enum": [
+                          "9:16",
+                          "1:1",
+                          "16:9"
+                        ],
+                        "type": "string"
+                      },
+                      "audio": {
+                        "type": "boolean"
+                      },
+                      "durationSeconds": {
+                        "default": 6,
+                        "maximum": 60,
+                        "minimum": 1,
+                        "type": "integer"
+                      },
+                      "kind": {
+                        "const": "video",
+                        "type": "string"
+                      },
+                      "requiresImage": {
+                        "type": "boolean"
+                      },
+                      "tier": {
+                        "default": "draft",
+                        "enum": [
+                          "draft",
+                          "standard",
+                          "premium"
+                        ],
+                        "type": "string"
+                      },
+                      "variants": {
+                        "default": 1,
+                        "maximum": 8,
+                        "minimum": 1,
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable entity"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal server error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "tags": [
+          "media"
+        ],
+        "x-synthex-auth": [
+          "@/lib/api/define-route"
+        ],
+        "x-synthex-schema": "resolved"
+      },
+      "x-synthex-route-file": "app/api/media/quote/route.ts"
     },
     "/api/media/upload": {
       "post": {

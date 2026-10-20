@@ -36,6 +36,12 @@ jest.mock('@/lib/middleware/rate-limiter', () => ({
   UsageTracker: { track: (...a: unknown[]) => mockUsageTrack(...a) },
 }));
 
+// An enforcing policy admits spend only when the in-flight counters are
+// SHARED across instances (lib/ai/budget-enforcer.ts); the real wrapper's
+// memory mode is per-instance, so this process-wide fake stands in for Upstash.
+jest.mock('@/lib/redis-client', () =>
+  jest.requireActual('../../eval/jev/families/j9/fake-db').redisModule()
+);
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
