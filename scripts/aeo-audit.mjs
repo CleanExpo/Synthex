@@ -25,7 +25,8 @@
 //   6. Bing Places parity (front-end signal: are Bing-specific meta tags present)
 
 import { writeFile, mkdir } from 'node:fs/promises';
-import DOMPurify from 'isomorphic-dompurify';
+import createDOMPurify from 'dompurify';
+import { JSDOM } from 'jsdom';
 import { existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,6 +34,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const SCRATCHPAD = resolve(REPO_ROOT, '.claude/scratchpad');
+const DOMPurify = createDOMPurify(new JSDOM('').window);
 
 // ─── BRAND CATALOGUE ─────────────────────────────────────────────────────
 // Per CEO foundation memory + 2026-04-29 probe.
@@ -165,12 +167,23 @@ function extractVisibleText(html) {
   // using a real HTML parser, eliminating the nested-tag bypass that regex
   // strips are vulnerable to.
   const safe = DOMPurify.sanitize(html, {
-    FORBID_TAGS: ['script', 'style', 'noscript', 'iframe', 'object', 'embed', 'form'],
+    FORBID_TAGS: [
+      'script',
+      'style',
+      'noscript',
+      'iframe',
+      'object',
+      'embed',
+      'form',
+    ],
     KEEP_CONTENT: true,
   });
   return safe
     .replace(/<[^>]+>/g, ' ')
-    .replace(/&(?:nbsp|amp|quot|#39|apos);/g, (match) => ENTITY_MAP[match] || match)
+    .replace(
+      /&(?:nbsp|amp|quot|#39|apos);/g,
+      match => ENTITY_MAP[match] || match
+    )
     .replace(/\s+/g, ' ')
     .trim();
 }

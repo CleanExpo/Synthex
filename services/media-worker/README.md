@@ -17,9 +17,22 @@ serverless body cap.
 `videoUrl` may be any http(s) URL ffmpeg can fetch — a Supabase signed URL, a
 fal URL, or (for owned Drive files) a Drive direct-download / signed URL.
 
+## What is actually deployed (observed 20/10/2026)
+
+- Railway project `synthex-media-worker`, service `synthex-media-worker`, public URL
+  `https://synthex-media-worker-production.up.railway.app`. `GET /health` returned HTTP 200 with
+  `ffmpeg version 5.1.9-0+deb12u1`, i.e. Debian 12's packaged ffmpeg.
+- Railway's latest deployment (created 11/07/2026) uses the `DOCKERFILE` builder with
+  `dockerfilePath: /Dockerfile`. The service has **no repo source connected**; it was uploaded from a
+  local CLI (`railway up`). No health-check path is configured.
+- **That Dockerfile is not in this repository.** A redeploy from this folder alone cannot reproduce the
+  running image. Restoring a committed Dockerfile is a separate runtime change: pin the base image by
+  digest, commit a lockfile, install with `npm ci --omit=dev --ignore-scripts`, and check `/health`
+  after the deploy.
+
 ## Deploy to Railway
 
-1. New Railway service from the **CleanExpo/Synthex** repo, **Root Directory = `services/media-worker`** (Dockerfile build).
+1. New Railway service from the **CleanExpo/Synthex** repo, **Root Directory = `services/media-worker`** (Dockerfile build; the Dockerfile must be restored first, see above).
 2. Set variables:
    - `WORKER_TOKEN` — a random shared secret (the Synthex MCP tools send it as Bearer).
    - `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` — only needed for `/extract` `upload` (writing frames into the private reference bucket).
