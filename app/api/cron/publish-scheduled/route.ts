@@ -42,6 +42,7 @@ import {
   reclaimStalePublishingPosts,
 } from '@/lib/publish/postPublishClaim';
 import { resolveOrgAutoPublishGate } from '@/lib/publish/safetyChecks';
+import { readSocialCutPattern } from '@/lib/publish/socialCutSource';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
 
 // ---------------------------------------------------------------------------
@@ -716,6 +717,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                     typeof metadata.cutAssetId === 'string'
                       ? metadata.cutAssetId
                       : null,
+                  // Build Spec R1: unknown unless the post recorded a pattern.
+                  pattern: readSocialCutPattern(metadata.pattern),
                 },
               },
             });

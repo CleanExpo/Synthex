@@ -25,6 +25,7 @@ import { nextMondayFrom, weekEndFromStart } from '@/lib/calendar/slotScheduler';
 import type { ContentCalendarData } from '@/lib/calendar/types';
 import { extractVoiceoverFromScript } from './quality-gate';
 import { assertGatePassed } from './gates/assert-gate-passed';
+import type { SocialCutPattern } from '@/lib/publish/socialCutSource';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -494,6 +495,64 @@ export function buildYoutubeCutPackage(
   };
 }
 
+// ── Pattern tag ──────────────────────────────────────────────────────────────
+
+/** YouTube treats an upright video of up to 3 minutes as a Short. */
+const YOUTUBE_SHORTS_MAX_SEC = 180;
+const SHORTS_TAG = '#Shorts';
+
+const LENGTH_BANDS_SEC: ReadonlyArray<[number, string]> = [
+  [15, '0-15'],
+  [30, '15-30'],
+  [60, '30-60'],
+  [90, '60-90'],
+  [180, '90-180'],
+];
+
+export function lengthBandFor(durationSec: number): string {
+  for (const [upper, band] of LENGTH_BANDS_SEC) {
+    if (durationSec <= upper) return band;
+  }
+  return '180+';
+}
+
+/**
+ * The pattern a cut is made with, stamped at derive so every published post
+ * can be read against it (Build Spec R1). `libraryPatternId` stays null until
+ * the pattern library selects cuts (R2). A hero with no method card is
+ * 'unknown' — recorded, never refused.
+ */
+export function buildCutPattern(input: {
+  methodCardId: string | null;
+  target: SocialCutTarget;
+  durationSec: number;
+  platform: string | undefined;
+}): SocialCutPattern {
+  const format =
+    input.target === '9:16' && input.durationSec <= YOUTUBE_SHORTS_MAX_SEC
+      ? 'short'
+      : 'long';
+  return {
+    source: input.methodCardId ? 'method-card' : 'unknown',
+    methodCardId: input.methodCardId,
+    libraryPatternId: null,
+    lengthBandSec: lengthBandFor(input.durationSec),
+    aspect: input.target,
+    platform: input.platform ?? null,
+    format,
+  };
+}
+
+/**
+ * Mark an upright YouTube cut as a Short in its title, keeping within the
+ * 100-character limit. A title that already carries the tag is unchanged.
+ */
+export function withShortsTag(title: string): string {
+  if (title.toLowerCase().includes(SHORTS_TAG.toLowerCase())) return title;
+  const room = YOUTUBE_TITLE_MAX_CHARS - SHORTS_TAG.length - 1;
+  return `${title.slice(0, room).trimEnd()} ${SHORTS_TAG}`;
+}
+
 // ── Hero resolution ──────────────────────────────────────────────────────────
 
 interface ResolvedHero {
@@ -505,6 +564,7 @@ interface ResolvedHero {
   durationSec: number | null;
   sourceRatio: number | null;
   subjectBox: SocialCutBox | null;
+  methodCardId: string | null;
 }
 
 function readMetadataRecord(value: unknown): Record<string, unknown> | null {
@@ -583,6 +643,10 @@ async function resolveHero(
       durationSec: asset.duration ?? null,
       sourceRatio: readAspectRatio(null, metadata),
       subjectBox: readSubjectBox(metadata),
+      methodCardId:
+        typeof metadata?.methodCardId === 'string' && metadata.methodCardId
+          ? metadata.methodCardId
+          : null,
     };
   }
 
@@ -604,6 +668,7 @@ async function resolveHero(
       durationSec: generation.durationSeconds ?? null,
       sourceRatio: readAspectRatio(generation.aspectRatio, metadata),
       subjectBox: readSubjectBox(metadata),
+      methodCardId: generation.methodCardId ?? null,
     };
   }
 
@@ -761,10 +826,24 @@ export async function deriveSocialCut(
   // Persist the grilled YouTube search package for a YouTube cut ONLY, in the
   // shape resolveSocialCutSource reads (metadata.youtube). Absent for every
   // other platform, so non-YouTube cuts are byte-for-byte unaffected.
-  const youtubePackage =
+  const pattern = buildCutPattern({
+    methodCardId: hero.methodCardId,
+    target,
+    durationSec: trim.toSec,
+    platform: input.platform,
+  });
+
+  const builtYoutubePackage =
     input.platform === 'youtube'
       ? buildYoutubeCutPackage(caption, input.youtube)
       : null;
+  const youtubePackage =
+    builtYoutubePackage && pattern.format === 'short'
+      ? {
+          ...builtYoutubePackage,
+          title: withShortsTag(builtYoutubePackage.title),
+        }
+      : builtYoutubePackage;
 
   const cut = await prisma.$transaction(async tx => {
     const created = await tx.videoAsset.create({
@@ -781,6 +860,7 @@ export async function deriveSocialCut(
           derivedFrom: heroAssetId,
           heroKind: hero.kind,
           aspectRatio: target,
+          pattern,
           ...(youtubePackage ? { youtube: youtubePackage } : {}),
           derivation: {
             target,

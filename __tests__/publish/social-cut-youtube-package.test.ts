@@ -170,7 +170,7 @@ describe('deriveSocialCut() — YouTube package persistence', () => {
 
     const meta = writtenMetadata();
     expect(meta.youtube).toEqual({
-      title: 'We dried a flooded office in 4 hours',
+      title: 'We dried a flooded office in 4 hours #Shorts',
       tags: [],
     });
   });
@@ -187,7 +187,7 @@ describe('deriveSocialCut() — YouTube package persistence', () => {
 
     const meta = writtenMetadata();
     expect(meta.youtube).toEqual({
-      title: 'Flooded office dried in 4 hours',
+      title: 'Flooded office dried in 4 hours #Shorts',
       description: 'The exact 4-step process our crew used.',
       tags: ['water damage', 'restoration', 'brisbane'],
     });
@@ -245,7 +245,7 @@ describe('resolveSocialCutSource() reads the persisted YouTube package', () => {
 
     expect(source).not.toBeNull();
     expect(source?.youtube).toEqual({
-      title: 'Flooded office dried in 4 hours',
+      title: 'Flooded office dried in 4 hours #Shorts',
       description: 'The exact steps.',
       tags: ['water damage', 'restoration'],
     });
@@ -263,7 +263,7 @@ describe('resolveSocialCutSource() reads the persisted YouTube package', () => {
 
     const source = await resolveSocialCutSource('social-cut:cut-001', ORG_ID);
     expect(source?.youtube).toEqual({
-      title: 'We dried a flooded office in 4 hours',
+      title: 'We dried a flooded office in 4 hours #Shorts',
       tags: [],
     });
   });

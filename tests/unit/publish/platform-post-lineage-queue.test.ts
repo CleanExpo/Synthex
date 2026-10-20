@@ -92,6 +92,9 @@ jest.mock('@/lib/publish/postPublishClaim', () => ({
   reclaimStalePublishingQueueItems: jest.fn(),
 }));
 jest.mock('@/lib/publish/socialCutSource', () => ({
+  UNKNOWN_SOCIAL_CUT_PATTERN: jest.requireActual(
+    '@/lib/publish/socialCutSource'
+  ).UNKNOWN_SOCIAL_CUT_PATTERN,
   isSocialCutSlot: jest.fn(() => false),
   resolveSocialCutSource: jest.fn(),
 }));
@@ -172,11 +175,21 @@ beforeEach(() => {
 });
 
 describe('publish queue success → PlatformPost with lineage metadata', () => {
-  it('records the cut asset id for a released social cut', async () => {
+  it('records the cut asset id and its pattern for a released social cut', async () => {
+    const cutPattern = {
+      source: 'method-card',
+      methodCardId: 'viral-hero-short',
+      libraryPatternId: null,
+      lengthBandSec: '30-60',
+      aspect: '9:16',
+      platform: 'facebook',
+      format: 'short',
+    };
     (isSocialCutSlot as jest.Mock).mockReturnValue(true);
     (resolveSocialCutSource as jest.Mock).mockResolvedValue({
       caption: 'Cut caption',
       video: { url: 'https://cdn.example/cut-9.mp4' },
+      pattern: cutPattern,
     });
     mockPrisma.publishQueueItem.findMany.mockResolvedValue([
       { ...dueItem, slotId: 'social-cut:cut-9' },
@@ -209,6 +222,7 @@ describe('publish queue success → PlatformPost with lineage metadata', () => {
           studioDraftId: null,
           cutAssetId: 'cut-9',
           publishQueueItemId: 'qi1',
+          pattern: cutPattern,
         },
       }),
     });
@@ -236,7 +250,14 @@ describe('publish queue success → PlatformPost with lineage metadata', () => {
     expect(mockPrisma.platformPost.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         platformId: 'fb-post-2',
-        metadata: expect.objectContaining({ cutAssetId: null }),
+        // A calendar item records no pattern: unknown, never invented.
+        metadata: expect.objectContaining({
+          cutAssetId: null,
+          pattern: expect.objectContaining({
+            source: 'unknown',
+            methodCardId: null,
+          }),
+        }),
       }),
     });
   });
