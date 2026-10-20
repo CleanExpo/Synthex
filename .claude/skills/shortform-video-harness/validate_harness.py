@@ -40,7 +40,9 @@ def main():
                     # A file:line pointer must land within 3 lines of a symbol the tool name mentions.
                     rows = (REPO / p).read_text(errors="replace").splitlines()
                     ln = int(line)
-                    window = "\n".join(rows[max(0, ln - 4):ln + 3])
+                    # Comment lines do not count: a header comment naming the symbol is not the symbol.
+                    window = "\n".join(r for r in rows[max(0, ln - 4):ln + 3]
+                                       if not r.lstrip().startswith(("//", "/*", "*", "#")))
                     idents = [w for w in re.findall(r"[A-Za-z_][A-Za-z0-9_]{3,}", t.get("name", ""))
                               if w.lower() not in GENERIC_WORDS]
                     if ln > len(rows) or not any(w in window for w in idents):

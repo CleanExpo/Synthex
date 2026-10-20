@@ -396,7 +396,7 @@
         {
           "kind": "cli",
           "name": "ffmpeg aevalsrc ambient beds",
-          "ref": "scripts/generate-brand-audio.ts:7"
+          "ref": "scripts/generate-brand-audio.ts:229"
         }
       ],
       "inputs": ["script.beats[]", "concept.archetype"],
