@@ -138,7 +138,7 @@ export async function settleQuota(
           holdId,
           organizationId,
           actualUsd,
-          new Date()
+          await reserveWindowAt(holdId)
         );
       } else {
         await ensureVideoSpendLedgerRow(holdId);
@@ -163,8 +163,8 @@ export async function settleQuota(
  * is left alone. The amount and timestamp come from the spend log, not the
  * caller — the hold's reserve plus its terminal settle/sweep event — so the
  * audit row always matches what the money-safety record charged, whichever
- * path (settle or sweep) finalised it, and lands in the budget window the
- * spend happened in. A release, an uncharged hold, a hold not yet finalised
+ * path (settle or sweep) finalised it. The row is dated with the reserve's
+ * windowAt, the budget window the hold belongs to. A release, an uncharged hold, a hold not yet finalised
  * or a non-video hold writes nothing.
  *
  * Throws when a read or the write fails; callers decide whether that is fatal.
@@ -180,11 +180,16 @@ export async function ensureVideoSpendLedgerRow(
   const [reserve, final] = await Promise.all([
     prisma.mediaSpendEvent.findUnique({
       where: { eventKey: reserveKey(holdId) },
-      select: { deltaUsd: true, organizationId: true, mediaType: true },
+      select: {
+        deltaUsd: true,
+        organizationId: true,
+        mediaType: true,
+        windowAt: true,
+      },
     }),
     prisma.mediaSpendEvent.findUnique({
       where: { eventKey: finalizeKey(holdId) },
-      select: { kind: true, deltaUsd: true, createdAt: true },
+      select: { kind: true, deltaUsd: true },
     }),
   ]);
   if (
@@ -212,7 +217,7 @@ export async function ensureVideoSpendLedgerRow(
     holdId,
     reserve.organizationId,
     actualUsd,
-    final.createdAt
+    reserve.windowAt
   );
   logger.info('video spend: ledger row written', {
     holdId,
@@ -220,6 +225,23 @@ export async function ensureVideoSpendLedgerRow(
     finalisedBy: final.kind,
   });
   return 'written';
+}
+
+/**
+ * The window a hold's spend belongs to: the reserve event's windowAt, which
+ * finalizeSpend copies onto the terminal event. A ledger row is dated with it,
+ * not with the settle or repair time, because the budget windows SUM the
+ * ledger by createdAt: a hold reserved at 23:59 and settled at 00:01 belongs
+ * to the reserve's day and month. Throws when the reserve cannot be read.
+ */
+async function reserveWindowAt(holdId: string): Promise<Date> {
+  const { default: prisma } = await import('@/lib/prisma');
+  const reserve = await prisma.mediaSpendEvent.findUnique({
+    where: { eventKey: reserveKey(holdId) },
+    select: { windowAt: true },
+  });
+  if (!reserve) throw new Error(`no reserve event for hold ${holdId}`);
+  return reserve.windowAt;
 }
 
 /** Write one video pipeline_cost_ledger row. Throws when the write fails. */

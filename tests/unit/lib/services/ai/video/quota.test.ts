@@ -191,8 +191,17 @@ describe('quotaSnapshot reads derived spend', () => {
 });
 
 /**
+ * Reserved at 23:59 UTC on the last day of a month, finalised two minutes
+ * later in the next day AND month. Budget windows SUM the ledger by
+ * createdAt, so the row must carry the reserve window, never the later time.
+ */
+const RESERVED_AT = new Date('2026-10-31T23:59:00.000Z');
+const FINALISED_AT = new Date('2026-11-01T00:01:00.000Z');
+
+/**
  * One charged hold in the spend log: reserved at `heldUsd`, finalised by
- * `kind` at `actualUsd` (finalizeSpend stores actual - held).
+ * `kind` at `actualUsd` (finalizeSpend stores actual - held). As in the real
+ * log, both events carry the reserve's windowAt.
  */
 function chargedHold(
   holdId: string,
@@ -201,18 +210,19 @@ function chargedHold(
   kind: 'settle' | 'sweep' | 'release' = 'settle',
   mediaType: string | null = 'video'
 ) {
-  const finalisedAt = new Date('2026-10-19T03:00:00.000Z');
   mockEvents.set(`hold:${holdId}:reserve`, {
     deltaUsd: heldUsd,
     organizationId: 'org-1',
     mediaType,
+    windowAt: RESERVED_AT,
+    createdAt: RESERVED_AT,
   });
   mockEvents.set(`hold:${holdId}:final`, {
     kind,
     deltaUsd: kind === 'release' ? -heldUsd : actualUsd - heldUsd,
-    createdAt: finalisedAt,
+    windowAt: RESERVED_AT,
+    createdAt: FINALISED_AT,
   });
-  return finalisedAt;
 }
 
 describe('the video ledger row survives a failed write', () => {
@@ -248,9 +258,10 @@ describe('the video ledger row survives a failed write', () => {
     expect(mockLedgerCreate).not.toHaveBeenCalled();
   });
 
-  it('records what the spend LOG charged, at the time it was finalised', async () => {
-    // A replay carrying a different actual must not contradict the log.
-    const finalisedAt = chargedHold('hold-1', 0.42, 0.21);
+  it('a replay records what the spend LOG charged, in the reserve window', async () => {
+    // A replay carrying a different actual must not contradict the log, and
+    // a hold finalised after midnight still belongs to the reserve's day.
+    chargedHold('hold-1', 0.42, 0.21);
     mockFinalizeSpend.mockResolvedValueOnce(false);
 
     await settleQuota('org-1', 'hold-1', 0.42, 0.105, 'studio');
@@ -258,8 +269,34 @@ describe('the video ledger row survives a failed write', () => {
     expect(mockLedgerCreate).toHaveBeenCalledTimes(1);
     expect(mockLedgerCreate.mock.calls[0][0].data).toMatchObject({
       costUsd: 0.21,
-      createdAt: finalisedAt,
+      createdAt: RESERVED_AT,
     });
+  });
+
+  it('a first settle after midnight dates its row in the reserve day and month', async () => {
+    chargedHold('hold-1', 0.42, 0.105);
+    jest.useFakeTimers({ now: FINALISED_AT, doNotFake: ['nextTick'] });
+    try {
+      await settleQuota('org-1', 'hold-1', 0.42, 0.105, 'studio');
+    } finally {
+      jest.useRealTimers();
+    }
+
+    expect(mockLedgerCreate).toHaveBeenCalledTimes(1);
+    expect(mockLedgerCreate.mock.calls[0][0].data.createdAt).toEqual(
+      RESERVED_AT
+    );
+  });
+
+  it('a backfilled row is dated in the reserve window, not the finalisation time', async () => {
+    chargedHold('hold-1', 0.42, 0.105, 'sweep');
+    mockQueryRaw.mockResolvedValue([{ hold_id: 'hold-1' }]);
+
+    await quota.backfillMediaSpendLedger(new Date('2026-10-30T00:00:00.000Z'));
+
+    expect(mockLedgerCreate.mock.calls[0][0].data.createdAt).toEqual(
+      RESERVED_AT
+    );
   });
 
   it('the sweep backfills every charged hold the query finds without a row', async () => {

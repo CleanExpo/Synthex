@@ -213,7 +213,11 @@ export async function settleMediaSpend(
   // and the video sweep's backfillMediaSpendLedger writes the row later.
   try {
     if (wrote) {
-      await writeMediaLedgerRow(hold, charged, new Date());
+      await writeMediaLedgerRow(
+        hold,
+        charged,
+        await reserveWindowAt(hold.holdId)
+      );
     } else {
       await ensureMediaSpendLedgerRow(hold.holdId, hold);
     }
@@ -232,6 +236,23 @@ export async function settleMediaSpend(
  * still exact.
  */
 export const MEDIA_LEDGER_BACKFILL_PIPELINE = 'media-spend-backfill';
+
+/**
+ * The window a hold's spend belongs to: the reserve event's windowAt, which
+ * finalizeSpend copies onto the terminal event. A ledger row is dated with it,
+ * not with the settle or repair time, because the budget windows SUM the
+ * ledger by createdAt: a hold reserved at 23:59 and settled at 00:01 belongs
+ * to the reserve's day and month. Throws when the reserve cannot be read.
+ */
+async function reserveWindowAt(holdId: string): Promise<Date> {
+  const { default: prisma } = await import('@/lib/prisma');
+  const reserve = await prisma.mediaSpendEvent.findUnique({
+    where: { eventKey: reserveKey(holdId) },
+    select: { windowAt: true },
+  });
+  if (!reserve) throw new Error(`no reserve event for hold ${holdId}`);
+  return reserve.windowAt;
+}
 
 /** Write one pipeline_cost_ledger row for a media hold. Throws on failure. */
 async function writeMediaLedgerRow(
@@ -267,7 +288,8 @@ async function writeMediaLedgerRow(
  * Idempotent on run_id = holdId (hold ids are UUIDs, so no other writer's
  * run_id collides): a row already there, under any pipeline name, is left
  * alone. The amount and timestamp come from the spend log — reserve plus the
- * terminal settle/sweep event — so the row matches what was charged. Pass the
+ * terminal settle/sweep event — so the row matches what was charged, dated
+ * with the reserve's windowAt (the hold's budget window). Pass the
  * hold when it is in hand to record its real pipeline and model; without it
  * the row is labelled MEDIA_LEDGER_BACKFILL_PIPELINE.
  *
@@ -282,11 +304,16 @@ export async function ensureMediaSpendLedgerRow(
   const [reserve, final] = await Promise.all([
     prisma.mediaSpendEvent.findUnique({
       where: { eventKey: reserveKey(holdId) },
-      select: { deltaUsd: true, organizationId: true, mediaType: true },
+      select: {
+        deltaUsd: true,
+        organizationId: true,
+        mediaType: true,
+        windowAt: true,
+      },
     }),
     prisma.mediaSpendEvent.findUnique({
       where: { eventKey: finalizeKey(holdId) },
-      select: { kind: true, deltaUsd: true, createdAt: true },
+      select: { kind: true, deltaUsd: true },
     }),
   ]);
   if (
@@ -317,7 +344,7 @@ export async function ensureMediaSpendLedgerRow(
       model: identity?.model,
     },
     costUsd,
-    final.createdAt,
+    reserve.windowAt,
     identity
       ? undefined
       : { backfilled: true, mediaType: 'audio', finalisedBy: final.kind }

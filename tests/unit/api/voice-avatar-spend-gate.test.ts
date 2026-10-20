@@ -405,3 +405,64 @@ describe('media spend: the audio ledger row survives a failed write', () => {
     expect(state().ledger).toHaveLength(0);
   });
 });
+
+describe('media spend: the audio ledger row is dated in the reserve window', () => {
+  // Reserved 23:59 UTC on the last day of a month, settled two minutes later
+  // in the next day AND month. Budget windows SUM the ledger by createdAt.
+  const RESERVED_AT = new Date('2026-10-31T23:59:00.000Z');
+  const SETTLED_AT = new Date('2026-11-01T00:01:00.000Z');
+  const at = async <T>(when: Date, fn: () => Promise<T>): Promise<T> => {
+    jest.useFakeTimers({ now: when, doNotFake: ['nextTick', 'setImmediate'] });
+    try {
+      return await fn();
+    } finally {
+      jest.useRealTimers();
+    }
+  };
+  const holdAtMidnight = () =>
+    at(RESERVED_AT, () =>
+      holdMediaSpend({
+        organizationId: ORG,
+        initiatedBy: 'studio',
+        heldUsd: 0.08,
+        pipeline: 'voice-generation',
+        model: 'eleven_multilingual_v2',
+      })
+    );
+
+  it('first settle', async () => {
+    const hold = await holdAtMidnight();
+    await at(SETTLED_AT, () => settleMediaSpend(hold, 0.08));
+
+    expect(state().ledger).toHaveLength(1);
+    expect(state().ledger[0].createdAt).toEqual(RESERVED_AT);
+  });
+
+  it('replay after a failed first write', async () => {
+    const hold = await holdAtMidnight();
+    state().failures.add('pipelineCostLedger.create');
+    await at(SETTLED_AT, () => settleMediaSpend(hold, 0.08));
+    state().failures.delete('pipelineCostLedger.create');
+
+    await at(SETTLED_AT, () => settleMediaSpend({ ...hold }, 0.08));
+
+    expect(state().ledger).toHaveLength(1);
+    expect(state().ledger[0].createdAt).toEqual(RESERVED_AT);
+  });
+
+  it('sweep backfill after a failed first write', async () => {
+    const hold = await holdAtMidnight();
+    state().failures.add('pipelineCostLedger.create');
+    await at(SETTLED_AT, () => settleMediaSpend(hold, 0.08));
+    state().failures.delete('pipelineCostLedger.create');
+
+    const { backfillMediaSpendLedger } = jest.requireActual(
+      '@/lib/services/ai/video/quota'
+    ) as { backfillMediaSpendLedger: (since: Date) => Promise<number> };
+    await expect(
+      backfillMediaSpendLedger(new Date('2026-10-30T00:00:00.000Z'))
+    ).resolves.toBe(1);
+
+    expect(state().ledger[0].createdAt).toEqual(RESERVED_AT);
+  });
+});
