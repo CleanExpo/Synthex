@@ -21,7 +21,7 @@ NUMERIC = ("views", "duration_s", "cut_count", "avg_shot_len_s", "cuts_first_3s"
 
 
 def load(p):
-    return json.loads(p.read_text()) if p.exists() else {}
+    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
 
 
 def q(vals):
@@ -127,9 +127,10 @@ def main(datadir, out, keyfile):
     swaps = sorted({(k[f], k["reel_id"] if f == "code" else k["account_id"])
                     for k in key for f in ("code", "handle", "poster") if k.get(f)},
                    key=lambda s: -len(s[0]))
-    # Identities of 1-3 characters match only as whole words, so they cannot rewrite ordinary words.
-    pattern = re.compile("|".join(re.escape(s) if len(s) > 3 else rf"(?<![A-Za-z0-9]){re.escape(s)}(?![A-Za-z0-9])"
-                                  for s, _ in swaps), re.I) if swaps else None
+    # Identities match only as whole tokens, so they cannot rewrite ordinary words or enum values
+    # (a poster "Clean" must not touch "cleaning_restoration").
+    pattern = re.compile("|".join(rf"(?<![A-Za-z0-9]){re.escape(s)}(?![A-Za-z0-9])" for s, _ in swaps),
+                         re.I) if swaps else None
     lookup = {s.lower(): p for s, p in swaps}
 
     def scrub(v):
@@ -143,13 +144,13 @@ def main(datadir, out, keyfile):
         return v
 
     public = [scrub(r) for r in public]
-    Path(keyfile).write_text(json.dumps(key, indent=1, ensure_ascii=False))
+    Path(keyfile).write_text(json.dumps(key, indent=1, ensure_ascii=False), encoding="utf-8")
     rows = Path(out).with_name("corpus-reels.jsonl")
-    rows.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in public))
+    rows.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in public), encoding="utf-8")
     doc = {"schema": "synthex.shortform.corpus/2", "built_from": "logged-out harvester (kept outside this repo) + analyze.py + vision breakdown",
            "sample_note": "Stratified, not random: latest-12 reels per public profile, logged out, kept if views >= 1M, capped per account; control_low = same accounts' reels under 500K. Views as shown on the profile grid on observed_at.",
            "reels_file": rows.name, "count": len(reels), "ok": len(ok), "control_low": len(ctl), "aggregates": agg}
-    Path(out).write_text(json.dumps(doc, indent=1, ensure_ascii=False))
+    Path(out).write_text(json.dumps(doc, indent=1, ensure_ascii=False), encoding="utf-8")
     print(json.dumps({"count": len(reels), "ok": len(ok), "control_low": len(ctl), "observed": agg["observed_n"],
                       "strata": {s: v["n"] for s, v in agg["by_stratum"].items()}}))
 
