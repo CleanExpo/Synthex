@@ -143,20 +143,15 @@ describe('POST /api/auth/signup — invite-only mode on', () => {
     );
   });
 
-  it('creates the account for a recent team invitee without a code', async () => {
+  // A TeamInvitation carries no secret, so knowing an invitee's email must not
+  // be enough to claim their account with a caller-chosen password.
+  it('refuses a pending team invitee without a code (email alone is not proof)', async () => {
     mockTeamInviteFindFirst.mockResolvedValue({ id: 'team-invite-1' });
 
     const res = await signup(baseBody);
 
-    expect(res.status).toBe(200);
-    expect(mockUserCreate).toHaveBeenCalledTimes(1);
-    expect(mockTeamInviteFindFirst).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          email: { equals: baseBody.email, mode: 'insensitive' },
-        }),
-      })
-    );
+    expect(res.status).toBe(400);
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 });
 

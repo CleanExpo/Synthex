@@ -6,10 +6,7 @@ import { z } from 'zod';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { email as emailService } from '@/lib/email/index';
-import {
-  findPendingTeamInvite,
-  isInviteOnlyMode,
-} from '@/lib/auth/invite-gate';
+import { isInviteOnlyMode } from '@/lib/auth/invite-gate';
 
 // Input validation schema
 const signupSchema = z.object({
@@ -77,18 +74,14 @@ export async function POST(request: NextRequest) {
         validationResult.data;
 
       // Invite-only gate (fail closed). When NEXT_PUBLIC_INVITE_ONLY_MODE is
-      // 'true', an account needs invite evidence: a valid invite code, or a
-      // recent team invitation addressed to this email (team invitees get a
-      // TeamInvitation, not an InviteCode). With the gate off, codes are
-      // optional. A supplied code must always be valid (exists, active, not
-      // expired, not maxed out, email match).
+      // 'true', an account needs a valid invite code. A pending TeamInvitation
+      // is NOT accepted here: it carries no secret, so knowing an invitee's
+      // email would let anyone claim the account with their own password.
+      // With the gate off, codes are optional. A supplied code must always be
+      // valid (exists, active, not expired, not maxed out, email match).
       let validatedInvite: { id: string; code: string } | null = null;
 
-      if (
-        isInviteOnlyMode() &&
-        !inviteCode &&
-        !(await findPendingTeamInvite(email))
-      ) {
+      if (isInviteOnlyMode() && !inviteCode) {
         return NextResponse.json(
           { error: 'An invite code is required to create an account.' },
           { status: 400 }
