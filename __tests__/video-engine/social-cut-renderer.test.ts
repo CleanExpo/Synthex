@@ -212,9 +212,10 @@ describe('buildVideoFilters()', () => {
     }
   });
 
-  it('escapes filter-graph metacharacters in the font path', () => {
-    expect(escapeFilterPath("/a b/it's:x,y\\z")).toBe(
-      "/a b/it\\'s\\:x\\,y\\\\z"
+  it('escapes the font path for both ffmpeg parsing levels', () => {
+    // Option level: \ ' : get a backslash. Graph level: \ ' [ ] , ; get one more.
+    expect(escapeFilterPath("/a b/it's:x,y\\z[1];")).toBe(
+      "/a b/it\\\\\\'s\\\\:x\\,y\\\\\\\\z\\[1\\]\\;"
     );
   });
 
@@ -246,54 +247,63 @@ describe('buildVideoFilters()', () => {
 
 // The production ffmpeg builds (darwin-arm64 and linux-x64 4.1.0) have FreeType but no
 // fontconfig, so drawtext without a font file refuses to start. Run the real binary on
-// the real filter chain, from a font path with a space and a comma in it.
+// the real filter chain, from font paths holding every character either ffmpeg parsing
+// level treats specially.
 describe('buildVideoFilters() on the installed ffmpeg', () => {
   const ffmpegPath: string = jest.requireActual(
     '@ffmpeg-installer/ffmpeg'
   ).path;
-  let fontDir: string;
-  let fontFile: string;
+  const BRANDED = { primaryColor: '#0f172a', source: 'preset' as const };
+  const dirs: string[] = [];
 
-  beforeAll(() => {
-    fontDir = fs.mkdtempSync(path.join(os.tmpdir(), 'caption font, '));
-    fontFile = path.join(fontDir, 'caption.woff');
-    fs.copyFileSync(CAPTION_FONT_FILE, fontFile);
+  afterAll(() => {
+    for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
   });
-  afterAll(() => fs.rmSync(fontDir, { recursive: true, force: true }));
 
   it.each([
-    ['unbranded', null],
-    ['branded', { primaryColor: '#0f172a', source: 'preset' as const }],
-  ])('renders a %s caption frame', (_label, kit) => {
-    const filters = buildVideoFilters(
-      PLAN,
-      { width: 1080, height: 1920 },
-      kit,
-      fontFile
-    );
-    const run = spawnSync(
-      ffmpegPath,
-      [
-        '-hide_banner',
-        '-loglevel',
-        'error',
-        '-f',
-        'lavfi',
-        '-i',
-        'color=c=gray:s=1080x1920:d=1',
-        '-vf',
-        filters.join(','),
-        '-frames:v',
-        '1',
-        '-f',
-        'null',
-        '-',
-      ],
-      { encoding: 'utf8', timeout: 30_000 }
-    );
-    expect(run.stderr).toBe('');
-    expect(run.status).toBe(0);
-  });
+    ['unbranded', 'plain', null],
+    ['branded', 'space and, comma', BRANDED],
+    ['branded', 'co:lon', BRANDED],
+    ['branded', "apo'strophe", BRANDED],
+    ['branded', 'back\\slash', BRANDED],
+    ['branded', 'semi;colon [brackets]', BRANDED],
+  ])(
+    'renders a %s caption frame from a font dir named %p',
+    (_l, dirName, kit) => {
+      const fontDir = fs.mkdtempSync(path.join(os.tmpdir(), `${dirName} `));
+      dirs.push(fontDir);
+      const fontFile = path.join(fontDir, 'caption.woff');
+      fs.copyFileSync(CAPTION_FONT_FILE, fontFile);
+      const filters = buildVideoFilters(
+        PLAN,
+        { width: 1080, height: 1920 },
+        kit,
+        fontFile
+      );
+      const run = spawnSync(
+        ffmpegPath,
+        [
+          '-hide_banner',
+          '-loglevel',
+          'error',
+          '-f',
+          'lavfi',
+          '-i',
+          'color=c=gray:s=1080x1920:d=1',
+          '-vf',
+          filters.join(','),
+          '-frames:v',
+          '1',
+          '-f',
+          'null',
+          '-',
+        ],
+        { encoding: 'utf8', timeout: 30_000 }
+      );
+      expect(run.stderr).toBe('');
+      expect(run.status).toBe(0);
+    }
+  );
 });
 
 describe('captionColours()', () => {

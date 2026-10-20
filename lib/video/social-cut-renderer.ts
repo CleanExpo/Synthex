@@ -163,13 +163,14 @@ export function escapeDrawtext(line: string): string {
     .replace(/%/g, '\\%');
 }
 
-/** Escape a file path for an unquoted filter option value. */
+/**
+ * Escape a file path for an unquoted drawtext option value. ffmpeg unescapes it
+ * twice: first as the filter graph (`\ ' [ ] , ;`), then as the option value
+ * (`\ ' :`), so the option-level escape is applied first and then escaped again.
+ */
 export function escapeFilterPath(filePath: string): string {
-  return filePath
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/:/g, '\\:')
-    .replace(/,/g, '\\,');
+  const optionValue = filePath.replace(/[\\':]/g, c => `\\${c}`);
+  return optionValue.replace(/[\\'[\],;]/g, c => `\\${c}`);
 }
 
 /** WCAG relative luminance of a #rrggbb colour. */
