@@ -13,6 +13,8 @@ const createCampaign = jest.fn();
 const createPost = jest.fn();
 
 const mockPrisma = {
+  hermesConfig: { findUnique: async () => null },
+  organization: { findUnique: async () => null },
   platformConnection: {
     findMany: (...a: unknown[]) => findManyConnections(...a),
   },

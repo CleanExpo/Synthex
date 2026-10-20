@@ -11,14 +11,25 @@
     "instagram": {
       "aspect": "9:16",
       "master_px": [1080, 1920],
-      "duration_s": { "api_min": 3, "api_max": 900, "recommend_max": 180, "evidence": "P api / S recommend" },
+      "duration_s": {
+        "api_min": 3,
+        "api_max": 900,
+        "recommend_max": 180,
+        "evidence": "P api / S recommend"
+      },
       "fps": [23, 60],
       "max_file_mb": 300,
       "hashtags_max": 5,
       "hashtags_evidence": "S",
       "caption_line1_chars": 125,
       "caption_max_chars": 2200,
-      "safe_zone_pct": { "top": 14, "bottom": 35, "right": 12, "left": 6, "evidence": "S, conflicting; preview with UI" },
+      "safe_zone_pct": {
+        "top": 14,
+        "bottom": 35,
+        "right": 12,
+        "left": 6,
+        "evidence": "S, conflicting; preview with UI"
+      },
       "ai_flag_field": "is_ai_generated",
       "api_publish_per_24h": 50,
       "api_publish_note": "page states 100 and 50; budget 50",
@@ -30,13 +41,24 @@
     "tiktok": {
       "aspect": "9:16",
       "master_px": [1080, 1920],
-      "duration_s": { "api_min": 1, "api_max": 600, "creator_cap_field": "max_video_post_duration_sec", "evidence": "P" },
+      "duration_s": {
+        "api_min": 1,
+        "api_max": 600,
+        "creator_cap_field": "max_video_post_duration_sec",
+        "evidence": "P"
+      },
       "fps": [23, 60],
       "max_file_mb": 4096,
       "hashtags_max": 5,
       "hashtags_evidence": "Synthex house rule",
       "caption_max_chars": 2200,
-      "safe_zone_px_1080x1920": { "top": 160, "bottom": 480, "left": 120, "right": 120, "evidence": "S" },
+      "safe_zone_px_1080x1920": {
+        "top": 160,
+        "bottom": 480,
+        "left": 120,
+        "right": 120,
+        "evidence": "S"
+      },
       "ai_flag_field": "post_info.is_aigc",
       "unaudited_limits": { "users_per_24h": 5, "privacy": "SELF_ONLY" },
       "posts_per_day_per_creator": 15,
@@ -75,9 +97,19 @@
     },
     "linkedin": {
       "aspect_options": ["9:16", "4:5", "1:1"],
-      "duration_s": { "native_min": 3, "native_max": 900, "api_max": 1800, "recommend": [60, 150], "evidence": "P / S recommend" },
+      "duration_s": {
+        "native_min": 3,
+        "native_max": 900,
+        "api_max": 1800,
+        "recommend": [60, 150],
+        "evidence": "P / S recommend"
+      },
       "max_file_mb_safe": 500,
-      "captions": { "format": "SRT", "languages": ["en"], "also_burn_in": true },
+      "captions": {
+        "format": "SRT",
+        "languages": ["en"],
+        "also_burn_in": true
+      },
       "text_must_match_video": true,
       "api_version_sunset": { "version": "202511", "date": "2026-11-16" },
       "skill": "shortform-linkedin"

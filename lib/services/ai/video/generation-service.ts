@@ -26,7 +26,7 @@ import {
 import { submitToFal } from './fal-adapter';
 import { enhancePrompt } from './prompt-enhancer';
 
-const MAX_VARIANTS = 8;
+export const MAX_VARIANTS = 8;
 
 /**
  * Fail-closed grounding refusal (Real Images Only mandate,

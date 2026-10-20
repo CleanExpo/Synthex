@@ -30,6 +30,21 @@ import {
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import type { AIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+} from '@/lib/ai/governor';
+import {
+  estimateTokens,
+  governorProviderFor,
+  governorRefusalResponse,
+  resolveGovernorScope,
+  unwrapGoverned,
+  type GovernorScope,
+} from '@/lib/ai/route-governance';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -73,7 +88,8 @@ interface EngagementPrediction {
  */
 async function analyzeSentiment(
   text: string,
-  ai?: AIProvider
+  ai?: AIProvider,
+  scope?: GovernorScope | null
 ): Promise<SentimentResult> {
   if (!ai) {
     // No AI provider available — fall back to rule-based analysis
@@ -81,12 +97,10 @@ async function analyzeSentiment(
   }
 
   try {
-    const response = await ai.complete({
-      model: ai.models.balanced,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a sentiment analysis expert. Analyze the given text and return a JSON object with:
+    const messages = [
+      {
+        role: 'system' as const,
+        content: `You are a sentiment analysis expert. Analyze the given text and return a JSON object with:
 - sentiment: "positive", "neutral", "negative", or "mixed"
 - score: number from -100 (very negative) to 100 (very positive)
 - confidence: number from 0 to 1
@@ -96,18 +110,65 @@ async function analyzeSentiment(
 - keyPhrases: array of key phrases that influenced the sentiment
 
 Return ONLY valid JSON, no other text.`,
-        },
-        {
-          role: 'user',
-          content: text,
-        },
-      ],
-      temperature: 0.3,
-      max_tokens: 500,
-    });
+      },
+      {
+        role: 'user' as const,
+        content: text,
+      },
+    ];
+    const callProvider = async (
+      client: AIProvider,
+      model: string
+    ): Promise<ProviderCallResult<string>> => {
+      const completion = await client.complete({
+        model,
+        messages,
+        temperature: 0.3,
+        max_tokens: 500,
+      });
+      return {
+        data: completion.choices[0]?.message?.content || '',
+        inputTokens:
+          completion.usage?.prompt_tokens ??
+          estimateTokens(messages[0].content + text),
+        outputTokens: completion.usage?.completion_tokens ?? 0,
+        modelId: model,
+      };
+    };
 
-    const content = response.choices[0]?.message?.content || '';
-
+    const provider = governorProviderFor(ai.name);
+    let content: string;
+    if (!scope || !provider) {
+      // No organisation (or a local Ollama provider): nothing to govern or bill.
+      content = (await callProvider(ai, ai.models.balanced)).data;
+    } else {
+      let providerError: { error: unknown } | null = null;
+      const result = await governedCall<string>({
+        organizationId: scope.organizationId,
+        brandSlug: scope.brandSlug,
+        runner: 'ai-content-sentiment',
+        provider,
+        model: { kind: 'registered', modelId: ai.models.balanced },
+        pipelineName: 'ai-content-sentiment',
+        estimate: {
+          inputTokens: estimateTokens(messages[0].content + text),
+          outputTokens: 500,
+        },
+        mode: GOVERNOR_MODE,
+        execute: async ctx => {
+          try {
+            return await callProvider(
+              ctx.apiKey ? getAIProvider({ apiKey: ctx.apiKey, provider }) : ai,
+              ctx.model?.id ?? ai.models.balanced
+            );
+          } catch (error) {
+            providerError = { error };
+            throw error;
+          }
+        },
+      });
+      content = unwrapGoverned(result, providerError);
+    }
     // Parse JSON response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
@@ -124,6 +185,8 @@ Return ONLY valid JSON, no other text.`,
 
     throw new Error('Failed to parse AI response');
   } catch (error) {
+    // A refusal is the Governor's answer, not a provider failure: surface it.
+    if (error instanceof GovernorRefusedError) throw error;
     logger.error('AI sentiment analysis failed, using fallback:', error);
     return analyzeWithRules(text);
   }
@@ -455,7 +518,8 @@ async function _handlePost(request: NextRequest) {
           const ai = aiAvailable ? await resolveAIProvider(userId) : undefined;
 
           // Analyze sentiment
-          const sentiment = await analyzeSentiment(text, ai);
+          const scope = ai ? await resolveGovernorScope(userId) : null;
+          const sentiment = await analyzeSentiment(text, ai, scope);
 
           // Get engagement prediction if requested
           let engagementPrediction: EngagementPrediction | null = null;
@@ -514,6 +578,9 @@ async function _handlePost(request: NextRequest) {
             analyzedAt: new Date().toISOString(),
           });
         } catch (error) {
+          if (error instanceof GovernorRefusedError) {
+            return governorRefusalResponse(error);
+          }
           logger.error('Sentiment analysis error:', error);
           return NextResponse.json(
             { error: 'Failed to analyze sentiment' },
