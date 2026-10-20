@@ -1,0 +1,94 @@
+{
+  "schema": "synthex-release-receipt/1",
+  "phase": "P5",
+  "written_at": "2026-10-20T06:34:29.540Z",
+  "reviewed_commit": "964553516d0350d86108cd4d510bf89eba655544",
+  "tested_tree": "0c9eade8edd5c6ff3becb1b933dc54d8a1113d21",
+  "review_report": "release-receipts/manifests/P5-review.json",
+  "cost_ledger": {
+    "file": "release-receipts/ledger/fleet.jsonl",
+    "rows": 1
+  },
+  "gate": [
+    {
+      "cmd": "$NODE_DIR/npm run type-check",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 type-check | > tsc --noEmit"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run lint",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "> synthex@2.0.1 lint | > eslint . --max-warnings 0"
+    },
+    {
+      "cmd": "$NODE_DIR/npm test",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "      at Object.<anonymous> (lib/security/audit-logger.ts:507:28) |       at Object.<anonymous> (app/api/media/generate/image/route.ts:22:1) |       at Object.<anonymous> (tests/unit/api/media-generate-image-providers.test.ts:37:1)"
+    },
+    {
+      "cmd": "$NODE_DIR/npx prisma validate",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Loaded Prisma config from prisma.config.ts. |  | Prisma schema loaded from prisma/schema.prisma."
+    },
+    {
+      "cmd": "$NODE scripts/fleet/verify-protected.mjs --base origin/main",
+      "kind": "cumulative",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "verify-protected: 110 changed files, 0 protected, 0 violations"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run jev:det -- --family J8",
+      "kind": "dod",
+      "id": "P5-C1",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Time:        1.14 s | Ran all test suites matching /families[\\\\/](j8)\\.jev\\.test\\.ts$/i. | Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?"
+    },
+    {
+      "cmd": "$NODE_DIR/npm run jev:det -- --family J9",
+      "kind": "dod",
+      "id": "P5-C2",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "Time:        1.177 s | Ran all test suites matching /families[\\\\/](j9)\\.jev\\.test\\.ts$/i. | Force exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?"
+    },
+    {
+      "cmd": "$NODE scripts/mcp/check-tools.mjs",
+      "kind": "dod",
+      "id": "P5-C3",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS check-tools: all 30 registrable MCP tools declare an outputSchema | [WARN] REDIS_URL not set, using localhost for development"
+    },
+    {
+      "cmd": "$NODE scripts/fleet/check-governor-mode.mjs",
+      "kind": "dod",
+      "id": "P5-C4",
+      "required": true,
+      "state": "PASS",
+      "exit": 0,
+      "tail": "PASS check-governor-mode: shadow"
+    }
+  ],
+  "human_acts": [],
+  "human_intervention_count": 0,
+  "policy_hash": "c894affc0451a22f584c16424a6998c75c3012348ab269520bcde691d80556f0",
+  "state": "PASS"
+}

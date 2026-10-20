@@ -1,0 +1,454 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "codex",
+  "reviewer_session_id": "p5-round4-96455351-codex",
+  "base_sha": "3c651189fb4fbe47f97f5bccb30528aec2efe2f8",
+  "head_sha": "964553516d0350d86108cd4d510bf89eba655544",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "git diff --name-only base head yields 110 paths; each is recorded exactly once in reviewed or not_reviewed."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Reviewed P5 scope against media quote, spend holds, ledger repair, budget enforcement, Governor receipts, and publish-queue retry hunks; no scope-breaking deviation in reviewed paths."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "Inspected changed J9 detectors/known-gap surface by search and focused tests; no new skip/only marker seen in reviewed spend or publish tests."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "Changed video repair timestamp to settlement now; cross-midnight assertions killed it. Restored source byte-identical to HEAD and reran suite.",
+      "mutants": [
+        {
+          "file": "lib/services/ai/video/quota.ts",
+          "planted": "In ensureVideoSpendLedgerRow, replaced reserve.windowAt argument to writeVideoLedgerRow with new Date().",
+          "test_command": "npm test -- --runInBand tests/unit/lib/services/ai/video/quota.test.ts --silent",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "Cross-midnight date control failed under the timestamp mutant (2 failures), then passed after restoration; Redis-outage tests refused both enforcing instances and admitted log_only control."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "N/A",
+      "evidence": "Ran five focused Jest suites at exact head: 108/108 passed; no isolated full-suite rerun.",
+      "reason": "The full clean-environment fleet gate was supplied by the implementation agent, not independently executed in this review."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Traced ledger writer to budget sum by clientId/createdAt, reserve/finalize event schema, 48h sweep SQL, redis shared counter, HeyGen hold handling, and queue dispatch retry boundary. SQL identifiers match Prisma mappings and interpolated since/limit are parameters. Race in ledger check-then-insert and 48h repair horizon are P2 residual risks; no reproduced P1."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Inspected publishQueue claim, pre-dispatch retry and post-dispatch unknown-outcome behavior; reviewer made no provider, publish, network, or production writes."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      "__tests__/publish/publishQueue.test.ts",
+      "app/api/cron/video-sweep/route.ts",
+      "app/api/heygen/video/route.ts",
+      "app/api/media/quote/route.ts",
+      "lib/ai/budget-enforcer.ts",
+      "lib/ai/governor/index.ts",
+      "lib/marketing-agency/heygen/client.ts",
+      "lib/pipelines/track-cost.ts",
+      "lib/publish/postPublishClaim.ts",
+      "lib/publish/publishQueue.ts",
+      "lib/redis-client.ts",
+      "lib/services/ai/image/spend-log.ts",
+      "lib/services/ai/media-quote.ts",
+      "lib/services/ai/media-spend-gate.ts",
+      "lib/services/ai/video/quota.ts",
+      "tests/unit/ai/budget-enforcer-redis-outage.test.ts",
+      "tests/unit/api/video-sweep-ledger.test.ts",
+      "tests/unit/api/voice-avatar-spend-gate.test.ts",
+      "tests/unit/lib/services/ai/video/quota.test.ts"
+    ],
+    "not_reviewed": [
+      {
+        "path": ".claude/skills/nexus-viral-run/SKILL.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".claude/skills/shortform-instagram/SKILL.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".claude/skills/shortform-pattern-library/references/platform-docs-2026-10.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".claude/skills/shortform-pattern-library/references/platform-rules.json",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".claude/skills/shortform-tiktok/SKILL.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".claude/skills/shortform-video-harness/SKILL.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".claude/skills/shortform-youtube-shorts/SKILL.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": ".planning/ROUTE_REFERENCE.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "BACKLOG.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "__tests__/landing/helpers/tripwire-seeds.generated.json",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "__tests__/video-engine/studio-tools.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/admin/blog/generate/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/ai-content/sentiment/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/ai/calendar-jobs/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/ai/generate-content/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/ask-synthex/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/brand-iq/next-steps/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/cron/autopilot/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/cron/gbp-monitor/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/geo/rewrite/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/google-business/reviews/[reviewId]/auto-reply/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/internal/algorithm-freshness-monitor/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/internal/generate-advisor-brief/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/internal/generate-review-responses/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/media/generate/voice/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/posts/quick-create/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/profile-analyser/generate-content/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "app/api/video/generate/route.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "config/jest/jest.worktree.cjs",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "docs/api/error-codes.md",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "docs/api/openapi.generated.json",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/calendar-job-handler.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/content-generator.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/governed-generation.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/governor-route-support.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/governor/mode.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/governor/types.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/model-registry.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/providers/index.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/route-governance.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/ai/routing-config.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/pipelines/__tests__/track-cost.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/image/meter.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/index.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/media-tools.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/ops-tools.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/types.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/video/generation-service.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "lib/services/ai/voice-generation.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "public/llms.txt",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "scripts/mcp/check-tools.mjs",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/auto-publish/failure-modes.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/eval/jev/families/j9.jev.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/eval/jev/families/j9/detectors.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/eval/jev/families/j9/fake-db.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/eval/jev/known-gaps/J8.json",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/eval/jev/known-gaps/J9.json",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/integration/budget-enforcer.integration.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/integration/mcp-007b-namespaces.integration.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/integration/track-cost.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/pipelines/review-intelligence.smoke.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/ai/budget-enforcer.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/ai/calendar-job-handler-budget.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/ai/governor/governor-budget.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/ai/media-quote.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/ai/model-router-registry.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-calendar-jobs-idempotency.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-calendar-jobs.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-batch.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-calendar.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-enforcement.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-org-budget.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-persona.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/brand-iq-next-steps.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/content-generator-routes-governor.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/generate-advisor-brief.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/governed-text-routes-enforcing.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/governed-text-routes.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/media-image-routes-quota-gate.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/media-quote-route.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/not-provisioned/voice.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/p5-routes-governed.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/posts-quick-create.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/api/video-generate-governor.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/ask-synthex/not-provisioned.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/lib/heygen-client.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/lib/publish/postPublishClaim.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/lib/redis-client-incrby-shared.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/mcp/namespace-tools.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/mcp/scope-filtering.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      },
+      {
+        "path": "tests/unit/mcp/structured-content.test.ts",
+        "reason": "Lower-priority route, test, generated data, or documentation hunk; not independently line-reviewed in this round."
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-20T10:05:00Z",
+  "head": "964553516d0350d86108cd4d510bf89eba655544",
+  "lane": "codex"
+}
