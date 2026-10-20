@@ -24,8 +24,11 @@ const ACCOUNT_FLOW_PREFIXES = [
   'app/invite/',
 ];
 
+// Every way a page sends the visitor somewhere: an href, a router call, a
+// location assignment or redirect. /auth/signup is a legacy redirect to
+// /signup (config/legacy-path-redirects.mjs), so it counts as /signup.
 const SELF_SERVE_LINK =
-  /(?:href\s*[=:]\s*\{?\s*|router\.(?:push|replace)\(\s*)['"`]\/(signup|pricing)(?=['"`?#/])/g;
+  /(?:href\s*[=:]\s*\{?\s*|router\.(?:push|replace)\(\s*|location\s*=\s*|location\.(?:assign|replace)\(\s*|redirect\(\s*|window\.open\(\s*)['"`]\/(?:auth\/)?(signup|pricing)(?=['"`?#/])/g;
 
 function publicFiles(): string[] {
   return publicSourceInventory({ followApi: false })
@@ -66,8 +69,11 @@ describe('public calls to action', () => {
       '<Link href="/signup">Start free</Link>',
       "{ href: '/pricing', label: 'Pricing' }",
       "router.push('/signup?plan=pro')",
+      'window.location.href = `/auth/signup?${params.toString()}`;',
+      "window.location.assign('/signup')",
+      "redirect('/pricing')",
     ].join('\n');
-    expect([...planted.matchAll(SELF_SERVE_LINK)]).toHaveLength(3);
+    expect([...planted.matchAll(SELF_SERVE_LINK)]).toHaveLength(6);
     expect([
       ...'<Link href="/opportunity-map">'.matchAll(SELF_SERVE_LINK),
     ]).toHaveLength(0);
