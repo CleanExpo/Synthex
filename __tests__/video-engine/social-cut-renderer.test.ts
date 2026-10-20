@@ -44,6 +44,7 @@ import {
   wrapCaptionLines,
   escapeDrawtext,
   buildVideoFilters,
+  captionColours,
   parseRenderPlan,
   claimSocialCut,
   renderSocialCut,
@@ -184,6 +185,53 @@ describe('buildVideoFilters()', () => {
     expect(filters.some(f => f.startsWith('crop='))).toBe(false);
     expect(filters.some(f => f.startsWith('drawtext='))).toBe(true);
   });
+
+  it('keeps the unbranded caption byte-identical when there is no kit', () => {
+    const dims = { width: 1080, height: 1920 };
+    const first = wrapCaptionLines(PLAN.caption.text)[0];
+    // 1:1 crop of 1080x1920 -> 1080 high: font 35px, band top 86px.
+    const legacy = `drawtext=text='${escapeDrawtext(first)}':fontsize=35:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=12:x=(w-text_w)/2:y=86`;
+    expect(buildVideoFilters(PLAN, dims)[1]).toBe(legacy);
+    expect(buildVideoFilters(PLAN, dims, null)[1]).toBe(legacy);
+  });
+
+  it('fills the caption box with a dark brand colour and uses white text', () => {
+    const filters = buildVideoFilters(
+      PLAN,
+      { width: 1080, height: 1920 },
+      { primaryColor: '#0f172a', source: 'preset' }
+    );
+    const drawtexts = filters.filter(f => f.startsWith('drawtext='));
+    expect(drawtexts.length).toBeGreaterThan(0);
+    for (const d of drawtexts) {
+      expect(d).toContain(':boxcolor=0x0f172a@0.85:');
+      expect(d).toContain(':fontcolor=white:');
+    }
+  });
+
+  it('uses black text on a light brand colour', () => {
+    const filters = buildVideoFilters(
+      PLAN,
+      { width: 1080, height: 1920 },
+      { primaryColor: '#fde047', source: 'dna' }
+    );
+    const drawtext = filters.find(f => f.startsWith('drawtext='));
+    expect(drawtext).toContain(':boxcolor=0xfde047@0.85:');
+    expect(drawtext).toContain(':fontcolor=black:');
+  });
+});
+
+describe('captionColours()', () => {
+  it.each([
+    ['#ffffff', 'black'],
+    ['#000000', 'white'],
+    ['#ff6b35', 'black'],
+    ['#1d4ed8', 'white'],
+  ])('picks the higher-contrast text for %s', (primaryColor, expected) => {
+    expect(
+      captionColours({ primaryColor, source: 'organization' }).fontcolor
+    ).toBe(expected);
+  });
 });
 
 describe('parseRenderPlan()', () => {
@@ -257,6 +305,35 @@ describe('renderSocialCut()', () => {
     const update = mockVideoAsset.update.mock.calls[0][0];
     expect(update.data.status).toBe('failed');
     expect(update.data.metadata.renderError).toContain('ffmpeg exploded');
+  });
+
+  it('burns the founder org brand colour into the caption', async () => {
+    const brandKit = jest.fn(async () => ({
+      primaryColor: '#1d4ed8',
+      source: 'preset' as const,
+    }));
+    const io = fakeIo({ brandKit });
+    const result = await renderSocialCut(PENDING_ASSET, io);
+
+    expect(result.status).toBe('ready');
+    expect(brandKit).toHaveBeenCalledWith('user-001');
+    const { filters } = (io.transcode as jest.Mock).mock.calls[0][0];
+    expect(filters.find((f: string) => f.startsWith('drawtext='))).toContain(
+      ':boxcolor=0x1d4ed8@0.85:'
+    );
+  });
+
+  it('still renders, unbranded, when the brand kit lookup rejects', async () => {
+    const io = fakeIo({
+      brandKit: jest.fn().mockRejectedValue(new Error('db down')),
+    });
+    const result = await renderSocialCut(PENDING_ASSET, io);
+
+    expect(result.status).toBe('ready');
+    const { filters } = (io.transcode as jest.Mock).mock.calls[0][0];
+    expect(filters).toEqual(
+      buildVideoFilters(PLAN, { width: 1080, height: 1920 })
+    );
   });
 
   it('fails fast on a foreign row without touching IO', async () => {
