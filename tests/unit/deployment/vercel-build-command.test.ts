@@ -6,11 +6,13 @@ describe('Vercel build command', () => {
     const root = process.cwd();
     const vercelConfig = JSON.parse(
       fs.readFileSync(path.join(root, 'vercel.json'), 'utf8')
-    ) as { buildCommand?: string };
+    ) as { buildCommand?: string; installCommand?: string };
     const packageJson = JSON.parse(
       fs.readFileSync(path.join(root, 'package.json'), 'utf8')
     ) as { scripts?: Record<string, string> };
 
+    // Production installs exactly the lockfile CI tested; `npm install` may re-resolve it.
+    expect(vercelConfig.installCommand).toBe('npm ci --include=dev');
     expect(vercelConfig.buildCommand).toBe('npm run build:vercel');
     expect(packageJson.scripts?.['build:vercel']).toBe(
       'sh scripts/build-with-migrations.sh'
