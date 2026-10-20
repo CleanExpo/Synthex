@@ -24,7 +24,6 @@ assert.equal(
 );
 assert.equal(webFonts.length, 8);
 assert.equal(renderFonts.length, 1);
-const nextConfig = fs.readFileSync(path.join(root, 'next.config.mjs'), 'utf8');
 for (const font of renderFonts) {
   assert(font.path.endsWith('.woff'), font.path);
   const bytes = fs.readFileSync(path.join(root, font.path));
@@ -37,14 +36,6 @@ for (const font of renderFonts) {
     fs
       .readFileSync(path.join(root, font.licensePath), 'utf8')
       .includes('SIL OPEN FONT LICENSE')
-  );
-  const renderTrace = nextConfig.match(
-    /'\/api\/cron\/social-cut-render':\s*\[([^\]]*)\]/
-  );
-  assert(renderTrace, 'No trace include for /api/cron/social-cut-render');
-  assert(
-    renderTrace[1].includes(`'./${font.path}'`),
-    `Not traced for /api/cron/social-cut-render: ${font.path}`
   );
 }
 for (const font of webFonts) {
@@ -73,6 +64,28 @@ for (const font of webFonts) {
     `Incorrect layout weight: ${font.path}`
   );
 }
-console.log(
-  'Verified 8 local font faces, actual weights, layout bindings, hashes and OFL licences, plus 1 traced caption-render face.'
-);
+// Read the evaluated config, not its source text: a commented-out entry or a
+// later duplicate key changes what Next.js traces but not what a text match sees.
+const { pathToFileURL } = require('node:url');
+import(pathToFileURL(path.join(root, 'next.config.mjs')).href)
+  .then(({ default: nextConfig }) => {
+    const traced =
+      nextConfig?.outputFileTracingIncludes?.['/api/cron/social-cut-render'];
+    assert(
+      Array.isArray(traced),
+      'No trace include for /api/cron/social-cut-render'
+    );
+    for (const font of renderFonts) {
+      assert(
+        traced.includes(`./${font.path}`),
+        `Not traced for /api/cron/social-cut-render: ${font.path}`
+      );
+    }
+    console.log(
+      'Verified 8 local font faces, actual weights, layout bindings, hashes and OFL licences, plus 1 traced caption-render face.'
+    );
+  })
+  .catch(error => {
+    console.error(error);
+    process.exitCode = 1;
+  });
