@@ -27,11 +27,31 @@ import {
 } from '@/lib/brand-video/styles';
 import { MotionPanel } from './motion-panel';
 
+/** A failed read keeps its status and the server's message. */
+class FetchError extends Error {
+  constructor(
+    message: string,
+    readonly status: number
+  ) {
+    super(message);
+  }
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const r = await fetch(url, { credentials: 'include' });
-  if (!r.ok) throw new Error('Fetch failed');
+  if (!r.ok) {
+    const payload = await r.json().catch(() => null);
+    throw new FetchError(
+      payload?.message || payload?.error || `Request failed (${r.status})`,
+      r.status
+    );
+  }
   return r.json() as Promise<T>;
 }
+
+/** 503 means the feature is not provisioned; retrying cannot change that. */
+const isNotProvisioned = (err: unknown) =>
+  err instanceof FetchError && err.status === 503;
 
 interface BrandVideoJob {
   id: string;
@@ -65,12 +85,20 @@ export default function BrandVideoStudioPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: jobsData, mutate } = useSWR<{ jobs: BrandVideoJob[] }>(
-    '/api/brand-video/jobs',
-    fetchJson,
-    { refreshInterval: 8000 }
-  );
+  const {
+    data: jobsData,
+    error: jobsError,
+    mutate,
+  } = useSWR<{ jobs: BrandVideoJob[] }>('/api/brand-video/jobs', fetchJson, {
+    // SWR does not run refreshInterval while the key holds an error; the
+    // repeated requests after a 503 were error retries, stopped here.
+    refreshInterval: 8000,
+    shouldRetryOnError: err => !isNotProvisioned(err),
+  });
   const jobs = jobsData?.jobs ?? [];
+  const notProvisionedMessage = isNotProvisioned(jobsError)
+    ? (jobsError as FetchError).message
+    : null;
 
   async function handleGenerate() {
     setFormError(null);
@@ -87,7 +115,9 @@ export default function BrandVideoStudioPage() {
       });
       if (!res.ok) {
         const payload = await res.json().catch(() => null);
-        throw new Error(payload?.error || `Request failed (${res.status})`);
+        throw new Error(
+          payload?.message || payload?.error || `Request failed (${res.status})`
+        );
       }
       setTopic('');
       await mutate();
@@ -193,7 +223,18 @@ export default function BrandVideoStudioPage() {
         <div className="px-6 py-4 border-b border-white/[0.06]">
           <h2 className="text-sm font-light text-white">Recent jobs</h2>
         </div>
-        {jobs.length === 0 ? (
+        {notProvisionedMessage ? (
+          <div className="px-6 py-12 text-center space-y-1">
+            <p className="text-sm text-white/70">
+              Brand video rendering is not set up yet
+            </p>
+            <p className="text-xs text-white/40">{notProvisionedMessage}</p>
+          </div>
+        ) : jobsError && !jobsData ? (
+          <div className="px-6 py-12 text-center text-sm text-red-400/80">
+            Could not load recent jobs: {jobsError.message}
+          </div>
+        ) : jobs.length === 0 ? (
           <div className="px-6 py-12 text-center text-sm text-white/40">
             No videos queued yet.
           </div>

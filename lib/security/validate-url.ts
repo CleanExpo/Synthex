@@ -81,7 +81,8 @@ type HostClass = 'blocked' | 'ip-ok' | 'hostname';
 
 function classifyHost(hostname: string): HostClass {
   const host = normalizeHost(hostname);
-  if (host === '' || /(^|\.)localhost$/.test(host) || host === 'localhost') return 'blocked';
+  if (host === '' || /(^|\.)localhost$/.test(host) || host === 'localhost')
+    return 'blocked';
   const kind = isIP(host);
   if (kind === 4) return isBlockedIpv4(host) ? 'blocked' : 'ip-ok';
   if (kind === 6) return isBlockedIpv6(host) ? 'blocked' : 'ip-ok';
@@ -131,7 +132,50 @@ export async function assertExternalUrlSafe(url: string): Promise<void> {
   }
   if (addresses.length === 0) throw new Error(BLOCKED_ERROR);
   for (const { address, family } of addresses) {
-    const blocked = family === 4 ? isBlockedIpv4(address) : isBlockedIpv6(address);
+    const blocked =
+      family === 4 ? isBlockedIpv4(address) : isBlockedIpv6(address);
     if (blocked) throw new Error(BLOCKED_ERROR);
+  }
+}
+
+const MAX_REDIRECTS = 5;
+
+/**
+ * fetch() for untrusted URLs. Follows redirects manually and runs assertExternalUrlSafe on
+ * every hop, so a public URL that 3xx-redirects to a private/metadata address is refused
+ * instead of followed (J11-GAP-ssrf-redirect-follow). Throws on a blocked hop or more than
+ * maxRedirects redirects. Like fetch, 303 (and 301/302 after POST) continue as a bodiless GET.
+ */
+export async function fetchExternalUrl(
+  url: string,
+  init: RequestInit = {},
+  maxRedirects = MAX_REDIRECTS
+): Promise<Response> {
+  let current = url;
+  let { method, body } = init;
+  for (let hop = 0; ; hop++) {
+    await assertExternalUrlSafe(current);
+    const res = await fetch(current, {
+      ...init,
+      method,
+      body,
+      redirect: 'manual',
+    });
+    const location =
+      res.status >= 300 && res.status < 400
+        ? res.headers.get('location')
+        : null;
+    if (!location) return res;
+    await res.body?.cancel().catch(() => undefined);
+    if (hop >= maxRedirects) throw new Error('Too many redirects');
+    current = new URL(location, current).href;
+    const verb = (method ?? 'GET').toUpperCase();
+    if (
+      (res.status === 303 && verb !== 'HEAD') ||
+      ((res.status === 301 || res.status === 302) && verb === 'POST')
+    ) {
+      method = 'GET';
+      body = undefined;
+    }
   }
 }

@@ -13,7 +13,10 @@
 
 import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { APISecurityChecker, DEFAULT_POLICIES } from '@/lib/security/api-security-checker';
+import {
+  APISecurityChecker,
+  DEFAULT_POLICIES,
+} from '@/lib/security/api-security-checker';
 import prisma from '@/lib/prisma';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
@@ -26,9 +29,18 @@ export const dynamic = 'force-dynamic';
 // =============================================================================
 
 const PublishVideoSchema = z.object({
-  platforms: z.array(z.enum([
-    'youtube', 'instagram', 'linkedin', 'twitter', 'tiktok', 'facebook',
-  ])).min(1),
+  platforms: z
+    .array(
+      z.enum([
+        'youtube',
+        'instagram',
+        'linkedin',
+        'twitter',
+        'tiktok',
+        'facebook',
+      ])
+    )
+    .min(1),
   scheduledAt: z.string().datetime().optional(), // If not provided, schedule for 1 hour from now
   clipStart: z.number().min(0).optional(),
   clipEnd: z.number().min(0).optional(),
@@ -100,19 +112,37 @@ export async function POST(
       );
     }
 
+    // Script mode marks a row 'rendered' with a script and no video. Publishing
+    // it would create posts with no media and mark the row published.
+    if (!video.videoUrl) {
+      return APISecurityChecker.createSecureResponse(
+        {
+          error:
+            'This generation has no video to publish (script only). Render a video first.',
+        },
+        422
+      );
+    }
+
     // Validate request body
     const body = await request.json();
     const validation = PublishVideoSchema.safeParse(body);
 
     if (!validation.success) {
       return APISecurityChecker.createSecureResponse(
-        { success: false, error: 'Invalid request', details: validation.error.issues },
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.issues,
+        },
         400
       );
     }
 
     const { platforms, scheduledAt, clipStart, clipEnd } = validation.data;
-    const scheduleTime = scheduledAt ? new Date(scheduledAt) : new Date(Date.now() + 60 * 60 * 1000);
+    const scheduleTime = scheduledAt
+      ? new Date(scheduledAt)
+      : new Date(Date.now() + 60 * 60 * 1000);
 
     // Resolve organisation context
     const organizationId = await getEffectiveOrganizationId(userId);
@@ -147,7 +177,12 @@ export async function POST(
 
     for (const platform of platforms) {
       // Build content for the platform
-      const content = buildPlatformContent(platform, scriptTitle, video.topic, hashtags);
+      const content = buildPlatformContent(
+        platform,
+        scriptTitle,
+        video.topic,
+        hashtags
+      );
 
       const post = await prisma.post.create({
         data: {
@@ -213,7 +248,8 @@ function buildPlatformContent(
   topic: string,
   hashtags: string[]
 ): string {
-  const hashtagStr = hashtags.length > 0 ? `\n\n${hashtags.map(t => `#${t}`).join(' ')}` : '';
+  const hashtagStr =
+    hashtags.length > 0 ? `\n\n${hashtags.map(t => `#${t}`).join(' ')}` : '';
 
   switch (platform) {
     case 'youtube':

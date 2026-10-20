@@ -69,9 +69,32 @@ export interface UseMediaLibraryOptions {
 // HELPERS
 // ============================================================================
 
+/**
+ * A failed library request. `notProvisioned` is true for the route's honest
+ * 503 FEATURE_NOT_PROVISIONED (the media tables do not exist yet), which the
+ * UI shows as "not set up" rather than as a retryable failure.
+ */
+export class MediaLibraryFetchError extends Error {
+  constructor(
+    readonly status: number,
+    readonly notProvisioned: boolean
+  ) {
+    super(`HTTP ${status}`);
+    this.name = 'MediaLibraryFetchError';
+  }
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url, { credentials: 'include' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new MediaLibraryFetchError(
+      res.status,
+      res.status === 503 && body?.error === 'FEATURE_NOT_PROVISIONED'
+    );
+  }
   return res.json() as Promise<T>;
 }
 

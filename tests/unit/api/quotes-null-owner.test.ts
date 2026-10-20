@@ -10,10 +10,11 @@ import { createMockNextRequest } from '@/tests/helpers/mock-request';
 const mockFindUnique = jest.fn();
 const mockPrisma = {
   quote: {
-    findUnique: (...a: unknown[]) => mockFindUnique(...a),
+    // GET reads via a scoped findFirst
+    findFirst: (...a: unknown[]) => mockFindUnique(...a),
     // Plain fn (not jest.fn) so resetMocks can't strip the .catch()-able return
     // used by the fire-and-forget usage-count update on the success path.
-    update: () => Promise.resolve({}),
+    updateMany: () => Promise.resolve({ count: 1 }),
   },
 };
 jest.mock('@/lib/prisma', () => ({

@@ -244,6 +244,29 @@ if (window.opener) {
 // =============================================================================
 
 /**
+ * Resolve a state-carried returnTo against the app origin.
+ * Returns the URL only when it stays on the app origin with a single-slash
+ * path. Checking the raw string is not enough: URL parsing turns '/\\evil'
+ * into '//evil' and strips tab/newline, which moves the host off-site.
+ */
+function resolveSameOriginReturnTo(
+  returnTo: string,
+  appBaseUrl: string
+): URL | null {
+  if (!returnTo.startsWith('/') || returnTo.startsWith('//')) return null;
+  try {
+    const base = new URL(appBaseUrl);
+    const url = new URL(returnTo, base);
+    if (url.origin !== base.origin || url.pathname.startsWith('//')) {
+      return null;
+    }
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Build an error response for integration OAuth flows.
  * When returnTo is set (full-page redirect flow), redirects there with ?error=.
  * Otherwise falls back to postMessage HTML for popup-based flows.
@@ -255,23 +278,14 @@ function integrationErrorResponse(
   appBaseUrl?: string
 ): NextResponse {
   if (returnTo) {
-    const isRelative =
-      returnTo.startsWith('/') &&
-      !returnTo.startsWith('//') &&
-      !returnTo.includes('://');
-    if (isRelative) {
-      const appUrl =
-        appBaseUrl ||
-        process.env.NEXT_PUBLIC_APP_URL ||
-        'http://localhost:3008';
-      try {
-        const url = new URL(returnTo, appUrl);
-        url.searchParams.set('error', errorMsg);
-        return NextResponse.redirect(url.toString());
-      } catch {
-        // returnTo was invalid — fall through to postMessage
-      }
+    const appUrl =
+      appBaseUrl || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3008';
+    const url = resolveSameOriginReturnTo(returnTo, appUrl);
+    if (url) {
+      url.searchParams.set('error', errorMsg);
+      return NextResponse.redirect(url.toString());
     }
+    // returnTo was invalid or off-origin — fall through to postMessage
   }
   const html = buildPostMessageHtml(
     'oauth-error',
@@ -940,12 +954,11 @@ export async function GET(
       // If returnTo is set in state (e.g. from onboarding/connect or platforms page),
       // do a full-page redirect back there. Otherwise close popup.
       if (returnTo) {
-        const isRelative =
-          returnTo.startsWith('/') &&
-          !returnTo.startsWith('//') &&
-          !returnTo.includes('://');
-        if (isRelative) {
-          const redirectUrl = new URL(returnTo, callbackBaseUrl);
+        const redirectUrl = resolveSameOriginReturnTo(
+          returnTo,
+          callbackBaseUrl
+        );
+        if (redirectUrl) {
           redirectUrl.searchParams.set('connected', platform);
           return NextResponse.redirect(redirectUrl.toString());
         }

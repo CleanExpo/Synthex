@@ -39,7 +39,10 @@ import {
   isPreDispatchFailure,
   neverReachedProvider,
 } from '@/lib/services/ai/image/providers/errors';
-import { GEMINI_TOKEN_BOUND } from '@/lib/services/ai/image/registry';
+import {
+  GEMINI_TOKEN_BOUND,
+  IMAGE_MODELS,
+} from '@/lib/services/ai/image/registry';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
 
 // Provider types
@@ -211,6 +214,18 @@ const LEGACY_PROVIDER_MODEL_IDS: Record<ImageProvider, string> = {
   dalle: 'dall-e-3',
   gemini: GEMINI_IMAGE_MODEL,
 };
+
+/**
+ * Legacy providers a caller can actually choose: those whose registry model is
+ * neither deprecated nor unpriced. A pin to any other provider is refused by
+ * the spend meter (UnpricedModelError), so it must not be advertised.
+ */
+export function offeredImageProviders(): ImageProvider[] {
+  return (['stability', 'dalle', 'gemini'] as ImageProvider[]).filter(p => {
+    const model = IMAGE_MODELS.find(m => m.id === LEGACY_PROVIDER_MODEL_IDS[p]);
+    return Boolean(model && !model.deprecated && model.pricing);
+  });
+}
 
 /**
  * Fetch visual style trend insights for a platform.

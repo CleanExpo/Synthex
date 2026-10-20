@@ -3,12 +3,17 @@
  *
  * POST /api/media/upload
  * Accepts multipart/form-data with a `file` field.
- * Validates file type and size, uploads to Supabase Storage,
- * and returns the public URL.
+ * Validates file type and size, stores the file in the private Supabase
+ * Storage bucket `media-uploads` (DECISIONS.md FD-7) via
+ * lib/storage/object-storage at `${userId}/${Date.now()}-${name}`, and returns
+ * a signed URL for it plus its storage path.
+ *
+ * The bucket is private, so `url` is a signed URL valid for
+ * SIGNED_URL_TTL_SECONDS (`expiresAt`); `path` is the durable key.
  *
  * ENVIRONMENT VARIABLES REQUIRED:
- * - LEGACY_PLATFORM_URL (PUBLIC)
- * - LEGACY_PLATFORM_SERVICE_KEY (SECRET)
+ * - SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (SECRET). Without them the route
+ *   answers 503 FEATURE_NOT_PROVISIONED and saves nothing.
  * - JWT_SECRET (CRITICAL)
  *
  * @module app/api/media/upload/route
@@ -18,7 +23,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
-import { validateFile, uploadToStorage } from '@/lib/storage/platform-storage';
+import { validateFile } from '@/lib/storage/platform-storage';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
+import {
+  ObjectStorageNotProvisionedError,
+  signedUrls,
+  upload,
+} from '@/lib/storage/object-storage';
+
+const BUCKET = 'media-uploads';
+
+// Callers keep `url` (brand logos, post attachments), so it is long-lived; it
+// still expires, and `path` is the durable reference to re-sign from.
+const SIGNED_URL_TTL_SECONDS = 365 * 24 * 60 * 60;
 
 // ---------------------------------------------------------------------------
 // Validation — multipart form fields (file validated separately)
@@ -88,13 +105,38 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: validationError }, { status: 400 });
   }
 
-  // -- Upload to Supabase Storage -----------------------------------------
+  // -- Upload to Supabase Storage (bucket media-uploads, FD-7) ------------
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const result = await uploadToStorage(userId, file.name, buffer, file.type);
+    const sanitized = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/_{2,}/g, '_')
+      .substring(0, 100);
+    const path = `${userId}/${Date.now()}-${sanitized}`;
 
-    return NextResponse.json({ data: result }, { status: 201 });
+    await upload(BUCKET, path, buffer, file.type, { upsert: false });
+    const [url] = await signedUrls(BUCKET, [path], SIGNED_URL_TTL_SECONDS);
+
+    return NextResponse.json(
+      {
+        data: {
+          url,
+          path,
+          size: buffer.length,
+          mimeType: file.type,
+          expiresAt: new Date(
+            Date.now() + SIGNED_URL_TTL_SECONDS * 1000
+          ).toISOString(),
+        },
+      },
+      { status: 201 }
+    );
   } catch (err) {
+    if (err instanceof ObjectStorageNotProvisionedError) {
+      return notProvisionedResponse(
+        'Media upload is not available: durable file storage is not provisioned.'
+      );
+    }
     logger.error(
       '[media/upload] Upload error:',
       err instanceof Error ? err.message : err

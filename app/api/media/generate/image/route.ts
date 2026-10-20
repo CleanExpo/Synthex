@@ -1,7 +1,8 @@
 /**
  * AI Image Generation API
  *
- * @description Generate images using AI (Stability AI, DALL-E, Gemini)
+ * @description Generate images using AI (Gemini; Stability AI and DALL-E are
+ * deprecated and unpriced in lib/services/ai/image/registry.ts, so not offered)
  *
  * ENVIRONMENT VARIABLES REQUIRED:
  * - STABILITY_API_KEY: Stability AI API key (SECRET)
@@ -27,6 +28,7 @@ import {
   enhancePrompt,
   getOptimalDimensions,
   NO_REFERENCES_BLOCK_ERROR,
+  offeredImageProviders,
   ImageGenerationOptions,
   ImageGenerationResult,
 } from '@/lib/services/ai/image-generation';
@@ -80,6 +82,8 @@ function mediaGenerationContext(
 }
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
 import { tableUnavailable } from '@/lib/api/not-provisioned';
+import { QuotaExceededError } from '@/lib/services/ai/video/types';
+import { UnpricedModelError } from '@/lib/services/ai/image/registry';
 
 // NOT_PROVISIONED: prisma/schema.prisma has no media_assets model, so
 // saveToLibrary cannot persist. Responses say so via `library` instead of
@@ -118,6 +122,43 @@ async function resolveOwningOrganization(
     );
   }
   return organizationId;
+}
+
+/**
+ * The spend meter's fail-closed refusals, mapped to honest statuses, or null
+ * for any other error. holdImageSpend throws all three before a provider call,
+ * and they propagate out of generateImage / generateBatch / generateVariations:
+ * - QuotaExceededError: the org's shared media budget cap → 429 naming the cap
+ * - UnpricedModelError: a deprecated/unpriced model pin → 422
+ *   (registry.ts documents 422 for it)
+ * - RangeError "image variants must be…" from the meter → 422
+ * Its message says "Video budget" (the class is shared), so the image message
+ * is composed here from its fields.
+ */
+function meterRefusalResponse(error: unknown): NextResponse | null {
+  if (error instanceof QuotaExceededError) {
+    return APISecurityChecker.createSecureResponse(
+      {
+        success: false,
+        error: `Media budget cap exceeded (${error.cap}): $${error.spentUsd.toFixed(2)} spent of $${error.limitUsd.toFixed(2)} limit. No image was generated.`,
+        cap: error.cap,
+      },
+      429
+    );
+  }
+  if (error instanceof UnpricedModelError) {
+    return APISecurityChecker.createSecureResponse(
+      { success: false, error: error.message, blocked: true },
+      422
+    );
+  }
+  if (error instanceof RangeError && /variants must be/.test(error.message)) {
+    return APISecurityChecker.createSecureResponse(
+      { success: false, error: error.message },
+      422
+    );
+  }
+  return null;
 }
 
 // Request validation schema
@@ -381,7 +422,11 @@ async function _handlePost(request: NextRequest) {
         }
       );
 
-      // (3) respond — NO imageBase64 (Vercel 4.5MB limit, spec Part B).
+      // (3) respond — imageBase64 ONLY for variants with no imageUrl (the
+      // Gemini escape hatch returns bytes, not a hosted URL). Without it such a
+      // variant is a success with nothing to show: there is no mediaAssetId
+      // (media_assets is not provisioned). URL-backed variants stay slim
+      // because of the Vercel 4.5MB response limit (spec Part B).
       const anySuccess = results.some(r => r.success);
       if (!anySuccess) {
         // ALL variants blocked (Real Images Only, no owned coverage or
@@ -413,6 +458,7 @@ async function _handlePost(request: NextRequest) {
           success: r.success,
           provider: r.provider,
           imageUrl: r.imageUrl,
+          ...(!r.imageUrl && r.imageBase64 && { imageBase64: r.imageBase64 }),
           metadata: r.metadata,
           grounded: r.grounded,
           referenceSet: r.referenceSet,
@@ -493,6 +539,9 @@ async function _handlePost(request: NextRequest) {
         400
       );
     }
+
+    const refusal = meterRefusalResponse(error);
+    if (refusal) return refusal;
 
     logger.error('Image generation error:', { error });
     return APISecurityChecker.createSecureResponse(
@@ -608,6 +657,9 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    const refusal = meterRefusalResponse(error);
+    if (refusal) return refusal;
+
     logger.error('Image variations error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -680,7 +732,9 @@ export async function GET(request: NextRequest) {
       'cinematic',
       'minimalist',
     ],
-    providers: ['stability', 'dalle', 'gemini'],
+    // Only providers the meter will price; deprecated/unpriced ones always
+    // fail closed, so offering them only produced a guaranteed error.
+    providers: offeredImageProviders(),
     referenceSets,
   });
 }

@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   useMediaLibrary,
+  MediaLibraryFetchError,
   type MediaKind,
   type MediaLibraryAsset,
 } from '@/hooks/use-media-library';
@@ -105,6 +106,9 @@ export function MediaLibraryBrowser() {
     limit: visibleCount,
     offset: 0,
   });
+
+  const notProvisioned =
+    error instanceof MediaLibraryFetchError && error.notProvisioned;
 
   const isFiltered = kind !== 'all' || search.trim() !== '' || favouritesOnly;
 
@@ -186,7 +190,16 @@ export function MediaLibraryBrowser() {
         </div>
       )}
 
-      {error && (
+      {notProvisioned && (
+        <div className="rounded-lg border border-border bg-muted/30 p-4">
+          <p className="flex items-center gap-2 text-sm text-foreground">
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            The media library is not set up yet.
+          </p>
+        </div>
+      )}
+
+      {error && !notProvisioned && (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/5 p-4">
           <p className="flex items-center gap-2 text-sm text-foreground">
             <AlertCircle className="h-4 w-4 text-destructive" />

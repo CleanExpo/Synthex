@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration } from '@/lib/rate-limit';
 import { detectIndustry } from '@/lib/demo/industry-classifier';
-import { assertExternalUrlSafe } from '@/lib/security/validate-url';
+import {
+  assertExternalUrlSafe,
+  fetchExternalUrl,
+} from '@/lib/security/validate-url';
 
 export const runtime = 'nodejs';
 export const maxDuration = 20;
@@ -276,7 +279,7 @@ export async function POST(req: NextRequest) {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch(url, {
+      const res = await fetchExternalUrl(url, {
         signal: controller.signal,
         headers: {
           'User-Agent':
