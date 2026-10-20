@@ -43,6 +43,13 @@ jest.mock('@/lib/prisma', () => {
     workflowTemplate: {
       findUnique: jest.fn(),
     },
+    // POST resolves named step assignees from org operators (lib/approvals/assignees.ts)
+    businessOwnership: {
+      findMany: jest.fn(),
+    },
+    teamMember: {
+      findMany: jest.fn(),
+    },
     contentCalendar: {
       findFirst: jest.fn(),
       update: jest.fn(),
