@@ -497,8 +497,9 @@ export function buildYoutubeCutPackage(
 
 // ── Pattern tag ──────────────────────────────────────────────────────────────
 
-/** YouTube treats an upright video of up to 3 minutes as a Short. */
+/** YouTube treats a square or upright video of up to 3 minutes as a Short. */
 const YOUTUBE_SHORTS_MAX_SEC = 180;
+const SHORTS_ASPECTS: ReadonlySet<SocialCutTarget> = new Set(['9:16', '1:1']);
 const SHORTS_TAG = '#Shorts';
 
 const LENGTH_BANDS_SEC: ReadonlyArray<[number, string]> = [
@@ -529,7 +530,8 @@ export function buildCutPattern(input: {
   platform: string | undefined;
 }): SocialCutPattern {
   const format =
-    input.target === '9:16' && input.durationSec <= YOUTUBE_SHORTS_MAX_SEC
+    SHORTS_ASPECTS.has(input.target) &&
+    input.durationSec <= YOUTUBE_SHORTS_MAX_SEC
       ? 'short'
       : 'long';
   return {

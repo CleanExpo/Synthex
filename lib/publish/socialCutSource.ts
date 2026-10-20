@@ -88,16 +88,25 @@ function readNullableString(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
 
-/** Read a stored pattern; anything malformed or absent reads as unknown. */
+/**
+ * Read a stored pattern. A record whose source is neither 'method-card' nor
+ * 'unknown', or a method-card record with no card id, is malformed and reads
+ * as the bare unknown pattern. A genuine 'unknown' record keeps its
+ * descriptive fields (length band, aspect, platform, format).
+ */
 export function readSocialCutPattern(value: unknown): SocialCutPattern {
   const record = readRecord(value);
-  if (!record || record.source !== 'method-card') {
+  const source = record?.source;
+  if (!record || (source !== 'method-card' && source !== 'unknown')) {
     return { ...UNKNOWN_SOCIAL_CUT_PATTERN };
   }
-  const methodCardId = readNullableString(record.methodCardId);
-  if (!methodCardId) return { ...UNKNOWN_SOCIAL_CUT_PATTERN };
+  const methodCardId =
+    source === 'method-card' ? readNullableString(record.methodCardId) : null;
+  if (source === 'method-card' && !methodCardId) {
+    return { ...UNKNOWN_SOCIAL_CUT_PATTERN };
+  }
   return {
-    source: 'method-card',
+    source,
     methodCardId,
     libraryPatternId: readNullableString(record.libraryPatternId),
     lengthBandSec: readNullableString(record.lengthBandSec),

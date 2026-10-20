@@ -141,13 +141,19 @@ describe('withShortsTag()', () => {
 });
 
 describe('buildCutPattern()', () => {
-  it('is a Short only when upright and 180 s or less', () => {
+  it('is a Short only when upright or square and 180 s or less', () => {
     const base = { methodCardId: 'viral-hero-short', platform: 'youtube' };
     expect(
       buildCutPattern({ ...base, target: '9:16', durationSec: 180 }).format
     ).toBe('short');
     expect(
       buildCutPattern({ ...base, target: '9:16', durationSec: 181 }).format
+    ).toBe('long');
+    expect(
+      buildCutPattern({ ...base, target: '1:1', durationSec: 180 }).format
+    ).toBe('short');
+    expect(
+      buildCutPattern({ ...base, target: '1:1', durationSec: 181 }).format
     ).toBe('long');
     expect(
       buildCutPattern({ ...base, target: '16:9', durationSec: 30 }).format
@@ -210,6 +216,19 @@ describe('deriveSocialCut() stamps metadata.pattern', () => {
     });
   });
 
+  it('titles a square YouTube cut of 180 s or less as a Short', async () => {
+    await deriveSocialCut({
+      ...BASE_INPUT,
+      target: '1:1',
+      platform: 'youtube',
+    });
+    const meta = writtenMetadata();
+    expect(meta.pattern.format).toBe('short');
+    expect(meta.youtube.title).toBe(
+      'We dried a flooded office in 4 hours #Shorts'
+    );
+  });
+
   it('leaves a 16:9 YouTube cut as long-form, with no #Shorts', async () => {
     await deriveSocialCut({
       ...BASE_INPUT,
@@ -234,9 +253,38 @@ describe('readSocialCutPattern()', () => {
       { source: 'method-card' },
       { source: 'method-card', methodCardId: '' },
       { source: 'other', methodCardId: 'viral-hero-short' },
+      // a malformed source never carries its fields through
+      {
+        source: 'other',
+        lengthBandSec: '0-15',
+        aspect: '9:16',
+        format: 'short',
+      },
     ]) {
       expect(readSocialCutPattern(value)).toEqual(UNKNOWN_SOCIAL_CUT_PATTERN);
     }
+  });
+
+  it('keeps the descriptive fields of a genuine unknown pattern', () => {
+    expect(
+      readSocialCutPattern({
+        source: 'unknown',
+        methodCardId: 'ignored-for-unknown',
+        libraryPatternId: null,
+        lengthBandSec: '30-60',
+        aspect: '9:16',
+        platform: 'instagram',
+        format: 'short',
+      })
+    ).toEqual({
+      source: 'unknown',
+      methodCardId: null,
+      libraryPatternId: null,
+      lengthBandSec: '30-60',
+      aspect: '9:16',
+      platform: 'instagram',
+      format: 'short',
+    });
   });
 
   it('drops an invalid format but keeps a valid card', () => {
