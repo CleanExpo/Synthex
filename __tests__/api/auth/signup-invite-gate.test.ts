@@ -42,6 +42,7 @@ const mockUserFindFirst = jest.fn();
 const mockUserCreate = jest.fn();
 const mockInviteFindUnique = jest.fn();
 const mockInviteUpdate = jest.fn();
+const mockInviteUpdateMany = jest.fn();
 const mockTeamInviteFindFirst = jest.fn();
 const mockAuditCreate = jest.fn();
 
@@ -54,11 +55,13 @@ jest.mock('@/lib/prisma', () => {
     inviteCode: {
       findUnique: (...a: unknown[]) => mockInviteFindUnique(...a),
       update: (...a: unknown[]) => mockInviteUpdate(...a),
+      updateMany: (...a: unknown[]) => mockInviteUpdateMany(...a),
     },
     teamInvitation: {
       findFirst: (...a: unknown[]) => mockTeamInviteFindFirst(...a),
     },
     auditLog: { create: (...a: unknown[]) => mockAuditCreate(...a) },
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) => fn(instance),
   };
   return { __esModule: true, prisma: instance, default: instance };
 });
@@ -90,6 +93,7 @@ beforeEach(() => {
   }));
   mockInviteFindUnique.mockReset().mockResolvedValue(null);
   mockInviteUpdate.mockReset().mockResolvedValue({});
+  mockInviteUpdateMany.mockReset().mockResolvedValue({ count: 1 });
   mockTeamInviteFindFirst.mockReset().mockResolvedValue(null);
   mockAuditCreate.mockReset().mockResolvedValue({});
 });
@@ -141,6 +145,67 @@ describe('POST /api/auth/signup — invite-only mode on', () => {
     expect(mockInviteUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: 'code-1' } })
     );
+  });
+
+  // Both requests read useCount 0 before either writes. The database row is
+  // modelled by `row`: a conditional claim only matches while useCount still
+  // equals the value in its where clause, as Postgres would.
+  it('lets only one of two racing signups consume a single-use code', async () => {
+    const row = { id: 'code-1', useCount: 0 };
+    mockInviteFindUnique.mockResolvedValue({
+      id: 'code-1',
+      code: 'SX-ABCDEF',
+      isActive: true,
+      expiresAt: null,
+      useCount: 0,
+      maxUses: 1,
+      email: null,
+    });
+    mockInviteUpdateMany.mockImplementation(
+      async ({ where }: { where: { id: string; useCount?: number } }) => {
+        if (where.id !== row.id) return { count: 0 };
+        if (where.useCount !== undefined && where.useCount !== row.useCount) {
+          return { count: 0 };
+        }
+        row.useCount += 1;
+        return { count: 1 };
+      }
+    );
+
+    const [a, b] = await Promise.all([
+      signup({
+        ...baseBody,
+        email: 'first@example.com',
+        inviteCode: 'SX-ABCDEF',
+      }),
+      signup({
+        ...baseBody,
+        email: 'second@example.com',
+        inviteCode: 'SX-ABCDEF',
+      }),
+    ]);
+
+    expect([a.status, b.status].sort()).toEqual([200, 400]);
+    expect(mockUserCreate).toHaveBeenCalledTimes(1);
+    expect(row.useCount).toBe(1);
+  });
+
+  it('does not report success when consuming the code fails', async () => {
+    mockInviteFindUnique.mockResolvedValue({
+      id: 'code-1',
+      code: 'SX-ABCDEF',
+      isActive: true,
+      expiresAt: null,
+      useCount: 0,
+      maxUses: 1,
+      email: null,
+    });
+    mockInviteUpdateMany.mockRejectedValue(new Error('db unavailable'));
+
+    const res = await signup({ ...baseBody, inviteCode: 'SX-ABCDEF' });
+
+    expect(res.status).toBe(500);
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 
   // A TeamInvitation carries no secret, so knowing an invitee's email must not

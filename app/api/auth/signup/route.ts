@@ -79,7 +79,11 @@ export async function POST(request: NextRequest) {
       // email would let anyone claim the account with their own password.
       // With the gate off, codes are optional. A supplied code must always be
       // valid (exists, active, not expired, not maxed out, email match).
-      let validatedInvite: { id: string; code: string } | null = null;
+      let validatedInvite: {
+        id: string;
+        code: string;
+        useCount: number;
+      } | null = null;
 
       if (isInviteOnlyMode() && !inviteCode) {
         return NextResponse.json(
@@ -135,7 +139,11 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        validatedInvite = { id: invite.id, code: invite.code };
+        validatedInvite = {
+          id: invite.id,
+          code: invite.code,
+          useCount: invite.useCount,
+        };
       }
 
       const existingByEmail = await prisma.user.findFirst({
@@ -154,36 +162,51 @@ export async function POST(request: NextRequest) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       try {
-        const createdUser = await prisma.user.create({
-          data: {
-            email,
-            password: hashedPassword,
-            name: name || email.split('@')[0],
-            authProvider: 'email',
-            conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
-            emailVerified: true,
-            ...(timezone && { timezone }),
-          },
+        // The invite is consumed in the same transaction as the account. The
+        // claim only matches while useCount is still the value read above, so
+        // two concurrent signups on a single-use code cannot both succeed, and
+        // a failed claim rolls the account back instead of leaving the code
+        // reusable.
+        const createdUser = await prisma.$transaction(async tx => {
+          if (validatedInvite) {
+            const claimed = await tx.inviteCode.updateMany({
+              where: {
+                id: validatedInvite.id,
+                isActive: true,
+                useCount: validatedInvite.useCount,
+              },
+              data: { useCount: { increment: 1 }, usedAt: new Date() },
+            });
+            if (claimed.count !== 1) return null;
+          }
+
+          const user = await tx.user.create({
+            data: {
+              email,
+              password: hashedPassword,
+              name: name || email.split('@')[0],
+              authProvider: 'email',
+              conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
+              emailVerified: true,
+              ...(timezone && { timezone }),
+            },
+          });
+
+          if (validatedInvite) {
+            await tx.inviteCode.update({
+              where: { id: validatedInvite.id },
+              data: { usedBy: user.id },
+            });
+          }
+
+          return user;
         });
 
-        // Mark invite code as used (if invite-only mode)
-        if (validatedInvite) {
-          try {
-            await prisma.inviteCode.update({
-              where: { id: validatedInvite.id },
-              data: {
-                useCount: { increment: 1 },
-                usedBy: createdUser.id,
-                usedAt: new Date(),
-              },
-            });
-          } catch (inviteError) {
-            logger.error(
-              '[SIGNUP] Failed to mark invite code as used:',
-              inviteError
-            );
-            // Non-blocking — user already created, don't fail the signup
-          }
+        if (!createdUser) {
+          return NextResponse.json(
+            { error: 'This invite code has already been used.' },
+            { status: 400 }
+          );
         }
 
         await prisma.auditLog.create({
