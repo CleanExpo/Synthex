@@ -704,6 +704,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
                 mentions: [],
                 status: 'published',
                 publishedAt: new Date(),
+                // Lineage (seam audit 06 §B5): metrics ingested against this
+                // row trace back to the Post and, for Studio posts, the draft.
+                metadata: {
+                  postId: post.id,
+                  studioDraftId:
+                    typeof metadata.studioDraftId === 'string'
+                      ? metadata.studioDraftId
+                      : null,
+                  cutAssetId:
+                    typeof metadata.cutAssetId === 'string'
+                      ? metadata.cutAssetId
+                      : null,
+                },
               },
             });
           } catch (platformPostError) {

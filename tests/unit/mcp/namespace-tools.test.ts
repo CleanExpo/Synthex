@@ -19,6 +19,8 @@ const mockBosFindUnique = jest.fn();
 const mockProfileFindUnique = jest.fn();
 const mockOutcomeFindMany = jest.fn();
 const mockLedgerFindMany = jest.fn();
+const mockDraftFindMany = jest.fn();
+const mockQueueFindMany = jest.fn();
 const mockOrgFindUnique = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
@@ -48,6 +50,12 @@ jest.mock('@/lib/prisma', () => ({
     },
     pipelineCostLedger: {
       findMany: (...a: unknown[]) => mockLedgerFindMany(...a),
+    },
+    studioContentDraft: {
+      findMany: (...a: unknown[]) => mockDraftFindMany(...a),
+    },
+    publishQueueItem: {
+      findMany: (...a: unknown[]) => mockQueueFindMany(...a),
     },
   },
 }));
@@ -111,6 +119,8 @@ const ctx = {
 
 beforeEach(() => {
   mockClaimFindMany.mockResolvedValue([]);
+  mockDraftFindMany.mockResolvedValue([]);
+  mockQueueFindMany.mockResolvedValue([]);
   mockClaimFindFirst.mockResolvedValue(null);
   mockScoreFindMany.mockResolvedValue([]);
   mockBrandDnaFindUnique.mockResolvedValue(null);
@@ -692,6 +702,6 @@ describe('defence-in-depth scope enforcement at execution', () => {
   it('non-MCP callers (no scopes field) are unaffected — legacy REST/copilot parity', async () => {
     await expect(
       executeStudioTool('approvals_list_pending', {}, ctx)
-    ).resolves.toEqual({ claims: [], total: 0 });
+    ).resolves.toEqual({ claims: [], total: 0, drafts: [], queueItems: [] });
   });
 });

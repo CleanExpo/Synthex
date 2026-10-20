@@ -55,8 +55,20 @@ export interface NexusViralBrief {
   topic: string;
   /** Brand voice / angle notes pulled from org data. */
   angle: string;
-  /** Any grounding facts the copy stage must cite. */
+  /** Any grounding facts the copy stage must cite (the org's proof points). */
   facts: string[];
+  /** BrandDNA voice tone + ClientProfile tone keywords; null when not recorded. */
+  brandVoice: string | null;
+  /** ClientProfile vocabularyBank.banned + antiPatterns — never use these. */
+  bannedVocabulary: string[];
+  /** ClientProfile offers + BrandDNA offerings. */
+  offers: string[];
+  /**
+   * Brand fields with no recorded data ('brand voice' | 'banned vocabulary' |
+   * 'offers' | 'proof points'). The copy prompt names them as missing so the
+   * model never invents them.
+   */
+  missing: string[];
 }
 
 export interface NexusViralCopy {
@@ -130,7 +142,8 @@ export interface NexusViralRunReport {
 export interface NexusViralRunDeps {
   loadBrief: (
     organizationId: string,
-    topic: string
+    topic: string,
+    ctx: ToolContext
   ) => Promise<NexusViralBrief>;
   generateCopy: (brief: NexusViralBrief) => Promise<NexusViralCopy>;
   runBriefGrill: (input: RunGateInput) => Promise<RunGateResult>;
@@ -147,21 +160,86 @@ export interface NexusViralRunDeps {
 
 const DEFAULT_METHOD_CARD = 'viral-hero-short';
 
+function toStringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((v): v is string => typeof v === 'string')
+    .map(v => v.trim())
+    .filter(v => v.length > 0);
+}
+
+function readObject(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
 /**
- * Default brief loader. Kept intentionally thin — a production caller supplies a
- * richer org-grounded brief. Reads no external service so the default is safe to
- * type-check; real org data threading is the caller's job.
+ * Default brief loader (seam audit 06 §B4). Grounds the brief in the org's own
+ * brand data through the read-only studio tools context_get_brand +
+ * context_get_client_profile, which scope every query to ctx.organizationId.
+ * A field with no recorded data is listed in `missing`, never filled in.
  */
 async function defaultLoadBrief(
   organizationId: string,
-  topic: string
+  topic: string,
+  ctx: ToolContext
 ): Promise<NexusViralBrief> {
+  const [brandOut, profileOut] = await Promise.all([
+    executeStudioTool('context_get_brand', {}, ctx),
+    executeStudioTool('context_get_client_profile', {}, ctx),
+  ]);
+  const dna = readObject(brandOut.brandDna);
+  const profile = readObject(profileOut.profile);
+
+  const voiceTone = readObject(dna?.brandVoice)?.tone;
+  const voiceParts = [
+    typeof voiceTone === 'string' ? voiceTone.trim() : '',
+    ...toStringList(profile?.toneKeywords),
+  ].filter(v => v.length > 0);
+  const brandVoice = voiceParts.length > 0 ? voiceParts.join('; ') : null;
+
+  const bannedVocabulary = Array.from(
+    new Set([
+      ...toStringList(readObject(profile?.vocabularyBank)?.banned),
+      ...toStringList(profile?.antiPatterns),
+    ])
+  );
+  const offers = Array.from(
+    new Set([...toStringList(profile?.offers), ...toStringList(dna?.offerings)])
+  );
+  const facts = toStringList(profile?.proofPoints);
+
+  const missing: string[] = [];
+  if (!brandVoice) missing.push('brand voice');
+  if (bannedVocabulary.length === 0) missing.push('banned vocabulary');
+  if (offers.length === 0) missing.push('offers');
+  if (facts.length === 0) missing.push('proof points');
+
   return {
     organizationId,
     topic,
     angle: `Hook-first, 9:16 short-form on: ${topic}`,
-    facts: [],
+    facts,
+    brandVoice,
+    bannedVocabulary,
+    offers,
+    missing,
   };
+}
+
+const NOT_RECORDED = 'NOT RECORDED for this organisation (do not invent it)';
+
+/** The brand block of the copy prompt: every field stated, recorded or not. */
+function briefBrandLines(brief: NexusViralBrief): string {
+  const list = (items: string[]) =>
+    items.length > 0 ? items.join('; ') : NOT_RECORDED;
+  return [
+    `Brand voice: ${brief.brandVoice ?? NOT_RECORDED}`,
+    `Banned vocabulary (never use): ${list(brief.bannedVocabulary)}`,
+    `Offers: ${list(brief.offers)}`,
+    `Proof points (the only claims you may make): ${list(brief.facts)}`,
+  ].join('\n');
 }
 
 /**
@@ -185,11 +263,14 @@ async function defaultGenerateCopy(
           'You are a senior short-form copywriter. Return a scroll-stopping ' +
           'hook (max 12 words, a concrete claim — never generic scene-setting) ' +
           'and a matching 9:16 generative-video prompt. Australian English. ' +
+          'Write in the brand voice given, never use a banned word, and cite ' +
+          'only the proof points given. Where a brand field is NOT RECORDED, ' +
+          'do not invent it. ' +
           'Respond as: HOOK: <line>\\nPROMPT: <line>',
       },
       {
         role: 'user',
-        content: `Topic: ${brief.topic}\nAngle: ${brief.angle}\nFacts: ${brief.facts.join('; ')}`,
+        content: `Topic: ${brief.topic}\nAngle: ${brief.angle}\n${briefBrandLines(brief)}`,
       },
     ],
   });
@@ -299,7 +380,7 @@ export async function runNexusViral(
   };
 
   // --- Stage 1: brief -----------------------------------------------------
-  const brief = await deps.loadBrief(organizationId, topic);
+  const brief = await deps.loadBrief(organizationId, topic, ctx);
   report.stages.push({ stage: 'brief', status: 'ok', detail: { topic } });
   deps.log(`brief: ${topic}`);
 

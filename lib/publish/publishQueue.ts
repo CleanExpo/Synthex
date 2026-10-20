@@ -647,6 +647,47 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
         markSlotPublished(item.calendarId, item.slotId),
       ]);
 
+      // PlatformPost for analytics-sync, with lineage (seam audit 06 §B5) so a
+      // metric traces back to the queue row and, for a social cut, the cut
+      // asset. Non-fatal: the platform already confirmed the publish, and a
+      // duplicate (connectionId, platformId) must not turn that into a failure.
+      if (publishResult.platformPostId) {
+        const videoOrImageUrl = publishMedia.video?.url ?? publishMedia.url;
+        try {
+          await prisma.platformPost.create({
+            data: {
+              connectionId: connection.id,
+              platformId: publishResult.platformPostId,
+              content: caption,
+              mediaUrls: videoOrImageUrl ? [videoOrImageUrl] : [],
+              hashtags: [],
+              mentions: [],
+              status: 'published',
+              publishedAt: new Date(),
+              metadata: {
+                postId: null,
+                studioDraftId: null,
+                // Literal prefix (not SOCIAL_CUT_SLOT_PREFIX) so a partial
+                // jest.mock of socialCutSource cannot turn it into undefined.
+                cutAssetId: isSocialCutSlot(item.slotId)
+                  ? item.slotId.slice('social-cut:'.length)
+                  : null,
+                publishQueueItemId: item.id,
+              },
+            },
+          });
+        } catch (platformPostError) {
+          logger.error('publishQueue: PlatformPost record not written', {
+            itemId: item.id,
+            platformPostId: publishResult.platformPostId,
+            error:
+              platformPostError instanceof Error
+                ? platformPostError.message
+                : String(platformPostError),
+          });
+        }
+      }
+
       logger.info('publishQueue: published', {
         itemId: item.id,
         platform: item.platform,
