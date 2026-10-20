@@ -42,16 +42,81 @@ export function isSocialCutSlot(slotId: string): boolean {
  * otherwise read off a CalendarSlot (caption + rendered video + optional YouTube
  * search package).
  */
+/**
+ * The pattern a social cut was made with, stamped by `deriveSocialCut` onto the
+ * cut's `metadata.pattern` and copied onto `PlatformPost.metadata.pattern` at
+ * publish, so a post's metrics can be read against the pattern that made it.
+ * `source: 'unknown'` marks a post with no recorded pattern (calendar and Studio
+ * posts today); it is excluded from pattern comparisons, never refused.
+ */
+// A type alias, not an interface, so it is assignable to Prisma JSON input.
+export type SocialCutPattern = {
+  source: 'method-card' | 'unknown';
+  methodCardId: string | null;
+  /** Filled once the pattern library selects cuts (Build Spec R2). */
+  libraryPatternId: string | null;
+  lengthBandSec: string | null;
+  aspect: string | null;
+  platform: string | null;
+  format: 'short' | 'long' | null;
+};
+
+export const UNKNOWN_SOCIAL_CUT_PATTERN: SocialCutPattern = {
+  source: 'unknown',
+  methodCardId: null,
+  libraryPatternId: null,
+  lengthBandSec: null,
+  aspect: null,
+  platform: null,
+  format: null,
+};
+
 export interface SocialCutPublishSource {
   caption: string;
   video: { url: string; thumbnail?: string };
   youtube?: { title?: string; description?: string; tags?: string[] };
+  pattern: SocialCutPattern;
 }
 
 function readRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
+}
+
+function readNullableString(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
+
+/**
+ * Read a stored pattern. A record whose source is neither 'method-card' nor
+ * 'unknown', or a method-card record with no card id, is malformed and reads
+ * as the bare unknown pattern. A genuine 'unknown' record keeps its
+ * descriptive fields (length band, aspect, platform, format).
+ */
+export function readSocialCutPattern(value: unknown): SocialCutPattern {
+  const record = readRecord(value);
+  const source = record?.source;
+  if (!record || (source !== 'method-card' && source !== 'unknown')) {
+    return { ...UNKNOWN_SOCIAL_CUT_PATTERN };
+  }
+  const methodCardId =
+    source === 'method-card' ? readNullableString(record.methodCardId) : null;
+  if (source === 'method-card' && !methodCardId) {
+    return { ...UNKNOWN_SOCIAL_CUT_PATTERN };
+  }
+  return {
+    source,
+    methodCardId,
+    libraryPatternId: readNullableString(record.libraryPatternId),
+    lengthBandSec: readNullableString(record.lengthBandSec),
+    aspect: readNullableString(record.aspect),
+    platform: readNullableString(record.platform),
+    format:
+      record.format === 'short' || record.format === 'long'
+        ? record.format
+        : null,
+  };
 }
 
 function readYoutube(
@@ -120,5 +185,6 @@ export async function resolveSocialCutSource(
         : {}),
     },
     ...(youtube ? { youtube } : {}),
+    pattern: readSocialCutPattern(metadata.pattern),
   };
 }

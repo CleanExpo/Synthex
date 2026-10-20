@@ -93,6 +93,7 @@ jest.mock('@/components/marketing/PostAttributionFooter', () => ({
 import { GET } from '@/app/api/cron/publish-scheduled/route';
 import { resolveOrgAutoPublishGate } from '@/lib/publish/safetyChecks';
 import { buildAttribution } from '@/components/marketing/PostAttributionFooter';
+import { UNKNOWN_SOCIAL_CUT_PATTERN } from '@/lib/publish/socialCutSource';
 
 const LINK =
   'https://carsi.au/courses?utm_source=synthex&utm_medium=linkedin&utm_campaign=studio-carsi&utm_content=d1';
@@ -187,6 +188,7 @@ describe('Post cron → PlatformPost carries its Post and Studio draft ids', () 
           postId: 'p1',
           studioDraftId: 'draft-42',
           cutAssetId: null,
+          pattern: UNKNOWN_SOCIAL_CUT_PATTERN,
         },
       }),
     });
@@ -209,7 +211,43 @@ describe('Post cron → PlatformPost carries its Post and Studio draft ids', () 
 
     expect(mockPrisma.platformPost.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
-        metadata: { postId: 'p1', studioDraftId: null, cutAssetId: null },
+        metadata: {
+          postId: 'p1',
+          studioDraftId: null,
+          cutAssetId: null,
+          pattern: UNKNOWN_SOCIAL_CUT_PATTERN,
+        },
+      }),
+    });
+  });
+
+  it('copies a recorded pattern from the Post onto the PlatformPost', async () => {
+    const createPost = jest.fn().mockResolvedValue({
+      success: true,
+      postId: 'urn:li:share:79',
+    });
+    mockCreatePlatformService.mockReturnValue({ createPost });
+    (resolveOrgAutoPublishGate as jest.Mock).mockResolvedValue({
+      allowed: true,
+      calendarMode: 'live',
+      autoPublishPaused: false,
+    });
+    const pattern = {
+      source: 'method-card',
+      methodCardId: 'retention-3beat',
+      libraryPatternId: null,
+      lengthBandSec: '15-30',
+      aspect: '9:16',
+      platform: 'linkedin',
+      format: 'short',
+    };
+    mockPrisma.post.findMany.mockResolvedValue([duePost({ pattern })]);
+
+    await GET(cronRequest());
+
+    expect(mockPrisma.platformPost.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        metadata: expect.objectContaining({ pattern }),
       }),
     });
   });

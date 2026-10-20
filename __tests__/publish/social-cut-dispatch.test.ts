@@ -103,7 +103,10 @@ jest.mock('@/lib/security/field-encryption', () => ({
 
 import { runSafetyChecks } from '@/lib/publish/safetyChecks';
 import { processPublishQueue } from '@/lib/publish/publishQueue';
-import { resolveSocialCutSource } from '@/lib/publish/socialCutSource';
+import {
+  resolveSocialCutSource,
+  UNKNOWN_SOCIAL_CUT_PATTERN,
+} from '@/lib/publish/socialCutSource';
 import { buildApprovedCampaignAuthorityManifest } from '@/tests/helpers/campaign-authority-manifest';
 
 // ── Test data ─────────────────────────────────────────────────────────────────
@@ -192,6 +195,8 @@ describe('resolveSocialCutSource', () => {
     expect(source).toEqual({
       caption: CUT_CAPTION,
       video: { url: CUT_URL, thumbnail: 'https://cdn.example/thumb.jpg' },
+      // This asset recorded no pattern, so it reads as unknown.
+      pattern: UNKNOWN_SOCIAL_CUT_PATTERN,
     });
   });
 

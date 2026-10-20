@@ -48,7 +48,12 @@ import {
   reclaimStalePublishingQueueItems,
   PUBLISHING_STATUS,
 } from './postPublishClaim';
-import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
+import {
+  isSocialCutSlot,
+  resolveSocialCutSource,
+  UNKNOWN_SOCIAL_CUT_PATTERN,
+  type SocialCutPattern,
+} from './socialCutSource';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -431,6 +436,8 @@ async function prepareClaimedItem(
     youtube?: { title?: string; description?: string; tags?: string[] };
     articleUrl?: string;
   } = {};
+  // Calendar slots carry no pattern; only a social cut records one.
+  let pattern: SocialCutPattern = { ...UNKNOWN_SOCIAL_CUT_PATTERN };
 
   if (isSocialCutSlot(item.slotId)) {
     const source = await resolveSocialCutSource(
@@ -451,6 +458,7 @@ async function prepareClaimedItem(
     }
     caption = source.caption;
     publishMedia = { video: source.video, youtube: source.youtube };
+    pattern = source.pattern ?? pattern;
   } else {
     const calendar = await prisma.contentCalendar.findUnique({
       where: { id: item.calendarId },
@@ -490,6 +498,7 @@ async function prepareClaimedItem(
     accessToken: tokenReadiness.accessToken,
     caption,
     publishMedia,
+    pattern,
   };
 }
 
@@ -650,7 +659,8 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
     if (!prepared) continue;
-    const { connection, accessToken, caption, publishMedia } = prepared;
+    const { connection, accessToken, caption, publishMedia, pattern } =
+      prepared;
 
     // ── Dispatch to platform ───────────────────────────────────────────────
     const decryptedRefreshToken = connection.refreshToken
@@ -747,6 +757,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
                   ? item.slotId.slice('social-cut:'.length)
                   : null,
                 publishQueueItemId: item.id,
+                pattern,
               },
             },
           });
