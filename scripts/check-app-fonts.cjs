@@ -38,7 +38,14 @@ for (const font of renderFonts) {
       .readFileSync(path.join(root, font.licensePath), 'utf8')
       .includes('SIL OPEN FONT LICENSE')
   );
-  assert(nextConfig.includes(`'./${font.path}'`), `Not traced: ${font.path}`);
+  const renderTrace = nextConfig.match(
+    /'\/api\/cron\/social-cut-render':\s*\[([^\]]*)\]/
+  );
+  assert(renderTrace, 'No trace include for /api/cron/social-cut-render');
+  assert(
+    renderTrace[1].includes(`'./${font.path}'`),
+    `Not traced for /api/cron/social-cut-render: ${font.path}`
+  );
 }
 for (const font of webFonts) {
   const bytes = fs.readFileSync(path.join(root, font.path));
