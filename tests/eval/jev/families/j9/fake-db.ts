@@ -36,6 +36,7 @@ export interface SpendEvent {
   windowAt: Date;
   mediaType?: string;
   runId?: string;
+  createdAt?: Date;
 }
 
 export interface J9State {
@@ -202,6 +203,29 @@ const tx = {
         },
       ];
     }
+    if (sql.includes('pipeline_cost_ledger')) {
+      // backfillMediaSpendLedger: charged video/audio holds finalised since
+      // `since` with no ledger row for the hold.
+      const [since] = values as [Date];
+      const events = state().events;
+      return events
+        .filter(
+          f =>
+            (f.kind === 'settle' || f.kind === 'sweep') &&
+            (f.createdAt ?? f.windowAt) >= since
+        )
+        .flatMap(f => {
+          const r = events.find(
+            e => e.holdId === f.holdId && e.kind === 'reserve'
+          );
+          if (!r || (r.mediaType !== 'video' && r.mediaType !== 'audio')) {
+            return [];
+          }
+          if (Number(r.deltaUsd) + Number(f.deltaUsd) <= 0) return [];
+          if (state().ledger.some(l => l.runId === f.holdId)) return [];
+          return [{ hold_id: f.holdId, media_type: r.mediaType }];
+        });
+    }
     if (sql.includes('media_spend_events')) {
       const [dayStart, monthStart, , organizationId] = values as [
         Date,
@@ -238,13 +262,19 @@ const tx = {
       if (state().events.some(e => e.eventKey === data.eventKey)) {
         throw duplicate();
       }
-      state().events.push({ ...data });
+      state().events.push({ ...data, createdAt: new Date() });
       return data;
     },
     async findUnique({ where }: { where: { eventKey: string } }) {
       maybeFail('mediaSpendEvent.findUnique');
       const e = state().events.find(x => x.eventKey === where.eventKey);
-      return e ? { windowAt: e.windowAt } : null;
+      return e
+        ? {
+            ...e,
+            mediaType: e.mediaType ?? null,
+            createdAt: e.createdAt ?? e.windowAt,
+          }
+        : null;
     },
   },
 };
@@ -297,9 +327,30 @@ export const fakePrisma = {
         },
       };
     },
-    async create({ data }: { data: Omit<LedgerRow, 'createdAt'> }) {
+    async findFirst({
+      where,
+    }: {
+      where: { runId: string; pipelineName?: string };
+    }) {
+      maybeFail('pipelineCostLedger.findFirst');
+      const row = state().ledger.find(
+        r =>
+          r.runId === where.runId &&
+          (where.pipelineName === undefined ||
+            r.pipelineName === where.pipelineName)
+      );
+      return row ? { id: `ledger-${row.runId}` } : null;
+    },
+    async create({
+      data,
+    }: {
+      data: Omit<LedgerRow, 'createdAt'> & { createdAt?: Date };
+    }) {
       maybeFail('pipelineCostLedger.create');
-      const row = { ...data, createdAt: new Date() } as LedgerRow;
+      const row = {
+        ...data,
+        createdAt: data.createdAt ?? new Date(),
+      } as LedgerRow;
       state().ledger.push(row);
       return { id: `ledger-${state().ledger.length}`, ...row };
     },
@@ -429,13 +480,36 @@ export function loggerModule() {
 
 export function redisModule() {
   const r = () => state().redis;
+  // String values (idempotency sentinels); counters stay in state().redis.
+  const strings = new Map<string, string>();
   const client = {
     async get(key: string) {
+      if (strings.has(key)) return strings.get(key) as string;
       return r().has(key) ? String(r().get(key)) : null;
+    },
+    async set(key: string, value: string) {
+      strings.set(key, value);
+    },
+    async del(keys: string | string[]) {
+      let n = 0;
+      for (const k of Array.isArray(keys) ? keys : [keys]) {
+        if (strings.delete(k)) n++;
+        if (r().delete(k)) n++;
+      }
+      return n;
+    },
+    async incr(key: string) {
+      r().set(key, (r().get(key) ?? 0) + 1);
+      return r().get(key) as number;
     },
     async incrby(key: string, n: number) {
       r().set(key, (r().get(key) ?? 0) + n);
       return r().get(key) as number;
+    },
+    // One process-wide map stands in for the shared Upstash store.
+    async incrbyShared(key: string, n: number) {
+      r().set(key, (r().get(key) ?? 0) + n);
+      return { total: r().get(key) as number, shared: true };
     },
     async decrby(key: string, n: number) {
       r().set(key, (r().get(key) ?? 0) - n);
@@ -445,7 +519,14 @@ export function redisModule() {
       return 1;
     },
   };
-  return { __esModule: true, getRedisClient: () => client };
+  return {
+    __esModule: true,
+    getRedisClient: () => client,
+    resetRedisClient: async () => {
+      r().clear();
+      strings.clear();
+    },
+  };
 }
 
 export { startOfUtcDay };

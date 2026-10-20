@@ -75,10 +75,10 @@ agentic-capability status at /docs/agent-capabilities.
 
 ## Machine contract
 
-Generated from the route source of 774 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
+Generated from the route source of 775 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
 
 - OpenAPI document, `docs/api/openapi.generated.json`: the generated OpenAPI contract for the routes under /api/.
-- Error codes, `docs/api/error-codes.md`: 11 structured error codes, with HTTP status and meaning.
+- Error codes, `docs/api/error-codes.md`: 12 structured error codes, with HTTP status and meaning.
 - Rate limits, `docs/api/rate-limits.md`: 40 limiters, their limits and windows, and the routes that use them.
 
 ## Error codes
@@ -94,6 +94,7 @@ Generated from the route source of 774 route files under app/api. These files li
 - PROJECT_REQUIRED: HTTP 400
 - SEARCH_CONSOLE_NOT_CONFIGURED: HTTP 200
 - SERVICE_NOT_CONFIGURED: HTTP 501
+- UNPRICEABLE_REQUEST: HTTP 422
 
 ## Rate limits
 

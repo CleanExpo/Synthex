@@ -1,9 +1,10 @@
 /**
  * BUDGET-ENFORCER — unit contract for lib/ai/budget-enforcer.ts.
  *
- * Prisma is mocked (policy row + ledger sums); Redis runs on the REAL
- * redis-client memory fallback so the atomic INCRBY reservation counters are
- * genuinely exercised (reset between tests).
+ * Prisma is mocked (policy row + ledger sums); Redis is the J9 process-wide
+ * fake, standing in for the shared Upstash store, so the atomic INCRBY
+ * reservation counters are genuinely exercised (reset between tests). The
+ * outage behaviour is pinned in budget-enforcer-redis-outage.test.ts.
  *
  * Pins the deploy-safety contract:
  *   - no policy row + no env defaults  → no-op (null reservation, no throw)
@@ -19,6 +20,12 @@
 const mockPolicyFindUnique = jest.fn();
 const mockLedgerAggregate = jest.fn();
 
+// An enforcing policy admits spend only when the in-flight counters are
+// SHARED across instances (lib/ai/budget-enforcer.ts); the real wrapper's
+// memory mode is per-instance, so this process-wide fake stands in for Upstash.
+jest.mock('@/lib/redis-client', () =>
+  jest.requireActual('../../eval/jev/families/j9/fake-db').redisModule()
+);
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
@@ -54,6 +61,7 @@ import {
   estimateCalendarGenerationCostUsd,
   getOrgSpendSnapshot,
   OrgBudgetExceededError,
+  OrgBudgetUnavailableError,
   previewBudget,
   releaseReservation,
   reserveBudget,
@@ -120,23 +128,25 @@ describe('budget-enforcer', () => {
     expect(mockLoggerWarn).not.toHaveBeenCalled();
   });
 
-  it('fails OPEN with a warn when the policy read errors (e.g. missing table P2021)', async () => {
+  it('fails CLOSED with a warn when the policy read errors (e.g. missing table P2021)', async () => {
     mockPolicyFindUnique.mockRejectedValue(
       new Error('The table `public.org_budget_policies` does not exist')
     );
-    const reservation = await reserveBudget(CTX, 1.0);
-    expect(reservation).toBeNull();
+    await expect(reserveBudget(CTX, 1.0)).rejects.toThrow(
+      OrgBudgetUnavailableError
+    );
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       expect.stringContaining('policy read failed'),
       expect.objectContaining({ organizationId: ORG })
     );
   });
 
-  it('fails OPEN (skip) when the ledger window read errors', async () => {
+  it('fails CLOSED when the ledger window read errors', async () => {
     mockPolicyFindUnique.mockResolvedValue(policyRow());
     mockLedgerAggregate.mockRejectedValue(new Error('connection refused'));
-    const reservation = await reserveBudget(CTX, 1.0);
-    expect(reservation).toBeNull();
+    await expect(reserveBudget(CTX, 1.0)).rejects.toThrow(
+      OrgBudgetUnavailableError
+    );
     expect(mockLoggerWarn).toHaveBeenCalledWith(
       expect.stringContaining('ledger window read failed'),
       expect.anything()

@@ -13,6 +13,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import {
   getReviews,
   getInsights,
@@ -23,6 +24,16 @@ import { markReviewReceived } from '@/lib/reviews/review-request-service';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
 import { getAIProvider } from '@/lib/ai/providers';
+import {
+  governedCall,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+} from '@/lib/ai/governor';
+import {
+  estimateTokens,
+  governorProviderFor,
+  unwrapGoverned,
+} from '@/lib/ai/route-governance';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { captureServerException } from '@/lib/observability/sentry-server';
@@ -44,6 +55,7 @@ async function generatePendingSuggestions(): Promise<void> {
   if (pending.length === 0) return;
 
   const ai = getAIProvider();
+  const provider = governorProviderFor(ai.name);
 
   // Fetch brand DNA for the unique orgs in this batch
   const orgIds = [...new Set(pending.map(r => r.organizationId))];
@@ -70,16 +82,59 @@ async function generatePendingSuggestions(): Promise<void> {
         review.organization.industry,
         brandVoice
       );
-      const result = await ai.complete({
-        model: ai.models.fast,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 350,
-      });
+      const callProvider = async (
+        client: typeof ai,
+        model: string
+      ): Promise<ProviderCallResult<string>> => {
+        const result = await client.complete({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 350,
+        });
+        return {
+          data: (result.choices[0]?.message.content ?? '').trim(),
+          inputTokens: result.usage?.prompt_tokens ?? estimateTokens(prompt),
+          outputTokens: result.usage?.completion_tokens ?? 0,
+          modelId: model,
+        };
+      };
+      let suggestion: string;
+      if (!provider) {
+        // Ollama: local, unkeyed, zero-cost, outside the Governor by design.
+        suggestion = (await callProvider(ai, ai.models.fast)).data;
+      } else {
+        // One governed call per organisation-scoped provider call.
+        let providerError: { error: unknown } | null = null;
+        const governed = await governedCall<string>({
+          organizationId: review.organizationId,
+          brandSlug: await resolveOrgBrandSlug(review.organizationId),
+          runner: 'gbp-monitor',
+          provider,
+          model: { kind: 'registered', modelId: ai.models.fast },
+          pipelineName: 'gbp-monitor-auto-suggest',
+          estimate: { inputTokens: estimateTokens(prompt), outputTokens: 350 },
+          mode: GOVERNOR_MODE,
+          execute: async ctx => {
+            try {
+              return await callProvider(
+                ctx.apiKey
+                  ? getAIProvider({ apiKey: ctx.apiKey, provider })
+                  : ai,
+                ctx.model?.id ?? ai.models.fast
+              );
+            } catch (error) {
+              providerError = { error };
+              throw error;
+            }
+          },
+        });
+        suggestion = unwrapGoverned(governed, providerError);
+      }
       await prisma.gBPReview.update({
         where: { id: review.id },
         data: {
-          aiSuggestion: (result.choices[0]?.message.content ?? '').trim(),
+          aiSuggestion: suggestion,
           aiSuggestionAt: new Date(),
         },
       });

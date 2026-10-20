@@ -8,6 +8,33 @@ import { createMockHeyGenAvatarVideo } from './mock';
 
 const DEFAULT_BASE_URL = 'https://api.heygen.com';
 
+/**
+ * HeyGen API price for `/v2/video/generate` (Avatar III engine), USD per minute
+ * of output, "charged by actual seconds generated" — the ONE table the spend
+ * gate prices from.
+ *
+ * Source: https://help.heygen.com/en/articles/10060327-heygen-api-pricing-explained
+ * (read 2026-10-19), Avatar III self-serve: Digital Twin $0.60, Studio Avatar
+ * $0.99, Photo Avatar $0.99 per minute. The avatar type is not known from the
+ * avatar id before the call, so the hold and the charge use the dearest of the
+ * three. Avatar IV / V are separate endpoints this client does not call.
+ */
+export const HEYGEN_AVATAR_III_USD_PER_MINUTE = 0.99;
+
+/** Bytes per second of the audio the pipeline generates (mp3_44100_128: 128 kbit/s CBR). */
+export const MP3_128K_BYTES_PER_SECOND = 16_000;
+
+/** Seconds of video HeyGen will bill for lip-syncing `audioBytes` of 128 kbit/s MP3. */
+export function mp3DurationSeconds(audioBytes: number): number {
+  // Rounded UP; frame headers make this a slight over-estimate, the safe side.
+  return Math.ceil(audioBytes / MP3_128K_BYTES_PER_SECOND);
+}
+
+/** USD for `seconds` of Avatar III video at the dearest avatar-type rate. */
+export function priceAvatarVideoUsd(seconds: number): number {
+  return (seconds * HEYGEN_AVATAR_III_USD_PER_MINUTE) / 60;
+}
+
 export class HeyGenConfigurationError extends Error {
   constructor(
     message = 'HeyGen API credentials are required for live avatar video generation.'
@@ -28,11 +55,26 @@ export class HeyGenConsentError extends Error {
 
 export class HeyGenApiError extends Error {
   readonly status: number;
-  constructor(status: number, message: string) {
+  /**
+   * Whether HeyGen may have created (and will bill) a job. False only when
+   * HeyGen explicitly refused the request, which proves no job exists; a
+   * spend hold may be returned only then. Defaults to true, the safe side.
+   */
+  readonly dispatched: boolean;
+  constructor(status: number, message: string, dispatched = true) {
     super(`HeyGen API error ${status}: ${message}`);
     this.name = 'HeyGenApiError';
     this.status = status;
+    this.dispatched = dispatched;
   }
+}
+
+/**
+ * A 4xx is HeyGen answering that it will not create the job (bad request,
+ * auth, rate limit). 408 is a timeout, not a refusal, so the job may exist.
+ */
+function isExplicitRefusal(status: number): boolean {
+  return status >= 400 && status < 500 && status !== 408;
 }
 
 /** Map HeyGen's status_v1 / status strings to our normalised union. */
@@ -53,15 +95,23 @@ function mapStatus(raw: string | undefined): HeyGenJobStatus {
 }
 
 export interface HeyGenClient {
-  createAvatarVideo(request: HeyGenAvatarVideoRequest): Promise<HeyGenAvatarVideoJob>;
+  createAvatarVideo(
+    request: HeyGenAvatarVideoRequest
+  ): Promise<HeyGenAvatarVideoJob>;
   getVideoStatus(videoId: string): Promise<HeyGenAvatarVideoJob>;
   waitForCompletion(
     videoId: string,
-    opts?: { timeoutMs?: number; intervalMs?: number; sleep?: (ms: number) => Promise<void> }
+    opts?: {
+      timeoutMs?: number;
+      intervalMs?: number;
+      sleep?: (ms: number) => Promise<void>;
+    }
   ): Promise<HeyGenAvatarVideoJob>;
 }
 
-export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClient {
+export function createHeyGenClient(
+  config: HeyGenClientConfig = {}
+): HeyGenClient {
   const apiKey = config.apiKey ?? process.env.HEYGEN_API_KEY;
   const baseUrl = (config.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, '');
   const doFetch = config.fetchImpl ?? fetch;
@@ -86,8 +136,12 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
     // Prefer a pre-generated audio track (ElevenLabs CEO voice) for lip-sync.
     // This bypasses HeyGen TTS (requires voice_id) and uses our brand voice clone.
     const voice = request.audioUrl
-      ? { type: 'audio', audio_url: request.audioUrl } as const
-      : { type: 'text', input_text: request.script, voice_id: request.voiceId || '077ab89b14f04ce89334d586402d05fb' } as const;
+      ? ({ type: 'audio', audio_url: request.audioUrl } as const)
+      : ({
+          type: 'text',
+          input_text: request.script,
+          voice_id: request.voiceId || '077ab89b14f04ce89334d586402d05fb',
+        } as const);
 
     const body = {
       video_inputs: [
@@ -106,33 +160,57 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
       areLikenessTermsAccepted: true,
     };
 
-    const res = await doFetch(`${baseUrl}/v2/video/generate`, {
-      method: 'POST',
-      headers: {
-        'X-Api-Key': apiKey,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      throw new HeyGenApiError(res.status, await safeText(res));
+    // From here the request may reach HeyGen. Every failure is typed with
+    // whether a job can exist: only an explicit refusal proves none does.
+    let res: Response;
+    try {
+      res = await doFetch(`${baseUrl}/v2/video/generate`, {
+        method: 'POST',
+        headers: {
+          'X-Api-Key': apiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      // The response was lost; the POST may still have been accepted.
+      throw new HeyGenApiError(
+        0,
+        `request failed: ${error instanceof Error ? error.message : String(error)}`,
+        true
+      );
     }
 
-    const json = (await res.json()) as {
-      data?: { video_id?: string };
-      error?: unknown;
-    };
+    if (!res.ok) {
+      throw new HeyGenApiError(
+        res.status,
+        await safeText(res),
+        !isExplicitRefusal(res.status)
+      );
+    }
+
+    let json: { data?: { video_id?: string }; error?: unknown };
+    try {
+      json = (await res.json()) as typeof json;
+    } catch {
+      throw new HeyGenApiError(res.status, 'response body is not JSON', true);
+    }
     const videoId = json?.data?.video_id;
     if (!videoId) {
-      throw new HeyGenApiError(res.status, 'response missing data.video_id');
+      throw new HeyGenApiError(
+        res.status,
+        'response missing data.video_id',
+        true
+      );
     }
 
     return { id: videoId, provider: 'heygen', status: 'queued' };
   }
 
-  async function getVideoStatus(videoId: string): Promise<HeyGenAvatarVideoJob> {
+  async function getVideoStatus(
+    videoId: string
+  ): Promise<HeyGenAvatarVideoJob> {
     const url = `${baseUrl}/v1/video_status.get?video_id=${encodeURIComponent(videoId)}`;
     const res = await doFetch(url, {
       method: 'GET',
@@ -144,7 +222,11 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
     }
 
     const json = (await res.json()) as {
-      data?: { status?: string; video_url?: string; error?: { message?: string } };
+      data?: {
+        status?: string;
+        video_url?: string;
+        error?: { message?: string };
+      };
     };
     const status = mapStatus(json?.data?.status);
     return {
@@ -158,11 +240,16 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
 
   async function waitForCompletion(
     videoId: string,
-    opts: { timeoutMs?: number; intervalMs?: number; sleep?: (ms: number) => Promise<void> } = {}
+    opts: {
+      timeoutMs?: number;
+      intervalMs?: number;
+      sleep?: (ms: number) => Promise<void>;
+    } = {}
   ): Promise<HeyGenAvatarVideoJob> {
     const timeoutMs = opts.timeoutMs ?? 180_000;
     const intervalMs = opts.intervalMs ?? 5_000;
-    const sleep = opts.sleep ?? ((ms: number) => new Promise<void>(r => setTimeout(r, ms)));
+    const sleep =
+      opts.sleep ?? ((ms: number) => new Promise<void>(r => setTimeout(r, ms)));
     const deadline = timeoutMs / Math.max(intervalMs, 1);
 
     for (let i = 0; i <= deadline; i++) {
@@ -170,7 +257,10 @@ export function createHeyGenClient(config: HeyGenClientConfig = {}): HeyGenClien
       if (job.status === 'completed' || job.status === 'failed') return job;
       await sleep(intervalMs);
     }
-    throw new HeyGenApiError(408, `video ${videoId} did not complete within ${timeoutMs}ms`);
+    throw new HeyGenApiError(
+      408,
+      `video ${videoId} did not complete within ${timeoutMs}ms`
+    );
   }
 
   return { createAvatarVideo, getVideoStatus, waitForCompletion };

@@ -29,6 +29,13 @@
  * for anyone following CLAUDE.md: that function lives in lib/multi-business/,
  * not lib/auth/, despite the auth docs pointing at lib/auth/.)
  *
+ * SHADOW MODE (P5). With `mode: 'shadow'` every gate above is evaluated in the
+ * same order; the first one that WOULD refuse is logged ('would refuse') and
+ * recorded on the provenance as `shadowRefusal`, and the call then runs
+ * anyway with whatever the Governor had resolved so far (model and key may be
+ * null; the caller keeps its own). Still exactly one receipt per call. Absent
+ * `mode` means 'enforcing', whose behaviour is unchanged.
+ *
  * NO HARDCODED MODEL STRINGS. Nothing on this path names a model. The registry
  * is the only source, and scripts/audit-governor-model-strings.mjs fails CI if
  * that stops being true.
@@ -36,11 +43,13 @@
 
 import { randomUUID } from 'crypto';
 import { logger } from '@/lib/logger';
+import { getModel, type ModelConfig } from '@/lib/ai/model-registry';
 import { resolveRunnerFlag } from './flags';
 import { resolveBrandApiKey } from './byok';
 import { checkBudget } from './budget';
 import { estimateCostUsd, resolveModel } from './model';
 import { writeReceipt } from './receipts';
+import { GOVERNOR_MODE } from './mode';
 import {
   BRAND_WIDE_RUNNER,
   type GovernedCallInput,
@@ -48,6 +57,7 @@ import {
   type GovernorOutcome,
   type GovernorProvenance,
   type GovernorRefusal,
+  type ProviderCallResult,
 } from './types';
 
 export * from './types';
@@ -56,6 +66,7 @@ export { resolveBrandApiKey } from './byok';
 export { checkBudget, readProviderCeiling, startOfUtcDay } from './budget';
 export { estimateCostUsd, resolveModel } from './model';
 export { writeReceipt } from './receipts';
+export { GOVERNOR_MODE } from './mode';
 
 /**
  * Model id recorded on a receipt when resolution itself failed. Not a model
@@ -86,6 +97,7 @@ export async function governedCall<T>(
     pipelineName,
     estimate,
   } = input;
+  const mode = input.mode ?? 'enforcing';
   const runId = input.runId ?? randomUUID();
   const decidedAt = new Date().toISOString();
 
@@ -132,9 +144,119 @@ export async function governedCall<T>(
     return { ok: false, outcome, reason, receipt };
   };
 
+  // What the gates have resolved so far; handed to execute in shadow mode.
+  let model: ModelConfig | null = null;
+  let apiKey: string | null = null;
+
+  /**
+   * A gate would refuse. Enforcing: refuse. Shadow: log it, record it on the
+   * provenance, and run the call anyway — still one receipt.
+   */
+  const deny = async (
+    outcome: GovernorRefusal,
+    reason: string,
+    provenance: GovernorProvenance
+  ): Promise<GovernedCallResult<T>> => {
+    if (mode !== 'shadow') {
+      return refuse(outcome, reason, provenance, model?.id ?? UNRESOLVED_MODEL);
+    }
+    logger.warn('Governor would refuse an AI call (shadow mode, not blocked)', {
+      organizationId,
+      brandSlug,
+      runner,
+      provider,
+      outcome,
+      reason,
+      runId,
+    });
+    const { errorClass: _refusalClass, ...rest } = provenance;
+    return run({ ...rest, shadowRefusal: { outcome, reason } });
+  };
+
+  // --- 5 + 6. The provider call and its receipt ----------------------------
+  const run = async (
+    provenance: GovernorProvenance
+  ): Promise<GovernedCallResult<T>> => {
+    let result: ProviderCallResult<T>;
+    try {
+      result = await input.execute({
+        mode,
+        model,
+        provider,
+        apiKey,
+        organizationId,
+        brandSlug,
+        runner,
+        runId,
+      });
+    } catch (error) {
+      const errorClass =
+        error instanceof Error ? error.constructor.name : 'UnknownError';
+      return refuse(
+        'failed_provider_error',
+        error instanceof Error ? error.message : 'Unknown provider error',
+        { ...provenance, errorClass },
+        model?.id ?? UNRESOLVED_MODEL
+      );
+    }
+
+    // The counts come back from the provider call, so they are untrusted too.
+    // A NaN here would write a NaN cost into the ledger, which then poisons
+    // every budget SUM that reads it — a receipt that corrupts the ledger is
+    // worse than one that is merely imprecise. Fall back to 0 and say so in
+    // provenance rather than storing a number nobody can add up.
+    const inputTokens = isUsableTokenCount(result.inputTokens)
+      ? result.inputTokens
+      : 0;
+    const outputTokens = isUsableTokenCount(result.outputTokens)
+      ? result.outputTokens
+      : 0;
+    const tokensWereUsable =
+      inputTokens === result.inputTokens &&
+      outputTokens === result.outputTokens;
+
+    // Record and price the model that actually ran. An id the registry does
+    // not list is recorded at cost 0 as 'unpriced_model', never guessed.
+    const usedModelId = result.modelId ?? model?.id ?? UNRESOLVED_MODEL;
+    const priced =
+      result.modelId === undefined ? model : getModel(provider, result.modelId);
+    const errorClass = !priced
+      ? 'unpriced_model'
+      : tokensWereUsable
+        ? undefined
+        : 'provider_returned_unusable_token_counts';
+    // Recorded on its own, so an unpriced model cannot hide the sanitised
+    // counts behind its errorClass.
+    const tokenVerdict = tokensWereUsable
+      ? {}
+      : {
+          tokenCountVerdict: 'provider_returned_unusable_token_counts' as const,
+        };
+
+    const outcome: GovernorOutcome = 'completed';
+    const receipt = await writeReceipt({
+      pipelineName,
+      clientId: organizationId,
+      runId,
+      model: usedModelId,
+      provider,
+      brandSlug,
+      runner,
+      inputTokens,
+      outputTokens,
+      costUsd: priced ? estimateCostUsd(priced, inputTokens, outputTokens) : 0,
+      outcome,
+      provenance: errorClass
+        ? { ...provenance, modelId: usedModelId, errorClass, ...tokenVerdict }
+        : { ...provenance, modelId: usedModelId, ...tokenVerdict },
+    });
+
+    return { ok: true, outcome, data: result.data, receipt };
+  };
+
   // A runner may never impersonate the brand-wide kill-switch row.
   if (runner === BRAND_WIDE_RUNNER) {
-    return refuse(
+    return deny(
       'refused_flag_missing',
       `'${BRAND_WIDE_RUNNER}' is the brand kill-switch row, not a runner`,
       {
@@ -144,65 +266,55 @@ export async function governedCall<T>(
         keyVerdict: 'not_reached',
         budgetVerdict: 'not_reached',
         errorClass: 'reserved_runner_name',
-      },
-      UNRESOLVED_MODEL
+      }
     );
   }
 
   // --- 1. Model, from the registry file -----------------------------------
   const resolution = resolveModel(provider, input.model);
   if (!resolution.ok || !resolution.model) {
-    return refuse(
-      'refused_model_unavailable',
-      resolution.reason,
-      {
-        ...baseProvenance,
-        modelId: UNRESOLVED_MODEL,
-        flagVerdict: 'not_reached',
-        keyVerdict: 'not_reached',
-        budgetVerdict: 'not_reached',
-        errorClass: resolution.reason,
-      },
-      UNRESOLVED_MODEL
-    );
+    return deny('refused_model_unavailable', resolution.reason, {
+      ...baseProvenance,
+      modelId: UNRESOLVED_MODEL,
+      flagVerdict: 'not_reached',
+      keyVerdict: 'not_reached',
+      budgetVerdict: 'not_reached',
+      errorClass: resolution.reason,
+    });
   }
-  const model = resolution.model;
+  const resolved = resolution.model;
+  model = resolved;
 
   // --- 2. Per-brand runner flag + kill-switch ------------------------------
   const flag = await resolveRunnerFlag(organizationId, brandSlug, runner);
   if (!flag.allowed) {
-    return refuse(
+    return deny(
       (flag.outcome ?? 'refused_flag_missing') as GovernorRefusal,
       flag.verdict,
       {
         ...baseProvenance,
-        modelId: model.id,
+        modelId: resolved.id,
         flagVerdict: flag.verdict,
         keyVerdict: 'not_reached',
         budgetVerdict: 'not_reached',
         errorClass: flag.verdict,
-      },
-      model.id
+      }
     );
   }
 
   // --- 3. BYOK, fail-closed ------------------------------------------------
   const key = await resolveBrandApiKey(organizationId, provider);
   if (!key.ok) {
-    return refuse(
-      key.outcome as GovernorRefusal,
-      key.verdict,
-      {
-        ...baseProvenance,
-        modelId: model.id,
-        flagVerdict: flag.verdict,
-        keyVerdict: key.verdict,
-        budgetVerdict: 'not_reached',
-        errorClass: key.verdict,
-      },
-      model.id
-    );
+    return deny(key.outcome as GovernorRefusal, key.verdict, {
+      ...baseProvenance,
+      modelId: resolved.id,
+      flagVerdict: flag.verdict,
+      keyVerdict: key.verdict,
+      budgetVerdict: 'not_reached',
+      errorClass: key.verdict,
+    });
   }
+  apiKey = key.apiKey;
 
   // --- 4. Budget, priced from the registry ---------------------------------
   // Token counts arrive from the caller, so they are untrusted input. NaN or a
@@ -215,115 +327,53 @@ export async function governedCall<T>(
     !isUsableTokenCount(estimate.inputTokens) ||
     !isUsableTokenCount(estimate.outputTokens)
   ) {
-    return refuse(
+    return deny(
       'refused_budget_invalid_estimate',
       `non-finite or negative token estimate: in=${String(
         estimate.inputTokens
       )} out=${String(estimate.outputTokens)}`,
       {
         ...baseProvenance,
-        modelId: model.id,
+        modelId: resolved.id,
         flagVerdict: flag.verdict,
         keyVerdict: key.verdict,
         budgetVerdict: 'budget_invalid_estimate',
         errorClass: 'budget_invalid_estimate',
-      },
-      model.id
+      }
     );
   }
 
   const estimatedCostUsd = estimateCostUsd(
-    model,
+    resolved,
     estimate.inputTokens,
     estimate.outputTokens
   );
   const budget = await checkBudget(organizationId, provider, estimatedCostUsd);
   if (!budget.allowed) {
-    return refuse(
+    return deny(
       (budget.outcome ?? 'refused_budget_exhausted') as GovernorRefusal,
       budget.verdict,
       {
         ...baseProvenance,
-        modelId: model.id,
+        modelId: resolved.id,
         flagVerdict: flag.verdict,
         keyVerdict: key.verdict,
         budgetVerdict: budget.verdict,
         budgetDetail: budget.detail,
         errorClass: budget.verdict,
-      },
-      model.id
+      }
     );
   }
 
-  // --- 5. The provider call ------------------------------------------------
-  const provenance: GovernorProvenance = {
+  // --- 5. The provider call, then 6. its receipt -------------------------
+  return run({
     ...baseProvenance,
-    modelId: model.id,
+    modelId: resolved.id,
     flagVerdict: flag.verdict,
     keyVerdict: key.verdict,
     budgetVerdict: budget.verdict,
     budgetDetail: budget.detail,
-  };
-
-  let result;
-  try {
-    result = await input.execute({
-      model,
-      provider,
-      apiKey: key.apiKey,
-      organizationId,
-      brandSlug,
-      runner,
-      runId,
-    });
-  } catch (error) {
-    const errorClass =
-      error instanceof Error ? error.constructor.name : 'UnknownError';
-    return refuse(
-      'failed_provider_error',
-      error instanceof Error ? error.message : 'Unknown provider error',
-      { ...provenance, errorClass },
-      model.id
-    );
-  }
-
-  // --- 6. Receipt, with the ACTUAL token counts ----------------------------
-  // The counts come back from the provider call, so they are untrusted too. A
-  // NaN here would write a NaN cost into the ledger, which then poisons every
-  // budget SUM that reads it — a receipt that corrupts the ledger is worse than
-  // one that is merely imprecise. Fall back to 0 and say so in provenance
-  // rather than storing a number nobody can add up.
-  const inputTokens = isUsableTokenCount(result.inputTokens)
-    ? result.inputTokens
-    : 0;
-  const outputTokens = isUsableTokenCount(result.outputTokens)
-    ? result.outputTokens
-    : 0;
-  const tokensWereUsable =
-    inputTokens === result.inputTokens && outputTokens === result.outputTokens;
-
-  const outcome: GovernorOutcome = 'completed';
-  const receipt = await writeReceipt({
-    pipelineName,
-    clientId: organizationId,
-    runId,
-    model: model.id,
-    provider,
-    brandSlug,
-    runner,
-    inputTokens,
-    outputTokens,
-    costUsd: estimateCostUsd(model, inputTokens, outputTokens),
-    outcome,
-    provenance: tokensWereUsable
-      ? provenance
-      : {
-          ...provenance,
-          errorClass: 'provider_returned_unusable_token_counts',
-        },
   });
-
-  return { ok: true, outcome, data: result.data, receipt };
 }
 
 /**
@@ -345,4 +395,42 @@ export async function governedCallForUser<T>(
     return { ok: false, outcome: 'no_organisation' };
   }
   return governedCall({ ...input, organizationId });
+}
+
+/** Thrown by governedRouteCall when an enforcing Governor refuses the call. */
+export class GovernorRefusedError extends Error {
+  constructor(
+    readonly outcome: GovernorRefusal,
+    readonly reason: string
+  ) {
+    super(`Governor refused: ${outcome} (${reason})`);
+    this.name = 'GovernorRefusedError';
+  }
+}
+
+/**
+ * For route callers: run the route's existing provider call as `execute`, in
+ * GOVERNOR_MODE, and get its data back. A provider error is rethrown as the
+ * route's own error so existing error handling is unchanged; an enforcing
+ * refusal throws GovernorRefusedError.
+ */
+export async function governedRouteCall<T>(
+  input: Omit<GovernedCallInput<T>, 'mode'>
+): Promise<T> {
+  let providerError: { error: unknown } | null = null;
+  const result = await governedCall({
+    ...input,
+    mode: GOVERNOR_MODE,
+    execute: async ctx => {
+      try {
+        return await input.execute(ctx);
+      } catch (error) {
+        providerError = { error };
+        throw error;
+      }
+    },
+  });
+  if (result.ok) return result.data;
+  if (providerError) throw (providerError as { error: unknown }).error;
+  throw new GovernorRefusedError(result.outcome, result.reason);
 }

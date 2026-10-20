@@ -19,7 +19,26 @@ import {
 import { OpenRouterClient } from '@/lib/ai/openrouter-client';
 import { aiGeneration } from '@/lib/rate-limit';
 import { logger } from '@/lib/logger';
+import { getAIProvider } from '@/lib/ai/providers';
+import { SYSTEM_ORGANIZATION_ID } from '@/lib/ai/generation-context';
+import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+} from '@/lib/ai/governor';
+import {
+  governedData,
+  governorRefusalResponse,
+} from '@/lib/ai/governed-generation';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 import type { ProfileData, SupportedPlatform } from '../route';
+
+/** AI Governor identity for this route's generation (P5 / M10). */
+const GOVERNOR_RUNNER = 'profile-analyser';
+const GOVERNOR_PIPELINE = 'profile-analyser-content';
+/** Prompt is the fixed template plus one profile (~900 tokens); max_tokens 2000. */
+const ESTIMATE = { inputTokens: 1000, outputTokens: 2000 };
 
 // ---------------------------------------------------------------------------
 // Research-backed default scheduling per platform
@@ -281,13 +300,53 @@ async function handlePost(
     const schedulingSlots = buildSchedulingSlots(profile as ProfileData);
     const prompt = buildPrompt(profile as ProfileData, topic);
 
-    const ai = new OpenRouterClient();
-    const aiResponse = await ai.complete({
-      model: ai.models.balanced,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.8,
-      max_tokens: 2000,
+    // One governed call, one receipt. A user with no organisation is
+    // receipted under the system sentinel (an enforcing Governor refuses it).
+    const organizationId =
+      (await getEffectiveOrganizationId(userId).catch(error => {
+        logger.warn('profile-analyser: organisation lookup failed', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return null;
+      })) ?? SYSTEM_ORGANIZATION_ID;
+    let providerError: { error: unknown } | undefined;
+    const governed = await governedCall({
+      organizationId,
+      brandSlug: await resolveOrgBrandSlug(organizationId),
+      runner: GOVERNOR_RUNNER,
+      provider: 'openrouter',
+      model: { kind: 'latest' },
+      pipelineName: GOVERNOR_PIPELINE,
+      estimate: ESTIMATE,
+      mode: GOVERNOR_MODE,
+      execute: async governor => {
+        try {
+          // The brand's own OpenRouter key when the Governor resolved one,
+          // else the platform client exactly as before.
+          const ai = new OpenRouterClient();
+          const client = governor.apiKey
+            ? getAIProvider({ apiKey: governor.apiKey, provider: 'openrouter' })
+            : ai;
+          const model = ai.models.balanced;
+          const response = await client.complete({
+            model,
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.8,
+            max_tokens: 2000,
+          });
+          return {
+            data: response,
+            inputTokens: response.usage?.prompt_tokens ?? 0,
+            outputTokens: response.usage?.completion_tokens ?? 0,
+            modelId: model,
+          };
+        } catch (error) {
+          providerError = { error };
+          throw error;
+        }
+      },
     });
+    const aiResponse = governedData(governed, providerError);
 
     const rawText = aiResponse.choices[0]?.message?.content ?? '';
 
@@ -319,6 +378,10 @@ async function handlePost(
 
     return NextResponse.json({ success: true, result });
   } catch (err) {
+    // Enforcing Governor refusal: an honest refusal with its code.
+    if (err instanceof GovernorRefusedError) {
+      return governorRefusalResponse(err);
+    }
     logger.error('Profile analyser generate-content error', { err });
     return NextResponse.json(
       { error: 'Failed to generate content. Please try again.' },

@@ -27,12 +27,28 @@
  *                   the existing recordGenerationCost, so nothing is
  *                   double-counted for longer than the ledger-write gap).
  *
- * FAIL-OPEN DOCTRINE (deploy safety — prod migrations are founder-gated and
- * lag deploys): missing table (P2021), missing row, or ANY policy/ledger/
- * redis read error ⇒ log-only warn and proceed. Fail-closed
- * (OrgBudgetExceededError → HTTP 402) happens ONLY on a live OrgBudgetPolicy
- * row with enforcementMode='enforce' and a computed breach. With zero policy
- * rows and the env defaults unset, every function here is a no-op.
+ * FAIL-CLOSED ON READ ERRORS (spec M10): a policy or ledger read ERROR
+ * (missing table, connection failure, ...) refuses the spend with
+ * OrgBudgetUnavailableError (routes answer HTTP 503) — an unreadable budget
+ * is never treated as an absent one. The in-flight COUNTERS follow the same
+ * rule under an ENFORCING policy row: they only stop concurrent reservations
+ * from jointly breaching when every instance shares them, and the Redis
+ * wrapper (lib/redis-client.ts) falls back to a per-instance memory cache
+ * when Upstash is down or not configured. reserveBudget therefore increments
+ * through incrbyShared and, when either window's increment did not land in
+ * the shared store, rolls back the one that did and refuses with
+ * OrgBudgetUnavailableError ('budget_counter_unavailable', HTTP 503). An
+ * enforced org therefore needs UPSTASH_REDIS_REST_URL / _TOKEN to spend at
+ * all. Under log_only or env defaults (observability only) the per-instance
+ * count is kept and the request proceeds. previewBudget and the commit /
+ * release DECRBYs still use the silent fallback: the preview is advisory (the
+ * worker's reserveBudget is the gate), and a DECRBY lost during an outage
+ * leaves the shared counter high until its TTL, the safe direction. A
+ * missing policy ROW is not an error:
+ * the org keeps the env defaults, or no enforcement at all. A breach under a
+ * live OrgBudgetPolicy row with enforcementMode='enforce' throws
+ * OrgBudgetExceededError (HTTP 402). With zero policy rows and the env
+ * defaults unset, every function here is a no-op.
  *
  * Env defaults (log-only observability when no policy row exists):
  *   SYNTHEX_DEFAULT_DAILY_COST_CEILING_USD
@@ -79,6 +95,34 @@ export class OrgBudgetExceededError extends Error {
         `policy or retry after the ${window} window resets.`
     );
     this.name = 'OrgBudgetExceededError';
+  }
+}
+
+/**
+ * The budget could not be read (policy or ledger read error, or the shared
+ * in-flight counter could not be written under an enforcing policy), so the
+ * spend is refused rather than proceeding unbudgeted. Routes map this to
+ * HTTP 503 BUDGET_UNAVAILABLE; queue workers fail the job with it.
+ */
+export const BUDGET_UNAVAILABLE = 'BUDGET_UNAVAILABLE';
+
+export class OrgBudgetUnavailableError extends Error {
+  constructor(
+    public readonly organizationId: string,
+    public readonly source: 'policy' | 'ledger' | 'counter',
+    cause?: unknown
+  ) {
+    super(
+      source === 'counter'
+        ? `Organization ${organizationId} AI spend refused ` +
+            `(budget_counter_unavailable): the shared in-flight budget ` +
+            `counter could not be updated, so concurrent spend cannot be ` +
+            `bounded. Retry shortly.`
+        : `Organization ${organizationId} AI spend refused: the budget ${source} ` +
+            `could not be read, so the budget cannot be checked. Retry shortly.`
+    );
+    this.name = 'OrgBudgetUnavailableError';
+    if (cause !== undefined) this.cause = cause;
   }
 }
 
@@ -222,9 +266,9 @@ function warn(message: string, meta: Record<string, unknown>): void {
 }
 
 /**
- * Resolve the effective policy for an org. NEVER throws — any read error
- * degrades to env defaults in log_only mode (fail-open; the table may not
- * exist yet on a deploy that precedes the founder-applied migration).
+ * Resolve the effective policy for an org. A missing row degrades to env
+ * defaults in log_only mode; a read ERROR throws OrgBudgetUnavailableError
+ * (fail-closed).
  */
 async function resolveOrgBudgetPolicy(
   organizationId: string
@@ -251,12 +295,11 @@ async function resolveOrgBudgetPolicy(
       };
     }
   } catch (error) {
-    // P2021 (table missing), connection failure, mocked client without the
-    // model — all fail open per the deploy-safety contract.
-    warn('policy read failed — proceeding log-only (fail-open)', {
+    warn('policy read failed — refusing spend (fail-closed)', {
       organizationId,
       error: error instanceof Error ? error.message : String(error),
     });
+    throw new OrgBudgetUnavailableError(organizationId, 'policy', error);
   }
 
   if (envDaily !== null || envMonthly !== null) {
@@ -304,9 +347,8 @@ async function readCounterMicro(key: string): Promise<number> {
  * any provider call.
  *
  * Returns:
- *   - null                  → enforcement skipped (system org, no policy and
- *                             no env defaults, or a read failure — fail-open;
- *                             callers proceed exactly as today).
+ *   - null                  → enforcement skipped (system org, or no policy and
+ *                             no env defaults; callers proceed as today).
  *   - OrgBudgetReservation  → reserved; caller MUST commitActual() on success
  *                             or releaseReservation() on failure (a leaked
  *                             reservation self-heals at the window boundary
@@ -314,7 +356,8 @@ async function readCounterMicro(key: string): Promise<number> {
  *
  * Throws OrgBudgetExceededError ONLY when a live policy row has
  * enforcementMode='enforce' and the window would breach (fail-closed). In
- * log_only mode a breach warns and the request proceeds.
+ * log_only mode a breach warns and the request proceeds. Throws
+ * OrgBudgetUnavailableError when the policy or ledger cannot be read.
  */
 export async function reserveBudget(
   ctx: Pick<GenerationContext, 'organizationId'> &
@@ -342,12 +385,12 @@ export async function reserveBudget(
         : Promise.resolve(0),
     ]);
   } catch (error) {
-    // Ledger unreadable → cannot compute the window → fail open (skip).
-    warn('ledger window read failed — skipping enforcement (fail-open)', {
+    // Ledger unreadable → cannot compute the window → fail closed.
+    warn('ledger window read failed — refusing spend (fail-closed)', {
       organizationId,
       error: error instanceof Error ? error.message : String(error),
     });
-    return null;
+    throw new OrgBudgetUnavailableError(organizationId, 'ledger', error);
   }
 
   const amountMicroUsd = toMicroUsd(estimatedCostUsd);
@@ -358,13 +401,29 @@ export async function reserveBudget(
 
   const redis = getRedisClient();
   // INCR first, THEN check — atomic against concurrent reservations (each
-  // caller's check includes every other caller's increment). The wrapper
-  // never throws (memory fallback), so a redis outage degrades to
-  // per-instance counting rather than breaking generation.
-  const dailyTotalMicro = await redis.incrby(dailyKey, amountMicroUsd);
+  // caller's check includes every other caller's increment). That holds only
+  // while the increments land in the SHARED store; see the header.
+  const daily = await redis.incrbyShared(dailyKey, amountMicroUsd);
   await redis.expire(dailyKey, ttlToEndOfUtcDay(now));
-  const monthlyTotalMicro = await redis.incrby(monthlyKey, amountMicroUsd);
+  const monthly = await redis.incrbyShared(monthlyKey, amountMicroUsd);
   await redis.expire(monthlyKey, ttlToEndOfUtcMonth(now));
+  const dailyTotalMicro = daily.total;
+  const monthlyTotalMicro = monthly.total;
+
+  const enforcing = policy.mode === 'enforce' && policy.source === 'policy_row';
+  if (enforcing && (!daily.shared || !monthly.shared)) {
+    // Undo exactly what was incremented: a key whose write fell back to
+    // memory was never incremented in the shared store, and the memory copy
+    // is harmless either way.
+    if (daily.shared) await redis.decrby(dailyKey, amountMicroUsd);
+    if (monthly.shared) await redis.decrby(monthlyKey, amountMicroUsd);
+    warn('budget counter not shared — refusing spend (fail-closed)', {
+      organizationId,
+      dailyShared: daily.shared,
+      monthlyShared: monthly.shared,
+    });
+    throw new OrgBudgetUnavailableError(organizationId, 'counter');
+  }
 
   const reservation: OrgBudgetReservation = {
     id: randomUUID(),
@@ -529,7 +588,8 @@ export async function releaseReservation(
  * unavoidable gap between this preview and the worker run is safe.
  *
  * Throws OrgBudgetExceededError only under an enforcing policy row;
- * otherwise warns (log-only) or no-ops. Read failures fail open.
+ * otherwise warns (log-only) or no-ops. Read failures throw
+ * OrgBudgetUnavailableError (fail-closed).
  */
 export async function previewBudget(
   organizationId: string | undefined,
@@ -563,11 +623,11 @@ export async function previewBudget(
         ).then(fromMicroUsd),
       ]);
   } catch (error) {
-    warn('preview read failed — skipping (fail-open)', {
+    warn('preview read failed — refusing spend (fail-closed)', {
       organizationId,
       error: error instanceof Error ? error.message : String(error),
     });
-    return;
+    throw new OrgBudgetUnavailableError(organizationId, 'ledger', error);
   }
 
   const evaluate = (
@@ -611,8 +671,7 @@ export async function previewBudget(
 /**
  * Current spend vs ceiling for an org — the admin read endpoint's payload
  * (app/api/admin/org-spend). Ledger/policy read failures propagate to the
- * caller (an ADMIN surface should see the error, unlike the enforcement
- * path, which fails open).
+ * caller (an ADMIN surface should see the error).
  */
 export async function getOrgSpendSnapshot(
   organizationId: string

@@ -60,7 +60,7 @@ export const TIER_MODELS: Record<
     costPerMTokOutput: 15.0,
   },
   complex: {
-    modelId: 'anthropic/claude-opus-4-8',
+    modelId: 'anthropic/claude-opus-4.8', // OpenRouter id uses a dot; hyphen form is not listed
     costPerMTokInput: 15.0,
     costPerMTokOutput: 75.0,
   },

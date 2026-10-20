@@ -89,6 +89,7 @@ jest.mock('@/lib/platform-connections/token-readiness', () => ({
   resolvePlatformAccessToken: jest.fn(),
 }));
 jest.mock('@/lib/publish/postPublishClaim', () => ({
+  PUBLISHING_STATUS: 'publishing',
   claimQueueItemForPublish: jest.fn(),
   reclaimStalePublishingQueueItems: jest.fn(),
 }));
@@ -453,4 +454,66 @@ describe('Auto-publish — Failure State 6: Network timeout / Supabase queue rea
     'fires internal admin alert (Slack/email) after 3 consecutive read failures (45 min)'
   );
   it.todo('does NOT alert the client on queue read failures');
+});
+
+describe('Auto-publish — a thrown pre-dispatch read keeps its normal retry', () => {
+  // A read that rejects AFTER the claim but BEFORE dispatchToPlatform used to
+  // abort the whole run with the item still in 'publishing'. The stale-claim
+  // reclaim then filed it as "outcome unknown" with no retry, although no
+  // platform call had happened. It must take the ordinary retry instead.
+  const expectRetryScheduled = () =>
+    expect(mockPrisma.publishQueueItem.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        // Conditional on the claim we hold, so it never rewrites a row that
+        // another path has already moved on.
+        where: { id: 'qi1', status: 'publishing' },
+        data: expect.objectContaining({
+          status: 'failed',
+          attempts: { increment: 1 },
+          nextRetryAt: expect.any(Date),
+        }),
+      })
+    );
+
+  it('organization.findUnique rejecting after the claim schedules a retry and dispatches nothing', async () => {
+    mockPrisma.organization.findUnique.mockRejectedValue(
+      new Error('connection terminated')
+    );
+
+    const result = await processPublishQueue();
+
+    expect(publishToFacebook).not.toHaveBeenCalled();
+    expectRetryScheduled();
+    expect(result.failed).toBe(1);
+  });
+
+  it('platformConnection.findFirst rejecting after the claim schedules a retry and dispatches nothing', async () => {
+    mockPrisma.platformConnection.findFirst.mockRejectedValue(
+      new Error('connection terminated')
+    );
+
+    const result = await processPublishQueue();
+
+    expect(publishToFacebook).not.toHaveBeenCalled();
+    expectRetryScheduled();
+    expect(result.failed).toBe(1);
+  });
+
+  it('control: a throw FROM the dispatch is not retried — its outcome is unknown', async () => {
+    (publishToFacebook as jest.Mock).mockRejectedValue(
+      new Error('socket hang up')
+    );
+
+    await processPublishQueue().catch(() => undefined);
+
+    expect(publishToFacebook).toHaveBeenCalledTimes(1);
+    // No retry is scheduled; the row stays 'publishing' for the stale-claim
+    // reclaim, which never re-dispatches it.
+    expect(mockPrisma.publishQueueItem.updateMany).not.toHaveBeenCalled();
+    expect(mockPrisma.publishQueueItem.update).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ nextRetryAt: expect.any(Date) }),
+      })
+    );
+  });
 });
