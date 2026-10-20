@@ -3,7 +3,7 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "npm install --include=dev",
+  "installCommand": "npm ci --include=dev",
   "env": {
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1"
