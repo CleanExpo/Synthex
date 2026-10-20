@@ -1,0 +1,1076 @@
+{
+  "schema": "synthex.shortform.corpus/2",
+  "built_from": "logged-out harvester (kept outside this repo) + analyze.py + vision breakdown",
+  "sample_note": "Stratified, not random: latest-12 reels per public profile, logged out, kept if views >= 1M, capped per account; control_low = same accounts' reels under 500K. Views as shown on the profile grid on observed_at.",
+  "reels_file": "corpus-reels.jsonl",
+  "count": 135,
+  "ok": 94,
+  "control_low": 41,
+  "aggregates": {
+    "all": {
+      "views": {
+        "n": 94,
+        "p25": 2000000,
+        "median": 4100000.0,
+        "p75": 10600000,
+        "min": 1000000,
+        "max": 474000000
+      },
+      "duration_s": {
+        "n": 94,
+        "p25": 21.554888,
+        "median": 38.785919500000006,
+        "p75": 65.0,
+        "min": 5.733333,
+        "max": 958.558475
+      },
+      "cut_count": {
+        "n": 94,
+        "p25": 1,
+        "median": 5.0,
+        "p75": 22,
+        "min": 0,
+        "max": 61
+      },
+      "avg_shot_len_s": {
+        "n": 94,
+        "p25": 2.55,
+        "median": 5.08,
+        "p75": 11.47,
+        "min": 1.06,
+        "max": 59.27
+      },
+      "cuts_first_3s": {
+        "n": 94,
+        "p25": 0,
+        "median": 0.0,
+        "p75": 1,
+        "min": 0,
+        "max": 6
+      },
+      "integrated_lufs": {
+        "n": 92,
+        "p25": -14.6,
+        "median": -14.2,
+        "p75": -14.1,
+        "min": -50.9,
+        "max": -7.8
+      },
+      "first_word_at_s": {
+        "n": 59,
+        "p25": 0.02,
+        "median": 0.05,
+        "p75": 0.14,
+        "min": 0.0,
+        "max": 0.54
+      },
+      "words_per_sec": {
+        "n": 59,
+        "p25": 2.04,
+        "median": 3.03,
+        "p75": 3.64,
+        "min": 0.2,
+        "max": 4.67
+      }
+    },
+    "voiced_n": 59,
+    "niche_trades_cleaning": {
+      "n": 38,
+      "views": {
+        "n": 38,
+        "p25": 1900000,
+        "median": 3750000.0,
+        "p75": 6000000,
+        "min": 1000000,
+        "max": 61600000
+      },
+      "duration_s": {
+        "n": 38,
+        "p25": 14.666667,
+        "median": 38.5833335,
+        "p75": 60.894228,
+        "min": 5.733333,
+        "max": 183.866667
+      },
+      "cut_count": {
+        "n": 38,
+        "p25": 1,
+        "median": 12.5,
+        "p75": 26,
+        "min": 0,
+        "max": 47
+      },
+      "avg_shot_len_s": {
+        "n": 38,
+        "p25": 1.81,
+        "median": 3.2800000000000002,
+        "p75": 7.33,
+        "min": 1.06,
+        "max": 37.8
+      },
+      "cuts_first_3s": {
+        "n": 38,
+        "p25": 0,
+        "median": 0.0,
+        "p75": 1,
+        "min": 0,
+        "max": 2
+      },
+      "integrated_lufs": {
+        "n": 37,
+        "p25": -16.1,
+        "median": -14.5,
+        "p75": -14.1,
+        "min": -50.9,
+        "max": -7.8
+      },
+      "first_word_at_s": {
+        "n": 18,
+        "p25": 0.03,
+        "median": 0.08,
+        "p75": 0.24,
+        "min": 0.0,
+        "max": 0.54
+      },
+      "words_per_sec": {
+        "n": 18,
+        "p25": 1.77,
+        "median": 3.11,
+        "p75": 3.84,
+        "min": 0.41,
+        "max": 4.67
+      }
+    },
+    "by_stratum": {
+      "global_format": {
+        "n": 20,
+        "views": {
+          "n": 20,
+          "p25": 4700000,
+          "median": 17150000.0,
+          "p75": 70000000,
+          "min": 1600000,
+          "max": 474000000
+        },
+        "duration_s": {
+          "n": 20,
+          "p25": 21.5,
+          "median": 26.913213,
+          "p75": 34.801468,
+          "min": 10.377044,
+          "max": 198.2
+        },
+        "cut_count": {
+          "n": 20,
+          "p25": 3,
+          "median": 5.5,
+          "p75": 13,
+          "min": 0,
+          "max": 58
+        },
+        "avg_shot_len_s": {
+          "n": 20,
+          "p25": 1.99,
+          "median": 5.2,
+          "p75": 7.67,
+          "min": 1.13,
+          "max": 30.0
+        },
+        "cuts_first_3s": {
+          "n": 20,
+          "p25": 0,
+          "median": 0.0,
+          "p75": 1,
+          "min": 0,
+          "max": 6
+        },
+        "integrated_lufs": {
+          "n": 19,
+          "p25": -14.3,
+          "median": -14.1,
+          "p75": -14.1,
+          "min": -15.0,
+          "max": -14.1
+        },
+        "first_word_at_s": {
+          "n": 12,
+          "p25": 0.0,
+          "median": 0.025,
+          "p75": 0.09,
+          "min": 0.0,
+          "max": 0.5
+        },
+        "words_per_sec": {
+          "n": 12,
+          "p25": 1.97,
+          "median": 2.25,
+          "p75": 2.89,
+          "min": 0.86,
+          "max": 4.13
+        }
+      },
+      "trades": {
+        "n": 20,
+        "views": {
+          "n": 20,
+          "p25": 1600000,
+          "median": 2250000.0,
+          "p75": 4200000,
+          "min": 1000000,
+          "max": 40300000
+        },
+        "duration_s": {
+          "n": 20,
+          "p25": 11.033333,
+          "median": 14.862522,
+          "p75": 22.933333,
+          "min": 5.733333,
+          "max": 74.6
+        },
+        "cut_count": {
+          "n": 20,
+          "p25": 0,
+          "median": 1.5,
+          "p75": 5,
+          "min": 0,
+          "max": 14
+        },
+        "avg_shot_len_s": {
+          "n": 20,
+          "p25": 3.12,
+          "median": 6.12,
+          "p75": 10.7,
+          "min": 1.06,
+          "max": 37.8
+        },
+        "cuts_first_3s": {
+          "n": 20,
+          "p25": 0,
+          "median": 0.0,
+          "p75": 1,
+          "min": 0,
+          "max": 2
+        },
+        "integrated_lufs": {
+          "n": 19,
+          "p25": -16.9,
+          "median": -14.3,
+          "p75": -14.0,
+          "min": -50.9,
+          "max": -7.8
+        },
+        "first_word_at_s": {
+          "n": 5,
+          "p25": 0.0,
+          "median": 0.12,
+          "p75": 0.14,
+          "min": 0.0,
+          "max": 0.17
+        },
+        "words_per_sec": {
+          "n": 5,
+          "p25": 0.68,
+          "median": 3.19,
+          "p75": 3.84,
+          "min": 0.41,
+          "max": 4.67
+        }
+      },
+      "education_did_you_know": {
+        "n": 25,
+        "views": {
+          "n": 25,
+          "p25": 1500000,
+          "median": 5900000,
+          "p75": 10100000,
+          "min": 1000000,
+          "max": 31100000
+        },
+        "duration_s": {
+          "n": 25,
+          "p25": 31.133333,
+          "median": 43.766667,
+          "p75": 59.266667,
+          "min": 8.375042,
+          "max": 136.261261
+        },
+        "cut_count": {
+          "n": 25,
+          "p25": 0,
+          "median": 2,
+          "p75": 12,
+          "min": 0,
+          "max": 27
+        },
+        "avg_shot_len_s": {
+          "n": 25,
+          "p25": 4.97,
+          "median": 11.47,
+          "p75": 27.56,
+          "min": 2.2,
+          "max": 59.27
+        },
+        "cuts_first_3s": {
+          "n": 25,
+          "p25": 0,
+          "median": 0,
+          "p75": 0,
+          "min": 0,
+          "max": 2
+        },
+        "integrated_lufs": {
+          "n": 25,
+          "p25": -14.4,
+          "median": -14.2,
+          "p75": -14.1,
+          "min": -17.0,
+          "max": -10.0
+        },
+        "first_word_at_s": {
+          "n": 19,
+          "p25": 0.02,
+          "median": 0.04,
+          "p75": 0.12,
+          "min": 0.0,
+          "max": 0.54
+        },
+        "words_per_sec": {
+          "n": 19,
+          "p25": 1.5,
+          "median": 3.32,
+          "p75": 3.49,
+          "min": 0.2,
+          "max": 4.03
+        }
+      },
+      "cleaning_restoration": {
+        "n": 14,
+        "views": {
+          "n": 14,
+          "p25": 2600000,
+          "median": 4500000.0,
+          "p75": 6000000,
+          "min": 1500000,
+          "max": 61600000
+        },
+        "duration_s": {
+          "n": 14,
+          "p25": 49.266667,
+          "median": 57.6,
+          "p75": 87.933333,
+          "min": 27.766667,
+          "max": 183.866667
+        },
+        "cut_count": {
+          "n": 14,
+          "p25": 18,
+          "median": 24.5,
+          "p75": 35,
+          "min": 3,
+          "max": 45
+        },
+        "avg_shot_len_s": {
+          "n": 14,
+          "p25": 1.75,
+          "median": 2.65,
+          "p75": 4.0,
+          "min": 1.37,
+          "max": 15.37
+        },
+        "cuts_first_3s": {
+          "n": 14,
+          "p25": 0,
+          "median": 1.0,
+          "p75": 1,
+          "min": 0,
+          "max": 2
+        },
+        "integrated_lufs": {
+          "n": 14,
+          "p25": -16.1,
+          "median": -14.7,
+          "p75": -14.2,
+          "min": -17.2,
+          "max": -14.1
+        },
+        "first_word_at_s": {
+          "n": 9,
+          "p25": 0.05,
+          "median": 0.08,
+          "p75": 0.29,
+          "min": 0.01,
+          "max": 0.54
+        },
+        "words_per_sec": {
+          "n": 9,
+          "p25": 2.04,
+          "median": 3.63,
+          "p75": 4.02,
+          "min": 0.7,
+          "max": 4.15
+        }
+      },
+      "business_explainer": {
+        "n": 11,
+        "views": {
+          "n": 11,
+          "p25": 2500000,
+          "median": 3400000,
+          "p75": 4000000,
+          "min": 1000000,
+          "max": 18600000
+        },
+        "duration_s": {
+          "n": 11,
+          "p25": 104.0,
+          "median": 112.933333,
+          "p75": 177.4,
+          "min": 15.333333,
+          "max": 958.558475
+        },
+        "cut_count": {
+          "n": 11,
+          "p25": 17,
+          "median": 35,
+          "p75": 48,
+          "min": 0,
+          "max": 61
+        },
+        "avg_shot_len_s": {
+          "n": 11,
+          "p25": 2.86,
+          "median": 3.67,
+          "p75": 11.21,
+          "min": 2.05,
+          "max": 53.25
+        },
+        "cuts_first_3s": {
+          "n": 11,
+          "p25": 0,
+          "median": 1,
+          "p75": 1,
+          "min": 0,
+          "max": 2
+        },
+        "integrated_lufs": {
+          "n": 11,
+          "p25": -14.6,
+          "median": -14.4,
+          "p75": -14.2,
+          "min": -16.2,
+          "max": -14.1
+        },
+        "first_word_at_s": {
+          "n": 10,
+          "p25": 0.02,
+          "median": 0.065,
+          "p75": 0.09,
+          "min": 0.01,
+          "max": 0.23
+        },
+        "words_per_sec": {
+          "n": 10,
+          "p25": 2.63,
+          "median": 3.765,
+          "p75": 4.02,
+          "min": 2.12,
+          "max": 4.27
+        }
+      },
+      "trades_au": {
+        "n": 4,
+        "views": {
+          "n": 4,
+          "p25": 5200000,
+          "median": 9050000.0,
+          "p75": 12900000,
+          "min": 4200000,
+          "max": 24300000
+        },
+        "duration_s": {
+          "n": 4,
+          "p25": 54.083333,
+          "median": 57.488780500000004,
+          "p75": 60.894228,
+          "min": 53.0,
+          "max": 62.266667
+        },
+        "cut_count": {
+          "n": 4,
+          "p25": 32,
+          "median": 33.5,
+          "p75": 35,
+          "min": 28,
+          "max": 47
+        },
+        "avg_shot_len_s": {
+          "n": 4,
+          "p25": 1.5,
+          "median": 1.665,
+          "p75": 1.83,
+          "min": 1.27,
+          "max": 1.89
+        },
+        "cuts_first_3s": {
+          "n": 4,
+          "p25": 1,
+          "median": 1.5,
+          "p75": 2,
+          "min": 1,
+          "max": 2
+        },
+        "integrated_lufs": {
+          "n": 4,
+          "p25": -14.3,
+          "median": -14.2,
+          "p75": -14.1,
+          "min": -15.4,
+          "max": -14.1
+        },
+        "first_word_at_s": {
+          "n": 4,
+          "p25": 0.05,
+          "median": 0.05,
+          "p75": 0.05,
+          "min": 0.03,
+          "max": 0.26
+        },
+        "words_per_sec": {
+          "n": 4,
+          "p25": 2.34,
+          "median": 2.485,
+          "p75": 2.63,
+          "min": 1.77,
+          "max": 3.55
+        }
+      }
+    },
+    "observed_counts": {
+      "frame1.shot_scale": {
+        "medium": 45,
+        "wide": 27,
+        "closeup": 18,
+        "extreme_closeup": 4
+      },
+      "frame1.subject": {
+        "face": 37,
+        "action": 29,
+        "scene": 20,
+        "problem_object": 5,
+        "product": 3
+      },
+      "frame1.face_visible": {
+        "True": 61,
+        "False": 33
+      },
+      "frame1.motion_at_open": {
+        "already_moving": 73,
+        "static": 21
+      },
+      "hook_text.present": {
+        "False": 52,
+        "True": 42
+      },
+      "hook_text.position": {
+        "None": 52,
+        "top": 25,
+        "upper_mid": 8,
+        "center": 5,
+        "lower_mid": 4
+      },
+      "hook_text.font_class": {
+        "None": 52,
+        "heavy_sans_caps": 15,
+        "sans_bold_mixed": 11,
+        "native_tiktok_sans": 4,
+        "condensed_caps": 4,
+        "native_ig_classic": 3,
+        "serif": 3,
+        "other": 2
+      },
+      "hook_text.treatment": {
+        "None": 52,
+        "box": 15,
+        "shadow": 15,
+        "none": 6,
+        "stroke": 6
+      },
+      "hook_text.fill": {
+        "None": 52,
+        "white": 24,
+        "black": 10,
+        "brand": 4,
+        "other": 4
+      },
+      "captions.style": {
+        "none": 60,
+        "chunk_1_3": 23,
+        "sentence": 8,
+        "word_by_word": 3
+      },
+      "captions.position": {
+        "None": 60,
+        "lower_mid": 19,
+        "center": 11,
+        "upper_mid": 4
+      },
+      "captions.all_caps": {
+        "None": 54,
+        "False": 25,
+        "True": 15
+      },
+      "captions.keyword_highlight": {
+        "none": 68,
+        "None": 16,
+        "yellow": 6,
+        "red": 2,
+        "other": 1,
+        "green": 1
+      },
+      "format": {
+        "skit": 18,
+        "montage": 14,
+        "interview": 14,
+        "voiceover_broll": 13,
+        "talking_head": 8,
+        "pov_hands": 7,
+        "text_over_footage": 7,
+        "demo_tutorial": 5,
+        "single_take": 3,
+        "green_screen": 3,
+        "before_after": 1,
+        "selfie_pip_over_broll": 1
+      },
+      "camera": {
+        "handheld": 36,
+        "tripod": 33,
+        "mixed": 19,
+        "gimbal": 3,
+        "screen": 3
+      },
+      "graphics": {
+        "none": 63,
+        "counter_label": 15,
+        "zoom_punch_in": 9,
+        "stickers_emoji": 7,
+        "split_screen": 6,
+        "lower_third": 4,
+        "arrows_circles": 4,
+        "progress_bar": 1
+      },
+      "colour_look": {
+        "natural": 52,
+        "high_contrast": 16,
+        "warm": 12,
+        "cool": 8,
+        "desaturated": 4,
+        "mixed": 2
+      },
+      "spoken_hook_type": {
+        "none": 40,
+        "story_open": 24,
+        "bold_claim": 8,
+        "contrarian": 7,
+        "you_address": 7,
+        "question": 5,
+        "number_list": 3
+      },
+      "archetype": {
+        "comedy_skit": 21,
+        "story": 15,
+        "did_you_know": 10,
+        "transformation": 9,
+        "tutorial": 7,
+        "review_demo": 6,
+        "day_in_life": 6,
+        "challenge_stunt": 6,
+        "listicle": 5,
+        "myth_bust": 4,
+        "news": 3,
+        "reaction": 2
+      },
+      "payoff_position": {
+        "end": 54,
+        "middle": 21,
+        "front": 13,
+        "none": 6
+      },
+      "ending": {
+        "abrupt": 37,
+        "payoff_reveal": 33,
+        "loop_back": 9,
+        "fade_or_outro": 8,
+        "cta_card": 7
+      },
+      "cta": {
+        "none": 79,
+        "follow": 7,
+        "comment": 5,
+        "link": 2,
+        "share": 1
+      },
+      "audio_read": {
+        "voice_plus_music": 22,
+        "voice_only": 22,
+        "music_only": 20,
+        "None": 15,
+        "trending_sound": 9,
+        "sfx_heavy": 6
+      }
+    },
+    "observed_counts_niche": {
+      "frame1.shot_scale": {
+        "medium": 17,
+        "wide": 10,
+        "closeup": 8,
+        "extreme_closeup": 3
+      },
+      "frame1.subject": {
+        "action": 16,
+        "face": 11,
+        "scene": 7,
+        "problem_object": 3,
+        "product": 1
+      },
+      "frame1.face_visible": {
+        "False": 19,
+        "True": 19
+      },
+      "frame1.motion_at_open": {
+        "already_moving": 34,
+        "static": 4
+      },
+      "hook_text.present": {
+        "False": 22,
+        "True": 16
+      },
+      "hook_text.position": {
+        "None": 22,
+        "top": 15,
+        "lower_mid": 1
+      },
+      "hook_text.font_class": {
+        "None": 22,
+        "sans_bold_mixed": 5,
+        "heavy_sans_caps": 4,
+        "serif": 3,
+        "native_ig_classic": 2,
+        "native_tiktok_sans": 1,
+        "condensed_caps": 1
+      },
+      "hook_text.treatment": {
+        "None": 22,
+        "shadow": 8,
+        "stroke": 5,
+        "box": 2,
+        "none": 1
+      },
+      "hook_text.fill": {
+        "None": 22,
+        "white": 11,
+        "black": 2,
+        "brand": 2,
+        "other": 1
+      },
+      "captions.style": {
+        "none": 33,
+        "chunk_1_3": 3,
+        "word_by_word": 1,
+        "sentence": 1
+      },
+      "captions.position": {
+        "None": 33,
+        "lower_mid": 3,
+        "upper_mid": 2
+      },
+      "captions.all_caps": {
+        "None": 31,
+        "False": 4,
+        "True": 3
+      },
+      "captions.keyword_highlight": {
+        "none": 21,
+        "None": 16,
+        "green": 1
+      },
+      "format": {
+        "skit": 9,
+        "montage": 6,
+        "voiceover_broll": 5,
+        "text_over_footage": 4,
+        "pov_hands": 3,
+        "single_take": 3,
+        "demo_tutorial": 3,
+        "green_screen": 2,
+        "talking_head": 2,
+        "before_after": 1
+      },
+      "camera": {
+        "handheld": 21,
+        "tripod": 9,
+        "mixed": 7,
+        "screen": 1
+      },
+      "graphics": {
+        "none": 33,
+        "counter_label": 3,
+        "stickers_emoji": 2,
+        "zoom_punch_in": 1
+      },
+      "colour_look": {
+        "natural": 27,
+        "warm": 8,
+        "high_contrast": 3
+      },
+      "spoken_hook_type": {
+        "none": 21,
+        "story_open": 8,
+        "you_address": 4,
+        "contrarian": 2,
+        "question": 2,
+        "bold_claim": 1
+      },
+      "archetype": {
+        "comedy_skit": 13,
+        "transformation": 8,
+        "tutorial": 6,
+        "review_demo": 3,
+        "day_in_life": 3,
+        "story": 2,
+        "listicle": 1,
+        "challenge_stunt": 1,
+        "reaction": 1
+      },
+      "payoff_position": {
+        "end": 26,
+        "middle": 7,
+        "none": 3,
+        "front": 2
+      },
+      "ending": {
+        "payoff_reveal": 14,
+        "abrupt": 13,
+        "fade_or_outro": 6,
+        "loop_back": 4,
+        "cta_card": 1
+      },
+      "cta": {
+        "none": 35,
+        "follow": 2,
+        "comment": 1
+      },
+      "audio_read": {
+        "music_only": 9,
+        "trending_sound": 8,
+        "voice_plus_music": 7,
+        "voice_only": 6,
+        "sfx_heavy": 4,
+        "None": 4
+      }
+    },
+    "control_low": {
+      "n": 41,
+      "views": {
+        "n": 41,
+        "p25": 59700,
+        "median": 268000,
+        "p75": 430000,
+        "min": 1914,
+        "max": 497000
+      },
+      "duration_s": {
+        "n": 41,
+        "p25": 16.641642,
+        "median": 44.966667,
+        "p75": 78.966667,
+        "min": 3.6,
+        "max": 180.08008
+      },
+      "cut_count": {
+        "n": 41,
+        "p25": 1,
+        "median": 5,
+        "p75": 18,
+        "min": 0,
+        "max": 53
+      },
+      "avg_shot_len_s": {
+        "n": 41,
+        "p25": 3.25,
+        "median": 5.3,
+        "p75": 8.9,
+        "min": 1.44,
+        "max": 47.03
+      },
+      "cuts_first_3s": {
+        "n": 41,
+        "p25": 0,
+        "median": 0,
+        "p75": 0,
+        "min": 0,
+        "max": 2
+      },
+      "integrated_lufs": {
+        "n": 39,
+        "p25": -14.4,
+        "median": -14.2,
+        "p75": -14.1,
+        "min": -21.7,
+        "max": -7.2
+      },
+      "first_word_at_s": {
+        "n": 26,
+        "p25": 0.01,
+        "median": 0.065,
+        "p75": 0.13,
+        "min": 0.0,
+        "max": 0.42
+      },
+      "words_per_sec": {
+        "n": 26,
+        "p25": 2.54,
+        "median": 2.94,
+        "p75": 3.49,
+        "min": 0.26,
+        "max": 4.3
+      }
+    },
+    "contrast_1m_vs_control": {
+      "frame1.motion_at_open=already_moving": {
+        "viral": {
+          "share": 0.77,
+          "n": 70
+        },
+        "control": {
+          "share": 0.73,
+          "n": 41
+        }
+      },
+      "frame1.face_visible=True": {
+        "viral": {
+          "share": 0.71,
+          "n": 70
+        },
+        "control": {
+          "share": 0.51,
+          "n": 41
+        }
+      },
+      "hook_text.present=True": {
+        "viral": {
+          "share": 0.54,
+          "n": 70
+        },
+        "control": {
+          "share": 0.32,
+          "n": 41
+        }
+      },
+      "captions.style=none": {
+        "viral": {
+          "share": 0.54,
+          "n": 70
+        },
+        "control": {
+          "share": 0.61,
+          "n": 41
+        }
+      },
+      "graphics=counter_label": {
+        "viral": {
+          "share": 0.17,
+          "n": 70
+        },
+        "control": {
+          "share": 0.17,
+          "n": 41
+        }
+      },
+      "payoff_position=end": {
+        "viral": {
+          "share": 0.59,
+          "n": 70
+        },
+        "control": {
+          "share": 0.59,
+          "n": 41
+        }
+      },
+      "ending=loop_back": {
+        "viral": {
+          "share": 0.1,
+          "n": 70
+        },
+        "control": {
+          "share": 0.05,
+          "n": 41
+        }
+      },
+      "cta=none": {
+        "viral": {
+          "share": 0.8,
+          "n": 70
+        },
+        "control": {
+          "share": 0.78,
+          "n": 41
+        }
+      },
+      "spoken_hook_type=none": {
+        "viral": {
+          "share": 0.34,
+          "n": 70
+        },
+        "control": {
+          "share": 0.39,
+          "n": 41
+        }
+      },
+      "archetype=transformation": {
+        "viral": {
+          "share": 0.09,
+          "n": 70
+        },
+        "control": {
+          "share": 0.17,
+          "n": 41
+        }
+      },
+      "archetype=comedy_skit": {
+        "viral": {
+          "share": 0.26,
+          "n": 70
+        },
+        "control": {
+          "share": 0.07,
+          "n": 41
+        }
+      }
+    },
+    "observed_n": 94,
+    "hook_text_words": {
+      "n": 42,
+      "p25": 4,
+      "median": 5.5,
+      "p75": 8,
+      "min": 1,
+      "max": 18
+    },
+    "hook_text_first_visible_s": {
+      "n": 42,
+      "p25": 0.0,
+      "median": 0.0,
+      "p75": 0.0,
+      "min": 0.0,
+      "max": 2.75
+    },
+    "hook_text_cap_height_pct": {
+      "n": 42,
+      "p25": 2,
+      "median": 2.5,
+      "p75": 4,
+      "min": 1.2,
+      "max": 6
+    }
+  }
+}
