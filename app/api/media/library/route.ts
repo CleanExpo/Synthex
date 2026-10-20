@@ -20,8 +20,26 @@ import { auditLogger } from '@/lib/security/audit-logger';
 import {
   mediaLibraryService,
   MediaFilterOptions,
+  MediaLibraryNotProvisionedError,
 } from '@/lib/services/media-library';
 import { logger } from '@/lib/logger';
+import {
+  NOT_PROVISIONED_STATUS,
+  notProvisionedBody,
+} from '@/lib/api/not-provisioned';
+
+/**
+ * The honest 503 for MediaLibraryNotProvisionedError (no Prisma model backs
+ * media_assets / media_folders, so the service rejects every call), or null
+ * for any other error, which keeps its existing handling.
+ */
+function notProvisioned(error: unknown) {
+  if (!(error instanceof MediaLibraryNotProvisionedError)) return null;
+  return APISecurityChecker.createSecureResponse(
+    notProvisionedBody(error.table, 'Media library'),
+    NOT_PROVISIONED_STATUS
+  );
+}
 
 // Request validation schemas
 const FilterSchema = z.object({
@@ -271,6 +289,9 @@ export async function GET(request: NextRequest) {
         (filterOptions.offset || 0) + result.assets.length < result.total,
     });
   } catch (error: unknown) {
+    const unprovisioned = notProvisioned(error);
+    if (unprovisioned) return unprovisioned;
+
     logger.error('Media library GET error:', { error });
     return APISecurityChecker.createSecureResponse(
       { error: 'Internal server error' },
@@ -345,6 +366,9 @@ export async function POST(request: NextRequest) {
         400
       );
     }
+
+    const unprovisioned = notProvisioned(error);
+    if (unprovisioned) return unprovisioned;
 
     logger.error('Media library POST error:', { error });
     return APISecurityChecker.createSecureResponse(
@@ -457,6 +481,9 @@ export async function PUT(request: NextRequest) {
         400
       );
     }
+
+    const unprovisioned = notProvisioned(error);
+    if (unprovisioned) return unprovisioned;
 
     logger.error('Media library PUT error:', { error });
     return APISecurityChecker.createSecureResponse(
@@ -577,6 +604,9 @@ export async function DELETE(request: NextRequest) {
         400
       );
     }
+
+    const unprovisioned = notProvisioned(error);
+    if (unprovisioned) return unprovisioned;
 
     logger.error('Media library DELETE error:', { error });
     return APISecurityChecker.createSecureResponse(

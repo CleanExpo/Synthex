@@ -144,6 +144,32 @@ describe('MediaLibraryBrowser — empty is not the same as broken', () => {
       screen.getByRole('button', { name: 'Try again' })
     ).toBeInTheDocument();
   });
+
+  it('says the library is not set up yet when the route answers 503 FEATURE_NOT_PROVISIONED', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: () =>
+        Promise.resolve({
+          error: 'FEATURE_NOT_PROVISIONED',
+          message:
+            'Media library is not available: the media_assets table is not provisioned.',
+        }),
+    }) as unknown as typeof fetch;
+
+    renderBrowser();
+
+    await waitFor(() =>
+      expect(
+        screen.getByText('The media library is not set up yet.')
+      ).toBeInTheDocument()
+    );
+    // Neither "you have nothing" nor a retryable failure: retrying cannot help.
+    expect(screen.queryByText('Nothing here yet.')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Your media could not be loaded.')
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe('MediaLibraryBrowser — paging', () => {
