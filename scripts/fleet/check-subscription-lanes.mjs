@@ -4,7 +4,12 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { reviewLanes, policyViolations, meteredKeysPresent } from './lanes.mjs';
+import {
+  reviewLanes,
+  policyViolations,
+  meteredKeysPresent,
+  usableReviewLanes,
+} from './lanes.mjs';
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -67,6 +72,32 @@ if (
   meteredKeysPresent({ ANTHROPIC_API_KEY: 'x' }).join() !== 'ANTHROPIC_API_KEY'
 )
   fails.push('meteredKeysPresent does not detect ANTHROPIC_API_KEY');
+
+// 5. Bootstrap item 5 counts only lanes the policy allows: resolved paid lanes beside an
+//    unavailable codex must not read as review readiness (Codex review of 0b8fc6231, P1).
+const listing = codexState =>
+  [
+    'order  lane        credential',
+    `    1  codex       ${codexState}`,
+    '    2  minimax     resolved',
+    '    3  gemini      NOT FOUND',
+    '    4  openrouter  resolved',
+    '    -  cursor      PATH ok  [registered, not routed]',
+  ].join('\n');
+const noCodex = usableReviewLanes(pol, listing('NOT FOUND'));
+if (noCodex.length)
+  fails.push(
+    `usableReviewLanes counted ${JSON.stringify(noCodex)} with codex unavailable, expected []`
+  );
+const withCodex = usableReviewLanes(pol, listing('PATH ok'));
+if (JSON.stringify(withCodex) !== JSON.stringify(['codex']))
+  fails.push(
+    `usableReviewLanes returned ${JSON.stringify(withCodex)} with codex available, expected ["codex"]`
+  );
+if (!/usableReviewLanes\(pol, lanes\.stdout\)/.test(cb))
+  fails.push(
+    'check-bootstrap.mjs item 5 does not use usableReviewLanes(pol, ...)'
+  );
 
 for (const f of fails) console.log(`FAIL ${f}`);
 if (fails.length) process.exit(1);

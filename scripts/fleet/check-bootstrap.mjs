@@ -7,7 +7,7 @@
  *  2 FLEET_HOME/RUN  -> policy hash recorded in release-receipts/manifests/policy-hash.json, halt dir present, no real STOP
  *  3 metered key     -> DISABLED by design (A-2) until P8; recorded, never a FAIL
  *  4 push principal  -> gh auth works; committer identity configured; FD-2 recorded in DECISIONS.md
- *  5 review lanes    -> independent_review.py --list-lanes shows at least one non-Claude lane with a credential (never cursor/codex)
+ *  5 review lanes    -> independent_review.py --list-lanes shows a lane the policy allows (subscription only) as available
  *  6 Done harness    -> donectl status and selftest run on this host
  *  7 local database  -> DATABASE_URL absent or names localhost/127.0.0.1 only (never a production host)
  *  8 repo controls   -> scripts/check-repo-controls.mjs exits 0 or 1 (2 = cannot read = FAIL)
@@ -29,7 +29,7 @@ import {
   tryGit,
 } from './lib.mjs';
 import { existsSync } from 'node:fs';
-import { meteredKeysPresent } from './lanes.mjs';
+import { meteredKeysPresent, usableReviewLanes } from './lanes.mjs';
 import path from 'node:path';
 import os from 'node:os';
 
@@ -126,21 +126,16 @@ const lanes = run('python3', [
   ),
   '--list-lanes',
 ]);
-const laneLines = lanes.stdout.split('\n').filter(l => /^\s*\d+\s+\w+/.test(l));
-const usable = laneLines.filter(
-  l =>
-    !/cursor|codex/.test(l) && /(resolved|ok)/i.test(l) && !/NOT FOUND/.test(l)
-);
+const usable = usableReviewLanes(pol, lanes.stdout); // founder 19/10: subscription lanes only
 add(
   5,
-  'review lanes: at least one non-Claude lane other than cursor/codex has a credential',
+  'review lanes: a review lane the policy allows (subscription only) is available',
   lanes.code === 0 && usable.length
     ? 'PASS'
     : lanes.code !== 0
       ? 'INCONCLUSIVE'
       : 'FAIL',
-  usable.map(l => l.trim().split(/\s+/)[1]).join(',') ||
-    lanes.stderr.slice(0, 120)
+  usable.join(',') || lanes.stderr.slice(0, 120)
 );
 // 6
 const donectl = path.join(

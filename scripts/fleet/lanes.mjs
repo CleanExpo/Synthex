@@ -23,6 +23,25 @@ export function reviewLanes(pol) {
   );
 }
 
+/** Policy-allowed review lanes that `independent_review.py --list-lanes` shows routed (a numbered
+ *  row) with a usable credential or binary. A lane the policy no longer allows never counts. */
+export function usableReviewLanes(pol, listLanesStdout) {
+  const allowed = reviewLanes(pol);
+  return String(listLanesStdout || '')
+    .split('\n')
+    .map(l => l.trim().split(/\s+/))
+    .filter(([order, name, ...rest]) => {
+      const state = rest.join(' ');
+      return (
+        /^\d+$/.test(order || '') &&
+        allowed.includes(name) &&
+        /\b(ok|resolved)\b/i.test(state) &&
+        !/NOT FOUND/i.test(state)
+      );
+    })
+    .map(([, name]) => name);
+}
+
 /** Every way the policy file itself permits a non-subscription route. Empty = compliant. */
 export function policyViolations(pol) {
   const out = [];
