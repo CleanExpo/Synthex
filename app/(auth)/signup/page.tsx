@@ -20,6 +20,7 @@ import {
 import { SynthexLogo } from '@/components/landing/synthex-logo';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { isInviteOnlyMode } from '@/lib/auth/invite-mode';
 import { HelpVideo } from '@/components/ui/HelpVideo';
 
 /** Shape of per-field validation details returned by the signup API */
@@ -393,16 +394,19 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Invite code — optional */}
+            {/* Invite code — required in invite-only mode unless the email
+                has a team invitation; the server enforces this. */}
             <div className="space-y-1.5">
               <label
                 htmlFor="inviteCode"
                 className="text-[10px] uppercase tracking-[0.1em] text-white/50"
               >
                 Invite Code{' '}
-                <span className="normal-case tracking-normal text-white/30">
-                  (optional)
-                </span>
+                {!isInviteOnlyMode() && (
+                  <span className="normal-case tracking-normal text-white/30">
+                    (optional)
+                  </span>
+                )}
               </label>
               <div className="relative">
                 <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
