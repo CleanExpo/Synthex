@@ -28,13 +28,15 @@
  * before settling.
  */
 import { randomUUID } from 'crypto';
+import type { Prisma } from '@prisma/client';
 import {
   reserveSpendBatch,
   finalizeSpend,
+  reserveKey,
+  finalizeKey,
 } from '@/lib/services/ai/image/spend-log';
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
-import { trackPipelineCost } from '@/lib/pipelines/track-cost';
 import {
   isSystemOrganization,
   SYSTEM_ORGANIZATION_ID,
@@ -176,7 +178,8 @@ export async function holdMediaSpend(
 
 /**
  * Charge what actually ran. Idempotent: a replay hits the finalize key and
- * writes neither a second event nor a second ledger row. Never throws — the
+ * writes neither a second event nor a second ledger row, but does write the
+ * ledger row an earlier settle failed to write. Never throws — the
  * provider already succeeded, so a bookkeeping error must not turn the paid
  * result into a failure; an unsettled hold stays charged at its reservation
  * until the stale sweep finalises it (errs high, never low).
@@ -203,26 +206,128 @@ export async function settleMediaSpend(
     });
     return;
   }
-  if (!wrote || charged <= 0) return;
+  if (charged <= 0) return;
+  // The ledger row is keyed on the hold. First settle: write it from the
+  // values in hand. Replay (finalize returned false): write it only if an
+  // earlier settle failed to. Either way a failure is logged, never thrown,
+  // and the video sweep's backfillMediaSpendLedger writes the row later.
   try {
-    await trackPipelineCost({
-      pipeline_name: hold.pipeline,
-      client_id: isSystemOrganization(hold.organizationId)
-        ? null
-        : hold.organizationId,
-      run_id: hold.holdId,
-      model: hold.model,
-      // Billed per character / per second, not tokens; the columns are NOT NULL.
-      input_tokens: 0,
-      output_tokens: 0,
-      cost_usd: charged,
-    });
+    if (wrote) {
+      await writeMediaLedgerRow(hold, charged, new Date());
+    } else {
+      await ensureMediaSpendLedgerRow(hold.holdId, hold);
+    }
   } catch (error) {
-    logger.error('media spend: ledger write failed', {
+    logger.error('media spend: ledger write failed — the sweep backfills it', {
       holdId: hold.holdId,
-      error,
+      error: error instanceof Error ? error.message : String(error),
     });
   }
+}
+
+/**
+ * Ledger identity for a backfilled row. The spend log records neither the
+ * pipeline nor the model of a media hold, so a row the sweep repairs carries
+ * this label and says so in its provenance; the cost, client and window are
+ * still exact.
+ */
+export const MEDIA_LEDGER_BACKFILL_PIPELINE = 'media-spend-backfill';
+
+/** Write one pipeline_cost_ledger row for a media hold. Throws on failure. */
+async function writeMediaLedgerRow(
+  hold: Pick<MediaSpendHold, 'holdId' | 'organizationId'> &
+    Partial<Pick<MediaSpendHold, 'pipeline' | 'model'>>,
+  costUsd: number,
+  createdAt: Date,
+  provenance?: Prisma.InputJsonObject
+): Promise<void> {
+  const { default: prisma } = await import('@/lib/prisma');
+  await prisma.pipelineCostLedger.create({
+    data: {
+      pipelineName: hold.pipeline ?? MEDIA_LEDGER_BACKFILL_PIPELINE,
+      clientId: isSystemOrganization(hold.organizationId)
+        ? null
+        : hold.organizationId,
+      runId: hold.holdId,
+      model: hold.model ?? 'unknown',
+      // Billed per character / per second, not tokens; the columns are NOT NULL.
+      inputTokens: 0,
+      outputTokens: 0,
+      costUsd,
+      createdAt,
+      ...(provenance ? { provenance } : {}),
+    },
+  });
+}
+
+/**
+ * Make sure a CHARGED audio hold (ElevenLabs speech, HeyGen avatar video —
+ * every hold this gate takes is mediaType 'audio') has its ledger row.
+ *
+ * Idempotent on run_id = holdId (hold ids are UUIDs, so no other writer's
+ * run_id collides): a row already there, under any pipeline name, is left
+ * alone. The amount and timestamp come from the spend log — reserve plus the
+ * terminal settle/sweep event — so the row matches what was charged. Pass the
+ * hold when it is in hand to record its real pipeline and model; without it
+ * the row is labelled MEDIA_LEDGER_BACKFILL_PIPELINE.
+ *
+ * Throws when a read or the write fails. The check-then-insert is not atomic;
+ * a duplicate is the lesser evil next to a missing row.
+ */
+export async function ensureMediaSpendLedgerRow(
+  holdId: string,
+  identity?: Pick<MediaSpendHold, 'pipeline' | 'model'>
+): Promise<'written' | 'present' | 'not_charged'> {
+  const { default: prisma } = await import('@/lib/prisma');
+  const [reserve, final] = await Promise.all([
+    prisma.mediaSpendEvent.findUnique({
+      where: { eventKey: reserveKey(holdId) },
+      select: { deltaUsd: true, organizationId: true, mediaType: true },
+    }),
+    prisma.mediaSpendEvent.findUnique({
+      where: { eventKey: finalizeKey(holdId) },
+      select: { kind: true, deltaUsd: true, createdAt: true },
+    }),
+  ]);
+  if (
+    !reserve ||
+    !final ||
+    final.kind === 'release' ||
+    reserve.mediaType !== 'audio'
+  ) {
+    return 'not_charged';
+  }
+  // finalizeSpend stores actual - held, so held + that delta is the charge.
+  const costUsd =
+    Math.round((Number(reserve.deltaUsd) + Number(final.deltaUsd)) * 10000) /
+    10000;
+  if (!(costUsd > 0)) return 'not_charged';
+
+  const existing = await prisma.pipelineCostLedger.findFirst({
+    where: { runId: holdId },
+    select: { id: true },
+  });
+  if (existing) return 'present';
+
+  await writeMediaLedgerRow(
+    {
+      holdId,
+      organizationId: reserve.organizationId,
+      pipeline: identity?.pipeline,
+      model: identity?.model,
+    },
+    costUsd,
+    final.createdAt,
+    identity
+      ? undefined
+      : { backfilled: true, mediaType: 'audio', finalisedBy: final.kind }
+  );
+  logger.info('media spend: ledger row written', {
+    holdId,
+    costUsd,
+    finalisedBy: final.kind,
+  });
+  return 'written';
 }
 
 /** Return the whole hold: the provider produced nothing. Never throws. */

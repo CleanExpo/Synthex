@@ -127,7 +127,7 @@ export async function settleQuota(
   // and backfills a row an earlier settle failed to write, without adding a
   // second one. Non-fatal and after the settle: the spend log is the
   // money-safety record, the ledger is the audit record. A failure here is
-  // repaired by the video sweep (backfillVideoSpendLedger), because a webhook
+  // repaired by the video sweep (backfillMediaSpendLedger), because a webhook
   // replay stops at the job's status guard and never reaches this call.
   if (actualUsd > 0) {
     try {
@@ -248,48 +248,64 @@ async function writeVideoLedgerRow(
 
 /**
  * Durable repair for a ledger write that failed after its spend was settled.
- * Finds video holds finalised since `since` with a positive charge and no
- * ledger row, and writes each one. Run by the video sweep every pass; a hold
- * whose write fails again is simply found again next pass.
+ * Finds media holds finalised since `since` with a positive charge and no
+ * ledger row, and writes each one: video holds through
+ * ensureVideoSpendLedgerRow, audio holds (ElevenLabs speech and HeyGen avatar
+ * video, lib/services/ai/media-spend-gate.ts) through
+ * ensureMediaSpendLedgerRow. Image holds keep their own ledger path
+ * (image/meter.ts) and are not touched. Run by the video sweep every pass; a
+ * hold whose write fails again is simply found again next pass.
+ *
+ * The "no row" test is run_id = hold id under any pipeline name: hold ids are
+ * UUIDs, and a backfilled audio row is labelled differently from a settled one.
  *
  * Returns the number of rows written.
  */
-export async function backfillVideoSpendLedger(
+export async function backfillMediaSpendLedger(
   since: Date,
   limit = 200
 ): Promise<number> {
   const { default: prisma } = await import('@/lib/prisma');
-  const rows = await prisma.$queryRaw<Array<{ hold_id: string }>>`
-    SELECT f.hold_id
+  const rows = await prisma.$queryRaw<
+    Array<{ hold_id: string; media_type: string }>
+  >`
+    SELECT f.hold_id, r.media_type
     FROM media_spend_events f
     JOIN media_spend_events r
       ON r.hold_id = f.hold_id AND r.kind = 'reserve'
     WHERE f.kind IN ('settle', 'sweep')
       AND f.created_at >= ${since}
-      AND r.media_type = 'video'
+      AND r.media_type IN ('video', 'audio')
       AND r.delta_usd + f.delta_usd > 0
       AND NOT EXISTS (
         SELECT 1 FROM pipeline_cost_ledger l
-        WHERE l.pipeline_name = ${VIDEO_LEDGER_PIPELINE}
-          AND l.run_id = f.hold_id
+        WHERE l.run_id = f.hold_id
       )
     ORDER BY f.created_at ASC
     LIMIT ${limit}
   `;
 
+  // Imported lazily: the gate pulls in organisation scoping that the video
+  // quota's other callers never need.
+  const { ensureMediaSpendLedgerRow } =
+    await import('@/lib/services/ai/media-spend-gate');
   let written = 0;
-  for (const { hold_id: holdId } of rows) {
+  for (const { hold_id: holdId, media_type: mediaType } of rows) {
     try {
-      if ((await ensureVideoSpendLedgerRow(holdId)) === 'written') written++;
+      const outcome =
+        mediaType === 'audio'
+          ? await ensureMediaSpendLedgerRow(holdId)
+          : await ensureVideoSpendLedgerRow(holdId);
+      if (outcome === 'written') written++;
     } catch (error) {
-      logger.error('video spend: ledger backfill failed — retrying next pass', {
+      logger.error('media spend: ledger backfill failed — retrying next pass', {
         holdId,
         error: error instanceof Error ? error.message : String(error),
       });
     }
   }
   if (written > 0) {
-    logger.warn('video spend: backfilled missing ledger rows', {
+    logger.warn('media spend: backfilled missing ledger rows', {
       count: written,
     });
   }

@@ -55,11 +55,26 @@ export class HeyGenConsentError extends Error {
 
 export class HeyGenApiError extends Error {
   readonly status: number;
-  constructor(status: number, message: string) {
+  /**
+   * Whether HeyGen may have created (and will bill) a job. False only when
+   * HeyGen explicitly refused the request, which proves no job exists; a
+   * spend hold may be returned only then. Defaults to true, the safe side.
+   */
+  readonly dispatched: boolean;
+  constructor(status: number, message: string, dispatched = true) {
     super(`HeyGen API error ${status}: ${message}`);
     this.name = 'HeyGenApiError';
     this.status = status;
+    this.dispatched = dispatched;
   }
+}
+
+/**
+ * A 4xx is HeyGen answering that it will not create the job (bad request,
+ * auth, rate limit). 408 is a timeout, not a refusal, so the job may exist.
+ */
+function isExplicitRefusal(status: number): boolean {
+  return status >= 400 && status < 500 && status !== 408;
 }
 
 /** Map HeyGen's status_v1 / status strings to our normalised union. */
@@ -145,27 +160,49 @@ export function createHeyGenClient(
       areLikenessTermsAccepted: true,
     };
 
-    const res = await doFetch(`${baseUrl}/v2/video/generate`, {
-      method: 'POST',
-      headers: {
-        'X-Api-Key': apiKey,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      throw new HeyGenApiError(res.status, await safeText(res));
+    // From here the request may reach HeyGen. Every failure is typed with
+    // whether a job can exist: only an explicit refusal proves none does.
+    let res: Response;
+    try {
+      res = await doFetch(`${baseUrl}/v2/video/generate`, {
+        method: 'POST',
+        headers: {
+          'X-Api-Key': apiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+    } catch (error) {
+      // The response was lost; the POST may still have been accepted.
+      throw new HeyGenApiError(
+        0,
+        `request failed: ${error instanceof Error ? error.message : String(error)}`,
+        true
+      );
     }
 
-    const json = (await res.json()) as {
-      data?: { video_id?: string };
-      error?: unknown;
-    };
+    if (!res.ok) {
+      throw new HeyGenApiError(
+        res.status,
+        await safeText(res),
+        !isExplicitRefusal(res.status)
+      );
+    }
+
+    let json: { data?: { video_id?: string }; error?: unknown };
+    try {
+      json = (await res.json()) as typeof json;
+    } catch {
+      throw new HeyGenApiError(res.status, 'response body is not JSON', true);
+    }
     const videoId = json?.data?.video_id;
     if (!videoId) {
-      throw new HeyGenApiError(res.status, 'response missing data.video_id');
+      throw new HeyGenApiError(
+        res.status,
+        'response missing data.video_id',
+        true
+      );
     }
 
     return { id: videoId, provider: 'heygen', status: 'queued' };

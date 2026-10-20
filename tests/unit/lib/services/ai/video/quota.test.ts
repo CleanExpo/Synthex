@@ -271,7 +271,7 @@ describe('the video ledger row survives a failed write', () => {
     ]);
 
     await expect(
-      quota.backfillVideoSpendLedger(new Date('2026-10-18T00:00:00.000Z'))
+      quota.backfillMediaSpendLedger(new Date('2026-10-18T00:00:00.000Z'))
     ).resolves.toBe(2);
     expect(
       mockLedgerCreate.mock.calls.map(c => [c[0].data.runId, c[0].data.costUsd])
@@ -291,7 +291,7 @@ describe('the video ledger row survives a failed write', () => {
     mockLedgerCreate.mockRejectedValueOnce(new Error('ledger down'));
 
     await expect(
-      quota.backfillVideoSpendLedger(new Date('2026-10-18T00:00:00.000Z'))
+      quota.backfillMediaSpendLedger(new Date('2026-10-18T00:00:00.000Z'))
     ).resolves.toBe(1);
   });
 

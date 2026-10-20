@@ -23,9 +23,15 @@ const mockBackfillLedger = jest.fn();
 jest.mock('@/lib/services/ai/video/quota', () => ({
   VIDEO_LEDGER_BACKFILL_LOOKBACK_MS: 48 * 60 * 60 * 1000,
   ensureVideoSpendLedgerRow: (...a: unknown[]) => mockEnsureLedgerRow(...a),
-  backfillVideoSpendLedger: (...a: unknown[]) => mockBackfillLedger(...a),
+  backfillMediaSpendLedger: (...a: unknown[]) => mockBackfillLedger(...a),
   releaseQuota: jest.fn(),
   settleQuota: jest.fn(),
+}));
+
+const mockEnsureMediaLedgerRow = jest.fn();
+jest.mock('@/lib/services/ai/media-spend-gate', () => ({
+  ensureMediaSpendLedgerRow: (...a: unknown[]) =>
+    mockEnsureMediaLedgerRow(...a),
 }));
 
 const mockVideoFindMany = jest.fn();
@@ -58,7 +64,7 @@ import { GET } from '@/app/api/cron/video-sweep/route';
 
 function staleHold(
   holdId: string,
-  mediaType: 'video' | 'image',
+  mediaType: 'video' | 'image' | 'audio',
   extra: Record<string, unknown> = {}
 ) {
   return {
@@ -83,6 +89,7 @@ beforeEach(() => {
   mockVideoFindMany.mockResolvedValue([]);
   mockFinalizeSpend.mockResolvedValue(true);
   mockEnsureLedgerRow.mockResolvedValue('written');
+  mockEnsureMediaLedgerRow.mockResolvedValue('written');
   mockBackfillLedger.mockResolvedValue(0);
 });
 
@@ -111,6 +118,18 @@ describe('video sweep — ledger rows for charged sweeps', () => {
     expect(mockEnsureLedgerRow).not.toHaveBeenCalled();
   });
 
+  it('a charged AUDIO sweep (ElevenLabs / HeyGen hold) writes its ledger row', async () => {
+    mockFindStaleReservations.mockResolvedValue([
+      staleHold('hold-a', 'audio', { hasOwnerRow: false }),
+    ]);
+    mockSettlementAmountUsd.mockResolvedValue(0.42);
+
+    await runSweep();
+
+    expect(mockEnsureMediaLedgerRow).toHaveBeenCalledWith('hold-a');
+    expect(mockEnsureLedgerRow).not.toHaveBeenCalled();
+  });
+
   it('control: a charged IMAGE sweep is not written as video spend', async () => {
     mockFindStaleReservations.mockResolvedValue([staleHold('hold-i', 'image')]);
     mockSettlementAmountUsd.mockResolvedValue(0.3);
@@ -118,6 +137,7 @@ describe('video sweep — ledger rows for charged sweeps', () => {
     await runSweep();
 
     expect(mockEnsureLedgerRow).not.toHaveBeenCalled();
+    expect(mockEnsureMediaLedgerRow).not.toHaveBeenCalled();
   });
 
   it('a sweep that lost the finalise race writes nothing (the winner owns it)', async () => {

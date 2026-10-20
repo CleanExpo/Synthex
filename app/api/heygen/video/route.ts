@@ -19,6 +19,9 @@ import {
 } from '@/lib/security/api-security-checker';
 import {
   createHeyGenClient,
+  HeyGenApiError,
+  HeyGenConfigurationError,
+  HeyGenConsentError,
   mp3DurationSeconds,
   priceAvatarVideoUsd,
 } from '@/lib/marketing-agency/heygen/client';
@@ -207,8 +210,24 @@ async function _handlePost(request: NextRequest) {
         ...(validated.title ? { title: validated.title } : {}),
       });
     } catch (err) {
-      // HeyGen refused the job (or never received it): nothing was rendered.
-      await releaseMediaSpend(videoHold);
+      // Return the hold only when no job can exist: HeyGen explicitly refused
+      // it, or the client stopped before sending (consent / configuration).
+      // Any other failure — a 5xx, a lost or unreadable response — may follow
+      // a job HeyGen accepted and bills, so the hold is KEPT at its full
+      // amount; the stale sweep charges it rather than handing the headroom
+      // back for spend that may be real.
+      const provenNoJob =
+        (err instanceof HeyGenApiError && !err.dispatched) ||
+        err instanceof HeyGenConsentError ||
+        err instanceof HeyGenConfigurationError;
+      if (provenNoJob) {
+        await releaseMediaSpend(videoHold);
+      } else {
+        console.error(
+          '[heygen/video] HeyGen outcome unknown — avatar hold kept',
+          { holdId: videoHold.holdId }
+        );
+      }
       throw err;
     }
     await settleMediaSpend(videoHold, videoUsd);
