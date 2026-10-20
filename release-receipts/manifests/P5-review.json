@@ -1,0 +1,498 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "codex",
+  "reviewer_session_id": "fleet-p5-round7-codex-20261020",
+  "base_sha": "5cda89d22ed07e94717a7b452977e6d44c83fe7e",
+  "head_sha": "537a199101d2f8c19cfaf4c6b1654c815163fd5e",
+  "verdict": "PASS",
+  "blocking_findings": [],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "110 changed paths enumerated exactly once from git diff --name-only; four directly read; remaining 106 mechanically compared with prior reviewed patches."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "PASS",
+      "evidence": "Per-file patch comparison found zero differences outside the three expected auto-merges; four release-receipts paths from prior diff are absent from new diff. Three merged files reviewed for queue lineage and MCP registry composition."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "PASS",
+      "evidence": "git diff --check passed; MCP tests retain approvals_list_pending/get and add P5 creative/media/ops assertions; seven requested suites passed."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "PASS",
+      "evidence": "Changed reclaim nextRetryAt null to new Date(); focused test exited 1 with two failed tests; restored source exited 0 with 18 passed.",
+      "mutants": [
+        {
+          "file": "lib/publish/postPublishClaim.ts",
+          "planted": "Replaced reclaim nextRetryAt: null with nextRetryAt: new Date()",
+          "test_command": "npx jest --config config/jest/jest.worktree.cjs tests/unit/lib/publish/postPublishClaim.test.ts --runInBand --silent",
+          "exit_under_mutant": 1,
+          "exit_restored": 0
+        }
+      ]
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "Mutant made outcome-unknown publishing claim retryable; tests caught resending and retry timestamp. MCP risk invariant test passed, including reserved publish/spend and approvals_decide absence."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "PASS",
+      "evidence": "Requested seven-suite Jest command --runInBand exited 0: seven suites, 141 passed, 21 todo. Focused claim suite restored exited 0: 18 passed."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "PASS",
+      "evidence": "Three #1035 auto-merged paths read. Queue retains atomic claim before dispatch, safety gate before claim, pre-dispatch-only retry, successful PlatformPost lineage create, and success status update. MCP registry combines approvals with P5 tools; test suites passed."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Review made no outbound publish calls. Added credential-looking strings in diff scan were test placeholders only; no secrets or tokens added."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      "lib/publish/publishQueue.ts",
+      "tests/unit/mcp/namespace-tools.test.ts",
+      "tests/unit/mcp/structured-content.test.ts",
+      "lib/publish/postPublishClaim.ts"
+    ],
+    "not_reviewed": [
+      {
+        "path": ".claude/skills/nexus-viral-run/SKILL.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".claude/skills/shortform-instagram/SKILL.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".claude/skills/shortform-pattern-library/references/platform-docs-2026-10.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".claude/skills/shortform-pattern-library/references/platform-rules.json",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".claude/skills/shortform-tiktok/SKILL.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".claude/skills/shortform-video-harness/SKILL.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".claude/skills/shortform-youtube-shorts/SKILL.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": ".planning/ROUTE_REFERENCE.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "BACKLOG.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "__tests__/landing/helpers/tripwire-seeds.generated.json",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "__tests__/publish/publishQueue.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "__tests__/video-engine/studio-tools.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/admin/blog/generate/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/ai-content/sentiment/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/ai/calendar-jobs/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/ai/generate-content/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/ask-synthex/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/brand-iq/next-steps/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/cron/autopilot/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/cron/gbp-monitor/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/cron/video-sweep/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/geo/rewrite/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/google-business/reviews/[reviewId]/auto-reply/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/heygen/video/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/internal/algorithm-freshness-monitor/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/internal/generate-advisor-brief/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/internal/generate-review-responses/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/media/generate/voice/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/media/quote/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/posts/quick-create/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/profile-analyser/generate-content/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "app/api/video/generate/route.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "config/jest/jest.worktree.cjs",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "docs/api/error-codes.md",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "docs/api/openapi.generated.json",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/budget-enforcer.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/calendar-job-handler.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/content-generator.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/governed-generation.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/governor-route-support.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/governor/index.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/governor/mode.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/governor/types.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/model-registry.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/providers/index.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/route-governance.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/ai/routing-config.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/marketing-agency/heygen/client.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/pipelines/__tests__/track-cost.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/pipelines/track-cost.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/redis-client.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/image/meter.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/image/spend-log.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/media-quote.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/media-spend-gate.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/index.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/media-tools.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/ops-tools.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/studio-tools/types.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/video/generation-service.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/video/quota.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "lib/services/ai/voice-generation.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "public/llms.txt",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "scripts/mcp/check-tools.mjs",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/auto-publish/failure-modes.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/eval/jev/families/j9.jev.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/eval/jev/families/j9/detectors.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/eval/jev/families/j9/fake-db.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/eval/jev/known-gaps/J8.json",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/eval/jev/known-gaps/J9.json",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/integration/budget-enforcer.integration.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/integration/mcp-007b-namespaces.integration.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/integration/track-cost.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/pipelines/review-intelligence.smoke.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ai/budget-enforcer-redis-outage.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ai/budget-enforcer.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ai/calendar-job-handler-budget.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ai/governor/governor-budget.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ai/media-quote.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ai/model-router-registry.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-calendar-jobs-idempotency.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-calendar-jobs.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-batch.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-calendar.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-enforcement.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-org-budget.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/ai-generate-content-persona.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/brand-iq-next-steps.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/content-generator-routes-governor.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/generate-advisor-brief.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/governed-text-routes-enforcing.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/governed-text-routes.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/media-image-routes-quota-gate.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/media-quote-route.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/not-provisioned/voice.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/p5-routes-governed.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/posts-quick-create.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/video-generate-governor.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/video-sweep-ledger.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/api/voice-avatar-spend-gate.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/ask-synthex/not-provisioned.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/lib/heygen-client.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/lib/publish/postPublishClaim.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/lib/redis-client-incrby-shared.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/lib/services/ai/video/quota.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      },
+      {
+        "path": "tests/unit/mcp/scope-filtering.test.ts",
+        "reason": "Patch-equivalent to prior reviewed P5 head; checked mechanically against 165f5d807aa2..781dae1b3d9315ff4d5c73677d8bd561e2a78ad3 but not line-reviewed afresh."
+      }
+    ]
+  },
+  "reviewed_at": "2026-10-20T08:05:00Z",
+  "head": "537a199101d2f8c19cfaf4c6b1654c815163fd5e",
+  "lane": "codex"
+}
