@@ -27,6 +27,10 @@ import {
   publicUrl,
   upload,
 } from '@/lib/storage/object-storage';
+import {
+  loadRenderBrandKitForUser,
+  type RenderBrandKit,
+} from '@/lib/brand/render-brand-kit';
 import type {
   SocialCutBox,
   SocialCutTrim,
@@ -34,6 +38,16 @@ import type {
 } from './social-derivation';
 
 const SOCIAL_CUT_BUCKET = 'generated-videos';
+
+/**
+ * Caption face. The bundled ffmpeg builds have FreeType but no fontconfig, so
+ * drawtext without a font file fails to start. WOFF, not WOFF2: this FreeType
+ * cannot read WOFF2. Traced into the cron bundle by next.config.mjs.
+ */
+export const CAPTION_FONT_FILE = path.join(
+  process.cwd(),
+  'public/fonts/app/inter-latin-700-normal.woff'
+);
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,6 +93,15 @@ export interface RendererIo {
     buffer: Buffer,
     mimeType: string
   ) => Promise<{ url: string }>;
+  /**
+   * The brand kit of the organisation the cut was made for (its
+   * metadata.organizationId, else the founder's own); absent or null renders
+   * the unbranded look.
+   */
+  brandKit?: (
+    userId: string,
+    organizationId: string | null
+  ) => Promise<RenderBrandKit | null>;
 }
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -148,13 +171,53 @@ export function escapeDrawtext(line: string): string {
 }
 
 /**
+ * Escape a file path for an unquoted drawtext option value. ffmpeg unescapes it
+ * twice: first as the filter graph (`\ ' [ ] , ;`), then as the option value
+ * (`\ ' :`), so the option-level escape is applied first and then escaped again.
+ */
+export function escapeFilterPath(filePath: string): string {
+  const optionValue = filePath.replace(/[\\':]/g, c => `\\${c}`);
+  return optionValue.replace(/[\\'[\],;]/g, c => `\\${c}`);
+}
+
+/** WCAG relative luminance of a #rrggbb colour. */
+function relativeLuminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map(offset => {
+    const c = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Caption colours for drawtext. Unbranded keeps the original white on a
+ * translucent black box; branded fills the box with the client's colour and
+ * picks whichever of black or white text contrasts more with it.
+ */
+export function captionColours(kit?: RenderBrandKit | null): {
+  fontcolor: string;
+  boxcolor: string;
+} {
+  if (!kit) return { fontcolor: 'white', boxcolor: 'black@0.55' };
+  const lum = relativeLuminance(kit.primaryColor);
+  const contrastWithWhite = 1.05 / (lum + 0.05);
+  const contrastWithBlack = (lum + 0.05) / 0.05;
+  return {
+    fontcolor: contrastWithBlack > contrastWithWhite ? 'black' : 'white',
+    boxcolor: `0x${kit.primaryColor.slice(1)}@0.85`,
+  };
+}
+
+/**
  * Build the FFmpeg filter chain: centred crop (when the plan crops) then one
  * drawtext per wrapped caption line, stacked inside the caption band. Font
  * sizing follows the same drawtext pattern video-processor.ts already uses.
  */
 export function buildVideoFilters(
   plan: RenderPlan,
-  dims: { width: number; height: number }
+  dims: { width: number; height: number },
+  kit?: RenderBrandKit | null,
+  fontFile: string = CAPTION_FONT_FILE
 ): string[] {
   const filters: string[] = [];
 
@@ -172,11 +235,12 @@ export function buildVideoFilters(
   const bandTopPx = Math.round((plan.caption.band.yPct / 100) * outH);
   const fontSize = Math.max(24, Math.round(outH * 0.032));
   const lineGap = Math.round(fontSize * 1.25);
+  const { fontcolor, boxcolor } = captionColours(kit);
 
   lines.forEach((line, i) => {
     const y = bandTopPx + i * lineGap;
     filters.push(
-      `drawtext=text='${escapeDrawtext(line)}':fontsize=${fontSize}:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=12:x=(w-text_w)/2:y=${y}`
+      `drawtext=fontfile=${escapeFilterPath(fontFile)}:text='${escapeDrawtext(line)}':fontsize=${fontSize}:fontcolor=${fontcolor}:box=1:boxcolor=${boxcolor}:boxborderw=12:x=(w-text_w)/2:y=${y}`
     );
   });
 
@@ -307,6 +371,7 @@ export const defaultIo: RendererIo = {
     });
     return { url };
   },
+  brandKit: loadRenderBrandKitForUser,
 };
 
 // ── Claim + render ───────────────────────────────────────────────────────────
@@ -380,7 +445,20 @@ export async function renderSocialCut(
   try {
     await io.download(heroUrl, inPath);
     const dims = await io.probe(inPath);
-    const filters = buildVideoFilters(plan, dims);
+    // Branding is styling, not a precondition: a failed lookup renders unbranded.
+    // The organisation deriveSocialCut recorded; brand the cut as that client.
+    const cutOrganizationId =
+      asset.metadata &&
+      typeof asset.metadata === 'object' &&
+      !Array.isArray(asset.metadata) &&
+      typeof (asset.metadata as Record<string, unknown>).organizationId ===
+        'string'
+        ? ((asset.metadata as Record<string, unknown>).organizationId as string)
+        : null;
+    const kit = io.brandKit
+      ? await io.brandKit(asset.founderId, cutOrganizationId).catch(() => null)
+      : null;
+    const filters = buildVideoFilters(plan, dims, kit);
     await io.transcode({
       inPath,
       outPath,

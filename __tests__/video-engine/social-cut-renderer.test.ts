@@ -7,6 +7,9 @@
  * downloaded hero + rendered cut there) — the fakes write tiny stub files.
  */
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { spawnSync } from 'child_process';
 
 const mockVideoAsset = {
   findMany: jest.fn(),
@@ -44,6 +47,9 @@ import {
   wrapCaptionLines,
   escapeDrawtext,
   buildVideoFilters,
+  CAPTION_FONT_FILE,
+  captionColours,
+  escapeFilterPath,
   parseRenderPlan,
   claimSocialCut,
   renderSocialCut,
@@ -184,6 +190,140 @@ describe('buildVideoFilters()', () => {
     expect(filters.some(f => f.startsWith('crop='))).toBe(false);
     expect(filters.some(f => f.startsWith('drawtext='))).toBe(true);
   });
+
+  it('keeps the unbranded caption look when there is no kit', () => {
+    const dims = { width: 1080, height: 1920 };
+    const first = wrapCaptionLines(PLAN.caption.text)[0];
+    // 1:1 crop of 1080x1920 -> 1080 high: font 35px, band top 86px.
+    const legacy = `drawtext=fontfile=${escapeFilterPath(CAPTION_FONT_FILE)}:text='${escapeDrawtext(first)}':fontsize=35:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=12:x=(w-text_w)/2:y=86`;
+    expect(buildVideoFilters(PLAN, dims)[1]).toBe(legacy);
+    expect(buildVideoFilters(PLAN, dims, null)[1]).toBe(legacy);
+  });
+
+  it('names the bundled caption font in every drawtext', () => {
+    expect(fs.existsSync(CAPTION_FONT_FILE)).toBe(true);
+    const drawtexts = buildVideoFilters(PLAN, {
+      width: 1080,
+      height: 1920,
+    }).filter(f => f.startsWith('drawtext='));
+    expect(drawtexts.length).toBeGreaterThan(0);
+    for (const d of drawtexts) {
+      expect(d.startsWith(`drawtext=fontfile=`)).toBe(true);
+    }
+  });
+
+  it('escapes the font path for both ffmpeg parsing levels', () => {
+    // Option level: \ ' : get a backslash. Graph level: \ ' [ ] , ; get one more.
+    expect(escapeFilterPath("/a b/it's:x,y\\z[1];")).toBe(
+      "/a b/it\\\\\\'s\\\\:x\\,y\\\\\\\\z\\[1\\]\\;"
+    );
+  });
+
+  it('fills the caption box with a dark brand colour and uses white text', () => {
+    const filters = buildVideoFilters(
+      PLAN,
+      { width: 1080, height: 1920 },
+      { primaryColor: '#0f172a', source: 'preset' }
+    );
+    const drawtexts = filters.filter(f => f.startsWith('drawtext='));
+    expect(drawtexts.length).toBeGreaterThan(0);
+    for (const d of drawtexts) {
+      expect(d).toContain(':boxcolor=0x0f172a@0.85:');
+      expect(d).toContain(':fontcolor=white:');
+    }
+  });
+
+  it('uses black text on a light brand colour', () => {
+    const filters = buildVideoFilters(
+      PLAN,
+      { width: 1080, height: 1920 },
+      { primaryColor: '#fde047', source: 'dna' }
+    );
+    const drawtext = filters.find(f => f.startsWith('drawtext='));
+    expect(drawtext).toContain(':boxcolor=0xfde047@0.85:');
+    expect(drawtext).toContain(':fontcolor=black:');
+  });
+});
+
+// The production ffmpeg builds (darwin-arm64 and linux-x64 4.1.0) have FreeType but no
+// fontconfig, so drawtext without a font file refuses to start. Run the real binary on
+// the real filter chain, from font paths holding every character either ffmpeg parsing
+// level treats specially.
+describe('buildVideoFilters() on the installed ffmpeg', () => {
+  const ffmpegPath: string = jest.requireActual(
+    '@ffmpeg-installer/ffmpeg'
+  ).path;
+  const BRANDED = { primaryColor: '#0f172a', source: 'preset' as const };
+  const dirs: string[] = [];
+
+  afterAll(() => {
+    for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
+  });
+
+  // ':' is not allowed in a Windows file name and '\' is its path separator,
+  // so those two folder names can only be made on POSIX.
+  const isWindows = process.platform === 'win32';
+  it.each(
+    [
+      ['unbranded', 'plain', null],
+      ['branded', 'space and, comma', BRANDED],
+      ['branded', 'co:lon', BRANDED],
+      ['branded', "apo'strophe", BRANDED],
+      ['branded', 'back\\slash', BRANDED],
+      ['branded', 'semi;colon [brackets]', BRANDED],
+    ].filter(
+      ([, dirName]) => !isWindows || !/[:\\]/.test(dirName as string)
+    ) as Array<[string, string, typeof BRANDED | null]>
+  )(
+    'renders a %s caption frame from a font dir named %p',
+    (_l, dirName, kit) => {
+      const fontDir = fs.mkdtempSync(path.join(os.tmpdir(), `${dirName} `));
+      dirs.push(fontDir);
+      const fontFile = path.join(fontDir, 'caption.woff');
+      fs.copyFileSync(CAPTION_FONT_FILE, fontFile);
+      const filters = buildVideoFilters(
+        PLAN,
+        { width: 1080, height: 1920 },
+        kit,
+        fontFile
+      );
+      const run = spawnSync(
+        ffmpegPath,
+        [
+          '-hide_banner',
+          '-loglevel',
+          'error',
+          '-f',
+          'lavfi',
+          '-i',
+          'color=c=gray:s=1080x1920:d=1',
+          '-vf',
+          filters.join(','),
+          '-frames:v',
+          '1',
+          '-f',
+          'null',
+          '-',
+        ],
+        { encoding: 'utf8', timeout: 30_000 }
+      );
+      expect(run.stderr).toBe('');
+      expect(run.status).toBe(0);
+    }
+  );
+});
+
+describe('captionColours()', () => {
+  it.each([
+    ['#ffffff', 'black'],
+    ['#000000', 'white'],
+    ['#ff6b35', 'black'],
+    ['#1d4ed8', 'white'],
+  ])('picks the higher-contrast text for %s', (primaryColor, expected) => {
+    expect(
+      captionColours({ primaryColor, source: 'organization' }).fontcolor
+    ).toBe(expected);
+  });
 });
 
 describe('parseRenderPlan()', () => {
@@ -257,6 +397,48 @@ describe('renderSocialCut()', () => {
     const update = mockVideoAsset.update.mock.calls[0][0];
     expect(update.data.status).toBe('failed');
     expect(update.data.metadata.renderError).toContain('ffmpeg exploded');
+  });
+
+  it('brands the cut as the organisation it was made for, not the founder home org', async () => {
+    const brandKit = jest.fn(async () => null);
+    const io = fakeIo({ brandKit });
+    await renderSocialCut(
+      {
+        ...PENDING_ASSET,
+        metadata: { ...METADATA, organizationId: 'org-client-b' },
+      },
+      io
+    );
+    expect(brandKit).toHaveBeenCalledWith('user-001', 'org-client-b');
+  });
+
+  it('burns the cut organisation brand colour into the caption', async () => {
+    const brandKit = jest.fn(async () => ({
+      primaryColor: '#1d4ed8',
+      source: 'preset' as const,
+    }));
+    const io = fakeIo({ brandKit });
+    const result = await renderSocialCut(PENDING_ASSET, io);
+
+    expect(result.status).toBe('ready');
+    expect(brandKit).toHaveBeenCalledWith('user-001', 'org-001');
+    const { filters } = (io.transcode as jest.Mock).mock.calls[0][0];
+    expect(filters.find((f: string) => f.startsWith('drawtext='))).toContain(
+      ':boxcolor=0x1d4ed8@0.85:'
+    );
+  });
+
+  it('still renders, unbranded, when the brand kit lookup rejects', async () => {
+    const io = fakeIo({
+      brandKit: jest.fn().mockRejectedValue(new Error('db down')),
+    });
+    const result = await renderSocialCut(PENDING_ASSET, io);
+
+    expect(result.status).toBe('ready');
+    const { filters } = (io.transcode as jest.Mock).mock.calls[0][0];
+    expect(filters).toEqual(
+      buildVideoFilters(PLAN, { width: 1080, height: 1920 })
+    );
   });
 
   it('fails fast on a foreign row without touching IO', async () => {

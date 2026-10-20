@@ -208,6 +208,10 @@ const nextConfig = {
       './.claude/memory/skill-orchestration-spec.md',
       './.claude/memory/verification-gates.md',
     ],
+    // drawtext needs an explicit font file: the bundled ffmpeg has no fontconfig.
+    '/api/cron/social-cut-render': [
+      './public/fonts/app/inter-latin-700-normal.woff',
+    ],
   },
   outputFileTracingExcludes: {
     '*': [
