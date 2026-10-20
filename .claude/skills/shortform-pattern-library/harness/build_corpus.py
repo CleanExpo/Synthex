@@ -9,7 +9,7 @@ as the hook under study). No media leaves the data dir. This repo is public, so 
 are written as reel-NNN / acct-NN; the id-to-handle/URL key goes to <private key.json>, which must
 sit outside the repo.
 """
-import json, statistics as st, sys
+import json, re, statistics as st, sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -122,6 +122,25 @@ def main(datadir, out, keyfile):
         key.append({"reel_id": f"reel-{i:03d}", "account_id": a, **{k: r[k] for k in ("code", "url", "handle", "poster")}})
         public.append({"reel_id": f"reel-{i:03d}", "account_id": a,
                        **{k: v for k, v in r.items() if k not in ("code", "url", "handle", "poster")}})
+    # Free text (observer notes, transcripts) can name the source too: swap every known code, handle
+    # and poster for its pseudonym, and blank any other @mention.
+    swaps = sorted({(k[f], k["reel_id"] if f == "code" else k["account_id"])
+                    for k in key for f in ("code", "handle", "poster") if k.get(f) and len(k[f]) > 3},
+                   key=lambda s: -len(s[0]))
+    pattern = re.compile("|".join(re.escape(s) for s, _ in swaps), re.I) if swaps else None
+    lookup = {s.lower(): p for s, p in swaps}
+
+    def scrub(v):
+        if isinstance(v, dict):
+            return {k: scrub(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [scrub(x) for x in v]
+        if isinstance(v, str):
+            v = pattern.sub(lambda m: lookup[m.group(0).lower()], v) if pattern else v
+            return re.sub(r"@[A-Za-z0-9._]{2,}", "@[handle]", v)
+        return v
+
+    public = [scrub(r) for r in public]
     Path(keyfile).write_text(json.dumps(key, indent=1, ensure_ascii=False))
     rows = Path(out).with_name("corpus-reels.jsonl")
     rows.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in public))
