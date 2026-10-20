@@ -303,10 +303,10 @@ export default function SupportPage() {
               <ul className="space-y-2">
                 <li>
                   <Link
-                    href="/pricing"
+                    href="/opportunity-map"
                     className="text-gray-400 hover:text-orange-400 flex items-center gap-2"
                   >
-                    <ChevronRight className="w-4 h-4" /> Pricing comparison
+                    <ChevronRight className="w-4 h-4" /> Talk to us
                   </Link>
                 </li>
                 <li>

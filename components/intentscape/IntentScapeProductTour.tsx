@@ -387,8 +387,8 @@ export function IntentScapeProductTour() {
             </p>
           </div>
           <Button asChild variant="premium-primary" size="xl">
-            <Link href="/signup">
-              Create my workspace
+            <Link href="/opportunity-map">
+              Talk to us
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

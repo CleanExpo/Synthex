@@ -39,13 +39,13 @@ export default function CaseStudiesPage() {
                 <ArrowRight className="ml-2" />
               </Button>
             </Link>
-            <Link href="/pricing">
+            <Link href="/opportunity-map">
               <Button
                 size="lg"
                 variant="outline"
                 className="border-orange-500/30 text-white hover:bg-orange-500/10 px-10 py-6 text-lg"
               >
-                View Pricing
+                Talk to us
               </Button>
             </Link>
           </div>

@@ -198,7 +198,7 @@ export default function RoadmapPage() {
                 We're always looking for ways to improve Synthex. Share your
                 ideas and help shape the future of our platform.
               </p>
-              <Link href="/signup">
+              <Link href="/contact">
                 <Button className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
                   Submit Feature Request
                 </Button>

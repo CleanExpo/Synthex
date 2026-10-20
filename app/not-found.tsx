@@ -71,10 +71,10 @@ function MessageDisplay() {
           <p className="text-xs text-white/40 mb-3">Pages</p>
           <div className="flex flex-wrap gap-2 justify-center mb-6">
             <Link
-              href="/pricing"
+              href="/opportunity-map"
               className="text-orange-400 hover:text-orange-300 text-xs transition-colors"
             >
-              Pricing
+              Talk to us
             </Link>
             <span className="text-white/50">•</span>
             <Link

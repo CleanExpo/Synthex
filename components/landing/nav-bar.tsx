@@ -7,7 +7,7 @@ import { SynthexLogo } from './synthex-logo';
 const NAV_LINKS = [
   { href: '/features', label: 'Features' },
   { href: '/agencies', label: 'Agencies' },
-  { href: '/pricing', label: 'Pricing' },
+  { href: '/opportunity-map', label: 'Talk to us' },
   { href: '/about', label: 'About' },
   // { href: '/blog', label: 'Blog' }, // Blog link hidden until content is ready
 ];
@@ -73,10 +73,10 @@ export function NavBar() {
             Login
           </Link>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="premium-btn text-white font-semibold rounded-full px-6 py-2 text-sm transition-all duration-300"
           >
-            Get started
+            Talk to us
           </Link>
         </div>
 
@@ -135,11 +135,11 @@ export function NavBar() {
               Login
             </Link>
             <Link
-              href="/signup"
+              href="/opportunity-map"
               onClick={() => setMobileOpen(false)}
               className="premium-btn block py-3 text-center text-white font-semibold rounded-xl text-base min-h-[44px] flex items-center justify-center"
             >
-              Get started
+              Talk to us
             </Link>
           </div>
         </div>

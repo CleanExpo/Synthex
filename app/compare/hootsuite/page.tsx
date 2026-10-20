@@ -97,10 +97,10 @@ export default function VsHootsuitePage() {
             to your connected platforms.
           </p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
           >
-            Try Synthex free — no card required
+            Talk to us
           </Link>
         </div>
       </section>
@@ -173,10 +173,10 @@ export default function VsHootsuitePage() {
             Start with your website URL and approve your first draft.
           </p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-10 py-4 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-base"
           >
-            Start with Synthex free →
+            Talk to us →
           </Link>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm text-white/30">
             <Link
@@ -192,10 +192,10 @@ export default function VsHootsuitePage() {
               Platforms →
             </Link>
             <Link
-              href="/pricing"
+              href="/opportunity-map"
               className="hover:text-orange-400 transition-colors"
             >
-              Pricing →
+              Talk to us →
             </Link>
           </div>
         </div>

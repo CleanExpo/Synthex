@@ -168,12 +168,11 @@ export default function DemoSettingsPage() {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-[600px]">
+          <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -752,99 +751,6 @@ export default function DemoSettingsPage() {
                       setAppearance({ ...appearance, animations: checked })
                     }
                   />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="billing" className="space-y-6">
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle>Current Plan</CardTitle>
-                <CardDescription>
-                  You're currently on the Pro plan
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">
-                          Pro Plan
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                          Perfect for growing businesses
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-white">$249</p>
-                        <p className="text-sm text-gray-400">/month</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">
-                          Unlimited social accounts
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">
-                          Advanced analytics
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm text-gray-300">
-                          Priority support
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1">
-                      Change Plan
-                    </Button>
-                    <Button variant="outline" className="flex-1">
-                      Cancel Subscription
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card variant="glass">
-              <CardHeader>
-                <CardTitle>Payment Method</CardTitle>
-                <CardDescription>
-                  Manage your payment information
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-gray-800 rounded">
-                          <Monitor className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-white">
-                            •••• •••• •••• ••••
-                          </p>
-                          <p className="text-sm text-gray-400">Expires 12/25</p>
-                        </div>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Update
-                      </Button>
-                    </div>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    Add Payment Method
-                  </Button>
                 </div>
               </CardContent>
             </Card>

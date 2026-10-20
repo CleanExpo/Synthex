@@ -175,9 +175,9 @@ export default function IntegrationsPage() {
             Synthex integrates with social platforms, AI providers, and the
             tools your business already uses — all from one dashboard.
           </p>
-          <Link href="/signup">
+          <Link href="/opportunity-map">
             <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white text-lg px-8 py-6 rounded-xl shadow-lg shadow-orange-500/25">
-              Get Started Free
+              Talk to us
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
@@ -298,9 +298,9 @@ export default function IntegrationsPage() {
               AI-powered content across all your channels.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/signup">
+              <Link href="/opportunity-map">
                 <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-8 py-3 rounded-xl shadow-lg shadow-orange-500/25">
-                  Start Free Trial
+                  Talk to us
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>

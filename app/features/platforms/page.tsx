@@ -114,10 +114,10 @@ export default function PlatformsPage() {
             ))}
           </div>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
           >
-            Connect your platforms free →
+            Talk to us →
           </Link>
         </div>
       </section>
@@ -163,10 +163,10 @@ export default function PlatformsPage() {
           </h2>
           <p className="text-white/50 mb-8">No card required.</p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-10 py-4 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-base"
           >
-            Start free →
+            Talk to us →
           </Link>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm text-white/30">
             <Link

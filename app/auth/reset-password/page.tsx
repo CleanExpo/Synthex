@@ -267,7 +267,7 @@ function ResetPasswordForm() {
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Repeat new password"
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
                     required

@@ -193,13 +193,13 @@ export default function ApiReferencePage() {
                 View Full Docs
               </Button>
             </Link>
-            <Link href="/signup">
+            <Link href="/opportunity-map">
               <Button
                 size="lg"
                 variant="outline"
                 className="border-orange-500/30 text-white hover:bg-orange-500/10 px-8"
               >
-                Get API Key
+                Talk to us
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
@@ -347,12 +347,12 @@ console.log(content);
               Synthex.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/signup">
+              <Link href="/opportunity-map">
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 text-white px-10 shadow-lg shadow-orange-500/25"
                 >
-                  Get API Key
+                  Talk to us
                   <ArrowRight className="ml-2" />
                 </Button>
               </Link>
