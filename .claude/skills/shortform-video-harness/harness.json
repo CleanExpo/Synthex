@@ -460,7 +460,7 @@
         {
           "kind": "code",
           "name": "social-cut-renderer buildVideoFilters (ffmpeg drawtext burn-in)",
-          "ref": "lib/video/social-cut-renderer.ts:148"
+          "ref": "lib/video/social-cut-renderer.ts:155"
         }
       ],
       "inputs": ["hero.mp4 or vo.wav"],
