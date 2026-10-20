@@ -23,13 +23,13 @@ Tags: **[P]** official page read, **[S]** secondary. Craft numbers live in **sho
 
 From https://developers.facebook.com/docs/video-api/guides/reels-publishing [P]:
 
-| Item | Rule |
-|---|---|
-| Aspect | 9:16; 1080×1920 recommended, 540×960 minimum |
-| Length | **3–90 s via the API** (60 s max if also published as a Page story). Longer Reels must be posted in-app |
-| Codec | H.264/H.265 (VP9, AV1 accepted), 24–60 fps fixed, closed GOP 2–5 s |
-| Audio | AAC-LC stereo 48 kHz ≥128 kbps |
-| Safe zone | No official pixel spec [gap]. Use the Instagram floor (bottom ~35%, right ~12% clear) and preview |
+| Item      | Rule                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------- |
+| Aspect    | 9:16; 1080×1920 recommended, 540×960 minimum                                                            |
+| Length    | **3–90 s via the API** (60 s max if also published as a Page story). Longer Reels must be posted in-app |
+| Codec     | H.264/H.265 (VP9, AV1 accepted), 24–60 fps fixed, closed GOP 2–5 s                                      |
+| Audio     | AAC-LC stereo 48 kHz ≥128 kbps                                                                          |
+| Safe zone | No official pixel spec [gap]. Use the Instagram floor (bottom ~35%, right ~12% clear) and preview       |
 
 ## 2. Audience and length
 
@@ -44,6 +44,7 @@ From https://developers.facebook.com/docs/video-api/guides/reels-publishing [P]:
 ## 3. Unoriginal-content penalties (hard rule)
 
 From https://creators.facebook.com/blog/combating-unoriginal-content (14 Jul 2025) [P]:
+
 - Accounts that repeatedly reuse others' content lose monetisation for a period and get **reduced
   distribution on everything they share**.
 - Duplicate videos get reduced distribution. "Stitching together clips or adding your watermark does
@@ -68,6 +69,7 @@ API field `is_ai_generated` [P].
 ## 6. Publishing (Reels Publishing API)
 
 From https://developers.facebook.com/docs/video-api/guides/reels-publishing [P]:
+
 1. `POST /{page-id}/video_reels?upload_phase=start` → `video_id`.
 2. Upload to `rupload.facebook.com/video-upload/{video-id}` (binary with `offset`/`file_size`, or a
    `file_url` header; fbcdn URLs are rejected).
@@ -77,7 +79,9 @@ From https://developers.facebook.com/docs/video-api/guides/reels-publishing [P]:
 
 Limits: **30 API reels per Page per rolling 24 h**; Pages only, not profiles. Permissions:
 `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, Page token with CREATE_CONTENT.
-Code: `lib/publish/platformAdapters/facebook.ts`; publish gate `APPROVED_TO_PUBLISH_META_ADS` in
+Code: **gap**. `lib/publish/platformAdapters/facebook.ts` posts text/link to `/{page-id}/feed`
+only; it does not implement `video_reels`. Until it does, upload Reels manually in Meta Business
+Suite. Publish gate `APPROVED_TO_PUBLISH_META_ADS` in
 `docs/marketing-agency/FACEBOOK-VIDEO-CREATOR-SPEC.md`. Human-gated.
 
 ## 7. Measure (Video Insights)
@@ -94,12 +98,14 @@ and the client metric moved (UTM on the first-comment link).
 ## 8. Gate checklist
 
 Hard gates ([P] or Synthex rule; a miss blocks the cut):
+
 - [ ] 9:16, 3–90 s if API-published [P]
 - [ ] Clean master, no foreign watermark, no border [P unoriginal-content post]
 - [ ] Caption: no link, ≤5 hashtags, minimal capitals [P unoriginal-content post]
+- [ ] Burned-in captions, sound-off legible [Synthex rule]
 - [ ] `is_ai_generated` correct [P]; footage owned and grounded (real-images-only) [Synthex rule]
 - [ ] Page risk status checked this month [Synthex rule]
 
 Advisory ([S]; warn, do not block):
-- [ ] Burned-in captions, sound-off legible [S, dated sound-off data]
+
 - [ ] Local place name in the caption where relevant [house style]

@@ -7,7 +7,7 @@ description: >-
   length, loudness, archetypes, endings, split into table stakes vs traits that separated hits,
   with a trades/cleaning/restoration cut. Use when concepting, scripting, editing or gating any Reel, TikTok, Short or social video
   (harness nodes N3, N5, N13), when someone asks "what makes it go viral", or to refresh the
-  corpus with the bundled harvester. Platform rules live in the shortform-<platform> skills.
+  corpus (harvester kept outside this public repo). Platform rules live in the shortform-<platform> skills.
 metadata:
   author: synthex
   version: 1.0.0
@@ -80,11 +80,11 @@ reel from these accounts shares, and traits that separated the hits.
 | A face visible in frame 1       | **71%**    | 51%               | Open on a person (expert, worker, customer reacting), not an empty scene                               |
 | Short hook-text overlay present | **54%**    | 32%               | Add one: ≤8 words (median 5.5), small (cap height 2.5–4% of frame), top of frame, on screen from 0.0 s |
 | Comedy / relatable skit         | **26%**    | 7%                | Make some content about the crew and the trade, not the job                                            |
-| Transformation / before-after   | 9%         | 17%               | Do not rely on the before/after alone; pair it with a face and a text hook                             |
-| Loop-back ending                | 10%        | 5%                | Weak signal; worth testing on 6–15 s satisfying cuts                                                   |
+| Transformation / before-after   | 9%         | 17%               | ~1.2 SE: not distinguishable from noise. Keep using before/after; pair it with a face and a text hook  |
+| Loop-back ending                | 10%        | 5%                | ~1.0 SE: not distinguishable from noise; worth testing on 6–15 s satisfying cuts                       |
 
-Each gap is roughly 2–3 standard errors on these sample sizes, and 11 traits were tested, so
-read them as **hypotheses ranked for testing**, not laws. Test each with Instagram Trial Reels
+The face, hook-text and comedy gaps are roughly 2.1–2.9 standard errors on these sample sizes; the
+transformation and loop-back gaps are about 1 SE (noise-level). 11 traits were tested, so read them as **hypotheses ranked for testing**, not laws. Test each with Instagram Trial Reels
 (same footage, trait on vs off) before making it a hard gate.
 
 ### Typography and captions, as measured on the 1M+ reels
@@ -159,8 +159,8 @@ Run `harness/analyze.py` on the rendered master and fail the cut if any line fai
   (a lower bound); Whisper hallucinates speech over music, so speech stats use voiced reels only;
   `audio_read` is inferred from transcripts, not heard; type size is a visual estimate.
 - **Sample:** logged-out view of each profile's latest 12 reels, 19/10/2026; stratified by niche,
-  capped per account; collab posts can appear in a profile's grid (`poster` field records the real
-  poster). Restoration-specific 1M+ creators were scarce: of 8 cleaning/restoration accounts
+  capped per account. Reels and accounts are pseudonymised (`reel-NNN`, `acct-NN`) because this repo is
+  public; the key to handles and URLs is held privately, outside the repo. Restoration-specific 1M+ creators were scarce: of 8 cleaning/restoration accounts
   probed in wave 2, 5 were blocked logged-out, 1 had no 1M+ reel in its latest 12 and 1 had a
   single one. Of 26 trade accounts visible logged-out, 16 had no 1M+ reel in their latest 12: a 1M+ hit
   is rare even for established trade creators, so judge client work on rates, not view counts.
@@ -171,16 +171,17 @@ Run `harness/analyze.py` on the rendered master and fail the cut if any line fai
 # scratch dir: npm i playwright@1.64.1 (Chromium 156 used on 19/10/2026)
 # model: curl -L -o ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 #        expected SHA-1 137c40403d78fd54d454da0f9bd998f78703390c (shasum -a 1); whisper-cli from brew whisper-cpp
-NODE_PATH=<scratch>/node_modules node harness/harvest.cjs grid  <data> <handle> [...]
-NODE_PATH=<scratch>/node_modules node harness/harvest.cjs reels <data> <list.json>
+# harvest: the logged-out Playwright harvester is NOT in this public repo; it is held privately
+#          (ask the Synthex lead). It writes <data>/reels/<id>/{video.mp4,audio.m4a,meta.json}.
 python3 -I harness/analyze.py <data> <ggml-base.en.bin>
 # vision pass: one agent per ~11 reels, schema references/breakdown-schema.md -> observed.json
-python3 -I harness/build_corpus.py <data> references/corpus.json
+python3 -I harness/build_corpus.py <data> references/corpus.json <private dir outside repo>/corpus-key.json
 ```
 
 Logged out, no cookies, 3–6 s jitter. Every target writes a status record; blocked pages are
 `BLOCKED_*`, never silently empty. Media stays in the scratch data dir and is never committed or
-re-published; the corpus keeps structure plus the first 3 s of speech only.
+re-published; the corpus keeps structure plus the first 3 s of speech only, with no handles,
+reel codes or URLs.
 Refresh quarterly, or when a platform announces a ranking change.
 
 ## 9. How the hit-versus-miss comparison was built

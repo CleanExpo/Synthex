@@ -51,11 +51,13 @@ def cuts(video):
 
 
 def loudness(audio):
-    r = run(["ffmpeg", "-hide_banner", "-i", str(audio), "-af", "ebur128", "-f", "null", "-"])
+    r = run(["ffmpeg", "-hide_banner", "-i", str(audio), "-af", "ebur128=peak=true", "-f", "null", "-"])
     tail = r.stderr[r.stderr.rfind("Summary:"):]
     i = re.search(r"I:\s+(-?[\d.]+) LUFS", tail)
     lra = re.search(r"LRA:\s+([\d.]+) LU", tail)
-    return {"integrated_lufs": float(i.group(1)) if i else None, "lra_lu": float(lra.group(1)) if lra else None}
+    tp = re.search(r"True peak:\s*\n\s*Peak:\s+(-?[\d.]+) dBFS", tail)
+    return {"integrated_lufs": float(i.group(1)) if i else None, "lra_lu": float(lra.group(1)) if lra else None,
+            "true_peak_dbtp": float(tp.group(1)) if tp else None}
 
 
 def transcribe(audio, model, d):
@@ -188,8 +190,10 @@ def single(video, model, workdir):
     # (word_count 0 is a real measurement for a music-only render; None is not.)
     errors = [k for k in ("probe_error", "cuts_error", "speech_error", "audio_note") if out.get(k)]
     required = ("duration_s", "width", "height", "fps", "cut_count", "avg_shot_len_s", "cuts_first_3s",
-                "integrated_lufs", "word_count", "words_per_sec")
+                "integrated_lufs", "true_peak_dbtp", "word_count", "words_per_sec")
     errors += [f"{k} not measured" for k in required if out.get(k) is None]
+    if out.get("true_peak_dbtp") is not None and out["true_peak_dbtp"] > -1:
+        errors.append(f"true peak {out['true_peak_dbtp']} dBTP above -1 dBTP master limit")
     if out.get("first_word_at_s") is None and (out.get("word_count") or 0) > 0:
         errors.append("first_word_at_s not measured")
     errors += [f"{k} empty" for k in ("hook_frames_t", "sheet_frames_t") if not out.get(k)]

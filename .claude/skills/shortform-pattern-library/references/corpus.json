@@ -1,6 +1,6 @@
 {
   "schema": "synthex.shortform.corpus/2",
-  "built_from": "harness/harvest.cjs + analyze.py + vision breakdown",
+  "built_from": "logged-out harvester (kept outside this repo) + analyze.py + vision breakdown",
   "sample_note": "Stratified, not random: latest-12 reels per public profile, logged out, kept if views >= 1M, capped per account; control_low = same accounts' reels under 500K. Views as shown on the profile grid on observed_at.",
   "reels_file": "corpus-reels.jsonl",
   "count": 135,

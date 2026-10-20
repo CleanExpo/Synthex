@@ -30,7 +30,7 @@
   "runner": {
     "skill": "nexus-viral-run",
     "code": "scripts/nexus-viral-run.ts",
-    "note": "canonical runner for nodes N3-N13; dry-run by default"
+    "note": "canonical runner for nodes N4, N5, N7, N14, N15 (Gate A, copy, generate, Gate B, derive_cuts); dry-run by default"
   },
   "invariants": [
     "Real images only: every visual goes through generateImage()/submitGenerativeVideo() or owned footage; GroundingBlockedError is a gate, not a retry (.claude/rules/real-images-only.md)",
@@ -56,11 +56,7 @@
       "name": "Intake",
       "stage": "brief",
       "purpose": "Pin brand, client, platform set, goal metric and owned-asset inventory before any idea work",
-      "skills": [
-        "brandprint",
-        "business-dna",
-        "shortform-video-harness"
-      ],
+      "skills": ["brandprint", "business-dna", "shortform-video-harness"],
       "tools": [
         {
           "kind": "studio_tool",
@@ -83,10 +79,7 @@
           "ref": "lib/services/ai/studio-tools/index.ts:331"
         }
       ],
-      "inputs": [
-        "request text",
-        "orgId"
-      ],
+      "inputs": ["request text", "orgId"],
       "outputs": [
         "brief.brand",
         "brief.platforms[]",
@@ -127,34 +120,24 @@
         },
         {
           "kind": "cli",
-          "name": "harvest.cjs grid/reels + analyze.py",
-          "ref": ".claude/skills/shortform-pattern-library/harness/"
+          "name": "analyze.py (harvester held privately, outside this public repo)",
+          "ref": ".claude/skills/shortform-pattern-library/harness/analyze.py"
         }
       ],
-      "inputs": [
-        "brief.niche",
-        "competitor handles"
-      ],
-      "outputs": [
-        "trend_signals[]",
-        "reference_reels[] (structure only)"
-      ],
+      "inputs": ["brief.niche", "competitor handles"],
+      "outputs": ["trend_signals[]", "reference_reels[] (structure only)"],
       "gate": "References are studied, never re-posted (platform originality rules)",
       "spend": "metered",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N0"
-      ]
+      "depends_on": ["N0"]
     },
     {
       "id": "N2",
       "name": "Topic queue",
       "stage": "research",
       "purpose": "Store and rank candidate topics",
-      "skills": [
-        "nexus-viral"
-      ],
+      "skills": ["nexus-viral"],
       "tools": [
         {
           "kind": "code",
@@ -167,19 +150,12 @@
           "ref": "prisma/schema.prisma:5908"
         }
       ],
-      "inputs": [
-        "trend_signals[]",
-        "brief"
-      ],
-      "outputs": [
-        "topic"
-      ],
+      "inputs": ["trend_signals[]", "brief"],
+      "outputs": ["topic"],
       "spend": "none",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N1"
-      ]
+      "depends_on": ["N1"]
     },
     {
       "id": "N3",
@@ -213,10 +189,7 @@
           "ref": ".claude/skills/shortform-pattern-library/references/"
         }
       ],
-      "inputs": [
-        "topic",
-        "brief.platforms[]"
-      ],
+      "inputs": ["topic", "brief.platforms[]"],
       "outputs": [
         "concept.archetype",
         "concept.hook_spoken",
@@ -228,18 +201,14 @@
       "spend": "none",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N2"
-      ]
+      "depends_on": ["N2"]
     },
     {
       "id": "N4",
       "name": "Gate A: brief grill",
       "stage": "gate",
       "purpose": "Fail closed before any spend",
-      "skills": [
-        "nexus-viral-run"
-      ],
+      "skills": ["nexus-viral-run"],
       "tools": [
         {
           "kind": "code",
@@ -247,19 +216,13 @@
           "ref": "lib/video/gates/index.ts:138"
         }
       ],
-      "inputs": [
-        "concept"
-      ],
-      "outputs": [
-        "gateA.verdict"
-      ],
+      "inputs": ["concept"],
+      "outputs": ["gateA.verdict"],
       "gate": "persisted VideoGateVerdict status=passed",
       "spend": "metered",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N3"
-      ]
+      "depends_on": ["N3"]
     },
     {
       "id": "N5",
@@ -289,10 +252,7 @@
           "ref": "lib/services/ai/studio-tools/research-tools.ts:229"
         }
       ],
-      "inputs": [
-        "concept",
-        "gateA.verdict"
-      ],
+      "inputs": ["concept", "gateA.verdict"],
       "outputs": [
         "script.beats[] {t, line, on_screen_text, shot}",
         "script.claims[] with evidence"
@@ -301,9 +261,7 @@
       "spend": "metered",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N4"
-      ]
+      "depends_on": ["N4"]
     },
     {
       "id": "N6",
@@ -327,18 +285,14 @@
           "ref": "lib/services/ai/studio-tools/index.ts:353"
         }
       ],
-      "inputs": [
-        "script.beats[]"
-      ],
+      "inputs": ["script.beats[]"],
       "outputs": [
         "shots[] {beat, source: owned|generate_image|generate_video|capture|avatar, asset_ref}"
       ],
       "spend": "none",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N5"
-      ]
+      "depends_on": ["N5"]
     },
     {
       "id": "N7",
@@ -391,30 +345,21 @@
           "ref": "lib/motion/planner.ts:136"
         }
       ],
-      "inputs": [
-        "shots[]"
-      ],
-      "outputs": [
-        "clips[]"
-      ],
+      "inputs": ["shots[]"],
+      "outputs": ["clips[]"],
       "gate": "GroundingBlockedError = stop and request real photos; draft tier first",
       "spend": "expensive",
       "human_gate": true,
       "human_gate_reason": "generate_video spend needs --live --confirm-spend",
       "status": "live",
-      "depends_on": [
-        "N6"
-      ]
+      "depends_on": ["N6"]
     },
     {
       "id": "N8",
       "name": "Voiceover",
       "stage": "audio",
       "purpose": "Brand voice reading the script with word timestamps",
-      "skills": [
-        "video-sound-designer",
-        "brand-video"
-      ],
+      "skills": ["video-sound-designer", "brand-video"],
       "tools": [
         {
           "kind": "code",
@@ -427,31 +372,20 @@
           "ref": "app/api/media/generate/voice/route.ts:117"
         }
       ],
-      "inputs": [
-        "script.beats[]",
-        "brand voice id"
-      ],
-      "outputs": [
-        "vo.wav",
-        "vo.word_timestamps[]"
-      ],
+      "inputs": ["script.beats[]", "brand voice id"],
+      "outputs": ["vo.wav", "vo.word_timestamps[]"],
       "spend": "metered",
       "human_gate": false,
       "status": "partial",
       "build_hint": "Add a metered `generate_voice` studio tool wrapping generateSpeech so agents can call it without the REST route",
-      "depends_on": [
-        "N5"
-      ]
+      "depends_on": ["N5"]
     },
     {
       "id": "N9",
       "name": "Music and SFX",
       "stage": "audio",
       "purpose": "Licensed bed and hit points; no trending commercial tracks on brand accounts",
-      "skills": [
-        "video-sound-designer",
-        "artlist-mcp"
-      ],
+      "skills": ["video-sound-designer", "artlist-mcp"],
       "tools": [
         {
           "kind": "code",
@@ -465,22 +399,14 @@
           "ref": "scripts/generate-brand-audio.ts:7"
         }
       ],
-      "inputs": [
-        "script.beats[]",
-        "concept.archetype"
-      ],
-      "outputs": [
-        "music.wav",
-        "sfx[]"
-      ],
+      "inputs": ["script.beats[]", "concept.archetype"],
+      "outputs": ["music.wav", "sfx[]"],
       "spend": "metered",
       "human_gate": false,
       "status": "stub",
       "build_hint": "Connect the Artlist MCP (artlist-mcp skill) or a licensed royalty-free library; Instagram/Facebook business accounts are limited to licensed audio, YouTube blocks claimed music on Shorts over 60 s",
       "fallback": "Voice-only (common in the 1M+ corpus) or YouTube Audio Library / Meta Sound Collection uploaded manually",
-      "depends_on": [
-        "N5"
-      ]
+      "depends_on": ["N5"]
     },
     {
       "id": "N10",
@@ -511,34 +437,20 @@
           "ref": "lib/video/video-processor.ts:59"
         }
       ],
-      "inputs": [
-        "clips[]",
-        "vo.wav",
-        "music.wav",
-        "script.beats[]"
-      ],
-      "outputs": [
-        "hero.mp4 (9:16 master)"
-      ],
+      "inputs": ["clips[]", "vo.wav", "music.wav", "script.beats[]"],
+      "outputs": ["hero.mp4 (9:16 master)"],
       "spend": "none",
       "human_gate": false,
       "status": "partial",
       "build_hint": "Add a `compose_hero` studio tool (Remotion SocialReel or ffmpeg) so derive_cuts receives a hero without a manual render; worktrees need `npm ci` before npx remotion runs",
-      "depends_on": [
-        "N7",
-        "N8",
-        "N9"
-      ]
+      "depends_on": ["N7", "N8", "N9"]
     },
     {
       "id": "N11",
       "name": "Captions and transcript",
       "stage": "captions",
       "purpose": "Word-accurate burned-in captions plus SRT (LinkedIn needs SRT)",
-      "skills": [
-        "video-use",
-        "shortform-pattern-library"
-      ],
+      "skills": ["video-use", "shortform-pattern-library"],
       "tools": [
         {
           "kind": "cli",
@@ -551,59 +463,41 @@
           "ref": "lib/video/social-cut-renderer.ts:148"
         }
       ],
-      "inputs": [
-        "hero.mp4 or vo.wav"
-      ],
-      "outputs": [
-        "captions.srt",
-        "hero_captioned.mp4"
-      ],
+      "inputs": ["hero.mp4 or vo.wav"],
+      "outputs": ["captions.srt", "hero_captioned.mp4"],
       "spend": "none",
       "human_gate": false,
       "status": "gap",
       "build_hint": "Add `media_transcribe` to the Railway media worker (whisper.cpp) returning word timestamps + SRT; ElevenLabs timestamps from N8 can skip transcription when VO is synthetic",
-      "depends_on": [
-        "N10"
-      ]
+      "depends_on": ["N10"]
     },
     {
       "id": "N12",
       "name": "Loudness master",
       "stage": "audio",
       "purpose": "Integrated -14 LUFS, true peak -1 dBTP (the corpus' delivered level)",
-      "skills": [
-        "video-sound-designer"
-      ],
+      "skills": ["video-sound-designer"],
       "tools": [
         {
           "kind": "cli",
           "name": "ffmpeg loudnorm=I=-14:TP=-1",
-          "ref": "/opt/homebrew/bin/ffmpeg"
+          "ref": "bin:ffmpeg"
         }
       ],
-      "inputs": [
-        "hero_captioned.mp4"
-      ],
-      "outputs": [
-        "hero_master.mp4"
-      ],
+      "inputs": ["hero_captioned.mp4"],
+      "outputs": ["hero_master.mp4"],
       "spend": "none",
       "human_gate": false,
       "status": "partial",
       "build_hint": "Add loudnorm to the media worker transcode path",
-      "depends_on": [
-        "N11"
-      ]
+      "depends_on": ["N11"]
     },
     {
       "id": "N13",
       "name": "Technical + craft QA",
       "stage": "gate",
       "purpose": "Measure our own render with the same instruments used on the 1M+ corpus",
-      "skills": [
-        "shortform-pattern-library",
-        "video-brand-guardian"
-      ],
+      "skills": ["shortform-pattern-library", "video-brand-guardian"],
       "tools": [
         {
           "kind": "code",
@@ -621,28 +515,20 @@
           "ref": "lib/services/ai/studio-tools/media-tools.ts:131"
         }
       ],
-      "inputs": [
-        "hero_master.mp4"
-      ],
-      "outputs": [
-        "qa.report"
-      ],
+      "inputs": ["hero_master.mp4"],
+      "outputs": ["qa.report"],
       "gate": "Craft checklist in shortform-pattern-library section 'Craft gate' passes",
       "spend": "none",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N12"
-      ]
+      "depends_on": ["N12"]
     },
     {
       "id": "N14",
       "name": "Gate B: broadcast grill",
       "stage": "gate",
       "purpose": "Creative and legal pass on the rendered hero before derivation",
-      "skills": [
-        "nexus-viral-run"
-      ],
+      "skills": ["nexus-viral-run"],
       "tools": [
         {
           "kind": "code",
@@ -650,20 +536,13 @@
           "ref": "lib/video/gates/index.ts:145"
         }
       ],
-      "inputs": [
-        "hero_master.mp4",
-        "qa.report"
-      ],
-      "outputs": [
-        "gateB.verdict"
-      ],
+      "inputs": ["hero_master.mp4", "qa.report"],
+      "outputs": ["gateB.verdict"],
       "gate": "persisted VideoGateVerdict status=passed",
       "spend": "metered",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N13"
-      ]
+      "depends_on": ["N13"]
     },
     {
       "id": "N15",
@@ -695,20 +574,12 @@
           "ref": ".claude/skills/shortform-pattern-library/references/platform-rules.json"
         }
       ],
-      "inputs": [
-        "hero_master.mp4",
-        "gateB.verdict",
-        "brief.platforms[]"
-      ],
-      "outputs": [
-        "cuts[] queued_human_gated"
-      ],
+      "inputs": ["hero_master.mp4", "gateB.verdict", "brief.platforms[]"],
+      "outputs": ["cuts[] queued_human_gated"],
       "spend": "metered",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N14"
-      ]
+      "depends_on": ["N14"]
     },
     {
       "id": "N16",
@@ -732,29 +603,19 @@
           "ref": "lib/services/ai/studio-tools/index.ts:367"
         }
       ],
-      "inputs": [
-        "cuts[]",
-        "script"
-      ],
-      "outputs": [
-        "posts[] {platform, caption, hashtags, title, ai_flag}"
-      ],
+      "inputs": ["cuts[]", "script"],
+      "outputs": ["posts[] {platform, caption, hashtags, title, ai_flag}"],
       "spend": "metered",
       "human_gate": false,
       "status": "live",
-      "depends_on": [
-        "N15"
-      ]
+      "depends_on": ["N15"]
     },
     {
       "id": "N17",
       "name": "Human approval and publish",
       "stage": "publish",
       "purpose": "Human reviews each cut and post; publish via adapters or scheduled cron",
-      "skills": [
-        "social-integrations",
-        "connecting-meta-facebook-instagram"
-      ],
+      "skills": ["social-integrations", "connecting-meta-facebook-instagram"],
       "tools": [
         {
           "kind": "studio_tool",
@@ -772,21 +633,15 @@
           "ref": "vercel.json:137"
         }
       ],
-      "inputs": [
-        "cuts[]",
-        "posts[]"
-      ],
-      "outputs": [
-        "published_ids[]"
-      ],
+      "inputs": ["cuts[]", "posts[]"],
+      "outputs": ["published_ids[]"],
       "gate": "Human approval; TikTok public posting only after API audit (draft/inbox until then); new formats as Instagram Trial Reels",
       "spend": "none",
       "human_gate": true,
       "human_gate_reason": "No agent publish primitive by design",
-      "status": "live",
-      "depends_on": [
-        "N16"
-      ]
+      "status": "partial",
+      "build_hint": "Instagram, TikTok and YouTube adapters publish video. facebook.ts posts text/link to /{page-id}/feed only and linkedin.ts posts text/article to /v2/ugcPosts only: add video_reels start/upload/finish (Facebook) and Videos API initializeUpload/finalizeUpload + /rest/posts (LinkedIn); until then upload those cuts manually",
+      "depends_on": ["N16"]
     },
     {
       "id": "N18",
@@ -815,9 +670,7 @@
           "ref": "lib/services/ai/studio-tools/performance-tools.ts:104"
         }
       ],
-      "inputs": [
-        "published_ids[]"
-      ],
+      "inputs": ["published_ids[]"],
       "outputs": [
         "scorecard {skip_rate, avg_watch_pct, sends_per_reach, engaged_views, client_metric}"
       ],
@@ -825,9 +678,7 @@
       "human_gate": false,
       "status": "partial",
       "build_hint": "Add `performance_get_video_metrics` exposing ig_reels_avg_watch_time, reels_skip_rate, shares, engagedViews, post_video_retention_graph; never report an unread metric as 0",
-      "depends_on": [
-        "N17"
-      ]
+      "depends_on": ["N17"]
     }
   ],
   "duplicates_to_converge": [

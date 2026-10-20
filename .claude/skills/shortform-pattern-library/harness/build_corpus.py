@@ -2,10 +2,12 @@
 """Merge per-reel meta/metrics/observed into references/corpus-reels.jsonl and write the
 aggregates to references/corpus.json.
 
-Usage: python3 -I build_corpus.py <datadir> <out corpus.json>
+Usage: python3 -I build_corpus.py <datadir> <out corpus.json> <private key.json>
 
 Only structure is kept: full transcripts and captions are dropped (first 3 s of speech stays,
-as the hook under study). No media leaves the data dir.
+as the hook under study). No media leaves the data dir. This repo is public, so reels and accounts
+are written as reel-NNN / acct-NN; the id-to-handle/URL key goes to <private key.json>, which must
+sit outside the repo.
 """
 import json, statistics as st, sys
 from collections import Counter, defaultdict
@@ -30,7 +32,7 @@ def q(vals):
     return {"n": len(v), "p25": pick(0.25), "median": st.median(v), "p75": pick(0.75), "min": v[0], "max": v[-1]}
 
 
-def main(datadir, out):
+def main(datadir, out, keyfile):
     reels = []
     for d in sorted((Path(datadir) / "reels").iterdir()):
         meta, met, obs = load(d / "meta.json"), load(d / "metrics.json"), load(d / "observed.json")
@@ -113,9 +115,17 @@ def main(datadir, out):
     agg["hook_text_cap_height_pct"] = q(ch)
 
     # Per-reel rows go to a sibling JSON Lines file (one reel per line); this file keeps the aggregates.
+    # Identities are replaced by pseudonyms; the key never enters the repo.
+    acct, key, public = {}, [], []
+    for i, r in enumerate(reels, 1):
+        a = acct.setdefault(r["handle"], f"acct-{len(acct) + 1:02d}")
+        key.append({"reel_id": f"reel-{i:03d}", "account_id": a, **{k: r[k] for k in ("code", "url", "handle", "poster")}})
+        public.append({"reel_id": f"reel-{i:03d}", "account_id": a,
+                       **{k: v for k, v in r.items() if k not in ("code", "url", "handle", "poster")}})
+    Path(keyfile).write_text(json.dumps(key, indent=1, ensure_ascii=False))
     rows = Path(out).with_name("corpus-reels.jsonl")
-    rows.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in reels))
-    doc = {"schema": "synthex.shortform.corpus/2", "built_from": "harness/harvest.cjs + analyze.py + vision breakdown",
+    rows.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in public))
+    doc = {"schema": "synthex.shortform.corpus/2", "built_from": "logged-out harvester (kept outside this repo) + analyze.py + vision breakdown",
            "sample_note": "Stratified, not random: latest-12 reels per public profile, logged out, kept if views >= 1M, capped per account; control_low = same accounts' reels under 500K. Views as shown on the profile grid on observed_at.",
            "reels_file": rows.name, "count": len(reels), "ok": len(ok), "control_low": len(ctl), "aggregates": agg}
     Path(out).write_text(json.dumps(doc, indent=1, ensure_ascii=False))
@@ -124,4 +134,7 @@ def main(datadir, out):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    root = Path(__file__).resolve().parents[4]
+    if Path(sys.argv[3]).resolve().is_relative_to(root):
+        sys.exit("private key must be written outside the repo")
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

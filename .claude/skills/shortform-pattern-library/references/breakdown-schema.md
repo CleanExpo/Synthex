@@ -5,6 +5,7 @@ estimated by eye. The observed half is read from `hook.jpg` (0–2.75 s at 4 fps
 and `sheet.jpg` (one frame per shot, then the last frame) plus the transcript.
 
 Rules for the observer:
+
 - Read what is in the frames. If a field cannot be seen, write `null`; never guess.
 - Sizes are estimates against the 9:16 frame and are labelled `_est`.
 - Quote on-screen text exactly as it appears, including capitals and emoji.
@@ -16,18 +17,18 @@ v1.1 (2026-10-19) added `single_take`, `over_shoulder_pov`, `advice_qa` and `aud
 
 ## Measured (analyze.py)
 
-| Field | Meaning |
-|---|---|
-| `duration_s`, `width`, `height`, `fps` | ffprobe |
-| `cut_count`, `cut_times`, `avg_shot_len_s`, `cuts_first_3s` | ffmpeg scene score > 0.30 (hard cuts; whip-pans and punch-ins can miss) |
-| `integrated_lufs`, `lra_lu` | EBU R128 on the delivered AAC track |
-| `first_word_at_s`, `words_per_sec`, `word_count`, `first_3s_text`, `full_text` | whisper.cpp base.en; music-only reels give few or no words |
+| Field                                                                          | Meaning                                                                 |
+| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| `duration_s`, `width`, `height`, `fps`                                         | ffprobe                                                                 |
+| `cut_count`, `cut_times`, `avg_shot_len_s`, `cuts_first_3s`                    | ffmpeg scene score > 0.30 (hard cuts; whip-pans and punch-ins can miss) |
+| `integrated_lufs`, `lra_lu`                                                    | EBU R128 on the delivered AAC track                                     |
+| `first_word_at_s`, `words_per_sec`, `word_count`, `first_3s_text`, `full_text` | whisper.cpp base.en; music-only reels give few or no words              |
 
 ## Observed (vision + transcript)
 
 ```json
 {
-  "code": "DeRswhbsC5c",
+  "code": "reel-000",
   "frame1": {
     "shot_scale": "extreme_closeup | closeup | medium | wide",
     "subject": "face | problem_object | action | product | text_card | scene",
@@ -55,7 +56,16 @@ v1.1 (2026-10-19) added `single_take`, `over_shoulder_pov`, `advice_qa` and `aud
   },
   "format": "talking_head | voiceover_broll | selfie_pip_over_broll | green_screen | pov_hands | skit | demo_tutorial | before_after | montage | interview | text_over_footage | single_take | over_shoulder_pov",
   "camera": "handheld | tripod | gimbal | mixed | screen",
-  "graphics": ["zoom_punch_in", "arrows_circles", "stickers_emoji", "progress_bar", "split_screen", "counter_label", "lower_third", "none"],
+  "graphics": [
+    "zoom_punch_in",
+    "arrows_circles",
+    "stickers_emoji",
+    "progress_bar",
+    "split_screen",
+    "counter_label",
+    "lower_third",
+    "none"
+  ],
   "colour_look": "natural | warm | cool | high_contrast | desaturated | mixed",
   "spoken_hook_type": "question | bold_claim | contrarian | number_list | you_address | story_open | none",
   "archetype": "did_you_know | listicle | myth_bust | tutorial | transformation | challenge_stunt | story | reaction | news | comedy_skit | review_demo | day_in_life | advice_qa",

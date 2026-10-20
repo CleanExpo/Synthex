@@ -7,7 +7,7 @@ Checks: node ids unique; depends_on resolve; every skill exists in <repo>/.claud
 within 3 lines of a symbol named in the tool's name;
 gap/stub/partial nodes carry a build_hint. Exit 1 with one line per problem.
 """
-import json, re, sys
+import json, re, shutil, sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -47,6 +47,8 @@ def main():
                         problems.append(f"{nid}: {ref} does not point at any of {idents[:4]}")
             elif ref.startswith("/") and not Path(ref).exists():
                 problems.append(f"{nid}: binary {ref} missing")
+            elif ref.startswith("bin:") and not shutil.which(ref[4:]):
+                problems.append(f"{nid}: binary {ref[4:]} not on PATH")
         if n.get("status") in ("gap", "stub", "partial") and not n.get("build_hint"):
             problems.append(f"{nid}: status {n['status']} without build_hint")
     for p in problems:
