@@ -4,4 +4,6 @@ Space Grotesk headings (300, 400, 500, 600) and Inter body (400, 500, 600, 700) 
 
 `app/layout.tsx` uses `next/font/local`, so builds do not fetch Google Fonts or parse changing CDN URLs. CSS variable names and `display: swap` are preserved. These application weights are separate from each brand's approved art-board typography.
 
+`inter-latin-700-normal.woff` is the caption face burned into social cuts (`lib/video/social-cut-renderer.ts`). It is WOFF, not WOFF2, because the bundled ffmpeg's FreeType cannot read WOFF2, and the ffmpeg builds have no fontconfig, so drawtext must be given a font file.
+
 Sources: [Fontsource](https://github.com/fontsource/fontsource), [Next.js local fonts](https://nextjs.org/docs/app/getting-started/fonts). See `sources.json`, `inter-OFL.txt` and `space-grotesk-OFL.txt`.

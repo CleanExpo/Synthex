@@ -7,6 +7,9 @@
  * downloaded hero + rendered cut there) — the fakes write tiny stub files.
  */
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+import { spawnSync } from 'child_process';
 
 const mockVideoAsset = {
   findMany: jest.fn(),
@@ -44,7 +47,9 @@ import {
   wrapCaptionLines,
   escapeDrawtext,
   buildVideoFilters,
+  CAPTION_FONT_FILE,
   captionColours,
+  escapeFilterPath,
   parseRenderPlan,
   claimSocialCut,
   renderSocialCut,
@@ -186,13 +191,31 @@ describe('buildVideoFilters()', () => {
     expect(filters.some(f => f.startsWith('drawtext='))).toBe(true);
   });
 
-  it('keeps the unbranded caption byte-identical when there is no kit', () => {
+  it('keeps the unbranded caption look when there is no kit', () => {
     const dims = { width: 1080, height: 1920 };
     const first = wrapCaptionLines(PLAN.caption.text)[0];
     // 1:1 crop of 1080x1920 -> 1080 high: font 35px, band top 86px.
-    const legacy = `drawtext=text='${escapeDrawtext(first)}':fontsize=35:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=12:x=(w-text_w)/2:y=86`;
+    const legacy = `drawtext=fontfile=${escapeFilterPath(CAPTION_FONT_FILE)}:text='${escapeDrawtext(first)}':fontsize=35:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=12:x=(w-text_w)/2:y=86`;
     expect(buildVideoFilters(PLAN, dims)[1]).toBe(legacy);
     expect(buildVideoFilters(PLAN, dims, null)[1]).toBe(legacy);
+  });
+
+  it('names the bundled caption font in every drawtext', () => {
+    expect(fs.existsSync(CAPTION_FONT_FILE)).toBe(true);
+    const drawtexts = buildVideoFilters(PLAN, {
+      width: 1080,
+      height: 1920,
+    }).filter(f => f.startsWith('drawtext='));
+    expect(drawtexts.length).toBeGreaterThan(0);
+    for (const d of drawtexts) {
+      expect(d.startsWith(`drawtext=fontfile=`)).toBe(true);
+    }
+  });
+
+  it('escapes filter-graph metacharacters in the font path', () => {
+    expect(escapeFilterPath("/a b/it's:x,y\\z")).toBe(
+      "/a b/it\\'s\\:x\\,y\\\\z"
+    );
   });
 
   it('fills the caption box with a dark brand colour and uses white text', () => {
@@ -218,6 +241,58 @@ describe('buildVideoFilters()', () => {
     const drawtext = filters.find(f => f.startsWith('drawtext='));
     expect(drawtext).toContain(':boxcolor=0xfde047@0.85:');
     expect(drawtext).toContain(':fontcolor=black:');
+  });
+});
+
+// The production ffmpeg builds (darwin-arm64 and linux-x64 4.1.0) have FreeType but no
+// fontconfig, so drawtext without a font file refuses to start. Run the real binary on
+// the real filter chain, from a font path with a space and a comma in it.
+describe('buildVideoFilters() on the installed ffmpeg', () => {
+  const ffmpegPath: string = jest.requireActual(
+    '@ffmpeg-installer/ffmpeg'
+  ).path;
+  let fontDir: string;
+  let fontFile: string;
+
+  beforeAll(() => {
+    fontDir = fs.mkdtempSync(path.join(os.tmpdir(), 'caption font, '));
+    fontFile = path.join(fontDir, 'caption.woff');
+    fs.copyFileSync(CAPTION_FONT_FILE, fontFile);
+  });
+  afterAll(() => fs.rmSync(fontDir, { recursive: true, force: true }));
+
+  it.each([
+    ['unbranded', null],
+    ['branded', { primaryColor: '#0f172a', source: 'preset' as const }],
+  ])('renders a %s caption frame', (_label, kit) => {
+    const filters = buildVideoFilters(
+      PLAN,
+      { width: 1080, height: 1920 },
+      kit,
+      fontFile
+    );
+    const run = spawnSync(
+      ffmpegPath,
+      [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-f',
+        'lavfi',
+        '-i',
+        'color=c=gray:s=1080x1920:d=1',
+        '-vf',
+        filters.join(','),
+        '-frames:v',
+        '1',
+        '-f',
+        'null',
+        '-',
+      ],
+      { encoding: 'utf8', timeout: 30_000 }
+    );
+    expect(run.stderr).toBe('');
+    expect(run.status).toBe(0);
   });
 });
 

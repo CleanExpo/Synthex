@@ -39,6 +39,16 @@ import type {
 
 const SOCIAL_CUT_BUCKET = 'generated-videos';
 
+/**
+ * Caption face. The bundled ffmpeg builds have FreeType but no fontconfig, so
+ * drawtext without a font file fails to start. WOFF, not WOFF2: this FreeType
+ * cannot read WOFF2. Traced into the cron bundle by next.config.mjs.
+ */
+export const CAPTION_FONT_FILE = path.join(
+  process.cwd(),
+  'public/fonts/app/inter-latin-700-normal.woff'
+);
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface RenderPlan {
@@ -153,6 +163,15 @@ export function escapeDrawtext(line: string): string {
     .replace(/%/g, '\\%');
 }
 
+/** Escape a file path for an unquoted filter option value. */
+export function escapeFilterPath(filePath: string): string {
+  return filePath
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/:/g, '\\:')
+    .replace(/,/g, '\\,');
+}
+
 /** WCAG relative luminance of a #rrggbb colour. */
 function relativeLuminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map(offset => {
@@ -189,7 +208,8 @@ export function captionColours(kit?: RenderBrandKit | null): {
 export function buildVideoFilters(
   plan: RenderPlan,
   dims: { width: number; height: number },
-  kit?: RenderBrandKit | null
+  kit?: RenderBrandKit | null,
+  fontFile: string = CAPTION_FONT_FILE
 ): string[] {
   const filters: string[] = [];
 
@@ -212,7 +232,7 @@ export function buildVideoFilters(
   lines.forEach((line, i) => {
     const y = bandTopPx + i * lineGap;
     filters.push(
-      `drawtext=text='${escapeDrawtext(line)}':fontsize=${fontSize}:fontcolor=${fontcolor}:box=1:boxcolor=${boxcolor}:boxborderw=12:x=(w-text_w)/2:y=${y}`
+      `drawtext=fontfile=${escapeFilterPath(fontFile)}:text='${escapeDrawtext(line)}':fontsize=${fontSize}:fontcolor=${fontcolor}:box=1:boxcolor=${boxcolor}:boxborderw=12:x=(w-text_w)/2:y=${y}`
     );
   });
 

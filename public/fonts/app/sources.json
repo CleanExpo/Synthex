@@ -78,5 +78,15 @@
     "bytes": 13284,
     "license": "OFL-1.1",
     "licensePath": "public/fonts/app/space-grotesk-OFL.txt"
+  },
+  {
+    "path": "public/fonts/app/inter-latin-700-normal.woff",
+    "family": "inter",
+    "weight": 700,
+    "source": "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.3.0/files/inter-latin-700-normal.woff",
+    "sha256": "7c5ed5655730de337704d3fc94628515cd7e3d8d32368871709bf56ac0397e7a",
+    "bytes": 31320,
+    "license": "OFL-1.1",
+    "licensePath": "public/fonts/app/inter-OFL.txt"
   }
 ]
