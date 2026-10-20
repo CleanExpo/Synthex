@@ -15,9 +15,9 @@
  *  - LOG-ONLY: a breaching request under a 'log_only' policy row still
  *    returns 200 (deploy safety).
  *  - RACE (must_fix 8): two parallel near-ceiling reserveBudget calls —
- *    exactly one proceeds. (In-flight counters run on the redis-client
- *    memory fallback here — no Upstash REST in the sandbox — which is the
- *    same atomic INCRBY contract the Upstash server provides in prod.)
+ *    exactly one proceeds. (In-flight counters run on the J9 process-wide
+ *    redis fake here — no Upstash REST in the sandbox — which is the same
+ *    shared, atomic INCRBY contract the Upstash server provides in prod.)
  *
  * Run: npx jest --config config/jest/jest.integration.cjs \
  *        tests/integration/budget-enforcer.integration.test.ts
@@ -26,6 +26,12 @@
 // The app's lib/prisma singleton is Supabase-tuned (forces SSL) and rejects
 // the local sandbox Postgres — swap it for the sandbox client so the REAL
 // route + generator + enforcer code paths hit the sandbox DB.
+// An enforcing policy admits spend only when the in-flight counters are
+// SHARED across instances (lib/ai/budget-enforcer.ts); the real wrapper's
+// memory mode is per-instance, so this process-wide fake stands in for Upstash.
+jest.mock('@/lib/redis-client', () =>
+  jest.requireActual('../eval/jev/families/j9/fake-db').redisModule()
+);
 jest.mock('@/lib/prisma', () => {
   const { createSandboxPrismaClient } = require('./setup/seed');
   const { prisma } = createSandboxPrismaClient();

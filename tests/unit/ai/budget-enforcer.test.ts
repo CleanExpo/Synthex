@@ -1,9 +1,10 @@
 /**
  * BUDGET-ENFORCER — unit contract for lib/ai/budget-enforcer.ts.
  *
- * Prisma is mocked (policy row + ledger sums); Redis runs on the REAL
- * redis-client memory fallback so the atomic INCRBY reservation counters are
- * genuinely exercised (reset between tests).
+ * Prisma is mocked (policy row + ledger sums); Redis is the J9 process-wide
+ * fake, standing in for the shared Upstash store, so the atomic INCRBY
+ * reservation counters are genuinely exercised (reset between tests). The
+ * outage behaviour is pinned in budget-enforcer-redis-outage.test.ts.
  *
  * Pins the deploy-safety contract:
  *   - no policy row + no env defaults  → no-op (null reservation, no throw)
@@ -19,6 +20,12 @@
 const mockPolicyFindUnique = jest.fn();
 const mockLedgerAggregate = jest.fn();
 
+// An enforcing policy admits spend only when the in-flight counters are
+// SHARED across instances (lib/ai/budget-enforcer.ts); the real wrapper's
+// memory mode is per-instance, so this process-wide fake stands in for Upstash.
+jest.mock('@/lib/redis-client', () =>
+  jest.requireActual('../../eval/jev/families/j9/fake-db').redisModule()
+);
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {

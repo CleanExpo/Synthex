@@ -480,13 +480,36 @@ export function loggerModule() {
 
 export function redisModule() {
   const r = () => state().redis;
+  // String values (idempotency sentinels); counters stay in state().redis.
+  const strings = new Map<string, string>();
   const client = {
     async get(key: string) {
+      if (strings.has(key)) return strings.get(key) as string;
       return r().has(key) ? String(r().get(key)) : null;
+    },
+    async set(key: string, value: string) {
+      strings.set(key, value);
+    },
+    async del(keys: string | string[]) {
+      let n = 0;
+      for (const k of Array.isArray(keys) ? keys : [keys]) {
+        if (strings.delete(k)) n++;
+        if (r().delete(k)) n++;
+      }
+      return n;
+    },
+    async incr(key: string) {
+      r().set(key, (r().get(key) ?? 0) + 1);
+      return r().get(key) as number;
     },
     async incrby(key: string, n: number) {
       r().set(key, (r().get(key) ?? 0) + n);
       return r().get(key) as number;
+    },
+    // One process-wide map stands in for the shared Upstash store.
+    async incrbyShared(key: string, n: number) {
+      r().set(key, (r().get(key) ?? 0) + n);
+      return { total: r().get(key) as number, shared: true };
     },
     async decrby(key: string, n: number) {
       r().set(key, (r().get(key) ?? 0) - n);
@@ -496,7 +519,14 @@ export function redisModule() {
       return 1;
     },
   };
-  return { __esModule: true, getRedisClient: () => client };
+  return {
+    __esModule: true,
+    getRedisClient: () => client,
+    resetRedisClient: async () => {
+      r().clear();
+      strings.clear();
+    },
+  };
 }
 
 export { startOfUtcDay };

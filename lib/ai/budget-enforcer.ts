@@ -30,12 +30,21 @@
  * FAIL-CLOSED ON READ ERRORS (spec M10): a policy or ledger read ERROR
  * (missing table, connection failure, ...) refuses the spend with
  * OrgBudgetUnavailableError (routes answer HTTP 503) — an unreadable budget
- * is never treated as an absent one. The in-flight COUNTERS are not covered:
- * the Redis wrapper (lib/redis-client.ts) never throws and falls back to a
- * per-instance memory cache during an outage, so reserveBudget then proceeds
- * with in-flight counted per instance, not shared. The ledger SUM still
- * bounds settled spend; only concurrent reservations across instances can
- * jointly overshoot until Redis returns. A missing policy ROW is not an error:
+ * is never treated as an absent one. The in-flight COUNTERS follow the same
+ * rule under an ENFORCING policy row: they only stop concurrent reservations
+ * from jointly breaching when every instance shares them, and the Redis
+ * wrapper (lib/redis-client.ts) falls back to a per-instance memory cache
+ * when Upstash is down or not configured. reserveBudget therefore increments
+ * through incrbyShared and, when either window's increment did not land in
+ * the shared store, rolls back the one that did and refuses with
+ * OrgBudgetUnavailableError ('budget_counter_unavailable', HTTP 503). An
+ * enforced org therefore needs UPSTASH_REDIS_REST_URL / _TOKEN to spend at
+ * all. Under log_only or env defaults (observability only) the per-instance
+ * count is kept and the request proceeds. previewBudget and the commit /
+ * release DECRBYs still use the silent fallback: the preview is advisory (the
+ * worker's reserveBudget is the gate), and a DECRBY lost during an outage
+ * leaves the shared counter high until its TTL, the safe direction. A
+ * missing policy ROW is not an error:
  * the org keeps the env defaults, or no enforcement at all. A breach under a
  * live OrgBudgetPolicy row with enforcementMode='enforce' throws
  * OrgBudgetExceededError (HTTP 402). With zero policy rows and the env
@@ -90,7 +99,8 @@ export class OrgBudgetExceededError extends Error {
 }
 
 /**
- * The budget could not be read (policy, ledger or counter read error), so the
+ * The budget could not be read (policy or ledger read error, or the shared
+ * in-flight counter could not be written under an enforcing policy), so the
  * spend is refused rather than proceeding unbudgeted. Routes map this to
  * HTTP 503 BUDGET_UNAVAILABLE; queue workers fail the job with it.
  */
@@ -99,12 +109,17 @@ export const BUDGET_UNAVAILABLE = 'BUDGET_UNAVAILABLE';
 export class OrgBudgetUnavailableError extends Error {
   constructor(
     public readonly organizationId: string,
-    public readonly source: 'policy' | 'ledger',
+    public readonly source: 'policy' | 'ledger' | 'counter',
     cause?: unknown
   ) {
     super(
-      `Organization ${organizationId} AI spend refused: the budget ${source} ` +
-        `could not be read, so the budget cannot be checked. Retry shortly.`
+      source === 'counter'
+        ? `Organization ${organizationId} AI spend refused ` +
+            `(budget_counter_unavailable): the shared in-flight budget ` +
+            `counter could not be updated, so concurrent spend cannot be ` +
+            `bounded. Retry shortly.`
+        : `Organization ${organizationId} AI spend refused: the budget ${source} ` +
+            `could not be read, so the budget cannot be checked. Retry shortly.`
     );
     this.name = 'OrgBudgetUnavailableError';
     if (cause !== undefined) this.cause = cause;
@@ -386,13 +401,29 @@ export async function reserveBudget(
 
   const redis = getRedisClient();
   // INCR first, THEN check — atomic against concurrent reservations (each
-  // caller's check includes every other caller's increment). The wrapper
-  // never throws (memory fallback), so a redis outage degrades to
-  // per-instance counting rather than breaking generation.
-  const dailyTotalMicro = await redis.incrby(dailyKey, amountMicroUsd);
+  // caller's check includes every other caller's increment). That holds only
+  // while the increments land in the SHARED store; see the header.
+  const daily = await redis.incrbyShared(dailyKey, amountMicroUsd);
   await redis.expire(dailyKey, ttlToEndOfUtcDay(now));
-  const monthlyTotalMicro = await redis.incrby(monthlyKey, amountMicroUsd);
+  const monthly = await redis.incrbyShared(monthlyKey, amountMicroUsd);
   await redis.expire(monthlyKey, ttlToEndOfUtcMonth(now));
+  const dailyTotalMicro = daily.total;
+  const monthlyTotalMicro = monthly.total;
+
+  const enforcing = policy.mode === 'enforce' && policy.source === 'policy_row';
+  if (enforcing && (!daily.shared || !monthly.shared)) {
+    // Undo exactly what was incremented: a key whose write fell back to
+    // memory was never incremented in the shared store, and the memory copy
+    // is harmless either way.
+    if (daily.shared) await redis.decrby(dailyKey, amountMicroUsd);
+    if (monthly.shared) await redis.decrby(monthlyKey, amountMicroUsd);
+    warn('budget counter not shared — refusing spend (fail-closed)', {
+      organizationId,
+      dailyShared: daily.shared,
+      monthlyShared: monthly.shared,
+    });
+    throw new OrgBudgetUnavailableError(organizationId, 'counter');
+  }
 
   const reservation: OrgBudgetReservation = {
     id: randomUUID(),
