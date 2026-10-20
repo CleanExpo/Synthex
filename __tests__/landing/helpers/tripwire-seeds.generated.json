@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1087,
+  "count": 1100,
   "seeds": [
     {
       "text": "- [Error codes](docs/api/error-codes.md): 11 structured error codes, with HTTP status and meaning.",
@@ -76,6 +76,11 @@
     {
       "text": ";border:1px solid ;border-radius:8px;padding:20px;margin:32px 0;text-align:center;\"> <p style=\"margin:0 0 12px;font-size:1em;font-weight:600;color:",
       "file": "lib/content/layout-renderer.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "?fields=like_count,comments_count,insights.metric(impressions,reach,engagement,saved)",
+      "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
     },
     {
@@ -236,6 +241,21 @@
     {
       "text": "/help\">Help Center</a> or reply to this email.</p> <p>Welcome aboard!",
       "file": "lib/email/email-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/insights?metric=impressions,reach&period=day&since=",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/media?fields=like_count,comments_count&limit=50 Service not configured",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "&period=",
+      "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
     },
     {
@@ -2329,6 +2349,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "days_28",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "days_28 impressions",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "demo-branch-7 The original request points to creative production, but the decision could sit at three different layers: buyer evidence, offer relevance, or the learning system around creative work.",
       "file": "components/intentscape/demo-data.ts",
       "firstSeen": "base"
@@ -2586,6 +2616,11 @@
     {
       "text": "Figure 2 · The three-layer commercial chain",
       "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/EvidencePanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "follower_count",
+      "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
     },
     {
@@ -3009,6 +3044,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(impressions,reach,engagement)",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "If video is not part of your content mix, you are leaving engagement on the table.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3027,6 +3067,11 @@
       "text": "ImmutableAuditUnavailableError",
       "file": "lib/security/audit-logger.ts",
       "firstSeen": "9b976681"
+    },
+    {
+      "text": "impressions,reach,follower_count,profile_views,website_clicks",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
     },
     {
       "text": "Improved API rate limiting Security audit compliance updates",
@@ -3071,6 +3116,11 @@
     {
       "text": "In month three, a post on a common leadership failure went viral within the industry.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "insights.metric(impressions,reach,engagement)",
+      "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
     },
     {
@@ -3881,6 +3931,11 @@
     {
       "text": "productivity AI marketing",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "profile_views",
+      "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
     },
     {
@@ -5304,6 +5359,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "website_clicks",
+      "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "We build on the same stack.",
       "file": "app/add-ons/mcp-app-development/page.tsx",
       "firstSeen": "base"
@@ -5311,6 +5371,11 @@
     {
       "text": "Wed",
       "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "week days_28",
+      "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
     },
     {
