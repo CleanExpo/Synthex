@@ -125,9 +125,11 @@ def main(datadir, out, keyfile):
     # Free text (observer notes, transcripts) can name the source too: swap every known code, handle
     # and poster for its pseudonym, and blank any other @mention.
     swaps = sorted({(k[f], k["reel_id"] if f == "code" else k["account_id"])
-                    for k in key for f in ("code", "handle", "poster") if k.get(f) and len(k[f]) > 3},
+                    for k in key for f in ("code", "handle", "poster") if k.get(f)},
                    key=lambda s: -len(s[0]))
-    pattern = re.compile("|".join(re.escape(s) for s, _ in swaps), re.I) if swaps else None
+    # Identities of 1-3 characters match only as whole words, so they cannot rewrite ordinary words.
+    pattern = re.compile("|".join(re.escape(s) if len(s) > 3 else rf"(?<![A-Za-z0-9]){re.escape(s)}(?![A-Za-z0-9])"
+                                  for s, _ in swaps), re.I) if swaps else None
     lookup = {s.lower(): p for s, p in swaps}
 
     def scrub(v):
@@ -136,8 +138,8 @@ def main(datadir, out, keyfile):
         if isinstance(v, list):
             return [scrub(x) for x in v]
         if isinstance(v, str):
-            v = pattern.sub(lambda m: lookup[m.group(0).lower()], v) if pattern else v
-            return re.sub(r"@[A-Za-z0-9._]{2,}", "@[handle]", v)
+            v = re.sub(r"@[A-Za-z0-9._]+", "@[handle]", v)
+            return pattern.sub(lambda m: lookup[m.group(0).lower()], v) if pattern else v
         return v
 
     public = [scrub(r) for r in public]
