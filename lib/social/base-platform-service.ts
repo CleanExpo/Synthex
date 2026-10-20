@@ -43,16 +43,21 @@ export interface PlatformCredentials {
 
 export interface SyncAnalyticsResult {
   success: boolean;
+  /**
+   * `null` means the value was not read (failed, unconfigured, or no longer
+   * offered by the platform). It is never a real zero.
+   */
   metrics: {
-    impressions: number;
-    engagements: number;
-    followers: number;
+    impressions: number | null;
+    engagements: number | null;
+    followers: number | null;
     following?: number;
     posts?: number;
     likes?: number;
     comments?: number;
     shares?: number;
-    reach?: number;
+    reach?: number | null;
+    views?: number | null;
     profileViews?: number;
   };
   period: {
@@ -82,12 +87,14 @@ export interface SyncPostsResult {
     content: string;
     mediaUrls?: string[];
     publishedAt: Date;
+    /** `null`/absent means not read, never a real zero. */
     metrics: {
       likes: number;
       comments: number;
-      shares: number;
+      shares: number | null;
       impressions?: number;
       reach?: number;
+      views?: number;
     };
     url?: string;
   }>;
