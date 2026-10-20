@@ -24,6 +24,7 @@ import {
 } from '@/components/icons';
 import { ApiKeyGate } from '@/components/api-key-gate/ApiKeyGate';
 import { VideoEpisodeMonitor } from '@/components/dashboard/VideoEpisodeMonitor';
+import { GenerativeVideoPanel } from '@/components/video/generative-video-panel';
 
 interface WorkflowInfo {
   id: string;
@@ -307,6 +308,10 @@ export default function VideoProductionPage() {
           </div>
         </div>
       )}
+
+      {/* Generative video (fal engine) — outside the ElevenLabs key gate, which
+          only applies to the workflow capture pipeline below. */}
+      <GenerativeVideoPanel />
 
       {/* Workflows Grid */}
       <div>
