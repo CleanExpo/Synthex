@@ -1,6 +1,12 @@
 /**
- * Cron sweep: any generative job still 'generating' after 30 min lost its
- * webhook — mark failed with a diagnostic and release the quota hold.
+ * Cron sweep: any generative job still 'generating' after 30 min may have lost
+ * its webhook. Before failing it the sweep asks fal what happened:
+ *   - COMPLETED with a video -> recovered through the webhook's own completion
+ *     path (store artifact, guarded transition to 'rendered', settle);
+ *   - still queued/rendering, or fal cannot be asked -> left for the next
+ *     sweep until MAX_AGE_HOURS after creation;
+ *   - finished without a video, past the max age, or never accepted by fal ->
+ *     marked failed and the hold finalised as before.
  * Transitions are atomic (status-guarded updateMany) so a late webhook and
  * the sweep can never both settle the same job.
  *
@@ -14,6 +20,11 @@ import { releaseQuota, settleQuota } from '@/lib/services/ai/video/quota';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
 import { InitiatedBy } from '@/lib/services/ai/video/types';
 import {
+  getFalResult,
+  getFalStatus,
+} from '@/lib/services/ai/video/fal-adapter';
+import { completeFalSuccess } from '@/lib/services/ai/video/fal-completion';
+import {
   finalizeSpend,
   findStaleReservations,
   settlementAmountUsd,
@@ -24,6 +35,37 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 const STALE_MINUTES = 30;
+/** A job fal has not finished this long after creation is declared dead. */
+const MAX_AGE_HOURS = 24;
+/** Stop asking fal after this much of the 60s budget; the rest wait a pass. */
+const FAL_CHECK_BUDGET_MS = 40_000;
+
+type FalCheck =
+  | { kind: 'completed'; videoUrl: string }
+  | { kind: 'no-video' }
+  | { kind: 'pending' }
+  | { kind: 'unknown' };
+
+/** Ask fal for a job's outcome. Never throws: an error is 'unknown'. */
+async function checkFal(model: string, requestId: string): Promise<FalCheck> {
+  try {
+    const status = await getFalStatus(model, requestId);
+    if (status === 'IN_QUEUE' || status === 'IN_PROGRESS') {
+      return { kind: 'pending' };
+    }
+    if (status !== 'COMPLETED') return { kind: 'unknown' };
+    const result = await getFalResult(model, requestId);
+    return result.videoUrl
+      ? { kind: 'completed', videoUrl: result.videoUrl }
+      : { kind: 'no-video' };
+  } catch (error) {
+    logger.warn('video sweep could not ask fal for a job outcome', {
+      requestId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { kind: 'unknown' };
+  }
+}
 
 export async function GET(request: NextRequest) {
   // ── Auth ──────────────────────────────────────────────────────────────────
@@ -45,6 +87,13 @@ export async function GET(request: NextRequest) {
       initiatedBy: true,
       spendHoldId: true,
       providerJobId: true,
+      userId: true,
+      model: true,
+      durationSeconds: true,
+      enhancedPrompt: true,
+      batchGroupId: true,
+      metadata: true,
+      createdAt: true,
     },
     take: 200,
   });
@@ -56,8 +105,42 @@ export async function GET(request: NextRequest) {
   }
 
   let swept = 0;
+  let recovered = 0;
+  const startedAt = Date.now();
+  const maxAgeCutoff = startedAt - MAX_AGE_HOURS * 60 * 60 * 1000;
 
   for (const row of stale) {
+    // fal accepted this job, so it may have finished with only the webhook
+    // lost. Failing it unasked charged for a finished video and threw it away.
+    if (row.providerJobId && row.model) {
+      const pastMaxAge =
+        row.createdAt instanceof Date && row.createdAt.getTime() < maxAgeCutoff;
+      if (!pastMaxAge && Date.now() - startedAt > FAL_CHECK_BUDGET_MS) {
+        continue; // out of time this pass; the next sweep asks
+      }
+      const check = await checkFal(row.model, row.providerJobId);
+      // A live hold with no organisation cannot be settled; it falls through
+      // to the existing failure diagnostic instead of being consumed here.
+      if (
+        check.kind === 'completed' &&
+        (row.organizationId || !row.spendHoldId)
+      ) {
+        const outcome = await completeFalSuccess(
+          row,
+          row.providerJobId,
+          check.videoUrl
+        );
+        if (outcome === 'rendered') recovered++;
+        continue;
+      }
+      if (
+        (check.kind === 'pending' || check.kind === 'unknown') &&
+        !pastMaxAge
+      ) {
+        continue; // may still finish; ask again next sweep
+      }
+    }
+
     // Atomic + idempotent: only win the race when the row is still 'generating'.
     const transitioned = await prisma.videoGeneration.updateMany({
       where: { id: row.id, status: 'generating' },
@@ -119,10 +202,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (swept > 0) logger.warn('video sweep failed stale jobs', { count: swept });
+  if (recovered > 0) {
+    logger.warn('video sweep recovered jobs whose webhook was lost', {
+      count: recovered,
+    });
+  }
 
   const reconciledHolds = await reconcileStaleReservations(cutoff);
 
-  return NextResponse.json({ swept, reconciledHolds });
+  return NextResponse.json({ swept, recovered, reconciledHolds });
 }
 
 /**
