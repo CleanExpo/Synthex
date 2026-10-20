@@ -50,19 +50,47 @@ jest.mock('next/server', () => {
 const mockReviewFindMany = jest.fn();
 const mockReviewUpdate = jest.fn();
 const mockOrgFindMany = jest.fn();
+// The reply call now runs through the AI Governor (P5, M10): it resolves the
+// org's brand and reads flags, BYOK keys and the budget, then writes one
+// cost-ledger receipt. The Governor runs for real; only its Prisma reads and
+// receipt write are faked here.
+const mockOrgFindUnique = jest.fn();
+const mockHermesFindUnique = jest.fn();
+const mockRunnerFlagFindMany = jest.fn();
+const mockApiCredentialFindMany = jest.fn();
+const mockBudgetPolicyFindUnique = jest.fn();
+const mockLedgerGroupBy = jest.fn();
+const mockLedgerCreate = jest.fn();
 
-jest.mock('@/lib/prisma', () => ({
-  __esModule: true,
-  default: {
+jest.mock('@/lib/prisma', () => {
+  const client = {
     gBPReview: {
       findMany: (...a: unknown[]) => mockReviewFindMany(...a),
       update: (...a: unknown[]) => mockReviewUpdate(...a),
     },
     organization: {
       findMany: (...a: unknown[]) => mockOrgFindMany(...a),
+      findUnique: (...a: unknown[]) => mockOrgFindUnique(...a),
     },
-  },
-}));
+    hermesConfig: {
+      findUnique: (...a: unknown[]) => mockHermesFindUnique(...a),
+    },
+    runnerFlag: {
+      findMany: (...a: unknown[]) => mockRunnerFlagFindMany(...a),
+    },
+    aPICredential: {
+      findMany: (...a: unknown[]) => mockApiCredentialFindMany(...a),
+    },
+    orgBudgetPolicy: {
+      findUnique: (...a: unknown[]) => mockBudgetPolicyFindUnique(...a),
+    },
+    pipelineCostLedger: {
+      groupBy: (...a: unknown[]) => mockLedgerGroupBy(...a),
+      create: (...a: unknown[]) => mockLedgerCreate(...a),
+    },
+  };
+  return { __esModule: true, default: client, prisma: client };
+});
 
 // ── Anthropic SDK mock (reply model) ──────────────────────────────────────────
 
@@ -108,6 +136,16 @@ describe('Review Intelligence pipeline smoke test (SYN-590)', () => {
       },
     ]);
     mockReviewUpdate.mockResolvedValue({});
+
+    // Governor reads in shadow mode: no HERMES brand, no flag / key / budget
+    // rows, so every gate "would refuse" and the call still runs.
+    mockHermesFindUnique.mockResolvedValue(null);
+    mockOrgFindUnique.mockResolvedValue({ slug: 'test-trades-co' });
+    mockRunnerFlagFindMany.mockResolvedValue([]);
+    mockApiCredentialFindMany.mockResolvedValue([]);
+    mockBudgetPolicyFindUnique.mockResolvedValue(null);
+    mockLedgerGroupBy.mockResolvedValue([]);
+    mockLedgerCreate.mockResolvedValue({ id: 'ledger-smoke-1' });
 
     // Reply model returns a valid, non-trivial draft (>20 chars).
     mockAnthropicCreate.mockResolvedValue({

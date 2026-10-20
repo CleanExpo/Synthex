@@ -13,6 +13,18 @@ import {
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { getAIProvider } from '@/lib/ai/providers';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+} from '@/lib/ai/governor';
+import {
+  estimateTokens,
+  governorProviderFor,
+  governorRefusalResponse,
+  unwrapGoverned,
+} from '@/lib/ai/route-governance';
 import { logger } from '@/lib/logger';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 
@@ -95,7 +107,7 @@ async function _postHandler(
     const [org, brandDna] = await Promise.all([
       prisma.organization.findUnique({
         where: { id: organizationId },
-        select: { name: true, industry: true },
+        select: { name: true, industry: true, slug: true },
       }),
       prisma.brandDNA.findUnique({
         where: { organizationId },
@@ -118,14 +130,58 @@ async function _postHandler(
 
     try {
       const ai = getAIProvider();
-      const aiResult = await ai.complete({
-        model: ai.models.fast,
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 350,
-      });
-      suggestion = (aiResult.choices[0]?.message.content ?? '').trim();
+      const provider = governorProviderFor(ai.name);
+      const callProvider = async (
+        client: typeof ai,
+        model: string
+      ): Promise<ProviderCallResult<string>> => {
+        const aiResult = await client.complete({
+          model,
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7,
+          max_tokens: 350,
+        });
+        return {
+          data: (aiResult.choices[0]?.message.content ?? '').trim(),
+          inputTokens: aiResult.usage?.prompt_tokens ?? estimateTokens(prompt),
+          outputTokens: aiResult.usage?.completion_tokens ?? 0,
+          modelId: model,
+        };
+      };
+      if (!provider) {
+        // Ollama: local, unkeyed, zero-cost, outside the Governor by design.
+        suggestion = (await callProvider(ai, ai.models.fast)).data;
+      } else {
+        let providerError: { error: unknown } | null = null;
+        const result = await governedCall<string>({
+          organizationId,
+          brandSlug: org?.slug ?? organizationId,
+          runner: 'gbp-auto-reply',
+          provider,
+          model: { kind: 'registered', modelId: ai.models.fast },
+          pipelineName: 'gbp-auto-reply',
+          estimate: { inputTokens: estimateTokens(prompt), outputTokens: 350 },
+          mode: GOVERNOR_MODE,
+          execute: async ctx => {
+            try {
+              return await callProvider(
+                ctx.apiKey
+                  ? getAIProvider({ apiKey: ctx.apiKey, provider })
+                  : ai,
+                ctx.model?.id ?? ai.models.fast
+              );
+            } catch (error) {
+              providerError = { error };
+              throw error;
+            }
+          },
+        });
+        suggestion = unwrapGoverned(result, providerError);
+      }
     } catch (aiErr) {
+      if (aiErr instanceof GovernorRefusedError) {
+        return governorRefusalResponse(aiErr);
+      }
       logger.warn('GBP auto-reply: AI generation failed, using fallback', {
         error: aiErr instanceof Error ? aiErr.message : String(aiErr),
       });

@@ -22,6 +22,22 @@ import { withRateLimit, UsageTracker } from '@/lib/middleware/rate-limiter';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { evaluateContent, scoreDimensions } from '@/lib/autopilot/quality-gate';
 import { humanizeAiError } from '@/lib/dashboard/humanize-error';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+  type ResolvedCallContext,
+} from '@/lib/ai/governor';
+import {
+  generationEstimate,
+  generationProvider,
+  generatorCallResult,
+  governedData,
+  governorCredentials,
+  governorRefusalResponse,
+} from '@/lib/ai/governed-generation';
+import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Prevent 504s on long-running LLM calls
@@ -38,6 +54,10 @@ const AUTO_PUBLISH_PLATFORMS = new Set([
 ]);
 
 const QUICK_POSTS_CAMPAIGN_NAME = 'Quick Posts';
+
+/** AI Governor identity for this route's generation (P5 / M10). */
+const GOVERNOR_RUNNER = 'posts-quick-create';
+const GOVERNOR_PIPELINE = 'content-generation';
 
 const quickCreateSchema = z.object({
   intent: z.string().max(500).optional(),
@@ -102,51 +122,99 @@ export async function POST(request: NextRequest) {
         const prompt =
           intent ??
           'An on-brand post highlighting what we do and why it helps.';
-        let content: string;
-        let variations: string[];
-        try {
-          const branded = await ClientBrandedContentService.generate({
-            orgId,
-            userId,
-            platform,
-            prompt,
-            contentType: 'post',
-            tone: 'professional',
-          });
-          content = branded.content;
-          variations = branded.variations;
-        } catch (brandedError) {
-          logger.warn(
-            'quick-create: branded service failed, falling back to aiContentGenerator',
-            {
-              error:
-                brandedError instanceof Error
-                  ? brandedError.message
-                  : String(brandedError),
-            }
-          );
-          const generated = await aiContentGenerator.generateContent(
-            {
-              type: 'post',
-              // Base generator types platform as a fixed union; connection
-              // platforms (e.g. 'threads') are a superset, cast as in the
-              // generator's own calendar path (content-generator.ts:874).
-              platform: platform as ContentRequest['platform'],
-              topic: prompt,
+        const traceId = crypto.randomUUID();
+        const generateQuickPost = async (
+          governor: ResolvedCallContext
+        ): Promise<
+          ProviderCallResult<{ content: string; variations: string[] }>
+        > => {
+          try {
+            const branded = await ClientBrandedContentService.generate({
               orgId,
-            },
-            // SYN-MCP-003: server-built context from the authed user + org.
-            {
-              organizationId: orgId,
               userId,
-              traceId: crypto.randomUUID(),
-              autonomyLevel: 'manual',
-            },
-            userCreds ?? undefined
-          );
-          content = generated.content;
-          variations = generated.variations.map(v => v.content);
-        }
+              platform,
+              prompt,
+              contentType: 'post',
+              tone: 'professional',
+            });
+            const tokens = branded.metadata?.tokensUsed ?? 0;
+            return {
+              data: {
+                content: branded.content,
+                variations: branded.variations,
+              },
+              inputTokens: Math.round(tokens * 0.4),
+              outputTokens: Math.round(tokens * 0.6),
+              modelId: branded.model,
+            };
+          } catch (brandedError) {
+            logger.warn(
+              'quick-create: branded service failed, falling back to aiContentGenerator',
+              {
+                error:
+                  brandedError instanceof Error
+                    ? brandedError.message
+                    : String(brandedError),
+              }
+            );
+            const generated = await aiContentGenerator.generateContent(
+              {
+                type: 'post',
+                // Base generator types platform as a fixed union; connection
+                // platforms (e.g. 'threads') are a superset, cast as in the
+                // generator's own calendar path (content-generator.ts:874).
+                platform: platform as ContentRequest['platform'],
+                topic: prompt,
+                orgId,
+              },
+              // SYN-MCP-003: server-built context from the authed user + org.
+              {
+                organizationId: orgId,
+                userId,
+                traceId,
+                autonomyLevel: 'manual',
+              },
+              governorCredentials(governor, userCreds),
+              // The Governor receipt is this generation's only ledger row.
+              { costLedger: 'caller' }
+            );
+            const receipt = generatorCallResult(generated);
+            return {
+              ...receipt,
+              data: {
+                content: generated.content,
+                variations: generated.variations.map(v => v.content),
+              },
+            };
+          }
+        };
+
+        // The whole generation (branded service, or the generator fallback)
+        // is one governed call with exactly one receipt.
+        let providerError: { error: unknown } | undefined;
+        const governed = await governedCall<{
+          content: string;
+          variations: string[];
+        }>({
+          organizationId: orgId,
+          brandSlug: await resolveOrgBrandSlug(orgId),
+          runner: GOVERNOR_RUNNER,
+          provider: generationProvider(userCreds),
+          model: { kind: 'latest' },
+          pipelineName: GOVERNOR_PIPELINE,
+          runId: traceId,
+          estimate: generationEstimate('post'),
+          mode: GOVERNOR_MODE,
+          execute: async governor => {
+            try {
+              return await generateQuickPost(governor);
+            } catch (error) {
+              providerError = { error };
+              throw error;
+            }
+          },
+        });
+        const { content, variations } = governedData(governed, providerError);
 
         // 6. Score + gate the result
         const dimensions = scoreDimensions(content, platform);
@@ -213,6 +281,10 @@ export async function POST(request: NextRequest) {
           },
         });
       } catch (error) {
+        // Enforcing Governor refusal: an honest refusal with its code.
+        if (error instanceof GovernorRefusedError) {
+          return governorRefusalResponse(error);
+        }
         logger.error('Quick post creation error', { error });
         const raw =
           error instanceof Error ? error.message : 'Failed to create post';

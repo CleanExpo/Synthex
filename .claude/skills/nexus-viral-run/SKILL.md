@@ -52,12 +52,12 @@ row. An agent's "8/8 verdict" is inert until that enforcer reads it.
 Every stage that makes a platform decision loads the short-form pack instead of
 guessing specs:
 
-| Stage | Load | For |
-| ----- | ---- | --- |
-| brief, Gate A | `shortform-pattern-library` | hook archetype, length band, measured 1M+ benchmarks |
-| copy | `shortform-pattern-library` + the target platform skill | spoken hook by 3 s, on-screen text, caption and hashtag rules |
-| Gate B | `shortform-pattern-library` (craft gate) | cut rate, caption style, safe zone, loudness |
-| derive_cuts | `shortform-instagram`, `shortform-tiktok`, `shortform-facebook`, `shortform-youtube-shorts`, `shortform-linkedin` | per-platform length, aspect, caption, originality and AI-label rules; each skill ends with a gate checklist |
+| Stage         | Load                                                                                                              | For                                                                                                         |
+| ------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| brief, Gate A | `shortform-pattern-library`                                                                                       | hook archetype, length band, measured 1M+ benchmarks                                                        |
+| copy          | `shortform-pattern-library` + the target platform skill                                                           | spoken hook by 3 s, on-screen text, caption and hashtag rules                                               |
+| Gate B        | `shortform-pattern-library` (craft gate)                                                                          | cut rate, caption style, safe zone, loudness                                                                |
+| derive_cuts   | `shortform-instagram`, `shortform-tiktok`, `shortform-facebook`, `shortform-youtube-shorts`, `shortform-linkedin` | per-platform length, aspect, caption, originality and AI-label rules; each skill ends with a gate checklist |
 
 Machine-readable limits for code live in
 `.claude/skills/shortform-pattern-library/references/platform-rules.json`.

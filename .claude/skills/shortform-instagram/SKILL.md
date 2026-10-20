@@ -25,14 +25,14 @@ Craft numbers (hook timing, cut rate, caption style, loudness) live in
 
 ## 1. Deliverable spec
 
-| Item | Rule |
-|---|---|
-| Aspect | 9:16, 1080×1920 master. API accepts other ratios but crops or letterboxes [P] |
-| Length | API 3 s – 15 min [P]. In-app 3 min is the recommended ceiling: Reels over 3 min reach followers only, not non-followers [S] |
-| Codec | H.264 or HEVC, closed GOP, 4:2:0, moov atom at front, 23–60 fps, ≤25 Mbps VBR, ≤300 MB [P] |
-| Audio | AAC ≤48 kHz, 128 kbps [P]. Master to the loudness in shortform-pattern-library |
-| Cover | `cover_url` JPEG ≤8 MB, 9:16. The centre 1:1 crop shows on the profile grid, so keep the title inside it [P] |
-| Captions | No caption-file field in the API [P]. Burn captions in |
+| Item      | Rule                                                                                                                                                                                                                                                |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aspect    | 9:16, 1080×1920 master. API accepts other ratios but crops or letterboxes [P]                                                                                                                                                                       |
+| Length    | API 3 s – 15 min [P]. In-app 3 min is the recommended ceiling: Reels over 3 min reach followers only, not non-followers [S]                                                                                                                         |
+| Codec     | H.264 or HEVC, closed GOP, 4:2:0, moov atom at front, 23–60 fps, ≤25 Mbps VBR, ≤300 MB [P]                                                                                                                                                          |
+| Audio     | AAC ≤48 kHz, 128 kbps [P]. Master to the loudness in shortform-pattern-library                                                                                                                                                                      |
+| Cover     | `cover_url` JPEG ≤8 MB, 9:16. The centre 1:1 crop shows on the profile grid, so keep the title inside it [P]                                                                                                                                        |
+| Captions  | No caption-file field in the API [P]. Burn captions in                                                                                                                                                                                              |
 | Safe zone | No official pixel spec [gap]. Keep text out of the bottom ~35% and the right ~12% (Synthex `viral-method-cards.json` uses bottom 15% / right 12% reserved; Reels UI is taller, so treat 15% as a floor). Preview with the app UI on before approval |
 
 ## 2. What the ranking rewards
@@ -49,6 +49,7 @@ Craft numbers (hook timing, cut rate, caption style, loudness) live in
 ## 3. Originality (hard rule)
 
 From 30 Apr 2026 [P] (https://creators.instagram.com/blog/rewarding-original-creators-on-instagram):
+
 - Accounts that mainly post unoriginal content lose recommendation eligibility. A border,
   watermark, subtitles or a caption credit added to someone else's clip **does not** make it original.
 - Eligibility is judged over a rolling 30 days.
@@ -87,6 +88,7 @@ master per platform: no TikTok or CapCut watermark ever reaches Instagram.
 ## 7. Trial Reels: the default test path
 
 From https://creators.instagram.com/blog/instagram-trial-reels [P]:
+
 - Trials go to **non-followers first** and do not appear in followers' feeds.
 - Results after ~24 h. Optional auto-share if it performs on views within 72 h.
 - API: `trial_params.graduation_strategy` = `MANUAL` or `SS_PERFORMANCE`.
@@ -97,6 +99,7 @@ with trials, not with main-feed Reels.
 ## 8. Publishing (Graph API)
 
 From https://developers.facebook.com/docs/instagram-platform/content-publishing [P]:
+
 1. `POST /<IG_ID>/media` with `media_type=REELS`, `video_url`, `caption`, `share_to_feed`,
    optional `cover_url`, `collaborators` (≤3), `trial_params`, `is_ai_generated`.
 2. Poll `GET /<container>?fields=status_code` until `FINISHED` (once a minute, ≤5 min).
@@ -117,6 +120,7 @@ Reels metrics [P] (https://developers.facebook.com/docs/instagram-platform/refer
 `plays` and `impressions` are deprecated.
 
 Scorecard per Reel, read at 24 h and 7 d:
+
 - `reels_skip_rate`: the hook score. Compare against the account's own median.
 - `ig_reels_avg_watch_time ÷ duration`: retention.
 - `shares ÷ reach` (sends per reach) and `likes ÷ reach`: Mosseri's two rate signals.
@@ -125,6 +129,7 @@ Scorecard per Reel, read at 24 h and 7 d:
 ## 10. Gate checklist (feeds Gate A / Gate B)
 
 Hard gates ([P] or Synthex rule; a miss blocks the cut):
+
 - [ ] 9:16 clean master, no foreign watermark, no border [P ranking explainer]
 - [ ] Original or licensed audio [Synthex rule]; `is_ai_generated` set correctly [P]
 - [ ] Burned-in captions match the transcript [Synthex rule]
@@ -132,6 +137,7 @@ Hard gates ([P] or Synthex rule; a miss blocks the cut):
 - [ ] Footage is owned and grounded (real-images-only) [Synthex rule]
 
 Advisory ([S] or corpus hypothesis; warn, do not block, until re-verified):
+
 - [ ] Subject (ideally a face) moving in frame 1; ≤8-word text hook from 0.0 s unless deliberately wordless [corpus tier 2]
 - [ ] All text inside the safe zone with the Reels UI overlaid [no official pixel spec]
 - [ ] ≤5 specific hashtags [S]; search phrase in voice, text and caption line 1 [S]

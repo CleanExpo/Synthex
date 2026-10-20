@@ -26,6 +26,18 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
 import { OpenRouterClient } from '@/lib/ai/openrouter-client';
+import {
+  governedCall,
+  GovernorRefusedError,
+  GOVERNOR_MODE,
+  type ProviderCallResult,
+} from '@/lib/ai/governor';
+import {
+  estimateTokens,
+  governorRefusalResponse,
+  resolveGovernorScope,
+  unwrapGoverned,
+} from '@/lib/ai/route-governance';
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
@@ -123,19 +135,66 @@ async function _handlePost(request: NextRequest) {
   };
 
   try {
-    const completion = await client.complete({
-      model: client.models.creative, // Claude Sonnet for brand-quality copy
-      messages: [
-        {
-          role: 'user',
-          content: buildBlogPrompt(topic, category),
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 4000,
-    });
+    const prompt = buildBlogPrompt(topic, category);
+    const callProvider = async (): Promise<ProviderCallResult<string>> => {
+      const completion = await client.complete({
+        model: client.models.creative, // Claude Sonnet for brand-quality copy
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 4000,
+      });
+      return {
+        data: completion.choices[0]?.message?.content ?? '',
+        inputTokens: completion.usage?.prompt_tokens ?? estimateTokens(prompt),
+        outputTokens: completion.usage?.completion_tokens ?? 0,
+        modelId: client.models.creative,
+      };
+    };
 
-    const raw = completion.choices[0]?.message?.content ?? '';
+    // The organisation comes from the admin's session, never the body. An
+    // admin-key call has no user and so no organisation to bill.
+    const scope = auth.userId ? await resolveGovernorScope(auth.userId) : null;
+    let raw: string;
+    if (!scope) {
+      if (GOVERNOR_MODE !== 'shadow') {
+        return governorRefusalResponse(
+          new GovernorRefusedError(
+            'refused_flag_missing',
+            'no organisation for this admin call'
+          )
+        );
+      }
+      logger.warn('Blog generation has no organisation; spend is unreceipted', {
+        topic,
+      });
+      raw = (await callProvider()).data;
+    } else {
+      let providerError: { error: unknown } | null = null;
+      const result = await governedCall<string>({
+        organizationId: scope.organizationId,
+        brandSlug: scope.brandSlug,
+        runner: 'admin-blog-generate',
+        provider: 'openrouter',
+        model: { kind: 'registered', modelId: client.models.creative },
+        pipelineName: 'admin-blog-generate',
+        estimate: { inputTokens: estimateTokens(prompt), outputTokens: 4000 },
+        mode: GOVERNOR_MODE,
+        execute: async () => {
+          try {
+            return await callProvider();
+          } catch (error) {
+            providerError = { error };
+            throw error;
+          }
+        },
+      });
+      raw = unwrapGoverned(result, providerError);
+    }
 
     // Strip markdown code fences if the model wraps the JSON
     const jsonStr = raw
@@ -145,6 +204,9 @@ async function _handlePost(request: NextRequest) {
 
     generated = JSON.parse(jsonStr) as typeof generated;
   } catch (err) {
+    if (err instanceof GovernorRefusedError) {
+      return governorRefusalResponse(err);
+    }
     logger.error('Blog generation AI call failed', { error: err, topic });
     return NextResponse.json(
       { error: 'AI generation failed', details: String(err) },

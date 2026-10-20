@@ -10,17 +10,26 @@
  */
 
 import { logger } from '@/lib/logger';
+import { MediaSpendRefusedError } from '@/lib/services/ai/media-spend-gate';
 
 // Voice generation options
 export interface VoiceGenerationOptions {
   text: string;
   voiceId?: string;
-  modelId?: 'eleven_multilingual_v2' | 'eleven_turbo_v2' | 'eleven_monolingual_v1';
+  modelId?:
+    | 'eleven_multilingual_v2'
+    | 'eleven_turbo_v2'
+    | 'eleven_monolingual_v1';
   stability?: number; // 0-1, default 0.5
   similarityBoost?: number; // 0-1, default 0.75
   style?: number; // 0-1, default 0
   useSpeakerBoost?: boolean;
-  outputFormat?: 'mp3_44100_128' | 'mp3_44100_192' | 'pcm_16000' | 'pcm_22050' | 'pcm_24000';
+  outputFormat?:
+    | 'mp3_44100_128'
+    | 'mp3_44100_192'
+    | 'pcm_16000'
+    | 'pcm_22050'
+    | 'pcm_24000';
 }
 
 // Voice cloning options
@@ -53,6 +62,43 @@ export interface Voice {
 
 const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
 
+/**
+ * ElevenLabs text-to-speech price per 1,000 characters, USD — the ONE table the
+ * spend gate prices from. ElevenLabs bills TTS by input characters.
+ *
+ * Source: https://elevenlabs.io/pricing/api (read 2026-10-19): Multilingual v2
+ * and v3 $0.08 / 1K characters; Flash / Turbo $0.04 / 1K characters.
+ *
+ * `eleven_monolingual_v1` is absent on purpose: the published page lists no
+ * rate for it, so it is UNPRICED and refused before any provider call. Add it
+ * only from the provider's pricing page, never by guessing.
+ */
+export const ELEVENLABS_USD_PER_1K_CHARS: Readonly<Record<string, number>> = {
+  eleven_multilingual_v2: 0.08,
+  eleven_turbo_v2: 0.04,
+};
+
+/** Model generateSpeech uses when the caller names none. */
+export const DEFAULT_SPEECH_MODEL = 'eleven_multilingual_v2';
+/** Model generateSpeechStream uses when the caller names none. */
+export const DEFAULT_STREAM_MODEL = 'eleven_turbo_v2';
+
+/**
+ * USD cost of speaking `text` with `modelId`. Throws a `media_unpriced`
+ * refusal for a model with no published rate (fail closed).
+ */
+export function priceSpeechUsd(modelId: string, text: string): number {
+  const per1k = ELEVENLABS_USD_PER_1K_CHARS[modelId];
+  if (per1k === undefined) {
+    throw new MediaSpendRefusedError(
+      'media_unpriced',
+      422,
+      `ElevenLabs model "${modelId}" has no verified price; generation is blocked`
+    );
+  }
+  return (text.length / 1000) * per1k;
+}
+
 // Default voices for quick access
 export const DEFAULT_VOICES = {
   rachel: '21m00Tcm4TlvDq8ikWAM', // Female, American
@@ -78,7 +124,7 @@ export async function generateSpeech(
   }
 
   const voiceId = options.voiceId || DEFAULT_VOICES.rachel;
-  const modelId = options.modelId || 'eleven_multilingual_v2';
+  const modelId = options.modelId || DEFAULT_SPEECH_MODEL;
 
   try {
     const response = await fetch(
@@ -88,7 +134,9 @@ export async function generateSpeech(
         headers: {
           'xi-api-key': apiKey,
           'Content-Type': 'application/json',
-          'Accept': options.outputFormat?.startsWith('mp3') ? 'audio/mpeg' : 'audio/wav',
+          Accept: options.outputFormat?.startsWith('mp3')
+            ? 'audio/mpeg'
+            : 'audio/wav',
         },
         body: JSON.stringify({
           text: options.text,
@@ -106,7 +154,9 @@ export async function generateSpeech(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail?.message || `ElevenLabs API error: ${response.status}`);
+      throw new Error(
+        error.detail?.message || `ElevenLabs API error: ${response.status}`
+      );
     }
 
     const audioBuffer = await response.arrayBuffer();
@@ -122,7 +172,10 @@ export async function generateSpeech(
     };
   } catch (error: unknown) {
     logger.error('ElevenLabs speech generation failed:', { error });
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -139,7 +192,7 @@ export async function generateSpeechStream(
   }
 
   const voiceId = options.voiceId || DEFAULT_VOICES.rachel;
-  const modelId = options.modelId || 'eleven_turbo_v2'; // Turbo for streaming
+  const modelId = options.modelId || DEFAULT_STREAM_MODEL; // Turbo for streaming
 
   try {
     const response = await fetch(
@@ -163,7 +216,10 @@ export async function generateSpeechStream(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail?.message || `ElevenLabs streaming error: ${response.status}`);
+      throw new Error(
+        error.detail?.message ||
+          `ElevenLabs streaming error: ${response.status}`
+      );
     }
 
     return response.body;
@@ -185,7 +241,10 @@ export async function cloneVoice(
   }
 
   if (options.audioFiles.length === 0) {
-    return { success: false, error: 'At least one audio file required for voice cloning' };
+    return {
+      success: false,
+      error: 'At least one audio file required for voice cloning',
+    };
   }
 
   try {
@@ -219,7 +278,9 @@ export async function cloneVoice(
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.detail?.message || `Voice cloning error: ${response.status}`);
+      throw new Error(
+        error.detail?.message || `Voice cloning error: ${response.status}`
+      );
     }
 
     const data = await response.json();
@@ -230,7 +291,10 @@ export async function cloneVoice(
     };
   } catch (error: unknown) {
     logger.error('Voice cloning failed:', { error });
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
   }
 }
 
@@ -256,13 +320,21 @@ export async function getVoices(): Promise<Voice[]> {
 
     const data = await response.json();
 
-    return (data.voices || []).map((voice: { voice_id: string; name: string; category?: string; labels?: Record<string, string>; preview_url?: string }) => ({
-      voiceId: voice.voice_id,
-      name: voice.name,
-      category: voice.category,
-      labels: voice.labels,
-      previewUrl: voice.preview_url,
-    }));
+    return (data.voices || []).map(
+      (voice: {
+        voice_id: string;
+        name: string;
+        category?: string;
+        labels?: Record<string, string>;
+        preview_url?: string;
+      }) => ({
+        voiceId: voice.voice_id,
+        name: voice.name,
+        category: voice.category,
+        labels: voice.labels,
+        previewUrl: voice.preview_url,
+      })
+    );
   } catch (error: unknown) {
     logger.error('Failed to get voices:', { error });
     return [];
@@ -274,7 +346,9 @@ export async function getVoices(): Promise<Voice[]> {
  */
 export async function getCustomVoices(): Promise<Voice[]> {
   const voices = await getVoices();
-  return voices.filter(v => v.category === 'cloned' || v.category === 'generated');
+  return voices.filter(
+    v => v.category === 'cloned' || v.category === 'generated'
+  );
 }
 
 /**
@@ -313,7 +387,9 @@ export async function getVoiceSettings(voiceId: string): Promise<{
   // SYN-859: defensive boundary check — caller (API route) already validates,
   // but reject anything unsafe here too in case a future caller forgets.
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(voiceId)) {
-    throw new Error('Invalid voiceId — must be alphanumeric, underscore, or hyphen, 1-64 chars');
+    throw new Error(
+      'Invalid voiceId — must be alphanumeric, underscore, or hyphen, 1-64 chars'
+    );
   }
 
   const apiKey = process.env.ELEVENLABS_API_KEY;
@@ -322,11 +398,14 @@ export async function getVoiceSettings(voiceId: string): Promise<{
   }
 
   try {
-    const response = await fetch(`${ELEVENLABS_API_BASE}/voices/${voiceId}/settings`, {
-      headers: {
-        'xi-api-key': apiKey,
-      },
-    });
+    const response = await fetch(
+      `${ELEVENLABS_API_BASE}/voices/${voiceId}/settings`,
+      {
+        headers: {
+          'xi-api-key': apiKey,
+        },
+      }
+    );
 
     if (!response.ok) {
       return null;

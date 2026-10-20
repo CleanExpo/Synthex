@@ -538,6 +538,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST,PUT /api/media/generate/image` — user
 - `GET,POST,PUT /api/media/generate/video` — admin — _user_
 - `POST /api/media/upload` — user
+- `POST /api/media/quote` — user
 
 ### mobile
 

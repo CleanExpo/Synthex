@@ -251,6 +251,51 @@ async function sumWindows(
   };
 }
 
+/** Total reserved for `n` holds of `perHoldUsd` — the one rounding the batch reserve and a quote share. */
+export function batchHoldUsd(perHoldUsd: number, n: number): number {
+  return Math.round(perHoldUsd * n * 10000) / 10000;
+}
+
+export interface CapBreach {
+  cap: 'monthly' | 'daily' | 'mcp-daily';
+  limitUsd: number;
+  spentUsd: number;
+}
+
+/**
+ * The first cap `amountUsd` would breach, or null. Pure: the reserve path
+ * throws on it and the read-only quote reports it, so admission and quote cannot
+ * drift. The mcp fraction is resolved only for an agent-initiated reservation
+ * (a malformed VIDEO_MCP_DAILY_FRACTION refuses that admission only).
+ */
+export function firstCapBreach(p: {
+  amountUsd: number;
+  initiatedBy: InitiatedBy;
+  dailyCap: number;
+  monthlyCap: number;
+  dailySpend: number;
+  monthlySpend: number;
+  mcpDailySpend: number;
+}): CapBreach | null {
+  if (p.monthlySpend + p.amountUsd > p.monthlyCap) {
+    return { cap: 'monthly', limitUsd: p.monthlyCap, spentUsd: p.monthlySpend };
+  }
+  if (p.dailySpend + p.amountUsd > p.dailyCap) {
+    return { cap: 'daily', limitUsd: p.dailyCap, spentUsd: p.dailySpend };
+  }
+  if (p.initiatedBy === 'mcp') {
+    const mcpDailyCap = p.dailyCap * resolveMcpFraction();
+    if (p.mcpDailySpend + p.amountUsd > mcpDailyCap) {
+      return {
+        cap: 'mcp-daily',
+        limitUsd: mcpDailyCap,
+        spentUsd: p.mcpDailySpend,
+      };
+    }
+  }
+  return null;
+}
+
 export interface ReserveResult {
   holdId: string;
   heldUsd: number;
@@ -274,7 +319,7 @@ export async function reserveSpend(params: {
   organizationId: string;
   initiatedBy: InitiatedBy;
   amountUsd: number;
-  mediaType?: 'image' | 'video';
+  mediaType?: 'image' | 'video' | 'audio';
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult> {
@@ -316,7 +361,7 @@ export async function reserveSpendBatch(params: {
    * created. Settling both at zero forgot real spend and returned the
    * headroom (release review, pass 2).
    */
-  mediaType: 'image' | 'video';
+  mediaType: 'image' | 'video' | 'audio';
   runId?: string;
   now?: Date;
 }): Promise<ReserveResult[]> {
@@ -327,7 +372,7 @@ export async function reserveSpendBatch(params: {
     // than the cap check just admitted.
     throw new Error('reserveSpendBatch: hold ids must be unique');
   }
-  const amountUsd = Math.round(perHoldUsd * holdIds.length * 10000) / 10000;
+  const amountUsd = batchHoldUsd(perHoldUsd, holdIds.length);
   const now = params.now ?? new Date();
   const { default: prisma } = await import('@/lib/prisma');
 
@@ -394,24 +439,21 @@ export async function reserveSpendBatch(params: {
     const dailySpend = events.dailyUsd;
     const monthlySpend = events.monthlyUsd;
 
-    if (monthlySpend + amountUsd > monthlyCap) {
-      throw new QuotaExceededError('monthly', monthlyCap, monthlySpend);
-    }
-    if (dailySpend + amountUsd > dailyCap) {
-      throw new QuotaExceededError('daily', dailyCap, dailySpend);
-    }
-    // Resolved HERE, and only for an agent-initiated reservation: a malformed
-    // VIDEO_MCP_DAILY_FRACTION refuses this admission and leaves every
-    // settlement, release and sweep path working.
-    if (initiatedBy === 'mcp') {
-      const mcpDailyCap = dailyCap * resolveMcpFraction();
-      if (events.mcpDailyUsd + amountUsd > mcpDailyCap) {
-        throw new QuotaExceededError(
-          'mcp-daily',
-          mcpDailyCap,
-          events.mcpDailyUsd
-        );
-      }
+    const breach = firstCapBreach({
+      amountUsd,
+      initiatedBy,
+      dailyCap,
+      monthlyCap,
+      dailySpend,
+      monthlySpend,
+      mcpDailySpend: events.mcpDailyUsd,
+    });
+    if (breach) {
+      throw new QuotaExceededError(
+        breach.cap,
+        breach.limitUsd,
+        breach.spentUsd
+      );
     }
 
     // One reserve event per hold, inside the same transaction as the cap
@@ -548,7 +590,7 @@ export interface RecordAttemptParams {
   attemptKey: string;
   holdId: string;
   organizationId: string;
-  mediaType: 'image' | 'video';
+  mediaType: 'image' | 'video' | 'audio';
   provider: string;
   modelId: string;
   status?: 'submitted' | 'succeeded' | 'failed';
@@ -792,7 +834,7 @@ export async function findStaleReservations(
      * means no proof in either direction (SYN-1115 round-8).
      */
     hasOwnerRow: boolean;
-    /** 'image' | 'video', or null for holds reserved before the column existed. */
+    /** 'image' | 'video' | 'audio', or null for holds reserved before the column existed. */
     mediaType: string | null;
   }>
 > {

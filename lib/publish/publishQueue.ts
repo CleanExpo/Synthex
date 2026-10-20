@@ -5,8 +5,9 @@
  *
  * Called by the Supabase Edge Function every 15 minutes.
  *
- * Each pass first reclaims any item stranded in 'publishing' by a crashed/timed-
- * out prior worker (releases it to 'failed' so the due-fetch retries it), then:
+ * Each pass first surfaces any item stranded in 'publishing' by a crashed/timed-
+ * out prior worker ('failed', no retry, outcome unknown — never re-sent
+ * automatically, see reclaimStalePublishingQueueItems), then:
  *
  * Flow per queue item:
  *  1. Run five safety gates (safetyChecks.ts)
@@ -24,6 +25,7 @@
  * @task SYN-523
  */
 
+import type { PublishQueueItem } from '@prisma/client';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { runSafetyChecks } from './safetyChecks';
@@ -44,6 +46,7 @@ import { resolvePlatformAccessToken } from '@/lib/platform-connections/token-rea
 import {
   claimQueueItemForPublish,
   reclaimStalePublishingQueueItems,
+  PUBLISHING_STATUS,
 } from './postPublishClaim';
 import { isSocialCutSlot, resolveSocialCutSource } from './socialCutSource';
 import { trackPipelineCost } from '@/lib/pipelines/track-cost';
@@ -325,6 +328,206 @@ export async function dispatchToPlatform(
   }
 }
 
+/**
+ * Everything between the queue claim and the platform dispatch: the post-claim
+ * kill-switch re-check, the platform connection and token, and the caption +
+ * media. Returns null when the item was resolved here (held or failed, with its
+ * own write); otherwise what the dispatch needs. Makes no platform call, so a
+ * throw from here is a known PRE-dispatch failure (see processPublishQueue).
+ */
+async function prepareClaimedItem(
+  item: PublishQueueItem,
+  result: ProcessQueueResult
+) {
+  // Re-assert the org kill-switch AFTER the atomic claim (SYN-551 /
+  // State-1): a concurrent worker may have recorded a 401 and paused the
+  // organisation between our Gate-2 check and this claim. Any pause set
+  // before the claim must win over the dispatch. (A pause set after this
+  // read can still race one in-flight item — closing that fully needs a
+  // cross-table conditional write Prisma cannot express; the window is a
+  // single dispatch, and the item's own claim prevents double-posting.)
+  const orgNow = await prisma.organization.findUnique({
+    where: { id: item.organizationId },
+    select: { autoPublishPaused: true },
+  });
+  if (orgNow?.autoPublishPaused) {
+    await prisma.publishQueueItem.update({
+      where: { id: item.id },
+      data: {
+        status: 'held',
+        lastError:
+          'Auto-publish paused for this organisation (kill-switch / expired social connection)',
+      },
+    });
+    result.held++;
+    return null;
+  }
+
+  // ── Get platform connection + decrypt token ────────────────────────────
+  const connection = await prisma.platformConnection.findFirst({
+    where: {
+      organizationId: item.organizationId,
+      platform: item.platform,
+      isActive: true,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      accessToken: true,
+      refreshToken: true,
+      encryptionKeyVersion: true,
+      profileId: true,
+      expiresAt: true,
+      metadata: true,
+    },
+  });
+
+  if (!connection) {
+    await prisma.publishQueueItem.update({
+      where: { id: item.id },
+      data: {
+        status: 'failed',
+        lastError: 'Platform connection disappeared after safety check',
+        attempts: { increment: 1 },
+        nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
+      },
+    });
+    result.failed++;
+    return null;
+  }
+
+  const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
+  if (!tokenReadiness.ok || !tokenReadiness.accessToken) {
+    logger.error('publishQueue: token decryption failed', {
+      itemId: item.id,
+      error: tokenReadiness.reason,
+    });
+    await prisma.publishQueueItem.update({
+      where: { id: item.id },
+      data: {
+        status: 'failed',
+        lastError: tokenReadiness.reason ?? 'Token could not be resolved',
+        attempts: { increment: 1 },
+        nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
+      },
+    });
+    result.failed++;
+    return null;
+  }
+
+  // ── Get caption + media for this item ──────────────────────────────────
+  // Two sources, one dispatch shape:
+  //  • A nexus-viral social cut (slotId `social-cut:<assetId>`) has no
+  //    CalendarSlot — `deriveSocialCut` stored the caption + rendered video (+
+  //    optional YouTube snippet) on the `videoAsset`. Source them from there
+  //    (SYN-1094 item 3). Reached ONLY after a human release moved the row to
+  //    `pending`; this branch never transitions the row (§15.9 untouched).
+  //  • Every other row reads the slot from the ContentCalendar JSON as before.
+  let caption = '';
+  let publishMedia: {
+    type?: 'REELS';
+    url?: string;
+    video?: { url?: string; thumbnail?: string };
+    youtube?: { title?: string; description?: string; tags?: string[] };
+    articleUrl?: string;
+  } = {};
+
+  if (isSocialCutSlot(item.slotId)) {
+    const source = await resolveSocialCutSource(
+      item.slotId,
+      item.organizationId
+    );
+    if (!source || !source.video?.url) {
+      await prisma.publishQueueItem.update({
+        where: { id: item.id },
+        data: {
+          status: 'held',
+          lastError:
+            'Social cut media could not be resolved — no rendered video for this cut',
+        },
+      });
+      result.held++;
+      return null;
+    }
+    caption = source.caption;
+    publishMedia = { video: source.video, youtube: source.youtube };
+  } else {
+    const calendar = await prisma.contentCalendar.findUnique({
+      where: { id: item.calendarId },
+      select: { slots: true },
+    });
+
+    const calData = calendar?.slots as unknown as ContentCalendarData | null;
+    const slot = calData?.slots?.find(
+      (s: CalendarSlot & { selectedCaption?: number }) => s.id === item.slotId
+    ) as (CalendarSlot & { selectedCaption?: number }) | undefined;
+
+    const captionIdx = slot?.selectedCaption ?? 0;
+    caption = slot?.captions?.[captionIdx] ?? slot?.captions?.[0] ?? '';
+    publishMedia = {
+      type: slot?.mediaType,
+      url: slot?.mediaUrl,
+      video: slot?.video,
+      youtube: slot?.youtube,
+      articleUrl: slot?.linkUrl,
+    };
+  }
+
+  if (!caption) {
+    await prisma.publishQueueItem.update({
+      where: { id: item.id },
+      data: {
+        status: 'held',
+        lastError: 'No caption available for this slot',
+      },
+    });
+    result.held++;
+    return null;
+  }
+
+  return {
+    connection,
+    accessToken: tokenReadiness.accessToken,
+    caption,
+    publishMedia,
+  };
+}
+
+/**
+ * A claimed item whose pre-dispatch work threw: no platform call was made, so
+ * it takes the ordinary retry. Conditional on the claim we hold. If this write
+ * fails too (database down), the row stays 'publishing' and the stale-claim
+ * reclaim files it as outcome-unknown — the safe direction (never re-sent),
+ * at the cost of a manual check.
+ */
+async function retryAfterPreDispatchFailure(
+  itemId: string,
+  error: unknown
+): Promise<void> {
+  const message = error instanceof Error ? error.message : String(error);
+  logger.error('publishQueue: pre-dispatch failure — retry scheduled', {
+    itemId,
+    error: message,
+  });
+  try {
+    await prisma.publishQueueItem.updateMany({
+      where: { id: itemId, status: PUBLISHING_STATUS },
+      data: {
+        status: 'failed',
+        lastError: `Failed before dispatch (no platform call made): ${message}`,
+        attempts: { increment: 1 },
+        nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
+      },
+    });
+  } catch (writeError) {
+    logger.error('publishQueue: could not schedule pre-dispatch retry', {
+      itemId,
+      error:
+        writeError instanceof Error ? writeError.message : String(writeError),
+    });
+  }
+}
+
 // ── Main export ───────────────────────────────────────────────────────────────
 
 /**
@@ -342,11 +545,11 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
 
   const now = new Date();
 
-  // Crash recovery: release any item stranded in 'publishing' by a worker that
-  // died/timed out before resolving it. The due-fetch below only selects
-  // 'pending'/'failed' rows, so a stuck 'publishing' row would otherwise never
-  // be retried and the scheduled post would be silently lost. Reclaim flips it
-  // back to 'failed' with nextRetryAt=now so this same pass re-queues it.
+  // Crash recovery: surface any item stranded in 'publishing' by a worker that
+  // died/timed out before resolving it. Its platform call may already have
+  // succeeded, so it is NOT re-dispatched (at-most-once): reclaim moves it to
+  // 'failed' with nextRetryAt=null and an "outcome unknown, check the platform"
+  // error, which the due-fetch below and the claim both skip.
   await reclaimStalePublishingQueueItems(now);
 
   // Fetch items that are due: pending or failed-with-retry-ready. The
@@ -417,7 +620,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     }
 
     // ── Atomically claim → 'publishing' ────────────────────────────────────
-    // Conditional updateMany (status still 'pending'/'failed') — exactly one
+    // Conditional updateMany (status still 'pending'/'failed'-and-due) — exactly one
     // concurrent worker wins and proceeds; any overlapping pass / retry / second
     // instance loses the race here and skips WITHOUT publishing. Replaces the
     // old unconditional update, which gave no mutual exclusion and let two
@@ -432,151 +635,22 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
       continue;
     }
 
-    // Re-assert the org kill-switch AFTER the atomic claim (SYN-551 /
-    // State-1): a concurrent worker may have recorded a 401 and paused the
-    // organisation between our Gate-2 check and this claim. Any pause set
-    // before the claim must win over the dispatch. (A pause set after this
-    // read can still race one in-flight item — closing that fully needs a
-    // cross-table conditional write Prisma cannot express; the window is a
-    // single dispatch, and the item's own claim prevents double-posting.)
-    const orgNow = await prisma.organization.findUnique({
-      where: { id: item.organizationId },
-      select: { autoPublishPaused: true },
-    });
-    if (orgNow?.autoPublishPaused) {
-      await prisma.publishQueueItem.update({
-        where: { id: item.id },
-        data: {
-          status: 'held',
-          lastError:
-            'Auto-publish paused for this organisation (kill-switch / expired social connection)',
-        },
-      });
-      result.held++;
-      continue;
-    }
-
-    // ── Get platform connection + decrypt token ────────────────────────────
-    const connection = await prisma.platformConnection.findFirst({
-      where: {
-        organizationId: item.organizationId,
-        platform: item.platform,
-        isActive: true,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-        accessToken: true,
-        refreshToken: true,
-        encryptionKeyVersion: true,
-        profileId: true,
-        expiresAt: true,
-        metadata: true,
-      },
-    });
-
-    if (!connection) {
-      await prisma.publishQueueItem.update({
-        where: { id: item.id },
-        data: {
-          status: 'failed',
-          lastError: 'Platform connection disappeared after safety check',
-          attempts: { increment: 1 },
-          nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
-        },
-      });
+    // A throw between the claim and the dispatch (a transient database error)
+    // happened before any platform call, so the item takes the ordinary retry
+    // instead of being left in 'publishing', where the stale-claim reclaim
+    // would file it as outcome-unknown with no retry. The try ENDS before
+    // dispatchToPlatform on purpose: a throw from the dispatch or after it is
+    // a genuinely unknown outcome and stays with the reclaim's no-retry rule.
+    let prepared: Awaited<ReturnType<typeof prepareClaimedItem>>;
+    try {
+      prepared = await prepareClaimedItem(item, result);
+    } catch (error) {
+      await retryAfterPreDispatchFailure(item.id, error);
       result.failed++;
       continue;
     }
-
-    const tokenReadiness = resolvePlatformAccessToken(connection.accessToken);
-    if (!tokenReadiness.ok || !tokenReadiness.accessToken) {
-      logger.error('publishQueue: token decryption failed', {
-        itemId: item.id,
-        error: tokenReadiness.reason,
-      });
-      await prisma.publishQueueItem.update({
-        where: { id: item.id },
-        data: {
-          status: 'failed',
-          lastError: tokenReadiness.reason ?? 'Token could not be resolved',
-          attempts: { increment: 1 },
-          nextRetryAt: new Date(Date.now() + RETRY_INTERVAL_MS),
-        },
-      });
-      result.failed++;
-      continue;
-    }
-
-    // ── Get caption + media for this item ──────────────────────────────────
-    // Two sources, one dispatch shape:
-    //  • A nexus-viral social cut (slotId `social-cut:<assetId>`) has no
-    //    CalendarSlot — `deriveSocialCut` stored the caption + rendered video (+
-    //    optional YouTube snippet) on the `videoAsset`. Source them from there
-    //    (SYN-1094 item 3). Reached ONLY after a human release moved the row to
-    //    `pending`; this branch never transitions the row (§15.9 untouched).
-    //  • Every other row reads the slot from the ContentCalendar JSON as before.
-    let caption = '';
-    let publishMedia: {
-      type?: 'REELS';
-      url?: string;
-      video?: { url?: string; thumbnail?: string };
-      youtube?: { title?: string; description?: string; tags?: string[] };
-      articleUrl?: string;
-    } = {};
-
-    if (isSocialCutSlot(item.slotId)) {
-      const source = await resolveSocialCutSource(
-        item.slotId,
-        item.organizationId
-      );
-      if (!source || !source.video?.url) {
-        await prisma.publishQueueItem.update({
-          where: { id: item.id },
-          data: {
-            status: 'held',
-            lastError:
-              'Social cut media could not be resolved — no rendered video for this cut',
-          },
-        });
-        result.held++;
-        continue;
-      }
-      caption = source.caption;
-      publishMedia = { video: source.video, youtube: source.youtube };
-    } else {
-      const calendar = await prisma.contentCalendar.findUnique({
-        where: { id: item.calendarId },
-        select: { slots: true },
-      });
-
-      const calData = calendar?.slots as unknown as ContentCalendarData | null;
-      const slot = calData?.slots?.find(
-        (s: CalendarSlot & { selectedCaption?: number }) => s.id === item.slotId
-      ) as (CalendarSlot & { selectedCaption?: number }) | undefined;
-
-      const captionIdx = slot?.selectedCaption ?? 0;
-      caption = slot?.captions?.[captionIdx] ?? slot?.captions?.[0] ?? '';
-      publishMedia = {
-        type: slot?.mediaType,
-        url: slot?.mediaUrl,
-        video: slot?.video,
-        youtube: slot?.youtube,
-        articleUrl: slot?.linkUrl,
-      };
-    }
-
-    if (!caption) {
-      await prisma.publishQueueItem.update({
-        where: { id: item.id },
-        data: {
-          status: 'held',
-          lastError: 'No caption available for this slot',
-        },
-      });
-      result.held++;
-      continue;
-    }
+    if (!prepared) continue;
+    const { connection, accessToken, caption, publishMedia } = prepared;
 
     // ── Dispatch to platform ───────────────────────────────────────────────
     const decryptedRefreshToken = connection.refreshToken
@@ -612,7 +686,7 @@ export async function processPublishQueue(): Promise<ProcessQueueResult> {
     // use and falls back to caption-only when a URL is missing.
     const publishResult = await dispatchToPlatform(
       item.platform,
-      tokenReadiness.accessToken,
+      accessToken,
       connection.profileId ?? '',
       caption,
       accessTokenSecret,

@@ -21,19 +21,20 @@ Tags: **[P]** official page read, **[S]** secondary. Craft numbers live in **sho
 
 ## 1. Deliverable spec
 
-| Item | Rule |
-|---|---|
-| Aspect | 9:16, 1080×1920 master (360–4096 px accepted) [P] |
-| Length | API ≤10 min; the creator's own cap comes back as `max_video_post_duration_sec` (3, 5 or 10 min) [P] |
-| Codec | MP4/H.264 recommended, 23–60 fps, ≤4 GB [P] |
-| Cover | Frame pick only via `video_cover_timestamp_ms`; no custom cover in Direct Post [P]. So the chosen frame must carry the title text |
-| Safe zone | TikTok publishes no pixel spec, only "keep key elements central" [P principle]. Working floor: 160 px top, 480 px bottom, 120 px each side on 1080×1920 [S] |
-| Font | TikTok's native face is **TikTok Sans** (open source, SIL OFL, on Google Fonts) [P]: https://developers.tiktok.com/blog/tiktok-sans-open-source. Use it for text that should feel native |
+| Item      | Rule                                                                                                                                                                                     |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aspect    | 9:16, 1080×1920 master (360–4096 px accepted) [P]                                                                                                                                        |
+| Length    | API ≤10 min; the creator's own cap comes back as `max_video_post_duration_sec` (3, 5 or 10 min) [P]                                                                                      |
+| Codec     | MP4/H.264 recommended, 23–60 fps, ≤4 GB [P]                                                                                                                                              |
+| Cover     | Frame pick only via `video_cover_timestamp_ms`; no custom cover in Direct Post [P]. So the chosen frame must carry the title text                                                        |
+| Safe zone | TikTok publishes no pixel spec, only "keep key elements central" [P principle]. Working floor: 160 px top, 480 px bottom, 120 px each side on 1080×1920 [S]                              |
+| Font      | TikTok's native face is **TikTok Sans** (open source, SIL OFL, on Google Fonts) [P]: https://developers.tiktok.com/blog/tiktok-sans-open-source. Use it for text that should feel native |
 
 ## 2. What For You rewards
 
 From https://newsroom.tiktok.com/en-us/how-tiktok-recommends-videos-for-you (Jun 2020, still the
 latest official explainer) [P]:
+
 - User interactions (likes, shares, follows, comments, watch-through), video information
   (captions, sounds, hashtags), and device/account settings (lower weight).
 - **Finishing a longer video** gets greater weight.
@@ -49,9 +50,10 @@ Voice carries the hook; captions back it up.
 ## 3. Length choice
 
 Large-sample data conflicts (see the pattern library's Contested section). Working rule:
+
 - Reach test: 20–45 s. OpusClip's viral tier (top 10%, ≥5.1M views) had a median of 41 s [S].
 - Watch-time / authority: 60–120 s is fine on TikTok if retention holds. Buffer (1.1M TikToks) found
-  >60 s got 43% more reach [S]: https://buffer.com/resources/longer-tiktoks-get-more-views-data/
+  > 60 s got 43% more reach [S]: https://buffer.com/resources/longer-tiktoks-get-more-views-data/
 
 ## 4. AIGC and originality
 
@@ -70,8 +72,7 @@ the Music Usage Confirmation consent text [P]. Default: original voice + license
 
 ## 6. Caption and search
 
-- Caption ≤2,200 characters via API [P]. Lead with the searchable phrase. Socialinsider (600K+ TikToks,
-  2023) found captions under 10 words had a higher view rate [S].
+- Caption ≤2,200 characters via API [P]. Lead with the searchable phrase. Socialinsider (600K+ TikToks, 2023) found captions under 10 words had a higher view rate [S].
 - Say the keyword in the first spoken sentence; TikTok reads captions, sounds and on-screen text.
 - 3–5 specific hashtags; no #fyp padding.
 
@@ -79,12 +80,14 @@ the Music Usage Confirmation consent text [P]. Default: original voice + license
 
 From https://developers.tiktok.com/doc/content-posting-api-get-started and
 https://developers.tiktok.com/doc/content-sharing-guidelines (updated 4 Aug 2026) [P]:
+
 1. `POST /v2/post/publish/creator_info/query/`: privacy options, interaction flags, max duration.
 2. `POST /v2/post/publish/video/init/` with `FILE_UPLOAD` (5–64 MB chunks) or `PULL_FROM_URL`
    (verified domain only). Scope `video.publish`.
 3. Poll post status. Init is rate-limited to 6 requests/min per user token (HTTP 429).
 
 Constraints that change the plan:
+
 - **Unaudited apps: max 5 users per 24 h, private accounts, SELF_ONLY posts.** Public posting needs
   TikTok's audit. Until Synthex's client is audited, use the **inbox/draft upload** flow and let a
   human press Post in the app.
@@ -108,6 +111,7 @@ client metric moved.
 ## 9. Gate checklist
 
 Hard gates ([P] or Synthex rule; a miss blocks the cut):
+
 - [ ] Own footage, no Instagram or CapCut watermark [Synthex rule]
 - [ ] CML or licensed audio with Music Usage Confirmation shown [P]; `is_aigc` correct [P]
 - [ ] Cover frame chosen via `video_cover_timestamp_ms` [P]
@@ -115,6 +119,7 @@ Hard gates ([P] or Synthex rule; a miss blocks the cut):
 - [ ] Footage is owned and grounded (real-images-only) [Synthex rule]
 
 Advisory (ads guidance, [S] or house style; warn, do not block):
+
 - [ ] Spoken hook by 3 s, point by 6 s; on-screen text ≤10 words/s [P, but written for ads]
 - [ ] Text inside the central safe area [S pixel figures]
 - [ ] Caption leads with the search phrase; 3–5 specific hashtags [house style]

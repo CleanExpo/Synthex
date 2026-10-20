@@ -38,6 +38,17 @@ interface RedisClientWrapper {
   keys: (pattern: string) => Promise<string[]>;
   incr: (key: string) => Promise<number>;
   incrby: (key: string, increment: number) => Promise<number>;
+  /**
+   * INCRBY that reports whether the SHARED store took the write. `shared` is
+   * false when no Upstash client is configured (memory mode) or the Upstash
+   * call failed and the per-instance memory fallback was used instead. For
+   * callers whose correctness depends on every instance seeing the same
+   * counter; `incrby` keeps its silent fallback for everyone else.
+   */
+  incrbyShared: (
+    key: string,
+    increment: number
+  ) => Promise<{ total: number; shared: boolean }>;
   decrby: (key: string, decrement: number) => Promise<number>;
   expire: (key: string, seconds: number) => Promise<boolean>;
   ttl: (key: string) => Promise<number>;
@@ -370,6 +381,29 @@ export function createRedisClient(): RedisClientWrapper {
         }
       }
       return memoryCache?.incrby(key, increment) ?? increment;
+    },
+
+    async incrbyShared(
+      key: string,
+      increment: number
+    ): Promise<{ total: number; shared: boolean }> {
+      if (upstashClient) {
+        try {
+          return {
+            total: await upstashClient.incrby(key, increment),
+            shared: true,
+          };
+        } catch (error) {
+          console.warn(
+            '[Redis] INCRBY (shared) failed, using memory fallback:',
+            error
+          );
+        }
+      }
+      return {
+        total: (await memoryCache?.incrby(key, increment)) ?? increment,
+        shared: false,
+      };
     },
 
     async decrby(key: string, decrement: number): Promise<number> {
