@@ -41,7 +41,11 @@ export class AnalyticsSnapshotsNotProvisionedError extends Error {
 async function recordConnectionSync(
   connectionId: string,
   userId: string,
-  state: { lastMetrics?: Record<string, number>; lastSyncError?: string }
+  state: {
+    // null = metric not read (failed or no longer offered), never a real zero.
+    lastMetrics?: Record<string, number | null>;
+    lastSyncError?: string;
+  }
 ): Promise<void> {
   const existing = await prisma.platformConnection.findFirst({
     where: { id: connectionId, userId, deletedAt: null },
@@ -106,7 +110,7 @@ async function processAnalyticsCollection(
 
     let analyticsResult: {
       success: boolean;
-      metrics?: Record<string, number>;
+      metrics?: Record<string, number | null>;
       error?: string;
     };
 

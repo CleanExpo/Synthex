@@ -61,6 +61,10 @@ interface InsightElement {
     value?: number;
     end_time?: string;
   }>;
+  /** Present when requested with `metric_type=total_value`. */
+  total_value?: {
+    value?: number;
+  };
 }
 
 /** Instagram profile response */
@@ -118,14 +122,46 @@ interface MediaPublishResponse {
   id?: string;
 }
 
-/** Instagram post metrics */
+/**
+ * Instagram post metrics. An insight Meta did not return is left undefined
+ * (unknown), never reported as 0. Meta no longer offers `impressions` for
+ * media created after 2 July 2024, so it is not read at all.
+ */
 interface InstagramPostMetrics {
   likes: number;
   comments: number;
-  impressions: number;
-  reach: number;
-  engagement: number;
-  saved: number;
+  views?: number;
+  reach?: number;
+  shares?: number;
+  saved?: number;
+  totalInteractions?: number;
+}
+
+/**
+ * Media insights requested for feed posts and Reels. Every name is valid for
+ * both FEED and REELS, so one non-Reel in a batch cannot fail the request.
+ * `impressions` (deprecated for media created after 2 July 2024) and
+ * `engagement` (not a media insight) are deliberately absent.
+ * Source: https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights
+ * (read 20/10/2026).
+ */
+const MEDIA_INSIGHT_METRICS =
+  'views,reach,likes,comments,shares,saved,total_interactions';
+
+/**
+ * Account insights. `impressions` is deprecated from Graph API v22.0, and
+ * these metrics are `period=day` with `metric_type=total_value`.
+ * Source: https://developers.facebook.com/docs/instagram-platform/api-reference/instagram-user/insights
+ * (read 20/10/2026).
+ */
+const ACCOUNT_INSIGHT_METRICS = 'reach,views';
+
+/** A numeric insight value, or undefined when Meta returned none. */
+function insightValue(insight: InsightElement): number | undefined {
+  const value = insight.total_value?.value ?? insight.values?.[0]?.value;
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
 }
 
 /** Media with insights response */
@@ -331,11 +367,14 @@ export class InstagramService extends BasePlatformService {
   }
 
   async syncAnalytics(days: number = 30): Promise<SyncAnalyticsResult> {
+    // null = not read. A failed or unconfigured read must never look like a
+    // real zero (Synthex honest-status rule, lib/api/not-provisioned.ts).
+    const unread = { impressions: null, engagements: null, followers: null };
     try {
       if (!this.isConfigured()) {
         return {
           success: false,
-          metrics: { impressions: 0, engagements: 0, followers: 0 },
+          metrics: unread,
           period: { start: new Date(), end: new Date() },
           error: 'Service not configured',
         };
@@ -346,129 +385,92 @@ export class InstagramService extends BasePlatformService {
       const startDate = new Date(
         endDate.getTime() - days * 24 * 60 * 60 * 1000
       );
+      const since = Math.floor(startDate.getTime() / 1000);
+      const until = Math.floor(endDate.getTime() / 1000);
+      const failures: string[] = [];
 
-      // Get account insights
-      const period = days <= 1 ? 'day' : days <= 7 ? 'week' : 'days_28';
-      const metricsToFetch = [
-        'impressions',
-        'reach',
-        'follower_count',
-        'profile_views',
-        'website_clicks',
-      ].join(',');
-
-      let impressions = 0;
-      let reach = 0;
-      let followers = 0;
-      let profileViews = 0;
-
+      // Account insights (reach, views) over the period.
+      let reach: number | null = null;
+      let views: number | null = null;
       try {
         const insightsResponse = await this.makeRequest<InsightsResponse>(
-          `/${igAccountId}/insights?metric=${metricsToFetch}&period=${period}`
+          `/${igAccountId}/insights?metric=${ACCOUNT_INSIGHT_METRICS}` +
+            `&period=day&metric_type=total_value&since=${since}&until=${until}`
         );
-
         for (const insight of insightsResponse.data || []) {
-          const value = insight.values?.[0]?.value || 0;
-          switch (insight.name) {
-            case 'impressions':
-              impressions = value;
-              break;
-            case 'reach':
-              reach = value;
-              break;
-            case 'follower_count':
-              followers = value;
-              break;
-            case 'profile_views':
-              profileViews = value;
-              break;
-          }
+          const value = insightValue(insight);
+          if (value === undefined) continue;
+          if (insight.name === 'reach') reach = value;
+          else if (insight.name === 'views') views = value;
         }
       } catch (error) {
-        logger.warn('Instagram insights fetch failed, using profile data', {
-          error,
-        });
+        failures.push('account insights');
+        logger.warn('Instagram account insights fetch failed', { error });
       }
 
-      // Fallback: Get follower count from profile if insights failed
-      if (followers === 0) {
-        try {
-          const profile = await this.makeRequest<IGProfileResponse>(
-            `/${igAccountId}?fields=followers_count`
-          );
-          followers = profile.followers_count || 0;
-        } catch {
-          // Ignore
-        }
-      }
-
-      // Get daily breakdown for impressions
-      const dailyBreakdown: Array<{
-        date: string;
-        impressions: number;
-        engagements: number;
-      }> = [];
-
+      // Followers come from the profile; Meta no longer lists a total
+      // follower metric among account insights.
+      let followers: number | null = null;
       try {
-        const since = Math.floor(startDate.getTime() / 1000);
-        const until = Math.floor(endDate.getTime() / 1000);
-
-        const dailyInsights = await this.makeRequest<InsightsResponse>(
-          `/${igAccountId}/insights?metric=impressions,reach&period=day&since=${since}&until=${until}`
+        const profile = await this.makeRequest<IGProfileResponse>(
+          `/${igAccountId}?fields=followers_count`
         );
-
-        const impressionsData = dailyInsights.data?.find(
-          (d: InsightElement) => d.name === 'impressions'
-        );
-        if (impressionsData?.values) {
-          for (const value of impressionsData.values) {
-            dailyBreakdown.push({
-              date: value.end_time?.split('T')[0] || '',
-              impressions: value.value || 0,
-              engagements: 0,
-            });
-          }
+        if (typeof profile.followers_count === 'number') {
+          followers = profile.followers_count;
         }
-      } catch {
-        // Daily breakdown not available
+      } catch (error) {
+        failures.push('profile');
+        logger.warn('Instagram follower count fetch failed', { error });
       }
 
-      // Calculate engagements from recent posts
-      let engagements = 0;
+      // Engagements: likes + comments across recent posts.
+      let engagements: number | null = null;
       try {
         const mediaResponse = await this.makeRequest<MediaListResponse>(
           `/${igAccountId}/media?fields=like_count,comments_count&limit=50`
         );
-
+        let total = 0;
         for (const media of mediaResponse.data || []) {
-          engagements += (media.like_count || 0) + (media.comments_count || 0);
+          total += (media.like_count || 0) + (media.comments_count || 0);
         }
-      } catch {
-        // Engagement calculation failed
+        engagements = total;
+      } catch (error) {
+        failures.push('recent media');
+        logger.warn('Instagram engagement fetch failed', { error });
+      }
+
+      const metrics = {
+        // Instagram no longer reports impressions (deprecated in Graph API
+        // v22.0); `views` is Meta's replacement.
+        impressions: null,
+        engagements,
+        followers,
+        reach,
+        views,
+      };
+
+      if (failures.length === 3) {
+        return {
+          success: false,
+          metrics,
+          period: { start: startDate, end: endDate },
+          error: `Instagram metrics could not be read (${failures.join(', ')})`,
+        };
       }
 
       return {
         success: true,
-        metrics: {
-          impressions,
-          engagements,
-          followers,
-          reach,
-          profileViews,
-        },
+        metrics,
         period: {
           start: startDate,
           end: endDate,
-        },
-        breakdown: {
-          daily: dailyBreakdown,
         },
       };
     } catch (error: unknown) {
       logger.error('Instagram analytics sync failed', { error });
       return {
         success: false,
-        metrics: { impressions: 0, engagements: 0, followers: 0 },
+        metrics: unread,
         period: { start: new Date(), end: new Date() },
         error: error instanceof Error ? error.message : String(error),
       };
@@ -503,7 +505,7 @@ export class InstagramService extends BasePlatformService {
         'timestamp',
         'like_count',
         'comments_count',
-        'insights.metric(impressions,reach,engagement)',
+        `insights.metric(${MEDIA_INSIGHT_METRICS})`,
       ].join(',');
 
       let endpoint = `/${igAccountId}/media?fields=${fields}&limit=${limit}`;
@@ -514,25 +516,12 @@ export class InstagramService extends BasePlatformService {
       const response = await this.makeRequest<MediaListResponse>(endpoint);
 
       const posts = (response.data || []).map((media: MediaElement) => {
-        // Extract insights
-        let impressions = 0;
-        let reach = 0;
-        let engagement = 0;
-
-        if (media.insights?.data) {
-          for (const insight of media.insights.data) {
-            switch (insight.name) {
-              case 'impressions':
-                impressions = insight.values?.[0]?.value || 0;
-                break;
-              case 'reach':
-                reach = insight.values?.[0]?.value || 0;
-                break;
-              case 'engagement':
-                engagement = insight.values?.[0]?.value || 0;
-                break;
-            }
-          }
+        // Extract insights. A metric Meta did not return stays undefined
+        // (unknown), never 0. Impressions are not read: Meta deprecated them
+        // for media created after 2 July 2024.
+        const insights: Record<string, number | undefined> = {};
+        for (const insight of media.insights?.data || []) {
+          insights[insight.name] = insightValue(insight);
         }
 
         return {
@@ -544,9 +533,9 @@ export class InstagramService extends BasePlatformService {
           metrics: {
             likes: media.like_count || 0,
             comments: media.comments_count || 0,
-            shares: 0, // Instagram doesn't expose shares
-            impressions,
-            reach,
+            shares: insights.shares ?? null,
+            reach: insights.reach,
+            views: insights.views,
           },
           url: media.permalink,
         };
@@ -720,40 +709,23 @@ export class InstagramService extends BasePlatformService {
       }
 
       const response = await this.makeRequest<MediaWithInsightsResponse>(
-        `/${postId}?fields=like_count,comments_count,insights.metric(impressions,reach,engagement,saved)`
+        `/${postId}?fields=like_count,comments_count,insights.metric(${MEDIA_INSIGHT_METRICS})`
       );
 
-      let impressions = 0;
-      let reach = 0;
-      let engagement = 0;
-      let saved = 0;
-
-      if (response.insights?.data) {
-        for (const insight of response.insights.data) {
-          switch (insight.name) {
-            case 'impressions':
-              impressions = insight.values?.[0]?.value || 0;
-              break;
-            case 'reach':
-              reach = insight.values?.[0]?.value || 0;
-              break;
-            case 'engagement':
-              engagement = insight.values?.[0]?.value || 0;
-              break;
-            case 'saved':
-              saved = insight.values?.[0]?.value || 0;
-              break;
-          }
-        }
+      // A metric Meta did not return stays undefined (unknown), never 0.
+      const insights: Record<string, number | undefined> = {};
+      for (const insight of response.insights?.data || []) {
+        insights[insight.name] = insightValue(insight);
       }
 
       return {
         likes: response.like_count || 0,
         comments: response.comments_count || 0,
-        impressions,
-        reach,
-        engagement,
-        saved,
+        views: insights.views,
+        reach: insights.reach,
+        shares: insights.shares,
+        saved: insights.saved,
+        totalInteractions: insights.total_interactions,
       };
     } catch (error: unknown) {
       logger.error('Instagram post metrics fetch failed', { error, postId });
