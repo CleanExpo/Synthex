@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1118,
+  "count": 1119,
   "seeds": [
     {
       "text": "- [Error codes](docs/api/error-codes.md): 11 structured error codes, with HTTP status and meaning.",
@@ -4147,6 +4147,11 @@
       "text": "Reports structured to IICRC S500 PDF and Excel export",
       "file": "app/(landing)/restoreassist/pricing/page.tsx",
       "firstSeen": "74908118"
+    },
+    {
+      "text": "resend_audience_not_configured",
+      "file": "lib/email/suppression.ts",
+      "firstSeen": "89a91074"
     },
     {
       "text": "restaurant marketing",
