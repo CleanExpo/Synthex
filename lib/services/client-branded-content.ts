@@ -154,7 +154,7 @@ export const PROVIDER_PRIORITY: Array<{
     slug: 'openai-api-key',
     provider: 'openai',
     // Resolved from the model registry rather than a literal: the previous
-    // 'gpt-4-turbo-preview' was shut down by OpenAI on 2026-03-26.
+    // GPT-4 Turbo preview default was shut down by OpenAI on 2026-03-26.
     defaultModel: getLatestModel('openai').id,
   },
 ];
