@@ -27,12 +27,20 @@ export interface InvokeOptions {
   body?: object | string;
   url?: string;
   params?: Record<string, string | string[]>;
+  /**
+   * A ready-made request (e.g. a real NextRequest carrying a form or multipart
+   * body, which the mock request cannot parse). invokeHandler only; replaces
+   * headers/body/url.
+   */
+  request?: unknown;
 }
 
 export interface InvokeResult {
   status: number | null;
   json: unknown;
   error?: string;
+  /** Response headers (lower-cased names), when a Response came back. */
+  headers?: Record<string, string>;
 }
 
 export interface RouteInfo {
@@ -87,23 +95,30 @@ function loadModule(abs: string): Record<string, unknown> {
   return mod ?? {};
 }
 
-export async function invokeRoute(
+/**
+ * Load a route module once. An import-time throw comes back as { error },
+ * never thrown. Sweeps load a module once and call its handlers many times
+ * through invokeHandler; invokeRoute loads afresh on every call.
+ */
+export function loadRouteModule(
+  routeFile: string
+):
+  | { mod: Record<string, unknown>; error?: undefined }
+  | { mod?: undefined; error: string } {
+  try {
+    return { mod: loadModule(path.resolve(ROOT, routeFile)) };
+  } catch (err) {
+    return { error: `import failed: ${errorText(err)}` };
+  }
+}
+
+/** Call one exported handler of an already-loaded route module. Never throws. */
+export async function invokeHandler(
+  mod: Record<string, unknown>,
   routeFile: string,
   method: string,
   opts: InvokeOptions = {}
 ): Promise<InvokeResult> {
-  const abs = path.resolve(ROOT, routeFile);
-  let mod: Record<string, unknown>;
-  try {
-    mod = loadModule(abs);
-  } catch (err) {
-    return {
-      status: null,
-      json: null,
-      error: `import failed: ${errorText(err)}`,
-    };
-  }
-
   const handler = mod[method.toUpperCase()];
   if (typeof handler !== 'function') {
     return {
@@ -113,13 +128,15 @@ export async function invokeRoute(
     };
   }
 
-  const request = createMockNextRequest({
-    method: method.toUpperCase(),
-    headers: opts.headers,
-    body: opts.body,
-    url:
-      opts.url ?? `http://localhost:3000${routePath(routeFile, opts.params)}`,
-  });
+  const request =
+    opts.request ??
+    createMockNextRequest({
+      method: method.toUpperCase(),
+      headers: opts.headers,
+      body: opts.body,
+      url:
+        opts.url ?? `http://localhost:3000${routePath(routeFile, opts.params)}`,
+    });
 
   let response: unknown;
   try {
@@ -137,6 +154,7 @@ export async function invokeRoute(
   const res = response as {
     status?: unknown;
     text?: () => Promise<string>;
+    headers?: { forEach?(fn: (value: string, key: string) => void): void };
   } | null;
   if (!res || typeof res.status !== 'number') {
     return {
@@ -145,6 +163,10 @@ export async function invokeRoute(
       error: 'handler did not return a Response',
     };
   }
+  const headers: Record<string, string> = {};
+  res.headers?.forEach?.((value, key) => {
+    headers[key.toLowerCase()] = value;
+  });
   let text = '';
   try {
     text = typeof res.text === 'function' ? await res.text() : '';
@@ -152,19 +174,31 @@ export async function invokeRoute(
     return {
       status: res.status,
       json: null,
+      headers,
       error: `body read failed: ${errorText(err)}`,
     };
   }
-  if (!text) return { status: res.status, json: null };
+  if (!text) return { status: res.status, json: null, headers };
   try {
-    return { status: res.status, json: JSON.parse(text) };
+    return { status: res.status, json: JSON.parse(text), headers };
   } catch {
     return {
       status: res.status,
       json: null,
+      headers,
       error: 'response body is not JSON',
     };
   }
+}
+
+export async function invokeRoute(
+  routeFile: string,
+  method: string,
+  opts: InvokeOptions = {}
+): Promise<InvokeResult> {
+  const loaded = loadRouteModule(routeFile);
+  if (!loaded.mod) return { status: null, json: null, error: loaded.error };
+  return invokeHandler(loaded.mod, routeFile, method, opts);
 }
 
 /**
