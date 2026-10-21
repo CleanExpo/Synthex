@@ -4,6 +4,10 @@ import {
   estimateCostUsd,
 } from '@/lib/services/ai/video/registry';
 
+// fal endpoints that are retired or announced for retirement. Ids stay listed
+// after removal so a re-add fails here. fal-ai/veo3.1: fal shutdown 2026-11-17.
+const RETIRED_VIDEO_MODEL_IDS = ['fal-ai/veo3.1'];
+
 describe('video model registry', () => {
   it('has at least one model per tier with a capability profile', () => {
     for (const tier of ['draft', 'standard', 'premium'] as const) {
@@ -63,7 +67,27 @@ describe('video model registry', () => {
     expect(estimateCostUsd(m, 6)).toBeCloseTo(m.costPerSecondUsd * 6, 4);
   });
 
-  it('routes premium 1:1 + audio to Kling (Veo has no 1:1)', () => {
+  it('carries no retired fal endpoint', () => {
+    const ids = VIDEO_MODELS.map(m => m.id);
+    for (const retired of RETIRED_VIDEO_MODEL_IDS) {
+      expect(ids).not.toContain(retired);
+    }
+  });
+
+  it.each(['9:16', '16:9', '1:1'] as const)(
+    'routes premium %s + audio + image to Kling 3 Pro',
+    aspectRatio => {
+      const m = resolveModel('premium', {
+        aspectRatio,
+        durationSeconds: 8,
+        audio: true,
+        requiresImage: true,
+      });
+      expect(m.name).toBe('Kling 3 Pro');
+    }
+  );
+
+  it('routes premium 1:1 + audio to Kling', () => {
     const m = resolveModel('premium', {
       aspectRatio: '1:1',
       durationSeconds: 6,

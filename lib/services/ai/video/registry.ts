@@ -4,6 +4,10 @@
  * model ids elsewhere. Pricing verified 2026-07-10 against live fal model pages
  * (SYN-1075 live run caught Wan 2.5 + Hailuo 2.3 retired from fal — "Path
  * /v2.5/text-to-video not found"). Verify at deploy.
+ * Veo 3.1 removed 2026-10-21 (its id stays in the test's retired list): fal
+ * deprecates the endpoint on 2026-11-17 and Google shut its Veo 3.1 previews
+ * on 2026-10-22. It never won routing — Kling 3 Pro is cheaper at premium with
+ * a superset of capabilities.
  */
 import { AspectRatio, ModelTier, VideoModelSpec } from './types';
 
@@ -77,20 +81,6 @@ export const VIDEO_MODELS: VideoModelSpec[] = [
     ],
     weaknesses: ['queue can be slow at peak'],
     bestFor: 'finished product with dialogue/SFX at the lower premium price',
-  },
-  {
-    id: 'fal-ai/veo3.1',
-    name: 'Veo 3.1',
-    provider: 'fal',
-    tier: 'premium',
-    costPerSecondUsd: 0.4,
-    maxDurationSeconds: 8,
-    aspectRatios: ['9:16', '16:9'],
-    supportsImageInput: true,
-    supportsAudio: true,
-    strengths: ['best realism', 'native audio', 'cinematic lighting'],
-    weaknesses: ['most expensive', 'no 1:1'],
-    bestFor: 'hero/final assets where quality is the point',
   },
 ];
 

@@ -314,7 +314,7 @@
         },
         {
           "kind": "studio_tool",
-          "name": "generate_video (fal: Seedance 2.0, Kling v3 pro, Veo 3.1)",
+          "name": "generate_video (fal: Seedance 2.0, Kling v3 pro)",
           "ref": "lib/services/ai/studio-tools/index.ts:231",
           "spend": "expensive"
         },
