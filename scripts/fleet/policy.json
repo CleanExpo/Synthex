@@ -38,24 +38,17 @@
     "screen": "claude-haiku-5-5",
     "judge_anthropic": "claude-sonnet-5-5",
     "judge_tiebreak": "claude-opus-5-5",
-    "judge_non_anthropic_lane": "openrouter",
+    "judge_non_anthropic_lane": "codex",
     "excluded": ["claude-mythos-5-1", "managed-agents"],
     "builder_hard": "claude-opus-5-5"
   },
   "review": {
-    "lanes_in_order": ["codex", "minimax", "openrouter", "gemini"],
+    "lanes_in_order": ["codex"],
     "never": ["cursor"],
     "minimax_via": "founder Mac mm-ask lane through room-cli mac run (key lives there only)",
-    "openrouter_models": [
-      "moonshotai/kimi-k2.5",
-      "moonshotai/kimi-k3",
-      "google/gemma-4-31b-it:free",
-      "nvidia/nemotron-3-super-120b-a12b:free",
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "google/gemma-4-26b-a4b-it:free"
-    ],
-    "openrouter_paid_ok": true,
-    "openrouter_note": "Founder 2026-10-17: \"OpenRouter Models Kimi for this project\"; paid Kimi allowed (A-21). MiniMax lane stays first and returns when its balance is topped up.",
+    "openrouter_models": [],
+    "openrouter_paid_ok": false,
+    "openrouter_note": "Founder 2026-10-19: subscription plans only (Claude Max, Codex on the ChatGPT plan); no API billing and no paid fallback. Supersedes A-21 (paid Kimi, 2026-10-17) and the MiniMax/OpenRouter/Gemini review lanes. scripts/fleet/lanes.mjs holds the allowlist; when Codex is unavailable the review is INCONCLUSIVE and work waits.",
     "codex_via": "Codex CLI on the ChatGPT subscription, run on the founder Mac through room-cli mac run (the Cloudroom sandbox cannot start its bwrap shell sandbox); never API credits (FD-5)"
   },
   "protected_paths": [
