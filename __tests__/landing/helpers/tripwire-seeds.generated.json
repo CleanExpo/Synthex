@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1115,
+  "count": 1118,
   "seeds": [
     {
       "text": "- [Error codes](docs/api/error-codes.md): 11 structured error codes, with HTTP status and meaning.",
@@ -256,6 +256,16 @@
     {
       "text": "/insights?metric=impressions,reach&period=day&since=",
       "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/insights?metric=page_impressions,page_post_engagements&",
+      "file": "lib/social/facebook-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "/insights?metric=page_impressions,page_post_engagements& period=days_28&since=",
+      "file": "lib/social/facebook-service.ts",
       "firstSeen": "base"
     },
     {
@@ -3176,6 +3186,11 @@
     {
       "text": "insights.metric(impressions,reach,engagement)",
       "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "insights.metric(post_impressions,post_impressions_unique,post_engaged_users)",
+      "file": "lib/social/facebook-service.ts",
       "firstSeen": "base"
     },
     {
