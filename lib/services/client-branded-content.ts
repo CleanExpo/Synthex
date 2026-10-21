@@ -13,6 +13,7 @@ import { VaultService } from '@/lib/vault/vault-service';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getAIProvider } from '@/lib/ai/providers';
+import { getLatestModel } from '@/lib/ai/model-registry';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
 import { sanitizeSocialPost } from '@/lib/ai/sanitize-social-post';
@@ -134,7 +135,7 @@ async function loadClientBrand(orgId: string): Promise<ClientBrand | null> {
 // Credential Resolution — Client's Vault keys FIRST, Synthex fallback LAST
 // =============================================================================
 
-const PROVIDER_PRIORITY: Array<{
+export const PROVIDER_PRIORITY: Array<{
   slug: string;
   provider: ClientCredentials['provider'];
   defaultModel: string;
@@ -152,7 +153,9 @@ const PROVIDER_PRIORITY: Array<{
   {
     slug: 'openai-api-key',
     provider: 'openai',
-    defaultModel: 'gpt-4-turbo-preview',
+    // Resolved from the model registry rather than a literal: the previous
+    // 'gpt-4-turbo-preview' was shut down by OpenAI on 2026-03-26.
+    defaultModel: getLatestModel('openai').id,
   },
 ];
 

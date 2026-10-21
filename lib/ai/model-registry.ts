@@ -76,7 +76,11 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
-      isDeprecated: false,
+      // Shutdown "October 23, 2026" per https://developers.openai.com/api/docs/deprecations
+      // (read 22/10/2026; vendor substitute gpt-5.6-sol, not in this registry).
+      isDeprecated: true,
+      deprecatedDate: new Date('2026-10-23'),
+      replacementModel: 'gpt-4-o',
     },
     {
       id: 'gpt-4-o',
@@ -339,7 +343,11 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
-      isDeprecated: false,
+      // Shutdown "June 1, 2026" per https://ai.google.dev/gemini-api/docs/deprecations
+      // (read 22/10/2026; vendor replacement gemini-3.6-flash, not in this registry).
+      isDeprecated: true,
+      deprecatedDate: new Date('2026-06-01'),
+      replacementModel: 'gemini-3-1-flash',
     },
     {
       id: 'gemini-1-5-pro',
@@ -512,7 +520,11 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       supportsVision: true,
       supportsTools: true,
       supportsStreaming: true,
-      isDeprecated: false,
+      // Upstream shutdown "June 1, 2026" per https://ai.google.dev/gemini-api/docs/deprecations
+      // (read 22/10/2026). OpenRouter's own listing was not checked.
+      isDeprecated: true,
+      deprecatedDate: new Date('2026-06-01'),
+      replacementModel: 'google/gemini-3.1-flash',
     },
     // SYN-807 — DeepSeek V4 (released 2026-04-24): cheap-cloud tier for
     // research-heavy + mid-quality drafting tasks. ~10-20× cheaper than
