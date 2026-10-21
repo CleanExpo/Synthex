@@ -109,9 +109,33 @@ describe('getSuppressionStatus', () => {
     expect(s.state).toBe('suppressed');
   });
 
-  it('is unknown (fail closed) when RESEND_AUDIENCE_ID is unset', async () => {
+  it('audience unset: preferences are authoritative, a clean Synthex user is allowed', async () => {
     delete process.env.RESEND_AUDIENCE_ID;
-    const s = await getSuppressionStatus('x@example.com', { preferences: {} });
+    const s = await getSuppressionStatus('x@example.com');
+    expect(s.state).toBe('allowed');
+    expect(mockContactsGet).not.toHaveBeenCalled();
+  });
+
+  it('audience unset: an unsubscribed Synthex user is still suppressed', async () => {
+    delete process.env.RESEND_AUDIENCE_ID;
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 'u1',
+      preferences: { emailStatus: { status: 'unsubscribed' } },
+    });
+    const s = await getSuppressionStatus('x@example.com');
+    expect(s.state).toBe('suppressed');
+  });
+
+  it('audience unset: a non-user recipient is unknown (fail closed)', async () => {
+    delete process.env.RESEND_AUDIENCE_ID;
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    const s = await getSuppressionStatus('stranger@example.com');
+    expect(s.state).toBe('unknown');
+  });
+
+  it('audience configured: a read error is unknown (fail closed)', async () => {
+    mockContactsGet.mockRejectedValue(new Error('network down'));
+    const s = await getSuppressionStatus('x@example.com');
     expect(s.state).toBe('unknown');
   });
 

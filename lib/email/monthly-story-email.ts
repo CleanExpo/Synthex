@@ -12,6 +12,7 @@ import {
   unsubscribeUrl as buildUnsubscribeUrl,
   listUnsubscribeHeaders,
 } from './list-unsubscribe';
+import { marketingSendBlocked } from './suppression';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -166,7 +167,16 @@ function buildProgressArcBlocks(metrics: EnhancedMetrics | undefined): string {
  */
 export async function sendMonthlyStoryEmail(
   params: MonthlyStoryEmailParams
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  suppressed?: boolean;
+  suppressionState?: 'suppressed' | 'unknown';
+}> {
+  // Spam Act: never mail an unsubscribed or unknown-status recipient.
+  const blocked = await marketingSendBlocked(params.to, 'monthly_story');
+  if (blocked) return blocked;
+
   const {
     to,
     businessName,

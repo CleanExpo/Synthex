@@ -181,11 +181,28 @@ describe('GET /api/cron/welcome-sequence', () => {
     expect(body.suppressed).toBe(1);
   });
 
-  it('fails closed: skips the send when the Resend audience is not configured', async () => {
+  it('audience unset: preferences are authoritative, a clean user is mailed', async () => {
     delete process.env.RESEND_AUDIENCE_ID;
     mockPrisma.$queryRaw.mockResolvedValue([
       {
         id: 'u8',
+        email: 'a@b.com',
+        name: 'Ann',
+        preferences: { emailSequenceStartedAt: FOUR_DAYS_AGO },
+      },
+    ]);
+    mockPrisma.user.findUnique.mockResolvedValue({ preferences: {} });
+    const res = await GET(req());
+    const body = await res.json();
+    expect(mockSendDay3).toHaveBeenCalledTimes(1);
+    expect(body.suppressionUnknown).toBe(0);
+  });
+
+  it('fails closed: skips the send when the configured Resend audience read errors', async () => {
+    mockContactsGet.mockRejectedValue(new Error('network down'));
+    mockPrisma.$queryRaw.mockResolvedValue([
+      {
+        id: 'u7',
         email: 'a@b.com',
         name: 'Ann',
         preferences: { emailSequenceStartedAt: FOUR_DAYS_AGO },

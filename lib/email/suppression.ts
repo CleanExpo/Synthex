@@ -7,14 +7,18 @@
  *   2. user.preferences.emailStatus — written by the SendGrid webhook
  *      ({ status: 'unsubscribed' | 'invalid' }) and by recordUnsubscribe().
  *
- * Fail closed: when either store cannot be read (audience not configured,
- * Resend error, database error, address not a Synthex user) the answer is
- * 'unknown', and callers must skip the send. A skipped send is recoverable;
+ * The Resend audience is a source only when RESEND_AUDIENCE_ID is set; when
+ * it is unset, user.preferences.emailStatus is authoritative for Synthex users.
+ *
+ * Fail closed: when a configured store cannot be read (Resend error or
+ * missing key with an audience configured, database error) or the address is
+ * not a Synthex user, the answer is 'unknown', and callers must skip the send. A skipped send is recoverable;
  * mailing someone who unsubscribed is a Spam Act breach.
  */
 
 import { Resend } from 'resend';
 import prisma from '@/lib/prisma';
+import { logger } from '@/lib/logger';
 
 export type SuppressionStatus =
   | { state: 'allowed' }
@@ -109,9 +113,14 @@ export async function getSuppressionStatus(
     return { state: 'suppressed', source: 'preferences' };
   }
 
-  const audienceId = resendConfigured();
+  const audienceId = process.env.RESEND_AUDIENCE_ID;
   if (!audienceId) {
-    return { state: 'unknown', reason: 'resend_audience_not_configured' };
+    // No audience configured: it is not a source (nothing was ever recorded
+    // there), so the user's preferences are authoritative.
+    return { state: 'allowed' };
+  }
+  if (!process.env.RESEND_API_KEY) {
+    return { state: 'unknown', reason: 'resend_api_key_missing' };
   }
 
   try {
@@ -199,4 +208,37 @@ export async function recordUnsubscribe(
   }
 
   return { recorded, failed };
+}
+
+export interface MarketingSendBlocked {
+  success: false;
+  suppressed: true;
+  suppressionState: 'suppressed' | 'unknown';
+  error: string;
+}
+
+/**
+ * Run the suppression check before a marketing send. Returns null when the
+ * send may go ahead; otherwise logs the skip and returns the result the
+ * sender hands back to its caller (which counts it, never as a plain failure).
+ */
+export async function marketingSendBlocked(
+  email: string,
+  emailType: string
+): Promise<MarketingSendBlocked | null> {
+  const status = await getSuppressionStatus(email);
+  if (status.state === 'allowed') return null;
+  logger.warn('[email] marketing send skipped: unsubscribe check', {
+    emailType,
+    suppression: status,
+  });
+  return {
+    success: false,
+    suppressed: true,
+    suppressionState: status.state,
+    error:
+      status.state === 'suppressed'
+        ? 'recipient_suppressed'
+        : `suppression_unknown:${status.reason}`,
+  };
 }

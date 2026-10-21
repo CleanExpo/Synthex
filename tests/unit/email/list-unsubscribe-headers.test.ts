@@ -17,6 +17,24 @@ jest.mock('resend', () => ({
   },
 }));
 
+// The newsletter-style senders run the suppression check first: a subscribed
+// Synthex user with no Resend audience configured is allowed.
+const mockPrisma = {
+  user: { findUnique: jest.fn() },
+};
+jest.mock('@/lib/prisma', () => ({
+  __esModule: true,
+  default: mockPrisma,
+  prisma: mockPrisma,
+}));
+jest.mock('@/lib/logger', () => ({
+  logger: { info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+}));
+const ENV = { ...process.env };
+afterAll(() => {
+  process.env = ENV;
+});
+
 import {
   sendWelcomeSequenceDay0,
   sendWelcomeSequenceDay3,
@@ -36,6 +54,9 @@ const EXPECTED_URL =
 beforeEach(() => {
   jest.clearAllMocks();
   mockSend.mockResolvedValue({ data: { id: 'em_1' }, error: null });
+  process.env = { ...ENV };
+  delete process.env.RESEND_AUDIENCE_ID;
+  mockPrisma.user.findUnique.mockResolvedValue({ preferences: {} });
 });
 
 async function lastPayload(): Promise<Record<string, unknown>> {

@@ -15,6 +15,7 @@ import {
   unsubscribeUrl as buildUnsubscribeUrl,
   listUnsubscribeHeaders,
 } from './list-unsubscribe';
+import { marketingSendBlocked } from './suppression';
 import { buildUtmUrl } from '@/lib/utm/build-utm-url';
 
 let _resend: Resend | null = null;
@@ -302,7 +303,17 @@ function buildHtml(params: GeoScoreNotificationEmailParams): {
  */
 export async function sendGeoScoreNotificationEmail(
   params: GeoScoreNotificationEmailParams
-): Promise<{ success: boolean; emailId?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  emailId?: string;
+  error?: string;
+  suppressed?: boolean;
+  suppressionState?: 'suppressed' | 'unknown';
+}> {
+  // Spam Act: never mail an unsubscribed or unknown-status recipient.
+  const blocked = await marketingSendBlocked(params.to, 'geo_score');
+  if (blocked) return blocked;
+
   const { subject, html } = buildHtml(params);
 
   try {
