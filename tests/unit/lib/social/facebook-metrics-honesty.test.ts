@@ -197,6 +197,21 @@ describe('FacebookService metrics honesty', () => {
       expect(result.metrics.followers).toBeNull();
     });
 
+    it('an empty 200 answer is a failure, not a successful read', async () => {
+      routeGraph({
+        profile: () => mockResponse({}),
+        pageInsights: () => mockResponse({ data: [] }),
+      });
+
+      const result = await service.syncAnalytics(30);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toMatch(/no metric values/);
+      expect(result.metrics.views).toBeNull();
+      expect(result.metrics.engagements).toBeNull();
+      expect(result.metrics.followers).toBeNull();
+    });
+
     it('a missing Page returns null metrics, not zeros', async () => {
       mockFetch.mockResolvedValue(mockResponse({ data: [] }));
 

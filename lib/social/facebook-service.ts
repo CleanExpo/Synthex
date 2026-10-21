@@ -576,12 +576,16 @@ export class FacebookService extends BasePlatformService {
         views,
       };
 
-      if (failures.length === 2) {
+      // Nothing read is a failure whether the calls errored or Meta answered
+      // 200 with no values.
+      if (followers === null && views === null && engagements === null) {
         return {
           success: false,
           metrics,
           period: { start: startDate, end: endDate },
-          error: `Facebook metrics could not be read (${failures.join(', ')})`,
+          error: failures.length
+            ? `Facebook metrics could not be read (${failures.join(', ')})`
+            : 'Facebook returned no metric values',
         };
       }
 

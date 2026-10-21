@@ -82,3 +82,77 @@ describe('analytics worker (Prisma port)', () => {
     });
   });
 });
+
+describe('analytics worker Facebook insights', () => {
+  const originalFetch = global.fetch;
+  const RETIRED = /^(page_impressions|page_engaged_users|page_fans)/;
+
+  afterEach(() => {
+    global.fetch = originalFetch;
+  });
+
+  function facebookConnection() {
+    mockPrisma.platformConnection.findFirst
+      .mockResolvedValueOnce({
+        id: 'conn_1',
+        userId: 'user_1',
+        isActive: true,
+        accessToken: 'tok',
+        refreshToken: null,
+        profileId: 'page-1',
+      })
+      .mockResolvedValueOnce({ metadata: {} });
+  }
+
+  function graphAnswers(body: unknown) {
+    const fetchMock = jest.fn().mockResolvedValue({ json: async () => body });
+    global.fetch = fetchMock as unknown as typeof fetch;
+    return fetchMock;
+  }
+
+  it('requests only current Page metrics and stores what was read', async () => {
+    facebookConnection();
+    const fetchMock = graphAnswers({
+      data: [
+        { name: 'page_media_view', values: [{ value: 50 }] },
+        { name: 'page_post_engagements', values: [{ value: 7 }] },
+        { name: 'page_follows', values: [{ value: 300 }] },
+      ],
+    });
+
+    const err = await processAnalyticsCollection(
+      job({ userId: 'user_1', platform: 'facebook', connectionId: 'conn_1' })
+    ).catch(e => e);
+
+    expect(err).toBeInstanceOf(AnalyticsSnapshotsNotProvisionedError);
+    const url = decodeURIComponent(String(fetchMock.mock.calls[0][0]));
+    const names = (url.match(/[?&]metric=([^&]+)/)?.[1] ?? '').split(',');
+    expect(names.length).toBeGreaterThan(0);
+    expect(names.filter(n => RETIRED.test(n))).toEqual([]);
+    const update = mockPrisma.platformConnection.updateMany.mock.calls[0][0];
+    expect(update.data.metadata.lastMetrics).toEqual({
+      impressions: null,
+      views: 50,
+      engagements: 7,
+      followers: 300,
+    });
+  });
+
+  it('an empty Graph answer is a failure, not zeros', async () => {
+    facebookConnection();
+    graphAnswers({ data: [] });
+
+    await expect(
+      processAnalyticsCollection(
+        job({ userId: 'user_1', platform: 'facebook', connectionId: 'conn_1' })
+      )
+    ).rejects.toThrow('Facebook returned no metric values');
+    // The failure is recorded as an error; no metrics (and no zeros) are kept.
+    const writes = mockPrisma.platformConnection.updateMany.mock.calls.map(
+      call => call[0].data.metadata
+    );
+    expect(writes).toEqual([
+      { lastSyncError: 'Facebook returned no metric values' },
+    ]);
+  });
+});
