@@ -126,6 +126,8 @@ const mods: Record<string, { mod?: Record<string, unknown>; error?: string }> =
   {};
 let calendarPublishers: string[] = [];
 
+let intendedSchedule = new Date();
+
 const fullyApproved = (o: Outcome) => o === 'approve' || o === 'approve-2-step';
 
 function seedWorld(
@@ -140,6 +142,7 @@ function seedWorld(
   calls.length = 0;
   const offset = { past: -3_600_000, now: -1_000, future: 86_400_000 }[when];
   const scheduledAt = new Date(Date.now() + offset);
+  intendedSchedule = scheduledAt;
   table('organization').push({
     id: ORG,
     slug: 'org-a',
@@ -195,8 +198,10 @@ function seedWorld(
       id: 'content-1',
       content: `Synthetic approved-post copy ${marker}`,
       platform,
-      status: 'pending_approval',
-      scheduledAt,
+      // Queued and due: the scheduler's authority gate is what parks it in
+      // pending_approval (judge() runs the scheduler once before the verdict).
+      status: 'scheduled',
+      scheduledAt: new Date(Date.now() - 7_200_000),
       publishedAt: null,
       deletedAt: null,
       metadata,
@@ -217,7 +222,15 @@ function seedWorld(
       status: 'pending_approval',
       scheduledAt,
       publishedAt: null,
-      metadata,
+      // No scheduler gates calendar posts; record the blocked verdict the way
+      // the post scheduler does.
+      metadata: {
+        ...metadata,
+        publishGate: {
+          allowed: false,
+          blockers: ['campaign_human_approval_missing'],
+        },
+      },
       organizationId: ORG,
       userId: AUTHOR,
     });
@@ -368,6 +381,18 @@ function expectation(w: World): { criterion: string; publish: boolean } {
 async function judge(w: World, n: number, actFn: typeof act = act) {
   const marker = `#m${n}`;
   seedWorld(w.content, w.outcome, w.when, w.platform, w.gate, marker);
+  // The scheduler meets the unapproved post first and parks it (authority
+  // gate -> pending_approval with metadata.publishGate). Then the slot is set
+  // to the case's time and the approver acts.
+  let pre = 'n/a';
+  if (w.content === 'post') {
+    await runPublishers();
+    const p = table('post')[0];
+    pre = String(p?.status);
+    if (p) p.scheduledAt = intendedSchedule;
+  }
+  const blockedFirst = publishedCount(marker);
+  calls.length = 0;
   const patches = await actFn(w.outcome, w.content);
   const run1 = await runPublishers();
   const atFirst = publishedCount(marker);
@@ -376,14 +401,20 @@ async function judge(w: World, n: number, actFn: typeof act = act) {
   const total = publishedCount(marker);
   const e = expectation(w);
   const due = w.when !== 'future';
-  const passed = e.publish
-    ? total === 1 && atFirst === (due ? 1 : 0)
-    : total === 0;
+  const passed =
+    blockedFirst === 0 &&
+    (e.publish ? total === 1 && atFirst === (due ? 1 : 0) : total === 0);
   const row = (w.content === 'post' ? table('post') : table('calendarPost'))[0];
+  const meta = (row?.metadata ?? {}) as {
+    history?: { event?: string; blockers?: string[] }[];
+    publishGate?: { blockers?: string[] };
+  };
+  const last = meta.history?.at(-1);
+  const trail = `last event=${last?.event ?? '-'}${last?.blockers?.length ? ` [${last.blockers.join(',')}]` : ''}; gate blockers=${(meta.publishGate?.blockers ?? []).join(',') || '-'}`;
   return {
     ...e,
     passed,
-    detail: `${w.content} ${w.outcome} ${w.when} ${w.platform} gate=${w.gate}: patch=${patches}; run1 ${run1.join(' ')} published=${atFirst}; run2 ${run2.join(' ')} published total=${total}; final status=${String(row?.status)}; expected ${e.publish ? 'publish once' : 'never publish'}`,
+    detail: `${w.content} ${w.outcome} ${w.when} ${w.platform} gate=${w.gate}: before approval status=${pre} published=${blockedFirst}; patch=${patches}; run1 ${run1.join(' ')} published=${atFirst}; run2 ${run2.join(' ')} published total=${total}; final status=${String(row?.status)}; ${trail}; expected ${e.publish ? 'publish once' : 'never publish'}`,
   };
 }
 
@@ -411,11 +442,20 @@ beforeAll(async () => {
   for (const f of [APPROVALS, SCHEDULER, ...calendarPublishers])
     mods[f] = loadRouteModule(f);
   const helper = await import('@/tests/helpers/campaign-authority-manifest');
-  pendingManifest = platform =>
-    helper.buildApprovedCampaignAuthorityManifest({
-      platformOutputs: [{ platform, status: 'draft', contentRef: 'content-1' }],
+  // Ready in every respect except the human verdict: the one blocker a
+  // human approval is meant to clear.
+  pendingManifest = platform => {
+    const m = helper.buildApprovedCampaignAuthorityManifest({
+      platformOutputs: [
+        { platform, status: 'approved', contentRef: 'content-1' },
+      ],
       approval: { status: 'pending', humanApproved: false },
     } as never);
+    return {
+      ...m,
+      evaluation: m.evaluation && { ...m.evaluation, approvalReadiness: 60 },
+    };
+  };
 
   // Reach check: an already-approved, due, clear post must publish through
   // this harness. If it does not, no G5.C1 verdict can be trusted.

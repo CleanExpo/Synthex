@@ -41,6 +41,8 @@ export interface InvokeResult {
   error?: string;
   /** Response headers (lower-cased names), when a Response came back. */
   headers?: Record<string, string>;
+  /** The raw body when it is not JSON (an HTML page, plain text). */
+  text?: string;
 }
 
 export interface RouteInfo {
@@ -186,6 +188,7 @@ export async function invokeHandler(
       status: res.status,
       json: null,
       headers,
+      text,
       error: 'response body is not JSON',
     };
   }

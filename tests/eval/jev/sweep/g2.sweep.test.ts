@@ -6,23 +6,29 @@
  *   GET /api/cron/drip-day3, /api/cron/drip-day7, /api/cron/welcome-sequence
  *   POST /api/newsletter/subscribe        (newsletter welcome send)
  * Boundaries mocked: the `resend` package (lib/fake-resend.ts: the audience
- * of contacts, the only suppression store on main, plus a recorder of every
- * email sent with its headers), Prisma (lib/fake-db.ts), rate limiters
- * (pass-through), the logger. Requests are real NextRequest objects so form
- * and multipart bodies parse as they would in Next.
+ * of contacts plus a recorder of every email sent with its headers), Prisma
+ * (lib/fake-db.ts), rate limiters (pass-through), the logger. Requests are
+ * real NextRequest objects so form and multipart bodies parse as in Next.
+ * Suppression stores modelled: the Resend audience (contact.unsubscribed) and
+ * user.preferences (emailStatus.status 'unsubscribed', the shape the SendGrid
+ * webhook writes, plus legacy opt-out flags). Status is UNKNOWN when the
+ * store cannot be read (the audience API erroring); a user with no opt-out on
+ * record in a readable store is not unsubscribed.
  * Catches: an unsubscribe answered as success without being recorded, a
  * marketing send to an unsubscribed or unknown-status address, a marketing
  * email without List-Unsubscribe / List-Unsubscribe-Post.
- * Misses: suppression stores other than the Resend audience and the user's
- * preferences flags seeded here (a fix that reads a new table needs that
- * table seeded too), SendGrid webhooks, HEAD (no HEAD export: INCONCLUSIVE).
+ * Misses: stores other than the two above (a fix that reads a new table needs
+ * that table seeded too), HEAD (no HEAD export: INCONCLUSIVE).
  *
  * Criteria:
- *  G2.C1 unsubscribe x method x content type x email x store: a success answer
- *        (2xx, or a redirect to /unsubscribed without ?error) only when the
- *        store now records the address as unsubscribed.
+ *  G2.C1 unsubscribe x method x content type x email x store x user: a
+ *        success answer (2xx JSON or page saying "unsubscribed", or a
+ *        redirect to /unsubscribed without ?error) only when a store now
+ *        records the address as unsubscribed. A confirmation page that asks
+ *        the reader to press Unsubscribe is not a success answer.
  *  G2.C2 send path x subscriber state x store x address: no marketing email
- *        reaches an address unless the store confirms it subscribed.
+ *        reaches an address that a store marks unsubscribed, or whose status
+ *        cannot be read.
  *  G2.C3 every marketing email sent carries List-Unsubscribe and
  *        List-Unsubscribe-Post: List-Unsubscribe=One-Click.
  */
@@ -68,19 +74,46 @@ function setStore(
   contact?: { email: string; unsubscribed: boolean }
 ) {
   resetResend(store === 'erroring' ? 'error' : 'ok');
+  // A dummy, non-secret key: "configured" means an audience id and a key.
+  process.env.RESEND_API_KEY = 're_sweep_dummy_not_a_key';
   if (store === 'unset') delete process.env.RESEND_AUDIENCE_ID;
   else process.env.RESEND_AUDIENCE_ID = AUDIENCE;
   if (contact && store !== 'configured-no-contact')
     resend.contacts.set(contact.email.trim().toLowerCase(), { ...contact });
 }
 
-const recorded = (email: string) =>
-  resend.contacts.get(email.trim().toLowerCase())?.unsubscribed === true;
+const OPTED_OUT = ['unsubscribed', 'invalid'];
+/** Does any store now hold the unsubscribe for this address? */
+function recorded(email: string): boolean {
+  const e = email.trim().toLowerCase();
+  if (resend.contacts.get(e)?.unsubscribed === true) return true;
+  return table('user').some(u => {
+    if (String(u.email).trim().toLowerCase() !== e) return false;
+    const prefs = (u.preferences ?? {}) as {
+      emailStatus?: { status?: unknown };
+    };
+    return OPTED_OUT.includes(String(prefs.emailStatus?.status));
+  });
+}
 
 /** Did the answer tell the user they are unsubscribed? */
 function claimsSuccess(r: InvokeResult): boolean {
   if (r.status === null) return false;
-  if (r.status >= 200 && r.status < 300) return true;
+  if (r.status >= 200 && r.status < 300) {
+    if (r.json && typeof r.json === 'object') {
+      const j = r.json as Record<string, unknown>;
+      if (j.error) return false;
+      return (
+        j.success === true ||
+        /unsubscribed/i.test(String(j.message ?? '')) ||
+        !('message' in j)
+      );
+    }
+    // An HTML or text page: a claim only when it says the address IS unsubscribed.
+    if (r.text !== undefined)
+      return /\bunsubscribed\b/i.test(r.text.replace(/<[^>]+>/g, ' '));
+    return true; // an empty 2xx is read as success
+  }
   if (r.status >= 300 && r.status < 400) {
     const loc = r.headers?.location ?? '';
     try {
@@ -199,12 +232,21 @@ async function judgeUnsubscribe(
   method: string,
   email: string,
   kind: string | undefined,
-  store: Store
+  store: Store,
+  userExists = false
 ) {
   setStore(
     store,
     email.trim() ? { email: email.trim(), unsubscribed: false } : undefined
   );
+  resetDb();
+  if (userExists && email.trim())
+    table('user').push({
+      id: 'u-reader',
+      email: email.trim(),
+      name: 'Reader',
+      preferences: {},
+    });
   const r = await handler(unsubRequest(method, email, kind));
   if (r.status === null)
     return { passed: null, detail: r.error ?? 'no status' };
@@ -228,29 +270,35 @@ it('G2 unsubscribe cases', async () => {
     ['GET', undefined],
     ['HEAD', undefined],
   ];
-  for (const store of stores)
-    for (const [method, kind] of shapes)
-      for (const email of UNSUB_EMAILS) {
-        const tag = `unsubscribe ${method}${kind ? ` ${kind}` : ''} email=${JSON.stringify(email.slice(0, 40))} store=${store}`;
-        const j = await judgeUnsubscribe(
-          req => call(UNSUB, method, req),
-          method,
-          email,
-          kind,
-          store
-        );
-        sink.verdict(
-          'G2.C1',
-          j.passed,
-          `${tag}: ${j.detail}`,
-          '/api/newsletter/unsubscribe'
-        );
-      }
+  for (const userExists of [false, true])
+    for (const store of stores)
+      for (const [method, kind] of shapes)
+        for (const email of UNSUB_EMAILS) {
+          const tag = `unsubscribe ${method}${kind ? ` ${kind}` : ''} email=${JSON.stringify(email.slice(0, 40))} store=${store} user=${userExists ? 'yes' : 'no'}`;
+          const j = await judgeUnsubscribe(
+            req => call(UNSUB, method, req),
+            method,
+            email,
+            kind,
+            store,
+            userExists
+          );
+          sink.verdict(
+            'G2.C1',
+            j.passed,
+            `${tag}: ${j.detail}`,
+            '/api/newsletter/unsubscribe'
+          );
+        }
 });
 
 // ── Marketing sends ──────────────────────────────────────────────────────────
 
-type SubState = 'subscribed' | 'unsubscribed' | 'unknown';
+type SubState =
+  | 'subscribed'
+  | 'unsubscribed'
+  | 'unsubscribed-prefs-only'
+  | 'no-record';
 const SEND_EMAILS = [
   'member@example.test',
   'Member@Example.Test',
@@ -267,13 +315,14 @@ const SEND_EMAILS = [
 function seedRecipient(email: string, state: SubState, store: Store) {
   setStore(
     store,
-    state === 'unknown'
+    state === 'no-record'
       ? undefined
       : { email, unsubscribed: state === 'unsubscribed' }
   );
   resetDb();
-  return state === 'unsubscribed'
+  return state === 'unsubscribed' || state === 'unsubscribed-prefs-only'
     ? {
+        emailStatus: { status: 'unsubscribed', source: 'sweep' },
         unsubscribed: true,
         emailUnsubscribed: true,
         marketingOptOut: true,
@@ -352,12 +401,13 @@ const SEND_PATHS: Record<
     ),
 };
 
-/** May this path mail this address? Only when the store is readable and says subscribed. */
-function allowed(path: string, state: SubState, store: Store): boolean {
-  if (store !== 'configured') return false;
-  // Subscribing is the opt-in: a new or already-subscribed address may get the welcome.
-  if (path === 'newsletter') return state !== 'unsubscribed';
-  return state === 'subscribed';
+/**
+ * May this path mail this address? Not when any store marks it unsubscribed,
+ * and not when its status cannot be read (the audience erroring).
+ */
+function allowed(_path: string, state: SubState, store: Store): boolean {
+  if (store === 'erroring') return false;
+  return state === 'subscribed' || state === 'no-record';
 }
 
 function judgeHeaders(mail: SentEmail): { passed: boolean; detail: string } {
@@ -373,7 +423,12 @@ function judgeHeaders(mail: SentEmail): { passed: boolean; detail: string } {
 }
 
 it('G2 marketing-send cases', async () => {
-  const states: SubState[] = ['subscribed', 'unsubscribed', 'unknown'];
+  const states: SubState[] = [
+    'subscribed',
+    'unsubscribed',
+    'unsubscribed-prefs-only',
+    'no-record',
+  ];
   const stores: Store[] = ['configured', 'unset', 'erroring'];
   for (const [path, run] of Object.entries(SEND_PATHS))
     for (const state of states)

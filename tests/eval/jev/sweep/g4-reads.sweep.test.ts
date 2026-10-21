@@ -34,7 +34,7 @@ import {
   setJ2Role,
 } from '../families/j2/failing-prisma';
 import { ownerEmail } from '../families/j2/fixtures';
-import { Sink, SWEEP, cutNetwork, disarmed, quietConsole } from './lib/sink';
+import { Sink, cutNetwork, disarmed, quietConsole } from './lib/sink';
 
 jest.mock('@/lib/prisma', () =>
   require('../families/j2/failing-prisma').failingPrismaModule()
@@ -42,10 +42,9 @@ jest.mock('@/lib/prisma', () =>
 
 const ROOT = path.join(__dirname, '../../../..');
 const TIMEOUT_MS = 5_000;
-const CONTROL_DIR = path
-  .relative(ROOT, path.join(SWEEP.outDir, 'g4-controls'))
-  .split(path.sep)
-  .join('/');
+// Planted route files live inside the tree (gitignored out/), whatever
+// --out-dir says: outside the repo they cannot resolve '@/lib/prisma'.
+const CONTROL_DIR = 'tests/eval/jev/out/sweep-controls/g4';
 
 // The J2 candidate rule (families/j2/select.ts selectRoutesFromTree), without
 // its top-180 cut: authenticated, data-reading GET routes that are not auth
