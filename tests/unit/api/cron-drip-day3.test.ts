@@ -9,9 +9,22 @@
  *   - already-flagged user is skipped (no double-send, no flag re-write)
  *   - unflagged user is sent + the flag is set (preserving other prefs)
  *   - the batch cap (take) is passed to the query
+ *   - unsubscribe honoured (Spam Act): a suppressed or unknown-status recipient
+ *     is skipped, never mailed (fail closed). Resend is the mocked boundary.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
+
+const mockContactsGet = jest.fn();
+jest.mock('resend', () => ({
+  // plain function: survives the config's resetMocks between tests
+  Resend: function MockResend() {
+    return {
+      contacts: { get: (...a: unknown[]) => mockContactsGet(...a) },
+    };
+  },
+}));
+const ENV = { ...process.env };
 
 const mockPrisma = {
   user: { findMany: jest.fn(), update: jest.fn() },
@@ -43,8 +56,21 @@ function req() {
   return createMockNextRequest({ url: 'http://localhost/api/cron/drip-day3' });
 }
 
+afterAll(() => {
+  process.env = ENV;
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
+  process.env = {
+    ...ENV,
+    RESEND_API_KEY: 're_test_placeholder',
+    RESEND_AUDIENCE_ID: 'aud_test',
+  };
+  mockContactsGet.mockResolvedValue({
+    data: { id: 'c1', email: 'b@example.com', unsubscribed: false },
+    error: null,
+  });
   mockVerifyCron.mockReturnValue({ ok: true, scope: 'shared-fallback' });
   mockPrisma.user.findMany.mockResolvedValue([]);
   mockPrisma.user.update.mockResolvedValue({});
@@ -116,5 +142,49 @@ describe('GET /api/cron/drip-day3', () => {
     expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ take: 500 })
     );
+  });
+
+  it('skips a user who unsubscribed (preferences emailStatus) and never mails them', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 'u3',
+        email: 'c@example.com',
+        name: 'C',
+        preferences: { emailStatus: { status: 'unsubscribed' } },
+      },
+    ]);
+    const res = await GET(req());
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(mockSendDay3).not.toHaveBeenCalled();
+    expect(body.sent).toBe(0);
+    expect(body.suppressed).toBe(1);
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('skips a contact marked unsubscribed in the Resend audience', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      { id: 'u4', email: 'd@example.com', name: 'D', preferences: {} },
+    ]);
+    mockContactsGet.mockResolvedValue({
+      data: { id: 'c4', email: 'd@example.com', unsubscribed: true },
+      error: null,
+    });
+    const res = await GET(req());
+    const body = await res.json();
+    expect(mockSendDay3).not.toHaveBeenCalled();
+    expect(body.suppressed).toBe(1);
+  });
+
+  it('fails closed: skips the send when suppression status cannot be read', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([
+      { id: 'u5', email: 'e@example.com', name: 'E', preferences: {} },
+    ]);
+    mockContactsGet.mockRejectedValue(new Error('network down'));
+    const res = await GET(req());
+    const body = await res.json();
+    expect(mockSendDay3).not.toHaveBeenCalled();
+    expect(body.sent).toBe(0);
+    expect(body.suppressionUnknown).toBe(1);
   });
 });

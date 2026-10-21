@@ -27,6 +27,7 @@ import {
   sendWelcomeSequenceDay7,
 } from '@/lib/email/billing-emails';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { getSuppressionStatus } from '@/lib/email/suppression';
 import { captureServerException } from '@/lib/observability/sentry-server';
 import { Prisma } from '@prisma/client';
 
@@ -145,6 +146,8 @@ export async function GET(request: NextRequest) {
     let day3Sent = 0;
     let day7Sent = 0;
     let errors = 0;
+    let suppressed = 0;
+    let suppressionUnknown = 0;
 
     for (const rawUser of rawUsers) {
       const user: UserRow = {
@@ -163,6 +166,28 @@ export async function GET(request: NextRequest) {
       if (isNaN(startedAtMs)) continue;
 
       const elapsedMs = now - startedAtMs;
+
+      const day3Due =
+        elapsedMs >= THREE_DAYS_MS && !prefs.emailSequenceDay3Sent;
+      const day7Due =
+        elapsedMs >= SEVEN_DAYS_MS && !prefs.emailSequenceDay7Sent;
+      if (!day3Due && !day7Due) continue;
+
+      // Spam Act: honour unsubscribes. Fail closed — when the suppression
+      // status cannot be read, skip the send rather than risk mailing someone
+      // who unsubscribed. No sent-flag is written, so a later run retries.
+      const suppression = await getSuppressionStatus(user.email, {
+        preferences: user.preferences,
+      });
+      if (suppression.state !== 'allowed') {
+        if (suppression.state === 'suppressed') suppressed++;
+        else suppressionUnknown++;
+        logger.warn('[welcome-sequence] send skipped: unsubscribe check', {
+          userId: user.id,
+          suppression,
+        });
+        continue;
+      }
 
       // ---- D+3 ----
       if (elapsedMs >= THREE_DAYS_MS && !prefs.emailSequenceDay3Sent) {
@@ -238,6 +263,8 @@ export async function GET(request: NextRequest) {
       durationMs,
       day3Sent,
       day7Sent,
+      suppressed,
+      suppressionUnknown,
       errors,
     });
 
@@ -245,6 +272,8 @@ export async function GET(request: NextRequest) {
       success: true,
       day3Sent,
       day7Sent,
+      suppressed,
+      suppressionUnknown,
       errors,
       totalUsersChecked: rawUsers.length,
       durationMs,

@@ -9,6 +9,10 @@
  */
 
 import { Resend } from 'resend';
+import {
+  unsubscribeUrl as buildUnsubscribeUrl,
+  listUnsubscribeHeaders,
+} from './list-unsubscribe';
 import type { EffectReportData } from '@/lib/effect-report/types';
 
 let _resend: Resend | null = null;
@@ -243,7 +247,7 @@ export async function sendEffectReportEmail(
     reportData: rd,
   } = params;
 
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(to);
 
   const statsRow = buildStatsRow(rd);
   const metricsBlock = buildMetricsBlock(rd);
@@ -354,6 +358,7 @@ export async function sendEffectReportEmail(
     const result = await getResend().emails.send({
       from: FROM,
       to,
+      headers: listUnsubscribeHeaders(to),
       subject: `${businessName}'s Effect Report is ready — ${quarterLabel}`,
       html,
       text,

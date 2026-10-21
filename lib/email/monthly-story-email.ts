@@ -8,6 +8,10 @@
  */
 
 import { Resend } from 'resend';
+import {
+  unsubscribeUrl as buildUnsubscribeUrl,
+  listUnsubscribeHeaders,
+} from './list-unsubscribe';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -182,7 +186,7 @@ export async function sendMonthlyStoryEmail(
 
   const hoursaved = Math.round(minutesSaved / 60);
   const dashboardUrl = `${APP_URL}/dashboard?story=${storyId}`;
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(to);
 
   const storyParagraphs = storyText
     .split('\n\n')
@@ -301,6 +305,7 @@ export async function sendMonthlyStoryEmail(
     const result = await getResend().emails.send({
       from: FROM,
       to,
+      headers: listUnsubscribeHeaders(to),
       subject: `${businessName}'s marketing in ${monthLabel} — here's what happened`,
       html,
       // SYN-729 section 3: tags surfaced on the email.opened webhook so

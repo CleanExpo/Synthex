@@ -22,6 +22,7 @@ import { prisma } from '@/lib/prisma';
 import { sendWelcomeSequenceDay7 } from '@/lib/email/billing-emails';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { getSuppressionStatus } from '@/lib/email/suppression';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -90,6 +91,8 @@ export async function GET(request: NextRequest) {
     let sent = 0;
     let failed = 0;
     let skipped = 0;
+    let suppressed = 0;
+    let suppressionUnknown = 0;
 
     for (const user of users) {
       const prefs = parsePreferences(user.preferences);
@@ -98,6 +101,22 @@ export async function GET(request: NextRequest) {
       // If D+7 was already sent (by either cron, or a prior retry), skip.
       if (prefs.emailSequenceDay7Sent) {
         skipped++;
+        continue;
+      }
+
+      // Spam Act: honour unsubscribes. Fail closed — when the suppression
+      // status cannot be read, skip the send rather than risk mailing someone
+      // who unsubscribed.
+      const suppression = await getSuppressionStatus(user.email, {
+        preferences: user.preferences,
+      });
+      if (suppression.state !== 'allowed') {
+        if (suppression.state === 'suppressed') suppressed++;
+        else suppressionUnknown++;
+        logger.warn('[drip-day7] send skipped: unsubscribe check', {
+          userId: user.id,
+          suppression,
+        });
         continue;
       }
 
@@ -132,6 +151,8 @@ export async function GET(request: NextRequest) {
       durationMs,
       sent,
       skipped,
+      suppressed,
+      suppressionUnknown,
       failed,
     });
 
@@ -139,6 +160,8 @@ export async function GET(request: NextRequest) {
       success: true,
       sent,
       skipped,
+      suppressed,
+      suppressionUnknown,
       failed,
       total: users.length,
       durationMs,
