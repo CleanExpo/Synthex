@@ -75,13 +75,42 @@ interface PagePostsResponse {
   paging?: { cursors?: { after?: string; before?: string } };
 }
 
+/**
+ * Facebook post metrics. An insight Meta did not return is left undefined
+ * (unknown), never reported as 0. `post_impressions` was retired on
+ * 15 November 2025 (`post_media_view` replaces it), `post_impressions_unique`
+ * on 15 June 2025 (`post_total_media_view_unique`) and `post_engaged_users` on
+ * 14 March 2024 (no replacement). Retired names are not requested.
+ */
 interface FacebookPostMetrics {
   likes: number;
   comments: number;
   shares: number;
-  impressions: number;
-  reach: number;
-  engagement: number;
+  views?: number;
+  reach?: number;
+}
+
+/**
+ * Post insights. Asking for any retired metric fails the whole request with
+ * an invalid-metric error, so only current names appear here.
+ * Source: https://developers.facebook.com/documentation/pages-api/platforminsights/page/deprecated-metrics
+ * (read 21/10/2026).
+ */
+const POST_INSIGHT_METRICS = 'post_media_view,post_total_media_view_unique';
+
+/**
+ * Page insights. `page_impressions` was retired on 15 November 2025;
+ * `page_media_view` replaces it. `page_post_engagements` is current.
+ * Source: as above, and https://developers.facebook.com/docs/graph-api/reference/insights
+ * (read 21/10/2026).
+ */
+const PAGE_INSIGHT_METRICS = 'page_media_view,page_post_engagements';
+
+/** A numeric insight value, or undefined when Meta returned none. */
+function insightNumber(value: unknown): number | undefined {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? value
+    : undefined;
 }
 
 export class FacebookService extends BasePlatformService {
@@ -343,28 +372,25 @@ export class FacebookService extends BasePlatformService {
         }
       >(
         `/${postId}?fields=likes.summary(true),comments.summary(true),shares,` +
-          `insights.metric(post_impressions,post_impressions_unique,post_engaged_users)`,
+          `insights.metric(${POST_INSIGHT_METRICS})`,
         {},
         page.accessToken
       );
 
-      let impressions = 0;
-      let reach = 0;
-      let engagement = 0;
+      let views: number | undefined;
+      let reach: number | undefined;
       for (const insight of data.insights?.data || []) {
-        const value = insight.values?.[0]?.value || 0;
-        if (insight.name === 'post_impressions') impressions = value;
-        else if (insight.name === 'post_impressions_unique') reach = value;
-        else if (insight.name === 'post_engaged_users') engagement = value;
+        const value = insightNumber(insight.values?.[0]?.value);
+        if (insight.name === 'post_media_view') views = value;
+        else if (insight.name === 'post_total_media_view_unique') reach = value;
       }
 
       return {
         likes: data.likes?.summary?.total_count || 0,
         comments: data.comments?.summary?.total_count || 0,
         shares: data.shares?.count || 0,
-        impressions,
+        views,
         reach,
-        engagement,
       };
     } catch (error) {
       logger.error('Facebook post metrics fetch failed', { postId, error });
@@ -484,11 +510,14 @@ export class FacebookService extends BasePlatformService {
   }
 
   async syncAnalytics(days: number = 30): Promise<SyncAnalyticsResult> {
+    // null = not read. A failed or unconfigured read must never look like a
+    // real zero (Synthex honest-status rule, lib/api/not-provisioned.ts).
+    const unread = { impressions: null, engagements: null, followers: null };
     try {
       if (!this.isConfigured()) {
         return {
           success: false,
-          metrics: { impressions: 0, engagements: 0, followers: 0 },
+          metrics: unread,
           period: { start: new Date(), end: new Date() },
           error: 'Service not configured',
         };
@@ -498,45 +527,78 @@ export class FacebookService extends BasePlatformService {
       const startDate = new Date(
         endDate.getTime() - days * 24 * 60 * 60 * 1000
       );
+      const failures: string[] = [];
 
-      const profile = await this.makeRequest<PageProfileResponse>(
-        `/${page.id}?fields=fan_count`,
-        {},
-        page.accessToken
-      );
+      let followers: number | null = null;
+      try {
+        const profile = await this.makeRequest<PageProfileResponse>(
+          `/${page.id}?fields=fan_count`,
+          {},
+          page.accessToken
+        );
+        followers = insightNumber(profile.fan_count) ?? null;
+      } catch (error) {
+        failures.push('profile');
+        logger.warn('Facebook follower count fetch failed', { error });
+      }
 
-      const insights = await this.makeRequest<{
-        data?: Array<{ name: string; values?: Array<{ value?: number }> }>;
-      }>(
-        `/${page.id}/insights?metric=page_impressions,page_post_engagements&` +
-          `period=days_28&since=${Math.floor(startDate.getTime() / 1000)}&` +
-          `until=${Math.floor(endDate.getTime() / 1000)}`,
-        {},
-        page.accessToken
-      );
+      let views: number | null = null;
+      let engagements: number | null = null;
+      try {
+        const insights = await this.makeRequest<{
+          data?: Array<{ name: string; values?: Array<{ value?: number }> }>;
+        }>(
+          `/${page.id}/insights?metric=${PAGE_INSIGHT_METRICS}&` +
+            `period=days_28&since=${Math.floor(startDate.getTime() / 1000)}&` +
+            `until=${Math.floor(endDate.getTime() / 1000)}`,
+          {},
+          page.accessToken
+        );
+        for (const metric of insights.data || []) {
+          const value = insightNumber(
+            metric.values?.[metric.values.length - 1]?.value
+          );
+          if (value === undefined) continue;
+          if (metric.name === 'page_media_view') views = value;
+          else if (metric.name === 'page_post_engagements') engagements = value;
+        }
+      } catch (error) {
+        failures.push('page insights');
+        logger.warn('Facebook page insights fetch failed', { error });
+      }
 
-      let impressions = 0;
-      let engagements = 0;
-      for (const metric of insights.data || []) {
-        const value = metric.values?.[metric.values.length - 1]?.value || 0;
-        if (metric.name === 'page_impressions') impressions = value;
-        else if (metric.name === 'page_post_engagements') engagements = value;
+      const metrics = {
+        // Facebook retired `page_impressions` on 15 November 2025;
+        // `page_media_view` (views) is Meta's replacement.
+        impressions: null,
+        engagements,
+        followers,
+        views,
+      };
+
+      // Nothing read is a failure whether the calls errored or Meta answered
+      // 200 with no values.
+      if (followers === null && views === null && engagements === null) {
+        return {
+          success: false,
+          metrics,
+          period: { start: startDate, end: endDate },
+          error: failures.length
+            ? `Facebook metrics could not be read (${failures.join(', ')})`
+            : 'Facebook returned no metric values',
+        };
       }
 
       return {
         success: true,
-        metrics: {
-          impressions,
-          engagements,
-          followers: profile.fan_count || 0,
-        },
+        metrics,
         period: { start: startDate, end: endDate },
       };
     } catch (error: unknown) {
       logger.error('Facebook analytics sync failed', { error });
       return {
         success: false,
-        metrics: { impressions: 0, engagements: 0, followers: 0 },
+        metrics: unread,
         period: { start: new Date(), end: new Date() },
         error: error instanceof Error ? error.message : String(error),
       };

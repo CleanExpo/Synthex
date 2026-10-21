@@ -168,9 +168,15 @@ async function processAnalyticsCollection(
         const pageAccessToken = accessToken;
 
         try {
+          // Meta retired page_impressions (15/11/2025, now page_media_view),
+          // page_fans (15/11/2025, now page_follows) and page_engaged_users
+          // (14/03/2024, no replacement). A retired name fails the whole call.
+          // page_follows supports period=day only.
+          // Source: developers.facebook.com/docs/graph-api/reference/insights
+          // (read 21/10/2026).
           const response = await fetch(
             `${META_GRAPH_BASE}/${pageId}/insights?` +
-              `metric=page_impressions,page_engaged_users,page_fans&` +
+              `metric=page_media_view,page_post_engagements,page_follows&` +
               `period=day&access_token=${pageAccessToken}`
           );
 
@@ -180,29 +186,41 @@ async function processAnalyticsCollection(
             throw new Error(data.error.message || 'Facebook API error');
           }
 
-          const metrics: Record<string, number> = {
-            impressions: 0,
-            engagements: 0,
-            followers: 0,
+          // null = not read, never a real zero. Impressions are no longer
+          // offered; views replace them, as in FacebookService.
+          const metrics: Record<string, number | null> = {
+            impressions: null,
+            views: null,
+            engagements: null,
+            followers: null,
           };
 
           for (const insight of data.data || []) {
-            const value =
-              insight.values?.[insight.values.length - 1]?.value || 0;
+            const value = insight.values?.[insight.values.length - 1]?.value;
+            if (typeof value !== 'number' || !Number.isFinite(value)) continue;
             switch (insight.name) {
-              case 'page_impressions':
-                metrics.impressions = value;
+              case 'page_media_view':
+                metrics.views = value;
                 break;
-              case 'page_engaged_users':
+              case 'page_post_engagements':
                 metrics.engagements = value;
                 break;
-              case 'page_fans':
+              case 'page_follows':
                 metrics.followers = value;
                 break;
             }
           }
 
-          analyticsResult = { success: true, metrics };
+          const anyRead =
+            metrics.views !== null ||
+            metrics.engagements !== null ||
+            metrics.followers !== null;
+          analyticsResult = anyRead
+            ? { success: true, metrics }
+            : {
+                success: false,
+                error: 'Facebook returned no metric values',
+              };
         } catch (error: unknown) {
           analyticsResult = {
             success: false,
