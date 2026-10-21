@@ -394,8 +394,9 @@ export default function SignupPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Invite code — required in invite-only mode unless the email
-                has a team invitation; the server enforces this. */}
+            {/* Invite code — required in invite-only mode (the default;
+                only NEXT_PUBLIC_INVITE_ONLY_MODE='false' makes it optional).
+                The server enforces this. */}
             <div className="space-y-1.5">
               <label
                 htmlFor="inviteCode"

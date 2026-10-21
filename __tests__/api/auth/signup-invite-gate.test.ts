@@ -1,8 +1,9 @@
 /**
  * POST /api/auth/signup — invite-only gate (server-side, fail closed).
  *
- * SYN-1070 (f34c98c25) made invite codes optional on this route, so with
- * NEXT_PUBLIC_INVITE_ONLY_MODE=true anyone could still create an account by
+ * The gate is ON unless NEXT_PUBLIC_INVITE_ONLY_MODE is the literal 'false'
+ * (an unset flag keeps it on). SYN-1070 (f34c98c25) made invite codes
+ * optional on this route, so with the gate on anyone could still create an account by
  * omitting the code. Synthex logins are for named operators only, so the
  * route must refuse account creation without invite evidence: a valid invite
  * code, or a recent team invitation addressed to the email.
@@ -220,8 +221,26 @@ describe('POST /api/auth/signup — invite-only mode on', () => {
   });
 });
 
+describe('POST /api/auth/signup — flag unset (default)', () => {
+  // SEAM: the POST handler with NEXT_PUBLIC_INVITE_ONLY_MODE absent. Catches a
+  // default that lets a codeless signup through when the env var is missing
+  // from a deployment. Misses: the value Next.js inlines at build time.
+  beforeEach(() => {
+    delete process.env.NEXT_PUBLIC_INVITE_ONLY_MODE;
+  });
+
+  it('refuses account creation without an invite code', async () => {
+    const res = await signup(baseBody);
+
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/invite code is required/i);
+    expect(mockUserCreate).not.toHaveBeenCalled();
+  });
+});
+
 describe('POST /api/auth/signup — invite-only mode off', () => {
-  it('creates the account without a code when the flag is not "true"', async () => {
+  it('creates the account without a code only when the flag is literal "false"', async () => {
     process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'false';
 
     const res = await signup(baseBody);

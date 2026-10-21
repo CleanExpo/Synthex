@@ -1,9 +1,8 @@
 /**
  * Track A — consumption boundary (handoff-20260711-074357).
  *
- * Route-level regression tests proving the three open-market bypasses are
- * Route-level regression tests for invite-only mode. The gate is OFF unless
- * NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'true':
+ * Route-level regression tests for invite-only mode. The gate is ON (fail
+ * closed) unless NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'false':
  *
  *   1. POST /api/auth/unified {action:'signup'} — the parallel signup door
  *      that never honoured the invite gate.
@@ -176,7 +175,7 @@ describe('POST /api/auth/unified {action:signup} — invite gate', () => {
     name: 'New User',
   };
 
-  it('allows signup when invite-only mode is unset (market open)', async () => {
+  it('refuses signup (403) when invite-only mode is unset (fail closed)', async () => {
     const res = await unifiedPost(
       createMockNextRequest({
         method: 'POST',
@@ -184,8 +183,8 @@ describe('POST /api/auth/unified {action:signup} — invite gate', () => {
         body: signupBody,
       })
     );
-    expect(res.status).toBe(200);
-    expect(mockUserCreate).toHaveBeenCalled();
+    expect(res.status).toBe(403);
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 
   it('refuses signup (403) when the flag is explicitly "true"', async () => {

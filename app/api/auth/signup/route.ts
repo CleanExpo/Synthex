@@ -73,8 +73,9 @@ export async function POST(request: NextRequest) {
       const { name, email, password, timezone, inviteCode } =
         validationResult.data;
 
-      // Invite-only gate (fail closed). When NEXT_PUBLIC_INVITE_ONLY_MODE is
-      // 'true', an account needs a valid invite code. A pending TeamInvitation
+      // Invite-only gate (fail closed). Unless NEXT_PUBLIC_INVITE_ONLY_MODE is
+      // the literal 'false' (unset keeps the gate on), an account needs a
+      // valid invite code. A pending TeamInvitation
       // is NOT accepted here: it carries no secret, so knowing an invitee's
       // email would let anyone claim the account with their own password.
       // With the gate off, codes are optional. A supplied code must always be

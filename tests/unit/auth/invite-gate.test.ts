@@ -1,8 +1,13 @@
 /**
  * Track A — consumption boundary (handoff-20260711-074357).
  *
- * Invite-only market mode is opt-in: the gate is ON only when
- * NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'true'.
+ * Invite-only market mode is FAIL CLOSED: the gate is ON unless
+ * NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'false'. Unset, empty or
+ * typo'd values keep it ON (restores #701 after ab2f22823 silently flipped it).
+ *
+ * SEAM: isInviteOnlyMode() from lib/auth/invite-mode.ts. Catches a default
+ * that opens signup when the env var is missing or mistyped. Misses: how
+ * Next.js inlines NEXT_PUBLIC_* at build time (the deployed value).
  *
  * Also covers the recency-bounded TeamInvitation bypass (the schema has
  * no expiresAt on team_invitations, so the window is enforced on sentAt)
@@ -47,26 +52,26 @@ afterAll(() => {
   process.env = ORIGINAL_ENV;
 });
 
-describe('isInviteOnlyMode — opt-in flag', () => {
-  it('is OFF when the env var is unset', () => {
-    expect(isInviteOnlyMode()).toBe(false);
+describe('isInviteOnlyMode — fail-closed flag', () => {
+  it('is ON when the env var is unset', () => {
+    expect(isInviteOnlyMode()).toBe(true);
   });
 
-  it('is ON only when explicitly "true"', () => {
+  it('is ON when explicitly "true"', () => {
     process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'true';
     expect(isInviteOnlyMode()).toBe(true);
   });
 
-  it('is OFF for the literal string "false"', () => {
+  it('is OFF only for the literal string "false"', () => {
     process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = 'false';
     expect(isInviteOnlyMode()).toBe(false);
   });
 
-  it.each(['', '0', 'no', 'FALSE', 'False', ' false'])(
-    'is OFF for any non-literal-true value (%j)',
+  it.each(['', '0', 'no', 'FALSE', 'False', ' false', 'off', 'true '])(
+    'stays ON for any value other than the literal "false" (%j)',
     value => {
       process.env.NEXT_PUBLIC_INVITE_ONLY_MODE = value;
-      expect(isInviteOnlyMode()).toBe(false);
+      expect(isInviteOnlyMode()).toBe(true);
     }
   );
 });
