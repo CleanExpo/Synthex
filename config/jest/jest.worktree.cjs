@@ -78,6 +78,19 @@ module.exports = {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: { jsx: 'react-jsx' } }],
+    // sanitize-html 2.18 nests ESM-only htmlparser2 12 and its dom* / entities
+    // deps. The repo has no Babel config, so plain babel-jest leaves `import`
+    // untouched; convert just these packages to CommonJS.
+    '/node_modules/(htmlparser2|domhandler|domutils|domelementtype|entities|dom-serializer)/.+\\.js$':
+      [
+        'babel-jest',
+        {
+          babelrc: false,
+          configFile: false,
+          sourceType: 'unambiguous',
+          presets: [['@babel/preset-env', { targets: { node: 'current' } }]],
+        },
+      ],
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
 
@@ -86,7 +99,7 @@ module.exports = {
   // SyntaxError on `export` keyword for: uncrypto (via @upstash/redis),
   // jose (auth tokens), @panva and oauth4webapi (Supabase auth).
   transformIgnorePatterns: [
-    'node_modules/(?!(uncrypto|@upstash/redis|jose|@panva|oauth4webapi)/)',
+    'node_modules/(?!(uncrypto|@upstash/redis|jose|@panva|oauth4webapi|sanitize-html|htmlparser2|domhandler|domutils|entities|dom-serializer|domelementtype)/)',
   ],
 
   testTimeout: 30000,
