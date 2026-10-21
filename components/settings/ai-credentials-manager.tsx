@@ -98,8 +98,8 @@ const OPENROUTER_MODELS = [
   { id: 'openai/gpt-4o-mini', name: 'GPT-4o Mini', tier: 'budget' },
   { id: 'anthropic/claude-haiku-4', name: 'Claude Haiku 4', tier: 'budget' },
   {
-    id: 'google/gemini-2.0-flash-001',
-    name: 'Gemini 2.0 Flash',
+    id: 'google/gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash',
     tier: 'budget',
   },
   {

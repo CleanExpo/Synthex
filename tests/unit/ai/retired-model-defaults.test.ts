@@ -24,7 +24,10 @@ jest.mock('@/lib/vault/vault-service', () => ({
   VaultService: { getSecret: jest.fn() },
 }));
 
-import { getModel, isModelAvailable } from '@/lib/ai/model-registry';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+import { getModel, getModels, isModelAvailable } from '@/lib/ai/model-registry';
 import {
   IMAGE_MODELS,
   estimateImageCostUsd,
@@ -119,5 +122,52 @@ describe('text registry marks vendor-retired models deprecated', () => {
     expect(
       getModel(provider, id)?.deprecatedDate?.toISOString().slice(0, 10)
     ).toBe(date);
+  });
+});
+
+describe('settings OpenRouter model picker', () => {
+  // SEAM: the OPENROUTER_MODELS literal in components/settings/ai-credentials-manager.tsx,
+  // read as source (the component is client-only and not exported).
+  // CATCHES: an offered id that is, or is a dated snapshot of, a deprecated OpenRouter
+  //   registry entry (e.g. 'google/gemini-2.0-flash-001'); an offered Gemini id the
+  //   registry does not list as available.
+  // MISSES: non-Gemini ids the registry does not track.
+  const source = readFileSync(
+    join(__dirname, '../../../components/settings/ai-credentials-manager.tsx'),
+    'utf8'
+  );
+  const block = source.slice(
+    source.indexOf('const OPENROUTER_MODELS'),
+    source.indexOf('];', source.indexOf('const OPENROUTER_MODELS'))
+  );
+  const offeredIds = [...block.matchAll(/id:\s*'([^']+)'/g)].map(m => m[1]);
+  const deprecatedIds = getModels('openrouter')
+    .filter(m => m.isDeprecated)
+    .map(m => m.id);
+
+  it('offers models (positive control: the parser found the list)', () => {
+    expect(offeredIds.length).toBeGreaterThan(5);
+    expect(deprecatedIds).toContain('google/gemini-2.0-flash');
+  });
+
+  it('offers no deprecated registry model or dated snapshot of one', () => {
+    const offenders = offeredIds.filter(
+      id =>
+        RETIRED_IDS.has(id) ||
+        deprecatedIds.some(d => id === d || id.startsWith(`${d}-`))
+    );
+    expect(offenders).toEqual([]);
+  });
+
+  it('offers only registry-available Gemini models', () => {
+    const gemini = offeredIds.filter(id => id.startsWith('google/gemini-'));
+    expect(gemini.length).toBeGreaterThan(0);
+    const unavailable = gemini.filter(
+      id =>
+        !isModelAvailable('openrouter', id) &&
+        // preview ids are newer than the registry; only stable ids must be registered
+        !id.endsWith('-preview')
+    );
+    expect(unavailable).toEqual([]);
   });
 });
