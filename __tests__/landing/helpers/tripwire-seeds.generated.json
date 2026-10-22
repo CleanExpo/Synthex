@@ -2928,6 +2928,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "gpt-4-turbo-preview",
+      "file": "lib/services/client-branded-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gpt-4-turbo-preview client_vault",
+      "file": "lib/services/client-branded-content.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "Grade ≤5",
       "file": "lib/quick-access/items.ts",
       "firstSeen": "base"
@@ -3608,6 +3618,11 @@
       "firstSeen": "0328e421"
     },
     {
+      "text": "multimodal gemini-1-5-pro",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "NEW Explore Demo",
       "file": "app/demo/DemoClient.tsx",
       "firstSeen": "base"
@@ -3780,6 +3795,11 @@
     {
       "text": "Only value.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "openai gpt-4-turbo-preview",
+      "file": "lib/services/client-branded-content.ts",
       "firstSeen": "base"
     },
     {
@@ -4613,7 +4633,17 @@
       "firstSeen": "base"
     },
     {
+      "text": "streaming deepseek/deepseek-v4-flash",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "streaming google/gemini-3.1-flash",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "streaming gpt-4-o",
       "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
     },

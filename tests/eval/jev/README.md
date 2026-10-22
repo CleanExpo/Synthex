@@ -74,3 +74,21 @@ it('J1 cases', async () => {
 ```
 
 Then `npm run jev:det -- --family J1`.
+
+## Goal sweep (`npm run jev:sweep`)
+
+High-volume, seeded, offline cases that each measure one current goal and record its result. Separate from `jev:det`: it never reads or changes `families.json`, `floors.json` or the floors proposal, and it is not a hard gate.
+
+| Goal | What every case measures                                                                                    | File                                                     |
+| ---- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| G1   | Account or org creation without a valid unused invite is refused unless the invite mode is exactly `false`  | `sweep/g1.sweep.test.ts`                                 |
+| G2   | Unsubscribe records or answers non-2xx; no marketing send to unsubscribed/unknown; List-Unsubscribe headers | `sweep/g2.sweep.test.ts`                                 |
+| G3   | No model default resolves to a deprecated registry entry; unpriced image models are unusable                | `sweep/g3.sweep.test.ts`                                 |
+| G4   | A publish is refused whenever a gate fails; a read failure never returns 2xx with empty data                | `sweep/g4.sweep.test.ts`, `sweep/g4-reads.sweep.test.ts` |
+| G5   | An approved post gets published; an unapproved or rejected one never does                                   | `sweep/g5.sweep.test.ts`                                 |
+
+```
+npm run jev:sweep [-- --goal G1 ...] [--seed N] [--as-of YYYY-MM-DD] [--out-dir DIR] [--disarm-control G1-C01,...]
+```
+
+Rows go to `out/sweep/<goal>[.<part>].jsonl` (a `JevResult` plus `goal` and `criterion`; ids like `G1-000123`, controls `G1-C01`), and `out/sweep/summary.json` holds per-goal and per-criterion counts in the four states. Exit 0: all green. Exit 1: the harness is broken (a goal file missing or malformed, fewer than 3 controls, a control not caught = `BROKEN_CHECK`, Jest red). Exit 2: the harness is sound and the goals measured a FAIL or INCONCLUSIVE. `--disarm-control` runs a control without its planted defect; the run must then exit 1, which is the sweep's own self-test.

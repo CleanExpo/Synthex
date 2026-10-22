@@ -225,7 +225,8 @@ describe('Model Registry — lib/ai/model-registry.ts', () => {
 
   describe('isModelAvailable()', () => {
     it('should return true for a known non-deprecated model', () => {
-      expect(isModelAvailable('openai', 'gpt-4-turbo')).toBe(true);
+      // gpt-4-turbo is deprecated (OpenAI shutdown 2026-10-23); gpt-4-o is not.
+      expect(isModelAvailable('openai', 'gpt-4-o')).toBe(true);
     });
 
     it('should return false for a deprecated model', () => {
