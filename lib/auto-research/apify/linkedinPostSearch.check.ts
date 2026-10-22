@@ -5,7 +5,7 @@ import {
   OPTIONAL_LINKEDIN_POST_SEARCH_ACTOR,
   linkedInPostSearchCall,
   linkedInSearchPosts,
-} from './linkedinPostSearch.ts';
+} from './linkedinPostSearch';
 
 const current = {
   actorId: 'apify/linkedin-post-search-scraper',

@@ -6,6 +6,8 @@
  * to send a keyword body and map rows onto ScrapedPost.
  */
 
+import type { ScrapedPost } from './types';
+
 export interface LinkedInActorConfig {
   actorId: string;
   buildInput: (options: { limit: number; query?: string[] }) => Record<string, unknown>;
@@ -85,10 +87,10 @@ export function linkedInPostSearchCall(
 export function linkedInSearchPosts(
   items: unknown[],
   optional: boolean
-): LinkedInResearchPost[] {
-  if (!optional) return items as LinkedInResearchPost[];
+): ScrapedPost[] {
+  if (!optional) return items as ScrapedPost[];
 
-  const posts: ScrapedPost[] = [];
+  const posts: LinkedInResearchPost[] = [];
   for (const item of items) {
     if (!isRecord(item)) continue;
     if (item.result_type === 'error') continue;
