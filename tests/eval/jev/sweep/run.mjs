@@ -39,7 +39,12 @@ const KEY = {
 const MIN_CONTROLS = 3;
 
 const argv = process.argv.slice(2);
-const all = name => argv.flatMap((a, i) => (a === name ? [argv[i + 1]] : []));
+const all = name =>
+  argv.flatMap((a, i) => {
+    if (a !== name) return [];
+    if (argv[i + 1] === undefined) throw new Error(`${name} needs a value`);
+    return [argv[i + 1]];
+  });
 const one = name => all(name).at(-1);
 
 const goals = all('--goal').length ? all('--goal') : GOALS;

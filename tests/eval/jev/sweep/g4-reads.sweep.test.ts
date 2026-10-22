@@ -24,7 +24,7 @@ import {
   type InvokeResult,
 } from '../runner/route-harness';
 import { generateToken } from '@/lib/auth/jwt-utils';
-import { judgeRead } from '../families/j2/detector';
+import { declaresUnavailable, judgeRead } from '../families/j2/detector';
 import { selectRoutes } from '../families/j2/select';
 import {
   J2_DB_ERROR,
@@ -169,18 +169,27 @@ function judge(
     };
   if (r.error && r.status >= 200 && r.status <= 299)
     return { passed: null, detail: `status ${r.status}, ${r.error}` };
-  // No data read was attempted: a 2xx here is not a dressed-up failure and a
-  // 4xx is a refusal before the read; either way the failing read never ran.
-  if (
-    !reached &&
-    (r.status < 300 || [400, 401, 403, 404, 405, 422, 429].includes(r.status))
-  )
+  // No data read was attempted, whatever the status: the failing read never
+  // ran, so this case measures nothing (INCONCLUSIVE, never PASS).
+  if (!reached)
     return {
       passed: null,
       detail: `status ${r.status} before any data-layer call (read not exercised)`,
     };
+  // The read failed. G4.C3: non-2xx or available:false, nothing else. A 2xx
+  // carrying data (even non-empty fallback data) hides the failure.
+  if (r.status < 200 || r.status > 299)
+    return { passed: true, detail: `status ${r.status}` };
+  if (declaresUnavailable(r.json))
+    return { passed: true, detail: `status ${r.status} available:false` };
   const v = judgeRead(r.status, r.json);
-  return { passed: v.honest, detail: v.detail.slice(0, 200) };
+  return {
+    passed: false,
+    detail: (v.honest
+      ? `status ${r.status} with data after a failed read: ${v.detail}`
+      : v.detail
+    ).slice(0, 200),
+  };
 }
 
 const sink = new Sink('G4', 'reads', 500_000);
@@ -230,9 +239,19 @@ const PLANTS: [string, string][] = [
     `try { return NextResponse.json({ success: true, metrics: { totalPosts: await prisma.post.count() } }); }
     catch { return NextResponse.json({ success: true, metrics: { totalPosts: 0, impressions: 0, engagementRate: 0 } }); }`,
   ],
+  [
+    'G4-C08',
+    `try { return NextResponse.json({ data: await prisma.post.findMany() }); }
+    catch { return NextResponse.json({ data: [{ id: 'cached-1', title: 'Fallback post' }] }); }`,
+  ],
 ];
 const HONEST = `try { return NextResponse.json({ data: await prisma.post.findMany() }); }
     catch { return NextResponse.json({ error: 'Database unavailable' }, { status: 503 }); }`;
+
+it('G4.C3 judge: an unreached read is never PASS', () => {
+  for (const status of [200, 401, 404, 500, 503])
+    expect(judge({ status, json: null }, false).passed).toBeNull();
+});
 
 it('G4 read planted controls', async () => {
   for (const [id, body] of PLANTS) {
