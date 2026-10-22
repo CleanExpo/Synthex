@@ -71,6 +71,9 @@ a { color: var(--brand-text); }
 .rabbit.in { left: calc(100% - 78px); }
 .rabbit svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--glow)); }
 .rabbit.found { opacity: 0; pointer-events: none; }
+.rabbit.in:not(.found) { animation: hop 1.6s ease-in-out 2.8s infinite; }
+@keyframes hop { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(-14px); } 90% { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .rabbit.in:not(.found) { animation: none; } }
 .toast { position: absolute; left: 16px; right: 16px; top: 52%; background: rgba(10,12,16,.9); border: 1px solid var(--glow);
   border-radius: 14px; padding: 14px 16px; font-size: 14.5px; }
 .toast b { color: var(--glow-text); font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
@@ -176,6 +179,23 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 @keyframes eq { 0%, 100% { height: 3px; } 50% { height: 12px; } }
 @media (prefers-reduced-motion: reduce) { .sound .bars i { animation: none; height: 8px; } }
 
+/* One action for visitors: save; everything marked owner-only shows only in the owner's view */
+body:not(.owner) .owner-only { display: none !important; }
+.save-hero { font-size: 19px; padding: 18px; text-align: center; justify-items: center; box-shadow: 0 10px 30px color-mix(in srgb, var(--brand) 35%, transparent); }
+.save-hint { margin: -16px 0 0; text-align: center; font-weight: 600; color: var(--fg); }
+.btn.quiet { background: none; text-align: center; justify-items: center; font-weight: 500; color: var(--fg); }
+.ownlink { justify-self: center; font-size: 14px; color: var(--muted); }
+.ownlink small { display: none; }
+/* The white rabbit's surprise: a gift that pops open with one practical idea */
+.surprise { position: fixed; inset: 0; z-index: 60; background: rgba(4,8,14,.88); display: grid; place-items: center; padding: 16px; }
+.surprise canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gift { position: relative; max-width: 380px; width: 100%; background: var(--bg); color: var(--fg); border-radius: 22px; padding: 22px; display: grid; gap: 10px;
+  border: 3px solid var(--brand); animation: pop .55s cubic-bezier(.2,1.6,.4,1) both; }
+.gift h2 { font-size: 22px; } .gift p { margin: 0; }
+.gift-k { font: 600 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--brand-text); }
+@keyframes pop { from { transform: scale(.4) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .gift { animation: none; } }
+
 /* Your view: only the card's owner sees this (?me=1, or the home-screen app) */
 .mine { display: grid; gap: 12px; padding: 18px; border-radius: 18px; border: 1px dashed var(--brand); }
 .mine ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14.5px; }
@@ -204,7 +224,6 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="off" d="M16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span><span id="sound-label">Tap for sound</span>
     </button>
-    <div class="toast" id="toast" hidden role="status"><b>You found the first rabbit.</b>More appear in the talk. Count them and open Solve below.</div>
     <div class="name">
       <h1 id="person-name"><span class="w">Name</span> <span class="w">missing</span></h1>
       <p id="person-intro"></p>
@@ -213,10 +232,19 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
   </section>
 
   <p class="intro-below" id="intro-below" hidden></p>
-  <p class="edition-label" id="edition-label" hidden></p>
-  <button class="replay" type="button" id="replay" hidden>Replay · another edition</button>
 
-  <button class="btn primary passbtn" type="button" id="pass-btn">Pass it on</button>
+  <button class="btn primary save-hero" type="button" id="save">Save to my phone</button>
+  <p class="save-hint" id="save-hint" role="status" hidden></p>
+  <div class="out" id="save-out" hidden>
+    <span class="tag">Preview limit</span>
+    <p class="fine" style="margin:0">This preview blocks the contact file. On the card's own address it saves in one tap. For now, copy the details below.</p>
+    <pre id="vcard-text"></pre>
+    <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
+  </div>
+
+  <p class="edition-label owner-only" id="edition-label" hidden></p>
+  <button class="replay owner-only" type="button" id="replay" hidden>Replay · another edition</button>
+  <button class="btn primary passbtn owner-only" type="button" id="pass-btn">Pass it on</button>
   <div class="passon" id="pass-on" hidden role="dialog" aria-modal="true" aria-label="Scan to get this card">
     <button class="close" type="button" id="pass-close">Close</button>
     <form class="personal" id="pass-form">
@@ -229,6 +257,17 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     </form>
     <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p></div>
     <p class="hint" id="pass-hint">Point a phone camera at the code.</p>
+  </div>
+
+  <div class="surprise" id="surprise" hidden role="dialog" aria-modal="true" aria-labelledby="surprise-h">
+    <canvas id="confetti" aria-hidden="true"></canvas>
+    <div class="gift" id="gift">
+      <p class="gift-k">Rabbit 1 of 5 found</p>
+      <p class="fine" style="margin:0">The other four are hiding in Phill's talk.</p>
+      <h2 id="surprise-h"></h2>
+      <p id="surprise-p"></p>
+      <div class="row"><button class="btn primary" type="button" id="surprise-more">Another one</button><button class="btn" type="button" id="surprise-close">Close</button></div>
+    </div>
   </div>
 
   <section class="mine" id="mine" aria-labelledby="mine-h" hidden>
@@ -263,8 +302,9 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     </div>
   </section>
 
-  <section id="review" aria-labelledby="review-h" style="display:grid;gap:10px;padding:18px;border-radius:18px;border:2px solid var(--brand)">
-    <h2 id="review-h" style="font-size:22px">Worked with us?</h2>
+  <button class="btn quiet" type="button" id="review-open" aria-expanded="false" aria-controls="review">Worked with us? Leave a review</button>
+  <section id="review" aria-labelledby="review-h" hidden style="display:grid;gap:10px;padding:18px;border-radius:18px;border:1px solid var(--line)">
+    <h2 id="review-h" class="sr-only">Review my business</h2>
     <div class="rw" id="rw" hidden>
       <p class="rw-step">Which one?</p>
       <div class="needs" id="rw-biz" role="group" aria-label="Business you worked with"></div>
@@ -281,20 +321,13 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     <p class="fine" id="review-note" style="margin:0"></p>
   </section>
 
-  <div class="creds" id="creds" aria-label="Credentials"></div>
+  <div class="creds owner-only" id="creds" aria-label="Credentials"></div>
 
-  <section class="actions" id="actions" aria-label="Save or contact">
-    <button class="btn primary" type="button" id="save">Save to contacts</button>
-    <div class="out" id="save-out" hidden style="grid-column:1/-1">
-      <span class="tag">Preview limit</span>
-      <p class="fine" style="margin:0">If no contact file opened, this preview blocked it. The hosted card saves in one tap. For now, copy the details below.</p>
-      <pre id="vcard-text"></pre>
-      <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
-    </div>
+  <section class="actions owner-only" id="actions" aria-label="Contact">
     <button class="btn" type="button" id="share">Share this card<small id="share-sub"></small></button>
   </section>
 
-  <section aria-labelledby="doors-h" style="display:grid;gap:14px">
+  <section class="owner-only" aria-labelledby="doors-h" style="display:grid;gap:14px">
     <div>
       <h2 id="doors-h">What would be useful today?</h2>
     </div>
@@ -308,7 +341,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
       <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>The game that runs through the talk. One rabbit is hiding above.</span></button>
       <div class="panel" id="p-solve" hidden>
-        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Count them, answer one question, and you are in the draw.</p>
+        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Find all five during the talk. No draw: everyone who finds them all gets the same reward.</p>
         <p class="fine"><span class="tag">Not connected yet</span> The game is Rana's build. Its permanent address is not set yet, so it is not linked here.</p>
       </div>
 
@@ -341,20 +374,18 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     </div>
   </section>
 
-  <section aria-labelledby="brands-h" style="display:grid;gap:12px" id="links-section" hidden>
+  <section class="owner-only" aria-labelledby="brands-h" style="display:grid;gap:12px" id="links-section" hidden>
     <h2 id="brands-h" style="font-size:20px">Businesses</h2>
     <div class="brands" id="links"></div>
   </section>
 
-  <section aria-label="Get a card like this" style="display:grid">
-    <a class="btn" id="own-card" href="#">Want a card like this?<small id="own-card-note"></small></a>
-  </section>
+  <a class="ownlink" id="own-card" href="#">Want a card like this?<small id="own-card-note"></small></a>
 
   <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px" hidden>
     <h2 id="live-h" style="font-size:20px">What works right now</h2>
     <ul class="status-list" id="status-list">
       <li class="on"><b>Live</b>Business links open the real websites.</li>
-      <li class="on"><b>Live</b>Phone numbers and email copy to your clipboard.</li>
+      <li class="on"><b>Live</b>The email address copies to your clipboard.</li>
       <li class="off" data-hosted="One-tap save to contacts opens this contact card on your phone."><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
       <li class="off" id="status-inbox"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
       <li class="off" data-hosted="Add the card to a home screen; it opens even with no signal."><b>Not connected yet</b>Home-screen app and offline copy. They need the card on its own web address.</li>
@@ -443,7 +474,7 @@ function lum(hex) {
     const h = $("person-name"); h.textContent = "";
     P.name.split(" ").forEach((w, i) => { if (i) h.append(" "); const s = document.createElement("span"); s.className = "w"; s.textContent = w; h.append(s); });
   }
-  $("person-intro").textContent = [P.title, P.intro].filter(Boolean).join(". ");
+  $("person-intro").textContent = P.title || "";   // one short line; the long story is not card material
   $("intro-below").textContent = $("person-intro").textContent;
   $("person-motto").textContent = P.motto || (B.tagline && B.tagline.text) || "";
   (P.credentials || []).forEach(c => {
@@ -693,6 +724,7 @@ if (GREET || EVENT) {
 // The claude.ai preview shows it so the owner can review it.
 const STANDALONE = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
 const OWNER = QS.get("me") === "1" || STANDALONE || !HOSTED;
+document.body.classList.toggle("owner", OWNER);
 const AT_KEY = "card-at:" + (KIT.id || "card");
 const savedAt = () => { try { return eventById(localStorage.getItem(AT_KEY) || ""); } catch (e) { return null; } };
 
@@ -974,7 +1006,13 @@ if (HOSTED) {
 
 // Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
 $("save").addEventListener("click", () => {
-  if (HOSTED && KIT.id) { location.href = KIT.id + ".vcf"; return; }
+  if (HOSTED && KIT.id) {
+    // Phones finish the save themselves: say the one tap that is left (Android browsers download the file)
+    const android = /Android/i.test(navigator.userAgent);
+    $("save-hint").textContent = android ? "Now open the downloaded file and tap Save." : "Now tap Create New Contact.";
+    $("save-hint").hidden = false;
+    location.href = KIT.id + ".vcf"; return;
+  }
   try {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([vcard()], { type: "text/vcard" }));
@@ -1028,10 +1066,45 @@ $("enquiry").addEventListener("submit", e => {
 $("copy-msg").addEventListener("click", e => copy($("out-text").textContent, e.currentTarget));
 
 const rabbit = $("rabbit");
+// The white rabbit: tap it and a gift pops open with one practical idea (picked at random), confetti and a chime
+function surprise() {
+  const ideas = Object.values(P.ideas || {}).filter(v => Array.isArray(v) && v.length >= 3);
+  if (!ideas.length) return;
+  let last = Number($("surprise").dataset.idea || -1), i = Math.floor(Math.random() * ideas.length);
+  if (ideas.length > 1 && i === last) i = (i + 1) % ideas.length;
+  $("surprise").dataset.idea = String(i);
+  $("surprise-h").textContent = ideas[i][1]; $("surprise-p").textContent = ideas[i][2];
+  $("surprise").hidden = false; const g = $("gift"); g.style.animation = "none"; void g.offsetWidth; g.style.animation = "";
+  SFX.chime(); confetti();
+}
+function confetti() {
+  if (REDUCED) return;
+  const c = $("confetti"), x = c.getContext("2d"), d = Math.min(devicePixelRatio || 1, 2);
+  c.width = innerWidth * d; c.height = innerHeight * d;
+  const brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#FFFFFF";
+  const cols = [brand, "#FFFFFF", "#FFD9CC"], bits = Array.from({ length: 90 }, () => ({
+    x: c.width / 2, y: c.height * .42, vx: (Math.random() - .5) * 18 * d, vy: (-6 - Math.random() * 12) * d,
+    r: (3 + Math.random() * 4) * d, c: cols[Math.floor(Math.random() * cols.length)], a: Math.random() * 6 }));
+  const t0 = performance.now();
+  (function frame(now) {
+    const t = now - t0; x.clearRect(0, 0, c.width, c.height);
+    bits.forEach(b => { b.vy += .45 * d; b.x += b.vx; b.y += b.vy; b.a += .2;
+      x.save(); x.translate(b.x, b.y); x.rotate(b.a); x.fillStyle = b.c; x.globalAlpha = Math.max(0, 1 - t / 1800); x.fillRect(-b.r, -b.r / 2, b.r * 2, b.r); x.restore(); });
+    if (t < 1800) requestAnimationFrame(frame); else x.clearRect(0, 0, c.width, c.height);
+  })(t0);
+}
 if (!rabbit.hidden) {
   setTimeout(() => rabbit.classList.add("in"), 3500);
-  rabbit.addEventListener("click", () => { rabbit.classList.add("found"); SFX.chime(); const t = $("toast"); t.hidden = false; setTimeout(() => { t.hidden = true; }, 5000); });
+  rabbit.addEventListener("click", () => { rabbit.classList.add("found"); surprise(); });
 }
+$("surprise-more").addEventListener("click", surprise);
+$("surprise-close").addEventListener("click", () => { $("surprise").hidden = true; });
+$("surprise").addEventListener("click", e => { if (e.target === $("surprise")) $("surprise").hidden = true; });
+// Review: one quiet button opens the review wheel
+$("review-open").addEventListener("click", e => {
+  const open = $("review").hidden; $("review").hidden = !open; e.currentTarget.setAttribute("aria-expanded", String(open));
+  if (open) $("review").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+});
 
 // PLACEHOLDER motion: slow light in the brand's own colour
 (function () {

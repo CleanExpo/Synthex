@@ -131,7 +131,7 @@ Composio connections, and env-file key names (names only, no values).
 
 **Recommendation:** use AgentMail for the card inbox. It is built for agent inboxes, and Phill already has
 an account. His step: connect `agent_mail` in Composio (one OAuth click). Until then the card's Connect
-form routes to `Phill@disasterrecovery.com.au` and is labelled PLACEHOLDER.
+form routed to his own address and was labelled PLACEHOLDER (superseded: see section 5).
 
 ## 4. The prototype
 
@@ -151,10 +151,8 @@ Link (private to Phill until he shares it): https://claude.ai/artifact/RPL8XEM3j
   favicon on the test server, not the card). `[VERIFIED: Playwright screenshot 22/10/2026]`
   Not checked on a physical phone. `[UNCONFIRMED]`
 
-**Contact details used** `[VERIFIED: Phill's email signatures]`: mobile +61 457 123 005,
-phill.m@carsi.com.au (CARSI signature); office 07 3879 4677 and Phill@disasterrecovery.com.au
-(Disaster Recovery signature). Showing his mobile on a card handed out to a trade-show crowd is Phill's
-call; the business line can replace it in one edit.
+**Contact details** — superseded 23/10/2026: the card's only contact is the bot inbox (section 5).
+Personal numbers and addresses are no longer on the card, in the contact file or in this README.
 
 **Photos Phill needs to supply** (his own, or ones he holds rights to):
 
@@ -175,8 +173,17 @@ phone, 390 px) and the Done contract; nothing is deployed.
 **Details fixed** `[VERIFIED: curl and Google Maps, 23/10/2026]`
 
 - "Unite Group" no longer links to unite-group.in, which sends visitors to a login page.
-- Connect now goes to the bot inbox `airestoreassist@gmail.com` (the Google account Claude signs in
-  with, connected in Composio). Marked **Proposed** on the card until Phill confirms it. `[INFERENCE]`
+- The only contact is the bot inbox `airestoreassist@gmail.com`, on the card and in the contact file
+  (Phill, 23/10/2026: "The only contact is through the AI email"). No mobile, office or personal email.
+
+**What a visitor sees** (Phill: "it just has to be a single click") — the opener, the name, one big
+**Save to my phone** button, a quiet "Leave a review" button and a small "Want a card like this?" link.
+Everything else is the owner's view (`?me=1` or the home-screen app). Checked by `tests/smoke.mjs oneclick`.
+
+**The white rabbit** — it hops across the opener; tapping it pops a gift (confetti, chime) with one
+practical idea, picked at random, and "Another one". The ideas are Claude-drafted and not yet approved
+by Phill.
+
 - Disaster Recovery's Google listing shows 1300 309 361, the number on Rana's card. `[VERIFIED: Google Maps]`
 
 **On your phone** (once hosted)
@@ -200,7 +207,7 @@ the button mutes it.
 
 **Review wheel** — the visitor picks the business they actually used (Disaster Recovery, CARSI,
 Unite-Group Nexus), spins for an open question, answers in their own words, and one tap copies their
-words and opens Google's review form for that business; photos and video are encouraged. Nothing is
+words and opens Google's review form for that business; a photo is encouraged (Google's form documents photos). Nothing is
 pre-written and no rating is suggested, because Google bars merchants from trying to "influence the
 rating or content" `[VERIFIED: support.google.com/contributionpolicy/answer/7400114, 23/10/2026]` and the
 ACCC treats business-written customer reviews as misleading (Service Seeking proceedings)
@@ -225,7 +232,7 @@ only create drafts; it never sends.
 ## Phill's steps
 
 1. Authorise the `higgsfield` MCP server via /mcp (then supply the photos above).
-2. Confirm the bot inbox `airestoreassist@gmail.com` for the Connect form.
-3. Confirm the contact details to show publicly, and that the CARSI Google listing is his.
+2. Approve (or rewrite) the practical ideas the white rabbit hands out.
+3. Confirm that the CARSI Google listing is his.
 4. Connect Disaster Recovery, CARSI and Unite-Group Nexus Business Profiles in Synthex so replies work.
 5. Say yes to hosting at card.unite-group.ink (see `hosting-plan.md`).

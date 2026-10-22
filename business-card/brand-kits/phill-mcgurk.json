@@ -369,29 +369,12 @@
         "text": "certified"
       }
     ],
-    "phones": [
-      {
-        "label": "Mobile",
-        "display": "+61 457 123 005",
-        "tel": "+61457123005",
-        "type": "CELL"
-      },
-      {
-        "label": "Office",
-        "display": "07 3879 4677",
-        "tel": "+61738794677",
-        "type": "WORK"
-      }
-    ],
+    "phones": [],
     "emails": [
       {
         "label": "Email",
-        "value": "phill.m@carsi.com.au",
+        "value": "airestoreassist@gmail.com",
         "primary": true
-      },
-      {
-        "label": "Disaster Recovery",
-        "value": "Phill@disasterrecovery.com.au"
       }
     ],
     "links": [
@@ -460,10 +443,9 @@
       ]
     },
     "inbox": {
-      "status": "proposed",
+      "status": "found",
       "address": "airestoreassist@gmail.com",
-      "fallback": "Phill@disasterrecovery.com.au",
-      "source": "Phill 23/10/2026 asked for his bot email address; this is the Google account Claude signs in with, ACTIVE in Composio (gmail_hask-subah). Inferred, not yet confirmed by Phill.",
+      "source": "Phill 23/10/2026 confirmed it as the card's only contact. Google account Claude signs in with; ACTIVE in Composio (gmail_hask-subah).",
       "note": "The reply desk (business-card/reply-desk/) reads [Card] enquiries here and drafts answers; nothing is sent without Phill."
     },
     "reviewPlaces": [
@@ -519,6 +501,7 @@
         "label": "Melbourne",
         "source": "Phill's email 19/10/2026: Melbourne show the week after"
       }
-    ]
+    ],
+    "contactSource": "Phill 23/10/2026: 'The only contact is through the AI email that I have set up'. Mobile, office and personal emails removed from the card and contact file."
   }
 }

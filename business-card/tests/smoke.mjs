@@ -332,7 +332,25 @@ try {
       (await page.textContent('#greet')) === 'Great to meet you, Sam',
       'unknown event ignored'
     );
-    // pass it on, personalised
+    // the white rabbit opens a surprise with a practical idea
+    await page.waitForTimeout(6500);
+    await page.click('#rabbit');
+    await page.waitForTimeout(400);
+    const gift1 = await page.textContent('#surprise-h');
+    check(
+      (await page.isVisible('#surprise')) && gift1.length > 5,
+      'rabbit opens a surprise: ' + gift1
+    );
+    await page.click('#surprise-more');
+    check(
+      (await page.textContent('#surprise-h')) !== gift1,
+      'another surprise is a different idea'
+    );
+    await page.click('#surprise-close');
+    check(await page.isHidden('#surprise'), 'surprise closes');
+    // pass it on, personalised (the owner's tool)
+    await page.goto(BASE + '?me=1');
+    await page.waitForTimeout(800);
     await page.click('#pass-btn');
     await page.fill('#pass-name', 'Alex');
     await page.selectOption('#pass-at', 'melbourne');
@@ -381,6 +399,7 @@ try {
       await v.ctx.close();
     }
     // review wheel: pick a business, spin, land on a question, open Google's form for that business only
+    await page.click('#review-open');
     await page.click('#rw-biz .need >> text=Disaster Recovery');
     check(
       (await page.getAttribute('#review-btn', 'href')) ===
@@ -456,6 +475,60 @@ try {
       'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
     );
     await ctx.close();
+  } else if (MODE === 'oneclick') {
+    // Someone the card is shared with: one obvious action, and it saves the contact
+    const { ctx, page, errors } = await phone();
+    let vcf = false;
+    // watch the context, not page.route: the card's service worker answers before a route would see it
+    ctx.on('request', r => {
+      if (r.url().endsWith('/phill-mcgurk.vcf')) vcf = true;
+    });
+    await page.goto(BASE + '?to=Sam&at=brisbane');
+    await page.waitForTimeout(1500);
+    const primaries = await page.evaluate(() =>
+      [...document.querySelectorAll('.btn.primary, button.primary')]
+        .filter(b => {
+          const r = b.getBoundingClientRect();
+          return b.offsetParent && r.top < innerHeight && r.bottom > 0;
+        })
+        .map(b => b.textContent.trim())
+    );
+    check(
+      primaries.length === 1 && primaries[0] === 'Save to my phone',
+      'first screen has one primary action: ' + JSON.stringify(primaries)
+    );
+    for (const sel of [
+      '#pass-btn',
+      '.doors',
+      '#links-section',
+      '#creds',
+      '#share',
+      '#mine',
+      '#live-status',
+      '#replay',
+    ]) {
+      check(await page.isHidden(sel), 'hidden from visitors: ' + sel);
+    }
+    check(
+      (await page.isVisible('#review-open')) &&
+        !(await page.getAttribute('#review-open', 'class')).includes('primary'),
+      'review is one secondary button'
+    );
+    await page.click('#save').catch(() => {});
+    await page.waitForTimeout(800);
+    check(vcf, 'Save to my phone requests the contact file');
+    check(
+      errors.length === 0,
+      'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
+    );
+    await ctx.close();
+    const own = await phone();
+    await own.page.goto(BASE + '?me=1');
+    await own.page.waitForTimeout(800);
+    for (const sel of ['#pass-btn', '#mine', '#creds']) {
+      check(await own.page.isVisible(sel), 'owner sees: ' + sel);
+    }
+    await own.ctx.close();
   } else if (MODE === 'shots') {
     // Phone screenshots for review: node smoke.mjs <site> shots <out dir>
     const out = path.resolve(process.argv[4] || '.');
@@ -473,6 +546,7 @@ try {
       await page.screenshot({ path: path.join(out, name) });
     };
     await at('#mine', '2-your-view.png', -40);
+    await page.click('#review-open');
     await page.click('#rw-biz .need >> text=Disaster Recovery');
     await page.click('#rw-spin');
     await page.waitForFunction(() => window.CARD_REVIEW.landed() !== '', null, {
@@ -498,6 +572,13 @@ try {
       path: path.join(out, '0-visitor-full.png'),
       fullPage: true,
     });
+    await v.page.screenshot({
+      path: path.join(out, '0-visitor-first-screen.png'),
+    });
+    await v.page.waitForTimeout(2500);
+    await v.page.click('#rabbit');
+    await v.page.waitForTimeout(900);
+    await v.page.screenshot({ path: path.join(out, '6-rabbit-surprise.png') });
     await v.ctx.close();
   } else {
     const rotation = ['signature', 'origami', 'blueprint', 'restoration'];
@@ -518,6 +599,7 @@ try {
     const { ctx, page } = await phone({ reducedMotion: 'reduce' });
     await page.goto(BASE + '?me=1');
     await page.waitForTimeout(1200);
+    await page.click('#review-open');
     await page.click('#rw-biz .need >> nth=0');
     await page.click('#door-connect');
     await page.click('#enquiry button[type=submit]');
@@ -535,7 +617,28 @@ try {
     const r = await contrastScene(page, 'pass-it-on');
     total += r.count;
     bad.push(...r.bad);
+    await page.click('#pass-close');
+    await page.evaluate(() => surprise());
+    await page.waitForTimeout(700);
+    const g = await contrastScene(page, 'surprise');
+    total += g.count;
+    bad.push(...g.bad);
     await ctx.close();
+    // what a visitor sees
+    const vis = await phone({ reducedMotion: 'reduce' });
+    await vis.page.goto(BASE + '?to=Sam&at=brisbane');
+    await vis.page.waitForTimeout(1200);
+    const VH = await vis.page.evaluate(
+      () => document.documentElement.scrollHeight
+    );
+    for (let y = 0; y < VH; y += 700) {
+      await vis.page.evaluate(v => scrollTo(0, v), y);
+      await vis.page.waitForTimeout(150);
+      const r2 = await contrastScene(vis.page, `visitor@${y}`);
+      total += r2.count;
+      bad.push(...r2.bad);
+    }
+    await vis.ctx.close();
     const uniq = [...new Set(bad)];
     check(total > 40, `measured ${total} text elements`);
     check(
