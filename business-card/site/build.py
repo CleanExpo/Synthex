@@ -8,11 +8,14 @@ Writes to out_dir:
   preview.html    the same card for a claude.ai preview (not hosted mode)
   card-template.html  the unbranded template, which get-your-card.html fills for its live preview
   media/          the logo and hero clip named in the kit, served as files by the hosted page
+  manifest.webmanifest, sw.js  the home-screen app: icons from the kit, and an offline copy of the card
+                  (the page, contact file, logo, QR library and the rotation posters) for a trade-show floor with no signal
 The logo and hero clip ("file", "video", "poster", relative to the repository root) are copied into
 media/ for the hosted page and embedded as data URIs in preview.html, so neither loads anything from
 another host. vercel.json is kept by hand.
 """
 import base64
+import hashlib
 import json
 import os
 import sys
@@ -25,8 +28,32 @@ HEAD = (
     '<meta name="robots" content="noindex">\n'
     '<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}'
     'body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n'
-    '<script>window.CARD_HOSTED = true;</script>\n</head>\n<body>\n'
+    '<script>window.CARD_HOSTED = true;</script>\n{app}</head>\n<body>\n'
 )
+QR_LIB = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+# Service worker: pages come from the network when there is one and from the saved copy when there isn't;
+# everything else is saved on first use. Clips are streamed (range requests) and never saved.
+SW = """// Built by build.py; do not edit by hand. Version {version}
+const CACHE = "card-{version}";
+const SHELL = {shell};
+self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u =>
+  c.add(new Request(u, u.startsWith("http") ? {{ mode: "no-cors" }} : {{}})).catch(() => {{}})))).then(() => self.skipWaiting())));
+self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
+  .then(() => self.clients.claim())));
+self.addEventListener("fetch", e => {{
+  const r = e.request;
+  if (r.method !== "GET" || r.headers.has("range") || /\\.(mp4|webm)$/.test(new URL(r.url).pathname)) return;
+  if (r.mode === "navigate") {{
+    e.respondWith(fetch(r).then(res => {{ const copy = res.clone(); caches.open(CACHE).then(c => c.put("./", copy)); return res; }})
+      .catch(() => caches.match("./")));
+    return;
+  }}
+  e.respondWith(caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || fetch(r).then(res => {{
+    if (res.ok || res.type === "opaque") {{ const copy = res.clone(); caches.open(CACHE).then(c => c.put(r, copy)); }}
+    return res;
+  }})));
+}});
+"""
 TAIL = "\n</body>\n</html>\n"
 MIME = {".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
         ".mp4": "video/mp4", ".webm": "video/webm"}
@@ -108,8 +135,42 @@ def main(card_path, kit_path, out):
         html = page.replace(SLOT, f'<script id="brand-kit" type="application/json">{embedded}</script>')
         return html.replace("<title>Living Card</title>", f"<title>{name} Card</title>", 1)
 
+    # Home-screen app: only when the kit names its own app icons
+    icons = (kit.get("brand") or {}).get("appIcons") or {}
+    app = ""
+    if icons.get("status") == "found" and icons.get("files"):
+        shipped = {size: media(path)[0] for size, path in icons["files"].items()}
+        theme = ((kit.get("brand") or {}).get("colours") or {}).get("primary", {}).get("value", "#000000")
+        bg = icons.get("background", "#000000")
+        manifest = {"name": name + " Card", "short_name": name.split(" ")[0] + "'s card", "id": "./",
+                    "start_url": "./?me=1", "scope": "./", "display": "standalone",
+                    "background_color": bg, "theme_color": bg,
+                    "icons": [{"src": src, "sizes": f"{s}x{s}", "type": "image/png", "purpose": "any"}
+                              for s, src in sorted(shipped.items(), key=lambda kv: int(kv[0])) if s != "180"]}
+        with open(os.path.join(out, "manifest.webmanifest"), "w", encoding="utf-8", newline="\n") as f:
+            json.dump(manifest, f, indent=2)
+        app = ('<link rel="manifest" href="manifest.webmanifest">\n'
+               f'<link rel="apple-touch-icon" href="{shipped.get("180", shipped[max(shipped, key=int)])}">\n'
+               f'<meta name="theme-color" content="{bg}">\n'
+               '<meta name="apple-mobile-web-app-capable" content="yes">\n'
+               '<meta name="mobile-web-app-capable" content="yes">\n'
+               '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
+               f'<meta name="apple-mobile-web-app-title" content="{manifest["short_name"]}">\n')
+        page_html = HEAD.replace("{app}", app) + render(hosted) + TAIL
+        shell = ["./", kit["id"] + ".vcf", "manifest.webmanifest", QR_LIB] + sorted(set(shipped.values()))
+        if brand_h.get("logo", {}).get("hostedUrl"):
+            shell.append(brand_h["logo"]["hostedUrl"])
+        for n in (kit.get("brand") or {}).get("rotation") or []:
+            src = brand_h.get("hero") if n == "signature" else (brand_h.get("editions") or {}).get(n)
+            if src and src.get("hostedPoster"):
+                shell.append(src["hostedPoster"])
+        version = hashlib.sha256(page_html.encode("utf-8")).hexdigest()[:12]
+        with open(os.path.join(out, "sw.js"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(SW.format(version=version, shell=json.dumps(shell)))
+    else:
+        page_html = HEAD.replace("{app}", "") + render(hosted) + TAIL
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-        f.write(HEAD + render(hosted) + TAIL)
+        f.write(page_html)
     with open(os.path.join(out, "preview.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(render(preview))
     with open(os.path.join(out, kit["id"] + ".vcf"), "w", encoding="utf-8", newline="") as f:

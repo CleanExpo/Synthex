@@ -6,6 +6,13 @@
 <meta name="robots" content="noindex">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <script>window.CARD_HOSTED = true;</script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="media/app-icon-180.png">
+<meta name="theme-color" content="#000511">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Phill's card">
 </head>
 <body>
 <title>Phill McGurk Card</title>
@@ -21,6 +28,8 @@
   --brand: #3A3F48;       /* replaced by the kit's primary colour */
   --brand-ink: #FFFFFF;   /* text on the brand colour, chosen by contrast */
   --glow: #8A93A3;        /* replaced by the kit's primary colour */
+  --brand-text: #3A3F48;  /* the primary colour, deepened until text in it reads at 4.5:1 on the page */
+  --glow-text: #C9CED6;   /* the primary colour, lightened until text in it reads at 4.5:1 on the stage */
   --warn: #B4462B;        /* semantic: not connected yet */
   --ok: #1E7B55;          /* semantic: live */
   --muted: color-mix(in srgb, var(--fg) 62%, var(--bg));
@@ -38,7 +47,7 @@ body {
   padding-block: 20px 48px;
 }
 .wrap { max-width: 440px; margin: 0 auto; display: grid; gap: 28px; }
-a { color: var(--brand); }
+a { color: var(--brand-text); }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 6px; }
 .tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--warn);
   border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); padding: 3px 8px; border-radius: 999px; display: inline-block; }
@@ -48,8 +57,8 @@ a { color: var(--brand); }
   border-radius: 22px; overflow: hidden; background: var(--stage); color: #FFFFFF; }
 .stage canvas, .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 /* full-height edition clips fill the stage; a dark fade keeps the name readable on light footage */
-.stage:has(video.hero-full)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26%; z-index: 2; pointer-events: none;
-  background: linear-gradient(to bottom, rgba(4,8,14,0), rgba(4,8,14,.9)); }
+.stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34%; z-index: 2; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(4,8,14,0), rgba(4,8,14,.82) 45%, rgba(4,8,14,.94)); }
 /* full-height editions place their wordmark low, so the overlay keeps only the name and motto; the intro moves below */
 .stage:has(video.hero-full) .name p { display: none; }
 .stage:has(video.hero-full) .rabbit { top: 12%; }
@@ -72,7 +81,7 @@ a { color: var(--brand); }
 .name h1 .w { display: inline-block; animation: rise .9s cubic-bezier(.2,.8,.2,1) both; }
 .name h1 .w:nth-child(2) { animation-delay: .12s; }
 .name p { margin: 10px 0 0; color: rgba(255,255,255,.8); font-size: 15px; }
-.name .motto { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--glow); margin-top: 12px; }
+.name .motto { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--glow-text); margin-top: 12px; }
 @keyframes rise { from { transform: translateY(14px); } to { transform: none; } }
 .rabbit { position: absolute; width: 46px; height: 46px; border: 0; background: none; padding: 0; cursor: pointer;
   top: 60%; left: -60px; transition: left 2.6s cubic-bezier(.3,.7,.3,1), opacity .4s; color: #FFFFFF; }
@@ -81,18 +90,18 @@ a { color: var(--brand); }
 .rabbit.found { opacity: 0; pointer-events: none; }
 .toast { position: absolute; left: 16px; right: 16px; top: 52%; background: rgba(10,12,16,.9); border: 1px solid var(--glow);
   border-radius: 14px; padding: 14px 16px; font-size: 14.5px; }
-.toast b { color: var(--glow); font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
+.toast b { color: var(--glow-text); font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
 
 .creds { display: flex; flex-wrap: wrap; gap: 8px; }
 .creds span { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; background: var(--panel); }
-.creds b { color: var(--brand); font-weight: 600; }
+.creds b { color: var(--brand-text); font-weight: 600; }
 
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .btn { font: 600 15px/1.2 var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line);
   border-radius: 14px; padding: 14px; text-align: left; text-decoration: none; cursor: pointer; display: grid; gap: 4px; min-width: 0; }
 .btn small { font: 400 12px/1.3 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
 .btn.primary { grid-column: 1 / -1; background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
-.btn.primary small { color: var(--brand-ink); opacity: .8; }
+.btn.primary small { color: var(--brand-ink); }
 .btn:active { transform: translateY(1px); }
 
 h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
@@ -101,7 +110,7 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spac
 .door { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; padding: 16px; border-radius: 16px;
   border: 1px solid var(--line); background: none; color: var(--fg); text-align: left; font: inherit; cursor: pointer; width: 100%; }
 .door[aria-expanded="true"] { border-color: var(--brand); background: var(--panel); }
-.door .k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--brand); grid-row: span 2; padding-top: 3px; }
+.door .k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--brand-text); grid-row: span 2; padding-top: 3px; }
 .door strong { font-family: var(--display); font-size: 19px; }
 .door span:last-child { color: var(--muted); font-size: 14.5px; }
 .panel { border-left: 2px solid var(--line); padding: 4px 0 4px 16px; display: grid; gap: 12px; }
@@ -133,8 +142,8 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
 /* Crack & reveal: a code-drawn shatter over the stage on open */
 #crack { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; background: #04080E; }
-.greet { position: absolute; left: 18px; right: 18px; top: 16px; z-index: 4; font: 600 15px var(--display); color: #FFFFFF;
-  text-shadow: 0 1px 12px rgba(0,0,0,.6); opacity: 0; transition: opacity .6s ease .2s; }
+.greet { position: absolute; left: 14px; right: auto; max-width: calc(100% - 28px); top: 58px; z-index: 4; font: 600 15px var(--display); color: #FFFFFF;
+  background: rgba(4,8,14,.82); padding: 7px 12px; border-radius: 12px; text-shadow: none; opacity: 0; transition: opacity .6s ease .2s; }
 .greet.on { opacity: 1; }
 
 /* Pass it on: a bouncing QR so a second person scans the card off this screen */
@@ -147,11 +156,51 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 .passon .close { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: max(16px, env(safe-area-inset-top, 0px));
   font: 600 15px var(--body); color: #FFFFFF; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 10px 16px; cursor: pointer; }
 .passon .hint { position: absolute; left: 0; right: 0; bottom: max(24px, env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 14px; color: rgba(255,255,255,.75); padding: 0 16px; }
+/* Make it personal: the code carries the next person's name and where you met, so the card greets them */
+.passon .personal { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  top: calc(max(16px, env(safe-area-inset-top, 0px)) + 52px); display: grid; grid-template-columns: 1fr auto; gap: 8px; z-index: 2; }
+.passon .personal input, .passon .personal select { background: rgba(255,255,255,.1); color: #FFFFFF; border-color: rgba(255,255,255,.3); padding: 9px 11px; }
+.passon .personal select option { color: #0A1120; }
+.passon .personal .wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.passon .personal button { font: 600 14px var(--body); border-radius: 10px; padding: 9px 12px; cursor: pointer; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); color: #FFFFFF; }
+.passon .personal button.go { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+
+/* Review wheel: pick the business, spin for an open question, answer in your own words, then post on Google */
+.rw { display: grid; gap: 12px; }
+.rw-step, .rw label > span { margin: 0; font: 600 15px var(--body); color: var(--fg); }
+.rw-step b, .rw-num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); font: 700 12px var(--body); margin-right: 6px; }
+.wheel { position: relative; height: 92px; overflow: hidden; border-radius: 14px; background: var(--stage); color: #FFFFFF;
+  border: 1px solid var(--line); }
+.wheel-track { position: absolute; top: 0; bottom: 0; left: 0; display: flex; will-change: transform; }
+.wheel-track span { flex: 0 0 220px; display: grid; place-items: center; text-align: center; padding: 0 14px; font: 600 16px/1.3 var(--display); opacity: .62; transition: opacity .2s; }
+.wheel-track span.on { opacity: 1; }
+.wheel-pin { position: absolute; left: 50%; top: 0; transform: translateX(-50%); border: 9px solid transparent; border-top-color: var(--brand); }
+.rw-tip { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); font-size: 14px; }
+
+/* Sound: off until the visitor taps it (phones block sound before a tap); all of it is synthesised in code, no audio files */
+.sound { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 6px; cursor: pointer;
+  font: 600 12px var(--body); color: #FFFFFF; background: rgba(4,8,14,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 11px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sound svg { width: 16px; height: 16px; }
+.sound[aria-pressed="true"] { border-color: var(--brand); box-shadow: 0 0 14px color-mix(in srgb, var(--brand) 70%, transparent); }
+.sound .bars { display: none; gap: 2px; align-items: end; height: 12px; }
+.sound[aria-pressed="true"] .bars { display: inline-flex; }
+.sound[aria-pressed="true"] .off { display: none; }
+.sound .bars i { width: 2px; background: var(--brand); animation: eq 1.1s ease-in-out infinite; }
+.sound .bars i:nth-child(2) { animation-delay: .3s; } .sound .bars i:nth-child(3) { animation-delay: .6s; }
+@keyframes eq { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+@media (prefers-reduced-motion: reduce) { .sound .bars i { animation: none; height: 8px; } }
+
+/* Your view: only the card's owner sees this (?me=1, or the home-screen app) */
+.mine { display: grid; gap: 12px; padding: 18px; border-radius: 18px; border: 1px dashed var(--brand); }
+.mine ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14.5px; }
+.mine .lockimg { width: 100%; max-width: 220px; justify-self: center; border-radius: 18px; border: 1px solid var(--line); }
+.mine .ok { color: var(--ok); font-weight: 600; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <!-- The brand kit for this card. site/build.py fills it from business-card/brand-kits/<id>.json; empty means unbranded. -->
-<script id="brand-kit" type="application/json">{"id":"phill-mcgurk","prepared":"22/10/2026","sources":[{"label":"Synthex canonical brand config for Unite Group","ref":"packages/brand-config/src/brands/unite.ts"},{"label":"Unite Group logo from unite-group.in, checksum recorded","ref":"config/brand-logo-sources.json (slug unite, sha256 f73cd4c5…)"},{"label":"Phill's email signatures (CARSI and Disaster Recovery)","ref":"Gmail threads 1a15c3ac0464bcf8 and 1a1485af1f95b555"},{"label":"Unite-Group portfolio registry","ref":"Unite-Group/.portfolio/PORTFOLIO.yaml"}],"brand":{"name":"Unite Group","slug":"unite","tagline":{"text":"Connected service for the field.","source":"packages/brand-config/src/brands/unite.ts:9"},"logo":{"status":"found","url":"file:///Volumes/Storage Unit/Unite-Group/brand-assets/unite-group-nexus/01-approved-logo/unite-group-nexus-logo-square-1024x1024.png","urlNote":"Canonical Unite-Group Nexus logo kit named by Phill 22/10/2026; no public URL.","file":"business-card/brand-kits/media/unite-group-nexus-logo-square-1f404d60.png","background":"#000511 (dark navy scene, not transparent)","source":"Logo kit 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png, sha256 1f404d60a96a917bb6b689fecfd1915b1b0d1a4c140d4db6602cef9a564fc3ea (master: 00-originals, sha256 7ff957ec...)","decision":"Phill 22/10/2026, attaching this image: \"This is the new and current Logo. It will need to be updated 100% through the entire Unite-Group Nexus Project\". Supersedes the 'image 4' wings mark chosen earlier the same day. AI-generated (Higgsfield), not yet trademark-checked.","hostedUrl":"media/unite-group-nexus-logo-square-1f404d60.png"},"previousLogos":[{"label":"Same cracked-U mark as Phill's chat attachment (WebP), card logo 22/10/2026 until the logo kit was named","file":"business-card/brand-kits/media/unite-nexus-u-d49d2161.webp","source":"Phill's image as supplied 22/10/2026, 2000x2000 WebP, sha256 d49d216152996a2db4b7c7a324e1f4a3a67d5fd637f74206cb9552f57c133a5f; same mark as the Shattered-U concept (Higgsfield job f51278f4-e500-480c-9bde-fc2fe7674e5d)"},{"label":"Unite-Group Nexus wings mark ('image 4'), card logo 22/10/2026 until superseded the same day","file":"business-card/brand-kits/media/unite-nexus-2026-05e8ec98.png","url":"https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072225_8411d0b4-af07-419b-a516-cd872c1207b2.png","source":"Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round); transparent version job 05e8ec98-a658-4c6d-b9b3-a3c5d61b5753; checksums in business-card/wow/media.json","decision":"Chosen by Phill 22/10/2026: \"We have to go with image 4. thats a clear winner\". Founder-chosen, AI-generated, not yet trademark-checked. Used on the card only; no live website logo changed."},{"label":"Unite-Group Nexus mark used on unite-group.in until 22/10/2026","file":"public/logos/unite/primary.svg","colour":"#00DCE3","source":"config/brand-logo-sources.json: exact bytes from unite-group.in (sha256 f73cd4c5…), vector traced deterministically"}],"colours":{"primary":{"value":"#E55A2B","source":"packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026","decision":"Lead colour, decided by Phill 22/10/2026: \"Keep the verified orange #E55A2B as the main colour.\""},"secondary":{"status":"missing","note":"#1E293B is proposed in unite.ts:17 but not verified"},"accent":{"status":"missing","note":"#FBBF24 is proposed in unite.ts:18 but not verified"},"background":{"status":"missing","note":"no confirmed page colour; the template uses plain white"},"text":{"status":"missing","note":"no confirmed text colour; the template uses near-black"}},"conflicts":[],"resolved":["Orange #E55A2B vs the logo's cyan #00DCE3: orange leads; cyan stays inside the logo only (Phill, 22/10/2026).","Logo: the cracked U replaces the wings mark everywhere on the card (Phill, 22/10/2026)."],"fonts":{"display":{"family":"Inter","weight":700,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700","source":"packages/brand-config/src/brands/unite.ts:25 (font not yet verified against the website)"},"body":{"family":"Inter","weight":400,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700","source":"packages/brand-config/src/brands/unite.ts:29"}},"about":{"status":"missing","note":"no approved About copy for Unite Group in brand-config"},"imagery":{"status":"missing","note":"no real photos of Phill supplied yet"},"rotation":["signature","origami","blueprint","restoration"],"rotationReason":"Card stays light and shows range: signature carries the crack and rests on the logo; Origami has the largest U; Blueprint is the clean navy one; Restoration tells the restoration story. All re-rendered on the cracked U 22/10/2026. Every other found edition plays with ?edition=<name>.","shopUrl":"get-your-card.html","shopUrlNote":"Single switch for the Get your own card target. Change to https://unite-group.in/cards/order only once `curl -sI` on it returns 200 (22/10/2026: 307 to the login page).","reviews":{"status":"missing","note":"Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection","profileUrl":"https://maps.google.com/?cid=16425003964954420216","profileUrlSource":"Phill's link to the live Unite-Group Nexus Business Profile, 22/10/2026 (CID 0xe3f156152d7da3f8 = 16425003964954420216). The link redirects to Google Maps; the listing's contents were not checked from here. The ChIJ Place ID for the review form is still to come from the Business Profile dashboard or the Places API."},"editions":{"portal":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-portal.mp4","poster":"business-card/brand-kits/media/edition-portal-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 8e9d89bc-f798-4196-af4f-400838d99ae5 (source sha256 db762022...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark in smoky navy light; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-portal.mp4","hostedPoster":"media/edition-portal-poster.jpg"},"restoration":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-restoration.mp4","poster":"business-card/brand-kits/media/edition-restoration-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 14c4fc3e-1476-4364-9d4a-6f1dd6d267c5 (source sha256 51a79479...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on a clean white wall; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-restoration.mp4","hostedPoster":"media/edition-restoration-poster.jpg"},"blueprint":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-blueprint.mp4","poster":"business-card/brand-kits/media/edition-blueprint-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 77aaf2d3-29ec-4675-b3f6-025eb31c1071 (source sha256 20c5b196...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on deep navy plaster; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-blueprint.mp4","hostedPoster":"media/edition-blueprint-poster.jpg"},"forge":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-forge.mp4","poster":"business-card/brand-kits/media/edition-forge-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: retry job cb3e17f6-bb76-4ab5-9d8b-93f1b9b56c94 (source sha256 c5e52895...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. First take 82052d23-66d2-445a-8f17-7e549bce2d99 rejected (wordmark cropped). Molten metal fills a stone mould, then ends on the U and wordmark on plain black; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-forge.mp4","hostedPoster":"media/edition-forge-poster.jpg"},"constellation":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-constellation.mp4","poster":"business-card/brand-kits/media/edition-constellation-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job b5a430e5-0fd6-4512-bb40-9d308e7bbbc2 (source sha256 7c6342d5...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark in a starfield; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-constellation.mp4","hostedPoster":"media/edition-constellation-poster.jpg"},"ink":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-ink.mp4","poster":"business-card/brand-kits/media/edition-ink-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job e530a648-92d5-4b33-9a60-2a07d0be34c7 (source sha256 9469d9ab...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the glowing U and wordmark on black; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-ink.mp4","hostedPoster":"media/edition-ink-poster.jpg"},"rewind":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-rewind.mp4","poster":"business-card/brand-kits/media/edition-rewind-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job e13f34a8-2f82-4bfa-bcb5-512d03a6dfe0 (source sha256 0a5be4d8...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark under a spotlight over a reflective floor; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-rewind.mp4","hostedPoster":"media/edition-rewind-poster.jpg"},"skyline":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-skyline.mp4","poster":"business-card/brand-kits/media/edition-skyline-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job b19f1950-7276-4a0a-a744-2de2a760c34f (source sha256 dc30d452...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on a tower over a night city; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-skyline.mp4","hostedPoster":"media/edition-skyline-poster.jpg"},"origami":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-origami.mp4","poster":"business-card/brand-kits/media/edition-origami-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 99497770-0c6d-4e59-95df-0265cdac0735 (source sha256 564d0530...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on a large U and wordmark on dark charcoal; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-origami.mp4","hostedPoster":"media/edition-origami-poster.jpg"},"magnet":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-magnet.mp4","poster":"business-card/brand-kits/media/edition-magnet-poster.jpg","stopAt":3.45,"source":"Re-render ending on the cracked U: job 0737511e-1b52-4b58-aab7-756189148826 (source sha256 c26e9161...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the glowing U and wordmark on dark grey (stops at 3.45 s, before the glow cools to dull red); stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-magnet.mp4","hostedPoster":"media/edition-magnet-poster.jpg"}},"hero":{"status":"found","video":"business-card/brand-kits/media/unite-nexus-u-reveal-h264.mp4","poster":"business-card/brand-kits/media/unite-nexus-u-reveal-poster.jpg","stopAt":4.4,"loop":false,"background":{"value":"#000511","source":"measured from the opener's corner pixels"},"source":"Shattered-U reveal generated in Higgsfield, job f51278f4-e500-480c-9bde-fc2fe7674e5d (H.264 copy), cut at 3.0 s and dissolved over 0.8 s into the logo kit PNG (sha256 1f404d60...), held to 5.0 s. Edited locally with ffmpeg; nothing new generated. The clip's own crack lines differ slightly from the logo, so the card rests on the logo file itself. Poster is the logo.","hostedVideo":"media/unite-nexus-u-reveal-h264.mp4","hostedPoster":"media/unite-nexus-u-reveal-poster.jpg"},"services":[],"previousHeroes":[{"status":"superseded","video":"business-card/brand-kits/media/unite-nexus-reveal-h264.mp4","poster":"business-card/brand-kits/media/unite-nexus-reveal-poster.jpg","stopAt":3.35,"loop":false,"background":{"value":"#04080E","source":"measured from the clip's corner pixels"},"source":"Generated in Higgsfield, job 9d9d98d9-dc53-47df-a610-ede9fa7179d8 (4 s logo reveal). Re-encoded from HEVC to H.264 so every phone browser plays it, trimmed at 3.4 s to drop the trailing black; poster is the frame at 3.3 s.","supersededReason":"ends on the wings mark; replaced by the cracked U 22/10/2026"}],"previousEditions":{"portal":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-portal-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"restoration":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-restoration-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"blueprint":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-blueprint-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 79c25c92-eac8-4b11-87e5-07f9422b3c4a (source sha256 3b39ba9c…); ends on the logo on deep navy; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"forge":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-forge-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"constellation":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-constellation-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2 (source sha256 18101dcf…); ends on the logo in a starfield; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"ink":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-ink-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 90463cb2-9496-4070-b1d8-93327812edab (source sha256 45e10bd7…); ends on the glowing logo on black; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"rewind":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-rewind-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 62822ddf-df7b-406d-a52c-af4a1fb6acc4 (source sha256 74b04b0d…); ends on the logo behind a glass pane; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"skyline":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-skyline-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job dd07eaba-07eb-4d50-96f8-37f80a4d3558 (source sha256 c3b2f430…); ends on the logo over a night city; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"origami":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-origami-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job ac453c47-ca08-4e94-9e0f-761c69f6ab52 (source sha256 e823adaa…); ends on the logo on dark charcoal; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"magnet":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-magnet-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 74047787-3e84-4104-9ce8-85d3d227af18 (source sha256 626a5ad5…); ends on the logo on dark grey; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"}}},"person":{"name":"Phill McGurk","cardUrl":"https://card.unite-group.ink","likenessConsent":{"date":"22/10/2026","scope":"Use of Phill's existing HeyGen avatar and existing ElevenLabs voice clone (both made from his own recordings) for his bio, image and motion. No new avatar or voice is to be created from scratch.","source":"Phill's words relayed by the coordinating session: \"that can be used for my bio, my image, my motion, whatever it needs to be\""},"title":"Founder, Unite Group","intro":"Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.","motto":"Found. Trusted. Chosen.","org":"Unite Group","credentials":[{"abbr":"MC","text":"IICRC Master Restoration Technician"},{"abbr":"IICRC","text":"47496"},{"abbr":"BFRS","text":"Bio Forensic Restoration Specialist"},{"abbr":"CFO","text":"Certified Forensic Operator"},{"abbr":"GBAC","text":"certified"}],"phones":[{"label":"Mobile","display":"+61 457 123 005","tel":"+61457123005","type":"CELL"},{"label":"Office","display":"07 3879 4677","tel":"+61738794677","type":"WORK"}],"emails":[{"label":"Email","value":"phill.m@carsi.com.au","primary":true},{"label":"Disaster Recovery","value":"Phill@disasterrecovery.com.au"}],"links":[{"label":"Disaster Recovery","url":"https://www.disasterrecovery.com.au","note":"Restoration, Brisbane"},{"label":"CARSI","url":"https://carsi.com.au","note":"IICRC CEC training"},{"label":"Unite Group","url":"https://unite-group.in","note":"The group"},{"label":"Synthex","url":"https://synthex.social","note":"Group marketing"},{"label":"RestoreAssist","url":"https://restoreassist.app","note":"Restoration job app"},{"label":"NRPG","url":"https://nrpg.business","note":"Contractor network"},{"label":"CleanExpo247 / TradeHall","url":null,"note":"Not connected yet: no public address"}],"vcardNote":"IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC","features":{"whiteRabbit":true,"discover":true},"ideas":{"proof":["Show proof of my work","Post one finished job, start to end","Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],"found":["Get found locally","Name the five jobs you want to be called for","Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],"team":["Skill up my team","Turn missed jobs into a training plan","Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],"reply":["Answer enquiries faster","Write your three most common replies once","Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]},"inbox":{"status":"missing","fallback":"Phill@disasterrecovery.com.au"}}}</script>
+<script id="brand-kit" type="application/json">{"id":"phill-mcgurk","prepared":"22/10/2026","sources":[{"label":"Synthex canonical brand config for Unite Group","ref":"packages/brand-config/src/brands/unite.ts"},{"label":"Unite Group logo from unite-group.in, checksum recorded","ref":"config/brand-logo-sources.json (slug unite, sha256 f73cd4c5…)"},{"label":"Phill's email signatures (CARSI and Disaster Recovery)","ref":"Gmail threads 1a15c3ac0464bcf8 and 1a1485af1f95b555"},{"label":"Unite-Group portfolio registry","ref":"Unite-Group/.portfolio/PORTFOLIO.yaml"}],"brand":{"name":"Unite Group","slug":"unite","tagline":{"text":"Connected service for the field.","source":"packages/brand-config/src/brands/unite.ts:9"},"logo":{"status":"found","url":"file:///Volumes/Storage Unit/Unite-Group/brand-assets/unite-group-nexus/01-approved-logo/unite-group-nexus-logo-square-1024x1024.png","urlNote":"Canonical Unite-Group Nexus logo kit named by Phill 22/10/2026; no public URL.","file":"business-card/brand-kits/media/unite-group-nexus-logo-square-1f404d60.png","background":"#000511 (dark navy scene, not transparent)","source":"Logo kit 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png, sha256 1f404d60a96a917bb6b689fecfd1915b1b0d1a4c140d4db6602cef9a564fc3ea (master: 00-originals, sha256 7ff957ec...)","decision":"Phill 22/10/2026, attaching this image: \"This is the new and current Logo. It will need to be updated 100% through the entire Unite-Group Nexus Project\". Supersedes the 'image 4' wings mark chosen earlier the same day. AI-generated (Higgsfield), not yet trademark-checked.","hostedUrl":"media/unite-group-nexus-logo-square-1f404d60.png"},"previousLogos":[{"label":"Same cracked-U mark as Phill's chat attachment (WebP), card logo 22/10/2026 until the logo kit was named","file":"business-card/brand-kits/media/unite-nexus-u-d49d2161.webp","source":"Phill's image as supplied 22/10/2026, 2000x2000 WebP, sha256 d49d216152996a2db4b7c7a324e1f4a3a67d5fd637f74206cb9552f57c133a5f; same mark as the Shattered-U concept (Higgsfield job f51278f4-e500-480c-9bde-fc2fe7674e5d)"},{"label":"Unite-Group Nexus wings mark ('image 4'), card logo 22/10/2026 until superseded the same day","file":"business-card/brand-kits/media/unite-nexus-2026-05e8ec98.png","url":"https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072225_8411d0b4-af07-419b-a516-cd872c1207b2.png","source":"Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round); transparent version job 05e8ec98-a658-4c6d-b9b3-a3c5d61b5753; checksums in business-card/wow/media.json","decision":"Chosen by Phill 22/10/2026: \"We have to go with image 4. thats a clear winner\". Founder-chosen, AI-generated, not yet trademark-checked. Used on the card only; no live website logo changed."},{"label":"Unite-Group Nexus mark used on unite-group.in until 22/10/2026","file":"public/logos/unite/primary.svg","colour":"#00DCE3","source":"config/brand-logo-sources.json: exact bytes from unite-group.in (sha256 f73cd4c5…), vector traced deterministically"}],"colours":{"primary":{"value":"#E55A2B","source":"packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026","decision":"Lead colour, decided by Phill 22/10/2026: \"Keep the verified orange #E55A2B as the main colour.\""},"secondary":{"status":"missing","note":"#1E293B is proposed in unite.ts:17 but not verified"},"accent":{"status":"missing","note":"#FBBF24 is proposed in unite.ts:18 but not verified"},"background":{"status":"missing","note":"no confirmed page colour; the template uses plain white"},"text":{"status":"missing","note":"no confirmed text colour; the template uses near-black"}},"conflicts":[],"resolved":["Orange #E55A2B vs the logo's cyan #00DCE3: orange leads; cyan stays inside the logo only (Phill, 22/10/2026).","Logo: the cracked U replaces the wings mark everywhere on the card (Phill, 22/10/2026)."],"fonts":{"display":{"family":"Inter","weight":700,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700","source":"packages/brand-config/src/brands/unite.ts:25 (font not yet verified against the website)"},"body":{"family":"Inter","weight":400,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700","source":"packages/brand-config/src/brands/unite.ts:29"}},"about":{"status":"missing","note":"no approved About copy for Unite Group in brand-config"},"imagery":{"status":"missing","note":"no real photos of Phill supplied yet"},"rotation":["signature","origami","blueprint","restoration"],"rotationReason":"Card stays light and shows range: signature carries the crack and rests on the logo; Origami has the largest U; Blueprint is the clean navy one; Restoration tells the restoration story. All re-rendered on the cracked U 22/10/2026. Every other found edition plays with ?edition=<name>.","shopUrl":"get-your-card.html","shopUrlNote":"Single switch for the Get your own card target. Change to https://unite-group.in/cards/order only once `curl -sI` on it returns 200 (22/10/2026: 307 to the login page).","appIcons":{"status":"found","files":{"180":"business-card/brand-kits/media/app-icon-180.png","192":"business-card/brand-kits/media/app-icon-192.png","512":"business-card/brand-kits/media/app-icon-512.png"},"background":"#000511","source":"Resized with macOS sips from the logo kit PNG above (sha256 1f404d60), 23/10/2026; nothing added or redrawn"},"reviews":{"status":"found","placeId":"ChIJHzPW_QTI1wQR-KN9LRVW8eM","business":"Unite-Group Nexus","placeIdSource":"23/10/2026: the profile link opens Google Maps at feature ID 0x4d7c804fdd6331f:0xe3f156152d7da3f8 (listing title 'Unite-Group Nexus'); the ChIJ Place ID is that ID's standard protobuf encoding. Checked: maps/place/?q=place_id:<id> opens the same listing, and search.google.com/local/writereview?placeid=<id> asks a signed-out visitor to sign in and continues to the review form for it. The listing shows a service area, not a street address.","note":"Phill asked 23/10/2026 for the review link to be on the card. Replace with the Place ID from the Business Profile dashboard if it ever differs.","profileUrl":"https://maps.google.com/?cid=16425003964954420216","profileUrlSource":"Phill's link to the live Unite-Group Nexus Business Profile, 22/10/2026 (CID 0xe3f156152d7da3f8 = 16425003964954420216). The link redirects to Google Maps; the listing's contents were not checked from here. The ChIJ Place ID for the review form is still to come from the Business Profile dashboard or the Places API."},"editions":{"portal":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-portal.mp4","poster":"business-card/brand-kits/media/edition-portal-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 8e9d89bc-f798-4196-af4f-400838d99ae5 (source sha256 db762022...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark in smoky navy light; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-portal.mp4","hostedPoster":"media/edition-portal-poster.jpg"},"restoration":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-restoration.mp4","poster":"business-card/brand-kits/media/edition-restoration-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 14c4fc3e-1476-4364-9d4a-6f1dd6d267c5 (source sha256 51a79479...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on a clean white wall; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-restoration.mp4","hostedPoster":"media/edition-restoration-poster.jpg"},"blueprint":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-blueprint.mp4","poster":"business-card/brand-kits/media/edition-blueprint-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 77aaf2d3-29ec-4675-b3f6-025eb31c1071 (source sha256 20c5b196...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on deep navy plaster; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-blueprint.mp4","hostedPoster":"media/edition-blueprint-poster.jpg"},"forge":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-forge.mp4","poster":"business-card/brand-kits/media/edition-forge-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: retry job cb3e17f6-bb76-4ab5-9d8b-93f1b9b56c94 (source sha256 c5e52895...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. First take 82052d23-66d2-445a-8f17-7e549bce2d99 rejected (wordmark cropped). Molten metal fills a stone mould, then ends on the U and wordmark on plain black; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-forge.mp4","hostedPoster":"media/edition-forge-poster.jpg"},"constellation":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-constellation.mp4","poster":"business-card/brand-kits/media/edition-constellation-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job b5a430e5-0fd6-4512-bb40-9d308e7bbbc2 (source sha256 7c6342d5...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark in a starfield; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-constellation.mp4","hostedPoster":"media/edition-constellation-poster.jpg"},"ink":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-ink.mp4","poster":"business-card/brand-kits/media/edition-ink-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job e530a648-92d5-4b33-9a60-2a07d0be34c7 (source sha256 9469d9ab...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the glowing U and wordmark on black; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-ink.mp4","hostedPoster":"media/edition-ink-poster.jpg"},"rewind":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-rewind.mp4","poster":"business-card/brand-kits/media/edition-rewind-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job e13f34a8-2f82-4bfa-bcb5-512d03a6dfe0 (source sha256 0a5be4d8...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark under a spotlight over a reflective floor; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-rewind.mp4","hostedPoster":"media/edition-rewind-poster.jpg"},"skyline":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-skyline.mp4","poster":"business-card/brand-kits/media/edition-skyline-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job b19f1950-7276-4a0a-a744-2de2a760c34f (source sha256 dc30d452...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on a tower over a night city; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-skyline.mp4","hostedPoster":"media/edition-skyline-poster.jpg"},"origami":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-origami.mp4","poster":"business-card/brand-kits/media/edition-origami-poster.jpg","stopAt":3.95,"source":"Re-render ending on the cracked U: job 99497770-0c6d-4e59-95df-0265cdac0735 (source sha256 564d0530...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on a large U and wordmark on dark charcoal; stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-origami.mp4","hostedPoster":"media/edition-origami-poster.jpg"},"magnet":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-magnet.mp4","poster":"business-card/brand-kits/media/edition-magnet-poster.jpg","stopAt":3.45,"source":"Re-render ending on the cracked U: job 0737511e-1b52-4b58-aab7-756189148826 (source sha256 c26e9161...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the glowing U and wordmark on dark grey (stops at 3.45 s, before the glow cools to dull red); stop frame checked by eye 22/10/2026.","hostedVideo":"media/edition-magnet.mp4","hostedPoster":"media/edition-magnet-poster.jpg"}},"hero":{"status":"found","video":"business-card/brand-kits/media/unite-nexus-u-reveal-h264.mp4","poster":"business-card/brand-kits/media/unite-nexus-u-reveal-poster.jpg","stopAt":4.4,"loop":false,"background":{"value":"#000511","source":"measured from the opener's corner pixels"},"source":"Shattered-U reveal generated in Higgsfield, job f51278f4-e500-480c-9bde-fc2fe7674e5d (H.264 copy), cut at 3.0 s and dissolved over 0.8 s into the logo kit PNG (sha256 1f404d60...), held to 5.0 s. Edited locally with ffmpeg; nothing new generated. The clip's own crack lines differ slightly from the logo, so the card rests on the logo file itself. Poster is the logo.","hostedVideo":"media/unite-nexus-u-reveal-h264.mp4","hostedPoster":"media/unite-nexus-u-reveal-poster.jpg"},"services":[],"previousHeroes":[{"status":"superseded","video":"business-card/brand-kits/media/unite-nexus-reveal-h264.mp4","poster":"business-card/brand-kits/media/unite-nexus-reveal-poster.jpg","stopAt":3.35,"loop":false,"background":{"value":"#04080E","source":"measured from the clip's corner pixels"},"source":"Generated in Higgsfield, job 9d9d98d9-dc53-47df-a610-ede9fa7179d8 (4 s logo reveal). Re-encoded from HEVC to H.264 so every phone browser plays it, trimmed at 3.4 s to drop the trailing black; poster is the frame at 3.3 s.","supersededReason":"ends on the wings mark; replaced by the cracked U 22/10/2026"}],"previousEditions":{"portal":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-portal-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"restoration":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-restoration-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"blueprint":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-blueprint-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 79c25c92-eac8-4b11-87e5-07f9422b3c4a (source sha256 3b39ba9c…); ends on the logo on deep navy; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"forge":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-forge-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"constellation":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-constellation-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2 (source sha256 18101dcf…); ends on the logo in a starfield; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"ink":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-ink-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 90463cb2-9496-4070-b1d8-93327812edab (source sha256 45e10bd7…); ends on the glowing logo on black; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"rewind":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-rewind-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 62822ddf-df7b-406d-a52c-af4a1fb6acc4 (source sha256 74b04b0d…); ends on the logo behind a glass pane; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"skyline":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-skyline-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job dd07eaba-07eb-4d50-96f8-37f80a4d3558 (source sha256 c3b2f430…); ends on the logo over a night city; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"origami":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-origami-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job ac453c47-ca08-4e94-9e0f-761c69f6ab52 (source sha256 e823adaa…); ends on the logo on dark charcoal; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"},"magnet":{"status":"superseded","fit":"cover","video":"business-card/brand-kits/media/edition-magnet-src.mp4","stopAt":3.95,"source":"Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 74047787-3e84-4104-9ce8-85d3d227af18 (source sha256 626a5ad5…); ends on the logo on dark grey; stop frame checked by eye 22/10/2026","supersededReason":"ends on the old wings mark","videoNote":"wings H.264 copy replaced in place; this is its Higgsfield source"}}},"person":{"name":"Phill McGurk","cardUrl":"https://card.unite-group.ink","likenessConsent":{"date":"22/10/2026","scope":"Use of Phill's existing HeyGen avatar and existing ElevenLabs voice clone (both made from his own recordings) for his bio, image and motion. No new avatar or voice is to be created from scratch.","source":"Phill's words relayed by the coordinating session: \"that can be used for my bio, my image, my motion, whatever it needs to be\""},"title":"Founder, Unite Group","intro":"Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.","motto":"Found. Trusted. Chosen.","org":"Unite Group","credentials":[{"abbr":"MC","text":"IICRC Master Restoration Technician"},{"abbr":"IICRC","text":"47496"},{"abbr":"BFRS","text":"Bio Forensic Restoration Specialist"},{"abbr":"CFO","text":"Certified Forensic Operator"},{"abbr":"GBAC","text":"certified"}],"phones":[{"label":"Mobile","display":"+61 457 123 005","tel":"+61457123005","type":"CELL"},{"label":"Office","display":"07 3879 4677","tel":"+61738794677","type":"WORK"}],"emails":[{"label":"Email","value":"phill.m@carsi.com.au","primary":true},{"label":"Disaster Recovery","value":"Phill@disasterrecovery.com.au"}],"links":[{"label":"Disaster Recovery","url":"https://www.disasterrecovery.com.au","note":"Restoration, Brisbane"},{"label":"CARSI","url":"https://carsi.com.au","note":"IICRC CEC training"},{"label":"Unite Group","url":null,"note":"The group. Site not public yet","urlNote":"https://unite-group.in sends visitors to a login page (curl 23/10/2026: 307 to /auth/login). Relink once it serves a public page."},{"label":"Synthex","url":"https://synthex.social","note":"Group marketing"},{"label":"RestoreAssist","url":"https://restoreassist.app","note":"Restoration job app"},{"label":"NRPG","url":"https://nrpg.business","note":"Contractor network"},{"label":"CleanExpo247 / TradeHall","url":null,"note":"Not connected yet: no public address"}],"vcardNote":"IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC","features":{"whiteRabbit":true,"discover":true},"ideas":{"proof":["Show proof of my work","Post one finished job, start to end","Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],"found":["Get found locally","Name the five jobs you want to be called for","Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],"team":["Skill up my team","Turn missed jobs into a training plan","Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],"reply":["Answer enquiries faster","Write your three most common replies once","Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]},"inbox":{"status":"proposed","address":"airestoreassist@gmail.com","fallback":"Phill@disasterrecovery.com.au","source":"Phill 23/10/2026 asked for his bot email address; this is the Google account Claude signs in with, ACTIVE in Composio (gmail_hask-subah). Inferred, not yet confirmed by Phill.","note":"The reply desk (business-card/reply-desk/) reads [Card] enquiries here and drafts answers; nothing is sent without Phill."},"reviewPlaces":[{"business":"Disaster Recovery","note":"Restoration jobs","placeId":"ChIJFTIv0bpOkWsRz_SIAaNI3Lc","status":"found","source":"23/10/2026 Google Maps: listing 'Disaster Recovery', water damage restoration, 4.7 from 48 reviews, 1300 309 361, website https://disasterrecovery.com.au/; feature ID 0x6b914ebad12f3215:0xb7dc48a30188f4cf, Place ID is its protobuf encoding and opens the same listing"},{"business":"CARSI","note":"Training and courses","placeId":"ChIJnYFtIFhK6yQRanZxQxPD5Dg","status":"found","confirm":true,"source":"23/10/2026 Google Maps search 'CARSI carsi.com.au' opened a single listing named 'CARSI' (service area); feature ID 0x24eb4a58206d819d:0x38e4c3134371766a, Place ID opens the same listing. The listing's website field did not render, so ownership is by name only: Phill to confirm"},{"business":"Unite-Group Nexus","note":"The group","placeId":"ChIJHzPW_QTI1wQR-KN9LRVW8eM","status":"found","source":"Same as brand.reviews (Phill's own profile link, 22/10/2026)"},{"business":"RestoreAssist","status":"missing","note":"No Google listing found by search 23/10/2026"},{"business":"NRPG","status":"missing","note":"No Google listing found by search 23/10/2026"}],"reviewPrompts":["What problem did we solve for you?","What was the job, and where was it?","What would you tell a friend in the same spot?","What surprised you about how we worked?","How did it feel when the job was finished?","What could we have done better?"],"reviewPromptsSource":"Written 23/10/2026 to Google's contribution policy: open questions only; they do not suggest a rating, wording or a staff name, and one invites criticism so the ask is not positive-only.","events":[{"id":"brisbane","label":"Brisbane","source":"Phill's email 19/10/2026: three-day Brisbane trade show talk"},{"id":"melbourne","label":"Melbourne","source":"Phill's email 19/10/2026: Melbourne show the week after"}]}}</script>
 
 <div class="wrap">
   <section class="stage" aria-label="Motion card">
@@ -165,6 +214,10 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     </div>
     <button class="rabbit" id="rabbit" type="button" aria-label="A white rabbit. Tap it." hidden>
       <svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M22 4c-3 0-4 6-3 13l2 9c-6 3-10 9-10 16 0 10 8 17 19 17h14c4 0 6-2 6-4s-2-3-4-3h-2c4-3 6-7 6-12 0-9-7-15-16-16l-1-9C31 8 28 3 25 6c-1-1-2-2-3-2zm6 30a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+    </button>
+    <button class="sound" id="sound" type="button" aria-pressed="false" aria-label="Sound">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="off" d="M16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span><span id="sound-label">Tap for sound</span>
     </button>
     <div class="toast" id="toast" hidden role="status"><b>You found the first rabbit.</b>More appear in the talk. Count them and open Solve below.</div>
     <div class="name">
@@ -181,13 +234,65 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
   <button class="btn primary passbtn" type="button" id="pass-btn">Pass it on<small>Let someone scan this card off your screen</small></button>
   <div class="passon" id="pass-on" hidden role="dialog" aria-modal="true" aria-label="Scan to get this card">
     <button class="close" type="button" id="pass-close">Close</button>
+    <form class="personal" id="pass-form">
+      <input id="pass-name" autocomplete="off" maxlength="30" placeholder="Their first name (optional)" aria-label="Their first name">
+      <button class="go" type="submit">Update</button>
+      <div class="wide">
+        <select id="pass-at" aria-label="Where you met"><option value="">Where we met: not set</option></select>
+        <button type="button" id="pass-send">Send the link instead</button>
+      </div>
+    </form>
     <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p></div>
     <p class="hint" id="pass-hint">Point a phone camera at the code.</p>
   </div>
 
+  <section class="mine" id="mine" aria-labelledby="mine-h" hidden>
+    <div>
+      <h2 id="mine-h" style="font-size:20px">Keep it on your phone</h2>
+      <p class="lede" style="margin:0">Only you see this panel. Visitors get the card without it.</p>
+    </div>
+    <label for="mine-at">Today I'm at
+      <select id="mine-at"><option value="">Nowhere in particular</option></select>
+    </label>
+    <p class="fine" style="margin:0">Every code and link you hand out today carries it, so the card greets them with where you met and their message to you is tagged with it.</p>
+    <div id="install-box" style="display:grid;gap:8px">
+      <strong>1. Put it on your home screen</strong>
+      <button class="btn primary" type="button" id="install-btn" hidden>Add to home screen<small>Opens like an app, even with no signal</small></button>
+      <ol id="install-steps">
+        <li>Open this card in Safari (iPhone) or Chrome (Android).</li>
+        <li>iPhone: tap Share, then <b>Add to Home Screen</b>. Android: tap the menu, then <b>Install app</b>.</li>
+        <li>Open it from the new icon. It works offline on a trade-show floor.</li>
+      </ol>
+      <p class="ok" id="install-done" hidden>It's on your home screen.</p>
+    </div>
+    <div style="display:grid;gap:8px">
+      <strong>2. Put the code on your lock screen</strong>
+      <button class="btn" type="button" id="lock-btn">Make my lock-screen code<small>A phone-sized picture with your code on it</small></button>
+      <img class="lockimg" id="lock-img" alt="Lock-screen picture with the card's code" hidden>
+      <p class="fine" id="lock-note" style="margin:0" hidden>Saved to your phone. Set it as your lock screen in Photos (Share, then Use as Wallpaper). Anyone can then scan it without you unlocking.</p>
+    </div>
+    <div style="display:grid;gap:8px">
+      <strong>3. Tap to share</strong>
+      <button class="btn" type="button" id="nfc-btn" hidden>Write to an NFC sticker<small>Hold a blank sticker to the back of this phone</small></button>
+      <p class="fine" id="nfc-note" style="margin:0">Put a blank NFC sticker (a few dollars) on your phone case. Any phone that taps it opens this card. On Android this button writes the sticker; on iPhone use the free NFC Tools app and paste the card's link.</p>
+    </div>
+  </section>
+
   <section id="review" aria-labelledby="review-h" style="display:grid;gap:10px;padding:18px;border-radius:18px;border:2px solid var(--brand)">
     <h2 id="review-h" style="font-size:22px">Worked with us?</h2>
     <p class="lede" style="margin:0">Tell others how it went, in your own words. It opens Google's own review page; you post it from your own account.</p>
+    <div class="rw" id="rw" hidden>
+      <p class="rw-step"><b>1</b> Which one did you work with?</p>
+      <div class="needs" id="rw-biz" role="group" aria-label="Business you worked with"></div>
+      <div id="rw-play" hidden style="display:grid;gap:12px">
+        <p class="rw-step"><b>2</b> Spin for a question to answer</p>
+        <div class="wheel" id="rw-wheel" aria-live="polite"><div class="wheel-track" id="rw-track"></div><span class="wheel-pin" aria-hidden="true"></span></div>
+        <div class="row"><button class="btn" type="button" id="rw-spin">Spin</button><button class="btn" type="button" id="rw-stop" hidden>Stop</button></div>
+        <label for="rw-text"><span><b class="rw-num">3</b> Answer it in your own words <span class="fine">(tap the microphone on your keyboard to speak it)</span></span>
+          <textarea id="rw-text" placeholder="Your words, your stars. Good or bad, it helps the next person."></textarea></label>
+        <p class="rw-tip"><b>Got a photo or a short video of the job?</b> Add it on Google's form with the camera button. A 20-second video says more than any words.</p>
+      </div>
+    </div>
     <a class="btn primary" id="review-btn" href="#" target="_blank" rel="noopener">Review my business<small id="review-sub">Opens Google's review form</small></a>
     <a class="btn" id="maps-btn" target="_blank" rel="noopener" hidden>Find us on Google<small>Opens our Google Business Profile</small></a>
     <p class="fine" id="review-note" style="margin:0"></p>
@@ -203,7 +308,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
       <pre id="vcard-text"></pre>
       <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
     </div>
-    <button class="btn" type="button" id="share">Share this card<small>Copies the link</small></button>
+    <button class="btn" type="button" id="share">Share this card<small id="share-sub">Copies the link</small></button>
   </section>
 
   <section aria-labelledby="doors-h" style="display:grid;gap:14px">
@@ -248,7 +353,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
             <button class="btn" type="button" id="copy-msg">Copy message</button>
             <a class="btn" id="mail-msg" href="#">Open in email app</a>
           </div>
-          <p class="fine" style="margin:0">Send it to <b id="inbox-addr"></b>. <span class="tag">Not connected yet</span> No assistant inbox is set up, so this goes to the person's own address.</p>
+          <p class="fine" style="margin:0" id="inbox-line">Send it to <b id="inbox-addr"></b>. <span class="tag" id="inbox-tag">Not connected yet</span> <span id="inbox-why">No assistant inbox is set up, so this goes to the person's own address.</span></p>
         </div>
       </div>
     </div>
@@ -271,7 +376,8 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
       <li class="on"><b>Live</b>Business links open the real websites.</li>
       <li class="on"><b>Live</b>Phone numbers and email copy to your clipboard.</li>
       <li class="off" data-hosted="One-tap save to contacts opens this contact card on your phone."><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
-      <li class="off"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
+      <li class="off" id="status-inbox"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
+      <li class="off" data-hosted="Add the card to a home screen; it opens even with no signal."><b>Not connected yet</b>Home-screen app and offline copy. They need the card on its own web address.</li>
       <li class="off"><b>Not connected yet</b>The motion video made from real photos.</li>
       <li class="off" data-hosted="Anyone with the link or the QR code can open this card."><b>Not connected yet</b>Public access. Only people this preview is shared with can open it, signed in to claude.ai.</li>
     </ul>
@@ -301,7 +407,21 @@ function lum(hex) {
   const c = B.colours || {}, root = document.documentElement.style;
   if (isSet(c.background)) root.setProperty("--bg", c.background.value);
   if (isSet(c.text)) root.setProperty("--fg", c.text.value);
-  if (isSet(c.primary)) { root.setProperty("--brand", c.primary.value); root.setProperty("--brand-ink", lum(c.primary.value) > .45 ? "#111111" : "#FFFFFF"); }
+  // Readable everywhere (WCAG AA 4.5:1): text on the brand colour takes whichever of white or near-black reads better;
+  // text in the brand colour is the same hue, deepened on the page or lightened on the dark stage until it reads
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const mix = (hex, to, t) => "#" + [1, 3, 5].map(i => { const a = parseInt(hex.substr(i, 2), 16), b = parseInt(to.substr(i, 2), 16);
+    return Math.round(a + (b - a) * t).toString(16).padStart(2, "0"); }).join("");
+  // targets carry margin: chips and open doors sit on a slightly tinted panel, and the stage motto sits over moving footage
+  const readable = (hex, on, toward, need) => { for (let t = 0; t <= 1; t += .02) { const v = mix(hex, toward, t); if (ratio(v, on) >= need) return v; } return toward; };
+  const css = getComputedStyle(document.documentElement);
+  if (isSet(c.primary)) {
+    const p = c.primary.value, page = css.getPropertyValue("--bg").trim(), stage = css.getPropertyValue("--stage").trim();
+    root.setProperty("--brand", p);
+    root.setProperty("--brand-ink", ratio(p, "#FFFFFF") >= ratio(p, "#111111") ? "#FFFFFF" : "#111111");
+    root.setProperty("--brand-text", readable(p, page, lum(page) > .4 ? "#000000" : "#FFFFFF", 5.4));
+    root.setProperty("--glow-text", readable(p, stage, "#FFFFFF", 8));
+  }
   // The lead colour drives every accent; a logo's own colours stay inside the logo
   if (isSet(c.primary)) root.setProperty("--glow", c.primary.value);
   const fonts = B.fonts || {}, families = [];
@@ -406,8 +526,70 @@ async function copy(text, el) {
 // The Place ID is the only review value the card ever holds; the connection itself lives in the Nexus portal.
 (function review() {
   const r = B.reviews || {}, a = $("review-btn");
-  if (r.status === "found" && /^[A-Za-z0-9_-]{10,}$/.test(r.placeId || "")) {
-    a.href = "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(r.placeId);
+  const okId = id => /^[A-Za-z0-9_-]{10,}$/.test(id || "");
+  const reviewUrl = id => "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(id);
+  // Several businesses: the review wheel. The visitor names the one they actually used; nothing is pre-written.
+  const places = (P.reviewPlaces || []).filter(p => p.status === "found" && okId(p.placeId));
+  if (places.length) {
+    $("rw").hidden = false;
+    let place = places.length === 1 ? places[0] : null;
+    const setPlace = p => {
+      place = p; a.href = reviewUrl(p.placeId); a.style.opacity = ""; a.removeAttribute("aria-disabled");
+      a.firstChild.textContent = "Copy my words and open Google";
+      $("review-sub").textContent = "Paste them on " + p.business + "'s review form, pick your stars, add a photo or video, post";
+      $("rw-play").hidden = false;
+    };
+    places.forEach(p => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "need"; b.textContent = p.business;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => { document.querySelectorAll("#rw-biz .need").forEach(n => n.setAttribute("aria-pressed", String(n === b))); setPlace(p); });
+      $("rw-biz").append(b);
+    });
+    a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
+    $("review-sub").textContent = "Pick the business you worked with first";
+    if (place) { $("rw-biz").firstChild.click(); }
+    // The wheel: open questions only (no rating, wording or staff names suggested); one invites criticism
+    const qs = (P.reviewPrompts || []).filter(q => typeof q === "string" && q.length < 90);
+    const track = $("rw-track"), W = 220, loops = 6;
+    for (let i = 0; i < qs.length * loops; i++) { const s = document.createElement("span"); s.textContent = qs[i % qs.length]; track.append(s); }
+    let x = 0, v = 0, raf = null, stopping = false, landed = -1;
+    const centre = () => $("rw-wheel").clientWidth / 2 - W / 2;
+    const paint = () => {
+      const span = qs.length * W, off = ((x % span) + span) % span;
+      track.style.transform = `translateX(${centre() - off - span}px)`;
+      const idx = Math.round(off / W) % qs.length;
+      [...track.children].forEach((s, i) => s.classList.toggle("on", i % qs.length === idx && Math.abs(v) < 4));
+      return idx;
+    };
+    const tick = () => {
+      const before = Math.floor(x / W); x += v; if (Math.floor(x / W) !== before) SFX.tick();
+      if (stopping) v *= 0.955;
+      if (stopping && v < 0.6) {   // settle on the nearest question
+        x = Math.round(x / W) * W; v = 0; landed = paint(); raf = null; stopping = false;
+        $("rw-spin").hidden = false; $("rw-stop").hidden = true; $("rw-spin").textContent = "Spin again"; SFX.chime();
+        $("rw-text").placeholder = qs[landed] + " Your words, your stars."; return;
+      }
+      paint(); raf = requestAnimationFrame(tick);
+    };
+    const spin = () => {
+      if (!qs.length) return;
+      x += Math.floor(Math.random() * qs.length) * W; v = REDUCED ? 0.8 : 26 + Math.random() * 8; stopping = false;
+      $("rw-spin").hidden = true; $("rw-stop").hidden = false;
+      if (!raf) raf = requestAnimationFrame(tick);
+      setTimeout(() => { stopping = true; }, REDUCED ? 0 : 2200 + Math.random() * 900);   // stops by itself, or tap Stop
+    };
+    $("rw-spin").addEventListener("click", spin);
+    $("rw-stop").addEventListener("click", () => { stopping = true; });
+    paint();
+    // Copy the visitor's own words, then let the link open Google's form for the chosen business
+    a.addEventListener("click", e => {
+      if (!place) { e.preventDefault(); return; }
+      const words = $("rw-text").value.trim();
+      if (words) { try { navigator.clipboard.writeText(words); } catch (err) {} }
+    });
+    window.CARD_REVIEW = { landed: () => (landed >= 0 ? qs[landed] : ""), place: () => (place ? place.placeId : "") };   // read by the smoke test
+  } else if (r.status === "found" && okId(r.placeId)) {
+    a.href = reviewUrl(r.placeId);
     $("review-sub").textContent = "Opens Google's review form for " + (r.business || B.name || "this business");
   } else {
     a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
@@ -419,9 +601,115 @@ async function copy(text, el) {
   if (MAPS_OK.test(r.profileUrl || "")) { const m = $("maps-btn"); m.href = r.profileUrl; m.hidden = false; }
 })();
 
-// Greeting: ?to=Sarah adds "Great to meet you, Sarah" to the opener (text only, letters and spaces)
-const GREET = (QS.get("to") || "").replace(/[^\p{L} '\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 30);
-if (GREET) { $("greet").textContent = "Great to meet you, " + GREET; $("greet").hidden = false; }
+// Sound: a quiet generative score plus small effects, synthesised with Web Audio (no files, nothing licensed).
+// On by default: phones allow sound only after a touch, so it starts on the visitor's first tap anywhere.
+// The button mutes it, and a visitor who muted it stays muted on their next visit.
+const SFX = (() => {
+  const KEY = "card-sound", btn = $("sound"), label = $("sound-label");
+  let ctx = null, master = null, music = null, on = false;
+  const want = () => { try { return localStorage.getItem(KEY) !== "off"; } catch (e) { return true; } };
+  const remember = v => { try { localStorage.setItem(KEY, v ? "on" : "off"); } catch (e) {} };
+  function audio() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.9;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+    return ctx;
+  }
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  function tone(freq, t, dur, { type = "sine", vol = 0.2, attack = 0.005, to = master } = {}) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(to); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function noise(t, dur, { vol = 0.3, from = 6000, to = 6000, q = 0.7, kind = "bandpass" } = {}) {
+    const len = Math.ceil(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = buf; f.type = kind; f.Q.value = q; f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur);
+  }
+  // The score: two slow chords (A minor 9, F major 7) on soft detuned voices under a breathing filter, with a
+  // sparse bell melody picked from the chord. Low and quiet so it sits under a conversation.
+  function startMusic() {
+    if (music) return;
+    const bus = ctx.createGain(), lp = ctx.createBiquadFilter(), lfo = ctx.createOscillator(), depth = ctx.createGain();
+    bus.gain.setValueAtTime(0, ctx.currentTime); bus.gain.linearRampToValueAtTime(0.11, ctx.currentTime + 3);
+    lp.type = "lowpass"; lp.frequency.value = 900; lp.Q.value = 0.8;
+    lfo.frequency.value = 0.07; depth.gain.value = 500; lfo.connect(depth); depth.connect(lp.frequency); lfo.start();
+    lp.connect(bus); bus.connect(master);
+    const chords = [[45, 52, 59, 60, 64], [41, 48, 55, 57, 64]];
+    let step = 0;
+    const play = () => {
+      const t = ctx.currentTime + 0.05, notes = chords[step % 2];
+      notes.forEach((m, i) => [-4, 4].forEach(cents => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = i ? "triangle" : "sine"; o.frequency.value = hz(m); o.detune.value = cents;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16 / notes.length, t + 2.5); g.gain.linearRampToValueAtTime(0, t + 8.4);
+        o.connect(g); g.connect(lp); o.start(t); o.stop(t + 8.6);
+      }));
+      [0, 2.25, 3.5, 5.75].forEach((dt, i) => {
+        if (Math.random() < 0.35) return;
+        const m = notes[1 + Math.floor(Math.random() * (notes.length - 1))] + 24;
+        tone(hz(m), t + dt + Math.random() * 0.2, 2.6, { vol: 0.05 - i * 0.006, to: bus, attack: 0.01 });
+      });
+      step++;
+    };
+    play(); music = { bus, lfo, timer: setInterval(play, 8000) };
+  }
+  function stopMusic() {
+    if (!music) return;
+    const m = music; music = null; clearInterval(m.timer);
+    m.bus.gain.cancelScheduledValues(ctx.currentTime); m.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
+    setTimeout(() => { try { m.lfo.stop(); m.bus.disconnect(); } catch (e) {} }, 2000);
+  }
+  function set(v) {
+    on = v; remember(v); btn.setAttribute("aria-pressed", String(v)); label.textContent = v ? "Sound" : "Tap for sound";
+    if (!v) { stopMusic(); return; }
+    if (!audio()) { label.textContent = "No sound here"; on = false; return; }
+    ctx.resume(); startMusic(); fx.chime();
+  }
+  const fx = {
+    // Glass: a bright crack, a few tinkling shards and a low thump
+    crack() { if (!on) return; const t = ctx.currentTime;
+      noise(t, 0.18, { vol: 0.5, from: 9000, to: 2500, q: 0.9 }); tone(70, t, 0.35, { vol: 0.35 });
+      for (let i = 0; i < 7; i++) tone(2400 + Math.random() * 2600, t + 0.08 + Math.random() * 0.5, 0.25, { vol: 0.05 }); },
+    // A small rising bell figure
+    chime() { if (!on) return; const t = ctx.currentTime; [76, 81, 88].forEach((m, i) => tone(hz(m), t + i * 0.09, 1.2, { vol: 0.12 })); },
+    // A soft swish for the pass-it-on code
+    whoosh() { if (!on) return; noise(ctx.currentTime, 0.45, { vol: 0.25, from: 400, to: 5000, q: 1.4 }); },
+    // A light tap for buttons
+    tick() { if (!on) return; tone(1800, ctx.currentTime, 0.06, { vol: 0.06, type: "triangle" }); },
+  };
+  btn.addEventListener("click", e => { e.stopPropagation(); set(!on); });
+  // Came back with sound on: start on the first tap anywhere (phones require one)
+  if (want()) addEventListener("pointerdown", function first(e) { removeEventListener("pointerdown", first); if (!on && !btn.contains(e.target)) set(true); }, { once: true });
+  document.addEventListener("visibilitychange", () => { if (!ctx) return; document.hidden ? ctx.suspend() : (on && ctx.resume()); });
+  document.addEventListener("click", e => { if (e.target.closest(".btn, .need, .door")) fx.tick(); });
+  fx.state = () => ({ on, playing: !!music, audio: ctx ? ctx.state : "none" });   // read by the smoke test
+  return fx;
+})();
+window.CARD_SFX = SFX;
+
+// Greeting: ?to=Sarah&at=brisbane opens with "Great to meet you at Brisbane, Sarah" (name: letters and spaces only;
+// the event must be one the kit lists, anything else is ignored)
+const cleanName = s => String(s || "").replace(/[^\p{L} '\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 30);
+const EVENTS = Array.isArray(P.events) ? P.events.filter(e => e && /^[a-z0-9-]{1,30}$/.test(e.id) && e.label) : [];
+const eventById = id => EVENTS.find(e => e.id === id) || null;
+const GREET = cleanName(QS.get("to"));
+const EVENT = eventById((QS.get("at") || "").toLowerCase());
+if (GREET || EVENT) {
+  $("greet").textContent = "Great to meet you" + (EVENT ? " at " + EVENT.label : "") + (GREET ? ", " + GREET : "");
+  $("greet").hidden = false;
+}
+// Your view: the owner opens ?me=1 once, or the home-screen app (which starts there); visitors never see it.
+// The claude.ai preview shows it so the owner can review it.
+const STANDALONE = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const OWNER = QS.get("me") === "1" || STANDALONE || !HOSTED;
+const AT_KEY = "card-at:" + (KIT.id || "card");
+const savedAt = () => { try { return eventById(localStorage.getItem(AT_KEY) || ""); } catch (e) { return null; } };
 
 // Crack & reveal: the screen cracks from an impact point, the shards fall away, and the brand reveal plays beneath.
 // Drawn in code so it runs the instant the card opens. Skipped entirely when the viewer has asked for reduced motion.
@@ -449,6 +737,7 @@ function crackReveal(done) {
   const glass = x.createLinearGradient(0, 0, W, H);
   glass.addColorStop(0, "#0B1220"); glass.addColorStop(1, "#04080E");
   try { navigator.vibrate && navigator.vibrate(25); } catch (e) {}
+  SFX.crack();
   let started = false;
   const t0 = performance.now();
   function frame(now) {
@@ -568,28 +857,113 @@ else setTimeout(() => crackReveal(startHero), 250);
 // Pass it on: a bouncing QR of this card so a second phone can scan it straight off this screen
 const CARD_URL = (() => {
   if (!HOSTED) return P.cardUrl || "";
-  const u = new URL(location.href); u.searchParams.delete("to"); u.hash = ""; return u.toString();
+  const u = new URL(location.href); ["to", "at", "me", "edition"].forEach(k => u.searchParams.delete(k)); u.hash = ""; return u.toString();
 })();
+// A link to this card for the next person: their name and where you met ride along so the card greets them
+function cardLink(to, at) {
+  if (!CARD_URL) return "";
+  const u = new URL(CARD_URL);
+  const n = cleanName(to); if (n) u.searchParams.set("to", n);
+  if (eventById(at)) u.searchParams.set("at", at);
+  return u.toString();
+}
+const currentAt = () => (OWNER && savedAt() ? savedAt().id : (EVENT ? EVENT.id : ""));
+EVENTS.forEach(e => ["pass-at", "mine-at"].forEach(id => { const o = document.createElement("option"); o.value = e.id; o.textContent = e.label; $(id).append(o); }));
+$("pass-at").options[0].textContent = "Where we met: not set";
+async function shareLink(url, el) {
+  if (navigator.share) { try { await navigator.share({ title: (P.name || "My") + " card", url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+  copy(url, el);
+}
+if (navigator.share) $("share-sub").textContent = "AirDrop, Messages, WhatsApp or email";
 let passAnim = null;
+function drawPassQR() {
+  const q = $("pass-qr"), url = cardLink($("pass-name").value, $("pass-at").value); q.textContent = ""; q.dataset.url = url;
+  if (url && window.QRCode) new QRCode(q, { text: url, width: 200, height: 200, colorDark: "#0A1120", colorLight: "#FFFFFF" });
+  else q.textContent = url || "The code appears once the card has its own web address.";
+  const who = cleanName($("pass-name").value);
+  $("pass-label").textContent = who ? "Scan, " + who : "Scan to get this card";
+}
 $("pass-btn").addEventListener("click", () => {
-  const o = $("pass-on"), q = $("pass-qr"); o.hidden = false; q.textContent = "";
-  if (CARD_URL && window.QRCode) new QRCode(q, { text: CARD_URL, width: 200, height: 200, colorDark: "#0A1120", colorLight: "#FFFFFF" });
-  else q.textContent = CARD_URL || "The code appears once the card has its own web address.";
+  $("pass-on").hidden = false; $("pass-at").value = currentAt(); drawPassQR(); SFX.whoosh();
   $("pass-hint").textContent = HOSTED ? "Point a phone camera at the code." : "Preview: the code points to the card's planned address (" + (CARD_URL || "not set") + "), which is not live yet.";
-  const tile = $("pass-tile");
-  let px = 40, py = 120, vx = 2.2, vy = 1.7;
+  const tile = $("pass-tile"), top = () => $("pass-form").getBoundingClientRect().bottom + 12;
+  let px = 40, py = top(), vx = 2.2, vy = 1.7;
   const step = () => {
-    const mw = innerWidth - tile.offsetWidth, mh = innerHeight - tile.offsetHeight;
-    if (REDUCED) { tile.style.transform = `translate(${Math.max(0, mw / 2)}px, ${Math.max(0, mh / 2)}px)`; return; }
+    const mw = innerWidth - tile.offsetWidth, mh = innerHeight - tile.offsetHeight, t = top();
+    if (REDUCED) { tile.style.transform = `translate(${Math.max(0, mw / 2)}px, ${Math.max(t, (t + mh) / 2)}px)`; return; }
     px += vx; py += vy;
     if (px <= 0 || px >= mw) { vx = -vx; px = Math.max(0, Math.min(px, mw)); }
-    if (py <= 60 || py >= mh) { vy = -vy; py = Math.max(60, Math.min(py, mh)); }
+    if (py <= t || py >= mh) { vy = -vy; py = Math.max(t, Math.min(py, mh)); }
     tile.style.transform = `translate(${px}px, ${py}px)`;
     passAnim = requestAnimationFrame(step);
   };
+  if (passAnim) cancelAnimationFrame(passAnim);
   step();
 });
+$("pass-form").addEventListener("submit", e => { e.preventDefault(); drawPassQR(); $("pass-name").blur(); });
+$("pass-at").addEventListener("change", drawPassQR);
+$("pass-send").addEventListener("click", e => shareLink(cardLink($("pass-name").value, $("pass-at").value), e.currentTarget));
 $("pass-close").addEventListener("click", () => { $("pass-on").hidden = true; if (passAnim) cancelAnimationFrame(passAnim); });
+
+// Your view: today's event, home-screen install, the lock-screen code and an NFC sticker
+(function mine() {
+  if (!OWNER) return;
+  $("mine").hidden = false;
+  const sel = $("mine-at"); sel.value = savedAt() ? savedAt().id : "";
+  sel.addEventListener("change", () => { try { localStorage.setItem(AT_KEY, sel.value); } catch (e) {} });
+  if (STANDALONE) { $("install-steps").hidden = true; $("install-done").hidden = false; }
+  let deferred = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; $("install-btn").hidden = false; });
+  $("install-btn").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; $("install-btn").hidden = true; });
+  addEventListener("appinstalled", () => { $("install-steps").hidden = true; $("install-done").hidden = false; });
+  $("lock-btn").addEventListener("click", lockScreen);
+  if ("NDEFReader" in window) {
+    $("nfc-btn").hidden = false;
+    $("nfc-btn").addEventListener("click", async e => {
+      const s = e.currentTarget.querySelector("small");
+      try { await new NDEFReader().write({ records: [{ recordType: "url", data: cardLink("", currentAt()) || CARD_URL }] }); s.textContent = "Written. Tap the sticker with any phone to test it."; }
+      catch (err) { s.textContent = "Not written: " + (err && err.message ? err.message : "try again"); }
+    });
+  }
+})();
+
+// Lock-screen code: a phone-sized picture (1290 x 2796) with the code low enough to clear the clock
+function lockScreen() {
+  const W = 1290, H = 2796, url = cardLink("", currentAt()) || P.cardUrl || "";
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const bg = ((B.appIcons || {}).background) || "#04080E", brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#FFFFFF";
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  const g = x.createRadialGradient(W / 2, H * 0.62, 0, W / 2, H * 0.62, W * 0.9);
+  g.addColorStop(0, brand + "55"); g.addColorStop(1, brand + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const size = 760, qx = (W - size) / 2, qy = 1420;
+  x.fillStyle = "#FFFFFF"; x.beginPath(); x.roundRect(qx - 50, qy - 50, size + 100, size + 100, 48); x.fill();
+  x.lineWidth = 10; x.strokeStyle = brand; x.stroke();
+  const tmp = document.createElement("div");
+  if (url && window.QRCode) new QRCode(tmp, { text: url, width: size, height: size, colorDark: "#0A1120", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+  const qc = tmp.querySelector("canvas"); if (qc) x.drawImage(qc, qx, qy, size, size);
+  x.fillStyle = "#FFFFFF"; x.textAlign = "center";
+  x.font = "700 104px " + getComputedStyle(document.documentElement).getPropertyValue("--display");
+  x.fillText(P.name || "", W / 2, qy + size + 200);
+  x.font = "500 52px " + getComputedStyle(document.documentElement).getPropertyValue("--body");
+  x.fillStyle = "rgba(255,255,255,.75)"; x.fillText("Scan for my card", W / 2, qy + size + 290);
+  const finish = () => c.toBlob(async blob => {
+    const name = (KIT.id || "card") + "-lock-screen.png";
+    const img = $("lock-img"); img.src = URL.createObjectURL(blob); img.hidden = false; img.dataset.height = String(H);
+    const file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} }
+    else { const a = document.createElement("a"); a.href = img.src; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+    $("lock-note").hidden = false; SFX.chime();
+  }, "image/png");
+  const logo = B.logo || {}, src = (HOSTED ? logo.hostedUrl : logo.dataUri) || logo.dataUri;
+  if (logo.status === "found" && src) {
+    const im = new Image(); im.onload = () => { x.drawImage(im, (W - 300) / 2, qy - 420, 300, 300); finish(); }; im.onerror = finish; im.src = src;
+  } else finish();
+}
+
+// Offline copy and home-screen app: only on the card's own address
+if (HOSTED && "serviceWorker" in navigator && (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 
 // "Get your own card": every card carries its own id as the referrer, so we know which card sold which
 // The target comes only from the kit (B.shopUrl), so it can move to the unite-group.in showroom in one edit
@@ -627,7 +1001,7 @@ $("save").addEventListener("click", () => {
   $("save-out").hidden = false;
 });
 $("copy-vcard").addEventListener("click", e => copy($("vcard-text").textContent, e.currentTarget));
-$("share").addEventListener("click", e => copy(location.href.split("#")[0], e.currentTarget));
+$("share").addEventListener("click", e => shareLink(cardLink("", currentAt()) || location.href.split("#")[0], e.currentTarget));
 
 const doors = ["discover", "solve", "connect"];
 doors.forEach(d => $("door-" + d).addEventListener("click", () => {
@@ -646,6 +1020,14 @@ $("needs").addEventListener("click", e => {
 
 const INBOX = (P.inbox && P.inbox.status !== "missing" && P.inbox.address) || (P.inbox && P.inbox.fallback) || ((P.emails || [])[0] || {}).value || "";
 $("inbox-addr").textContent = INBOX || "no address supplied";
+// An assistant inbox (proposed or found): messages land where the reply desk reads them; the owner still reads every one
+if (P.inbox && P.inbox.address && ["proposed", "found"].includes(P.inbox.status)) {
+  const who = (P.name || "").split(" ")[0] || "the owner";
+  $("inbox-tag").textContent = P.inbox.status === "found" ? "Assistant inbox" : "Proposed";
+  $("inbox-why").textContent = "It lands in " + who + "'s assistant inbox. " + who + " reads every message; nothing is sent back without " + who + ".";
+  const li = $("status-inbox"); li.className = "on"; li.querySelector("b").textContent = P.inbox.status === "found" ? "Live" : "Proposed";
+  li.lastChild.textContent = "Connect sends your message from your own email to " + who + "'s assistant inbox, tagged with where you met.";
+}
 $("enquiry").addEventListener("submit", e => {
   e.preventDefault();
   const f = new FormData(e.currentTarget);
@@ -653,8 +1035,9 @@ $("enquiry").addEventListener("submit", e => {
   if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
     $("out-text").textContent = "Add your name, a working email and a message, then try again."; $("out").hidden = false; return;
   }
-  const subject = `[Card] ${f.get("type")}: ${name}`;
-  const body = `${msg}\n\nFrom: ${name} <${email}>\nBusiness: ${f.get("business") || "not given"}\nVia: ${P.name || "the"} digital card`;
+  const met = eventById(currentAt());
+  const subject = `[Card${met ? " · " + met.label : ""}] ${f.get("type")}: ${name}`;
+  const body = `${msg}\n\nFrom: ${name} <${email}>\nBusiness: ${f.get("business") || "not given"}\nMet at: ${met ? met.label : "not given"}\nVia: ${P.name || "the"} digital card`;
   $("out-text").textContent = `To: ${INBOX}\nSubject: ${subject}\n\n${body}`;
   $("mail-msg").href = `mailto:${INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   $("out").hidden = false;
@@ -664,7 +1047,7 @@ $("copy-msg").addEventListener("click", e => copy($("out-text").textContent, e.c
 const rabbit = $("rabbit");
 if (!rabbit.hidden) {
   setTimeout(() => rabbit.classList.add("in"), 3500);
-  rabbit.addEventListener("click", () => { rabbit.classList.add("found"); const t = $("toast"); t.hidden = false; setTimeout(() => { t.hidden = true; }, 5000); });
+  rabbit.addEventListener("click", () => { rabbit.classList.add("found"); SFX.chime(); const t = $("toast"); t.hidden = false; setTimeout(() => { t.hidden = true; }, 5000); });
 }
 
 // PLACEHOLDER motion: slow light in the brand's own colour

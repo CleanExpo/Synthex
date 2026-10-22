@@ -109,18 +109,26 @@
       "status": "missing",
       "note": "no real photos of Phill supplied yet"
     },
-    "rotation": [
-      "signature",
-      "origami",
-      "blueprint",
-      "restoration"
-    ],
+    "rotation": ["signature", "origami", "blueprint", "restoration"],
     "rotationReason": "Card stays light and shows range: signature carries the crack and rests on the logo; Origami has the largest U; Blueprint is the clean navy one; Restoration tells the restoration story. All re-rendered on the cracked U 22/10/2026. Every other found edition plays with ?edition=<name>.",
     "shopUrl": "get-your-card.html",
     "shopUrlNote": "Single switch for the Get your own card target. Change to https://unite-group.in/cards/order only once `curl -sI` on it returns 200 (22/10/2026: 307 to the login page).",
+    "appIcons": {
+      "status": "found",
+      "files": {
+        "180": "business-card/brand-kits/media/app-icon-180.png",
+        "192": "business-card/brand-kits/media/app-icon-192.png",
+        "512": "business-card/brand-kits/media/app-icon-512.png"
+      },
+      "background": "#000511",
+      "source": "Resized with macOS sips from the logo kit PNG above (sha256 1f404d60), 23/10/2026; nothing added or redrawn"
+    },
     "reviews": {
-      "status": "missing",
-      "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection",
+      "status": "found",
+      "placeId": "ChIJHzPW_QTI1wQR-KN9LRVW8eM",
+      "business": "Unite-Group Nexus",
+      "placeIdSource": "23/10/2026: the profile link opens Google Maps at feature ID 0x4d7c804fdd6331f:0xe3f156152d7da3f8 (listing title 'Unite-Group Nexus'); the ChIJ Place ID is that ID's standard protobuf encoding. Checked: maps/place/?q=place_id:<id> opens the same listing, and search.google.com/local/writereview?placeid=<id> asks a signed-out visitor to sign in and continues to the review form for it. The listing shows a service area, not a street address.",
+      "note": "Phill asked 23/10/2026 for the review link to be on the card. Replace with the Place ID from the Business Profile dashboard if it ever differs.",
       "profileUrl": "https://maps.google.com/?cid=16425003964954420216",
       "profileUrlSource": "Phill's link to the live Unite-Group Nexus Business Profile, 22/10/2026 (CID 0xe3f156152d7da3f8 = 16425003964954420216). The link redirects to Google Maps; the listing's contents were not checked from here. The ChIJ Place ID for the review form is still to come from the Business Profile dashboard or the Places API."
     },
@@ -399,8 +407,9 @@
       },
       {
         "label": "Unite Group",
-        "url": "https://unite-group.in",
-        "note": "The group"
+        "url": null,
+        "note": "The group. Site not public yet",
+        "urlNote": "https://unite-group.in sends visitors to a login page (curl 23/10/2026: 307 to /auth/login). Relink once it serves a public page."
       },
       {
         "label": "Synthex",
@@ -451,8 +460,66 @@
       ]
     },
     "inbox": {
-      "status": "missing",
-      "fallback": "Phill@disasterrecovery.com.au"
-    }
+      "status": "proposed",
+      "address": "airestoreassist@gmail.com",
+      "fallback": "Phill@disasterrecovery.com.au",
+      "source": "Phill 23/10/2026 asked for his bot email address; this is the Google account Claude signs in with, ACTIVE in Composio (gmail_hask-subah). Inferred, not yet confirmed by Phill.",
+      "note": "The reply desk (business-card/reply-desk/) reads [Card] enquiries here and drafts answers; nothing is sent without Phill."
+    },
+    "reviewPlaces": [
+      {
+        "business": "Disaster Recovery",
+        "note": "Restoration jobs",
+        "placeId": "ChIJFTIv0bpOkWsRz_SIAaNI3Lc",
+        "status": "found",
+        "source": "23/10/2026 Google Maps: listing 'Disaster Recovery', water damage restoration, 4.7 from 48 reviews, 1300 309 361, website https://disasterrecovery.com.au/; feature ID 0x6b914ebad12f3215:0xb7dc48a30188f4cf, Place ID is its protobuf encoding and opens the same listing"
+      },
+      {
+        "business": "CARSI",
+        "note": "Training and courses",
+        "placeId": "ChIJnYFtIFhK6yQRanZxQxPD5Dg",
+        "status": "found",
+        "confirm": true,
+        "source": "23/10/2026 Google Maps search 'CARSI carsi.com.au' opened a single listing named 'CARSI' (service area); feature ID 0x24eb4a58206d819d:0x38e4c3134371766a, Place ID opens the same listing. The listing's website field did not render, so ownership is by name only: Phill to confirm"
+      },
+      {
+        "business": "Unite-Group Nexus",
+        "note": "The group",
+        "placeId": "ChIJHzPW_QTI1wQR-KN9LRVW8eM",
+        "status": "found",
+        "source": "Same as brand.reviews (Phill's own profile link, 22/10/2026)"
+      },
+      {
+        "business": "RestoreAssist",
+        "status": "missing",
+        "note": "No Google listing found by search 23/10/2026"
+      },
+      {
+        "business": "NRPG",
+        "status": "missing",
+        "note": "No Google listing found by search 23/10/2026"
+      }
+    ],
+    "reviewPrompts": [
+      "What problem did we solve for you?",
+      "What was the job, and where was it?",
+      "What would you tell a friend in the same spot?",
+      "What surprised you about how we worked?",
+      "How did it feel when the job was finished?",
+      "What could we have done better?"
+    ],
+    "reviewPromptsSource": "Written 23/10/2026 to Google's contribution policy: open questions only; they do not suggest a rating, wording or a staff name, and one invites criticism so the ask is not positive-only.",
+    "events": [
+      {
+        "id": "brisbane",
+        "label": "Brisbane",
+        "source": "Phill's email 19/10/2026: three-day Brisbane trade show talk"
+      },
+      {
+        "id": "melbourne",
+        "label": "Melbourne",
+        "source": "Phill's email 19/10/2026: Melbourne show the week after"
+      }
+    ]
   }
 }

@@ -9,20 +9,20 @@ agency, and the card is a separate showpiece.
 
 ## What is here
 
-| File | What it is |
-| --- | --- |
-| `card.html` | The prototype card. Published privately at https://claude.ai/artifact/RPL8XEM3jmUAKXmACms55x |
-| `phill-mcgurk.vcf` | The contact file a hosted version serves for one-tap "Save to contacts" |
-| `inbox-triage-framework.md` | Design for the assistant inbox behind the Connect form |
-| `product-sketch.md` | Sketch for selling these cards (up to AUD $249 each) |
-| `steering-board.html` | Phill's decision board. Published privately at https://claude.ai/artifact/XuXp2GMawpsNjLJV3wNp37 |
-| `board-seed.json` | The options written to the board's store (choices live in the store, not this file) |
-| `restoreassist-staff-cards.md` | Track 2: staff cards inside RestoreAssist, what data already exists, ecosystem ideas |
-| `brand-kits/` | One brand kit per card (`phill-mcgurk.json`) and `validate.py`, which rejects any unsourced value |
-| `site/` | `build.py` turns `card.html` plus a brand kit into the hosted card; `hosting-plan.md` explains going live |
-| `purchase-flow.md` | The "Get your own card" self-serve flow (`site/get-your-card.html`), what is proven, and Phill's founder-only decisions |
-| `wow/` | Six Higgsfield concept briefs (`concepts.json`) with their real input images and a 10% credit cap; four ready to generate, two waiting on real photos |
-| `research-notes.md` | Higgsfield in depth, review-engine rules, business list, competitor sweep, "lavish" search |
+| File                           | What it is                                                                                                                                            |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `card.html`                    | The prototype card. Published privately at https://claude.ai/artifact/RPL8XEM3jmUAKXmACms55x                                                          |
+| `phill-mcgurk.vcf`             | The contact file a hosted version serves for one-tap "Save to contacts"                                                                               |
+| `inbox-triage-framework.md`    | Design for the assistant inbox behind the Connect form                                                                                                |
+| `product-sketch.md`            | Sketch for selling these cards (up to AUD $249 each)                                                                                                  |
+| `steering-board.html`          | Phill's decision board. Published privately at https://claude.ai/artifact/XuXp2GMawpsNjLJV3wNp37                                                      |
+| `board-seed.json`              | The options written to the board's store (choices live in the store, not this file)                                                                   |
+| `restoreassist-staff-cards.md` | Track 2: staff cards inside RestoreAssist, what data already exists, ecosystem ideas                                                                  |
+| `brand-kits/`                  | One brand kit per card (`phill-mcgurk.json`) and `validate.py`, which rejects any unsourced value                                                     |
+| `site/`                        | `build.py` turns `card.html` plus a brand kit into the hosted card; `hosting-plan.md` explains going live                                             |
+| `purchase-flow.md`             | The "Get your own card" self-serve flow (`site/get-your-card.html`), what is proven, and Phill's founder-only decisions                               |
+| `wow/`                         | Six Higgsfield concept briefs (`concepts.json`) with their real input images and a 10% credit cap; four ready to generate, two waiting on real photos |
+| `research-notes.md`            | Higgsfield in depth, review-engine rules, business list, competitor sweep, "lavish" search                                                            |
 
 ## 1. Rana's concept, and who wrote what
 
@@ -37,6 +37,7 @@ agency, and the card is a separate showpiece.
 - Phill forwarded the whole exchange to his Gmail on 22/10. `[VERIFIED]`
 
 **The PDF proposal (Nexus foundation and digital business card)** `[VERIFIED: PDF pp. 1-6]`
+
 - The card is the first small test of "Nexus", a learning loop across Phill's businesses: understand a
   need, generate ideas, challenge them, run an authorised test, measure, keep what works.
 - Working name "Follow the White Rabbit", story "The Missing Signal". Front door asks "What would be
@@ -52,7 +53,9 @@ agency, and the card is a separate showpiece.
   required Google reviews, measure useful conversations rather than email captures.
 
 **Rana's view (email, 19/10/2026)** `[VERIFIED: thread 1a1485af1f95b555]`
+
 > "I would keep the first pilot focused on proving one complete customer journey before extending the wider Nexus foundation."
+
 - One simple mobile journey: tap the card, pick a business need, get one useful action, then save
   Phill's details or ask for help. Contact details reachable at every step.
 - Test two prototypes side by side: a plain card and the White Rabbit version with the same value.
@@ -63,6 +66,7 @@ three-day Brisbane trade show and a Melbourne show the week after, and opening i
 Rabbit game.
 
 **Rana's build so far (email, 22/10/2026 AEST)** `[VERIFIED: message 1a15f81d859b3138, and a fetch of her preview page today]`
+
 - A working preview with card, game, consent, uploads, host console, CSV export and Brisbane/Melbourne
   separation; six automated browser tests passed.
 - Her preview runs on a temporary address. She asked that it not be printed or shared yet, so this
@@ -153,6 +157,7 @@ phill.m@carsi.com.au (CARSI signature); office 07 3879 4677 and Phill@disasterre
 call; the business line can replace it in one edit.
 
 **Photos Phill needs to supply** (his own, or ones he holds rights to):
+
 1. A head-and-shoulders portrait, looking at camera, plain background, at least 2000 px tall.
 2. A three-quarter portrait in work context (on a job site or teaching at CARSI).
 3. One or two action shots: speaking on stage, or with restoration equipment.
@@ -161,8 +166,66 @@ call; the business line can replace it in one edit.
 With these, the stage becomes a 5 to 6 second Higgsfield loop (a slow push-in camera move on the
 portrait), re-encoded to a small looping mp4 with a still poster.
 
+## 5. Upgrade, 23/10/2026: a working card (preview only, nothing live)
+
+Phill asked for the card to be correct, connected and usable from his phone, with sound, reviews on
+every business and replies to every review. All of this is checked by `tests/smoke.mjs` (headless
+phone, 390 px) and the Done contract; nothing is deployed.
+
+**Details fixed** `[VERIFIED: curl and Google Maps, 23/10/2026]`
+
+- "Unite Group" no longer links to unite-group.in, which sends visitors to a login page.
+- Connect now goes to the bot inbox `airestoreassist@gmail.com` (the Google account Claude signs in
+  with, connected in Composio). Marked **Proposed** on the card until Phill confirms it. `[INFERENCE]`
+- Disaster Recovery's Google listing shows 1300 309 361, the number on Rana's card. `[VERIFIED: Google Maps]`
+
+**On your phone** (once hosted)
+
+- Open the card with `?me=1` once: an owner-only panel appears. It is hidden from visitors.
+- Add to Home Screen: the card becomes an app icon and opens with no signal (service worker caches the
+  page, contact file, logo, QR library and opener posters).
+- "Make my lock-screen code": a 1290 x 2796 picture with your code, low enough to clear the clock.
+- "Today I'm at": Brisbane or Melbourne. Every code and link you hand out carries it.
+- NFC sticker: Android writes it from the card; iPhone via the free NFC Tools app.
+
+**Passing it on**
+
+- Pass it on: type their first name; the code greets them ("Great to meet you at Brisbane, Sam").
+- "Send the link instead" opens the phone's share sheet (AirDrop, Messages, WhatsApp, email).
+
+**Sound** — synthesised in code (no audio files, nothing to license): a quiet two-chord score with a
+sparse bell line, a glass crack on the opener, a chime when the rabbit is found, a swish for the code,
+soft ticks on buttons. Phones allow sound only after a touch, so it starts on the first tap anywhere;
+the button mutes it.
+
+**Review wheel** — the visitor picks the business they actually used (Disaster Recovery, CARSI,
+Unite-Group Nexus), spins for an open question, answers in their own words, and one tap copies their
+words and opens Google's review form for that business; photos and video are encouraged. Nothing is
+pre-written and no rating is suggested, because Google bars merchants from trying to "influence the
+rating or content" `[VERIFIED: support.google.com/contributionpolicy/answer/7400114, 23/10/2026]` and the
+ACCC treats business-written customer reviews as misleading (Service Seeking proceedings)
+`[VERIFIED: accc.gov.au media release, via search 23/10/2026]`. A review cannot be posted for someone:
+Google only takes reviews from the reviewer's own account.
+
+- Place IDs come from each listing's Google Maps feature ID; each opens the same listing. CARSI's
+  listing matched by name only (its website field did not render): **Phill to confirm**.
+- RestoreAssist and NRPG: no Google listing found. Synthex is internal, so it is not asked for reviews.
+
+**Replying to reviews** — Synthex already does this: `app/api/cron/gbp-monitor` fetches new reviews
+daily and stores an AI reply suggestion for each unreplied one (never auto-sent), and
+`/dashboard/google-business/reviews` publishes the approved reply to Google. It needs each business's
+Google Business Profile connected in Synthex (owner sign-in). Its prompt lacks four rules from
+`reply-desk/review-playbook.md` (specific detail, no keyword stuffing, offline fix with a direct
+contact, never ask to change a review): a separate Synthex change.
+
+**Card enquiries** — `reply-desk/desk.py` reads `[Card]` mail in the bot inbox and drafts a reply in the
+enquiry's thread (Phill's card link with their name, his contact file, one practical idea). It can
+only create drafts; it never sends.
+
 ## Phill's steps
 
 1. Authorise the `higgsfield` MCP server via /mcp (then supply the photos above).
-2. Connect `agent_mail` in Composio, or tell us which mailbox he meant.
-3. Confirm the contact details to show publicly.
+2. Confirm the bot inbox `airestoreassist@gmail.com` for the Connect form.
+3. Confirm the contact details to show publicly, and that the CARSI Google listing is his.
+4. Connect Disaster Recovery, CARSI and Unite-Group Nexus Business Profiles in Synthex so replies work.
+5. Say yes to hosting at card.unite-group.ink (see `hosting-plan.md`).
