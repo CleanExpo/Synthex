@@ -21,7 +21,8 @@
  *   3. BYOK — the brand's own key, or a refusal. Never a platform key.
  *   4. BUDGET — priced from the registry's own per-model rates.
  *      4b. BUILD CAP — only when the call carries `build`: the build's
- *      ledger spend (run_id = buildId) plus the estimate must fit its cap.
+ *      ledger spend (run_id = buildId) plus its audio/video media holds plus
+ *      the estimate must fit its cap.
  *   5. CALL — the caller's provider call, reached only if 1-4 all passed.
  *   6. RECEIPT — written on every path, with the ACTUAL token counts when the
  *      call ran and zeros when it did not.
