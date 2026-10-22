@@ -170,6 +170,9 @@ describe('accreditation-claim guard (CARSI is not an RTO)', () => {
     'Delivered by a Registered Training Org.',
     'One of our Registered Training Orgs',
     'An ASQA-registered provider',
+    'ASQA certified training provider',
+    'Courses accredited by ASQA',
+    'Regulated by ASQA',
   ])('refuses %p in course copy', text => {
     expect(() =>
       buildCourse(
