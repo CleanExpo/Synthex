@@ -151,20 +151,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     logger.error('Profile fetch error:', error);
-    // Return a minimal default profile instead of 500 error
-    return NextResponse.json({
-      profile: {
-        id: null,
-        email: '',
-        name: '',
-        avatarUrl: '',
-        company: '',
-        role: '',
-        bio: '',
-        // Legacy snake_case alias for backward compatibility
-        avatar_url: '',
-      },
-    });
+    // Honest status: a failed read is an error, never a blank default profile
+    return NextResponse.json(
+      { error: 'Failed to fetch profile' },
+      { status: 500 }
+    );
   }
 }
 
