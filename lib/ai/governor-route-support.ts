@@ -49,6 +49,7 @@ const REFUSAL_STATUS: Partial<Record<GovernorRefusal, number>> = {
   refused_budget_unconfigured: 429,
   refused_budget_invalid_estimate: 429,
   refused_budget_untrusted_input: 429,
+  refused_build_cap_exceeded: 429,
   refused_byok_missing: 402,
   refused_byok_revoked: 402,
   refused_byok_inactive: 402,

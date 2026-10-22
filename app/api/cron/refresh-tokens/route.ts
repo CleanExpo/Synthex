@@ -15,7 +15,8 @@
  *
  * PERMANENT FAILURE HANDLING:
  * Some refresh failures are permanent (invalid_grant, revoked token, account
- * suspended). When detected, this cron:
+ * suspended), and an expired token with no refresh token stored can never be
+ * refreshed at all. When detected, this cron:
  *   1. Sets isActive=false on the PlatformConnection
  *   2. Stores authStatus: 'requires_reauth' in metadata with reason
  *   3. Sends the user an in-app notification to reconnect
@@ -122,6 +123,54 @@ async function createNotification(
   }
 }
 
+/**
+ * Disable a connection that cannot recover without the owner re-authenticating,
+ * record why in its metadata, and tell the owner to reconnect.
+ */
+async function markRequiresReauth(
+  connection: {
+    id: string;
+    userId: string;
+    platform: string;
+    profileName: string | null;
+    metadata: unknown;
+  },
+  reason: string
+): Promise<void> {
+  const { id, userId, platform, profileName } = connection;
+  try {
+    const existingMeta = (connection.metadata as Record<string, unknown>) ?? {};
+    await prisma.platformConnection.update({
+      where: { id },
+      data: {
+        isActive: false,
+        metadata: {
+          ...existingMeta,
+          authStatus: 'requires_reauth',
+          authFailedAt: new Date().toISOString(),
+          authFailureReason: reason,
+        },
+      },
+    });
+
+    const platformLabel = platform.charAt(0).toUpperCase() + platform.slice(1);
+    const accountLabel = profileName ? ` (${profileName})` : '';
+
+    await createNotification(
+      userId,
+      'platform_reauth_required',
+      `Reconnect your ${platformLabel} account`,
+      `Your ${platformLabel}${accountLabel} connection has expired and needs to be reconnected. Go to Platforms → ${platformLabel} and click Reconnect to restore posting.`,
+      { connectionId: id, platform, profileName: profileName ?? null }
+    );
+  } catch (updateError) {
+    logger.error(
+      '[refresh-tokens] Failed to disable connection after permanent failure',
+      { id, platform, error: updateError }
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Handler
 // ---------------------------------------------------------------------------
@@ -176,7 +225,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   // -- Process each connection independently ---------------------------------
   for (const connection of connections) {
-    const { id, userId, platform, profileName } = connection;
+    const { id, userId, platform } = connection;
 
     try {
       // Skip unsupported platforms
@@ -204,9 +253,29 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         continue;
       }
 
-      // Without a refresh token we cannot proactively refresh —
-      // the publish-scheduled cron will surface the error when needed.
+      // Without a refresh token we cannot proactively refresh. A token that
+      // still works is left alone until it expires. One that has already
+      // expired is dead and can only come back through the owner
+      // reconnecting, so it must stop looking active. A stored refresh token
+      // that fails to decrypt is a key problem, not a dead connection, so it
+      // is skipped rather than disabled.
       if (!refreshToken) {
+        if (
+          !connection.refreshToken &&
+          connection.expiresAt &&
+          connection.expiresAt < now
+        ) {
+          logger.warn(
+            '[refresh-tokens] Expired with no refresh token — disabling connection',
+            { id, platform }
+          );
+          await markRequiresReauth(
+            connection,
+            'Access token expired and no refresh token is stored'
+          );
+          permanentFailed++;
+          continue;
+        }
         logger.info('[refresh-tokens] No refresh token available — skipping', {
           id,
           platform,
@@ -303,40 +372,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           }
         );
 
-        try {
-          const existingMeta =
-            (connection.metadata as Record<string, unknown>) ?? {};
-          await prisma.platformConnection.update({
-            where: { id },
-            data: {
-              isActive: false,
-              metadata: {
-                ...existingMeta,
-                authStatus: 'requires_reauth',
-                authFailedAt: new Date().toISOString(),
-                authFailureReason: errorMessage,
-              },
-            },
-          });
-
-          const platformLabel =
-            platform.charAt(0).toUpperCase() + platform.slice(1);
-          const accountLabel = profileName ? ` (${profileName})` : '';
-
-          await createNotification(
-            userId,
-            'platform_reauth_required',
-            `Reconnect your ${platformLabel} account`,
-            `Your ${platformLabel}${accountLabel} connection has expired and needs to be reconnected. Go to Platforms → ${platformLabel} and click Reconnect to restore posting.`,
-            { connectionId: id, platform, profileName: profileName ?? null }
-          );
-        } catch (updateError) {
-          logger.error(
-            '[refresh-tokens] Failed to disable connection after permanent failure',
-            { id, platform, error: updateError }
-          );
-        }
-
+        await markRequiresReauth(connection, errorMessage);
         permanentFailed++;
       } else {
         // Transient failure (rate limit, network error, platform 5xx).
