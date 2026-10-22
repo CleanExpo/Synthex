@@ -1,6 +1,6 @@
 # `lib/nrpg-pipeline/` — SYN-834 Final Integration Handler
 
-Subscribes to `ContractorOnboardedEvent` and orchestrates the full NRPG → DR pipeline: postcode resolve → $55/mo budget commits → GBP + Bing service-area updates → per-suburb landing pages → sitemap regen + Google/Bing ping.
+Subscribes to `ContractorOnboardedEvent` and orchestrates the full NRPG → DR pipeline: postcode resolve → $55/mo budget commits → GBP + Bing service-area updates → per-suburb landing pages → sitemap regen (the Google/Bing sitemap pings are retired and report `retired: true`; nothing is sent).
 
 **Linear:** SYN-834 epic (final integration — all 9 children already merged)
 **Owners:** `marketing-operations-director` + `code-architect`
@@ -24,7 +24,7 @@ Subscribes to `ContractorOnboardedEvent` and orchestrates the full NRPG → DR p
 3. **Budget commits** (`lib/budget`) — synthesise a deterministic coverage ID per (job, suburb) and commit `$55/mo`. The ledger's idempotency means re-playing the same event = zero double-charges. Only suburbs that committed proceed to downstream stages.
 4. **GBP + Bing** (`lib/gbp` + `lib/bing-places`) — fan out **in parallel**. Distance map gates suburbs > 100 km from contractor base.
 5. **Landing pages** (`lib/landing-page`) — one page per (`drCategory` × committed suburb). Validators block on Aid Rule, category-claim, schema-vs-content mismatch, PII leak. Rejected pages don't reach the sitemap.
-6. **Sitemap regen + ping** (`lib/sitemap`) — only the pages that landed are appended. Ping is skipped if `regen.added.length === 0` or `opts.skipPing` is set. Ping is rate-limited 1/hour per target by the underlying client.
+6. **Sitemap regen + ping** (`lib/sitemap`) — only the pages that landed are appended. Ping is skipped if `regen.added.length === 0` or `opts.skipPing` is set. The Google and Bing sitemap ping endpoints are retired (Google 404, Bing 410), so each ping result is `pinged: false, retired: true` and no request is sent. Sitemap discovery goes through Search Console sitemaps, IndexNow (`lib/indexnow`) and Bing Webmaster SubmitFeed (`lib/bing-webmaster`). IndexNow is not wired here: disasterrecovery.com.au hosts no IndexNow key file.
 
 **Per-stage error isolation:** a GBP API failure does NOT block Bing, the budget commits stick, the page generation runs. Every stage outcome is captured in `NrpgPipelineResult` for audit.
 
