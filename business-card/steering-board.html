@@ -1,0 +1,292 @@
+<title>Card Steering Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: summary strip, then one lane per decision area; cards stack in a single column on phones and sit in two columns on wide screens. Same after-hours palette as the card itself, by choice. */
+:root {
+  --ink: #0A1120;
+  --panel: #111B2D;
+  --panel-2: #16233A;
+  --line: #24324D;
+  --fg: #ECF1F8;
+  --muted: #97A6BC;
+  --aqua: #79DCCF;     /* yes */
+  --brass: #E9B451;    /* maybe, and recommendations */
+  --rose: #F08C6B;     /* no, and compliance warnings */
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--ink); color: var(--fg); font: 15px/1.5 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 56px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 28px; }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 6px; }
+h1 { font: 800 clamp(30px, 7vw, 44px)/1 var(--display); letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+h2 { font: 600 22px/1.15 var(--display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 62ch; margin: 8px 0 0; }
+.mono { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+
+header { display: grid; gap: 14px; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.status.off { color: var(--rose); }
+.strip { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.count { display: inline-flex; gap: 6px; align-items: baseline; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-variant-numeric: tabular-nums; }
+.count b { font: 600 17px var(--display); }
+.count.yes b { color: var(--aqua); } .count.maybe b { color: var(--brass); } .count.no b { color: var(--rose); }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 500 13px var(--body); color: var(--fg); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--ink); border-color: var(--fg); }
+
+.lane { display: grid; gap: 12px; }
+.lane-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.lane-head p { margin: 0; color: var(--muted); font-size: 13.5px; max-width: 60ch; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 12px; }
+.empty { color: var(--muted); font-size: 14px; padding: 14px; border: 1px dashed var(--line); border-radius: 14px; }
+
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; gap: 10px; min-width: 0; }
+.card.yes { border-color: color-mix(in srgb, var(--aqua) 60%, var(--line)); }
+.card.maybe { border-color: color-mix(in srgb, var(--brass) 55%, var(--line)); }
+.card.no { opacity: .62; }
+.card.dragging { opacity: .4; }
+.card.drop-before { box-shadow: 0 -3px 0 var(--brass); }
+.top { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.grip { cursor: grab; color: var(--muted); font: 16px/1 var(--mono); padding: 4px 2px; user-select: none; border: 0; background: none; }
+.card h3 { margin: 0; font: 600 17px/1.25 var(--display); text-wrap: balance; }
+.card p { margin: 0; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; padding: 3px 8px; border-radius: 6px; background: var(--panel-2); color: var(--muted); }
+.tag.rec { color: var(--ink); background: var(--brass); }
+.tag.warn { color: var(--ink); background: var(--rose); }
+.tag.ok { color: var(--ink); background: var(--aqua); }
+.card img { width: 100%; max-width: 100%; border-radius: 10px; display: block; }
+.ev { font-size: 12.5px; color: var(--muted); }
+.ev a { color: var(--aqua); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.vote { font: 600 13.5px var(--body); color: var(--fg); background: none; border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; cursor: pointer; }
+.vote[data-vote="yes"][aria-pressed="true"] { background: var(--aqua); color: var(--ink); border-color: var(--aqua); }
+.vote[data-vote="maybe"][aria-pressed="true"] { background: var(--brass); color: var(--ink); border-color: var(--brass); }
+.vote[data-vote="no"][aria-pressed="true"] { background: var(--rose); color: var(--ink); border-color: var(--rose); }
+.move { margin-left: auto; display: flex; gap: 4px; }
+.move button { font: 14px var(--mono); color: var(--muted); background: none; border: 1px solid var(--line); border-radius: 8px; width: 34px; height: 32px; cursor: pointer; }
+textarea, input[type=text] { width: 100%; font: 14px var(--body); color: var(--fg); background: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; }
+textarea { min-height: 54px; resize: vertical; }
+.saved { font-family: var(--mono); font-size: 11px; color: var(--muted); min-height: 1em; }
+button:disabled, textarea:disabled { opacity: .5; cursor: not-allowed; }
+
+.ask { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 10px; }
+.ask ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.ask li span { font-family: var(--mono); font-size: 11px; color: var(--muted); display: block; }
+.btn { font: 600 14px var(--body); color: var(--ink); background: var(--aqua); border: 0; border-radius: 10px; padding: 10px 16px; cursor: pointer; justify-self: start; }
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="mono" style="color:var(--aqua)">Phill McGurk · living business card</span>
+    <h1>Card Steering Board</h1>
+    <p class="lede">Every option for the card in one place. Tap Yes, Maybe or No, drag (or use the arrows) to put the most important first, and leave a note. Claude reads this board and builds what you say yes to.</p>
+    <div class="status" id="status" role="status">Connecting to the board…</div>
+    <div class="strip" aria-label="Decision counts">
+      <span class="count yes"><b id="n-yes">0</b> yes</span>
+      <span class="count maybe"><b id="n-maybe">0</b> maybe</span>
+      <span class="count no"><b id="n-no">0</b> no</span>
+      <span class="count"><b id="n-open">0</b> to decide</span>
+    </div>
+    <div class="filters" role="group" aria-label="Show">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-filter="open" aria-pressed="false">To decide</button>
+      <button class="chip" type="button" data-filter="yes" aria-pressed="false">Yes</button>
+      <button class="chip" type="button" data-filter="maybe" aria-pressed="false">Maybe</button>
+      <button class="chip" type="button" data-filter="no" aria-pressed="false">No</button>
+      <button class="chip" type="button" data-filter="rec" aria-pressed="false">Recommended</button>
+    </div>
+  </header>
+
+  <main id="lanes"></main>
+
+  <section class="ask" aria-labelledby="ask-h">
+    <h2 id="ask-h">Tell Claude something</h2>
+    <p class="lede" style="margin:0">A new idea, a change of mind, a question. It lands on this board for the next working session.</p>
+    <label for="ask-text" class="mono" style="color:var(--muted)">Your note</label>
+    <textarea id="ask-text" placeholder="e.g. Make the intro feel like walking onto a job site at dawn."></textarea>
+    <button class="btn" type="button" id="ask-send">Add to the board</button>
+    <div class="saved" id="ask-saved"></div>
+    <ol id="ask-list"></ol>
+  </section>
+
+  <footer>Prepared 22/10/2026. Options come from the research in the business-card folder; costs are estimates until quoted. Nothing here spends money or sends anything.</footer>
+</div>
+
+<script>
+const LANES = [
+  { id: "motion",  name: "Motion and visuals", blurb: "How Phill appears on the card. Everything is made from his real photos, never invented faces." },
+  { id: "card",    name: "Card features",      blurb: "What the card does in someone's hand." },
+  { id: "reviews", name: "Review engine",      blurb: "Turning happy customers into public reviews, inside Google's and the ACCC's rules." },
+  { id: "links",   name: "Businesses on the card", blurb: "Which businesses the card connects to, and how." },
+  { id: "growth",  name: "Moonshots and go-to-market", blurb: "Ideas that could make this sell fast." },
+  { id: "ops",     name: "Inbox and operations", blurb: "What happens after someone taps Connect." }
+];
+const state = { items: [], filter: "all", canWrite: false, db: null };
+const $ = id => document.getElementById(id);
+
+function setStatus(text, off) { const s = $("status"); s.textContent = text; s.classList.toggle("off", !!off); }
+
+function sorted(laneId) {
+  return state.items.filter(i => i.lane === laneId).sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0) || a.id.localeCompare(b.id));
+}
+function visible(i) {
+  const f = state.filter, st = i.status || "open";
+  return f === "all" || (f === "rec" ? !!i.recommended : st === f);
+}
+
+function render() {
+  const n = { yes: 0, maybe: 0, no: 0, open: 0 };
+  state.items.forEach(i => { n[i.status || "open"] = (n[i.status || "open"] || 0) + 1; });
+  ["yes", "maybe", "no", "open"].forEach(k => { $("n-" + k).textContent = n[k] || 0; });
+
+  const main = $("lanes"); main.textContent = "";
+  LANES.forEach(l => {
+    const sec = document.createElement("section"); sec.className = "lane"; sec.setAttribute("aria-labelledby", "h-" + l.id);
+    const head = document.createElement("div"); head.className = "lane-head";
+    const h = document.createElement("h2"); h.id = "h-" + l.id; h.textContent = l.name;
+    const p = document.createElement("p"); p.textContent = l.blurb;
+    head.append(h, p); sec.append(head);
+    const list = document.createElement("div"); list.className = "cards"; list.dataset.lane = l.id;
+    const items = sorted(l.id).filter(visible);
+    if (!items.length) {
+      const e = document.createElement("div"); e.className = "empty";
+      e.textContent = state.items.length ? "Nothing here under this filter." : "Options appear here once the board loads.";
+      list.append(e);
+    }
+    items.forEach(i => list.append(cardEl(i)));
+    sec.append(list); main.append(sec);
+  });
+}
+
+function cardEl(i) {
+  const st = i.status || "open";
+  const c = document.createElement("article"); c.className = "card " + st; c.dataset.id = i.id;
+  c.draggable = state.canWrite;
+  const top = document.createElement("div"); top.className = "top";
+  const grip = document.createElement("span"); grip.className = "grip"; grip.textContent = "⋮⋮"; grip.setAttribute("aria-hidden", "true");
+  const body = document.createElement("div"); body.style.display = "grid"; body.style.gap = "6px"; body.style.minWidth = "0";
+  const h = document.createElement("h3"); h.textContent = i.title;
+  const meta = document.createElement("div"); meta.className = "meta";
+  const tag = (t, cls) => { const s = document.createElement("span"); s.className = "tag" + (cls ? " " + cls : ""); s.textContent = t; meta.append(s); };
+  if (i.recommended) tag("Recommended", "rec");
+  if (i.compliance === "blocked") tag("Breaks review rules", "warn");
+  if (i.compliance === "ok") tag("Rule-safe design", "ok");
+  if (i.effort) tag("Effort " + i.effort);
+  if (i.cost) tag(i.cost);
+  if (i.needs) tag("Needs: " + i.needs);
+  body.append(h, meta);
+  top.append(grip, body); c.append(top);
+  if (i.image) { const img = document.createElement("img"); img.src = i.image; img.alt = i.imageAlt || i.title; c.append(img); }
+  const d = document.createElement("p"); d.textContent = i.detail || ""; c.append(d);
+  if (i.evidence) { const ev = document.createElement("div"); ev.className = "ev"; ev.textContent = i.evidence; c.append(ev); }
+
+  const acts = document.createElement("div"); acts.className = "actions";
+  [["yes", "Yes"], ["maybe", "Maybe"], ["no", "No"]].forEach(([v, label]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "vote"; b.dataset.vote = v; b.textContent = label;
+    b.setAttribute("aria-pressed", String(st === v)); b.disabled = !state.canWrite;
+    b.addEventListener("click", () => save(i.id, { status: st === v ? "open" : v }, c));
+    acts.append(b);
+  });
+  const mv = document.createElement("div"); mv.className = "move";
+  [["↑", -1, "Move up"], ["↓", 1, "Move down"]].forEach(([t, dir, lab]) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = t; b.setAttribute("aria-label", lab + ": " + i.title);
+    b.disabled = !state.canWrite; b.addEventListener("click", () => nudge(i, dir)); mv.append(b);
+  });
+  acts.append(mv); c.append(acts);
+
+  const note = document.createElement("textarea"); note.id = "note-" + i.id; note.placeholder = "Your note on this (optional)";
+  note.setAttribute("aria-label", "Note on " + i.title); note.value = i.note || ""; note.disabled = !state.canWrite;
+  note.addEventListener("change", () => save(i.id, { note: note.value.trim() }, c));
+  const saved = document.createElement("div"); saved.className = "saved";
+  c.append(note, saved);
+
+  c.addEventListener("dragstart", e => { c.classList.add("dragging"); e.dataTransfer.setData("text/plain", i.id); e.dataTransfer.effectAllowed = "move"; });
+  c.addEventListener("dragend", () => c.classList.remove("dragging"));
+  c.addEventListener("dragover", e => { if (!state.canWrite) return; e.preventDefault(); c.classList.add("drop-before"); });
+  c.addEventListener("dragleave", () => c.classList.remove("drop-before"));
+  c.addEventListener("drop", e => { e.preventDefault(); c.classList.remove("drop-before"); dropBefore(e.dataTransfer.getData("text/plain"), i); });
+  return c;
+}
+
+let writing = Promise.resolve();
+function save(id, patch, el) {
+  if (!state.db || !state.canWrite) { setStatus("Your choices are not saved: open this board signed in to claude.ai as its owner.", true); return; }
+  const mark = el && el.querySelector(".saved");
+  if (mark) mark.textContent = "Saving…";
+  writing = writing.then(() => state.db.doc("options/" + id).update({ ...patch, updatedAt: new Date().toISOString() }))
+    .then(() => { if (mark) mark.textContent = "Saved"; setStatus("All changes saved."); })
+    .catch(err => { if (mark) mark.textContent = "Not saved (" + (err && err.code || "error") + ")"; setStatus("A change was not saved. Try again in a moment.", true); });
+}
+
+function nudge(item, dir) {
+  const lane = sorted(item.lane); const idx = lane.findIndex(x => x.id === item.id); const j = idx + dir;
+  if (j < 0 || j >= lane.length) return;
+  const other = lane[j];
+  const beyond = lane[j + dir];
+  const rank = beyond ? ((other.rank ?? 0) + (beyond.rank ?? 0)) / 2 : (other.rank ?? 0) + dir * 10;
+  save(item.id, { rank });
+}
+function dropBefore(dragId, target) {
+  const dragged = state.items.find(x => x.id === dragId);
+  if (!dragged || dragged.id === target.id || dragged.lane !== target.lane) return;
+  const lane = sorted(target.lane).filter(x => x.id !== dragId);
+  const t = lane.findIndex(x => x.id === target.id);
+  const prev = lane[t - 1];
+  const rank = prev ? ((prev.rank ?? 0) + (target.rank ?? 0)) / 2 : (target.rank ?? 0) - 10;
+  save(dragId, { rank });
+}
+
+document.querySelectorAll("[data-filter]").forEach(b => b.addEventListener("click", () => {
+  state.filter = b.dataset.filter;
+  document.querySelectorAll("[data-filter]").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  render();
+}));
+
+function renderAsks(docs) {
+  const ol = $("ask-list"); ol.textContent = "";
+  docs.forEach(d => {
+    const v = d.data(); const li = document.createElement("li");
+    li.textContent = v.text;
+    const s = document.createElement("span");
+    s.textContent = (v.status === "done" ? "Done" : "Waiting for Claude") + (v.reply ? ": " + v.reply : "");
+    li.append(s); ol.append(li);
+  });
+}
+$("ask-send").addEventListener("click", async () => {
+  const t = $("ask-text").value.trim(); if (!t) return;
+  if (!state.db || !state.canWrite) { $("ask-saved").textContent = "Not saved: open this board signed in as its owner."; return; }
+  $("ask-saved").textContent = "Saving…";
+  try { await state.db.collection("requests").add({ text: t.slice(0, 2000), at: new Date().toISOString(), status: "new" }); $("ask-text").value = ""; $("ask-saved").textContent = "Added. Claude will pick it up next session."; }
+  catch (err) { $("ask-saved").textContent = "Not saved (" + (err && err.code || "error") + "). Try again."; }
+});
+
+render();
+(async () => {
+  const hasRuntime = typeof claude !== "undefined" && claude && typeof claude.use === "function";
+  const db = hasRuntime ? await claude.use("db") : null;
+  if (!db) { setStatus("Read-only preview: choices are not saved here. Open the board signed in to claude.ai to decide.", true); return; }
+  state.db = db;
+  const user = await claude.use("user");
+  const can = user ? await user.can("data.write") : null;
+  state.canWrite = can !== false;
+  db.collection("options").onSnapshot(snap => {
+    state.items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    setStatus(state.items.length ? (state.canWrite ? "Live. Your choices save as you go." : "View only: choices are not saved for viewers.") : "The board is empty. Claude adds the options after publishing.", !state.canWrite);
+    render();
+  }, err => setStatus("The board stopped updating (" + err.code + "). Reload to reconnect.", true));
+  db.collection("requests").orderBy("at", "desc").limit(30).onSnapshot(s => renderAsks(s.docs), () => {});
+})();
+</script>
