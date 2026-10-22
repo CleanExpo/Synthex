@@ -7,7 +7,8 @@
  * emits.
  *
  * It is a defined-term filter over four families, not a judge of meaning:
- *   1. national(ly) recognised / recognition / accredited
+ *   1. national(ly) / nationwide recognised / recognition / accredited,
+ *      in either word order
  *   2. AQF, any mention
  *   3. RTO(s), Registered Training Org / Organisation(s)
  *   4. ASQA (the RTO regulator), any mention
@@ -15,7 +16,7 @@
  */
 
 const ACCREDITATION_CLAIM =
-  /national(?:ly)?[\s-]+(?:recogni[sz]ed|recognition|accredited)|\bAQF\b|registered[\s-]+training[\s-]+org(?:ani[sz]ations?|s)?\b|\bASQA\b|\bRTOs?\b/i;
+  /nation(?:al(?:ly)?|wide)[\s-]+(?:recogni[sz]ed|recognition|accredited)|(?:recogni[sz]ed|accredited)[\s-]+nation(?:ally|wide)|\bAQF\b|registered[\s-]+training[\s-]+org(?:ani[sz]ations?|s)?\b|\bASQA\b|\bRTOs?\b/i;
 
 export class AccreditationClaimError extends Error {
   constructor(readonly field: string) {
