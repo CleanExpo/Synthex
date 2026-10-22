@@ -1,7 +1,7 @@
 {
   "generator": "scripts/claims-seeds.ts",
   "base": "83243588",
-  "count": 1125,
+  "count": 1128,
   "seeds": [
     {
       "text": "- [Error codes](docs/api/error-codes.md): 11 structured error codes, with HTTP status and meaning.",
@@ -32,6 +32,16 @@
       "text": "- Error codes, `docs/api/error-codes.md`: 11 structured error codes, with HTTP status and meaning.",
       "file": "public/llms.txt",
       "firstSeen": "c4468de4"
+    },
+    {
+      "text": "- Error codes, `docs/api/error-codes.md`: 12 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "537a1991"
+    },
+    {
+      "text": "- FEATURE_NOT_PROVISIONED: HTTP 503, unresolved - GITHUB_TOKEN_REQUIRED: HTTP 200",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
     },
     {
       "text": "- Parent Organisation: Unite-Group (https://unite-group.com.au)",
@@ -2892,6 +2902,11 @@
       "text": "Generated from the route source of 774 route files under app/api.",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
+    },
+    {
+      "text": "Generated from the route source of 775 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "537a1991"
     },
     {
       "text": "Generate strategic brand identities using 50+ psychological principles for maximum market impact",
