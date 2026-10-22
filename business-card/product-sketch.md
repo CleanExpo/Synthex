@@ -1,7 +1,7 @@
 # Living business cards: product sketch
 
-Status: idea only, 22/10/2026. No pricing page, payments or billing exist or are proposed here. Tags as
-in README.md.
+Status: idea only, 22/10/2026. No pricing page, payments or billing exist or are proposed here. Tags:
+`[VERIFIED]`, `[INFERENCE]`, `[UNCONFIRMED]` as in README.md.
 
 ## The offer in one line
 
