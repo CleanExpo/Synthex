@@ -16,17 +16,17 @@
 
 // --- Mocks ---------------------------------------------------------------
 const mockTeamFindFirst = jest.fn();
-const mockCodeFindFirst = jest.fn();
+const mockCodeFindMany = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   prisma: {
     teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
-    inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
+    inviteCode: { findMany: (...a: unknown[]) => mockCodeFindMany(...a) },
   },
   default: {
     teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
-    inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
+    inviteCode: { findMany: (...a: unknown[]) => mockCodeFindMany(...a) },
   },
 }));
 
@@ -45,7 +45,7 @@ beforeEach(() => {
   process.env = { ...ORIGINAL_ENV };
   delete process.env.NEXT_PUBLIC_INVITE_ONLY_MODE;
   mockTeamFindFirst.mockReset().mockResolvedValue(null);
-  mockCodeFindFirst.mockReset().mockResolvedValue(null);
+  mockCodeFindMany.mockReset().mockResolvedValue([]);
 });
 
 afterAll(() => {
@@ -120,44 +120,101 @@ describe('hasInviteEvidence — org-provisioning evidence', () => {
     await expect(hasInviteEvidence('p@example.com', 'user-1')).resolves.toBe(
       true
     );
-    expect(mockCodeFindFirst).not.toHaveBeenCalled();
+    expect(mockCodeFindMany).not.toHaveBeenCalled();
 
     const where = mockTeamFindFirst.mock.calls[0][0].where;
     expect(where.status).toEqual({ in: ['sent', 'pending', 'accepted'] });
     expect(where.sentAt.gte).toBeInstanceOf(Date);
   });
 
+  // A row as the gate selects it. Defaults: a live, unused, email-locked code.
+  const code = (over: Record<string, unknown> = {}) => ({
+    usedBy: null,
+    isActive: true,
+    expiresAt: null,
+    maxUses: 1,
+    useCount: 0,
+    ...over,
+  });
+  const HOUR_MS = 60 * 60 * 1000;
+
   it('accepts an invite code redeemed by this user', async () => {
-    mockCodeFindFirst.mockResolvedValue({ id: 'ic-1' });
+    mockCodeFindMany.mockResolvedValue([
+      code({ usedBy: 'user-1', useCount: 1, isActive: false }),
+    ]);
 
     await expect(hasInviteEvidence('p@example.com', 'user-1')).resolves.toBe(
       true
     );
 
-    const where = mockCodeFindFirst.mock.calls[0][0].where;
+    const where = mockCodeFindMany.mock.calls[0][0].where;
     expect(where.OR).toEqual(expect.arrayContaining([{ usedBy: 'user-1' }]));
   });
 
-  it('accepts an active invite code locked to this email', async () => {
-    mockCodeFindFirst.mockResolvedValue({ id: 'ic-2' });
+  it('accepts a live, unused invite code locked to this email', async () => {
+    mockCodeFindMany.mockResolvedValue([
+      code({ expiresAt: new Date(Date.now() + HOUR_MS) }),
+    ]);
 
     await expect(hasInviteEvidence('Locked@Example.com')).resolves.toBe(true);
 
-    const where = mockCodeFindFirst.mock.calls[0][0].where;
+    const where = mockCodeFindMany.mock.calls[0][0].where;
     expect(where.OR).toEqual(
       expect.arrayContaining([
-        {
-          email: { equals: 'Locked@Example.com', mode: 'insensitive' },
-          isActive: true,
-        },
+        { email: { equals: 'Locked@Example.com', mode: 'insensitive' } },
       ])
     );
+  });
+
+  it('rejects an email-locked code that has expired', async () => {
+    mockCodeFindMany.mockResolvedValue([
+      code({ expiresAt: new Date(Date.now() - HOUR_MS) }),
+    ]);
+
+    await expect(hasInviteEvidence('p@example.com', 'user-1')).resolves.toBe(
+      false
+    );
+  });
+
+  it('rejects an email-locked code with no uses left', async () => {
+    mockCodeFindMany.mockResolvedValue([code({ maxUses: 2, useCount: 2 })]);
+
+    await expect(hasInviteEvidence('p@example.com', 'user-1')).resolves.toBe(
+      false
+    );
+  });
+
+  it('rejects an inactive email-locked code', async () => {
+    mockCodeFindMany.mockResolvedValue([code({ isActive: false })]);
+
+    await expect(hasInviteEvidence('p@example.com')).resolves.toBe(false);
+  });
+
+  it('rejects an email-locked code consumed by a different user', async () => {
+    mockCodeFindMany.mockResolvedValue([
+      code({ usedBy: 'someone-else', maxUses: 5, useCount: 1 }),
+    ]);
+
+    await expect(hasInviteEvidence('p@example.com', 'user-1')).resolves.toBe(
+      false
+    );
+    await expect(hasInviteEvidence('p@example.com')).resolves.toBe(false);
+  });
+
+  it('accepts when one of several codes for the email is still live', async () => {
+    mockCodeFindMany.mockResolvedValue([
+      code({ expiresAt: new Date(Date.now() - HOUR_MS) }),
+      code({ useCount: 1 }),
+      code(),
+    ]);
+
+    await expect(hasInviteEvidence('p@example.com')).resolves.toBe(true);
   });
 
   it('omits the usedBy clause when no userId is known (OAuth pre-create)', async () => {
     await hasInviteEvidence('p@example.com');
 
-    const where = mockCodeFindFirst.mock.calls[0][0].where;
+    const where = mockCodeFindMany.mock.calls[0][0].where;
     expect(where.OR).toHaveLength(1);
     expect(where.OR[0]).not.toHaveProperty('usedBy');
   });
@@ -198,7 +255,15 @@ describe('hasSelfProvisionEvidence — org-locked invitations are NOT generic ev
   });
 
   it('invite-code evidence is unchanged', async () => {
-    mockCodeFindFirst.mockResolvedValue({ id: 'ic-1' });
+    mockCodeFindMany.mockResolvedValue([
+      {
+        usedBy: 'user-1',
+        isActive: false,
+        expiresAt: null,
+        maxUses: 1,
+        useCount: 1,
+      },
+    ]);
 
     await expect(
       hasSelfProvisionEvidence('p@example.com', 'user-1')

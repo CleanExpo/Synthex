@@ -80,7 +80,7 @@ const mockOrgUpdate = jest.fn();
 const mockProgressUpsert = jest.fn();
 const mockProgressFindUnique = jest.fn();
 const mockTeamFindFirst = jest.fn();
-const mockCodeFindFirst = jest.fn();
+const mockCodeFindMany = jest.fn();
 const mockTransaction = jest.fn();
 
 const prismaMock = {
@@ -100,7 +100,7 @@ const prismaMock = {
     findUnique: (...a: unknown[]) => mockProgressFindUnique(...a),
   },
   teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
-  inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
+  inviteCode: { findMany: (...a: unknown[]) => mockCodeFindMany(...a) },
   $transaction: (...a: unknown[]) => mockTransaction(...a),
 };
 
@@ -136,7 +136,7 @@ beforeEach(() => {
   mockOrgUpdate.mockResolvedValue({});
   mockProgressUpsert.mockResolvedValue({});
   mockTeamFindFirst.mockResolvedValue(null);
-  mockCodeFindFirst.mockResolvedValue(null);
+  mockCodeFindMany.mockResolvedValue([]);
   mockGetUserId.mockResolvedValue('user-1');
   mockSecurityCheck.mockResolvedValue({
     allowed: true,

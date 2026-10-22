@@ -25,7 +25,7 @@ jest.mock('@/lib/auth/monitoring', () => ({
 
 const mockUserCreate = jest.fn();
 const mockTeamFindFirst = jest.fn();
-const mockCodeFindFirst = jest.fn();
+const mockCodeFindMany = jest.fn();
 
 const prismaMock = {
   user: {
@@ -34,7 +34,7 @@ const prismaMock = {
     update: jest.fn(async () => ({})),
   },
   teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
-  inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
+  inviteCode: { findMany: (...a: unknown[]) => mockCodeFindMany(...a) },
 };
 
 jest.mock('@/lib/prisma', () => ({
@@ -61,7 +61,7 @@ beforeEach(() => {
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   jest.clearAllMocks();
   mockTeamFindFirst.mockResolvedValue(null);
-  mockCodeFindFirst.mockResolvedValue(null);
+  mockCodeFindMany.mockResolvedValue([]);
   mockUserCreate.mockResolvedValue({
     id: 'user-new',
     email: PROFILE.email,
