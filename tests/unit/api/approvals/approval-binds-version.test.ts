@@ -10,7 +10,9 @@
  * fingerprint being trusted; resubmit failing to re-bind; a legacy request
  * (no fingerprint) being stranded or recorded silently.
  *
- * MISSES: real Postgres transactions; calendar-slot and campaign approvals
+ * MISSES: real Postgres transactions and the FOR UPDATE row lock (the mock
+ * proves only that the wording is re-read inside the transaction, after an
+ * edit made between the first check and the commit); calendar-slot and campaign approvals
  * (only contentType 'post' is bound); edits to media or scheduling, which the
  * fingerprint (platform + text) does not cover.
  */
@@ -24,6 +26,10 @@ const mockDb = {
   posts: new Map<string, Row>(),
   approvals: new Map<string, Row>(),
   audit: [] as Row[],
+  notifications: [] as Row[],
+  // Runs as a transaction opens: stands in for a concurrent post edit that
+  // lands after the route's first check but before its commit.
+  onTransaction: null as null | (() => void),
   currentUser: 'submitter-1',
   // What getEffectiveOrganizationId returns; null means no org context.
   orgId: 'org-1' as string | null,
@@ -98,11 +104,25 @@ const mockPrisma: Record<string, any> = {
       return {};
     },
   },
-  teamNotification: { create: async () => ({}) },
+  teamNotification: {
+    create: async ({ data }: { data: Row }) => {
+      mockDb.notifications.push(mockClone(data));
+      return {};
+    },
+  },
   notification: { create: async () => ({}) },
+  // The locked post re-read: SELECT content, platform FROM posts WHERE id = $1.
+  $queryRaw: async (_sql: TemplateStringsArray, ...values: unknown[]) => {
+    const row = mockDb.posts.get(values[0] as string);
+    return row ? [{ content: row.content, platform: row.platform }] : [];
+  },
 };
-mockPrisma.$transaction = async (cb: (tx: unknown) => unknown) =>
-  cb(mockPrisma);
+mockPrisma.$transaction = async (cb: (tx: unknown) => unknown) => {
+  const hook = mockDb.onTransaction;
+  mockDb.onTransaction = null;
+  hook?.();
+  return cb(mockPrisma);
+};
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -197,13 +217,13 @@ async function submit(metadata: Record<string, unknown> = {}) {
   return [...mockDb.approvals.keys()].pop()!;
 }
 
-async function act(id: string, action: string, user: string) {
+async function act(id: string, action: string, user: string, comment?: string) {
   mockDb.currentUser = user;
   return PATCH(
     createMockNextRequest({
       method: 'PATCH',
       url: `http://localhost/api/approvals/${id}`,
-      body: { action },
+      body: comment ? { action, comment } : { action },
     }),
     { params: Promise.resolve({ id }) }
   );
@@ -250,6 +270,8 @@ beforeEach(() => {
   mockDb.posts.clear();
   mockDb.approvals.clear();
   mockDb.audit.length = 0;
+  mockDb.notifications.length = 0;
+  mockDb.onTransaction = null;
   mockDb.orgId = 'org-1';
   mockDb.nextId = 1;
 });
@@ -372,6 +394,41 @@ describe('PATCH /api/approvals/[id] approve checks the wording is unchanged', ()
     expect(row.status).toBe('pending');
     expect(row.steps[0].currentApprovals).toBe(0);
     expect(lastAudit('approval_approve')).toBeUndefined();
+  });
+
+  it('refuses an approval when the post is edited between the check and the commit, and notifies no one', async () => {
+    seedPost();
+    const id = await submit();
+    mockDb.notifications.length = 0;
+    mockDb.onTransaction = () => editPost(EDITED_TEXT);
+
+    const res = await act(id, 'approve', 'reviewer-1');
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.code).toBe('content_changed');
+    const row = mockDb.approvals.get(id)!;
+    expect(row.status).toBe('pending');
+    expect(row.steps[0].currentApprovals).toBe(0);
+    expect(lastAudit('approval_approve')).toBeUndefined();
+    expect(mockDb.notifications).toEqual([]);
+  });
+
+  it('resubmit after an edit puts the comment on the step the workflow restarts at', async () => {
+    seedPost();
+    const id = await submit();
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    editPost(EDITED_TEXT);
+
+    const res = await act(id, 'resubmit', 'submitter-1', 'Reworded the offer');
+
+    expect(res.status).toBe(200);
+    const row = mockDb.approvals.get(id)!;
+    expect(row.currentStep).toBe(0);
+    expect(row.steps[0].comments.map((c: Row) => c.content)).toEqual([
+      'Reworded the offer',
+    ]);
+    expect(row.steps[1].comments).toEqual([]);
   });
 
   it('resubmit re-binds to the current wording, after which approval succeeds', async () => {

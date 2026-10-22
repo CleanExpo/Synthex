@@ -30,6 +30,7 @@ import {
   checkPostBinding,
   CONTENT_FINGERPRINT_KEY,
   type ContentBinding,
+  type FingerprintablePost,
 } from '@/lib/approvals/content-fingerprint';
 
 // =============================================================================
@@ -136,6 +137,18 @@ function transformApprovalForResponse(approval: {
     createdAt: approval.createdAt.toISOString(),
     updatedAt: approval.updatedAt.toISOString(),
   };
+}
+
+function contentChangedResponse() {
+  return NextResponse.json(
+    {
+      error: 'Conflict',
+      code: 'content_changed',
+      message:
+        'The post was edited or removed after it was sent for approval. Resubmit it so reviewers approve the current wording.',
+    },
+    { status: 409 }
+  );
 }
 
 /**
@@ -646,6 +659,8 @@ export async function PATCH(
       }
     }
 
+    let notifyAfterCommit: (() => Promise<void>) | null = null;
+
     // Process action
     switch (action) {
       case 'approve': {
@@ -661,15 +676,7 @@ export async function PATCH(
         }
 
         if (binding !== null && binding.kind === 'changed') {
-          return NextResponse.json(
-            {
-              error: 'Conflict',
-              code: 'content_changed',
-              message:
-                'The post was edited or removed after it was sent for approval. Resubmit it so reviewers approve the current wording.',
-            },
-            { status: 409 }
-          );
+          return contentChangedResponse();
         }
 
         // Increment approvals
@@ -703,37 +710,41 @@ export async function PATCH(
           }
         }
 
-        // Notify submitter
-        await createApprovalNotification(
-          approval.submittedBy,
-          id,
-          approval.organizationId,
-          userId,
-          userName,
-          'approve',
-          approval.title
-        );
+        // Notify only once the approval has committed: the wording is
+        // re-checked inside the transaction and may still refuse it.
+        notifyAfterCommit = async () => {
+          // Notify submitter
+          await createApprovalNotification(
+            approval.submittedBy,
+            id,
+            approval.organizationId,
+            userId,
+            userName,
+            'approve',
+            approval.title
+          );
 
-        // Notify next step assignees if advancing
-        if (
-          newCurrentStep > approval.currentStep &&
-          newCurrentStep < steps.length
-        ) {
-          const nextStep = steps[newCurrentStep];
-          for (const assigneeId of nextStep.assignedTo) {
-            if (assigneeId !== '*' && assigneeId !== userId) {
-              await createApprovalNotification(
-                assigneeId,
-                id,
-                approval.organizationId,
-                userId,
-                userName,
-                'approve',
-                approval.title
-              );
+          // Notify next step assignees if advancing
+          if (
+            newCurrentStep > approval.currentStep &&
+            newCurrentStep < steps.length
+          ) {
+            const nextStep = steps[newCurrentStep];
+            for (const assigneeId of nextStep.assignedTo) {
+              if (assigneeId !== '*' && assigneeId !== userId) {
+                await createApprovalNotification(
+                  assigneeId,
+                  id,
+                  approval.organizationId,
+                  userId,
+                  userName,
+                  'approve',
+                  approval.title
+                );
+              }
             }
           }
-        }
+        };
         break;
       }
 
@@ -867,7 +878,7 @@ export async function PATCH(
         }
 
         if (comment) {
-          currentStep.comments.push({
+          steps[newCurrentStep].comments.push({
             id: `cmt_${Date.now()}`,
             userId,
             userName,
@@ -933,6 +944,18 @@ export async function PATCH(
 
     // Update approval request and log in a transaction
     const updated = await prisma.$transaction(async tx => {
+      if (action === 'approve' && binding?.kind === 'match') {
+        // Re-read the post under a row lock, so an edit that commits after
+        // the check above cannot let this approval save for the old wording.
+        const locked = await tx.$queryRaw<FingerprintablePost[]>`
+          SELECT content, platform FROM posts
+          WHERE id = ${approval.contentId}
+          FOR UPDATE
+        `;
+        binding = checkPostBinding(approval.metadata, locked[0] ?? null);
+        if (binding.kind === 'changed') return null;
+      }
+
       const result = await tx.approvalRequest.update({
         where: { id },
         data: {
@@ -985,6 +1008,18 @@ export async function PATCH(
 
       return result;
     });
+
+    if (updated === null) return contentChangedResponse();
+
+    if (notifyAfterCommit) {
+      try {
+        await notifyAfterCommit();
+      } catch (notifyError: unknown) {
+        // The approval is already saved; a failed notification must not
+        // report it as failed.
+        logger.error('Approval notification error:', notifyError);
+      }
+    }
 
     return NextResponse.json({
       success: true,
