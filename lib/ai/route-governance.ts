@@ -14,9 +14,11 @@ import {
   GovernorRefusedError,
   type GovernedCallResult,
   type GovernorProvider,
-  type GovernorRefusal,
 } from '@/lib/ai/governor';
-import { resolveOrgBrandSlug } from '@/lib/ai/governor-route-support';
+import {
+  governorRefusalStatus,
+  resolveOrgBrandSlug,
+} from '@/lib/ai/governor-route-support';
 
 export interface GovernorScope {
   organizationId: string;
@@ -69,13 +71,11 @@ export function unwrapGoverned<T>(
   throw new GovernorRefusedError(result.outcome, result.reason);
 }
 
-const REFUSAL_STATUS: Partial<Record<GovernorRefusal, number>> = {
-  refused_budget_exhausted: 429,
-  refused_control_plane_error: 503,
-  refused_model_unavailable: 503,
-};
-
-/** Honest refusal for an enforcing Governor: a code and a 4xx/503, never a 500. */
+/**
+ * Honest refusal for an enforcing Governor: a code and a 4xx/503, never a 500.
+ * The status comes from the same table as governor-route-support, so a budget
+ * or build-cap refusal is a 429 here too (it fell through to 403 before).
+ */
 export function governorRefusalResponse(
   error: GovernorRefusedError
 ): NextResponse {
@@ -85,6 +85,6 @@ export function governorRefusalResponse(
       code: error.outcome,
       message: error.reason,
     },
-    { status: REFUSAL_STATUS[error.outcome] ?? 403 }
+    { status: governorRefusalStatus(error.outcome) }
   );
 }
