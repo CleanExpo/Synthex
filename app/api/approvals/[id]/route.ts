@@ -227,6 +227,7 @@ function toPrismaJson(value: Record<string, unknown>) {
 async function stampAuthorityApprovalOnContent(
   tx: Prisma.TransactionClient,
   approval: {
+    id: string;
     contentId: string;
     contentType: string;
     metadata: unknown;
@@ -310,23 +311,66 @@ async function stampAuthorityApprovalOnContent(
   if (approval.contentType === 'post' && txRecord.post) {
     const post = await tx.post.findUnique({
       where: { id: approval.contentId },
-      select: { metadata: true, platform: true },
+      select: {
+        metadata: true,
+        platform: true,
+        status: true,
+        publishedAt: true,
+        deletedAt: true,
+      },
     });
     if (!post || !extractCampaignAuthorityManifest(post.metadata)) return;
+
+    const approvedMetadata = approveCampaignAuthorityMetadata(post.metadata, {
+      ...input,
+      platforms:
+        metadataPlatforms.length > 0 ? metadataPlatforms : [post.platform],
+      requestedAction: 'approval_post_metadata',
+    });
+
+    // The publish cron only selects status 'scheduled'. When its authority
+    // gate blocked this post it parked it in 'pending_approval' with the
+    // failing verdict in metadata.publishGate; without a status reset the
+    // approval is stamped and the post never publishes. Re-queue only that
+    // case, and only when the approved manifest now passes the same gate.
+    // scheduledAt is kept: the cron publishes any post due at or before now.
+    const priorGate = jsonRecord(jsonRecord(post.metadata).publishGate);
+    const blockedByGate =
+      post.status === 'pending_approval' &&
+      priorGate.allowed === false &&
+      !post.publishedAt &&
+      !post.deletedAt;
+    const gateNow = jsonRecord(approvedMetadata.publishGate);
+    const requeue = blockedByGate && gateNow.allowed === true;
+
+    if (blockedByGate) {
+      const history = Array.isArray(approvedMetadata.history)
+        ? approvedMetadata.history
+        : [];
+      approvedMetadata.history = [
+        ...history,
+        requeue
+          ? {
+              event: 'requeued_after_approval',
+              at: input.approvedAt,
+              approvalId: approval.id,
+              approvedBy: input.approvedBy,
+            }
+          : {
+              event: 'approval_recorded_gate_still_blocked',
+              at: input.approvedAt,
+              approvalId: approval.id,
+              approvedBy: input.approvedBy,
+              blockers: getStringArray(gateNow.blockers),
+            },
+      ];
+    }
 
     await tx.post.update({
       where: { id: approval.contentId },
       data: {
-        metadata: toPrismaJson(
-          approveCampaignAuthorityMetadata(post.metadata, {
-            ...input,
-            platforms:
-              metadataPlatforms.length > 0
-                ? metadataPlatforms
-                : [post.platform],
-            requestedAction: 'approval_post_metadata',
-          })
-        ),
+        ...(requeue ? { status: 'scheduled' } : {}),
+        metadata: toPrismaJson(approvedMetadata),
       },
     });
     return;
