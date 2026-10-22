@@ -17,6 +17,7 @@ agency, and the card is a separate showpiece.
 | `product-sketch.md` | Sketch for selling these cards (up to AUD $249 each) |
 | `steering-board.html` | Phill's decision board. Published privately at https://claude.ai/artifact/XuXp2GMawpsNjLJV3wNp37 |
 | `board-seed.json` | The options written to the board's store (choices live in the store, not this file) |
+| `restoreassist-staff-cards.md` | Track 2: staff cards inside RestoreAssist, what data already exists, ecosystem ideas |
 | `research-notes.md` | Higgsfield in depth, review-engine rules, business list, competitor sweep, "lavish" search |
 
 ## 1. Rana's concept, and who wrote what
