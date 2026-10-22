@@ -95,10 +95,91 @@
       "status": "missing",
       "note": "no real photos of Phill supplied yet"
     },
-    "reviews": {"status": "missing", "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection"},
+    "reviews": {
+      "status": "missing",
+      "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection"
+    },
     "editions": {
-      "portal": {"status": "found", "fit": "cover", "video": "business-card/brand-kits/media/edition-portal.mp4", "poster": "business-card/brand-kits/media/edition-portal-poster.jpg", "stopAt": 3.95, "source": "Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark"},
-      "restoration": {"status": "found", "fit": "cover", "video": "business-card/brand-kits/media/edition-restoration.mp4", "poster": "business-card/brand-kits/media/edition-restoration-poster.jpg", "stopAt": 3.95, "source": "Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo"}
+      "portal": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-portal.mp4",
+        "poster": "business-card/brand-kits/media/edition-portal-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark"
+      },
+      "restoration": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-restoration.mp4",
+        "poster": "business-card/brand-kits/media/edition-restoration-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo"
+      },
+      "blueprint": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-blueprint.mp4",
+        "poster": "business-card/brand-kits/media/edition-blueprint-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 79c25c92-eac8-4b11-87e5-07f9422b3c4a (source sha256 3b39ba9c…); ends on the logo on deep navy; stop frame checked by eye 22/10/2026"
+      },
+      "forge": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-forge.mp4",
+        "poster": "business-card/brand-kits/media/edition-forge-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026"
+      },
+      "constellation": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-constellation.mp4",
+        "poster": "business-card/brand-kits/media/edition-constellation-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2 (source sha256 18101dcf…); ends on the logo in a starfield; stop frame checked by eye 22/10/2026"
+      },
+      "ink": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-ink.mp4",
+        "poster": "business-card/brand-kits/media/edition-ink-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 90463cb2-9496-4070-b1d8-93327812edab (source sha256 45e10bd7…); ends on the glowing logo on black; stop frame checked by eye 22/10/2026"
+      },
+      "rewind": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-rewind.mp4",
+        "poster": "business-card/brand-kits/media/edition-rewind-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 62822ddf-df7b-406d-a52c-af4a1fb6acc4 (source sha256 74b04b0d…); ends on the logo behind a glass pane; stop frame checked by eye 22/10/2026"
+      },
+      "skyline": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-skyline.mp4",
+        "poster": "business-card/brand-kits/media/edition-skyline-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job dd07eaba-07eb-4d50-96f8-37f80a4d3558 (source sha256 c3b2f430…); ends on the logo over a night city; stop frame checked by eye 22/10/2026"
+      },
+      "origami": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-origami.mp4",
+        "poster": "business-card/brand-kits/media/edition-origami-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job ac453c47-ca08-4e94-9e0f-761c69f6ab52 (source sha256 e823adaa…); ends on the logo on dark charcoal; stop frame checked by eye 22/10/2026"
+      },
+      "magnet": {
+        "status": "found",
+        "fit": "cover",
+        "video": "business-card/brand-kits/media/edition-magnet.mp4",
+        "poster": "business-card/brand-kits/media/edition-magnet-poster.jpg",
+        "stopAt": 3.95,
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 74047787-3e84-4104-9ce8-85d3d227af18 (source sha256 626a5ad5…); ends on the logo on dark grey; stop frame checked by eye 22/10/2026"
+      }
     },
     "hero": {
       "status": "found",
@@ -117,7 +198,11 @@
   "person": {
     "name": "Phill McGurk",
     "cardUrl": "https://card.unite-group.ink",
-    "likenessConsent": {"date": "22/10/2026", "scope": "Use of Phill's existing HeyGen avatar and existing ElevenLabs voice clone (both made from his own recordings) for his bio, image and motion. No new avatar or voice is to be created from scratch.", "source": "Phill's words relayed by the coordinating session: \"that can be used for my bio, my image, my motion, whatever it needs to be\""},
+    "likenessConsent": {
+      "date": "22/10/2026",
+      "scope": "Use of Phill's existing HeyGen avatar and existing ElevenLabs voice clone (both made from his own recordings) for his bio, image and motion. No new avatar or voice is to be created from scratch.",
+      "source": "Phill's words relayed by the coordinating session: \"that can be used for my bio, my image, my motion, whatever it needs to be\""
+    },
     "title": "Founder, Unite Group",
     "intro": "Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.",
     "motto": "Found. Trusted. Chosen.",

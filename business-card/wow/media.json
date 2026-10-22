@@ -199,6 +199,86 @@
       "sha256": "e557dd1fbc4b9c79715e83511e06c28fe1ef66f67d1ba09279b9ffc716f7d6f5",
       "label": "AI-generated in Higgsfield (concept, not a real photo)",
       "phoneJpg": "business-card/wow/out/x5-wallet-pass.jpg"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Blueprint",
+      "job": "79c25c92-eac8-4b11-87e5-07f9422b3c4a",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_79c25c92-eac8-4b11-87e5-07f9422b3c4a.mp4",
+      "file": "business-card/brand-kits/media/edition-blueprint-src.mp4",
+      "bytes": 1416031,
+      "sha256": "3b39ba9ccc96c5d6a70126b2b5ba9b2db024761d87ab810279d3431cb59a0402",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Forge",
+      "job": "4712e0de-ce47-46f8-b093-04520c11d639",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_4712e0de-ce47-46f8-b093-04520c11d639.mp4",
+      "file": "business-card/brand-kits/media/edition-forge-src.mp4",
+      "bytes": 1765772,
+      "sha256": "3ebd3cdf41a543a847397193d6835cfa3a6124be8998e53dc3141af2098dc8d9",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Constellation",
+      "job": "54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073141_54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2.mp4",
+      "file": "business-card/brand-kits/media/edition-constellation-src.mp4",
+      "bytes": 1302721,
+      "sha256": "18101dcf74173fddd27fe818ed710c4a6c88daeb731dfb423b21477b07a51a34",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Ink",
+      "job": "90463cb2-9496-4070-b1d8-93327812edab",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_90463cb2-9496-4070-b1d8-93327812edab.mp4",
+      "file": "business-card/brand-kits/media/edition-ink-src.mp4",
+      "bytes": 1456815,
+      "sha256": "45e10bd7ed0928cb58dfe0a9b45a8ac7ad8c54912ed68cd51db1630723b99fbe",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Rewind",
+      "job": "62822ddf-df7b-406d-a52c-af4a1fb6acc4",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_62822ddf-df7b-406d-a52c-af4a1fb6acc4.mp4",
+      "file": "business-card/brand-kits/media/edition-rewind-src.mp4",
+      "bytes": 1711720,
+      "sha256": "74b04b0d18015b6675866b8503c2d61287f8459909dd69e9f7e13b3b44481d28",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Skyline",
+      "job": "dd07eaba-07eb-4d50-96f8-37f80a4d3558",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_dd07eaba-07eb-4d50-96f8-37f80a4d3558.mp4",
+      "file": "business-card/brand-kits/media/edition-skyline-src.mp4",
+      "bytes": 2592634,
+      "sha256": "c3b2f43003400b70e008e96734261f30ac4366bc1c6d1208534cd5b97d530fb9",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Origami",
+      "job": "ac453c47-ca08-4e94-9e0f-761c69f6ab52",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_ac453c47-ca08-4e94-9e0f-761c69f6ab52.mp4",
+      "file": "business-card/brand-kits/media/edition-origami-src.mp4",
+      "bytes": 1131378,
+      "sha256": "e823adaae7b6a3b7602b9cd441f9961fa6482ac8810b91c41ab3602b4736105f",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener: Magnet",
+      "job": "74047787-3e84-4104-9ce8-85d3d227af18",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_073140_74047787-3e84-4104-9ce8-85d3d227af18.mp4",
+      "file": "business-card/brand-kits/media/edition-magnet-src.mp4",
+      "bytes": 1499941,
+      "sha256": "626a5ad50f11f3f7a19b51d5f74b83ed7effaa83e19ffbd1f35a4988d63123fe",
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
     }
   ],
   "note": "Full-size PNG stills stay local (the repo ignores *.png); 1600 px JPG copies are committed and are what the board shows."
