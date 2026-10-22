@@ -28,13 +28,21 @@
     },
     "logo": {
       "status": "found",
-      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072225_8411d0b4-af07-419b-a516-cd872c1207b2.png",
-      "file": "business-card/brand-kits/media/unite-nexus-2026-05e8ec98.png",
-      "background": "transparent",
-      "source": "Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round); transparent version job 05e8ec98-a658-4c6d-b9b3-a3c5d61b5753; checksums in business-card/wow/media.json",
-      "decision": "Chosen by Phill 22/10/2026: \"We have to go with image 4. thats a clear winner\". Founder-chosen, AI-generated, not yet trademark-checked. Used on the card only; no live website logo changed."
+      "url": "file:///Users/phill-mac/session-handoffs/unite-nexus-logo-shattered-u-phill-2026-10-22.webp",
+      "file": "business-card/brand-kits/media/unite-nexus-u-d49d2161.webp",
+      "background": "#000511 (dark scene, not transparent)",
+      "source": "Phill's image as supplied 22/10/2026, 2000x2000 WebP, sha256 d49d216152996a2db4b7c7a324e1f4a3a67d5fd637f74206cb9552f57c133a5f; same mark as the Shattered-U concept (Higgsfield job f51278f4-e500-480c-9bde-fc2fe7674e5d)",
+      "decision": "Phill 22/10/2026, attaching this image: \"This is the new and current Logo. It will need to be updated 100% through the entire Unite-Group Nexus Project\". Supersedes the 'image 4' wings mark chosen earlier the same day. AI-generated (Higgsfield), not yet trademark-checked.",
+      "urlNote": "No public URL: Phill attached this image in chat on 22/10/2026; the founder-supplied original is kept at this path outside the repo."
     },
     "previousLogos": [
+      {
+        "label": "Unite-Group Nexus wings mark ('image 4'), card logo 22/10/2026 until superseded the same day",
+        "file": "business-card/brand-kits/media/unite-nexus-2026-05e8ec98.png",
+        "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072225_8411d0b4-af07-419b-a516-cd872c1207b2.png",
+        "source": "Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round); transparent version job 05e8ec98-a658-4c6d-b9b3-a3c5d61b5753; checksums in business-card/wow/media.json",
+        "decision": "Chosen by Phill 22/10/2026: \"We have to go with image 4. thats a clear winner\". Founder-chosen, AI-generated, not yet trademark-checked. Used on the card only; no live website logo changed."
+      },
       {
         "label": "Unite-Group Nexus mark used on unite-group.in until 22/10/2026",
         "file": "public/logos/unite/primary.svg",
@@ -67,7 +75,8 @@
     },
     "conflicts": [],
     "resolved": [
-      "Orange #E55A2B vs the logo's cyan #00DCE3: orange leads; cyan stays inside the logo only (Phill, 22/10/2026)."
+      "Orange #E55A2B vs the logo's cyan #00DCE3: orange leads; cyan stays inside the logo only (Phill, 22/10/2026).",
+      "Logo: the cracked U replaces the wings mark everywhere on the card (Phill, 22/10/2026)."
     ],
     "fonts": {
       "display": {
@@ -95,109 +104,136 @@
       "status": "missing",
       "note": "no real photos of Phill supplied yet"
     },
-    "rotation": ["signature", "origami", "blueprint", "restoration"],
-    "rotationReason": "Card stays light: smallest files with the strongest logo hold. Signature 0.97 MB carries the crack moment; Origami 0.77 MB (smallest) has the boldest logo; Blueprint 0.98 MB clean navy hold; Restoration 1.05 MB tells the restoration story. All ten stay recorded for ?edition= and the unite-group.in showroom. Chosen 22/10/2026; Phill can swap any via the board.",
+    "rotation": [
+      "signature"
+    ],
+    "rotationReason": "Only the cracked-U opener exists in the new logo (22/10/2026). The ten editions return to the rotation once re-rendered; the earlier choice was signature, origami, blueprint, restoration.",
     "shopUrl": "get-your-card.html",
-    "shopUrlNote": "Single switch for the Get your own card target. Change to the unite-group.in showroom page once it is live.",
+    "shopUrlNote": "Single switch for the Get your own card target. Change to https://unite-group.in/cards/order only once `curl -sI` on it returns 200 (22/10/2026: 307 to the login page).",
     "reviews": {
       "status": "missing",
       "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection"
     },
     "editions": {
       "portal": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-portal.mp4",
         "poster": "business-card/brand-kits/media/edition-portal-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark"
+        "source": "Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "restoration": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-restoration.mp4",
         "poster": "business-card/brand-kits/media/edition-restoration-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo"
+        "source": "Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "blueprint": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-blueprint.mp4",
         "poster": "business-card/brand-kits/media/edition-blueprint-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 79c25c92-eac8-4b11-87e5-07f9422b3c4a (source sha256 3b39ba9c…); ends on the logo on deep navy; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 79c25c92-eac8-4b11-87e5-07f9422b3c4a (source sha256 3b39ba9c…); ends on the logo on deep navy; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "forge": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-forge.mp4",
         "poster": "business-card/brand-kits/media/edition-forge-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "constellation": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-constellation.mp4",
         "poster": "business-card/brand-kits/media/edition-constellation-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2 (source sha256 18101dcf…); ends on the logo in a starfield; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 54e6e2bf-e8c4-41f5-ba0d-a99a93b137b2 (source sha256 18101dcf…); ends on the logo in a starfield; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "ink": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-ink.mp4",
         "poster": "business-card/brand-kits/media/edition-ink-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 90463cb2-9496-4070-b1d8-93327812edab (source sha256 45e10bd7…); ends on the glowing logo on black; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 90463cb2-9496-4070-b1d8-93327812edab (source sha256 45e10bd7…); ends on the glowing logo on black; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "rewind": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-rewind.mp4",
         "poster": "business-card/brand-kits/media/edition-rewind-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 62822ddf-df7b-406d-a52c-af4a1fb6acc4 (source sha256 74b04b0d…); ends on the logo behind a glass pane; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 62822ddf-df7b-406d-a52c-af4a1fb6acc4 (source sha256 74b04b0d…); ends on the logo behind a glass pane; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "skyline": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-skyline.mp4",
         "poster": "business-card/brand-kits/media/edition-skyline-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job dd07eaba-07eb-4d50-96f8-37f80a4d3558 (source sha256 c3b2f430…); ends on the logo over a night city; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job dd07eaba-07eb-4d50-96f8-37f80a4d3558 (source sha256 c3b2f430…); ends on the logo over a night city; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "origami": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-origami.mp4",
         "poster": "business-card/brand-kits/media/edition-origami-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job ac453c47-ca08-4e94-9e0f-761c69f6ab52 (source sha256 e823adaa…); ends on the logo on dark charcoal; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job ac453c47-ca08-4e94-9e0f-761c69f6ab52 (source sha256 e823adaa…); ends on the logo on dark charcoal; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       },
       "magnet": {
-        "status": "found",
+        "status": "superseded",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-magnet.mp4",
         "poster": "business-card/brand-kits/media/edition-magnet-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 74047787-3e84-4104-9ce8-85d3d227af18 (source sha256 626a5ad5…); ends on the logo on dark grey; stop frame checked by eye 22/10/2026"
+        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 74047787-3e84-4104-9ce8-85d3d227af18 (source sha256 626a5ad5…); ends on the logo on dark grey; stop frame checked by eye 22/10/2026",
+        "supersededReason": "ends on the old wings mark; off the card and the order page until re-rendered on the cracked U (re-render spends Higgsfield credits: Phill's OK needed)"
       }
     },
     "hero": {
       "status": "found",
-      "video": "business-card/brand-kits/media/unite-nexus-reveal-h264.mp4",
-      "poster": "business-card/brand-kits/media/unite-nexus-reveal-poster.jpg",
-      "stopAt": 3.35,
+      "video": "business-card/brand-kits/media/unite-nexus-u-reveal-h264.mp4",
+      "poster": "business-card/brand-kits/media/unite-nexus-u-reveal-poster.jpg",
+      "stopAt": 4.4,
       "loop": false,
       "background": {
-        "value": "#04080E",
-        "source": "measured from the clip's corner pixels"
+        "value": "#000511",
+        "source": "measured from the opener's corner pixels"
       },
-      "source": "Generated in Higgsfield, job 9d9d98d9-dc53-47df-a610-ede9fa7179d8 (4 s logo reveal). Re-encoded from HEVC to H.264 so every phone browser plays it, trimmed at 3.4 s to drop the trailing black; poster is the frame at 3.3 s."
+      "source": "Shattered-U reveal generated in Higgsfield, job f51278f4-e500-480c-9bde-fc2fe7674e5d (H.264 copy), cut at 3.0 s and dissolved over 0.8 s into Phill's exact logo image (sha256 d49d2161...), held to 5.0 s. Edited locally with ffmpeg; nothing new generated. The clip's own crack lines differ slightly from Phill's image, so the card rests on his image, not the clip's last frame. Poster is his image."
     },
-    "services": []
+    "services": [],
+    "previousHeroes": [
+      {
+        "status": "superseded",
+        "video": "business-card/brand-kits/media/unite-nexus-reveal-h264.mp4",
+        "poster": "business-card/brand-kits/media/unite-nexus-reveal-poster.jpg",
+        "stopAt": 3.35,
+        "loop": false,
+        "background": {
+          "value": "#04080E",
+          "source": "measured from the clip's corner pixels"
+        },
+        "source": "Generated in Higgsfield, job 9d9d98d9-dc53-47df-a610-ede9fa7179d8 (4 s logo reveal). Re-encoded from HEVC to H.264 so every phone browser plays it, trimmed at 3.4 s to drop the trailing black; poster is the frame at 3.3 s.",
+        "supersededReason": "ends on the wings mark; replaced by the cracked U 22/10/2026"
+      }
+    ]
   },
   "person": {
     "name": "Phill McGurk",

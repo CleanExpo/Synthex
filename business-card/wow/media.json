@@ -135,7 +135,7 @@
     },
     {
       "kind": "video",
-      "title": "Shattered-U reveal (rejected logo, concept only)",
+      "title": "Shattered-U reveal (now the current logo, Phill 22/10/2026)",
       "job": "f51278f4-e500-480c-9bde-fc2fe7674e5d",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072344_f51278f4-e500-480c-9bde-fc2fe7674e5d.mp4",
       "file": "business-card/wow/out/v4-shattered-u.mp4",
@@ -279,6 +279,27 @@
       "bytes": 1499941,
       "sha256": "626a5ad50f11f3f7a19b51d5f74b83ed7effaa83e19ffbd1f35a4988d63123fe",
       "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo)"
+    },
+    {
+      "kind": "still",
+      "title": "Unite-Group Nexus cracked-U logo, as supplied by Phill 22/10/2026 (current logo)",
+      "job": null,
+      "url": null,
+      "file": "business-card/brand-kits/media/unite-nexus-u-d49d2161.webp",
+      "bytes": 133572,
+      "sha256": "d49d216152996a2db4b7c7a324e1f4a3a67d5fd637f74206cb9552f57c133a5f",
+      "label": "AI-generated in Higgsfield (Shattered-U concept); founder-supplied file, chosen as the logo"
+    },
+    {
+      "kind": "video",
+      "title": "Signature opener: Shattered-U reveal dissolving into Phill's logo",
+      "job": "f51278f4-e500-480c-9bde-fc2fe7674e5d",
+      "url": null,
+      "file": "business-card/brand-kits/media/unite-nexus-u-reveal-h264.mp4",
+      "bytes": 1013395,
+      "sha256": "8702ca723dc0108920bd192697e42b42cb14dd3eb9b9cc13bf132e24f9c4c9df",
+      "label": "AI-generated in Higgsfield, edited locally with ffmpeg (cut at 3.0 s, 0.8 s dissolve into the supplied logo); nothing new generated",
+      "poster": "business-card/brand-kits/media/unite-nexus-u-reveal-poster.jpg"
     }
   ],
   "note": "Full-size PNG stills stay local (the repo ignores *.png); 1600 px JPG copies are committed and are what the board shows."
