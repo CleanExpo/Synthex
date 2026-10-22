@@ -22,6 +22,7 @@
 
 import { emailQueue, EmailJob, EmailType } from './queue';
 import prisma from '@/lib/prisma';
+import { getSuppressionStatus } from './suppression';
 import * as crypto from 'crypto';
 
 // ============================================================================
@@ -304,25 +305,13 @@ class UnifiedEmailService {
   }
 
   /**
-   * Check if user's email is valid for sending
+   * May this address receive marketing email? Delegates to the shared
+   * suppression check (Resend audience + user.preferences.emailStatus).
+   * Fails closed: an unknown address or an unreadable store returns false.
    */
   async canSendTo(email: string): Promise<boolean> {
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: { preferences: true },
-    });
-
-    if (!user) return true; // Unknown email, allow
-
-    const prefs = user.preferences as Record<string, unknown> | null;
-    const emailStatus = prefs?.emailStatus as
-      | Record<string, unknown>
-      | undefined;
-
-    if (!emailStatus) return true;
-
-    const status = emailStatus.status as string;
-    return !['invalid', 'unsubscribed'].includes(status);
+    const status = await getSuppressionStatus(email);
+    return status.state === 'allowed';
   }
 
   // ============================================================================

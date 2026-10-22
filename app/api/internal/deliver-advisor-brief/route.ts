@@ -58,7 +58,13 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const results = { delivered: 0, skipped: 0, emailFailed: 0 };
+  const results = {
+    delivered: 0,
+    skipped: 0,
+    emailFailed: 0,
+    suppressed: 0,
+    suppressionUnknown: 0,
+  };
   const now = new Date();
 
   for (const brief of briefs) {
@@ -101,6 +107,15 @@ export async function POST(request: NextRequest) {
         briefId: brief.id,
         orgId: org.id,
         weekStart: brief.weekStart,
+      });
+    } else if (emailResult.suppressed) {
+      // Unsubscribed or status unreadable: not sent, brief stays 'generated'.
+      if (emailResult.suppressionState === 'suppressed') results.suppressed++;
+      else results.suppressionUnknown++;
+      logger.warn('deliver-advisor-brief: send skipped by unsubscribe check', {
+        briefId: brief.id,
+        orgId: org.id,
+        reason: emailResult.error,
       });
     } else {
       results.emailFailed++;

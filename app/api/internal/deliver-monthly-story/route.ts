@@ -31,10 +31,7 @@ const DEFAULT_ANCHOR_DAY = 28;
 /** Deliver stories whose anchor date falls in the next 48–72 hours.
  *  Handles month rollover: if the anchor day has already passed this month,
  *  checks the next month's occurrence instead. */
-function storyIsDeliveryDue(
-  anchorDay: number | null,
-  now: Date
-): boolean {
+function storyIsDeliveryDue(anchorDay: number | null, now: Date): boolean {
   const day = anchorDay ?? DEFAULT_ANCHOR_DAY;
 
   // Build this month's anchor
@@ -248,7 +245,13 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const results = { delivered: 0, skipped: 0, emailFailed: 0 };
+  const results = {
+    delivered: 0,
+    skipped: 0,
+    emailFailed: 0,
+    suppressed: 0,
+    suppressionUnknown: 0,
+  };
 
   for (const story of stories) {
     const { organization: org, qualityReviews } = story;
@@ -357,8 +360,32 @@ export async function POST(request: NextRequest) {
         orgId: org.id,
         monthYear: story.monthYear,
       });
+    } else if (
+      emailResult.suppressed &&
+      emailResult.suppressionState === 'suppressed'
+    ) {
+      // Owner unsubscribed: never email this story. Show the dashboard card
+      // and record the skip so the story is not picked up again.
+      await prisma.monthlyStory.update({
+        where: { id: story.id },
+        data: {
+          deliveredAt: now,
+          emailStatus: 'skipped',
+          emailError: emailResult.error ?? 'recipient_suppressed',
+        },
+      });
+      results.suppressed++;
+      logger.warn(
+        'deliver-monthly-story: send skipped, recipient unsubscribed',
+        {
+          storyId: story.id,
+          orgId: org.id,
+        }
+      );
     } else {
-      // Email failed — keep dashboard card visible, schedule retry
+      if (emailResult.suppressed) results.suppressionUnknown++;
+      // Email failed (or suppression status unreadable) — keep dashboard card
+      // visible, schedule retry
       const retryAt = new Date(now.getTime() + 60 * 60 * 1000); // 1h
       await prisma.monthlyStory.update({
         where: { id: story.id },
@@ -369,7 +396,7 @@ export async function POST(request: NextRequest) {
           // Dashboard card: deliveredAt null means card not shown yet
         },
       });
-      results.emailFailed++;
+      if (!emailResult.suppressed) results.emailFailed++;
 
       logger.error('deliver-monthly-story: email failed', {
         storyId: story.id,

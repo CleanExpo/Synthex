@@ -12,6 +12,17 @@
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
 
+const mockContactsGet = jest.fn();
+jest.mock('resend', () => ({
+  // plain function: survives the config's resetMocks between tests
+  Resend: function MockResend() {
+    return {
+      contacts: { get: (...a: unknown[]) => mockContactsGet(...a) },
+    };
+  },
+}));
+const ENV = { ...process.env };
+
 const mockPrisma = {
   $queryRaw: jest.fn(),
   user: { findUnique: jest.fn(), update: jest.fn() },
@@ -53,8 +64,21 @@ const FOUR_DAYS_AGO = new Date(
   Date.now() - 4 * 24 * 60 * 60 * 1000
 ).toISOString();
 
+afterAll(() => {
+  process.env = ENV;
+});
+
 beforeEach(() => {
   jest.clearAllMocks();
+  process.env = {
+    ...ENV,
+    RESEND_API_KEY: 're_test_placeholder',
+    RESEND_AUDIENCE_ID: 'aud_test',
+  };
+  mockContactsGet.mockResolvedValue({
+    data: { id: 'c1', email: 'a@b.com', unsubscribed: false },
+    error: null,
+  });
   mockVerifyCron.mockReturnValue({ ok: true, scope: 'shared-fallback' });
   mockSendDay3.mockResolvedValue(undefined);
   mockSendDay7.mockResolvedValue(undefined);
@@ -131,5 +155,62 @@ describe('GET /api/cron/welcome-sequence', () => {
         },
       },
     });
+  });
+
+  it('never mails an unsubscribed user (D+3 or D+7) and sets no sent-flag', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([
+      {
+        id: 'u9',
+        email: 'gone@b.com',
+        name: 'Gone',
+        preferences: {
+          emailSequenceStartedAt: new Date(
+            Date.now() - 8 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          emailStatus: { status: 'unsubscribed' },
+        },
+      },
+    ]);
+    mockPrisma.subscription.findUnique.mockResolvedValue(null);
+    const res = await GET(req());
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(mockSendDay3).not.toHaveBeenCalled();
+    expect(mockSendDay7).not.toHaveBeenCalled();
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    expect(body.suppressed).toBe(1);
+  });
+
+  it('audience unset: preferences are authoritative, a clean user is mailed', async () => {
+    delete process.env.RESEND_AUDIENCE_ID;
+    mockPrisma.$queryRaw.mockResolvedValue([
+      {
+        id: 'u8',
+        email: 'a@b.com',
+        name: 'Ann',
+        preferences: { emailSequenceStartedAt: FOUR_DAYS_AGO },
+      },
+    ]);
+    mockPrisma.user.findUnique.mockResolvedValue({ preferences: {} });
+    const res = await GET(req());
+    const body = await res.json();
+    expect(mockSendDay3).toHaveBeenCalledTimes(1);
+    expect(body.suppressionUnknown).toBe(0);
+  });
+
+  it('fails closed: skips the send when the configured Resend audience read errors', async () => {
+    mockContactsGet.mockRejectedValue(new Error('network down'));
+    mockPrisma.$queryRaw.mockResolvedValue([
+      {
+        id: 'u7',
+        email: 'a@b.com',
+        name: 'Ann',
+        preferences: { emailSequenceStartedAt: FOUR_DAYS_AGO },
+      },
+    ]);
+    const res = await GET(req());
+    const body = await res.json();
+    expect(mockSendDay3).not.toHaveBeenCalled();
+    expect(body.suppressionUnknown).toBe(1);
   });
 });

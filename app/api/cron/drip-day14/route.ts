@@ -18,6 +18,7 @@ import { prisma } from '@/lib/prisma';
 import { sendWelcomeSequenceDay14 } from '@/lib/email/billing-emails';
 import { logger } from '@/lib/logger';
 import { verifyCronRequest } from '@/lib/auth/cron-auth';
+import { getSuppressionStatus } from '@/lib/email/suppression';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -50,13 +51,30 @@ export async function GET(request: NextRequest) {
         createdAt: { gte: startOfDay, lte: endOfDay },
         email: { not: undefined },
       },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, preferences: true },
     });
 
     let sent = 0;
     let failed = 0;
+    let suppressed = 0;
+    let suppressionUnknown = 0;
 
     for (const user of users) {
+      // Unsubscribe honoured (Spam Act 2003): never mail a suppressed recipient,
+      // and fail closed when the status cannot be established.
+      const suppression = await getSuppressionStatus(user.email, {
+        preferences: user.preferences,
+      });
+      if (suppression.state !== 'allowed') {
+        if (suppression.state === 'suppressed') suppressed++;
+        else suppressionUnknown++;
+        logger.warn('[drip-day14] send skipped: unsubscribe check', {
+          userId: user.id,
+          suppression,
+        });
+        continue;
+      }
+
       try {
         await sendWelcomeSequenceDay14(user.email, user.name ?? undefined);
         logger.info('[drip-day14] email sent', { userId: user.id });
@@ -76,12 +94,16 @@ export async function GET(request: NextRequest) {
       durationMs,
       sent,
       failed,
+      suppressed,
+      suppressionUnknown,
     });
 
     return NextResponse.json({
       success: true,
       sent,
       failed,
+      suppressed,
+      suppressionUnknown,
       total: users.length,
       durationMs,
     });

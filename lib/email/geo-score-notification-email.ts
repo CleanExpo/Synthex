@@ -11,6 +11,11 @@
  */
 
 import { Resend } from 'resend';
+import {
+  unsubscribeUrl as buildUnsubscribeUrl,
+  listUnsubscribeHeaders,
+} from './list-unsubscribe';
+import { marketingSendBlocked } from './suppression';
 import { buildUtmUrl } from '@/lib/utm/build-utm-url';
 
 let _resend: Resend | null = null;
@@ -21,32 +26,32 @@ function getResend(): Resend {
   return _resend;
 }
 
-const FROM    = process.env.EMAIL_FROM      ?? 'Synthex <noreply@synthex.social>';
+const FROM = process.env.EMAIL_FROM ?? 'Synthex <noreply@synthex.social>';
 const REPLY_TO = 'support@synthex.social';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://synthex.social';
 
 export type GeoEmailVariant = 'improved' | 'needs_attention';
 
 export interface GeoScoreTrendPoint {
-  week: string;  // ISO date label e.g. "2026-03-24"
+  week: string; // ISO date label e.g. "2026-03-24"
   score: number; // 0-100
 }
 
 export interface GeoRecommendedAction {
-  action:    string;
-  impact:    number;
-  cta_url:   string;
+  action: string;
+  impact: number;
+  cta_url: string;
   cta_text?: string;
 }
 
 export interface GeoScoreNotificationEmailParams {
-  to:                    string;
-  businessName:          string;
-  variant:               GeoEmailVariant;
-  currentScore:          number;
-  delta:                 number;           // signed, e.g. +12 or -8
-  trendData:             GeoScoreTrendPoint[];
-  recommendedActions:    GeoRecommendedAction[];
+  to: string;
+  businessName: string;
+  variant: GeoEmailVariant;
+  currentScore: number;
+  delta: number; // signed, e.g. +12 or -8
+  trendData: GeoScoreTrendPoint[];
+  recommendedActions: GeoRecommendedAction[];
 }
 
 // ── Colour helpers ─────────────────────────────────────────────────────────────
@@ -54,7 +59,7 @@ export interface GeoScoreNotificationEmailParams {
 function scoreBandColor(score: number): string {
   if (score >= 67) return '#10B981'; // green — Strong
   if (score >= 34) return '#F59E0B'; // amber — Growing
-  return '#EF4444';                  // red   — Low
+  return '#EF4444'; // red   — Low
 }
 
 function scoreBandLabel(score: number): string {
@@ -74,7 +79,10 @@ function buildTrendChart(trendData: GeoScoreTrendPoint[]): string {
 
   const bars = points
     .map(p => {
-      const barHeight = Math.max(3, Math.round((p.score / maxScore) * chartHeight));
+      const barHeight = Math.max(
+        3,
+        Math.round((p.score / maxScore) * chartHeight)
+      );
       const color = scoreBandColor(p.score);
       return `<td style="vertical-align:bottom;padding:0 1px;">
         <div style="width:12px;height:${barHeight}px;background:${color};border-radius:2px 2px 0 0;"></div>
@@ -98,11 +106,11 @@ function buildScoreHero(
   delta: number,
   variant: GeoEmailVariant
 ): string {
-  const color       = scoreBandColor(score);
-  const label       = scoreBandLabel(score);
-  const deltaSign   = delta >= 0 ? '+' : '';
-  const deltaColor  = variant === 'improved' ? '#10B981' : '#EF4444';
-  const deltaLabel  = `${deltaSign}${delta} points this month`;
+  const color = scoreBandColor(score);
+  const label = scoreBandLabel(score);
+  const deltaSign = delta >= 0 ? '+' : '';
+  const deltaColor = variant === 'improved' ? '#10B981' : '#EF4444';
+  const deltaLabel = `${deltaSign}${delta} points this month`;
 
   return `
   <table cellpadding="0" cellspacing="0" style="margin:24px 0 20px;">
@@ -125,7 +133,7 @@ function buildScoreHero(
 
 function buildActionCard(action: GeoRecommendedAction): string {
   const ctaText = action.cta_text ?? 'Take action';
-  const ctaUrl  = action.cta_url.startsWith('http')
+  const ctaUrl = action.cta_url.startsWith('http')
     ? action.cta_url
     : `${APP_URL}${action.cta_url}`;
 
@@ -158,7 +166,10 @@ function buildActionCard(action: GeoRecommendedAction): string {
 
 // ── HTML builder ───────────────────────────────────────────────────────────────
 
-function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; html: string } {
+function buildHtml(params: GeoScoreNotificationEmailParams): {
+  subject: string;
+  html: string;
+} {
   const {
     businessName,
     variant,
@@ -168,14 +179,16 @@ function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; 
     recommendedActions,
   } = params;
 
-  const isImproved     = variant === 'improved';
-  const utmCampaign    = isImproved ? 'geo_score_improved' : 'geo_score_needs_attention';
-  const panelUrl       = buildUtmUrl(`${APP_URL}/dashboard/geo-score`, {
+  const isImproved = variant === 'improved';
+  const utmCampaign = isImproved
+    ? 'geo_score_improved'
+    : 'geo_score_needs_attention';
+  const panelUrl = buildUtmUrl(`${APP_URL}/dashboard/geo-score`, {
     source: 'synthex_email',
     medium: 'geo_score_monthly',
     campaign: utmCampaign,
   });
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(params.to)}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(params.to);
 
   const subject = isImproved
     ? `Your AI visibility improved this month 🟢`
@@ -189,12 +202,14 @@ function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; 
     ? `Your business is appearing more often when AI tools like ChatGPT and Google AI Overviews recommend local businesses. Here's what moved the needle:`
     : `Your GEO Score dropped this month, which means fewer AI recommendations for your business. One action can turn this around:`;
 
-  const ctaText   = isImproved ? 'View Your Full GEO Score →' : 'Take Action Now →';
+  const ctaText = isImproved
+    ? 'View Your Full GEO Score →'
+    : 'Take Action Now →';
   const topActions = isImproved
     ? recommendedActions.slice(0, 3)
     : recommendedActions.slice(0, 1);
 
-  const scoreHero  = buildScoreHero(currentScore, delta, variant);
+  const scoreHero = buildScoreHero(currentScore, delta, variant);
   const trendChart = isImproved ? buildTrendChart(trendData) : '';
   const actionRows = topActions.map(buildActionCard).join('');
 
@@ -232,7 +247,9 @@ function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; 
           </tr>
 
           <!-- Actions -->
-          ${topActions.length > 0 ? `
+          ${
+            topActions.length > 0
+              ? `
           <tr>
             <td style="padding:16px 32px 0;">
               <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;">
@@ -242,7 +259,9 @@ function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; 
                 ${actionRows}
               </table>
             </td>
-          </tr>` : ''}
+          </tr>`
+              : ''
+          }
 
           <!-- CTA -->
           <tr>
@@ -284,14 +303,25 @@ function buildHtml(params: GeoScoreNotificationEmailParams): { subject: string; 
  */
 export async function sendGeoScoreNotificationEmail(
   params: GeoScoreNotificationEmailParams
-): Promise<{ success: boolean; emailId?: string; error?: string }> {
+): Promise<{
+  success: boolean;
+  emailId?: string;
+  error?: string;
+  suppressed?: boolean;
+  suppressionState?: 'suppressed' | 'unknown';
+}> {
+  // Spam Act: never mail an unsubscribed or unknown-status recipient.
+  const blocked = await marketingSendBlocked(params.to, 'geo_score');
+  if (blocked) return blocked;
+
   const { subject, html } = buildHtml(params);
 
   try {
     const result = await getResend().emails.send({
-      from:     FROM,
-      to:       params.to,
-      replyTo:  REPLY_TO,
+      from: FROM,
+      to: params.to,
+      headers: listUnsubscribeHeaders(params.to),
+      replyTo: REPLY_TO,
       subject,
       html,
     });
