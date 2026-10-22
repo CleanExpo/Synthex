@@ -14,10 +14,9 @@
     "logo": {
       "status": "found",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072225_8411d0b4-af07-419b-a516-cd872c1207b2.png",
-      "file": "business-card/brand-kits/media/unite-nexus-2026.png",
-      "sha256": "52858877c0a7dfee0520fabb7644206d413ce4d83b288511f74f959a0a60f313",
-      "background": "light grey render; a clean navy version is being made",
-      "source": "Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round)",
+      "file": "business-card/brand-kits/media/unite-nexus-2026-transparent.png",
+      "background": "transparent",
+      "source": "Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round); transparent version job 05e8ec98-a658-4c6d-b9b3-a3c5d61b5753; checksums in business-card/wow/media.json",
       "decision": "Chosen by Phill 22/10/2026: \"We have to go with image 4. thats a clear winner\". Founder-chosen, AI-generated, not yet trademark-checked. Used on the card only; no live website logo changed."
     },
     "previousLogos": [
@@ -43,7 +42,15 @@
     },
     "about": {"status": "missing", "note": "no approved About copy for Unite Group in brand-config"},
     "imagery": {"status": "missing", "note": "no real photos of Phill supplied yet"},
-    "hero": {"status": "missing", "note": "4-second logo-reveal clip in progress in Higgsfield (job 9d9d98d9-dc53-47df-a610-ede9fa7179d8); add video and poster files here when it lands"},
+    "hero": {
+      "status": "found",
+      "video": "business-card/brand-kits/media/unite-nexus-reveal-h264.mp4",
+      "poster": "business-card/brand-kits/media/unite-nexus-reveal-poster.jpg",
+      "stopAt": 3.35,
+      "loop": false,
+      "background": {"value": "#04080E", "source": "measured from the clip's corner pixels"},
+      "source": "Generated in Higgsfield, job 9d9d98d9-dc53-47df-a610-ede9fa7179d8 (4 s logo reveal). Re-encoded from HEVC to H.264 so every phone browser plays it, trimmed at 3.4 s to drop the trailing black; poster is the frame at 3.3 s."
+    },
     "services": []
   },
   "person": {
