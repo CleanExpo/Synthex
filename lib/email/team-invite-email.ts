@@ -8,6 +8,7 @@
  */
 
 import { Resend } from 'resend';
+import { unsubscribeUrl as buildUnsubscribeUrl } from './list-unsubscribe';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -38,7 +39,7 @@ export async function sendBrandedTeamInviteEmail(
 
   // The accept URL is handled by SYN-598's accept flow
   const acceptUrl = `${APP_URL}/invite/accept?token=${invitationId}`;
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(to);
 
   const html = `<!DOCTYPE html>
 <html lang="en">

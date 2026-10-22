@@ -8,6 +8,11 @@
  */
 
 import { Resend } from 'resend';
+import {
+  unsubscribeUrl as buildUnsubscribeUrl,
+  listUnsubscribeHeaders,
+} from './list-unsubscribe';
+import { marketingSendBlocked } from './suppression';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -48,21 +53,16 @@ const EFFORT_LABELS: Record<string, string> = {
 function effortBadge(effort: string): string {
   const label = EFFORT_LABELS[effort] ?? effort;
   const bg =
-    effort === 'low'
-      ? '#dcfce7'
-      : effort === 'medium'
-        ? '#fef9c3'
-        : '#fee2e2';
+    effort === 'low' ? '#dcfce7' : effort === 'medium' ? '#fef9c3' : '#fee2e2';
   const colour =
-    effort === 'low'
-      ? '#166534'
-      : effort === 'medium'
-        ? '#854d0e'
-        : '#991b1b';
+    effort === 'low' ? '#166534' : effort === 'medium' ? '#854d0e' : '#991b1b';
   return `<span style="display:inline-block;background:${bg};color:${colour};font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:0.5px;">${label}</span>`;
 }
 
-function buildActionRow(action: AdvisorBriefEmailAction, index: number): string {
+function buildActionRow(
+  action: AdvisorBriefEmailAction,
+  index: number
+): string {
   return `
   <tr>
     <td style="padding:${index === 0 ? '0' : '16px'} 0 16px;border-bottom:1px solid #f3f4f6;">
@@ -95,7 +95,16 @@ function buildActionRow(action: AdvisorBriefEmailAction, index: number): string 
  */
 export async function sendAdvisorBriefEmail(
   params: AdvisorBriefEmailParams
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  suppressed?: boolean;
+  suppressionState?: 'suppressed' | 'unknown';
+}> {
+  // Spam Act: never mail an unsubscribed or unknown-status recipient.
+  const blocked = await marketingSendBlocked(params.to, 'advisor_brief');
+  if (blocked) return blocked;
+
   const {
     to,
     businessName,
@@ -108,16 +117,15 @@ export async function sendAdvisorBriefEmail(
   } = params;
 
   const dashboardUrl = `${APP_URL}/dashboard/advisor?brief=${briefId}`;
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(to);
 
   const actionRows = actions
     .sort((a, b) => a.rank - b.rank)
     .map((a, i) => buildActionRow(a, i))
     .join('');
 
-  const competitorBlock =
-    competitorMicroInsight
-      ? `
+  const competitorBlock = competitorMicroInsight
+    ? `
           <!-- Competitor Pulse -->
           <tr>
             <td style="padding:0 32px 24px;">
@@ -131,11 +139,10 @@ export async function sendAdvisorBriefEmail(
               </table>
             </td>
           </tr>`
-      : '';
+    : '';
 
-  const geoBlock =
-    geoTeaserText
-      ? `
+  const geoBlock = geoTeaserText
+    ? `
           <!-- GEO Teaser -->
           <tr>
             <td style="padding:0 32px 24px;">
@@ -149,7 +156,7 @@ export async function sendAdvisorBriefEmail(
               </table>
             </td>
           </tr>`
-      : '';
+    : '';
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -227,6 +234,7 @@ export async function sendAdvisorBriefEmail(
     const result = await getResend().emails.send({
       from: FROM,
       to,
+      headers: listUnsubscribeHeaders(to),
       subject: `Your Synthex brief for the week of ${weekLabel} — ${dollarAttribution}`,
       html,
     });

@@ -16,6 +16,7 @@
  */
 
 import { Resend } from 'resend';
+import { listUnsubscribeHeaders, unsubscribeUrl } from './list-unsubscribe';
 
 // Lazy singleton — instantiated on first use so module import does not throw
 // when RESEND_API_KEY is absent (e.g. in test environments).
@@ -290,6 +291,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
     .emails.send({
       from: FROM,
       to: email,
+      headers: listUnsubscribeHeaders(email),
       subject: "Welcome to Synthex — let's get you your first result",
       html: `<!DOCTYPE html>
 <html>
@@ -359,7 +361,7 @@ export function sendWelcomeSequenceDay0(email: string, name?: string): void {
             <td style="background:#000000;padding:25px;text-align:center;">
               <p style="margin:0;color:#666666;font-size:12px;">© 2026 Synthex. All rights reserved.</p>
               <p style="margin:8px 0 0;color:#666666;font-size:12px;">
-                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
+                <a href="${unsubscribeUrl(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -390,6 +392,7 @@ export async function sendWelcomeSequenceDay3(
   await getResend().emails.send({
     from: FROM,
     to: email,
+    headers: listUnsubscribeHeaders(email),
     subject: '3 things our best users do in their first week',
     html: `<!DOCTYPE html>
 <html>
@@ -453,7 +456,7 @@ export async function sendWelcomeSequenceDay3(
             <td style="background:#000000;padding:25px;text-align:center;">
               <p style="margin:0;color:#666666;font-size:12px;">© 2026 Synthex. All rights reserved.</p>
               <p style="margin:8px 0 0;color:#666666;font-size:12px;">
-                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
+                <a href="${unsubscribeUrl(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -481,6 +484,7 @@ export async function sendWelcomeSequenceDay7(
   await getResend().emails.send({
     from: FROM,
     to: email,
+    headers: listUnsubscribeHeaders(email),
     subject: "How's your first week with Synthex going?",
     html: `<!DOCTYPE html>
 <html>
@@ -553,7 +557,7 @@ export async function sendWelcomeSequenceDay7(
                 Not ready yet? No worries — your free plan is always here. Just reply if you have questions.
               </p>
               <p style="margin:8px 0 0;color:#666666;font-size:12px;text-align:center;">
-                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
+                <a href="${unsubscribeUrl(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -586,6 +590,7 @@ export async function sendWelcomeSequenceDay14(
   await getResend().emails.send({
     from: FROM,
     to: email,
+    headers: listUnsubscribeHeaders(email),
     subject: "Two weeks with Synthex — here's what's possible",
     html: `<!DOCTYPE html>
 <html>
@@ -659,7 +664,7 @@ export async function sendWelcomeSequenceDay14(
                 Any questions? Just reply — we read every email.
               </p>
               <p style="margin:8px 0 0;color:#666666;font-size:12px;text-align:center;">
-                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
+                <a href="${unsubscribeUrl(email)}" style="color:#666666;text-decoration:underline;">Unsubscribe</a>
               </p>
             </td>
           </tr>
@@ -690,6 +695,7 @@ export function sendNewsletterWelcome(email: string): void {
     .emails.send({
       from: FROM,
       to: email,
+      headers: listUnsubscribeHeaders(email),
       subject: "You're on the Synthex list — here's what's coming",
       html: `<!DOCTYPE html>
 <html>
@@ -737,7 +743,7 @@ export function sendNewsletterWelcome(email: string): void {
               </div>
               <p style="margin:28px 0 0;color:#555555;font-size:12px;text-align:center;line-height:1.5;">
                 You're receiving this because you subscribed at synthex.social.<br>
-                <a href="${APP_URL}/api/newsletter/unsubscribe?email=${encodeURIComponent(email)}" style="color:#666666;">Unsubscribe</a>
+                <a href="${unsubscribeUrl(email)}" style="color:#666666;">Unsubscribe</a>
               </p>
             </td>
           </tr>

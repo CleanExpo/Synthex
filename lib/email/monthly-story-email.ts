@@ -8,6 +8,11 @@
  */
 
 import { Resend } from 'resend';
+import {
+  unsubscribeUrl as buildUnsubscribeUrl,
+  listUnsubscribeHeaders,
+} from './list-unsubscribe';
+import { marketingSendBlocked } from './suppression';
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -162,7 +167,16 @@ function buildProgressArcBlocks(metrics: EnhancedMetrics | undefined): string {
  */
 export async function sendMonthlyStoryEmail(
   params: MonthlyStoryEmailParams
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{
+  success: boolean;
+  error?: string;
+  suppressed?: boolean;
+  suppressionState?: 'suppressed' | 'unknown';
+}> {
+  // Spam Act: never mail an unsubscribed or unknown-status recipient.
+  const blocked = await marketingSendBlocked(params.to, 'monthly_story');
+  if (blocked) return blocked;
+
   const {
     to,
     businessName,
@@ -182,7 +196,7 @@ export async function sendMonthlyStoryEmail(
 
   const hoursaved = Math.round(minutesSaved / 60);
   const dashboardUrl = `${APP_URL}/dashboard?story=${storyId}`;
-  const unsubscribeUrl = `${APP_URL}/unsubscribe?email=${encodeURIComponent(to)}`;
+  const unsubscribeUrl = buildUnsubscribeUrl(to);
 
   const storyParagraphs = storyText
     .split('\n\n')
@@ -301,6 +315,7 @@ export async function sendMonthlyStoryEmail(
     const result = await getResend().emails.send({
       from: FROM,
       to,
+      headers: listUnsubscribeHeaders(to),
       subject: `${businessName}'s marketing in ${monthLabel} — here's what happened`,
       html,
       // SYN-729 section 3: tags surfaced on the email.opened webhook so

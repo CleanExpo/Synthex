@@ -415,6 +415,114 @@ describe('POST /api/internal/deliver-monthly-story', () => {
       })
     );
   });
+
+  it('does not mail an unsubscribed owner: counts suppressed and marks the story skipped', async () => {
+    const fiftyHoursFromNow = new Date(Date.now() + 50 * 60 * 60 * 1000);
+    const anchorDay = fiftyHoursFromNow.getUTCDate();
+
+    mockStoryFindMany.mockResolvedValue([
+      {
+        id: 'story-3',
+        monthYear: '2026-02',
+        storyText: 'Good month.',
+        totalReach: 200,
+        postsPublished: 2,
+        autonomousPosts: 0,
+        minutesSaved: 44,
+        emailStatus: 'pending',
+        organization: {
+          id: 'org-3',
+          name: 'Synthex',
+          billingEmail: 'owner@synthex.social',
+          billingAnchorDate: anchorDay,
+          liveModeT: 0,
+          users: [],
+        },
+        qualityReviews: [],
+        storyConfig: { autoApproveFuture: true, storiesReviewed: 3 },
+      },
+    ]);
+
+    mockSendEmail.mockResolvedValue({
+      success: false,
+      suppressed: true,
+      suppressionState: 'suppressed',
+      error: 'recipient_suppressed',
+    });
+    mockStoryUpdate.mockResolvedValue({});
+
+    const { POST } =
+      await import('@/app/api/internal/deliver-monthly-story/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/internal/deliver-monthly-story',
+      headers: { authorization: `Bearer ${CRON_SECRET}` },
+    });
+    const res = await POST(req as any);
+    const body = await res.json();
+    expect(body.suppressed).toBe(1);
+    expect(body.emailFailed).toBe(0);
+    expect(body.delivered).toBe(0);
+    expect(mockStoryUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ emailStatus: 'skipped' }),
+      })
+    );
+  });
+
+  it('unreadable suppression status: counts suppressionUnknown (not emailFailed) and schedules retry', async () => {
+    const fiftyHoursFromNow = new Date(Date.now() + 50 * 60 * 60 * 1000);
+    const anchorDay = fiftyHoursFromNow.getUTCDate();
+
+    mockStoryFindMany.mockResolvedValue([
+      {
+        id: 'story-3',
+        monthYear: '2026-02',
+        storyText: 'Good month.',
+        totalReach: 200,
+        postsPublished: 2,
+        autonomousPosts: 0,
+        minutesSaved: 44,
+        emailStatus: 'pending',
+        organization: {
+          id: 'org-3',
+          name: 'Synthex',
+          billingEmail: 'owner@synthex.social',
+          billingAnchorDate: anchorDay,
+          liveModeT: 0,
+          users: [],
+        },
+        qualityReviews: [],
+        storyConfig: { autoApproveFuture: true, storiesReviewed: 3 },
+      },
+    ]);
+
+    mockSendEmail.mockResolvedValue({
+      success: false,
+      suppressed: true,
+      suppressionState: 'unknown',
+      error: 'suppression_unknown:resend_read_failed',
+    });
+    mockStoryUpdate.mockResolvedValue({});
+
+    const { POST } =
+      await import('@/app/api/internal/deliver-monthly-story/route');
+    const req = createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/internal/deliver-monthly-story',
+      headers: { authorization: `Bearer ${CRON_SECRET}` },
+    });
+    const res = await POST(req as any);
+    const body = await res.json();
+    expect(body.suppressionUnknown).toBe(1);
+    expect(body.emailFailed).toBe(0);
+    expect(body.delivered).toBe(0);
+    expect(mockStoryUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ emailStatus: 'retry' }),
+      })
+    );
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
