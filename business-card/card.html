@@ -107,6 +107,11 @@ textarea { min-height: 96px; resize: vertical; }
 .brands { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .brands a, .brands span { font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--fg); min-width: 0; }
 .brands small { display: block; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.status-list li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.status-list b { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.status-list .on b { color: var(--aqua); }
+.status-list .off b { color: var(--warn); }
 footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
 @media (prefers-reduced-motion: reduce) { .name h1 .w { animation: none; } .rabbit { transition: none; } }
 </style>
@@ -217,9 +222,23 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
       <a href="https://carsi.com.au" target="_blank" rel="noopener">CARSI<small>IICRC CEC training</small></a>
       <a href="https://unite-group.in" target="_blank" rel="noopener">Unite Group<small>The group</small></a>
       <a href="https://synthex.social" target="_blank" rel="noopener">Synthex<small>Group marketing</small></a>
-      <span>RestoreAssist<small>Link to confirm</small></span>
-      <span>CleanExpo / NRPG<small>Links to confirm</small></span>
+      <a href="https://restoreassist.app" target="_blank" rel="noopener">RestoreAssist<small>Restoration job app</small></a>
+      <a href="https://nrpg.business" target="_blank" rel="noopener">NRPG<small>Contractor network</small></a>
+      <span style="grid-column:1/-1">CleanExpo247 / TradeHall<small>Not connected yet: no public address</small></span>
     </div>
+  </section>
+
+  <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px">
+    <h2 id="live-h" style="font-size:20px">What works right now</h2>
+    <ul class="status-list">
+      <li class="on"><b>Live</b>Business links open the real websites.</li>
+      <li class="on"><b>Live</b>Mobile, office and email copy to your clipboard.</li>
+      <li class="on"><b>Live</b>Discover ideas and the hidden rabbit.</li>
+      <li class="off"><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
+      <li class="off"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
+      <li class="off"><b>Not connected yet</b>The White Rabbit game link and the motion video of Phill.</li>
+      <li class="off"><b>Not connected yet</b>Public access. Only people Phill shares this preview with can open it, signed in to claude.ai.</li>
+    </ul>
   </section>
 
   <footer>

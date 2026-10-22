@@ -34,8 +34,12 @@ h2 { font: 600 22px/1.15 var(--display); letter-spacing: -.01em; margin: 0; text
 .mono { font-family: var(--mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
 
 header { display: grid; gap: 14px; }
-.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
-.status.off { color: var(--rose); }
+.status { font-size: 14px; }
+.banner { display: grid; gap: 4px; padding: 12px 14px; border-radius: 14px; border: 2px solid var(--line); background: var(--panel); }
+.banner b { font: 600 13px var(--mono); letter-spacing: .14em; }
+.banner.live { border-color: var(--aqua); } .banner.live b { color: var(--aqua); }
+.banner.readonly, .banner.error { border-color: var(--rose); } .banner.readonly b, .banner.error b { color: var(--rose); }
+.banner.wait b { color: var(--muted); }
 .strip { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .count { display: inline-flex; gap: 6px; align-items: baseline; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); font-variant-numeric: tabular-nums; }
 .count b { font: 600 17px var(--display); }
@@ -93,7 +97,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     <span class="mono" style="color:var(--aqua)">Phill McGurk · living business card</span>
     <h1>Card Steering Board</h1>
     <p class="lede">Every option for the card in one place. Tap Yes, Maybe or No, drag (or use the arrows) to put the most important first, and leave a note. Claude reads this board and builds what you say yes to.</p>
-    <div class="status" id="status" role="status">Connecting to the board…</div>
+    <div class="banner wait" id="live-banner" role="status"><b id="banner-word">CONNECTING</b><span class="status" id="status">Connecting to the board…</span></div>
     <div class="strip" aria-label="Decision counts">
       <span class="count yes"><b id="n-yes">0</b> yes</span>
       <span class="count maybe"><b id="n-maybe">0</b> maybe</span>
@@ -139,7 +143,14 @@ const LANES = [
 const state = { items: [], filter: "all", canWrite: false, db: null };
 const $ = id => document.getElementById(id);
 
-function setStatus(text, off) { const s = $("status"); s.textContent = text; s.classList.toggle("off", !!off); }
+// The banner always says which mode the board is in: LIVE (choices save) or READ-ONLY (nothing saves).
+function setStatus(text, off) {
+  const mode = !off ? "live" : (state.db && state.canWrite ? "error" : "readonly");
+  const words = { live: "LIVE", readonly: "READ-ONLY", error: "LIVE, BUT LAST CHANGE NOT SAVED" };
+  $("live-banner").className = "banner " + mode;
+  $("banner-word").textContent = words[mode];
+  $("status").textContent = text;
+}
 
 function sorted(laneId) {
   return state.items.filter(i => i.lane === laneId).sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0) || a.id.localeCompare(b.id));
