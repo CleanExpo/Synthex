@@ -97,7 +97,7 @@ Each manifest records `onboardingAuthority.scopesRequired` and `onboardingAuthor
 
 ## Hosting
 
-CARSI and RestoreAssist sites run on DigitalOcean App Platform (observed with `doctl apps spec get`, 22/10/2026):
+CARSI and RestoreAssist sites run on DigitalOcean App Platform (observed by the coordinator with `doctl apps spec get` on 22/10/2026; the builder did not observe these facts):
 
 | Client        | App              | App id                                 | Region | Domains                                            | Source repo, branch             |
 | ------------- | ---------------- | -------------------------------------- | ------ | -------------------------------------------------- | ------------------------------- |
