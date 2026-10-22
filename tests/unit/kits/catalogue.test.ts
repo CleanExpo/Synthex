@@ -174,14 +174,15 @@ describe('client manifests', () => {
     ).toEqual([]);
   });
 
-  it('control: a planted missing claimsFile path is caught', () => {
-    const planted = clone(carsiManifest);
+  it('control: a planted missing claimsFile path is caught in any manifest', () => {
+    const planted = clone(restoreassistManifest);
     planted.claimsFile = {
       value: 'packages/brand-config/src/brands/__planted_missing__.md',
       source: 'planted',
     };
-    expect(missingManifestPaths([planted])).toEqual([
-      'carsi: packages/brand-config/src/brands/__planted_missing__.md',
+    // Planted in the second manifest so a sweep that stops early also fails.
+    expect(missingManifestPaths([carsiManifest, planted])).toEqual([
+      'restoreassist: packages/brand-config/src/brands/__planted_missing__.md',
     ]);
   });
 
