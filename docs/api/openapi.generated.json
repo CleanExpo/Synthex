@@ -59578,24 +59578,9 @@
     "/api/newsletter/unsubscribe": {
       "get": {
         "operationId": "get_newsletter_unsubscribe",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "email",
-            "required": true,
-            "schema": {
-              "format": "email",
-              "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-              "type": "string"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Success"
-          },
-          "307": {
-            "description": "Redirect"
           },
           "400": {
             "content": {
@@ -59634,17 +59619,9 @@
           "content": {
             "application/json": {
               "schema": {
-                "properties": {
-                  "email": {
-                    "format": "email",
-                    "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "email"
-                ],
-                "type": "object"
+                "format": "email",
+                "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+                "type": "string"
               }
             }
           },
@@ -59673,6 +59650,16 @@
               }
             },
             "description": "Internal server error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
           }
         },
         "security": [],
