@@ -102,6 +102,22 @@ describe('kit catalogue', () => {
       'verifier'
     );
   });
+
+  it.each([
+    ['a ".." segment', '../Synthex-sibling/package.json'],
+    ['a nested ".." segment', 'lib/../../outside.ts'],
+    ['a backslash', 'lib\\kits\\schema.ts'],
+  ])('control: an in-repo path with %s is rejected', (_what, bad) => {
+    const planted = clone(KITS[0]);
+    planted.artefacts.push({
+      kind: 'in-repo',
+      path: bad,
+      what: 'planted',
+      wired: false,
+      testPath: null,
+    });
+    expect(Kit.safeParse(planted).success).toBe(false);
+  });
 });
 
 describe('client manifests', () => {

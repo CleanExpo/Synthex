@@ -13,10 +13,22 @@ import { z } from 'zod';
 
 const text = z.string().trim().min(1);
 
-/** Repo-relative path: no leading slash, no glob, no `:line` suffix. */
+/**
+ * Repo-relative path: no leading slash, no backslash, no `..` segment (either
+ * would let the existence check pass on a file outside the checkout), no glob,
+ * no `:line` suffix.
+ */
 const repoPath = text.refine(
-  p => !p.startsWith('/') && !p.includes('*') && !/:\d/.test(p),
-  { message: 'path must be repo-relative, without globs or :line suffixes' }
+  p =>
+    !p.startsWith('/') &&
+    !p.includes('\\') &&
+    !p.split('/').includes('..') &&
+    !p.includes('*') &&
+    !/:\d/.test(p),
+  {
+    message:
+      'path must be repo-relative, without globs, backslashes, ".." segments or :line suffixes',
+  }
 );
 
 /** DD/MM/YYYY (AU date convention). */
