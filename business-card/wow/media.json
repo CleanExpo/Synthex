@@ -6,7 +6,7 @@
       "title": "Winner logo, transparent",
       "job": "05e8ec98-a658-4c6d-b9b3-a3c5d61b5753",
       "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072440_05e8ec98-a658-4c6d-b9b3-a3c5d61b5753.png",
-      "file": "business-card/brand-kits/media/unite-nexus-2026-transparent.png",
+      "file": "business-card/brand-kits/media/unite-nexus-2026-05e8ec98.png",
       "bytes": 1425071,
       "sha256": "cf423f78c972951c27390c852a556c67962ee0f479b3da257e566b5ab980a5cc",
       "label": "AI-generated in Higgsfield; founder-chosen logo, not yet trademark-checked"
@@ -39,7 +39,8 @@
       "file": "business-card/wow/out/h1-falling-cards.png",
       "bytes": 1880221,
       "sha256": "c368d856562ea50530cc256869bc0a9d6d72ff602ff4fb89c135e154f16153cb",
-      "label": "AI-generated in Higgsfield (concept, not a real photo)"
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/h1-falling-cards.jpg"
     },
     {
       "kind": "still",
@@ -49,7 +50,8 @@
       "file": "business-card/wow/out/h2-card-from-fire.png",
       "bytes": 2398477,
       "sha256": "115d20fa55e82f2539b75d62c0560819c87350c608a77cb41772a2d136a1a41f",
-      "label": "AI-generated in Higgsfield (concept, not a real photo)"
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/h2-card-from-fire.jpg"
     },
     {
       "kind": "still",
@@ -59,7 +61,8 @@
       "file": "business-card/wow/out/h3-flood-to-restored.png",
       "bytes": 2313501,
       "sha256": "ca7100446aef997f05b9f31409b523dc0bc3fd6f0616eaf3e89c8f3b463cb456",
-      "label": "AI-generated in Higgsfield (concept, not a real photo)"
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/h3-flood-to-restored.jpg"
     },
     {
       "kind": "still",
@@ -69,7 +72,8 @@
       "file": "business-card/wow/out/h4-glass-city.png",
       "bytes": 3115282,
       "sha256": "92c7fac5150c17492744f50d5401856041e39592285c22487bb94210ff9d0cf9",
-      "label": "AI-generated in Higgsfield (concept, not a real photo)"
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/h4-glass-city.jpg"
     },
     {
       "kind": "still",
@@ -79,7 +83,8 @@
       "file": "business-card/wow/out/h5-phone-tap.png",
       "bytes": 2600331,
       "sha256": "24f5fce868f89d152504ac4b23394254745c104b37a0a40029ea43bf68b63e49",
-      "label": "AI-generated in Higgsfield (concept, not a real photo)"
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/h5-phone-tap.jpg"
     },
     {
       "kind": "still",
@@ -89,7 +94,9 @@
       "file": "business-card/wow/out/h6-embers.png",
       "bytes": 1874017,
       "sha256": "b8c6b6bc0810c647b61cd10a27ce3f89749abb74396174ff20239366fa51759b",
-      "label": "AI-generated in Higgsfield (concept, not a real photo)"
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/h6-embers.jpg"
     }
-  ]
+  ],
+  "note": "Full-size PNG stills stay local (the repo ignores *.png); 1600 px JPG copies are committed and are what the board shows."
 }

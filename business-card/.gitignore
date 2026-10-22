@@ -1,0 +1,3 @@
+# The repo ignores *.png; the card build needs these logo and input files, so they are committed.
+!brand-kits/media/*.png
+!wow/inputs/*.png
