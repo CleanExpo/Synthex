@@ -187,6 +187,8 @@ body:not(.owner) .owner-only { display: none !important; }
 #burst { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 55; pointer-events: none; }
 .save-hint { margin: -16px 0 0; text-align: center; font-weight: 600; color: var(--fg); }
 .btn.quiet { background: none; text-align: center; justify-items: center; font-weight: 500; color: var(--fg); }
+.bizline { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 14px; }
+.bizline a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 1px; }
 .ownlink { justify-self: center; font-size: 14px; color: var(--muted); }
 .ownlink small { display: none; }
 /* The white rabbit's surprise: a gift that pops open with one practical idea */
@@ -385,6 +387,7 @@ body:not(.owner) .owner-only { display: none !important; }
     <div class="brands" id="links"></div>
   </section>
 
+  <nav class="bizline" id="bizline" aria-label="Businesses" hidden></nav>
   <a class="ownlink" id="own-card" href="#">Want a card like this?<small id="own-card-note"></small></a>
 
   <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px" hidden>
@@ -504,6 +507,12 @@ function lum(hex) {
       const el = document.createElement("a"); el.href = l.url; el.target = "_blank"; el.rel = "noopener";
       el.title = l.note || ""; el.append(l.label); $("links").append(el);
     });
+  }
+  // The businesses a visitor can reach: a quiet line of names, not buttons
+  const vis = links.filter(l => l.visitor && /^https:\/\//.test(l.url || ""));
+  if (vis.length) {
+    vis.forEach(l => { const a = document.createElement("a"); a.href = l.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label; $("bizline").append(a); });
+    $("bizline").hidden = false;
   }
   const f = P.features || {};
   if (f.discover && P.ideas) $("door-discover").hidden = false;

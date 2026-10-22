@@ -390,19 +390,22 @@
       },
       {
         "label": "Unite Group",
-        "url": null,
-        "note": "The group. Site not public yet",
-        "urlNote": "https://unite-group.in sends visitors to a login page (curl 23/10/2026: 307 to /auth/login). Relink once it serves a public page."
+        "url": "https://maps.google.com/?cid=16425003964954420216",
+        "note": "The group",
+        "urlNote": "unite-group.in sends visitors to a login page, so the card links the group's public Google listing (Unite-Group Nexus) until the site is public.",
+        "visitor": true
       },
       {
         "label": "Synthex",
         "url": "https://synthex.social",
-        "note": "Group marketing"
+        "note": "Group marketing",
+        "visitor": true
       },
       {
         "label": "RestoreAssist",
         "url": "https://restoreassist.app",
-        "note": "Restoration job app"
+        "note": "Restoration job app",
+        "visitor": true
       },
       {
         "label": "NRPG",
@@ -410,9 +413,11 @@
         "note": "Contractor network"
       },
       {
-        "label": "CleanExpo247 / TradeHall",
-        "url": null,
-        "note": "Not connected yet: no public address"
+        "label": "TradeHall",
+        "url": "https://cleanexpo247-hall.vercel.app",
+        "note": "NRPG Trade Hall",
+        "urlNote": "Vercel project cleanexpo247-hall in the Unite-Group team; page title 'NRPG Trade Hall' (checked 23/10/2026).",
+        "visitor": true
       }
     ],
     "vcardNote": "IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC",
@@ -502,6 +507,7 @@
         "source": "Phill's email 19/10/2026: Melbourne show the week after"
       }
     ],
-    "contactSource": "Phill 23/10/2026: 'The only contact is through the AI email that I have set up'. Mobile, office and personal emails removed from the card and contact file."
+    "contactSource": "Phill 23/10/2026: 'The only contact is through the AI email that I have set up'. Mobile, office and personal emails removed from the card and contact file.",
+    "visitorLinksSource": "Phill 23/10/2026: RestoreAssist, Unite Group, Synthex and TradeHall connected to the card. Restoration World: no live site found yet (restoration.world is a parked domain for sale)."
   }
 }
