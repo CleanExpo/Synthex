@@ -21,6 +21,7 @@ import {
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
 import { sanitizeErrorForResponse } from '@/lib/utils/error-utils';
+import { notProvisionedResponse } from '@/lib/api/not-provisioned';
 import { logger } from '@/lib/logger';
 import { seedSingleCredential } from '@/lib/vault/onboarding-seeder';
 import {
@@ -71,12 +72,15 @@ export async function GET(request: NextRequest) {
     }
     const userId = security.context.userId!;
 
-    // If Prisma client is not available, return empty list gracefully
+    // Honest status: an unavailable database is an error, never an empty list
     if (!isPrismaAvailable()) {
-      logger.warn(
-        '[Settings API Credentials] Prisma client not available — returning empty list'
+      logger.error(
+        '[Settings API Credentials] Prisma client not available for GET'
       );
-      return NextResponse.json({ credentials: [] });
+      return NextResponse.json(
+        { error: 'Database not available. Please try again later.' },
+        { status: 503 }
+      );
     }
 
     let credentials;
@@ -101,20 +105,16 @@ export async function GET(request: NextRequest) {
         orderBy: { createdAt: 'desc' },
       });
     } catch (dbError) {
-      // For the GET/read-only endpoint, any database failure should return an
-      // empty list rather than crashing the Settings UI.  We log the actual
-      // error for debugging but never surface it to the client.
+      // Honest status: a failed read is an error, never an empty list.
       if (isMissingTableError(dbError)) {
-        logger.warn(
-          '[Settings API Credentials] api_credentials table not found — returning empty list'
-        );
-      } else {
         logger.error(
-          '[Settings API Credentials] Database query failed:',
-          dbError
+          '[Settings API Credentials] api_credentials table not found'
+        );
+        return notProvisionedResponse(
+          'AI provider credentials are not available: the api_credentials table is not provisioned.'
         );
       }
-      return NextResponse.json({ credentials: [] });
+      throw dbError;
     }
 
     return NextResponse.json({ credentials });
