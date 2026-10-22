@@ -90,7 +90,7 @@ function asUsableUsd(value: unknown): number | null {
     : null;
 }
 
-function isUsableBuildId(buildId: unknown): buildId is string {
+export function isUsableBuildId(buildId: unknown): buildId is string {
   return typeof buildId === 'string' && buildId.trim().length > 0;
 }
 

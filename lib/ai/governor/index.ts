@@ -9,6 +9,8 @@
  *
  * ORDER MATTERS, and it is not arbitrary:
  *
+ *   0. BUILD ID — only when the call carries `build`: an unusable buildId is
+ *      refused before anything else, so it can never become a receipt run_id.
  *   1. MODEL — resolved from the registry file first, because
  *      pipeline_cost_ledger.model is NOT NULL. If resolution came later, a
  *      refusal row would have no model to write and the receipt could not be
@@ -49,7 +51,7 @@ import { getModel, type ModelConfig } from '@/lib/ai/model-registry';
 import { resolveRunnerFlag } from './flags';
 import { resolveBrandApiKey } from './byok';
 import { checkBudget } from './budget';
-import { checkBuildCap } from './build-cap';
+import { checkBuildCap, isUsableBuildId } from './build-cap';
 import { estimateCostUsd, resolveModel } from './model';
 import { writeReceipt } from './receipts';
 import { GOVERNOR_MODE } from './mode';
@@ -113,10 +115,15 @@ export async function governedCall<T>(
   } = input;
   const mode = input.mode ?? 'enforcing';
   // A build's buildId IS the ledger run_id of every call in it, so the build's
-  // spend is one SUM over run_id (see build-cap.ts).
-  const runId = input.build
-    ? String(input.build.buildId ?? '')
-    : (input.runId ?? randomUUID());
+  // spend is one SUM over run_id (see build-cap.ts). An unusable buildId is
+  // never used as a run_id — it would pool every such receipt under one blank
+  // key. Gate 0 below refuses it (enforcing) or records it (shadow).
+  const buildIdInvalid =
+    input.build !== undefined && !isUsableBuildId(input.build?.buildId);
+  const runId =
+    input.build && !buildIdInvalid
+      ? input.build.buildId
+      : (input.runId ?? randomUUID());
   const decidedAt = new Date().toISOString();
 
   const baseProvenance = {
@@ -271,6 +278,23 @@ export async function governedCall<T>(
 
     return { ok: true, outcome, data: result.data, receipt };
   };
+
+  // --- 0. A capped build needs a usable buildId (opt-in via input.build) ---
+  // Checked before every other gate so no receipt in the call can carry it.
+  if (buildIdInvalid) {
+    return deny(
+      'refused_budget_untrusted_input',
+      'budget_untrusted_input:build_id_invalid',
+      {
+        ...baseProvenance,
+        modelId: UNRESOLVED_MODEL,
+        flagVerdict: 'not_reached',
+        keyVerdict: 'not_reached',
+        budgetVerdict: 'budget_untrusted_input:build_id_invalid',
+        errorClass: 'build_id_invalid',
+      }
+    );
+  }
 
   // A runner may never impersonate the brand-wide kill-switch row.
   if (runner === BRAND_WIDE_RUNNER) {

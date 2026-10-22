@@ -388,4 +388,56 @@ describe('per-build spending cap', () => {
       expect(decision.outcome).toBe('refused_budget_untrusted_input');
     }
   );
+
+  // A blank buildId must never become a receipt's run_id: every blank-id
+  // receipt would land in one shared '' bucket and be counted as one build.
+  it.each([
+    ['empty', ''],
+    ['whitespace', '   '],
+    ['missing', undefined],
+    ['not a string', 42],
+  ])(
+    'C15 refuses an unusable buildId (%s) before any gate and never receipts a blank run_id',
+    async (_l, buildId) => {
+      const execute = jest.fn();
+
+      const result = await call(execute, {
+        build: { buildId: buildId as unknown as string, capUsd: 12 },
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.outcome).toBe('refused_budget_untrusted_input');
+      expect(result.ok === false && result.reason).toBe(
+        'budget_untrusted_input:build_id_invalid'
+      );
+      expect(execute).not.toHaveBeenCalled();
+      // Gate 0: refused before the flag, BYOK and budget gates are reached.
+      expect(mocks.prisma.runnerFlag.findMany).not.toHaveBeenCalled();
+      expect(mocks.prisma.pipelineCostLedger.aggregate).not.toHaveBeenCalled();
+      const row = receiptRow(mocks)!;
+      expect(row.outcome).toBe('refused_budget_untrusted_input');
+      expect(typeof row.runId).toBe('string');
+      expect((row.runId as string).trim()).not.toBe('');
+    }
+  );
+
+  it('C15 shadow mode with a blank buildId runs the call but never uses a blank run_id', async () => {
+    const execute = okExecute();
+
+    const result = await call(execute, {
+      mode: 'shadow',
+      build: { buildId: '  ', capUsd: 12 },
+    });
+
+    expect(result.ok).toBe(true);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(String(execute.mock.calls[0][0].runId).trim()).not.toBe('');
+    expect(mocks.prisma.pipelineCostLedger.create).toHaveBeenCalledTimes(1);
+    const row = receiptRow(mocks)!;
+    expect(row.outcome).toBe('completed');
+    expect((row.runId as string).trim()).not.toBe('');
+    expect(
+      (row.provenance as Record<string, unknown>).shadowRefusal
+    ).toMatchObject({ outcome: 'refused_budget_untrusted_input' });
+  });
 });
