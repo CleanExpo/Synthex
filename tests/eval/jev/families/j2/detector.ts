@@ -88,7 +88,7 @@ function metricNumbers(value: unknown, key = '', out: number[] = []): number[] {
   return out;
 }
 
-function declaresUnavailable(json: unknown): boolean {
+export function declaresUnavailable(json: unknown): boolean {
   if (!json || typeof json !== 'object' || Array.isArray(json)) return false;
   const body = json as Record<string, unknown>;
   if (body.available === false) return true;

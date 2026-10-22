@@ -5,6 +5,10 @@ import {
   generateImage,
   type ImageGenerationOptions,
 } from '@/lib/services/ai/image-generation';
+import {
+  IMAGE_MODELS,
+  selectImageModel,
+} from '@/lib/services/ai/image/registry';
 import { systemGenerationContext } from '@/lib/ai/generation-context';
 
 import {
@@ -20,7 +24,28 @@ const textModel =
   process.env.CAMPAIGN_CONCEPT_TEXT_MODEL ||
   process.env.OPENAI_TEXT_MODEL ||
   'gpt-4o-mini';
-const imageModel = process.env.CAMPAIGN_CONCEPT_IMAGE_MODEL || 'dall-e-3';
+/**
+ * The image model this workflow REPORTS. generateImage is called without a
+ * model, so it grounds on owned references and the image registry picks the
+ * model that actually runs; this value is the label used when generation fails
+ * and in the response's `model.imageModel`. An override is honoured only when
+ * it names a usable registry entry (not deprecated, priced, not LoRA-only);
+ * otherwise the registry's grounded default is reported, so a retired id such
+ * as dall-e-3 (shut down 2026-05-12) is never presented as the model in use.
+ */
+export function resolveCampaignImageModel(override?: string): string {
+  if (override) {
+    const entry = IMAGE_MODELS.find(m => m.id === override);
+    if (entry && !entry.deprecated && entry.pricing && !entry.loras) {
+      return entry.id;
+    }
+  }
+  return selectImageModel({ needsReferences: true }).id;
+}
+
+const imageModel = resolveCampaignImageModel(
+  process.env.CAMPAIGN_CONCEPT_IMAGE_MODEL
+);
 const maxOutputTokens = Number(
   process.env.CAMPAIGN_CONCEPT_MAX_TOKENS || '1400'
 );

@@ -7,7 +7,7 @@
  *   3. lib/gbp           — PATCH DR's GBP service-area
  *   4. lib/bing-places   — PUT DR's Bing Places service-area
  *   5. lib/landing-page  — build per-(service × suburb) pages
- *   6. lib/sitemap       — regen + ping Google/Bing
+ *   6. lib/sitemap       — regen (Google/Bing pings retired, reported as such)
  *
  * Per-stage error isolation: a GBP API failure does NOT stop Bing,
  * the budget commits stick, the page generation runs.

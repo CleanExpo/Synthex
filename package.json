@@ -16,6 +16,7 @@
     "api:openapi": "node scripts/api/gen-openapi.mjs",
     "api:openapi:check": "node scripts/api/gen-openapi.mjs --check --exempt proposals/P3/scripts/api/exempt-routes.json",
     "jev:det": "node tests/eval/jev/runner/run-det.mjs",
+    "jev:sweep": "node tests/eval/jev/sweep/run.mjs",
     "ai:eval": "tsx lib/ai/eval/cli.ts",
     "claims:guard": "jest --config config/jest/jest.worktree.cjs __tests__/landing/public-claims.test.ts __tests__/landing/public-claims-rendered.test.tsx __tests__/landing/public-claims-api.test.ts __tests__/landing/public-claims-seeds.test.ts --maxWorkers=2",
     "claims:seeds": "tsx scripts/claims-seeds.ts",

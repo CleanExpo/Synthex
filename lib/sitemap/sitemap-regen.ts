@@ -7,7 +7,7 @@
  * Pure function: takes the current sitemap.xml and a batch of
  * LocationOpened events, returns the merged sitemap and the diff. The
  * caller is responsible for the actual file write / cross-repo PR /
- * Google + Bing ping (use `pingAllSearchEngines` for the latter).
+ * Google + Bing ping (retired: `pingAllSearchEngines` now sends nothing).
  *
  * Idempotent — re-running with the same events does not duplicate URLs.
  *
