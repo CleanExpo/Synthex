@@ -86,7 +86,7 @@ const BASE = `http://localhost:${server.address().port}/`;
 const fails = [];
 const check = (ok, what) => {
   if (!ok) fails.push(what);
-  console.log((ok ? 'ok   ' : 'FAIL ') + what);
+  console.info((ok ? 'ok   ' : 'FAIL ') + what);
 };
 const browser = await chromium.launch();
 
@@ -490,6 +490,15 @@ try {
     await page.waitForTimeout(1500);
     await at('#lock-img', '5-lock-screen.png', -80);
     await ctx.close();
+    // What a visitor sees, top to bottom
+    const v = await phone();
+    await v.page.goto(BASE + '?to=Sam&at=brisbane&edition=blueprint');
+    await v.page.waitForTimeout(4500);
+    await v.page.screenshot({
+      path: path.join(out, '0-visitor-full.png'),
+      fullPage: true,
+    });
+    await v.ctx.close();
   } else {
     const rotation = ['signature', 'origami', 'blueprint', 'restoration'];
     let total = 0;
@@ -540,7 +549,7 @@ try {
   server.close();
 }
 if (fails.length) {
-  console.log(`\n${fails.length} failed`);
+  console.info(`\n${fails.length} failed`);
   process.exit(1);
 }
-console.log('\nall passed');
+console.info('\nall passed');

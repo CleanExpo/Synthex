@@ -95,7 +95,7 @@ h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spac
 .door[aria-expanded="true"] { border-color: var(--brand); background: var(--panel); }
 .door .k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--brand-text); grid-row: span 2; padding-top: 3px; }
 .door strong { font-family: var(--display); font-size: 19px; }
-.door span:last-child { color: var(--muted); font-size: 14.5px; }
+.door span:last-child { display: none; }
 .panel { border-left: 2px solid var(--line); padding: 4px 0 4px 16px; display: grid; gap: 12px; }
 .needs { display: flex; flex-wrap: wrap; gap: 8px; }
 .need { font: 500 14px var(--body); color: var(--fg); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; cursor: pointer; }
@@ -158,7 +158,9 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 .wheel-track span { flex: 0 0 220px; display: grid; place-items: center; text-align: center; padding: 0 14px; font: 600 16px/1.3 var(--display); opacity: .62; transition: opacity .2s; }
 .wheel-track span.on { opacity: 1; }
 .wheel-pin { position: absolute; left: 50%; top: 0; transform: translateX(-50%); border: 9px solid transparent; border-top-color: var(--brand); }
-.rw-tip { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); font-size: 14px; }
+.rw-tip { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.rw-tip svg { width: 18px; height: 18px; flex: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Sound: off until the visitor taps it (phones block sound before a tap); all of it is synthesised in code, no audio files */
 .sound { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 6px; cursor: pointer;
@@ -214,7 +216,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
   <p class="edition-label" id="edition-label" hidden></p>
   <button class="replay" type="button" id="replay" hidden>Replay · another edition</button>
 
-  <button class="btn primary passbtn" type="button" id="pass-btn">Pass it on<small>Let someone scan this card off your screen</small></button>
+  <button class="btn primary passbtn" type="button" id="pass-btn">Pass it on</button>
   <div class="passon" id="pass-on" hidden role="dialog" aria-modal="true" aria-label="Scan to get this card">
     <button class="close" type="button" id="pass-close">Close</button>
     <form class="personal" id="pass-form">
@@ -263,17 +265,15 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
   <section id="review" aria-labelledby="review-h" style="display:grid;gap:10px;padding:18px;border-radius:18px;border:2px solid var(--brand)">
     <h2 id="review-h" style="font-size:22px">Worked with us?</h2>
-    <p class="lede" style="margin:0">Tell others how it went, in your own words. It opens Google's own review page; you post it from your own account.</p>
     <div class="rw" id="rw" hidden>
-      <p class="rw-step"><b>1</b> Which one did you work with?</p>
+      <p class="rw-step">Which one?</p>
       <div class="needs" id="rw-biz" role="group" aria-label="Business you worked with"></div>
       <div id="rw-play" hidden style="display:grid;gap:12px">
-        <p class="rw-step"><b>2</b> Spin for a question to answer</p>
-        <div class="wheel" id="rw-wheel" aria-live="polite"><div class="wheel-track" id="rw-track"></div><span class="wheel-pin" aria-hidden="true"></span></div>
-        <div class="row"><button class="btn" type="button" id="rw-spin">Spin</button><button class="btn" type="button" id="rw-stop" hidden>Stop</button></div>
-        <label for="rw-text"><span><b class="rw-num">3</b> Answer it in your own words <span class="fine">(tap the microphone on your keyboard to speak it)</span></span>
-          <textarea id="rw-text" placeholder="Your words, your stars. Good or bad, it helps the next person."></textarea></label>
-        <p class="rw-tip"><b>Got a photo or a short video of the job?</b> Add it on Google's form with the camera button. A 20-second video says more than any words.</p>
+        <div class="wheel" id="rw-wheel" aria-live="polite" hidden><div class="wheel-track" id="rw-track"></div><span class="wheel-pin" aria-hidden="true"></span></div>
+        <div class="row"><button class="btn" type="button" id="rw-spin">Stuck? Spin for a nudge</button><button class="btn" type="button" id="rw-stop" hidden>Stop</button></div>
+        <label for="rw-text" class="sr-only">Your review</label>
+        <textarea id="rw-text" placeholder="Say it your way. Good or bad, it helps the next person."></textarea>
+        <p class="rw-tip"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></svg> Add a photo of the job on Google</p>
       </div>
     </div>
     <a class="btn primary" id="review-btn" href="#" target="_blank" rel="noopener">Review my business<small id="review-sub">Opens Google's review form</small></a>
@@ -284,20 +284,19 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
   <div class="creds" id="creds" aria-label="Credentials"></div>
 
   <section class="actions" id="actions" aria-label="Save or contact">
-    <button class="btn primary" type="button" id="save">Save to contacts<small>Adds this card to your phone</small></button>
+    <button class="btn primary" type="button" id="save">Save to contacts</button>
     <div class="out" id="save-out" hidden style="grid-column:1/-1">
       <span class="tag">Preview limit</span>
       <p class="fine" style="margin:0">If no contact file opened, this preview blocked it. The hosted card saves in one tap. For now, copy the details below.</p>
       <pre id="vcard-text"></pre>
       <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
     </div>
-    <button class="btn" type="button" id="share">Share this card<small id="share-sub">Copies the link</small></button>
+    <button class="btn" type="button" id="share">Share this card<small id="share-sub"></small></button>
   </section>
 
   <section aria-labelledby="doors-h" style="display:grid;gap:14px">
     <div>
       <h2 id="doors-h">What would be useful today?</h2>
-      <p class="lede">Pick one. Each takes under a minute.</p>
     </div>
     <div class="doors">
       <button class="door" id="door-discover" type="button" aria-expanded="false" aria-controls="p-discover" hidden><span class="k">DISCOVER</span><strong>One practical idea</strong><span>Choose a need, leave with one thing to do this week.</span></button>
@@ -327,7 +326,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
           </label>
           <label for="f-msg">Message<textarea id="f-msg" name="message" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea></label>
           <p class="fine" style="margin:0">Example entry shown. Replace it with your own.</p>
-          <button class="btn primary" type="submit">Prepare my message<small>You review it before anything is sent</small></button>
+          <button class="btn primary" type="submit">Prepare my message</button>
         </form>
         <div class="out" id="out" hidden>
           <span class="tag">Not sent</span>
@@ -347,13 +346,11 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     <div class="brands" id="links"></div>
   </section>
 
-  <section aria-labelledby="own-h" style="display:grid;gap:10px;padding:18px;border-radius:18px;background:var(--panel);border:1px solid var(--line)">
-    <h2 id="own-h" style="font-size:20px">Want a card like this?</h2>
-    <p class="lede" style="margin:0">Your own living card, in your own brand, built from your logo and website.</p>
-    <a class="btn primary" id="own-card" href="#">Get your own card<small id="own-card-note">Set it up in a few minutes</small></a>
+  <section aria-label="Get a card like this" style="display:grid">
+    <a class="btn" id="own-card" href="#">Want a card like this?<small id="own-card-note"></small></a>
   </section>
 
-  <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px">
+  <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px" hidden>
     <h2 id="live-h" style="font-size:20px">What works right now</h2>
     <ul class="status-list" id="status-list">
       <li class="on"><b>Live</b>Business links open the real websites.</li>
@@ -367,7 +364,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
   </section>
 
   <footer>
-    <span id="brand-credit">Brand kit: none loaded.</span>
+    <span id="brand-credit" hidden>Brand kit: none loaded.</span>
     <span>Nothing on this card is sent or stored without your say-so.</span>
   </footer>
 </div>
@@ -449,21 +446,26 @@ function lum(hex) {
   $("person-intro").textContent = [P.title, P.intro].filter(Boolean).join(". ");
   $("intro-below").textContent = $("person-intro").textContent;
   $("person-motto").textContent = P.motto || (B.tagline && B.tagline.text) || "";
-  (P.credentials || []).forEach(c => { const s = document.createElement("span"); const b = document.createElement("b"); b.textContent = c.abbr; s.append(b, " " + c.text); $("creds").append(s); });
+  (P.credentials || []).forEach(c => {
+    const s = document.createElement("span"); const b = document.createElement("b"); b.textContent = c.abbr;
+    s.title = c.abbr + " " + c.text; s.setAttribute("aria-label", s.title);
+    if (/^\d+$/.test(c.text)) s.append(b, " " + c.text); else s.append(b);   // keep licence numbers, drop long names
+    $("creds").append(s);
+  });
   const share = $("share");
   (P.phones || []).concat((P.emails || []).filter(e => e.primary)).forEach(item => {
     const b = document.createElement("button"); b.className = "btn"; b.type = "button";
     const value = item.display || item.value; b.dataset.copy = value;
     const sm = document.createElement("small"); sm.textContent = value; b.append(item.label, sm);
+    if (String(value).includes("@")) b.style.gridColumn = "1 / -1";
     b.addEventListener("click", () => copy(value, b)); $("actions").insertBefore(b, share);
   });
   const links = (P.links || []);
   if (links.length) {
     $("links-section").hidden = false;
-    links.forEach(l => {
-      const el = document.createElement(l.url ? "a" : "span");
-      if (l.url) { el.href = l.url; el.target = "_blank"; el.rel = "noopener"; } else el.style.gridColumn = "1/-1";
-      const sm = document.createElement("small"); sm.textContent = l.note || ""; el.append(l.label, sm); $("links").append(el);
+    links.filter(l => l.url).forEach(l => {
+      const el = document.createElement("a"); el.href = l.url; el.target = "_blank"; el.rel = "noopener";
+      el.title = l.note || ""; el.append(l.label); $("links").append(el);
     });
   }
   const f = P.features || {};
@@ -518,8 +520,8 @@ async function copy(text, el) {
     let place = places.length === 1 ? places[0] : null;
     const setPlace = p => {
       place = p; a.href = reviewUrl(p.placeId); a.style.opacity = ""; a.removeAttribute("aria-disabled");
-      a.firstChild.textContent = "Copy my words and open Google";
-      $("review-sub").textContent = "Paste them on " + p.business + "'s review form, pick your stars, add a photo or video, post";
+      a.firstChild.textContent = "Post on Google";
+      $("review-sub").textContent = "Copies your words. Paste, pick your stars, post.";
       $("rw-play").hidden = false;
     };
     places.forEach(p => {
@@ -529,7 +531,7 @@ async function copy(text, el) {
       $("rw-biz").append(b);
     });
     a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
-    $("review-sub").textContent = "Pick the business you worked with first";
+    $("review-sub").textContent = "Pick one above first";
     if (place) { $("rw-biz").firstChild.click(); }
     // The wheel: open questions only (no rating, wording or staff names suggested); one invites criticism
     const qs = (P.reviewPrompts || []).filter(q => typeof q === "string" && q.length < 90);
@@ -549,15 +551,15 @@ async function copy(text, el) {
       if (stopping) v *= 0.955;
       if (stopping && v < 0.6) {   // settle on the nearest question
         x = Math.round(x / W) * W; v = 0; landed = paint(); raf = null; stopping = false;
-        $("rw-spin").hidden = false; $("rw-stop").hidden = true; $("rw-spin").textContent = "Spin again"; SFX.chime();
-        $("rw-text").placeholder = qs[landed] + " Your words, your stars."; return;
+        $("rw-spin").hidden = false; $("rw-stop").hidden = true; $("rw-spin").textContent = "Another nudge"; SFX.chime();
+        $("rw-text").placeholder = qs[landed]; return;
       }
       paint(); raf = requestAnimationFrame(tick);
     };
     const spin = () => {
       if (!qs.length) return;
       x += Math.floor(Math.random() * qs.length) * W; v = REDUCED ? 0.8 : 26 + Math.random() * 8; stopping = false;
-      $("rw-spin").hidden = true; $("rw-stop").hidden = false;
+      $("rw-wheel").hidden = false; $("rw-spin").hidden = true; $("rw-stop").hidden = false;
       if (!raf) raf = requestAnimationFrame(tick);
       setTimeout(() => { stopping = true; }, REDUCED ? 0 : 2200 + Math.random() * 900);   // stops by itself, or tap Stop
     };
@@ -857,7 +859,6 @@ async function shareLink(url, el) {
   if (navigator.share) { try { await navigator.share({ title: (P.name || "My") + " card", url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
   copy(url, el);
 }
-if (navigator.share) $("share-sub").textContent = "AirDrop, Messages, WhatsApp or email";
 let passAnim = null;
 function drawPassQR() {
   const q = $("pass-qr"), url = cardLink($("pass-name").value, $("pass-at").value); q.textContent = ""; q.dataset.url = url;
@@ -891,7 +892,7 @@ $("pass-close").addEventListener("click", () => { $("pass-on").hidden = true; if
 // Your view: today's event, home-screen install, the lock-screen code and an NFC sticker
 (function mine() {
   if (!OWNER) return;
-  $("mine").hidden = false;
+  $("mine").hidden = false; $("live-status").hidden = false; $("brand-credit").hidden = false;
   const sel = $("mine-at"); sel.value = savedAt() ? savedAt().id : "";
   sel.addEventListener("change", () => { try { localStorage.setItem(AT_KEY, sel.value); } catch (e) {} });
   if (STANDALONE) { $("install-steps").hidden = true; $("install-done").hidden = false; }
@@ -959,11 +960,10 @@ if (HOSTED && "serviceWorker" in navigator && (location.protocol === "https:" ||
     };
     a.href = link();
     a.addEventListener("click", () => { a.href = link(); });   // carries whichever edition is showing now
-    $("own-card-note").textContent = "Start with the edition you just saw";
     return;
   }
   a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
-  $("own-card-note").textContent = "Opens on the hosted card, not in this preview";
+  $("own-card-note").textContent = "Works on the hosted card";
 })();
 
 if (HOSTED) {

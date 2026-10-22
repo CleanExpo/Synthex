@@ -501,14 +501,13 @@
       }
     ],
     "reviewPrompts": [
-      "What problem did we solve for you?",
-      "What was the job, and where was it?",
-      "What would you tell a friend in the same spot?",
-      "What surprised you about how we worked?",
-      "How did it feel when the job was finished?",
+      "How did it go?",
+      "What stood out for you?",
+      "How did you feel once it was done?",
+      "Would you recommend us? Why or why not?",
       "What could we have done better?"
     ],
-    "reviewPromptsSource": "Written 23/10/2026 to Google's contribution policy: open questions only; they do not suggest a rating, wording or a staff name, and one invites criticism so the ask is not positive-only.",
+    "reviewPromptsSource": "Rewritten 23/10/2026 after the living-card research (Wiki living-card/lc-00): Google tells businesses not to 'request that specific content be included', so the nudge is optional, skippable and neutral; no rating, wording, place or staff name is suggested, and one prompt invites criticism so the ask is not positive-only.",
     "events": [
       {
         "id": "brisbane",
