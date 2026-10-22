@@ -9,8 +9,19 @@
  *
  * IDENTITY. A build is a `buildId`, and the Governor writes it as the
  * pipeline_cost_ledger run_id of every governed call in that build. "What has
- * this build spent" is therefore one SUM(cost_usd) WHERE run_id = buildId —
- * no schema change, no second ledger.
+ * this build spent" is SUM(cost_usd) WHERE run_id = buildId, plus the media
+ * holds attributed to the build (below) — no schema change, no second ledger.
+ *
+ * MEDIA. Audio holds (the P5 media-spend-gate: speech, avatar video) and video
+ * holds write their ledger row under run_id = holdId, the hold's idempotency
+ * key, so the SUM above never sees them. Their spend is in media_spend_events:
+ * a hold taken for a build carries run_id = buildId on its RESERVE event, and
+ * the hold's NET (reserve + its one terminal delta) is what it cost — the
+ * reservation while in flight, the actual once settled, zero once released.
+ * Image holds are left out on purpose: image generation writes its ledger row
+ * under run_id = traceId, and in a build the traceId is the buildId, so image
+ * spend is already in the ledger SUM. Counting its hold too would count it
+ * twice.
  *
  * CURRENCY. The cap is in USD, because pipeline_cost_ledger.cost_usd is USD.
  * The founder thinks in AUD for client economics; converting a build's USD
@@ -29,10 +40,13 @@
  *   - The cap is checked against the ESTIMATE; the receipt records the actual
  *     cost. A call that runs over its estimate can take the build over the cap
  *     by that difference; the NEXT call in the build is then refused.
- *   - Only spend recorded under run_id = buildId is counted. Paths that write
- *     the ledger under their own run_id (the P5 media holds use run_id =
- *     holdId as their idempotency key) are not counted until they record the
- *     buildId too.
+ *   - Only spend attributed to the buildId is counted: ledger rows under
+ *     run_id = buildId, and audio/video holds whose reserve carries it. A hold
+ *     taken without a buildId (today every production media route: none of
+ *     them runs inside a build yet) is not counted.
+ *   - Media holds are counted, not refused: holdMediaSpend does not check the
+ *     build cap itself. A hold can take a build over its cap; the next
+ *     governed call in that build is then refused.
  */
 
 import { prisma } from '@/lib/prisma';
@@ -113,15 +127,64 @@ type SpendRead =
   | { ok: true; spentUsd: number }
   | { ok: false; kind: 'read_failed' | 'unusable'; reason: string };
 
-/** SUM(cost_usd) for run_id = buildId. A build with no rows has spent 0. */
+/**
+ * Media types whose ledger row is keyed by the hold (run_id = holdId), so the
+ * ledger SUM over run_id = buildId cannot see them. Image is not here: its
+ * ledger row already carries run_id = traceId (= buildId in a build).
+ */
+const BUILD_MEDIA_TYPES = ['audio', 'video'] as const;
+
+/**
+ * finalizeSpend rounds each terminal delta to 4 dp while the reserve is stored
+ * at Decimal(10,4), so a released or zero-cost hold can net to -0.0001. That
+ * residue is zero spend, not a poisoned sum.
+ */
+const MEDIA_ROUNDING_RESIDUE_USD = 0.0001;
+
+/**
+ * Net media spend attributed to the build: every event (reserve and terminal)
+ * of every audio/video hold whose reserve carries run_id = buildId. Returns
+ * the raw sum, unvalidated, for readBuildSpend to gate. Throws on a failed
+ * read. A build with no such holds has spent 0 on media.
+ */
+async function readBuildMediaSpend(buildId: string): Promise<unknown> {
+  const reserves = await prisma.mediaSpendEvent.findMany({
+    where: {
+      runId: buildId,
+      kind: 'reserve',
+      mediaType: { in: [...BUILD_MEDIA_TYPES] },
+    },
+    select: { holdId: true },
+  });
+  if (reserves.length === 0) return 0;
+  const holdIds = reserves.map(r => r.holdId);
+  const aggregate = await prisma.mediaSpendEvent.aggregate({
+    where: { holdId: { in: holdIds } },
+    _sum: { deltaUsd: true },
+  });
+  // Holds exist, so their reserves are in the sum: a null sum is not zero.
+  const raw = aggregate?._sum?.deltaUsd;
+  if (raw === null || raw === undefined) return Number.NaN;
+  const net = Number(raw);
+  return net < 0 && net >= -MEDIA_ROUNDING_RESIDUE_USD * holdIds.length
+    ? 0
+    : net;
+}
+
+/**
+ * What the build has spent: SUM(cost_usd) for run_id = buildId plus the net
+ * media spend attributed to it. Either side unreadable or unusable refuses.
+ */
 async function readBuildSpend(buildId: string): Promise<SpendRead> {
   let rawSpent: unknown;
+  let rawMedia: unknown;
   try {
     const aggregate = await prisma.pipelineCostLedger.aggregate({
       where: { runId: buildId },
       _sum: { costUsd: true },
     });
     rawSpent = aggregate?._sum?.costUsd ?? 0;
+    rawMedia = await readBuildMediaSpend(buildId);
   } catch (error) {
     return {
       ok: false,
@@ -136,7 +199,14 @@ async function readBuildSpend(buildId: string): Promise<SpendRead> {
       reason: `ledger sum is not a usable amount: ${String(rawSpent)}`,
     };
   }
-  return { ok: true, spentUsd: rawSpent as number };
+  if (asUsableUsd(rawMedia) === null) {
+    return {
+      ok: false,
+      kind: 'unusable',
+      reason: `media hold sum is not a usable amount: ${String(rawMedia)}`,
+    };
+  }
+  return { ok: true, spentUsd: (rawSpent as number) + (rawMedia as number) };
 }
 
 /**

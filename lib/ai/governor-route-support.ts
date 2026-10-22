@@ -62,6 +62,16 @@ const REFUSAL_STATUS: Partial<Record<GovernorRefusal, number>> = {
 };
 
 /**
+ * The HTTP status for a Governor refusal. The one table both response
+ * builders use (this module and lib/ai/route-governance.ts), so a refusal
+ * answers the same status from every route: a spend ceiling is a 429, a
+ * missing brand key a 402, a closed flag a 403.
+ */
+export function governorRefusalStatus(outcome: GovernorRefusal): number {
+  return REFUSAL_STATUS[outcome] ?? 403;
+}
+
+/**
  * An enforcing-mode refusal as an honest HTTP response (never a 500). Returns
  * null for any other error so the caller's own handling stays unchanged. Only
  * reachable once GOVERNOR_MODE is 'enforcing'.
@@ -70,7 +80,7 @@ export function governorRefusalResponse(error: unknown): NextResponse | null {
   if (!(error instanceof GovernorRefusedError)) return null;
   return NextResponse.json(
     { error: 'AI call refused by spend governor', code: error.outcome },
-    { status: REFUSAL_STATUS[error.outcome] ?? 403 }
+    { status: governorRefusalStatus(error.outcome) }
   );
 }
 

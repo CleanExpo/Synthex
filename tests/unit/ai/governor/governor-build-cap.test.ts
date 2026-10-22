@@ -22,6 +22,9 @@ jest.mock('@/lib/prisma', () => ({
       create: jest.fn(),
       aggregate: jest.fn(),
     },
+    // Media holds under a buildId count toward the cap (follow-up to #1066);
+    // these suites plant none, so the media side reads as an empty build.
+    mediaSpendEvent: { findMany: jest.fn(), aggregate: jest.fn() },
   },
 }));
 
@@ -87,6 +90,9 @@ beforeEach(() => {
   mocks.prisma.pipelineCostLedger.aggregate.mockResolvedValue({
     _sum: { costUsd: 0 },
   });
+  (
+    prisma as unknown as { mediaSpendEvent: { findMany: jest.Mock } }
+  ).mediaSpendEvent.findMany.mockResolvedValue([]);
   savedEnv = process.env.SYNTHEX_BUILD_CAP_USD;
   delete process.env.SYNTHEX_BUILD_CAP_USD;
 });
