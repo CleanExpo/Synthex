@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<script>window.CARD_HOSTED = true;</script>
+</head>
+<body>
+<title>Phill McGurk Card</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column, a 9:16 motion stage up top, then the three doors (Discover / Solve / Connect). Single dark "after-hours call-out" look, by choice. */
+:root {
+  --ink: #0A1120;        /* page */
+  --panel: #111B2D;      /* raised surfaces */
+  --line: #22304A;       /* hairlines */
+  --fg: #ECF1F8;         /* text */
+  --muted: #95A4BA;      /* secondary text */
+  --aqua: #79DCCF;       /* primary accent: water, "dry" readings */
+  --brass: #E9B451;      /* the rabbit and anything to find */
+  --warn: #F08C6B;       /* placeholder tags */
+  --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body: "Instrument Sans", "Helvetica Neue", Arial, system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--ink); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 440px; margin: 0 auto; display: grid; gap: 28px; }
+a { color: var(--aqua); }
+:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; border-radius: 6px; }
+.tag {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent);
+  padding: 3px 8px; border-radius: 999px; display: inline-block;
+}
+
+/* Motion stage */
+.stage { position: relative; aspect-ratio: 9 / 16; max-width: 100%; max-height: 72vh; margin: 0 auto; width: 100%;
+  border-radius: 22px; overflow: hidden; background: var(--panel); border: 1px solid var(--line); }
+.stage canvas, .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.stage .ph { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.stage .ph small { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: right; max-width: 52%; line-height: 1.35; }
+.mono-mark { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.mono-mark span { font-family: var(--display); font-weight: 800; font-size: clamp(88px, 34vw, 150px); letter-spacing: -.04em;
+  color: transparent; -webkit-text-stroke: 1.5px color-mix(in srgb, var(--fg) 40%, transparent); }
+.stage .name { position: absolute; left: 18px; right: 18px; bottom: 18px; }
+.name h1 { font-family: var(--display); font-weight: 800; font-size: clamp(40px, 13vw, 58px); line-height: .92; letter-spacing: -.03em; margin: 0; text-wrap: balance; }
+.name h1 .w { display: inline-block; animation: rise .9s cubic-bezier(.2,.8,.2,1) both; }
+.name h1 .w:nth-child(2) { animation-delay: .12s; }
+.name p { margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+.name .motto { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--aqua); margin-top: 12px; }
+@keyframes rise { from { transform: translateY(14px); opacity: .25; } to { transform: none; opacity: 1; } }
+
+.rabbit { position: absolute; width: 46px; height: 46px; border: 0; background: none; padding: 0; cursor: pointer;
+  top: 38%; left: -60px; transition: left 2.6s cubic-bezier(.3,.7,.3,1), opacity .4s; color: var(--brass); }
+.rabbit.in { left: calc(100% - 78px); }
+.rabbit svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--brass) 55%, transparent)); }
+.rabbit.found { opacity: 0; pointer-events: none; }
+.toast { position: absolute; left: 16px; right: 16px; top: 34%; background: color-mix(in srgb, var(--ink) 88%, transparent);
+  border: 1px solid var(--brass); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; }
+.toast b { color: var(--brass); font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
+
+/* Credentials */
+.creds { display: flex; flex-wrap: wrap; gap: 8px; }
+.creds span { font-family: var(--mono); font-size: 12px; color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; background: var(--panel); }
+.creds span b { color: var(--aqua); font-weight: 500; }
+
+/* Actions */
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { font: 600 15px/1.2 var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px; text-align: left; text-decoration: none; cursor: pointer; display: grid; gap: 4px; min-width: 0; }
+.btn small { font: 400 12px/1.3 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.btn.primary { grid-column: 1 / -1; background: var(--aqua); color: var(--ink); border-color: var(--aqua); }
+.btn.primary small { color: color-mix(in srgb, var(--ink) 70%, transparent); }
+.btn:active { transform: translateY(1px); }
+
+/* Doors */
+h2 { font-family: var(--display); font-weight: 700; font-size: 26px; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 6px 0 0; }
+.doors { display: grid; gap: 10px; }
+.door { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; padding: 16px; border-radius: 16px;
+  border: 1px solid var(--line); background: none; color: var(--fg); text-align: left; font: inherit; cursor: pointer; width: 100%; }
+.door[aria-expanded="true"] { border-color: var(--aqua); background: var(--panel); }
+.door .k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--aqua); grid-row: span 2; padding-top: 3px; }
+.door#door-solve .k { color: var(--brass); }
+.door strong { font-family: var(--display); font-size: 20px; font-weight: 700; }
+.door span:last-child { color: var(--muted); font-size: 14.5px; }
+.panel { border-left: 2px solid var(--line); padding: 4px 0 4px 16px; display: grid; gap: 12px; }
+
+.needs { display: flex; flex-wrap: wrap; gap: 8px; }
+.need { font: 500 14px var(--body); color: var(--fg); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; cursor: pointer; }
+.need[aria-pressed="true"] { background: var(--aqua); color: var(--ink); border-color: var(--aqua); }
+.idea { background: var(--panel); border-radius: 14px; padding: 16px; display: grid; gap: 8px; }
+.idea h3 { margin: 0; font-family: var(--display); font-size: 18px; }
+.idea p { margin: 0; }
+.fine { font-size: 12.5px; color: var(--muted); }
+
+form { display: grid; gap: 12px; }
+label { display: grid; gap: 5px; font-size: 13.5px; color: var(--muted); }
+input, select, textarea { font: 16px var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+textarea { min-height: 96px; resize: vertical; }
+.out { background: var(--panel); border: 1px dashed var(--warn); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.out pre { margin: 0; white-space: pre-wrap; font: 13px/1.45 var(--mono); color: var(--fg); overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.row .btn { padding: 10px 14px; }
+
+.brands { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.brands a, .brands span { font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--fg); min-width: 0; }
+.brands small { display: block; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.status-list li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.status-list b { font: 500 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.status-list .on b { color: var(--aqua); }
+.status-list .off b { color: var(--warn); }
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { .name h1 .w { animation: none; } .rabbit { transition: none; } }
+</style>
+
+<div class="wrap">
+
+  <!-- 1. Motion stage. PLACEHOLDER until a Higgsfield loop is made from a real photo of Phill. -->
+  <section class="stage" aria-label="Phill McGurk, motion card">
+    <canvas id="water" aria-hidden="true"></canvas>
+    <!-- When the real loop exists: <video src="phill-loop.mp4" poster="phill-still.jpg" autoplay muted loop playsinline></video> -->
+    <div class="mono-mark" aria-hidden="true"><span>PM</span></div>
+    <div class="ph">
+      <span class="tag">PLACEHOLDER motion</span>
+      <small>A 6-second Higgsfield loop of Phill, made from his own photos, replaces this.</small>
+    </div>
+    <button class="rabbit" id="rabbit" type="button" aria-label="A white rabbit. Tap it.">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M22 4c-3 0-4 6-3 13l2 9c-6 3-10 9-10 16 0 10 8 17 19 17h14c4 0 6-2 6-4s-2-3-4-3h-2c4-3 6-7 6-12 0-9-7-15-16-16l-1-9C31 8 28 3 25 6c-1-1-2-2-3-2zm6 30a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+    </button>
+    <div class="toast" id="toast" hidden role="status"><b>You found the first rabbit.</b>Four more appear in Phill's talk. Count them and open Solve below.</div>
+    <div class="name">
+      <h1><span class="w">Phill</span> <span class="w">McGurk</span></h1>
+      <p>Founder, Unite Group. Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.</p>
+      <div class="motto">Found. Trusted. Chosen.</div>
+    </div>
+  </section>
+
+  <div class="creds" aria-label="Credentials">
+    <span><b>MC</b> IICRC Master Restoration Technician</span>
+    <span><b>IICRC</b> 47496</span>
+    <span><b>BFRS</b> Bio Forensic Restoration Specialist</span>
+    <span><b>CFO</b> Certified Forensic Operator</span>
+    <span><b>GBAC</b> certified</span>
+  </div>
+
+  <!-- 2. Keep the connection: one tap, always available -->
+  <section class="actions" aria-label="Save or contact Phill">
+    <button class="btn primary" type="button" id="save">Save to contacts<small>Adds Phill's card to your phone</small></button>
+    <div class="out" id="save-out" hidden style="grid-column:1/-1">
+      <span class="tag">Preview limit</span>
+      <p class="fine" style="margin:0">If no contact file opened, this preview blocked it. The hosted card saves in one tap. For now, copy the details below.</p>
+      <pre id="vcard-text"></pre>
+      <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
+    </div>
+    <button class="btn" type="button" data-copy="+61 457 123 005">Mobile<small>+61 457 123 005</small></button>
+    <button class="btn" type="button" data-copy="07 3879 4677">Office<small>07 3879 4677</small></button>
+    <button class="btn" type="button" data-copy="phill.m@carsi.com.au">Email<small>phill.m@carsi.com.au</small></button>
+    <button class="btn" type="button" id="share">Share this card<small>Copies the link</small></button>
+  </section>
+
+  <!-- 3. Three doors, from the Nexus card proposal -->
+  <section aria-labelledby="doors-h" style="display:grid;gap:14px">
+    <div>
+      <h2 id="doors-h">What would be useful today?</h2>
+      <p class="lede">Pick one. Each takes under a minute.</p>
+    </div>
+    <div class="doors">
+      <button class="door" id="door-discover" type="button" aria-expanded="false" aria-controls="p-discover"><span class="k">DISCOVER</span><strong>One practical idea</strong><span>Choose a need, leave with one thing to do this week.</span></button>
+      <div class="panel" id="p-discover" hidden>
+        <div class="needs" role="group" aria-label="Your need">
+          <button class="need" type="button" data-need="proof">Show proof of my work</button>
+          <button class="need" type="button" data-need="found">Get found locally</button>
+          <button class="need" type="button" data-need="team">Skill up my team</button>
+          <button class="need" type="button" data-need="reply">Answer enquiries faster</button>
+        </div>
+        <div class="idea" id="idea" hidden><h3 id="idea-h"></h3><p id="idea-p"></p></div>
+        <p class="fine"><span class="tag">Draft</span> Prepared for this prototype and not yet approved by Phill. General guidance, not an audit of your business.</p>
+      </div>
+
+      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve"><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>The game that runs through Phill's talk. One rabbit is hiding above.</span></button>
+      <div class="panel" id="p-solve" hidden>
+        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Count them, answer one question, and you are in the draw.</p>
+        <p class="fine"><span class="tag">PLACEHOLDER link</span> The game itself is Rana's build. Its permanent address is not set yet, so it is not linked here.</p>
+      </div>
+
+      <button class="door" id="door-connect" type="button" aria-expanded="false" aria-controls="p-connect"><span class="k">CONNECT</span><strong>Talk to Phill</strong><span>Proposals, training, media or a job. Read by Phill's assistant first.</span></button>
+      <div class="panel" id="p-connect" hidden>
+        <form id="enquiry" novalidate>
+          <label for="f-name">Your name<input id="f-name" name="name" autocomplete="name" required value="Sam Example"></label>
+          <label for="f-email">Your email<input id="f-email" name="email" type="email" autocomplete="email" required value="sam@example.com.au"></label>
+          <label for="f-biz">Business<input id="f-biz" name="business" autocomplete="organization" value="Example Restorations, Ipswich"></label>
+          <label for="f-type">It's about
+            <select id="f-type" name="type">
+              <option>A job or quote</option><option selected>A proposal or partnership</option>
+              <option>Training (CARSI)</option><option>Media or speaking</option><option>Something else</option>
+            </select>
+          </label>
+          <label for="f-msg">Message<textarea id="f-msg" name="message" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea></label>
+          <p class="fine" style="margin:0">Example entry shown. Replace it with your own.</p>
+          <button class="btn primary" type="submit">Prepare my message<small>You review it before anything is sent</small></button>
+        </form>
+        <div class="out" id="out" hidden>
+          <span class="tag">Not sent</span>
+          <pre id="out-text"></pre>
+          <div class="row">
+            <button class="btn" type="button" id="copy-msg">Copy message</button>
+            <a class="btn" id="mail-msg" href="#">Open in email app</a>
+          </div>
+          <p class="fine" style="margin:0">Send it to <b id="inbox-addr"></b>. <span class="tag">PLACEHOLDER inbox</span> The assistant inbox is not live yet, so this goes to Phill's own address for now.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="brands-h" style="display:grid;gap:12px">
+    <h2 id="brands-h" style="font-size:20px">Phill's businesses</h2>
+    <div class="brands">
+      <a href="https://www.disasterrecovery.com.au" target="_blank" rel="noopener">Disaster Recovery<small>Restoration, Brisbane</small></a>
+      <a href="https://carsi.com.au" target="_blank" rel="noopener">CARSI<small>IICRC CEC training</small></a>
+      <a href="https://unite-group.in" target="_blank" rel="noopener">Unite Group<small>The group</small></a>
+      <a href="https://synthex.social" target="_blank" rel="noopener">Synthex<small>Group marketing</small></a>
+      <a href="https://restoreassist.app" target="_blank" rel="noopener">RestoreAssist<small>Restoration job app</small></a>
+      <a href="https://nrpg.business" target="_blank" rel="noopener">NRPG<small>Contractor network</small></a>
+      <span style="grid-column:1/-1">CleanExpo247 / TradeHall<small>Not connected yet: no public address</small></span>
+    </div>
+  </section>
+
+  <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px">
+    <h2 id="live-h" style="font-size:20px">What works right now</h2>
+    <ul class="status-list">
+      <li class="on"><b>Live</b>Business links open the real websites.</li>
+      <li class="on"><b>Live</b>Mobile, office and email copy to your clipboard.</li>
+      <li class="on"><b>Live</b>Discover ideas and the hidden rabbit.</li>
+      <li class="off" data-hosted="One-tap save to contacts opens Phill's contact card on your phone."><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
+      <li class="off"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
+      <li class="off"><b>Not connected yet</b>The White Rabbit game link and the motion video of Phill.</li>
+      <li class="off" data-hosted="Anyone with the link or the QR code can open this card."><b>Not connected yet</b>Public access. Only people Phill shares this preview with can open it, signed in to claude.ai.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span>Prototype, 22/10/2026. Motion and portrait are placeholders until Phill supplies real photos.</span>
+    <span>Nothing on this card is sent or stored without your say-so.</span>
+  </footer>
+</div>
+
+<script>
+// Placeholder routing: swap for the assistant inbox once it is chosen and live.
+const AGENT_INBOX = null; // e.g. "hello@<confirmed-domain>"  (PLACEHOLDER)
+const FALLBACK_INBOX = "Phill@disasterrecovery.com.au";
+const INBOX = AGENT_INBOX || FALLBACK_INBOX;
+
+// Embedded copy of the contact card, used by "Copy" fallbacks and by a standalone deploy.
+const VCARD = `BEGIN:VCARD
+VERSION:3.0
+N:McGurk;Phill;;;
+FN:Phill McGurk
+ORG:Unite Group
+TITLE:Founder
+TEL;TYPE=CELL:+61457123005
+TEL;TYPE=WORK:+61738794677
+EMAIL;TYPE=WORK:phill.m@carsi.com.au
+EMAIL;TYPE=WORK:Phill@disasterrecovery.com.au
+URL:https://www.disasterrecovery.com.au
+URL:https://carsi.com.au
+NOTE:IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC
+END:VCARD`;
+
+async function copy(text, el) {
+  const small = el.querySelector("small"); const before = small ? small.textContent : el.textContent;
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { ok = false; }
+  const msg = ok ? "Copied" : "Press and hold to copy: " + text;
+  if (small) small.textContent = msg; else el.textContent = msg;
+  if (ok) setTimeout(() => { if (small) small.textContent = before; else el.textContent = before; }, 1600);
+}
+document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copy(b.dataset.copy, b)));
+// Hosted mode: set by the site build (site/build.py) when the card runs on its own web address.
+const HOSTED = window.CARD_HOSTED === true;
+if (HOSTED) {
+  document.querySelectorAll("#live-status li[data-hosted]").forEach(li => {
+    li.className = "on"; li.querySelector("b").textContent = "Live";
+    li.lastChild.textContent = li.dataset.hosted;
+  });
+}
+
+// Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
+document.getElementById("save").addEventListener("click", () => {
+  if (HOSTED) { location.href = "phill-mcgurk.vcf"; return; }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([VCARD], { type: "text/vcard" }));
+    a.download = "phill-mcgurk.vcf"; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { /* blocked: the fallback below covers it */ }
+  document.getElementById("vcard-text").textContent = "Phill McGurk, Founder, Unite Group\nMobile +61 457 123 005\nOffice 07 3879 4677\nphill.m@carsi.com.au\nPhill@disasterrecovery.com.au\ndisasterrecovery.com.au · carsi.com.au";
+  document.getElementById("save-out").hidden = false;
+});
+document.getElementById("copy-vcard").addEventListener("click", e => copy(document.getElementById("vcard-text").textContent, e.currentTarget));
+document.getElementById("share").addEventListener("click", e => copy(location.href.split("#")[0], e.currentTarget));
+
+// Doors: one open at a time
+const doors = ["discover", "solve", "connect"];
+doors.forEach(d => document.getElementById("door-" + d).addEventListener("click", () => {
+  doors.forEach(o => {
+    const open = o === d && document.getElementById("door-" + o).getAttribute("aria-expanded") !== "true";
+    document.getElementById("door-" + o).setAttribute("aria-expanded", String(open));
+    document.getElementById("p-" + o).hidden = !open;
+  });
+}));
+
+// Discover: prepared ideas (DRAFT, not yet approved by Phill)
+const IDEAS = {
+  proof: ["Post one finished job, start to end", "Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],
+  found: ["Name the five jobs you want to be called for", "Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],
+  team: ["Turn missed jobs into a training plan", "Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],
+  reply: ["Write your three most common replies once", "Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]
+};
+document.querySelectorAll(".need").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll(".need").forEach(n => n.setAttribute("aria-pressed", String(n === b)));
+  const [h, p] = IDEAS[b.dataset.need];
+  document.getElementById("idea-h").textContent = h; document.getElementById("idea-p").textContent = p;
+  document.getElementById("idea").hidden = false;
+}));
+
+// Connect: prepare the message; nothing is sent from the page
+document.getElementById("inbox-addr").textContent = INBOX;
+document.getElementById("enquiry").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = new FormData(e.currentTarget);
+  const name = (f.get("name") || "").trim(), email = (f.get("email") || "").trim(), msg = (f.get("message") || "").trim();
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
+    document.getElementById("out-text").textContent = "Add your name, a working email and a message, then try again.";
+    document.getElementById("out").hidden = false; return;
+  }
+  const subject = `[Card] ${f.get("type")}: ${name}`;
+  const body = `${msg}\n\nFrom: ${name} <${email}>\nBusiness: ${f.get("business") || "not given"}\nVia: Phill's digital card`;
+  document.getElementById("out-text").textContent = `To: ${INBOX}\nSubject: ${subject}\n\n${body}`;
+  document.getElementById("mail-msg").href = `mailto:${INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  document.getElementById("out").hidden = false;
+});
+document.getElementById("copy-msg").addEventListener("click", e => copy(document.getElementById("out-text").textContent, e.currentTarget));
+
+// The rabbit: arrives after a few seconds, once per visit
+const rabbit = document.getElementById("rabbit");
+setTimeout(() => rabbit.classList.add("in"), 3500);
+rabbit.addEventListener("click", () => {
+  rabbit.classList.add("found"); const t = document.getElementById("toast"); t.hidden = false;
+  setTimeout(() => { t.hidden = true; }, 5000);
+});
+
+// PLACEHOLDER motion: slow caustic light, like sun through water on a ceiling
+(function () {
+  const c = document.getElementById("water"), x = c.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = getComputedStyle(document.documentElement);
+  const aqua = css.getPropertyValue("--aqua").trim(), panel = css.getPropertyValue("--panel").trim();
+  let w, h;
+  function size() { const r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); w = c.width = r.width * d; h = c.height = r.height * d; }
+  size(); addEventListener("resize", size);
+  function frame(t) {
+    t = t / 1000;
+    x.fillStyle = panel; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 7; i++) {
+      const cx = w * (0.5 + 0.38 * Math.sin(t * 0.13 + i * 1.7)), cy = h * (0.42 + 0.34 * Math.cos(t * 0.11 + i * 2.3));
+      const r = Math.max(w, h) * (0.22 + 0.06 * Math.sin(t * 0.4 + i));
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, aqua + "26"); g.addColorStop(1, aqua + "00");
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+    }
+    x.globalCompositeOperation = "source-over";
+    const fade = x.createLinearGradient(0, h * 0.45, 0, h);
+    fade.addColorStop(0, "rgba(10,17,32,0)"); fade.addColorStop(1, "rgba(10,17,32,0.92)");
+    x.fillStyle = fade; x.fillRect(0, 0, w, h);
+    if (!still) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

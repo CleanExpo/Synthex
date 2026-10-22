@@ -234,10 +234,10 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
       <li class="on"><b>Live</b>Business links open the real websites.</li>
       <li class="on"><b>Live</b>Mobile, office and email copy to your clipboard.</li>
       <li class="on"><b>Live</b>Discover ideas and the hidden rabbit.</li>
-      <li class="off"><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
+      <li class="off" data-hosted="One-tap save to contacts opens Phill's contact card on your phone."><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
       <li class="off"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
       <li class="off"><b>Not connected yet</b>The White Rabbit game link and the motion video of Phill.</li>
-      <li class="off"><b>Not connected yet</b>Public access. Only people Phill shares this preview with can open it, signed in to claude.ai.</li>
+      <li class="off" data-hosted="Anyone with the link or the QR code can open this card."><b>Not connected yet</b>Public access. Only people Phill shares this preview with can open it, signed in to claude.ai.</li>
     </ul>
   </section>
 
@@ -278,8 +278,18 @@ async function copy(text, el) {
   if (ok) setTimeout(() => { if (small) small.textContent = before; else el.textContent = before; }, 1600);
 }
 document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copy(b.dataset.copy, b)));
-// Save: a real .vcf download where the host allows it, plus a copyable fallback that always shows
+// Hosted mode: set by the site build (site/build.py) when the card runs on its own web address.
+const HOSTED = window.CARD_HOSTED === true;
+if (HOSTED) {
+  document.querySelectorAll("#live-status li[data-hosted]").forEach(li => {
+    li.className = "on"; li.querySelector("b").textContent = "Live";
+    li.lastChild.textContent = li.dataset.hosted;
+  });
+}
+
+// Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
 document.getElementById("save").addEventListener("click", () => {
+  if (HOSTED) { location.href = "phill-mcgurk.vcf"; return; }
   try {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([VCARD], { type: "text/vcard" }));

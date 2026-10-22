@@ -1,0 +1,19 @@
+{
+  "cleanUrls": true,
+  "headers": [
+    {
+      "source": "/phill-mcgurk.vcf",
+      "headers": [
+        { "key": "Content-Type", "value": "text/vcard; charset=utf-8" },
+        { "key": "Content-Disposition", "value": "inline; filename=\"phill-mcgurk.vcf\"" }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
+}
