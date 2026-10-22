@@ -422,9 +422,9 @@
       {
         "label": "Restoration World",
         "url": null,
-        "pendingUrl": "https://cleanexpo247.com",
-        "note": "CleanExpo247",
-        "urlNote": "Phill 23/10/2026: Restoration World is cleanexpo247.com. 23/10/2026: the domain is registered (GoDaddy, expires 28/08/2027) but parked on dns-parking.com nameservers and does not resolve, so it is not shown to visitors yet. Set url to pendingUrl and visitor to true once https://cleanexpo247.com answers 200 (e.g. after pointing it at the cleanexpo247-hall Vercel project)."
+        "pendingUrl": "https://disasterrecovery.com.au/nrpg-restorationworld",
+        "note": "NRPG Restoration World",
+        "urlNote": "Phill 23/10/2026: Restoration World lives at disasterrecovery.com.au/nrpg-restorationworld for now (cleanexpo247.com is registered but parked with no DNS). 23/10/2026 that path returns 404 on the live site and is not in its sitemap; the project is the private repo CleanExpo/Restoration-World (Godot). Set url to pendingUrl and visitor to true once it answers 200."
       }
     ],
     "vcardNote": "IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC",
@@ -515,6 +515,6 @@
       }
     ],
     "contactSource": "Phill 23/10/2026: 'The only contact is through the AI email that I have set up'. Mobile, office and personal emails removed from the card and contact file.",
-    "visitorLinksSource": "Phill 23/10/2026: RestoreAssist, Unite Group, Synthex, TradeHall and Restoration World (cleanexpo247.com) connected to the card. Restoration World waits until cleanexpo247.com resolves."
+    "visitorLinksSource": "Phill 23/10/2026: RestoreAssist, Unite Group, Synthex, TradeHall and Restoration World connected to the card. Restoration World waits until its page is live."
   }
 }
