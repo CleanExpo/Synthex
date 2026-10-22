@@ -1,0 +1,80 @@
+{
+  "id": "phill-mcgurk",
+  "prepared": "22/10/2026",
+  "sources": [
+    {"label": "Synthex canonical brand config for Unite Group", "ref": "packages/brand-config/src/brands/unite.ts"},
+    {"label": "Unite Group logo from unite-group.in, checksum recorded", "ref": "config/brand-logo-sources.json (slug unite, sha256 f73cd4c5…)"},
+    {"label": "Phill's email signatures (CARSI and Disaster Recovery)", "ref": "Gmail threads 1a15c3ac0464bcf8 and 1a1485af1f95b555"},
+    {"label": "Unite-Group portfolio registry", "ref": "Unite-Group/.portfolio/PORTFOLIO.yaml"}
+  ],
+  "brand": {
+    "name": "Unite Group",
+    "slug": "unite",
+    "tagline": {"text": "Connected service for the field.", "source": "packages/brand-config/src/brands/unite.ts:9"},
+    "logo": {
+      "status": "found",
+      "url": "https://unite-group.in/logos/unite-group-nexus-logo.png",
+      "file": "public/logos/unite/primary.svg",
+      "background": "dark",
+      "source": "config/brand-logo-sources.json: exact bytes from unite-group.in, vector traced deterministically"
+    },
+    "colours": {
+      "primary": {"value": "#E55A2B", "source": "packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026"},
+      "logo": {"value": "#00DCE3", "source": "measured from public/logos/unite/primary.svg (the unite-group.in logo)"},
+      "secondary": {"status": "missing", "note": "#1E293B is proposed in unite.ts:17 but not verified"},
+      "accent": {"status": "missing", "note": "#FBBF24 is proposed in unite.ts:18 but not verified"},
+      "background": {"status": "missing", "note": "no confirmed page colour; the template uses plain white"},
+      "text": {"status": "missing", "note": "no confirmed text colour; the template uses near-black"}
+    },
+    "conflicts": [
+      "The brand config's verified primary is orange #E55A2B, but the logo on unite-group.in is cyan #00DCE3. Phill to confirm which leads."
+    ],
+    "fonts": {
+      "display": {"family": "Inter", "weight": 700, "licence": "SIL Open Font License 1.1", "embedAllowed": true, "googleFonts": "Inter:wght@400;600;700", "source": "packages/brand-config/src/brands/unite.ts:25 (font not yet verified against the website)"},
+      "body": {"family": "Inter", "weight": 400, "licence": "SIL Open Font License 1.1", "embedAllowed": true, "googleFonts": "Inter:wght@400;600;700", "source": "packages/brand-config/src/brands/unite.ts:29"}
+    },
+    "about": {"status": "missing", "note": "no approved About copy for Unite Group in brand-config"},
+    "imagery": {"status": "missing", "note": "no real photos of Phill supplied yet"},
+    "services": []
+  },
+  "person": {
+    "name": "Phill McGurk",
+    "title": "Founder, Unite Group",
+    "intro": "Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.",
+    "motto": "Found. Trusted. Chosen.",
+    "org": "Unite Group",
+    "credentials": [
+      {"abbr": "MC", "text": "IICRC Master Restoration Technician"},
+      {"abbr": "IICRC", "text": "47496"},
+      {"abbr": "BFRS", "text": "Bio Forensic Restoration Specialist"},
+      {"abbr": "CFO", "text": "Certified Forensic Operator"},
+      {"abbr": "GBAC", "text": "certified"}
+    ],
+    "phones": [
+      {"label": "Mobile", "display": "+61 457 123 005", "tel": "+61457123005", "type": "CELL"},
+      {"label": "Office", "display": "07 3879 4677", "tel": "+61738794677", "type": "WORK"}
+    ],
+    "emails": [
+      {"label": "Email", "value": "phill.m@carsi.com.au", "primary": true},
+      {"label": "Disaster Recovery", "value": "Phill@disasterrecovery.com.au"}
+    ],
+    "links": [
+      {"label": "Disaster Recovery", "url": "https://www.disasterrecovery.com.au", "note": "Restoration, Brisbane"},
+      {"label": "CARSI", "url": "https://carsi.com.au", "note": "IICRC CEC training"},
+      {"label": "Unite Group", "url": "https://unite-group.in", "note": "The group"},
+      {"label": "Synthex", "url": "https://synthex.social", "note": "Group marketing"},
+      {"label": "RestoreAssist", "url": "https://restoreassist.app", "note": "Restoration job app"},
+      {"label": "NRPG", "url": "https://nrpg.business", "note": "Contractor network"},
+      {"label": "CleanExpo247 / TradeHall", "url": null, "note": "Not connected yet: no public address"}
+    ],
+    "vcardNote": "IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC",
+    "features": {"whiteRabbit": true, "discover": true},
+    "ideas": {
+      "proof": ["Show proof of my work", "Post one finished job, start to end", "Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],
+      "found": ["Get found locally", "Name the five jobs you want to be called for", "Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],
+      "team": ["Skill up my team", "Turn missed jobs into a training plan", "Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],
+      "reply": ["Answer enquiries faster", "Write your three most common replies once", "Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]
+    },
+    "inbox": {"status": "missing", "fallback": "Phill@disasterrecovery.com.au"}
+  }
+}

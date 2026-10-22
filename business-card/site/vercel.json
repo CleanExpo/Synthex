@@ -2,10 +2,10 @@
   "cleanUrls": true,
   "headers": [
     {
-      "source": "/phill-mcgurk.vcf",
+      "source": "/(.*)\\.vcf",
       "headers": [
         { "key": "Content-Type", "value": "text/vcard; charset=utf-8" },
-        { "key": "Content-Disposition", "value": "inline; filename=\"phill-mcgurk.vcf\"" }
+        { "key": "Content-Disposition", "value": "inline" }
       ]
     },
     {

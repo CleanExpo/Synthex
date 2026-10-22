@@ -39,6 +39,21 @@ marketing consent beyond the Pulse opt-out, no repeat-customer follow-ups, no vC
 `ContractorProfile.slug` and `isPubliclyVisible`. It already shows phone, email, website and certifications.
 `[VERIFIED by research agent]` The staff card should reuse its pattern, not duplicate it. `[INFERENCE]`
 
+## Every card in the firm's own brand
+
+Each firm's cards are rendered from its own brand kit, never from a house style. RestoreAssist already
+holds most of it: `Organization.logoUrl`, `primaryColor` and `accentColor` (`prisma/schema.prisma:995-997`)
+`[VERIFIED]`, and `lib/branding/extract-colors.ts` measures colours from the firm's own logo, locally and
+free `[VERIFIED by research agent]`. Two cautions for the build session:
+- When it finds no pixels, `extract-colors.ts` falls back to RestoreAssist's own colours (#1C2E47 /
+  #8A6B4E). For cards, that fallback must become "missing", or every unbranded firm would wear
+  RestoreAssist's colours. `[VERIFIED by research agent: extract-colors.ts:69]`
+- Fonts are not captured at all today. Use the firm's web font only where its licence allows embedding,
+  otherwise the closest open font, and name it on the owner's screen. `[INFERENCE]`
+
+The brand kit format and its validator are in `business-card/brand-kits/` (`validate.py`). The first kit,
+`phill-mcgurk.json`, is built from Synthex's canonical Unite Group config and logo. `[VERIFIED]`
+
 ## What the card shows
 
 1. **The person.** Name, photo (`User.image`), role, tickets, mobile, "save to contacts" and wallet pass.

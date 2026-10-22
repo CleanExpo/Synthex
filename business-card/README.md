@@ -18,6 +18,8 @@ agency, and the card is a separate showpiece.
 | `steering-board.html` | Phill's decision board. Published privately at https://claude.ai/artifact/XuXp2GMawpsNjLJV3wNp37 |
 | `board-seed.json` | The options written to the board's store (choices live in the store, not this file) |
 | `restoreassist-staff-cards.md` | Track 2: staff cards inside RestoreAssist, what data already exists, ecosystem ideas |
+| `brand-kits/` | One brand kit per card (`phill-mcgurk.json`) and `validate.py`, which rejects any unsourced value |
+| `site/` | `build.py` turns `card.html` plus a brand kit into the hosted card; `hosting-plan.md` explains going live |
 | `research-notes.md` | Higgsfield in depth, review-engine rules, business list, competitor sweep, "lavish" search |
 
 ## 1. Rana's concept, and who wrote what

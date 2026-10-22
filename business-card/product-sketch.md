@@ -47,13 +47,22 @@ yearly renewal; that decision is open. `[UNCONFIRMED]`
    their photos. `[INFERENCE: Higgsfield's terms put upload rights on the uploader, README §2]`
 2. **Check**: photos are real, sharp and theirs; contact details are spelled right. Reject stock or
    other people's photos.
-3. **Motion**: generate 2 or 3 camera-move variants from the best portrait, pick one, re-encode to a
+3. **Brand kit**: build the buyer's brand kit (`brand-kits/<id>.json`) from their own sources only:
+   their logo file or website, their brand guide, their colours and fonts. Every value records where it
+   came from; anything not supplied is marked missing and listed on the card, never invented. Fonts are
+   embedded only where the licence allows; otherwise the closest open font is used and named. The kit
+   passes `brand-kits/validate.py` before anything else happens. `[VERIFIED: validator and first kit exist]`
+   Reuse Synthex's existing tools rather than starting fresh: the canonical brand configs and logo
+   files in `packages/brand-config` and `public/logos`, and the website-to-brand-DNA extractor.
+   `[VERIFIED: packages/brand-config/src/brands/unite.ts; app/api/brand-dna/extract/route.ts]`
+4. **Motion**: generate 2 or 3 camera-move variants from the best portrait, pick one, re-encode to a
    small muted loop with a still poster. Never invent a face or a scene the buyer did not supply.
-4. **Assemble**: fill the card template (this prototype is the base), generate the vCard and QR code.
-5. **Proof**: send the buyer a private preview link; they approve or ask for one round of changes.
-6. **Go live**: publish at a permanent address, e.g. `cards.<domain>/<name>`. Set up the inbox tier if
+5. **Assemble**: `site/build.py card.html brand-kits/<id>.json <out>` renders the card in the buyer's
+   own brand and writes their contact file. Generate the QR code.
+6. **Proof**: send the buyer a private preview link; they approve or ask for one round of changes.
+7. **Go live**: publish at a permanent address, e.g. `cards.<domain>/<name>`. Set up the inbox tier if
    bought.
-7. **Hand over**: link, QR code as PNG and SVG, a 20-second "how to share it" note.
+8. **Hand over**: link, QR code as PNG and SVG, a 20-second "how to share it" note.
 
 Turnaround target: 3 business days. `[INFERENCE]`
 

@@ -1,0 +1,416 @@
+<title>Phill McGurk Card</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one narrow column, a 9:16 motion stage up top, then contact actions, the doors, the businesses and an honest status panel.
+   Brand template: every brand colour and font comes from the embedded brand kit (#brand-kit). The values below are plain
+   template neutrals used only where the kit marks a value missing; they are not anyone's brand. */
+:root {
+  --bg: #FFFFFF;          /* template neutral: page */
+  --fg: #16181D;          /* template neutral: text */
+  --stage: #14171C;       /* template neutral: motion stage */
+  --brand: #3A3F48;       /* replaced by the kit's primary colour */
+  --brand-ink: #FFFFFF;   /* text on the brand colour, chosen by contrast */
+  --glow: #8A93A3;        /* replaced by the kit's logo colour, else primary */
+  --warn: #B4462B;        /* semantic: not connected yet */
+  --ok: #1E7B55;          /* semantic: live */
+  --muted: color-mix(in srgb, var(--fg) 62%, var(--bg));
+  --panel: color-mix(in srgb, var(--fg) 5%, var(--bg));
+  --line: color-mix(in srgb, var(--fg) 14%, var(--bg));
+  --display: system-ui, "Segoe UI", Arial, sans-serif;
+  --body: system-ui, "Segoe UI", Arial, sans-serif;
+  --mono: ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 440px; margin: 0 auto; display: grid; gap: 28px; }
+a { color: var(--brand); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 6px; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); padding: 3px 8px; border-radius: 999px; display: inline-block; }
+
+/* Motion stage */
+.stage { position: relative; aspect-ratio: 9 / 16; max-width: 100%; max-height: 72vh; width: 100%; margin: 0 auto;
+  border-radius: 22px; overflow: hidden; background: var(--stage); color: #FFFFFF; }
+.stage canvas, .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.stage .ph { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.stage .ph small { font-family: var(--mono); font-size: 10.5px; color: rgba(255,255,255,.72); text-align: right; max-width: 52%; line-height: 1.35; }
+.stage .ph .tag { color: #FFD9CC; border-color: rgba(255,217,204,.6); }
+.logo { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); width: 62%; max-width: 260px; display: grid; place-items: center; }
+.logo img { width: 100%; height: auto; display: block; }
+.logo .tag { color: #FFD9CC; border-color: rgba(255,217,204,.6); }
+.stage .name { position: absolute; left: 18px; right: 18px; bottom: 18px; }
+.name h1 { font-family: var(--display); font-weight: 700; font-size: clamp(38px, 12vw, 54px); line-height: .95; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.name h1 .w { display: inline-block; animation: rise .9s cubic-bezier(.2,.8,.2,1) both; }
+.name h1 .w:nth-child(2) { animation-delay: .12s; }
+.name p { margin: 10px 0 0; color: rgba(255,255,255,.8); font-size: 15px; }
+.name .motto { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--glow); margin-top: 12px; }
+@keyframes rise { from { transform: translateY(14px); opacity: .25; } to { transform: none; opacity: 1; } }
+.rabbit { position: absolute; width: 46px; height: 46px; border: 0; background: none; padding: 0; cursor: pointer;
+  top: 60%; left: -60px; transition: left 2.6s cubic-bezier(.3,.7,.3,1), opacity .4s; color: #FFFFFF; }
+.rabbit.in { left: calc(100% - 78px); }
+.rabbit svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--glow)); }
+.rabbit.found { opacity: 0; pointer-events: none; }
+.toast { position: absolute; left: 16px; right: 16px; top: 52%; background: rgba(10,12,16,.9); border: 1px solid var(--glow);
+  border-radius: 14px; padding: 14px 16px; font-size: 14.5px; }
+.toast b { color: var(--glow); font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
+
+.creds { display: flex; flex-wrap: wrap; gap: 8px; }
+.creds span { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; background: var(--panel); }
+.creds b { color: var(--brand); font-weight: 600; }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { font: 600 15px/1.2 var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px; text-align: left; text-decoration: none; cursor: pointer; display: grid; gap: 4px; min-width: 0; }
+.btn small { font: 400 12px/1.3 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.btn.primary { grid-column: 1 / -1; background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.btn.primary small { color: var(--brand-ink); opacity: .8; }
+.btn:active { transform: translateY(1px); }
+
+h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 6px 0 0; }
+.doors { display: grid; gap: 10px; }
+.door { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; padding: 16px; border-radius: 16px;
+  border: 1px solid var(--line); background: none; color: var(--fg); text-align: left; font: inherit; cursor: pointer; width: 100%; }
+.door[aria-expanded="true"] { border-color: var(--brand); background: var(--panel); }
+.door .k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--brand); grid-row: span 2; padding-top: 3px; }
+.door strong { font-family: var(--display); font-size: 19px; }
+.door span:last-child { color: var(--muted); font-size: 14.5px; }
+.panel { border-left: 2px solid var(--line); padding: 4px 0 4px 16px; display: grid; gap: 12px; }
+.needs { display: flex; flex-wrap: wrap; gap: 8px; }
+.need { font: 500 14px var(--body); color: var(--fg); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; cursor: pointer; }
+.need[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.idea { background: var(--panel); border-radius: 14px; padding: 16px; display: grid; gap: 8px; }
+.idea h3 { margin: 0; font-family: var(--display); font-size: 18px; }
+.idea p { margin: 0; }
+.fine { font-size: 12.5px; color: var(--muted); }
+form { display: grid; gap: 12px; }
+label { display: grid; gap: 5px; font-size: 13.5px; color: var(--muted); }
+input, select, textarea { font: 16px var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+textarea { min-height: 96px; resize: vertical; }
+.out { background: var(--panel); border: 1px dashed var(--warn); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.out pre { margin: 0; white-space: pre-wrap; font: 13px/1.45 var(--mono); overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.row .btn { padding: 10px 14px; }
+.brands { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.brands a, .brands span { font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--fg); min-width: 0; }
+.brands small { display: block; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.status-list li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.status-list b { font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.status-list .on b { color: var(--ok); }
+.status-list .off b { color: var(--warn); }
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { .name h1 .w { animation: none; } .rabbit { transition: none; } }
+</style>
+
+<!-- The brand kit for this card. site/build.py fills it from business-card/brand-kits/<id>.json; empty means unbranded. -->
+<script id="brand-kit" type="application/json">{"id":"phill-mcgurk","prepared":"22/10/2026","sources":[{"label":"Synthex canonical brand config for Unite Group","ref":"packages/brand-config/src/brands/unite.ts"},{"label":"Unite Group logo from unite-group.in, checksum recorded","ref":"config/brand-logo-sources.json (slug unite, sha256 f73cd4c5…)"},{"label":"Phill's email signatures (CARSI and Disaster Recovery)","ref":"Gmail threads 1a15c3ac0464bcf8 and 1a1485af1f95b555"},{"label":"Unite-Group portfolio registry","ref":"Unite-Group/.portfolio/PORTFOLIO.yaml"}],"brand":{"name":"Unite Group","slug":"unite","tagline":{"text":"Connected service for the field.","source":"packages/brand-config/src/brands/unite.ts:9"},"logo":{"status":"found","url":"https://unite-group.in/logos/unite-group-nexus-logo.png","file":"public/logos/unite/primary.svg","background":"dark","source":"config/brand-logo-sources.json: exact bytes from unite-group.in, vector traced deterministically","dataUri":"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjE4MCAyNTUgNjY1IDUyMCI+PGRlZnM+PGNsaXBQYXRoIGlkPSJ3b3JkbWFyayI+PHJlY3QgeD0iMCIgeT0iMzMwIiB3aWR0aD0iNjMzIiBoZWlnaHQ9IjE2MCIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzUwOGM5MyIgc3Ryb2tlLXdpZHRoPSIyIj48cGF0aCBkPSJNNTEyIDI4NEw1MTIgNTUyIi8+PHBhdGggZD0iTTM3MSAzMzZMNjUzIDUwMyIvPjxwYXRoIGQ9Ik0zNzEgNTAzTDY1MyAzMzYiLz48cGF0aCBkPSJNNDY4IDM0Mkw0NjggNDQ2Ii8+PHBhdGggZD0iTTU1NiAzNDJMNTU2IDQ0NiIvPjxwYXRoIGQ9Ik00NjggMzQyTDU1NiAzOTQiLz48cGF0aCBkPSJNNTU2IDM0Mkw0NjggMzk0Ii8+PHBhdGggZD0iTTQ2OCAzOTRMNTU2IDQ0NiIvPjxwYXRoIGQ9Ik01NTYgMzk0TDQ2OCA0NDYiLz48cGF0aCBkPSJNNDIzIDQxOUw2MDAgNDE5Ii8+PHBhdGggZD0iTTQ2OCA0NDZMNTEyIDQ3MiIvPjxwYXRoIGQ9Ik01NTYgNDQ2TDUxMiA0NzIiLz48cGF0aCBkPSJNNTEyIDI4NEw0MTQgNDY4Ii8+PHBhdGggZD0iTTUxMiAyODRMNjEwIDQ2OCIvPjxwYXRoIGQ9Ik01MTIgNTUyTDQxNCAzNjYiLz48cGF0aCBkPSJNNTEyIDU1Mkw2MTAgMzY2Ii8+PHBhdGggZD0iTTUxMiAyODRMNDM5IDMxOUw0MTQgMzY2TDM3OSA0MThMNDE0IDQ2OEw0MzkgNTE2TDUxMiA1NTJMNTg1IDUxNkw2MTAgNDY4TDY0NSA0MThMNjEwIDM2Nkw1ODUgMzE5TDUxMiAyODQiLz48L2c+PHJlY3QgeD0iMzcxIiB5PSIyNzgiIHdpZHRoPSIyODIiIGhlaWdodD0iMjgyIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGRjZTMiIHN0cm9rZS13aWR0aD0iMTQiLz48ZyBmaWxsPSIjMDBkY2UzIj48Y2lyY2xlIGN4PSI0NjgiIGN5PSIzNDIiIHI9IjYiLz48Y2lyY2xlIGN4PSI1NTYiIGN5PSIzNDIiIHI9IjYiLz48Y2lyY2xlIGN4PSI1MTIiIGN5PSIzNjgiIHI9IjYiLz48Y2lyY2xlIGN4PSI0NjgiIGN5PSIzOTQiIHI9IjYiLz48Y2lyY2xlIGN4PSI1NTYiIGN5PSIzOTQiIHI9IjYiLz48Y2lyY2xlIGN4PSI0MjMiIGN5PSI0MTkiIHI9IjYiLz48Y2lyY2xlIGN4PSI2MDAiIGN5PSI0MTkiIHI9IjYiLz48Y2lyY2xlIGN4PSI0NjgiIGN5PSI0NDYiIHI9IjYiLz48Y2lyY2xlIGN4PSI1NTYiIGN5PSI0NDYiIHI9IjYiLz48Y2lyY2xlIGN4PSI1MTIiIGN5PSI0NzIiIHI9IjYiLz48L2c+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTgwIDYwMCkiPgo8cGF0aCBkPSJNMCAwIEMxMiAwIDEyIDAgMTUuMjk3IDIuNDkyIEMxNi4xNTIgMy41OTEgMTYuOTcgNC43MjEgMTcuNzUgNS44NzUgQzE4LjE5OCA2LjQ2NyAxOC42NDUgNy4wNTkgMTkuMTA3IDcuNjY5IEMyMC4wMSA4Ljg2NiAyMC44OTggMTAuMDc1IDIxLjc3IDExLjI5NCBDMjMuNDgzIDEzLjY2OSAyNS4zMzQgMTUuOTIyIDI3LjE4OCAxOC4xODggQzI4LjQ2IDE5Ljc5MSAyOS43MyAyMS4zOTUgMzEgMjMgQzMyLjQ3OCAyNC44NTUgMzMuOTU3IDI2LjcwOSAzNS40MzggMjguNTYyIEMzNi4wOTYgMjkuMzg5IDM2Ljc1NSAzMC4yMTUgMzcuNDM0IDMxLjA2NiBDMzkgMzMgMzkgMzMgNDAgMzQgQzQwLjMzIDIyLjc4IDQwLjY2IDExLjU2IDQxIDAgQzQ1LjYyIDAgNTAuMjQgMCA1NSAwIEM1NSAxOS44IDU1IDM5LjYgNTUgNjAgQzQ0IDYwIDQ0IDYwIDQxLjIzIDU4LjAwNCBDNDAuNDk0IDU3LjAxMyAzOS43NTggNTYuMDIxIDM5IDU1IEMzNy45MzggNTMuNzM0IDM2Ljg3MSA1Mi40NzMgMzUuODAxIDUxLjIxNSBDMzQuNjM2IDQ5Ljc5MSAzMy40NzMgNDguMzY1IDMyLjMxMiA0Ni45MzggQzMxLjA3NCA0NS40MjYgMjkuODM2IDQzLjkxNCAyOC41OTggNDIuNDAyIEMyNy4zOTggNDAuOTM1IDI2LjE5OSAzOS40NjggMjUgMzggQzIzLjA4OCAzNS42NjIgMjEuMTcyIDMzLjMyOSAxOS4yNSAzMSBDMTguNDcxIDMwLjA1MSAxNy42OTMgMjkuMTAyIDE2Ljg5MSAyOC4xMjUgQzE1IDI2IDE1IDI2IDEzIDI1IEMxMyAzNi41NSAxMyA0OC4xIDEzIDYwIEM4LjcxIDYwIDQuNDIgNjAgMCA2MCBDMCA0MC4yIDAgMjAuNCAwIDAgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDg0LDE1KSIvPgo8cGF0aCBkPSJNMCAwIEM0LjgyIC0wLjEgOS42MzkgLTAuMTcyIDE0LjQ1OSAtMC4yMiBDMTYuMDk1IC0wLjI0IDE3LjczMiAtMC4yNjcgMTkuMzY3IC0wLjMwMiBDMzAuMDk4IC0wLjUyNCAzNy42ODYgLTAuMTE4IDQ2Ljg3NSA1Ljg3NSBDNTIuMDI5IDExLjAyOSA1Mi45NzggMTYuOTU5IDUzIDI0IEM1MS44NDYgMzEuNTY3IDQ3LjIxNiAzNS44MzEgNDIgNDEgQzQzLjI2OSA0Mi45MTggNDQuNTQxIDQ0LjgzNCA0NS44MTIgNDYuNzUgQzQ2LjUyIDQ3LjgxNyA0Ny4yMjggNDguODg1IDQ3Ljk1NyA0OS45ODQgQzUwIDUzIDUwIDUzIDUxLjc2MiA1NS4yMDMgQzUzIDU3IDUzIDU3IDUzIDYwIEM0OC4xNzMgNjAuNjcxIDQzLjgwMiA2MC45MzkgMzkgNjAgQzM0LjY0OCA1Ni4yMDIgMzIuMDgxIDUxLjQxNiAyOS43NDIgNDYuMTg4IEMyOCA0NCAyOCA0NCAyNC42NDUgNDMuMjkzIEMyMy4zOCA0My4yNTggMjIuMTE1IDQzLjIyMyAyMC44MTIgNDMuMTg4IEMxOC41NjQgNDMuMTI2IDE2LjMxNiA0My4wNjQgMTQgNDMgQzE0IDQ4LjYxIDE0IDU0LjIyIDE0IDYwIEMzLjk0MSA2MC4wOTggMy45NDEgNjAuMDk4IDEgNjAgQzAgNTkgMCA1OSAtMC4xMiA1Ni42NCBDLTAuMTE4IDU1LjU5NCAtMC4xMTYgNTQuNTQ4IC0wLjExNCA1My40NyBDLTAuMTEzIDUyLjI4OSAtMC4xMTMgNTEuMTA4IC0wLjExMyA0OS44OTEgQy0wLjExMSA0OS4yNDkgLTAuMTExIDQ5LjI0OSAtMC4wOTggNDUuOTk2IEMtMC4wOTYgNDQuNjg4IC0wLjA5NSA0My4zOCAtMC4wOTMgNDIuMDMyIEMtMC4wOSAzOC41NDggLTAuMDggMzUuMDY1IC0wLjA2OSAzMS41ODEgQy0wLjA1OCAyOC4wMjkgLTAuMDU0IDI0LjQ3NiAtMC4wNDkgMjAuOTI0IEMtMC4wMzggMTMuOTQ5IC0wLjAyMSA2Ljk3NSAwIDAgWiBNMTQgMTEgQzE0IDE3LjYgMTQgMjQuMiAxNCAzMSBDMTUuNDQ0IDMxLjAyMSAxNS40NDQgMzEuMDIxIDIyLjc1IDMxLjEyNSBDMjMuNjUzIDMxLjE0MyAyNC41NTcgMzEuMTYxIDI1LjQ4NyAzMS4xOCBDMjYuMjA4IDMxLjE4NSAyNi45MjkgMzEuMTkgMjcuNjcyIDMxLjE5NSBDMjguMDM4IDMxLjIwMSAyOC4wMzggMzEuMjAxIDI5Ljg5NCAzMS4yMjcgQzMyLjM2OSAzMC45NiAzMy45IDMwLjMzMSAzNiAyOSBDMzguNjY4IDI0Ljk5NyAzOC44MzQgMjEuNzA3IDM4IDE3IEMzNS44MTggMTQuMjQ0IDM0LjEyOCAxMi41NjQgMzEgMTEgQzI4LjExNCAxMC45MjggMjUuMjU5IDEwLjkwNyAyMi4zNzUgMTAuOTM4IEMyMC45OTMgMTAuOTQ4IDIwLjk5MyAxMC45NDggMTQgMTEgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDM5NCwxNSkiLz4KPHBhdGggZD0iTTAgMCBDNy4yODUgNS45NCAxMS45MTggMTMuMjg2IDEyLjk3MyAyMi43MyBDMTMuNDE1IDMxLjc3MiAxMC43NTcgMzkuNDQ0IDQuOTY5IDQ2LjM5NSBDLTEuODkxIDUzLjUwOCAtMTAuMzk3IDU2LjQxOSAtMjAuMTU2IDU2Ljc3IEMtMzAuMzg0IDU2LjUwMyAtMzcuNzQxIDUyLjgwOCAtNDUuMDA0IDQ1Ljc5MyBDLTUxLjkzNyAzOC4zMzIgLTUyLjg2MiAzMS4wMjcgLTUyLjYyNSAyMS4wODIgQy01MS44MjUgMTIuNjQ1IC00Ny42NTEgNS45ODQgLTQxLjI4MSAwLjQ1NyBDLTI4LjU4IC03LjQzIC0xMi43NyAtOC42MzcgMCAwIFogTS0zNS42NTYgMTMuMTg0IEMtMzguODc0IDE4LjYxMyAtMzkuMTUyIDI0LjMwMiAtMzguMjgxIDMwLjQ1NyBDLTM2LjY4MSAzNi4wNDQgLTMzLjgzOSAzOS4zNDUgLTI5LjA2MiA0Mi41NDcgQy0yNC45MiA0NC42NjMgLTIwLjg3OSA0NC44NCAtMTYuMjgxIDQ0LjQ1NyBDLTEwLjQwNSA0Mi41MDIgLTYuNzM3IDM5LjUzOSAtMy4yODEgMzQuNDU3IEMtMC42MyAyOS4xNTQgLTEuMDY4IDI0LjExOCAtMi4yODEgMTguNDU3IEMtNC4wMiAxMy4zMTEgLTcuMTYxIDkuOTkxIC0xMS44NzUgNy4zNDQgQy0yMC42MzcgNC4xMTUgLTI5Ljc4MiA1LjgwOCAtMzUuNjU2IDEzLjE4NCBaICIgZmlsbD0iIzAwRENFMyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNTA3LjI4MTI1LDE5LjU0Mjk2ODc1KSIvPgo8cGF0aCBkPSJNMCAwIEMwIDMuOTYgMCA3LjkyIDAgMTIgQy0xMC41NiAxMiAtMjEuMTIgMTIgLTMyIDEyIEMtMzIgMTYuMjkgLTMyIDIwLjU4IC0zMiAyNSBDLTIyLjc2IDI1IC0xMy41MiAyNSAtNCAyNSBDLTQgMjguMyAtNCAzMS42IC00IDM1IEMtNi43MTQgMzYuMzU3IC04Ljg0OCAzNi4xMTIgLTExLjg4MyAzNi4wOTggQy0xMy4wNDkgMzYuMDk0IC0xNC4yMTYgMzYuMDkxIC0xNS40MTggMzYuMDg4IEMtMTYuNjQxIDM2LjA4IC0xNy44NjUgMzYuMDcxIC0xOS4xMjUgMzYuMDYyIEMtMjAuMzU2IDM2LjA1OCAtMjEuNTg3IDM2LjA1MyAtMjIuODU1IDM2LjA0OSBDLTI1LjkwNCAzNi4wMzcgLTI4Ljk1MiAzNi4wMTkgLTMyIDM2IEMtMzEuNjcgNDAuMjkgLTMxLjM0IDQ0LjU4IC0zMSA0OSBDLTI1LjcyIDQ5LjE2NSAtMjUuNzIgNDkuMTY1IDEgNTAgQzEgNTMuNjMgMSA1Ny4yNiAxIDYxIEMtMTQuMTggNjEgLTI5LjM2IDYxIC00NSA2MSBDLTQ2LjA0MyA1Ny44NzIgLTQ2LjEyMSA1NS43MDggLTQ2LjExNCA1Mi40MjcgQy00Ni4xMTMgNTEuMjg2IC00Ni4xMTMgNTAuMTQ1IC00Ni4xMTMgNDguOTcgQy00Ni4xMDggNDcuNzM4IC00Ni4xMDMgNDYuNTA3IC00Ni4wOTggNDUuMjM4IEMtNDYuMDk2IDQzLjk3NyAtNDYuMDk1IDQyLjcxNiAtNDYuMDkzIDQxLjQxNyBDLTQ2LjA4OSAzOC4wNjggLTQ2LjA4IDM0LjcyIC00Ni4wNjkgMzEuMzcxIEMtNDYuMDU4IDI3Ljk1MiAtNDYuMDU0IDI0LjUzNCAtNDYuMDQ5IDIxLjExNSBDLTQ2LjAzOCAxNC40MSAtNDYuMDIxIDcuNzA1IC00NiAxIEMtNDIuOCAwLjUwMSAtMzkuNTk5IDAuMDEgLTM2LjM5OCAtMC40OCBDLTM1LjQ5OCAtMC42MjEgLTM0LjU5NyAtMC43NjEgLTMzLjY3IC0wLjkwNiBDLTIyLjAzOCAtMi42NzggLTExLjU5OCAtMS45MjIgMCAwIFogIiBmaWxsPSIjMDBEQ0UzIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyODEsMTQpIi8+CjxwYXRoIGQ9Ik0wIDAgQzMuODk5IDIuMDgyIDcuNjc5IDQuMzU3IDEwLjgxNiA3LjUwNCBDMTAuODE2IDguMTY0IDEwLjgxNiA4LjgyNCAxMC44MTYgOS41MDQgQzkuMDY2IDExLjIzIDkuMDY2IDExLjIzIDYuODE2IDEzLjEyOSBDNi40NDUgMTMuNDQ1IDYuNDQ1IDEzLjQ0NSA0LjU2NiAxNS4wNDMgQzMuOTg5IDE1LjUyNSAzLjQxMSAxNi4wMDcgMi44MTYgMTYuNTA0IEMwLjQ1NyAxNS4zMzQgLTEuODY3IDE0LjEzMyAtNC4xODQgMTIuODc5IEMtOS45NSAxMC40NzMgLTE2LjcwMyAxMC4yODUgLTIyLjU5NCAxMi4zNDggQy0yNy43MDMgMTUuMTc1IC0zMC41NzIgMTguOTA1IC0zMi4xODQgMjQuNTA0IEMtMzMuMjY4IDMwLjk2MyAtMzEuOTExIDM2LjE1IC0yOC4xODQgNDEuNTA0IEMtMjMuOTQxIDQ1Ljc0NiAtMTkuNzA2IDQ3LjM2NiAtMTMuNzQ2IDQ3LjY5MSBDLTEwLjIwOCA0Ny41MDUgLTYuNjkxIDQ3LjAwNSAtMy4xODQgNDYuNTA0IEMtMy4xODQgNDAuNTY0IC0zLjE4NCAzNC42MjQgLTMuMTg0IDI4LjUwNCBDMS4xMDYgMjguNTA0IDUuMzk2IDI4LjUwNCA5LjgxNiAyOC41MDQgQzkuODE2IDM2Ljc1NCA5LjgxNiA0NS4wMDQgOS44MTYgNTMuNTA0IEMtMi4xNDQgNTkuNDg0IC0xMi43OTEgNjMuMjIxIC0yNS44NzEgNTguODc5IEMtMzQuNzY5IDU1LjI0MSAtNDAuNzAyIDUwLjA2NyAtNDUuMTg0IDQxLjUwNCBDLTQ4LjI5OSAzMy42MDggLTQ4LjQ3OSAyNS4wNDkgLTQ1LjQ5NiAxNy4wNjYgQy00MS41ODYgOC42OTIgLTM2LjA3MyA0LjgyNSAtMjguMTg0IDAuNTA0IEMtMjcuODQ3IDAuMjk1IC0yNy44NDcgMC4yOTUgLTI2LjE0NSAtMC43NjIgQy0xNy4zOTQgLTUuODc1IC04LjgzNyAtNC4wNDQgMCAwIFogIiBmaWxsPSIjMDBEQ0UzIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNzEuMTgzNTkzNzUsMTUuNDk2MDkzNzUpIi8+CjxwYXRoIGQ9Ik0wIDAgQzIuNzIyIC0wLjAzMSAyLjcyMiAtMC4wMzEgMTYuNSAtMC4xODggQzE4LjIwMiAtMC4yMTUgMTkuOTA0IC0wLjI0MiAyMS42NTggLTAuMjcgQzIzLjAzMyAtMC4yNzkgMjQuNDA3IC0wLjI4NyAyNS43ODEgLTAuMjkzIEMyNi4xMjggLTAuMzAxIDI2LjEyOCAtMC4zMDEgMjcuODgyIC0wLjMzOSBDMzQuMzc2IC0wLjM0MyA0MC4xMTggMS4zMjcgNDUuMzEyIDUuMzEyIEM0OS4wMSA5LjAxIDUwLjc5MiAxMi4yMDYgNTEuMzk4IDE3LjQzOCBDNTEuMzkxIDE4LjYxMyA1MS4zODMgMTkuNzg5IDUxLjM3NSAyMSBDNTEuMzc5IDIxLjU4OCA1MS4zNzkgMjEuNTg4IDUxLjM5OCAyNC41NjIgQzUwLjY0MSAzMS4wOTQgNDcuNzA3IDM0Ljc4IDQyLjc1OCAzOC43NDYgQzM2LjM3NyA0My4yOTggMjguNjMyIDQzLjEyOSAyMS4wNjIgNDMuMDYyIEMyMC4zNzkgNDMuMDU4IDE5LjY5NSA0My4wNTMgMTguOTkgNDMuMDQ5IEMxNy4zMjcgNDMuMDM3IDE1LjY2MyA0My4wMTkgMTQgNDMgQzE0LjAxMiA0NC4xNDMgMTQuMDIzIDQ1LjI4NyAxNC4wMzUgNDYuNDY1IEMxNC4wNDUgNDcuOTU2IDE0LjA1NCA0OS40NDcgMTQuMDYyIDUwLjkzOCBDMTQuMDcxIDUxLjY5MiAxNC4wNzkgNTIuNDQ3IDE0LjA4OCA1My4yMjUgQzE0LjA5NyA1NS4xNSAxNC4wNTIgNTcuMDc1IDE0IDU5IEMxMy44MzUgNTkuMTY1IDEzLjgzNSA1OS4xNjUgMTMgNjAgQzguNzEgNjAgNC40MiA2MCAwIDYwIEMwIDQwLjIgMCAyMC40IDAgMCBaIE0xNCAxMSBDMTQgMTcuNiAxNCAyNC4yIDE0IDMxIEMxNS4zNTEgMzEuMDMxIDE1LjM1MSAzMS4wMzEgMjIuMTg4IDMxLjE4OCBDMjMuMDI5IDMxLjIxNSAyMy44NzEgMzEuMjQyIDI0LjczOSAzMS4yNyBDMjkuMzIgMzEuMzIxIDMyLjI4MyAzMC45ODEgMzYgMjggQzM3LjczNiAyNC41MjcgMzcuNjAyIDIwLjc4OCAzNyAxNyBDMzQuODE4IDE0LjI0NCAzMy4xMjggMTIuNTY0IDMwIDExIEMyNy4yOCAxMC45MjggMjQuNTkzIDEwLjkwNyAyMS44NzUgMTAuOTM4IEMyMC41NzYgMTAuOTQ4IDIwLjU3NiAxMC45NDggMTQgMTEgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU5NywxNSkiLz4KPHBhdGggZD0iTTAgMCBDNC42MiAwIDkuMjQgMCAxNCAwIEMxMy45ODggMS4yOTYgMTMuOTc3IDIuNTkxIDEzLjk2NSAzLjkyNiBDMTMuOTA3IDEzLjEyMSAxMy45MzYgMjIuMzExIDE0LjMxMiAzMS41IEMxNC4zMzUgMzIuMjgyIDE0LjM1NyAzMy4wNjMgMTQuMzgxIDMzLjg2OCBDMTQuNTk4IDM4LjM2OCAxNS4yMTYgNDEuNDE3IDE4IDQ1IEMyMi4zMjEgNDguMDg2IDI1Ljc4NCA0OC40MjIgMzAuODc5IDQ3LjY0OCBDMzQuMjI2IDQ2LjYyNSAzNS45MTkgNDQuNzMyIDM4IDQyIEMzOS4zMDkgMzguMDcyIDM5LjIzNSAzNC4yNzQgMzkuMzE2IDMwLjE3NiBDMzkuMzM3IDI5LjMxNCAzOS4zNTggMjguNDUzIDM5LjM3OSAyNy41NjUgQzM5LjQ0NSAyNC44MTUgMzkuNTA0IDIyLjA2NCAzOS41NjIgMTkuMzEyIEMzOS42MDYgMTcuNDQ3IDM5LjY0OSAxNS41ODIgMzkuNjkzIDEzLjcxNyBDMzkuOCA5LjE0NSAzOS45MDIgNC41NzIgNDAgMCBDNDQuNjIgMCA0OS4yNCAwIDU0IDAgQzU0LjA3NSA1LjM3MSA1NC4xMjkgMTAuNzQyIDU0LjE2NSAxNi4xMTMgQzU0LjE4IDE3LjkzNyA1NC4yIDE5Ljc2IDU0LjIyNiAyMS41ODMgQzU0LjU3MSA0Ni4yOSA1NC41NzEgNDYuMjkgNDYuNzM4IDU0LjUzMSBDNDAuNTAzIDU5Ljc5OSAzMy4zMjkgNjEuMzc3IDI1LjI3IDYxLjIwNyBDMTcuNTggNjAuNTA2IDExLjU5NCA1OC4zNzUgNS43NTQgNTMuMzA1IEMwLjY5NCA0Ni42NTUgLTAuNTg1IDQwLjEyNyAtMC4zOTEgMzEuOTM0IEMtMC4zODUgMzEuMDE0IC0wLjM3OSAzMC4wOTUgLTAuMzczIDI5LjE0NyBDLTAuMzUxIDI2LjI0MyAtMC4zMDEgMjMuMzQxIC0wLjI1IDIwLjQzOCBDLTAuMjMgMTguNDU1IC0wLjIxMiAxNi40NzMgLTAuMTk1IDE0LjQ5IEMtMC4xNTEgOS42NiAtMC4wODMgNC44MyAwIDAgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUzMCwxNSkiLz4KPHBhdGggZD0iTTAgMCBDNC42MiAwIDkuMjQgMCAxNCAwIEMxNC4wMiAxLjA1NCAxNC4wNCAyLjEwOCAxNC4wNiAzLjE5NCBDMTQuMTM3IDcuMTI4IDE0LjIyNSAxMS4wNjIgMTQuMzE3IDE0Ljk5NiBDMTQuMzU2IDE2LjY5NSAxNC4zOSAxOC4zOTMgMTQuNDIyIDIwLjA5MSBDMTQuNDY4IDIyLjU0MSAxNC41MjYgMjQuOTkxIDE0LjU4NiAyNy40NDEgQzE0LjU5NyAyOC4xOTMgMTQuNjA5IDI4Ljk0NCAxNC42MjEgMjkuNzE4IEMxNC43NzkgMzUuNDQ1IDE1LjE2MiA0MC45NDUgMTkuMTI1IDQ1LjM3NSBDMjQuMjk3IDQ4LjI5OCAyOC4yMzIgNDguNDY0IDMzLjgxMiA0NyBDMzcuNjQ3IDQ0LjU5NCAzOC43ODcgNDIuMjEgNDAgMzggQzQwLjQyMyAzNC45OTcgNDAuNDg3IDMyLjAzMyA0MC41MTIgMjkuMDA0IEM0MC41MyAyOC4xNyA0MC41NDggMjcuMzM3IDQwLjU2NiAyNi40NzggQzQwLjYyIDIzLjg0IDQwLjY1NCAyMS4yMDEgNDAuNjg4IDE4LjU2MiBDNDAuNzIxIDE2Ljc2NCA0MC43NTUgMTQuOTY1IDQwLjc5MSAxMy4xNjYgQzQwLjg3NiA4Ljc3NyA0MC45NDMgNC4zODkgNDEgMCBDNDUuNjIgMCA1MC4yNCAwIDU1IDAgQzU1LjA1IDQuOTQ0IDU1LjA4NiA5Ljg4OCA1NS4xMSAxNC44MzIgQzU1LjEyIDE2LjUwOSA1NS4xMzMgMTguMTg3IDU1LjE1MSAxOS44NjUgQzU1LjQwNyA0NS4xNDIgNTUuNDA3IDQ1LjE0MiA0NyA1NSBDNDEuMjE3IDYwLjAxMiAzMy43MjggNjEuNTI0IDI2LjE2IDYxLjIzOCBDMTYuNzc3IDYwLjIwMyAxMC4yMSA1Ny4yNTQgNCA1MCBDLTAuMTY3IDQzLjQ0OSAtMC4xNDcgMzUuODIzIC0wLjA5OCAyOC4zMiBDLTAuMDk2IDI3LjUwOCAtMC4wOTUgMjYuNjk1IC0wLjA5MyAyNS44NTcgQy0wLjA4OCAyMy4yOCAtMC4wNzUgMjAuNzAyIC0wLjA2MiAxOC4xMjUgQy0wLjA1NyAxNi4zNyAtMC4wNTMgMTQuNjE1IC0wLjA0OSAxMi44NTkgQy0wLjAzOCA4LjU3MyAtMC4wMjEgNC4yODYgMCAwIFogIiBmaWxsPSIjMDBEQ0UzIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNiwxNSkiLz4KPHBhdGggZD0iTTAgMCBDOCAwIDggMCAxMC4xNDUgMS40NzcgQzEwLjY5NSAyLjE4NiAxMS4yNDUgMi44OTUgMTEuODEyIDMuNjI1IEMxMi40NyA0LjQ0NSAxMy4xMjcgNS4yNjUgMTMuODA1IDYuMTA5IEMxNC4xNjcgNi41ODYgMTQuMTY3IDYuNTg2IDE2IDkgQzE2Ljg3NSAxMC4xMTEgMTcuNzUzIDExLjIyMSAxOC42MzMgMTIuMzI4IEMyMC41MTMgMTQuNzAyIDIyLjM4MiAxNy4wODMgMjQuMjQyIDE5LjQ3MyBDMjYuODIgMjIuNzc3IDI5LjQyNyAyNi4wNTQgMzIuMDYyIDI5LjMxMiBDMzIuNDE5IDI5Ljc1NCAzMi40MTkgMjkuNzU0IDM0LjIyMyAzMS45ODggQzM2IDM0IDM2IDM0IDM4IDM1IEMzOCAyMy40NSAzOCAxMS45IDM4IDAgQzQwLjk3IDAgNDMuOTQgMCA0NyAwIEM0NyAxNy40OSA0NyAzNC45OCA0NyA1MyBDMzkgNTMgMzkgNTMgMzYuODU1IDUxLjUyMyBDMzYuMzA1IDUwLjgxNCAzNS43NTUgNTAuMTA1IDM1LjE4OCA0OS4zNzUgQzM0LjUzIDQ4LjU1NSAzMy44NzMgNDcuNzM1IDMzLjE5NSA0Ni44OTEgQzMyLjQ3MSA0NS45MzcgMzEuNzQ2IDQ0Ljk4MyAzMSA0NCBDMzAuMTI1IDQyLjg4OSAyOS4yNDcgNDEuNzc5IDI4LjM2NyA0MC42NzIgQzI2LjQ4NyAzOC4yOTggMjQuNjE4IDM1LjkxNyAyMi43NTggMzMuNTI3IEMyMC4xOCAzMC4yMjMgMTcuNTczIDI2Ljk0NiAxNC45MzggMjMuNjg4IEMxNC4yMjUgMjIuODA0IDEzLjUxMiAyMS45MjEgMTIuNzc3IDIxLjAxMiBDMTEgMTkgMTEgMTkgOSAxOCBDOSAyOS41NSA5IDQxLjEgOSA1MyBDNi4wMyA1MyAzLjA2IDUzIDAgNTMgQzAgMzUuNTEgMCAxOC4wMiAwIDAgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE4NSwxMDApIi8+CjxwYXRoIGQ9Ik0wIDAgQzE3LjE2IDAgMzQuMzIgMCA1MiAwIEM1MiAzLjYzIDUyIDcuMjYgNTIgMTEgQzQ1LjczIDExIDM5LjQ2IDExIDMzIDExIEMzMy4wMDUgMTIuNDEzIDMzLjAxIDEzLjgyNyAzMy4wMTYgMTUuMjgzIEMzMy4wMzQgMjAuNTEyIDMzLjA0NSAyNS43NDEgMzMuMDU1IDMwLjk3MSBDMzMuMDYgMzMuMjM3IDMzLjA2NyAzNS41MDMgMzMuMDc1IDM3Ljc2OSBDMzMuMDg4IDQxLjAyIDMzLjA5MyA0NC4yNzIgMzMuMDk4IDQ3LjUyMyBDMzMuMTAzIDQ4LjU0MSAzMy4xMDggNDkuNTU5IDMzLjExMyA1MC42MDggQzMzLjExMyA1MS41NDggMzMuMTEzIDUyLjQ4OSAzMy4xMTQgNTMuNDU4IEMzMy4xMTYgNTQuMjg5IDMzLjExOCA1NS4xMiAzMy4xMiA1NS45NzUgQzMzIDU4IDMzIDU4IDMyIDYwIEMyNy43MSA2MCAyMy40MiA2MCAxOSA2MCBDMTguNjcgNDQuMTYgMTguMzQgMjguMzIgMTggMTIgQzEyLjA2IDExLjY3IDYuMTIgMTEuMzQgMCAxMSBDMCA3LjM3IDAgMy43NCAwIDAgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE3NSwxNSkiLz4KPHBhdGggZD0iTTAgMCBDMTIuNTQgMCAyNS4wOCAwIDM4IDAgQzM4IDIuNjQgMzggNS4yOCAzOCA4IEMyOC43NiA4LjMzIDE5LjUyIDguNjYgMTAgOSBDOS42NyAxMy4yOSA5LjM0IDE3LjU4IDkgMjIgQzE3LjU4IDIyIDI2LjE2IDIyIDM1IDIyIEMzNSAyNC42NCAzNSAyNy4yOCAzNSAzMCBDMjYuNDIgMzAgMTcuODQgMzAgOSAzMCBDOS4zMyAzNC42MiA5LjY2IDM5LjI0IDEwIDQ0IEMxOS41NyA0NC4zMyAyOS4xNCA0NC42NiAzOSA0NSBDMzkgNDcuNjQgMzkgNTAuMjggMzkgNTMgQzI2LjEzIDUzIDEzLjI2IDUzIDAgNTMgQzAgMzUuNTEgMCAxOC4wMiAwIDAgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI1NSwxMDApIi8+CjxwYXRoIGQ9Ik0wIDAgQy0zLjg3MSA2LjA5IC04LjA5NSAxMS44MjkgLTEyLjU3MiAxNy40ODEgQy0xNC43MTMgMjAuMjA5IC0xNi42MTEgMjIuODEyIC0xOCAyNiBDLTE2LjUwMSAyOC4xMDUgLTE1IDMwLjIwOSAtMTMuNSAzMi4zMTIgQy0xMy4wNTEgMzIuOTQzIC0xMi42MDIgMzMuNTc0IC0xMi4xMzkgMzQuMjI0IEMtOS45NjcgMzcuMjY5IC03Ljc4NSA0MC4zMDUgLTUuNTU1IDQzLjMwOSBDLTQuODM1IDQ0LjI3OSAtNC4xMTYgNDUuMjUgLTMuMzc1IDQ2LjI1IEMtMy4wNDkgNDYuNjg2IC0zLjA0OSA0Ni42ODYgLTEuMzk4IDQ4Ljg5MSBDMCA1MSAwIDUxIDAgNTMgQy0zLjk1NyA1My45NDggLTcuMDcxIDU0LjE1OCAtMTEgNTMgQy0xNC44MDUgNDkuNTc0IC0xNy4zODggNDQuOTk1IC0xOS45OTIgNDAuNjM1IEMtMjEgMzkgLTIxIDM5IC0yMi43ODEgMzYuNjcyIEMtMjQgMzUgLTI0IDM1IC0yNCAzMyBDLTI0LjY2IDMzIC0yNS4zMiAzMyAtMjYgMzMgQy0yNi4yMjggMzMuNjY0IC0yNi40NTYgMzQuMzI4IC0yNi42OTEgMzUuMDEyIEMtMjkuNTI4IDQxLjQ4OCAtMzMuNjc2IDQ4LjI3NiAtMzkgNTMgQy00Mi45NjYgNTQuMjIxIC00Ni4wMTEgNTQuMDQyIC01MCA1MyBDLTQ4LjQ3MyA0OS42NzYgLTQ2LjU0NyA0Ni44NzYgLTQ0LjM3NSA0My45MzggQy00My42NzQgNDIuOTc1IC00Mi45NzMgNDIuMDEyIC00Mi4yNSA0MS4wMiBDLTQwLjc0IDM4Ljk5MyAtMzkuMTk3IDM2Ljk5IC0zNy42MjUgMzUuMDEyIEMtMzYuODgyIDM0LjA1OSAtMzYuMTQgMzMuMTA2IC0zNS4zNzUgMzIuMTI1IEMtMzQuNjgxIDMxLjI2MSAtMzMuOTg4IDMwLjM5OCAtMzMuMjczIDI5LjUwOCBDLTMyIDI3IC0zMiAyNyAtMzIuNDIyIDI0LjY3NiBDLTM0LjYzNyAyMC45MTkgLTM3LjIwNyAxNy41MDggLTM5Ljg3NSAxNC4wNjIgQy00My40MDYgOS40NjIgLTQ2Ljg0NiA0Ljg2OSAtNTAgMCBDLTMzLjI0MSAtMC44MTQgLTE2Ljc0MSAtMS41NTcgMCAwIFogTS0zNiAyIEMtMzQuMjMgNi40MjUgLTMyLjI0NCA5LjYyMyAtMjkuMzc1IDEzLjMxMiBDLTI5LjE2NSAxMy41ODcgLTI5LjE2NSAxMy41ODcgLTI4LjEwMiAxNC45NzkgQy0yNy4wNzMgMTYuMzIzIC0yNi4wMzcgMTcuNjYyIC0yNSAxOSBDLTIxLjY3OCAxNS45MSAtMTkuMjQgMTIuNTk4IC0xNi43NSA4LjgxMiBDLTE2LjA0NCA3Ljc0NiAtMTUuMzM3IDYuNjggLTE0LjYwOSA1LjU4MiBDLTEzIDMgLTEzIDMgLTEzIDIgQy0yMC41OSAyIC0yOC4xOCAyIC0zNiAyIFogIiBmaWxsPSIjMDBEQ0UzIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNTgsMTAwKSIvPgo8cGF0aCBkPSJNMCAwIEMzLjYzIDAgNy4yNiAwIDExIDAgQzEwLjk5IDAuODYyIDEwLjk3OSAxLjcyMyAxMC45NjggMi42MTEgQzEwLjkzNCA1Ljg0OCAxMC45MDkgOS4wODYgMTAuODkgMTIuMzIzIEMxMC44OCAxMy43MTcgMTAuODY3IDE1LjExIDEwLjg0OSAxNi41MDQgQzEwLjYxMiAzNS45MTkgMTAuNjEyIDM1LjkxOSAxNC45MzggNDEuNSBDMTkuMjM1IDQ0LjYyNiAyMy44OTMgNDQuNTAzIDI5IDQ0IEMzMS44MTcgNDIuODAxIDMzLjM1NyA0MS45MiAzNS4xMDMgMzkuNDIxIEMzNi40MjggMzUuODQ2IDM2LjM1OSAzMi4yODIgMzYuNDE0IDI4LjUxNiBDMzYuNDMzIDI3LjcgMzYuNDUzIDI2Ljg4NCAzNi40NzMgMjYuMDQ0IEMzNi41MzIgMjMuNDQ2IDM2LjU3OSAyMC44NDggMzYuNjI1IDE4LjI1IEMzNi42NjMgMTYuNDg2IDM2LjcwMiAxNC43MjEgMzYuNzQyIDEyLjk1NyBDMzYuODM4IDguNjM4IDM2LjkyMiA0LjMxOSAzNyAwIEMzOC40NzkgLTAuMDI3IDM5Ljk1OCAtMC4wNDYgNDEuNDM4IC0wLjA2MiBDNDIuMjYxIC0wLjA3NCA0My4wODUgLTAuMDg2IDQzLjkzNCAtMC4wOTggQzQ2IDAgNDYgMCA0NyAxIEM0Ny4xMzggMy40NzcgNDcuMjEzIDUuOTI0IDQ3LjIzOCA4LjQwMiBDNDcuMjQ2IDkuMTU0IDQ3LjI1NCA5LjkwNiA0Ny4yNjMgMTAuNjggQzQ3LjI3NyAxMi4yOCA0Ny4yODcgMTMuODggNDcuMjk1IDE1LjQ4IEM0Ny4zMTIgMTcuODk3IDQ3LjM1NiAyMC4zMTIgNDcuNCAyMi43MjkgQzQ3LjU4NCA0MC44NDQgNDcuNTg0IDQwLjg0NCA0MS41NTIgNDcuNjI5IEMzNS4zMzMgNTMuMTI0IDI5LjEwMSA1NC4wNyAyMSA1NCBDMTQuNDQzIDUyLjk4NCA5LjUyOSA1MC44NTIgNSA0NiBDMS4zNTkgNDAuNDA3IDAuNDAxIDM1LjQ5MSAwLjM5MSAyOC45MDYgQzAuMzc0IDI4LjA3NCAwLjM1OCAyNy4yNDIgMC4zNDEgMjYuMzg1IEMwLjI5MiAyMy43NTYgMC4yNzEgMjEuMTI5IDAuMjUgMTguNSBDMC4yMjIgMTYuNzA2IDAuMTkyIDE0LjkxMSAwLjE2IDEzLjExNyBDMC4wODcgOC43NDUgMC4wMzcgNC4zNzMgMCAwIFogIiBmaWxsPSIjMDBEQ0UzIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzNzMsMTAwKSIvPgo8cGF0aCBkPSJNMCAwIEMwLjc1NSAtMC4wMDEgMS41MTEgLTAuMDAzIDIuMjg5IC0wLjAwNCBDOC4wMiAwLjEwNSAxMS44ODEgMS4xMDIgMTYuNjg4IDQuMzc1IEMxNi4wMjggNi42ODUgMTUuMzY4IDguOTk1IDE0LjY4OCAxMS4zNzUgQzExLjkyNSAxMC44NTIgOS4zNjEgMTAuMjY2IDYuNjg4IDkuMzc1IEM0LjU0MyA5LjI4IDIuMzk2IDkuMjQ1IDAuMjUgOS4yNSBDLTAuODgzIDkuMjQ3IC0yLjAxNiA5LjI0NSAtMy4xODQgOS4yNDIgQy01Ljc2NSA5LjM1MiAtNy44NjIgOS42MTYgLTEwLjMxMiAxMC4zNzUgQy0xMC4zMTIgMTMuMDE1IC0xMC4zMTIgMTUuNjU1IC0xMC4zMTIgMTguMzc1IEMtNC42ODIgMjAuOTExIDAuOTU5IDIyLjc0MyA2LjkwMiAyNC4zOTMgQzEyLjEzMSAyNS45MzcgMTYuMTA3IDI3Ljg2IDE5LjA2MiAzMi41NjIgQzIwLjE0NyAzNy40NDQgMTkuOTcyIDQxLjkxMSAxNy42MjkgNDYuNDA2IEMxMy43MTQgNTEuNjQxIDguOTg0IDUzLjI4MyAyLjY4OCA1NC4zNzUgQy02LjAyNCA1NS4yMTggLTE0Ljk3IDUzLjE2NyAtMjIuMzEyIDQ4LjM3NSBDLTIxLjc2NSA0NSAtMjEuMjU4IDQzLjI5MyAtMTkuMzEyIDQwLjM3NSBDLTE4LjUyOSA0MC42NDMgLTE3Ljc0NSA0MC45MTEgLTE2LjkzOCA0MS4xODggQy0xNS43NDEgNDEuNTc5IC0xNC41NDUgNDEuOTcxIC0xMy4zMTIgNDIuMzc1IEMtMTIuNTUxIDQyLjY1MSAtMTEuNzg5IDQyLjkyNyAtMTEuMDA0IDQzLjIxMSBDLTUuMzUzIDQ1LjEzMyAtMC4xNDQgNDYuMjU5IDUuNjg4IDQ0LjM3NSBDNy40MyA0Mi45ODggNy40MyA0Mi45ODggOC42ODggNDEuMzc1IEM4Ljg3NSAzOC42ODggOC44NzUgMzguNjg4IDguNjg4IDM2LjM3NSBDNC4wMjMgMzMuNzc0IC0wLjE1NyAzMi4wNjMgLTUuMzc1IDMwLjg3NSBDLTExLjM5OCAyOS40NjEgLTE2LjAzMSAyNy45NSAtMjAuMjUgMjMuMTg4IEMtMjIuMTIzIDE4LjIyOSAtMjIuMTkzIDEzLjQ2IC0yMC4xMjUgOC41NjIgQy0xNC40NTcgMS43MjIgLTguNjYyIC0wLjAxNSAwIDAgWiAiIGZpbGw9IiMwMERDRTMiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQ2MC4zMTI1LDk5LjYyNSkiLz4KPHBhdGggZD0iTTAgMCBDNC42MiAwIDkuMjQgMCAxNCAwIEMxNC4wMjMgNy42NzUgMTQuMDQxIDE1LjM1MSAxNC4wNTIgMjMuMDI2IEMxNC4wNTcgMjYuNTkgMTQuMDY0IDMwLjE1MyAxNC4wNzUgMzMuNzE3IEMxNC4wODggMzcuODEgMTQuMDkzIDQxLjkwMyAxNC4wOTggNDUuOTk2IEMxNC4xMDMgNDcuMjgxIDE0LjEwOCA0OC41NjcgMTQuMTEzIDQ5Ljg5MSBDMTQuMTEzIDUxLjA3MiAxNC4xMTMgNTIuMjU0IDE0LjExNCA1My40NyBDMTQuMTE2IDU0LjUxNiAxNC4xMTggNTUuNTYyIDE0LjEyIDU2LjY0IEMxNCA1OSAxNCA1OSAxMyA2MCBDOC43MSA2MCA0LjQyIDYwIDAgNjAgQzAgNDAuMiAwIDIwLjQgMCAwIFogIiBmaWxsPSIjMDBEQ0UzIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNTMsMTUpIi8+CjxwYXRoIGQ9Ik0wIDAgQzAuOTM4IDAuMDAzIDEuODc2IDAuMDA2IDIuODQyIDAuMDEgQzMuMzMgMC4wMTQgMy4zMyAwLjAxNCA1LjgwMSAwLjAzNSBDNi4yOTUgMC4wMzcgNi4yOTUgMC4wMzcgOC43OTUgMC4wNDkgQzExLjIzNCAwLjA2MSAxMy42NzQgMC4wNzkgMTYuMTEzIDAuMDk4IEMxNi4xMTMgMy43MjggMTYuMTEzIDcuMzU4IDE2LjExMyAxMS4wOTggQzguMTkzIDExLjA5OCAwLjI3MyAxMS4wOTggLTcuODg3IDExLjA5OCBDLTcuODg3IDcuNzk4IC03Ljg4NyA0LjQ5OCAtNy44ODcgMS4wOTggQy00Ljk0NSAwLjExNyAtMy4wNjIgLTAuMDE5IDAgMCBaICIgZmlsbD0iIzAwRENFMyIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjk4Ljg4NjcxODc1LDQzLjkwMjM0Mzc1KSIvPgo8L2c+PC9zdmc+Cg=="},"colours":{"primary":{"value":"#E55A2B","source":"packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026"},"logo":{"value":"#00DCE3","source":"measured from public/logos/unite/primary.svg (the unite-group.in logo)"},"secondary":{"status":"missing","note":"#1E293B is proposed in unite.ts:17 but not verified"},"accent":{"status":"missing","note":"#FBBF24 is proposed in unite.ts:18 but not verified"},"background":{"status":"missing","note":"no confirmed page colour; the template uses plain white"},"text":{"status":"missing","note":"no confirmed text colour; the template uses near-black"}},"conflicts":["The brand config's verified primary is orange #E55A2B, but the logo on unite-group.in is cyan #00DCE3. Phill to confirm which leads."],"fonts":{"display":{"family":"Inter","weight":700,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700","source":"packages/brand-config/src/brands/unite.ts:25 (font not yet verified against the website)"},"body":{"family":"Inter","weight":400,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700","source":"packages/brand-config/src/brands/unite.ts:29"}},"about":{"status":"missing","note":"no approved About copy for Unite Group in brand-config"},"imagery":{"status":"missing","note":"no real photos of Phill supplied yet"},"services":[]},"person":{"name":"Phill McGurk","title":"Founder, Unite Group","intro":"Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.","motto":"Found. Trusted. Chosen.","org":"Unite Group","credentials":[{"abbr":"MC","text":"IICRC Master Restoration Technician"},{"abbr":"IICRC","text":"47496"},{"abbr":"BFRS","text":"Bio Forensic Restoration Specialist"},{"abbr":"CFO","text":"Certified Forensic Operator"},{"abbr":"GBAC","text":"certified"}],"phones":[{"label":"Mobile","display":"+61 457 123 005","tel":"+61457123005","type":"CELL"},{"label":"Office","display":"07 3879 4677","tel":"+61738794677","type":"WORK"}],"emails":[{"label":"Email","value":"phill.m@carsi.com.au","primary":true},{"label":"Disaster Recovery","value":"Phill@disasterrecovery.com.au"}],"links":[{"label":"Disaster Recovery","url":"https://www.disasterrecovery.com.au","note":"Restoration, Brisbane"},{"label":"CARSI","url":"https://carsi.com.au","note":"IICRC CEC training"},{"label":"Unite Group","url":"https://unite-group.in","note":"The group"},{"label":"Synthex","url":"https://synthex.social","note":"Group marketing"},{"label":"RestoreAssist","url":"https://restoreassist.app","note":"Restoration job app"},{"label":"NRPG","url":"https://nrpg.business","note":"Contractor network"},{"label":"CleanExpo247 / TradeHall","url":null,"note":"Not connected yet: no public address"}],"vcardNote":"IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC","features":{"whiteRabbit":true,"discover":true},"ideas":{"proof":["Show proof of my work","Post one finished job, start to end","Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],"found":["Get found locally","Name the five jobs you want to be called for","Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],"team":["Skill up my team","Turn missed jobs into a training plan","Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],"reply":["Answer enquiries faster","Write your three most common replies once","Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]},"inbox":{"status":"missing","fallback":"Phill@disasterrecovery.com.au"}}}</script>
+
+<div class="wrap">
+  <section class="stage" aria-label="Motion card">
+    <canvas id="water" aria-hidden="true"></canvas>
+    <div class="logo" id="logo"><span class="tag">Logo missing</span></div>
+    <div class="ph">
+      <span class="tag">PLACEHOLDER motion</span>
+      <small>A short loop made from the person's own photos replaces this.</small>
+    </div>
+    <button class="rabbit" id="rabbit" type="button" aria-label="A white rabbit. Tap it." hidden>
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M22 4c-3 0-4 6-3 13l2 9c-6 3-10 9-10 16 0 10 8 17 19 17h14c4 0 6-2 6-4s-2-3-4-3h-2c4-3 6-7 6-12 0-9-7-15-16-16l-1-9C31 8 28 3 25 6c-1-1-2-2-3-2zm6 30a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+    </button>
+    <div class="toast" id="toast" hidden role="status"><b>You found the first rabbit.</b>More appear in the talk. Count them and open Solve below.</div>
+    <div class="name">
+      <h1 id="person-name"><span class="w">Name</span> <span class="w">missing</span></h1>
+      <p id="person-intro"></p>
+      <div class="motto" id="person-motto"></div>
+    </div>
+  </section>
+
+  <div class="creds" id="creds" aria-label="Credentials"></div>
+
+  <section class="actions" id="actions" aria-label="Save or contact">
+    <button class="btn primary" type="button" id="save">Save to contacts<small>Adds this card to your phone</small></button>
+    <div class="out" id="save-out" hidden style="grid-column:1/-1">
+      <span class="tag">Preview limit</span>
+      <p class="fine" style="margin:0">If no contact file opened, this preview blocked it. The hosted card saves in one tap. For now, copy the details below.</p>
+      <pre id="vcard-text"></pre>
+      <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
+    </div>
+    <button class="btn" type="button" id="share">Share this card<small>Copies the link</small></button>
+  </section>
+
+  <section aria-labelledby="doors-h" style="display:grid;gap:14px">
+    <div>
+      <h2 id="doors-h">What would be useful today?</h2>
+      <p class="lede">Pick one. Each takes under a minute.</p>
+    </div>
+    <div class="doors">
+      <button class="door" id="door-discover" type="button" aria-expanded="false" aria-controls="p-discover" hidden><span class="k">DISCOVER</span><strong>One practical idea</strong><span>Choose a need, leave with one thing to do this week.</span></button>
+      <div class="panel" id="p-discover" hidden>
+        <div class="needs" id="needs" role="group" aria-label="Your need"></div>
+        <div class="idea" id="idea" hidden><h3 id="idea-h"></h3><p id="idea-p"></p></div>
+        <p class="fine"><span class="tag">Draft</span> Prepared for this prototype and not yet approved. General guidance, not an audit of your business.</p>
+      </div>
+
+      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>The game that runs through the talk. One rabbit is hiding above.</span></button>
+      <div class="panel" id="p-solve" hidden>
+        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Count them, answer one question, and you are in the draw.</p>
+        <p class="fine"><span class="tag">Not connected yet</span> The game is Rana's build. Its permanent address is not set yet, so it is not linked here.</p>
+      </div>
+
+      <button class="door" id="door-connect" type="button" aria-expanded="false" aria-controls="p-connect"><span class="k">CONNECT</span><strong>Get in touch</strong><span>Proposals, training, media or a job.</span></button>
+      <div class="panel" id="p-connect" hidden>
+        <form id="enquiry" novalidate>
+          <label for="f-name">Your name<input id="f-name" name="name" autocomplete="name" required value="Sam Example"></label>
+          <label for="f-email">Your email<input id="f-email" name="email" type="email" autocomplete="email" required value="sam@example.com.au"></label>
+          <label for="f-biz">Business<input id="f-biz" name="business" autocomplete="organization" value="Example Restorations, Ipswich"></label>
+          <label for="f-type">It's about
+            <select id="f-type" name="type">
+              <option>A job or quote</option><option selected>A proposal or partnership</option>
+              <option>Training</option><option>Media or speaking</option><option>Something else</option>
+            </select>
+          </label>
+          <label for="f-msg">Message<textarea id="f-msg" name="message" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea></label>
+          <p class="fine" style="margin:0">Example entry shown. Replace it with your own.</p>
+          <button class="btn primary" type="submit">Prepare my message<small>You review it before anything is sent</small></button>
+        </form>
+        <div class="out" id="out" hidden>
+          <span class="tag">Not sent</span>
+          <pre id="out-text"></pre>
+          <div class="row">
+            <button class="btn" type="button" id="copy-msg">Copy message</button>
+            <a class="btn" id="mail-msg" href="#">Open in email app</a>
+          </div>
+          <p class="fine" style="margin:0">Send it to <b id="inbox-addr"></b>. <span class="tag">Not connected yet</span> No assistant inbox is set up, so this goes to the person's own address.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="brands-h" style="display:grid;gap:12px" id="links-section" hidden>
+    <h2 id="brands-h" style="font-size:20px">Businesses</h2>
+    <div class="brands" id="links"></div>
+  </section>
+
+  <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px">
+    <h2 id="live-h" style="font-size:20px">What works right now</h2>
+    <ul class="status-list" id="status-list">
+      <li class="on"><b>Live</b>Business links open the real websites.</li>
+      <li class="on"><b>Live</b>Phone numbers and email copy to your clipboard.</li>
+      <li class="off" data-hosted="One-tap save to contacts opens this contact card on your phone."><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
+      <li class="off"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
+      <li class="off"><b>Not connected yet</b>The motion video made from real photos.</li>
+      <li class="off" data-hosted="Anyone with the link or the QR code can open this card."><b>Not connected yet</b>Public access. Only people this preview is shared with can open it, signed in to claude.ai.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span id="brand-credit">Brand kit: none loaded.</span>
+    <span>Nothing on this card is sent or stored without your say-so.</span>
+  </footer>
+</div>
+
+<script>
+const KIT = (() => { try { return JSON.parse(document.getElementById("brand-kit").textContent || "{}"); } catch (e) { return {}; } })();
+const B = KIT.brand || {}, P = KIT.person || {};
+const $ = id => document.getElementById(id);
+const HOSTED = window.CARD_HOSTED === true;
+const isSet = c => c && typeof c.value === "string" && !c.status;
+
+// Brand: colours and fonts only from the kit; anything missing stays on the template neutrals and is named in the footer
+function lum(hex) {
+  const n = parseInt(hex.slice(1), 16), ch = [n >> 16, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+  return .2126 * ch[0] + .7152 * ch[1] + .0722 * ch[2];
+}
+(function applyBrand() {
+  const c = B.colours || {}, root = document.documentElement.style;
+  if (isSet(c.background)) root.setProperty("--bg", c.background.value);
+  if (isSet(c.text)) root.setProperty("--fg", c.text.value);
+  if (isSet(c.primary)) { root.setProperty("--brand", c.primary.value); root.setProperty("--brand-ink", lum(c.primary.value) > .45 ? "#111111" : "#FFFFFF"); }
+  const glow = isSet(c.logo) ? c.logo.value : isSet(c.primary) ? c.primary.value : null;
+  if (glow) root.setProperty("--glow", glow);
+  const fonts = B.fonts || {}, families = [];
+  ["display", "body"].forEach(role => {
+    const f = fonts[role]; if (!f) return;
+    const fam = f.status === "missing" || !f.embedAllowed ? f.fallback : f.family;
+    if (!fam) return;
+    root.setProperty("--" + role, '"' + fam + '", system-ui, "Segoe UI", Arial, sans-serif');
+    const g = f.status === "missing" || !f.embedAllowed ? f.fallbackGoogleFonts : f.googleFonts;
+    if (g && !families.includes(g)) families.push(g);
+  });
+  if (families.length) {
+    const l = document.createElement("link"); l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?" + families.map(g => "family=" + g.replace(/ /g, "+")).join("&") + "&display=swap";
+    document.head.appendChild(l);
+  }
+  const logo = B.logo || {};
+  const src = logo.dataUri || (HOSTED && logo.url) || null;
+  if (logo.status === "found" && src) {
+    const img = document.createElement("img"); img.src = src; img.alt = (B.name || "Business") + " logo";
+    $("logo").textContent = ""; $("logo").appendChild(img);
+  }
+  const missing = Object.entries(c).filter(([, v]) => v && v.status === "missing").map(([k]) => k);
+  if (logo.status !== "found") missing.unshift("logo");
+  if ((B.about || {}).status === "missing") missing.push("about text");
+  if ((B.imagery || {}).status === "missing") missing.push("photos");
+  $("brand-credit").textContent = B.name
+    ? "Brand kit: " + B.name + ". Taken from its own sources only." + (missing.length ? " Not yet supplied: " + missing.join(", ") + "." : "")
+    : "Brand kit: none loaded.";
+})();
+
+// Person
+(function applyPerson() {
+  if (P.name) {
+    document.title = P.name + " Card";
+    const h = $("person-name"); h.textContent = "";
+    P.name.split(" ").forEach((w, i) => { if (i) h.append(" "); const s = document.createElement("span"); s.className = "w"; s.textContent = w; h.append(s); });
+  }
+  $("person-intro").textContent = [P.title, P.intro].filter(Boolean).join(". ");
+  $("person-motto").textContent = P.motto || (B.tagline && B.tagline.text) || "";
+  (P.credentials || []).forEach(c => { const s = document.createElement("span"); const b = document.createElement("b"); b.textContent = c.abbr; s.append(b, " " + c.text); $("creds").append(s); });
+  const share = $("share");
+  (P.phones || []).concat((P.emails || []).filter(e => e.primary)).forEach(item => {
+    const b = document.createElement("button"); b.className = "btn"; b.type = "button";
+    const value = item.display || item.value; b.dataset.copy = value;
+    const sm = document.createElement("small"); sm.textContent = value; b.append(item.label, sm);
+    b.addEventListener("click", () => copy(value, b)); $("actions").insertBefore(b, share);
+  });
+  const links = (P.links || []);
+  if (links.length) {
+    $("links-section").hidden = false;
+    links.forEach(l => {
+      const el = document.createElement(l.url ? "a" : "span");
+      if (l.url) { el.href = l.url; el.target = "_blank"; el.rel = "noopener"; } else el.style.gridColumn = "1/-1";
+      const sm = document.createElement("small"); sm.textContent = l.note || ""; el.append(l.label, sm); $("links").append(el);
+    });
+  }
+  const f = P.features || {};
+  if (f.discover && P.ideas) $("door-discover").hidden = false;
+  if (f.whiteRabbit) {
+    $("door-solve").hidden = false; $("rabbit").hidden = false;
+    const li = document.createElement("li"); li.className = "off"; li.innerHTML = "<b>Not connected yet</b>"; li.append("The White Rabbit game link."); $("status-list").insertBefore(li, $("status-list").children[4]);
+  }
+  Object.entries(P.ideas || {}).forEach(([k, v]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "need"; b.dataset.need = k; b.textContent = v[0]; $("needs").append(b);
+  });
+})();
+
+function vcard() {
+  const esc = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,");
+  const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "", first = parts.join(" ");
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + esc(last) + ";" + esc(first) + ";;;", "FN:" + esc(P.name || "")];
+  if (P.org) lines.push("ORG:" + esc(P.org));
+  if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
+  (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + (p.type || "VOICE") + ":" + p.tel));
+  (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + e.value));
+  (P.links || []).filter(l => l.url).slice(0, 2).forEach(l => lines.push("URL:" + l.url));
+  if (P.vcardNote) lines.push("NOTE:" + esc(P.vcardNote));
+  lines.push("END:VCARD");
+  return lines.join("\r\n") + "\r\n";
+}
+function contactText() {
+  return [P.name, P.title].filter(Boolean).join(", ") + "\n" +
+    (P.phones || []).map(p => p.label + " " + p.display).join("\n") + "\n" +
+    (P.emails || []).map(e => e.value).join("\n");
+}
+
+async function copy(text, el) {
+  const small = el.querySelector("small"); const before = small ? small.textContent : el.textContent;
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { ok = false; }
+  const msg = ok ? "Copied" : "Press and hold to copy: " + text;
+  if (small) small.textContent = msg; else el.textContent = msg;
+  if (ok) setTimeout(() => { if (small) small.textContent = before; else el.textContent = before; }, 1600);
+}
+
+if (HOSTED) {
+  document.querySelectorAll("#status-list li[data-hosted]").forEach(li => {
+    li.className = "on"; li.querySelector("b").textContent = "Live"; li.lastChild.textContent = li.dataset.hosted;
+  });
+}
+
+// Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
+$("save").addEventListener("click", () => {
+  if (HOSTED && KIT.id) { location.href = KIT.id + ".vcf"; return; }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([vcard()], { type: "text/vcard" }));
+    a.download = (KIT.id || "contact") + ".vcf"; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { /* blocked: the fallback below covers it */ }
+  $("vcard-text").textContent = contactText();
+  $("save-out").hidden = false;
+});
+$("copy-vcard").addEventListener("click", e => copy($("vcard-text").textContent, e.currentTarget));
+$("share").addEventListener("click", e => copy(location.href.split("#")[0], e.currentTarget));
+
+const doors = ["discover", "solve", "connect"];
+doors.forEach(d => $("door-" + d).addEventListener("click", () => {
+  doors.forEach(o => {
+    const open = o === d && $("door-" + o).getAttribute("aria-expanded") !== "true";
+    $("door-" + o).setAttribute("aria-expanded", String(open)); $("p-" + o).hidden = !open;
+  });
+}));
+
+$("needs").addEventListener("click", e => {
+  const b = e.target.closest(".need"); if (!b) return;
+  document.querySelectorAll(".need").forEach(n => n.setAttribute("aria-pressed", String(n === b)));
+  const [, h, p] = P.ideas[b.dataset.need];
+  $("idea-h").textContent = h; $("idea-p").textContent = p; $("idea").hidden = false;
+});
+
+const INBOX = (P.inbox && P.inbox.status !== "missing" && P.inbox.address) || (P.inbox && P.inbox.fallback) || ((P.emails || [])[0] || {}).value || "";
+$("inbox-addr").textContent = INBOX || "no address supplied";
+$("enquiry").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = new FormData(e.currentTarget);
+  const name = (f.get("name") || "").trim(), email = (f.get("email") || "").trim(), msg = (f.get("message") || "").trim();
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
+    $("out-text").textContent = "Add your name, a working email and a message, then try again."; $("out").hidden = false; return;
+  }
+  const subject = `[Card] ${f.get("type")}: ${name}`;
+  const body = `${msg}\n\nFrom: ${name} <${email}>\nBusiness: ${f.get("business") || "not given"}\nVia: ${P.name || "the"} digital card`;
+  $("out-text").textContent = `To: ${INBOX}\nSubject: ${subject}\n\n${body}`;
+  $("mail-msg").href = `mailto:${INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  $("out").hidden = false;
+});
+$("copy-msg").addEventListener("click", e => copy($("out-text").textContent, e.currentTarget));
+
+const rabbit = $("rabbit");
+if (!rabbit.hidden) {
+  setTimeout(() => rabbit.classList.add("in"), 3500);
+  rabbit.addEventListener("click", () => { rabbit.classList.add("found"); const t = $("toast"); t.hidden = false; setTimeout(() => { t.hidden = true; }, 5000); });
+}
+
+// PLACEHOLDER motion: slow light in the brand's own colour
+(function () {
+  const c = $("water"), x = c.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = getComputedStyle(document.documentElement);
+  const glow = css.getPropertyValue("--glow").trim(), stage = css.getPropertyValue("--stage").trim();
+  let w, h;
+  function size() { const r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); w = c.width = r.width * d; h = c.height = r.height * d; }
+  size(); addEventListener("resize", size);
+  function frame(t) {
+    t = t / 1000;
+    x.fillStyle = stage; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 6; i++) {
+      const cx = w * (0.5 + 0.38 * Math.sin(t * 0.13 + i * 1.7)), cy = h * (0.42 + 0.34 * Math.cos(t * 0.11 + i * 2.3));
+      const r = Math.max(w, h) * (0.22 + 0.06 * Math.sin(t * 0.4 + i));
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, glow + "22"); g.addColorStop(1, glow + "00");
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+    }
+    x.globalCompositeOperation = "source-over";
+    const fade = x.createLinearGradient(0, h * 0.5, 0, h);
+    fade.addColorStop(0, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,0.75)");
+    x.fillStyle = fade; x.fillRect(0, 0, w, h);
+    if (!still) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
