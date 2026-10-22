@@ -956,6 +956,114 @@
       "title": "Warranty and NFC packaging",
       "detail": "Tap the product packaging or warranty card to open the business's card.",
       "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "ed-portal",
+      "lane": "wow",
+      "rank": 2,
+      "recommended": true,
+      "title": "Edition live: Portal",
+      "video": "/_blob/934e7280f1db8ca1b8933618fc22ad9f",
+      "image": "/_blob/eb54e9632982b88526ee4a5680275c67",
+      "feature": "Higgsfield edition clip",
+      "job": "911c388b-fe9e-4c61-ac3e-524b048017bc",
+      "detail": "A burst of orange light opens onto your logo. Live on your hosted card at ?edition=portal. AI-generated concept in Higgsfield, not a real photo.",
+      "evidence": "Wired into the kit and shipped by the build [VERIFIED]."
+    },
+    {
+      "id": "ed-restoration",
+      "lane": "wow",
+      "rank": 3,
+      "recommended": true,
+      "title": "Edition live: Restoration",
+      "video": "/_blob/3ea8155f00454b28ff8f09e6ad67f526",
+      "image": "/_blob/01f041e5d7ab6ec80bcaef257fb9df3a",
+      "feature": "Higgsfield edition clip",
+      "job": "cc159c97-8175-4f21-b5c1-49d68d63b72c",
+      "detail": "A water-stained wall cleans itself down to your logo. Live on your hosted card at ?edition=restoration. AI-generated concept in Higgsfield, not a real photo.",
+      "evidence": "Wired into the kit and shipped by the build [VERIFIED]."
+    },
+    {
+      "id": "review-centre",
+      "lane": "reviews",
+      "rank": 1,
+      "recommended": true,
+      "title": "Live: 'Review my business' is the card's centrepiece",
+      "detail": "A big button opens Google's own review form for the business. Every visitor sees it, no prize, no screening. It says 'Not connected yet' until the owner connects their Google Business Profile in the Nexus portal.",
+      "evidence": "Built into the card [VERIFIED]; the Business Profile connection is designed only.",
+      "compliance": "ok"
+    },
+    {
+      "id": "nexus-connect",
+      "lane": "ops",
+      "rank": 1,
+      "recommended": true,
+      "needs": "Your Google Cloud OAuth app and Google verification; LinkedIn and Meta app review",
+      "title": "Designed: owners connect Google, LinkedIn and Facebook in the Nexus portal",
+      "detail": "Secrets stay in Nexus, encrypted, per customer. The card only gets the public Place ID and links. Nexus today is your private founder CRM, so card customers need a new customer area; Synthex already has working Business Profile code to reuse.",
+      "evidence": "Nexus auth and Synthex GBP code mapped [VERIFIED: pipeline-design.md §1]."
+    },
+    {
+      "id": "pipe-auto",
+      "lane": "ops",
+      "rank": 2,
+      "recommended": true,
+      "title": "Designed: website to published card, fully automatic",
+      "detail": "Website, brand kit pulled, opener generated from an edition with their logo as the end frame, live preview, pay, proof room, published. About A$7 direct cost per A$249 card; a person only sees flagged orders; each order stops and alerts if it passes A$15 in generation cost.",
+      "evidence": "pipeline-design.md §3 [INFERENCE for costs]."
+    },
+    {
+      "id": "proof-room",
+      "lane": "ops",
+      "rank": 3,
+      "recommended": true,
+      "title": "Designed: proof room with 3 rounds included, then A$29",
+      "detail": "A private page per order: approve in one tap, make small edits free, or send back changes. Rounds 1-3 included; from round 4, A$29. Fixes for our errors never count. Approve publishes the card and hands over the share kit.",
+      "evidence": "pipeline-design.md §4."
+    },
+    {
+      "id": "intro-a",
+      "lane": "motion",
+      "rank": 1,
+      "recommended": true,
+      "title": "Designed: 'Record yourself' intro, included",
+      "detail": "A teleprompter shows an AI-written script; the buyer records on their phone; we trim, caption and brand it. Real footage, no extra consent forms.",
+      "evidence": "pipeline-design.md §5."
+    },
+    {
+      "id": "intro-b",
+      "lane": "motion",
+      "rank": 2,
+      "title": "Designed: AI avatar in your own voice, A$49 add-on",
+      "needs": "HeyGen to confirm API access for Digital Twins",
+      "detail": "Our cost is about A$6-7 per client (A$14 with retries), so A$49 rather than A$29. Consent only from the person, through HeyGen's and ElevenLabs' own flows, with an 'AI-generated avatar' label.",
+      "evidence": "HeyGen and ElevenLabs pricing pages [VERIFIED]; price recommendation [INFERENCE]."
+    },
+    {
+      "id": "bio-video",
+      "lane": "motion",
+      "rank": 3,
+      "recommended": true,
+      "needs": "Authorise HeyGen and approve the script",
+      "title": "Your bio video: script ready for your OK",
+      "detail": "'Hi, I'm Phill McGurk...' 18 seconds, using your existing HeyGen avatar and ElevenLabs voice only. Script in phill-bio-script.md.",
+      "evidence": "Consent recorded 22/10/2026 in your brand kit [VERIFIED]; HeyGen not authorised in this session [VERIFIED]."
+    },
+    {
+      "id": "social-drafts",
+      "lane": "growth",
+      "rank": 6,
+      "title": "Designed: post your card to LinkedIn and socials as drafts",
+      "detail": "From Nexus, through your connected accounts. Every post is a draft you approve; nothing goes out on its own.",
+      "evidence": "Nexus already publishes only approved, unchanged posts [VERIFIED: pipeline-design.md §6]."
+    },
+    {
+      "id": "card-analytics",
+      "lane": "ops",
+      "rank": 4,
+      "title": "Designed: opens, review taps and saves per card",
+      "detail": "A small event counter on the card's host, shown per card in Nexus.",
+      "evidence": "pipeline-design.md §6."
     }
   ]
 }

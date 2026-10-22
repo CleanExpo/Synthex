@@ -37,6 +37,10 @@ a { color: var(--brand); }
 .stage { position: relative; aspect-ratio: 9 / 16; max-width: 100%; max-height: 72vh; width: 100%; margin: 0 auto;
   border-radius: 22px; overflow: hidden; background: var(--stage); color: #FFFFFF; }
 .stage canvas, .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* full-height edition clips fill the stage; a dark fade keeps the name readable on light footage */
+.stage:has(video.hero-full)::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 48%; z-index: 2; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(4,8,14,0), rgba(4,8,14,.88)); }
+.stage .name { z-index: 3; }
 .stage video.hero { inset: auto; top: 4%; left: 0; height: auto; aspect-ratio: 1; object-fit: contain;
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 78%, transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 78%, transparent 100%); }
@@ -159,6 +163,13 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p></div>
     <p class="hint" id="pass-hint">Point a phone camera at the code.</p>
   </div>
+
+  <section id="review" aria-labelledby="review-h" style="display:grid;gap:10px;padding:18px;border-radius:18px;border:2px solid var(--brand)">
+    <h2 id="review-h" style="font-size:22px">Worked with us?</h2>
+    <p class="lede" style="margin:0">Tell others how it went, in your own words. It opens Google's own review page; you post it from your own account.</p>
+    <a class="btn primary" id="review-btn" href="#" target="_blank" rel="noopener">Review my business<small id="review-sub">Opens Google's review form</small></a>
+    <p class="fine" id="review-note" style="margin:0"></p>
+  </section>
 
   <div class="creds" id="creds" aria-label="Credentials"></div>
 
@@ -300,7 +311,7 @@ function lum(hex) {
   if (heroSrc) {
     const still = REDUCED;
     const v = document.createElement("video");
-    v.className = "hero"; v.id = "hero-video";
+    v.className = hero.fit === "cover" ? "hero-full" : "hero"; v.id = "hero-video";
     // the crack opener starts the clip; with reduced motion the poster stays still
     v.muted = true; v.playsInline = true; v.loop = !!hero.loop; v.autoplay = false; v.preload = still ? "none" : "auto";
     v.setAttribute("playsinline", ""); v.setAttribute("aria-label", (B.name || "Brand") + " logo reveal");
@@ -387,6 +398,20 @@ async function copy(text, el) {
   if (small) small.textContent = msg; else el.textContent = msg;
   if (ok) setTimeout(() => { if (small) small.textContent = before; else el.textContent = before; }, 1600);
 }
+
+// Review my business: Google's own write-review form for the owner's connected Business Profile.
+// The Place ID is the only review value the card ever holds; the connection itself lives in the Nexus portal.
+(function review() {
+  const r = B.reviews || {}, a = $("review-btn");
+  if (r.status === "found" && /^[A-Za-z0-9_-]{10,}$/.test(r.placeId || "")) {
+    a.href = "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(r.placeId);
+    $("review-sub").textContent = "Opens Google's review form for " + (r.business || B.name || "this business");
+  } else {
+    a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
+    $("review-sub").textContent = "Not connected yet";
+    $("review-note").textContent = "Not connected yet: the owner connects their Google Business Profile in the Nexus portal, then this opens Google's review form.";
+  }
+})();
 
 // Greeting: ?to=Sarah adds "Great to meet you, Sarah" to the opener (text only, letters and spaces)
 const GREET = (QS.get("to") || "").replace(/[^\p{L} '\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 30);

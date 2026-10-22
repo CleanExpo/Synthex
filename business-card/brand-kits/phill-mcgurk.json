@@ -95,7 +95,11 @@
       "status": "missing",
       "note": "no real photos of Phill supplied yet"
     },
-    "editions": {},
+    "reviews": {"status": "missing", "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection"},
+    "editions": {
+      "portal": {"status": "found", "fit": "cover", "video": "business-card/brand-kits/media/edition-portal.mp4", "poster": "business-card/brand-kits/media/edition-portal-poster.jpg", "stopAt": 3.95, "source": "Higgsfield edition clip, job 911c388b-fe9e-4c61-ac3e-524b048017bc (source sha256 082e0d2f…); ends on the logo on dark"},
+      "restoration": {"status": "found", "fit": "cover", "video": "business-card/brand-kits/media/edition-restoration.mp4", "poster": "business-card/brand-kits/media/edition-restoration-poster.jpg", "stopAt": 3.95, "source": "Higgsfield edition clip, job cc159c97-8175-4f21-b5c1-49d68d63b72c (source sha256 a18516d1…); damaged wall cleans to the logo"}
+    },
     "hero": {
       "status": "found",
       "video": "business-card/brand-kits/media/unite-nexus-reveal-h264.mp4",
@@ -113,6 +117,7 @@
   "person": {
     "name": "Phill McGurk",
     "cardUrl": "https://card.unite-group.ink",
+    "likenessConsent": {"date": "22/10/2026", "scope": "Use of Phill's existing HeyGen avatar and existing ElevenLabs voice clone (both made from his own recordings) for his bio, image and motion. No new avatar or voice is to be created from scratch.", "source": "Phill's words relayed by the coordinating session: \"that can be used for my bio, my image, my motion, whatever it needs to be\""},
     "title": "Founder, Unite Group",
     "intro": "Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.",
     "motto": "Found. Trusted. Chosen.",
