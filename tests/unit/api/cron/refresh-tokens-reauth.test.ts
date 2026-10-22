@@ -36,7 +36,8 @@ jest.mock('@/lib/observability/sentry-server', () => ({
 }));
 
 jest.mock('@/lib/security/field-encryption', () => ({
-  decryptFieldSafe: (value: string | null) => value,
+  decryptFieldSafe: (value: string | null) =>
+    value === 'undecryptable' ? null : value,
 }));
 
 const mockRefresh = jest.fn();
@@ -122,6 +123,19 @@ describe('GET /api/cron/refresh-tokens — no refresh token', () => {
     expect(mockPrisma.notification.create).not.toHaveBeenCalled();
     expect(body.skipped).toBe(1);
     expect(body.permanentFailed).toBe(0);
+  });
+
+  it('does not disable an expired connection whose stored refresh token fails to decrypt', async () => {
+    mockPrisma.platformConnection.findMany.mockResolvedValue([
+      conn({ refreshToken: 'undecryptable' }),
+    ]);
+
+    const res = await GET(req());
+    const body = await res.json();
+
+    expect(mockPrisma.platformConnection.update).not.toHaveBeenCalled();
+    expect(mockPrisma.notification.create).not.toHaveBeenCalled();
+    expect(body.skipped).toBe(1);
   });
 
   it('still refreshes an expired connection that does hold a refresh token', async () => {

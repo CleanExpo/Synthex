@@ -256,9 +256,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       // Without a refresh token we cannot proactively refresh. A token that
       // still works is left alone until it expires. One that has already
       // expired is dead and can only come back through the owner
-      // reconnecting, so it must stop looking active.
+      // reconnecting, so it must stop looking active. A stored refresh token
+      // that fails to decrypt is a key problem, not a dead connection, so it
+      // is skipped rather than disabled.
       if (!refreshToken) {
-        if (connection.expiresAt && connection.expiresAt < now) {
+        if (
+          !connection.refreshToken &&
+          connection.expiresAt &&
+          connection.expiresAt < now
+        ) {
           logger.warn(
             '[refresh-tokens] Expired with no refresh token — disabling connection',
             { id, platform }
