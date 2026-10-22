@@ -179,6 +179,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     <h2 id="review-h" style="font-size:22px">Worked with us?</h2>
     <p class="lede" style="margin:0">Tell others how it went, in your own words. It opens Google's own review page; you post it from your own account.</p>
     <a class="btn primary" id="review-btn" href="#" target="_blank" rel="noopener">Review my business<small id="review-sub">Opens Google's review form</small></a>
+    <a class="btn" id="maps-btn" target="_blank" rel="noopener" hidden>Find us on Google<small>Opens our Google Business Profile</small></a>
     <p class="fine" id="review-note" style="margin:0"></p>
   </section>
 
@@ -403,6 +404,9 @@ async function copy(text, el) {
     $("review-sub").textContent = "Not connected yet";
     $("review-note").textContent = "Not connected yet: the owner connects their Google Business Profile in the Nexus portal, then this opens Google's review form.";
   }
+  // Find us on Google: the public profile link, shown only for a Google Maps address
+  const MAPS_OK = /^https:\/\/(maps\.google\.com\/|www\.google\.com\/maps\/)/;
+  if (MAPS_OK.test(r.profileUrl || "")) { const m = $("maps-btn"); m.href = r.profileUrl; m.hidden = false; }
 })();
 
 // Greeting: ?to=Sarah adds "Great to meet you, Sarah" to the opener (text only, letters and spaces)

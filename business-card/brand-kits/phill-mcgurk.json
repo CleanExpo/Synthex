@@ -120,7 +120,9 @@
     "shopUrlNote": "Single switch for the Get your own card target. Change to https://unite-group.in/cards/order only once `curl -sI` on it returns 200 (22/10/2026: 307 to the login page).",
     "reviews": {
       "status": "missing",
-      "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection"
+      "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection",
+      "profileUrl": "https://maps.google.com/?cid=16425003964954420216",
+      "profileUrlSource": "Phill's link to the live Unite-Group Nexus Business Profile, 22/10/2026 (CID 0xe3f156152d7da3f8 = 16425003964954420216). The link redirects to Google Maps; the listing's contents were not checked from here. The ChIJ Place ID for the review form is still to come from the Business Profile dashboard or the Places API."
     },
     "editions": {
       "portal": {
