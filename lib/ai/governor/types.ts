@@ -19,6 +19,7 @@
 
 import type { ModelConfig } from '@/lib/ai/model-registry';
 import type { GovernorMode } from './mode';
+import type { BuildCapDetail, GovernedBuild } from './build-cap';
 
 export type { GovernorMode } from './mode';
 
@@ -85,7 +86,12 @@ export type GovernorOutcome =
   /** A control-plane read (flag / credential / budget) failed. Unknown ⇒ refuse. */
   | 'refused_control_plane_error'
   /** Flags, key and budget all passed; the provider call itself threw. */
-  | 'failed_provider_error';
+  | 'failed_provider_error'
+  /**
+   * The call is part of a build (GovernedCallInput.build) and the build's
+   * ledger spend plus this call's estimate would exceed the per-build cap.
+   */
+  | 'refused_build_cap_exceeded';
 
 /** Every outcome that is not a served call. */
 export type GovernorRefusal = Exclude<GovernorOutcome, 'completed'>;
@@ -132,6 +138,11 @@ export interface GovernorProvenance {
     orgDailyCeilingUsd: number | null;
     providerDailyCeilingUsd: number | null;
   };
+  /**
+   * Present only when the call carried `build`: the per-build cap decision
+   * (spent so far under run_id = buildId, the estimate and the cap, in USD).
+   */
+  buildCap?: BuildCapDetail;
   /** Populated when the Governor refused or the provider threw. */
   errorClass?: string;
   /**
@@ -189,7 +200,17 @@ export interface GovernedCallInput<T> {
   model: ModelSelector;
   /** Ledger pipeline_name — the existing cost-report dimension. */
   pipelineName: string;
+  /**
+   * Ledger run_id for this call's receipt. With `build`, the buildId IS the
+   * run_id; a runId that disagrees with it is refused.
+   */
   runId?: string;
+  /**
+   * Opt-in per-build spending cap. The buildId becomes this call's ledger
+   * run_id, and the call is refused when the build's ledger spend plus this
+   * call's estimate would exceed the cap. Absent: no build cap, unchanged.
+   */
+  build?: GovernedBuild;
   /** Pre-spend estimate used for the budget check. */
   estimate: { inputTokens: number; outputTokens: number };
   /**
