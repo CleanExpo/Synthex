@@ -298,31 +298,49 @@
       "id": "tradehall",
       "name": "NRPG Trade Hall",
       "url": "https://cleanexpo247-hall.vercel.app",
-      "tagline": "The industry trade hall that never closes",
+      "tagline": "A walk-through trade expo, open 24/7",
       "segments": [
         {
           "path": "/",
           "from": 0.0,
-          "to": 0.25,
-          "say": "This is the NRPG Trade Hall: a virtual exhibition hall for the restoration and cleaning industry, open around the clock instead of a few days a year."
+          "to": 0.12,
+          "say": "This is the NRPG Trade Hall: a walk-through trade expo for Australian restoration professionals. Visit supplier booths, watch videos in the theatres, and collect a stamp in every zone. It is open twenty-four seven, from any device, and it is in preview now."
         },
         {
           "path": "/",
-          "from": 0.25,
+          "from": 0.12,
+          "to": 0.3,
+          "say": "You arrive at the plaza outside the hall with a trade visitor day pass. Walk with the keys or drag to look around, talk to the people you meet, or click any zone name to jump straight there."
+        },
+        {
+          "path": "/",
+          "from": 0.3,
           "to": 0.5,
-          "say": "Suppliers can try their booth in the hall, and run it from an exhibitor dashboard."
+          "say": "Suppliers can try their booth before booking. Pick a pod, choose a colour, add your business name, a one-line description and three products, then press preview to walk straight to it."
         },
         {
           "path": "/",
           "from": 0.5,
-          "to": 0.75,
-          "say": "Inside, you will find exhibitor booths, the CARSI Theatre with course introductions on the big screen, and free trade tools for working technicians."
+          "to": 0.62,
+          "say": "The exhibitor dashboard shows booth visits, visitors and callback requests, live. A visit counts once per visitor per session, when they walk up to the counter."
         },
         {
           "path": "/",
-          "from": 0.75,
+          "from": 0.62,
+          "to": 0.76,
+          "say": "There are twelve zones on one walk. The Foyer, with the info desk and the industry calendar. Supplier Boulevard, with six booth pods. The Demo Theatre, the Standards Chamber, the Awards Gallery and a Member Lounge."
+        },
+        {
+          "path": "/",
+          "from": 0.76,
+          "to": 0.88,
+          "say": "The CARSI Theatre shows course introductions on the big screen. Breakout rooms host smaller sessions. The Live Demo Area has drying and cleaning equipment, including a pull-apart dehumidifier that names each part. And yes, there is an after party."
+        },
+        {
+          "path": "/",
+          "from": 0.88,
           "to": 1.0,
-          "say": "Visit the hall now. Booths are coming soon. The NRPG Trade Hall: the trade show that never closes."
+          "say": "There are free trade tools too, like a drying calculator, with no sign-in. Founding booths open at launch. The NRPG Trade Hall: the trade show that never closes."
         }
       ]
     }
