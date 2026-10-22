@@ -58,11 +58,20 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(asOf))
   throw new Error('--as-of needs YYYY-MM-DD');
 
 fs.mkdirSync(outDir, { recursive: true });
+// <goal>.jsonl or <goal>.<part>.jsonl. Plain string tests, never a RegExp built
+// from a command-line argument (CodeQL js/regex-injection).
+const PART = /^[a-z0-9-]+$/;
+const isGoalFile = (g, f) => {
+  if (!f.endsWith('.jsonl')) return false;
+  const stem = f.slice(0, -'.jsonl'.length);
+  if (stem === g) return true;
+  return stem.startsWith(`${g}.`) && PART.test(stem.slice(g.length + 1));
+};
 const goalFiles = g =>
   fs.existsSync(outDir)
     ? fs
         .readdirSync(outDir)
-        .filter(f => new RegExp(`^${g}(\\.[a-z0-9-]+)?\\.jsonl$`).test(f))
+        .filter(f => isGoalFile(g, f))
         .sort()
     : [];
 for (const g of goals)
