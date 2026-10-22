@@ -145,6 +145,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
 /* Crack & reveal: a code-drawn shatter over the stage on open */
 #crack { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; background: #04080E; }
+#embers { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
 .greet { position: absolute; left: 14px; right: auto; max-width: calc(100% - 28px); top: 58px; z-index: 4; font: 600 15px var(--display); color: #FFFFFF;
   background: rgba(4,8,14,.82); padding: 7px 12px; border-radius: 12px; text-shadow: none; opacity: 0; transition: opacity .6s ease .2s; }
 .greet.on { opacity: 1; }
@@ -228,6 +229,7 @@ body:not(.owner) .owner-only { display: none !important; }
   <section class="stage" aria-label="Motion card">
     <canvas id="water" aria-hidden="true"></canvas>
     <canvas id="crack" aria-hidden="true"></canvas>
+    <canvas id="embers" aria-hidden="true"></canvas>
     <div class="greet" id="greet" hidden></div>
     <div class="logo" id="logo"><span class="tag">Logo missing</span></div>
     <div class="ph">
@@ -713,6 +715,10 @@ const SFX = (() => {
     chime() { if (!on) return; const t = ctx.currentTime; [76, 81, 88].forEach((m, i) => tone(hz(m), t + i * 0.09, 1.2, { vol: 0.12 })); },
     // A soft swish for the pass-it-on code
     whoosh() { if (!on) return; noise(ctx.currentTime, 0.45, { vol: 0.25, from: 400, to: 5000, q: 1.4 }); },
+    // The phoenix: a low rush of flame rising in pitch, with a soft crackle on top
+    flame() { if (!on) return; const t = ctx.currentTime;
+      noise(t, 1.6, { vol: 0.3, from: 180, to: 1400, q: 0.6, kind: "lowpass" }); tone(hz(45), t, 1.4, { vol: 0.18, attack: 0.3 });
+      for (let i = 0; i < 10; i++) noise(t + 0.2 + Math.random() * 1.2, 0.03, { vol: 0.12, from: 3000, to: 3000, q: 2 }); },
     // A light tap for buttons
     tick() { if (!on) return; tone(1800, ctx.currentTime, 0.06, { vol: 0.06, type: "triangle" }); },
   };
@@ -811,6 +817,65 @@ function crackReveal(done) {
 function startHero() {
   const v = $("hero-video"); if (v) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
   $("greet").classList.add("on");
+  phoenix();
+}
+
+// Phoenix: once the glass has shattered, the U rises from the embers. Two wings of fire sweep up and out
+// from the logo, then embers keep drifting upward for a while. Drawn in code (no media, nothing generated);
+// kept to the upper two-thirds of the stage so the name below stays clear. Skipped with reduced motion.
+let phoenixRun = 0;
+function phoenix() {
+  if (REDUCED) return;
+  const c = $("embers"), x = c.getContext("2d"), r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
+  const W = c.width = Math.round(r.width * d), H = c.height = Math.round(r.height * d);
+  const run = ++phoenixRun, cx = W / 2, cy = H * 0.42, ceiling = H * 0.62;
+  const brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#E55A2B";
+  const fire = t => (t < .35 ? "#FFF3C4" : t < .7 ? "#FFB347" : brand);   // hot core cooling to the brand colour
+  const sparks = [];
+  // Wings: particles launched along two arcs, left and right, rising and sweeping outward
+  // Wings: feathers of flame launched along two fans, left and right, rising and sweeping outward
+  for (let side of [-1, 1]) for (let i = 0; i < 150; i++) {
+    const k = (i % 50) / 50, row = Math.floor(i / 50), ang = -Math.PI / 2 + side * (0.2 + k * 1.25 + row * .08);
+    const sp = (3 + k * 4.2 - row * .6) * d * (0.85 + Math.random() * .3);
+    sparks.push({ x: cx + side * (4 + row * 6) * d, y: cy + row * 6 * d, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 1.4 * d,
+      life: 0, max: 40 + Math.random() * 24 + k * 26, r: (1.6 + Math.random() * 2.4) * d, delay: k * 12 + row * 4, streak: true });
+  }
+  // Body and head: a column of fire shooting straight up out of the U
+  for (let i = 0; i < 60; i++) {
+    sparks.push({ x: cx + (Math.random() - .5) * 14 * d, y: cy + 10 * d, vx: (Math.random() - .5) * .8 * d, vy: -(4 + Math.random() * 4) * d,
+      life: 0, max: 34 + Math.random() * 20, r: (2 + Math.random() * 2.6) * d, delay: 6 + Math.random() * 10, streak: true });
+  }
+  SFX.flame();
+  const t0 = performance.now();
+  (function frame(now) {
+    if (run !== phoenixRun) return;
+    const t = now - t0;
+    x.globalCompositeOperation = "source-over"; x.clearRect(0, 0, W, H);
+    x.globalCompositeOperation = "lighter";
+    // after the wings, a gentle stream of embers rises from the logo for twelve seconds
+    if (t > 900 && t < 12000 && Math.random() < .35) {
+      sparks.push({ x: cx + (Math.random() - .5) * W * .35, y: cy + H * .06, vx: (Math.random() - .5) * .6 * d, vy: -(0.6 + Math.random() * 1.2) * d,
+        life: 0, max: 90 + Math.random() * 80, r: (0.8 + Math.random() * 1.6) * d, delay: 0, drift: Math.random() * 6 });
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      if (s.delay > 0) { s.delay--; continue; }
+      s.px = s.x; s.py = s.y;
+      s.life++; s.x += s.vx + (s.drift ? Math.sin((s.life + s.drift * 10) / 14) * .3 * d : 0); s.y += s.vy; s.vy -= .015 * d; s.vx *= .985;
+      const k = s.life / s.max;
+      if (k >= 1 || s.y > ceiling) { sparks.splice(i, 1); continue; }
+      const a = (1 - k) * (k < .1 ? k * 10 : 1);
+      if (s.streak) {   // a streak from where it was: reads as a feather of flame
+        x.globalAlpha = a * .8; x.strokeStyle = fire(k); x.lineWidth = s.r * (1.4 - k); x.lineCap = "round";
+        x.beginPath(); x.moveTo(s.px - s.vx * 2.2, s.py - s.vy * 2.2); x.lineTo(s.x, s.y); x.stroke();
+      }
+      const g = x.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 4);
+      g.addColorStop(0, fire(k)); g.addColorStop(1, "rgba(0,0,0,0)");
+      x.globalAlpha = a * .9; x.fillStyle = g; x.beginPath(); x.arc(s.x, s.y, s.r * 4, 0, Math.PI * 2); x.fill();
+    }
+    x.globalAlpha = 1;
+    if (sparks.length || t < 12000) requestAnimationFrame(frame); else x.clearRect(0, 0, W, H);
+  })(t0);
 }
 
 // Openers this view can play: the signature reveal plus every edition shipped with the page
