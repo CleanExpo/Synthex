@@ -74,6 +74,10 @@ import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
 import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
 import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
+import {
+  type Ga4AdminConsent,
+  buildGa4AdminGrant,
+} from '@/lib/google/ga4-admin-consent';
 
 // =============================================================================
 // OAuth Configuration
@@ -907,6 +911,28 @@ export async function GET(
               })
             : null;
 
+        // K2 onboarding authority: record the GA4 edit grant (scopes, who,
+        // when, statement) only when the signed state carries the accepted
+        // consent AND Google actually granted the scope.
+        const ga4AdminConsent =
+          platform === 'googleanalytics'
+            ? (stateData.ga4AdminConsent as Ga4AdminConsent | undefined)
+            : undefined;
+        const ga4AdminGrant = ga4AdminConsent
+          ? buildGa4AdminGrant({
+              consent: ga4AdminConsent,
+              grantedScope: tokenData.scope,
+              userId,
+              email: (stateData.email as string | undefined) ?? null,
+            })
+          : null;
+        if (ga4AdminConsent && !ga4AdminGrant) {
+          logger.warn(
+            'GA4 create consent accepted in Synthex but the edit scope was not granted at Google',
+            { userId, organizationId: rawOrgId }
+          );
+        }
+
         await persistPlatformConnection({
           userId,
           organizationId: rawOrgId,
@@ -937,6 +963,7 @@ export async function GET(
                   },
                 }
               : {}),
+            ...(ga4AdminGrant ? { ga4AdminGrant } : {}),
           },
         });
       } catch (dbError) {
