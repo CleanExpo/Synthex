@@ -699,6 +699,9 @@ async function generateSlotContent(input: SlotInput): Promise<{
           model: { kind: 'latest' },
           pipelineName: GOVERNOR_PIPELINE,
           runId: input.runId,
+          // The run is the build: its governed spend is capped per run
+          // (SYNTHEX_BUILD_CAP_USD, default US$12). A cost guard, not billing.
+          build: { buildId: input.runId },
           estimate: generationEstimate(request.type),
           mode: GOVERNOR_MODE,
           execute: async governor => {

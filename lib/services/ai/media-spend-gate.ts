@@ -19,7 +19,10 @@
  *  - `settleMediaSpend` charges what actually ran and writes the one
  *    pipeline_cost_ledger row; `releaseMediaSpend` returns the hold when the
  *    provider produced nothing. Both share the hold's finalize key, so a replay
- *    no-ops and only the first terminal outcome stands.
+ *    no-ops and only the first terminal outcome stands;
+ *  - a hold taken with `buildId` records it as its reserve event's run_id, so
+ *    the hold's net spend counts toward that build's spending cap
+ *    (`lib/ai/governor/build-cap.ts`).
  *
  * Holds are recorded with mediaType 'audio' so spend reports can tell voice
  * and avatar spend from images. For the stale sweep only 'video' is special
@@ -48,7 +51,8 @@ export type MediaSpendRefusalCode =
   | 'media_quota_exceeded'
   | 'media_quota_unavailable'
   | 'media_unpriced'
-  | 'media_unattributed';
+  | 'media_unattributed'
+  | 'media_build_invalid';
 
 /** A spend refused before any provider call. `status` is the honest HTTP answer. */
 export class MediaSpendRefusedError extends Error {
@@ -71,6 +75,8 @@ export interface MediaSpendHold {
   pipeline: string;
   /** Model or plan the ledger row names, e.g. 'eleven_multilingual_v2'. */
   model: string;
+  /** The build this hold counts toward (lib/ai/governor/build-cap.ts), if any. */
+  buildId?: string;
 }
 
 /**
@@ -114,6 +120,12 @@ interface HoldParams {
   initiatedBy: InitiatedBy;
   pipeline: string;
   model: string;
+  /**
+   * Put this hold inside a capped build. Recorded as the reserve event's
+   * run_id, which is how the build cap finds it: the hold's net spend counts
+   * toward the build. Absent: the hold is not part of any build.
+   */
+  buildId?: string;
 }
 
 /**
@@ -132,6 +144,18 @@ export async function holdMediaSpendBatch(
       `media spend for ${params.model} has no positive price`
     );
   }
+  if (
+    params.buildId !== undefined &&
+    !(typeof params.buildId === 'string' && params.buildId.trim().length > 0)
+  ) {
+    // A blank run_id would pool every such hold under one key and count
+    // unrelated spend against whichever build shares it.
+    throw new MediaSpendRefusedError(
+      'media_build_invalid',
+      422,
+      'buildId must be a non-empty string; the hold was not taken'
+    );
+  }
   const holdIds = Array.from({ length: count }, () => randomUUID());
   try {
     await reserveSpendBatch({
@@ -140,6 +164,7 @@ export async function holdMediaSpendBatch(
       initiatedBy: params.initiatedBy,
       perHoldUsd,
       mediaType: 'audio',
+      runId: params.buildId,
     });
   } catch (error) {
     if (error instanceof QuotaExceededError) {
