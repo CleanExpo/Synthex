@@ -20,6 +20,7 @@ agency, and the card is a separate showpiece.
 | `restoreassist-staff-cards.md` | Track 2: staff cards inside RestoreAssist, what data already exists, ecosystem ideas |
 | `brand-kits/` | One brand kit per card (`phill-mcgurk.json`) and `validate.py`, which rejects any unsourced value |
 | `site/` | `build.py` turns `card.html` plus a brand kit into the hosted card; `hosting-plan.md` explains going live |
+| `purchase-flow.md` | The "Get your own card" self-serve flow (`site/get-your-card.html`), what is proven, and Phill's founder-only decisions |
 | `wow/` | Six Higgsfield concept briefs (`concepts.json`) with their real input images and a 10% credit cap; four ready to generate, two waiting on real photos |
 | `research-notes.md` | Higgsfield in depth, review-engine rules, business list, competitor sweep, "lavish" search |
 

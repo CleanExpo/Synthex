@@ -196,6 +196,12 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
     <div class="brands" id="links"></div>
   </section>
 
+  <section aria-labelledby="own-h" style="display:grid;gap:10px;padding:18px;border-radius:18px;background:var(--panel);border:1px solid var(--line)">
+    <h2 id="own-h" style="font-size:20px">Want a card like this?</h2>
+    <p class="lede" style="margin:0">Your own living card, in your own brand, built from your logo and website.</p>
+    <a class="btn primary" id="own-card" href="#">Get your own card<small id="own-card-note">Set it up in a few minutes</small></a>
+  </section>
+
   <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px">
     <h2 id="live-h" style="font-size:20px">What works right now</h2>
     <ul class="status-list" id="status-list">
@@ -326,6 +332,14 @@ async function copy(text, el) {
   if (small) small.textContent = msg; else el.textContent = msg;
   if (ok) setTimeout(() => { if (small) small.textContent = before; else el.textContent = before; }, 1600);
 }
+
+// "Get your own card": every card carries its own id as the referrer, so we know which card sold which
+(function ownCard() {
+  const a = $("own-card"), ref = encodeURIComponent(KIT.id || "unknown");
+  if (HOSTED) { a.href = "get-your-card.html?ref=" + ref; return; }
+  a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
+  $("own-card-note").textContent = "Opens on the hosted card, not in this preview";
+})();
 
 if (HOSTED) {
   document.querySelectorAll("#status-list li[data-hosted]").forEach(li => {

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Get Your Own Card</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<style>
+/* Seller page in Unite Group's brand kit (brand-kits/phill-mcgurk.json): lead colour #E55A2B (Phill's decision 22/10/2026), Inter.
+   Layout: one column of numbered steps; on wide screens the live preview sits beside them. */
+:root {
+  --bg: #FFFFFF; --fg: #16181D; --brand: #E55A2B; --brand-ink: #FFFFFF; --warn: #B4462B; --ok: #1E7B55;
+  --muted: color-mix(in srgb, var(--fg) 62%, var(--bg)); --panel: color-mix(in srgb, var(--fg) 5%, var(--bg)); --line: color-mix(in srgb, var(--fg) 14%, var(--bg));
+  --font: "Inter", system-ui, "Segoe UI", Arial, sans-serif; --mono: ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; }
+[hidden] { display: none !important; }
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 28px; }
+.cols { display: grid; gap: 28px; grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) 400px; } .previewbox { position: sticky; top: 16px; } }
+h1 { font-size: clamp(30px, 7vw, 44px); line-height: 1.05; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+h2 { font-size: 20px; margin: 0; display: flex; gap: 10px; align-items: baseline; }
+h2 .n { font: 600 13px var(--mono); color: var(--brand); }
+.lede { color: var(--muted); margin: 6px 0 0; max-width: 62ch; }
+.step { border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 12px; min-width: 0; }
+label { display: grid; gap: 5px; font-size: 13.5px; color: var(--muted); }
+input, textarea, select { font: 16px var(--font); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+textarea { min-height: 96px; resize: vertical; }
+.grid2 { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+.sw { display: grid; gap: 4px; justify-items: center; font: 12px var(--mono); cursor: pointer; border: 2px solid transparent; border-radius: 12px; padding: 6px; background: none; color: var(--fg); }
+.sw[aria-pressed="true"] { border-color: var(--fg); }
+.sw i { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); display: block; }
+.found { font-size: 14px; display: grid; gap: 4px; }
+.found b { font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.found .ok { color: var(--ok); } .found .miss { color: var(--warn); }
+.pkgs { display: grid; gap: 10px; }
+.pkg { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: baseline; border: 1px solid var(--line); border-radius: 14px; padding: 14px; cursor: pointer; }
+.pkg:has(input:checked) { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 7%, var(--bg)); }
+.pkg input { width: auto; }
+.pkg strong { font-size: 16px; } .pkg .price { font: 600 16px var(--font); font-variant-numeric: tabular-nums; }
+.pkg small { grid-column: 2 / -1; color: var(--muted); font-size: 13.5px; }
+.btn { font: 600 15px var(--font); border: 0; border-radius: 12px; padding: 13px 18px; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+.btn.primary { background: var(--brand); color: var(--brand-ink); }
+.btn.ghost { background: var(--panel); color: var(--fg); border: 1px solid var(--line); }
+.notice { border: 1px dashed var(--warn); border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
+.notice b { color: var(--warn); font: 600 12px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.45 var(--mono); background: var(--panel); border-radius: 10px; padding: 12px; }
+.previewbox { display: grid; gap: 10px; min-width: 0; }
+.phone { border: 10px solid #16181D; border-radius: 34px; overflow: hidden; height: 720px; max-height: 80vh; background: #fff; }
+.phone iframe { width: 100%; height: 100%; border: 0; display: block; }
+.fine { font-size: 12.5px; color: var(--muted); margin: 0; }
+.ref { font: 12px var(--mono); color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header style="display:grid;gap:8px">
+    <span class="ref" id="ref-line"></span>
+    <h1>Get your own living card</h1>
+    <p class="lede">Built from your own logo, colours and details. You see it take shape on the right as you go. Nothing is charged today.</p>
+  </header>
+
+  <div class="cols">
+    <div style="display:grid;gap:16px;min-width:0">
+      <section class="step" id="step-website">
+        <h2><span class="n">01</span>Your website</h2>
+        <label for="site">Website address<input id="site" type="url" inputmode="url" placeholder="https://yourbusiness.com.au" value="https://www.example-restorations.com.au"></label>
+        <p class="fine">We use your own site to confirm your fonts and services when we build your card. We never copy anything you haven't approved.</p>
+      </section>
+
+      <section class="step" id="step-logo">
+        <h2><span class="n">02</span>Your logo and colours</h2>
+        <label for="logo">Upload your logo (PNG, JPG, SVG or WebP)<input id="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp"></label>
+        <div class="found" id="found"></div>
+        <div id="swatch-area" hidden>
+          <p class="fine" style="margin-bottom:8px">Colours measured from your logo. Tap the one that should lead.</p>
+          <div class="swatches" id="swatches" role="group" aria-label="Lead colour"></div>
+        </div>
+        <label for="hex">Or enter your exact brand colour<input id="hex" type="text" placeholder="#E55A2B" maxlength="7" autocomplete="off"></label>
+      </section>
+
+      <section class="step" id="step-details">
+        <h2><span class="n">03</span>Your details</h2>
+        <div class="grid2">
+          <label for="d-name">Your name<input id="d-name" autocomplete="name" value="Sam Example"></label>
+          <label for="d-title">Role<input id="d-title" value="Owner, Example Restorations"></label>
+          <label for="d-biz">Business name<input id="d-biz" autocomplete="organization" value="Example Restorations"></label>
+          <label for="d-mobile">Mobile<input id="d-mobile" type="tel" autocomplete="tel" value="0400 000 000"></label>
+          <label for="d-email">Email<input id="d-email" type="email" autocomplete="email" value="sam@example.com.au"></label>
+          <label for="d-intro">One line about you<input id="d-intro" value="Water, fire and mould restoration across Ipswich."></label>
+        </div>
+        <p class="fine">Example entries shown. Replace them with yours.</p>
+      </section>
+
+      <section class="step" id="step-links">
+        <h2><span class="n">04</span>Businesses to link</h2>
+        <label for="links">One per line: name, then the web address<textarea id="links">Example Restorations | https://www.example-restorations.com.au
+Our Google reviews | https://www.google.com/maps</textarea></label>
+      </section>
+
+      <section class="step" id="step-package">
+        <h2><span class="n">05</span>Choose your card</h2>
+        <div class="pkgs" role="radiogroup" aria-label="Package">
+          <label class="pkg"><input type="radio" name="pkg" value="card"><strong>Card</strong><span class="price">$99</span><small>Your card page, save to contacts, QR code, 3 links.</small></label>
+          <label class="pkg"><input type="radio" name="pkg" value="living"><strong>Living card</strong><span class="price">$179</span><small>Plus a short motion intro made from your own photos.</small></label>
+          <label class="pkg"><input type="radio" name="pkg" value="living-inbox" checked><strong>Living card + inbox</strong><span class="price">$249</span><small>Plus an enquiry inbox that filters spam and replies for you, and the rule-safe review flow. 12 months.</small></label>
+        </div>
+        <p class="fine">AUD. Indicative prices, not yet final.</p>
+      </section>
+
+      <section class="step" id="step-pay">
+        <h2><span class="n">06</span>Pay and we build it</h2>
+        <div class="notice" id="pay-off">
+          <b>Coming soon</b>
+          <p style="margin:0">Online payment isn't switched on yet. Register your interest now and we'll build your card and send you a private proof to approve before you pay anything.</p>
+          <button class="btn primary" type="button" id="interest">Register your interest</button>
+        </div>
+        <a class="btn primary" id="pay-on" hidden href="#">Pay securely with Stripe</a>
+        <div id="interest-out" hidden style="display:grid;gap:10px">
+          <div class="notice"><b>Not sent yet</b><p style="margin:0">Your details are ready. Send them from your own email to <span id="inbox"></span>, or copy them. Our assistant inbox is not connected yet.</p></div>
+          <pre id="interest-text"></pre>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">
+            <button class="btn ghost" type="button" id="copy">Copy</button>
+            <a class="btn ghost" id="mail" href="#">Open in email app</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="step" id="step-next">
+        <h2><span class="n">07</span>What happens next</h2>
+        <p style="margin:0">We build your card from your logo and website, send you a private proof link, and you approve it or ask for one round of changes. Then it goes live at its own address with a QR code you can print.</p>
+      </section>
+    </div>
+
+    <aside class="previewbox" id="preview" aria-label="Live preview of your card">
+      <h2 style="font-size:16px">Live preview</h2>
+      <div class="phone"><iframe id="frame" title="Your card preview"></iframe></div>
+      <p class="fine" id="preview-note">Updates as you type. Brand items you haven't supplied are listed at the bottom of the card, not invented.</p>
+    </aside>
+  </div>
+</div>
+
+<script>
+// Payments stay off until Phill approves the live Stripe account, price and terms (see purchase-flow.md).
+// When approved, set this to { card: "https://buy.stripe.com/...", living: "...", "living-inbox": "..." }.
+const PAYMENT_LINKS = null;
+const INTEREST_TO = "Phill@disasterrecovery.com.au"; // until the assistant inbox is connected
+
+const $ = id => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const REF = (params.get("ref") || "").replace(/[^a-z0-9-]/gi, "").slice(0, 60) || "direct";
+$("ref-line").textContent = REF === "direct" ? "" : "Shared from " + REF + "'s card";
+$("inbox").textContent = INTEREST_TO;
+
+let template = null, logoUri = null, measured = [], lead = null, leadSource = null;
+
+// Colours measured from the buyer's own logo (their asset; nothing is guessed)
+function measure(img) {
+  const c = document.createElement("canvas"), n = 64; c.width = n; c.height = n;
+  const x = c.getContext("2d"); x.drawImage(img, 0, 0, n, n);
+  const d = x.getImageData(0, 0, n, n).data, counts = new Map();
+  for (let i = 0; i < d.length; i += 4) {
+    if (d[i + 3] < 200) continue;
+    const [r, g, b] = [d[i], d[i + 1], d[i + 2]];
+    if (r > 235 && g > 235 && b > 235) continue;            // background white
+    // group similar pixels, but keep their real values so the reported colour is the logo's own, not a rounded one
+    const key = ((r >> 4) << 8) | ((g >> 4) << 4) | (b >> 4);
+    const s = counts.get(key) || { n: 0, r: 0, g: 0, b: 0 };
+    s.n++; s.r += r; s.g += g; s.b += b; counts.set(key, s);
+  }
+  const hex = s => "#" + [s.r, s.g, s.b].map(v => Math.round(v / s.n).toString(16).padStart(2, "0")).join("").toUpperCase();
+  const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const out = [];
+  [...counts.values()].sort((a, b) => b.n - a.n).forEach(s => {
+    const h = hex(s), c1 = rgb(h);
+    if (out.length < 4 && out.every(o => { const c2 = rgb(o); return Math.hypot(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2]) > 60; })) out.push(h);
+  });
+  return out;
+}
+
+function renderFound() {
+  const items = [
+    ["Logo", !!logoUri, logoUri ? "your upload" : "not supplied yet"],
+    ["Lead colour", !!lead, lead ? lead + " (" + leadSource + ")" : "not supplied yet"],
+    ["Fonts", false, "we match yours from your website, or name the closest open font"],
+    ["Photos", false, "you send your own for the motion intro"]
+  ];
+  $("found").textContent = "";
+  items.forEach(([k, ok, v]) => {
+    const row = document.createElement("div"); const b = document.createElement("b");
+    b.className = ok ? "ok" : "miss"; b.textContent = ok ? "Found" : "Missing"; row.append(b, " " + k + ": " + v); $("found").append(row);
+  });
+}
+
+$("logo").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    logoUri = r.result;
+    const img = new Image();
+    img.onload = () => {
+      try { measured = measure(img); } catch (err) { measured = []; }
+      $("swatches").textContent = "";
+      measured.forEach((h, i) => {
+        const b = document.createElement("button"); b.type = "button"; b.className = "sw"; b.setAttribute("aria-pressed", String(i === 0));
+        const s = document.createElement("i"); s.style.background = h; b.append(s, h);
+        b.addEventListener("click", () => { lead = h; leadSource = "measured from your logo"; document.querySelectorAll(".sw").forEach(o => o.setAttribute("aria-pressed", String(o === b))); update(); });
+        $("swatches").append(b);
+      });
+      $("swatch-area").hidden = !measured.length;
+      if (measured.length && !$("hex").value) { lead = measured[0]; leadSource = "measured from your logo"; }
+      update();
+    };
+    img.src = logoUri;
+  };
+  r.readAsDataURL(f);
+});
+$("hex").addEventListener("input", e => {
+  const v = e.target.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) { lead = v.toUpperCase(); leadSource = "entered by you"; update(); }
+});
+
+function kit() {
+  const links = $("links").value.split("\n").map(l => l.split("|").map(s => s.trim())).filter(p => p[0])
+    .slice(0, 6).map(([label, url]) => ({ label, url: /^https:\/\//.test(url || "") ? url : null, note: /^https:\/\//.test(url || "") ? "" : "Link to add" }));
+  const mobile = $("d-mobile").value.trim();
+  return {
+    id: "your-card",
+    brand: {
+      name: $("d-biz").value.trim() || "Your business",
+      logo: logoUri ? { status: "found", dataUri: logoUri, source: "your upload" } : { status: "missing" },
+      colours: {
+        primary: lead ? { value: lead, source: leadSource } : { status: "missing" },
+        background: { status: "missing" }, text: { status: "missing" }
+      },
+      fonts: {},
+      about: { status: "missing" }, imagery: { status: "missing" }
+    },
+    person: {
+      name: $("d-name").value.trim(), title: $("d-title").value.trim(), intro: $("d-intro").value.trim(), org: $("d-biz").value.trim(),
+      phones: mobile ? [{ label: "Mobile", display: mobile, tel: mobile.replace(/[^+0-9]/g, ""), type: "CELL" }] : [],
+      emails: $("d-email").value.trim() ? [{ label: "Email", value: $("d-email").value.trim(), primary: true }] : [],
+      links, features: {}
+    }
+  };
+}
+
+let timer = null;
+function update() {
+  renderFound();
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!template) return;
+    const json = JSON.stringify(kit()).replace(/</g, "\\u003c");
+    $("frame").srcdoc = '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>' +
+      template.replace('<script id="brand-kit" type="application/json">{}<\/script>', '<script id="brand-kit" type="application/json">' + json + '<\/script>') + "</body></html>";
+  }, 250);
+}
+document.querySelectorAll("#step-details input, #links").forEach(el => el.addEventListener("input", update));
+
+fetch("card-template.html").then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+  .then(t => { template = t; update(); })
+  .catch(() => { $("preview-note").textContent = "The live preview could not load. Your details are still kept on this page."; renderFound(); });
+
+function pkg() { const c = document.querySelector('input[name="pkg"]:checked'); return c ? c.value : "living-inbox"; }
+
+if (PAYMENT_LINKS) {
+  $("pay-off").hidden = true; $("pay-on").hidden = false;
+  const setLink = () => {
+    const base = PAYMENT_LINKS[pkg()]; if (!base) return;
+    const u = new URL(base); u.searchParams.set("client_reference_id", REF + "__" + pkg());
+    const em = $("d-email").value.trim(); if (em) u.searchParams.set("prefilled_email", em);
+    $("pay-on").href = u.toString();
+  };
+  document.querySelectorAll('input[name="pkg"], #d-email').forEach(el => el.addEventListener("input", setLink)); setLink();
+}
+
+$("interest").addEventListener("click", () => {
+  const k = kit();
+  const text = [
+    "Card interest from " + (k.person.name || "(no name)") + ", " + (k.person.org || "(no business)"),
+    "Package: " + pkg(),
+    "Website: " + $("site").value.trim(),
+    "Mobile: " + ($("d-mobile").value.trim() || "-") + "   Email: " + ($("d-email").value.trim() || "-"),
+    "Lead colour: " + (lead ? lead + " (" + leadSource + ")" : "not supplied"),
+    "Logo: " + (logoUri ? "uploaded on the page (please attach it to this email)" : "not supplied"),
+    "Links: " + (k.person.links.map(l => l.label + (l.url ? " " + l.url : "")).join("; ") || "-"),
+    "Referred by: " + REF
+  ].join("\n");
+  $("interest-text").textContent = text; $("interest-out").hidden = false;
+  $("mail").href = "mailto:" + INTEREST_TO + "?subject=" + encodeURIComponent("Card interest via " + REF) + "&body=" + encodeURIComponent(text);
+});
+$("copy").addEventListener("click", async e => {
+  try { await navigator.clipboard.writeText($("interest-text").textContent); e.target.textContent = "Copied"; }
+  catch (err) { e.target.textContent = "Select the text above to copy"; }
+});
+renderFound();
+</script>
+</body>
+</html>

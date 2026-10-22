@@ -63,6 +63,11 @@ yearly renewal; that decision is open. `[UNCONFIRMED]`
 7. **Go live**: publish at a permanent address, e.g. `cards.<domain>/<name>`. Set up the inbox tier if
    bought.
 8. **Hand over**: link, QR code as PNG and SVG, a 20-second "how to share it" note.
+9. **Get your own card**: every finished card carries a "Get your own card" button with its own id as
+   the referrer. A viewer who wants one sets it up themselves (website, logo, details, live preview,
+   package) and pays, which starts this flow again at step 1. Payment is switched off until Phill
+   approves the live Stripe account, prices and terms (see purchase-flow.md). `[VERIFIED: built and
+   browser-tested locally]`
 
 Turnaround target: 3 business days. `[INFERENCE]`
 
