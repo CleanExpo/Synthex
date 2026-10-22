@@ -190,6 +190,12 @@ body:not(.owner) .owner-only { display: none !important; }
 .bizline { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 14px; }
 .bizline a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 1px; }
 .ownlink { justify-self: center; font-size: 14px; color: var(--muted); }
+/* A business's demo: its desktop screenshot as the thumbnail, linking to the video on YouTube */
+.bizthumb { position: relative; display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 9; background: var(--stage); }
+.bizthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bizthumb .play { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: rgba(4,8,14,.75); box-shadow: 0 0 0 3px var(--brand); }
+.bizthumb .play::after { content: ""; position: absolute; left: 26px; top: 20px; border-left: 20px solid #FFFFFF; border-top: 12px solid transparent; border-bottom: 12px solid transparent; }
 .ownlink small { display: none; }
 /* The white rabbit's surprise: a gift that pops open with one practical idea */
 .surprise { position: fixed; inset: 0; z-index: 60; background: rgba(4,8,14,.88); display: grid; place-items: center; padding: 16px; }
@@ -388,6 +394,13 @@ body:not(.owner) .owner-only { display: none !important; }
   </section>
 
   <nav class="bizline" id="bizline" aria-label="Businesses" hidden></nav>
+  <div class="surprise bizsheet" id="biz-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="biz-h">
+    <div class="gift">
+      <h2 id="biz-h"></h2>
+      <a class="bizthumb" id="biz-watch" target="_blank" rel="noopener"><img id="biz-thumb" alt=""><span class="play" aria-hidden="true"></span></a>
+      <div class="row"><a class="btn primary" id="biz-watch-btn" target="_blank" rel="noopener">Watch the demo</a><a class="btn" id="biz-visit" target="_blank" rel="noopener">Visit site</a><button class="btn" type="button" id="biz-close">Close</button></div>
+    </div>
+  </div>
   <a class="ownlink" id="own-card" href="#">Want a card like this?<small id="own-card-note"></small></a>
 
   <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px" hidden>
@@ -511,7 +524,13 @@ function lum(hex) {
   // The businesses a visitor can reach: a quiet line of names, not buttons
   const vis = links.filter(l => l.visitor && /^https:\/\//.test(l.url || ""));
   if (vis.length) {
-    vis.forEach(l => { const a = document.createElement("a"); a.href = l.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label; $("bizline").append(a); });
+    vis.forEach(l => {
+      const a = document.createElement("a"); a.href = l.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label;
+      // a business with a demo video opens its panel (desktop thumbnail, watch, visit) instead of leaving the card
+      const v = l.video || {};
+      if (/^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || "")) a.addEventListener("click", e => { e.preventDefault(); openBiz(l); });
+      $("bizline").append(a);
+    });
     $("bizline").hidden = false;
   }
   const f = P.features || {};
@@ -1204,6 +1223,18 @@ if (!rabbit.hidden) {
 $("surprise-more").addEventListener("click", surprise);
 $("surprise-close").addEventListener("click", () => { $("surprise").hidden = true; });
 $("surprise").addEventListener("click", e => { if (e.target === $("surprise")) $("surprise").hidden = true; });
+// A business's panel: its demo video (thumbnail and button go to YouTube) and its site
+function openBiz(l) {
+  const v = l.video || {}, yt = "https://youtu.be/" + v.youtubeId;
+  $("biz-h").textContent = l.label;
+  const src = (HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg";
+  $("biz-thumb").src = src; $("biz-thumb").alt = l.label + " demo video";
+  $("biz-watch").href = yt; $("biz-watch-btn").href = yt; $("biz-visit").href = l.url;
+  $("biz-sheet").hidden = false; SFX.whoosh();
+}
+$("biz-close").addEventListener("click", () => { $("biz-sheet").hidden = true; });
+$("biz-sheet").addEventListener("click", e => { if (e.target === $("biz-sheet")) $("biz-sheet").hidden = true; });
+
 // Review: one quiet button opens the review wheel
 $("review-open").addEventListener("click", e => {
   const open = $("review").hidden; $("review").hidden = !open; e.currentTarget.setAttribute("aria-expanded", String(open));

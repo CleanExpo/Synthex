@@ -496,6 +496,55 @@ try {
       'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
     );
     await ctx.close();
+  } else if (MODE === 'panel') {
+    // Each business with a demo video: tapping its name opens a panel whose thumbnail and Watch go to YouTube
+    const { ctx, page, errors } = await phone();
+    await page.goto(BASE + '?to=Sam');
+    await page.waitForTimeout(1200);
+    const kit = await page.evaluate(() =>
+      JSON.parse(document.getElementById('brand-kit').textContent)
+    );
+    const withVideo = kit.person.links.filter(
+      l => l.visitor && l.url && l.video && l.video.youtubeId
+    );
+    check(
+      withVideo.length >= 6,
+      'businesses with a demo video: ' + withVideo.length
+    );
+    for (const l of withVideo) {
+      await page.click(`#bizline a:text-is("${l.label}")`);
+      await page.waitForTimeout(400);
+      const yt = 'https://youtu.be/' + l.video.youtubeId;
+      const got = await page.evaluate(() => ({
+        open: !document.getElementById('biz-sheet').hidden,
+        thumb: document.getElementById('biz-thumb').naturalWidth,
+        watch: document.getElementById('biz-watch').href,
+        btn: document.getElementById('biz-watch-btn').href,
+        visit: document.getElementById('biz-visit').href,
+      }));
+      check(
+        got.open &&
+          got.thumb >= 320 &&
+          got.watch === yt &&
+          got.btn === yt &&
+          got.visit.startsWith(l.url),
+        `${l.label} panel: ${JSON.stringify(got)}`
+      );
+      await page.click('#biz-close');
+    }
+    const primaries = await page.evaluate(
+      () =>
+        [...document.querySelectorAll('.btn.primary')].filter(b => {
+          const r = b.getBoundingClientRect();
+          return b.offsetParent && r.top < innerHeight && r.bottom > 0;
+        }).length
+    );
+    check(primaries === 1, 'still one primary action on the first screen');
+    check(
+      errors.length === 0,
+      'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
+    );
+    await ctx.close();
   } else if (MODE === 'oneclick') {
     // Someone the card is shared with: one obvious action, and it saves the contact
     const { ctx, page, errors } = await phone();

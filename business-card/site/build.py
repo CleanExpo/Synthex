@@ -111,6 +111,12 @@ def main(card_path, kit_path, out):
     logo = (kit.get("brand") or {}).get("logo") or {}
     if logo.get("status") == "found" and logo.get("file"):
         brand_h["logo"]["hostedUrl"], brand_p["logo"]["dataUri"] = media(logo["file"])
+    # Demo video thumbnails (desktop screenshots) for the business panel; the videos themselves stay on YouTube
+    for lh, lp in zip((hosted.get("person") or {}).get("links", []), (preview.get("person") or {}).get("links", [])):
+        v = lh.get("video") or {}
+        if v.get("youtubeId") and v.get("thumb"):
+            lh["video"]["hostedThumb"], lp["video"]["thumbDataUri"] = media(v["thumb"])
+
     def clip(src, dst_h, dst_p, inline):
         """Ship one opener: files for the hosted page; data URIs in the preview only when inline is set."""
         if src.get("status") == "found" and src.get("video"):
