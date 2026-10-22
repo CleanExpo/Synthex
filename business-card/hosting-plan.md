@@ -25,7 +25,7 @@ README.md.
 | Domain | **No extra cost.** Already owned; its normal renewal is unchanged | `[VERIFIED: renew: true on the existing domain]` |
 | DNS | **No extra cost.** Existing wildcard record | `[VERIFIED]` |
 | Hosting plan | **No extra cost.** Uses the existing Unite-Group Vercel team | `[VERIFIED: team exists]`; plan tier not shown by the API `[UNCONFIRMED]` |
-| Usage | **Expected under AUD $1 a month.** A single static page (26 KB) and a 386-byte contact file; no functions, database or paid add-ons | The whole team billed about US$0.64 across every project for 30/09–02/10/2026 `[VERIFIED: Vercel billing charges]`; the card's share is `[INFERENCE]` |
+| Usage | **Expected under AUD $1 a month.** A single static page (about 52 KB with the logo embedded) and a 386-byte contact file; no functions, database or paid add-ons | The whole team billed about US$0.64 across every project for 30/09–02/10/2026 `[VERIFIED: Vercel billing charges]`; the card's share is `[INFERENCE]` |
 | Paid add-ons | **None** | — |
 
 **Total: no extra fixed cost; usage expected under AUD $1 a month.**
