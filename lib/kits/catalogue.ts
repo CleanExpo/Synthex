@@ -49,7 +49,7 @@ export const KITS: Kit[] = [
         what: 'Sitemap ping client (retired endpoints)',
         wired: true,
         testPath: 'tests/unit/sitemap-regen.test.ts',
-        note: 'Lines 28-31 still build google.com/ping and bing.com/ping URLs. Google retired its endpoint (404) and Bing removed anonymous submission (410); see spec K1. Replace with IndexNow.',
+        note: 'Sends nothing: Google retired its sitemap ping endpoint (404) and Bing removed anonymous submission (410), so every ping reports retired (spec K1). Replacements: lib/indexnow and lib/bing-webmaster.',
       },
       {
         kind: 'in-repo',

@@ -9,14 +9,14 @@ Keeps `disasterrecovery.com.au/sitemap.xml` in sync with newly-generated per-sub
 
 ## Files
 
-| File               | Purpose                                                                       |
-| ------------------ | ----------------------------------------------------------------------------- |
-| `types.ts`         | `LocationOpenedEvent` · `SitemapUrl` · `SitemapRegenResult` · `PingResult`    |
-| `url-builder.ts`   | `slugifySuburb` · `buildLandingPageUrl` · `urlForEvent`                       |
-| `xml.ts`           | Pure W3C urlset parser + serialiser (no external XML lib, no XXE surface)     |
-| `sitemap-regen.ts` | `regenerateSitemapForLocations(currentXml, events, opts?)` — idempotent merge |
-| `ping-client.ts`   | `pingSearchEngine` / `pingAllSearchEngines` — 1/hour rate-limited per target  |
-| `index.ts`         | Public re-exports                                                             |
+| File               | Purpose                                                                               |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `types.ts`         | `LocationOpenedEvent` · `SitemapUrl` · `SitemapRegenResult` · `PingResult`            |
+| `url-builder.ts`   | `slugifySuburb` · `buildLandingPageUrl` · `urlForEvent`                               |
+| `xml.ts`           | Pure W3C urlset parser + serialiser (no external XML lib, no XXE surface)             |
+| `sitemap-regen.ts` | `regenerateSitemapForLocations(currentXml, events, opts?)` — idempotent merge         |
+| `ping-client.ts`   | `pingSearchEngine` / `pingAllSearchEngines` — retired; send nothing, report `retired` |
+| `index.ts`         | Public re-exports                                                                     |
 
 ## Hard rules (binding behaviour)
 
@@ -24,7 +24,7 @@ Keeps `disasterrecovery.com.au/sitemap.xml` in sync with newly-generated per-sub
 2. **Source-of-truth job ID required** on every event (Q3.2.4 H8). Throws otherwise.
 3. **Service category must be `water-damage`, `fire`, or `mould`.** Mirrors SYN-838 page-generator scope.
 4. **Sorted output** — entries serialised in ascending `loc` order so git diffs stay readable.
-5. **Ping rate limit: 1/hour per target.** In-memory counter per Node process. For multi-instance fan-out, replace with Redis counter.
+5. **Sitemap pings are retired.** Google retired its ping endpoint (404, https://developers.google.com/search/blog/2023/06/sitemaps-lastmod-ping) and Bing removed anonymous submission (410, https://blogs.bing.com/webmaster/may-2022/Spring-cleaning-Removed-Bing-anonymous-sitemap-submission). The ping functions send nothing and return `pinged: false, retired: true`. Use Search Console sitemaps (`lib/google/search-console.ts`), IndexNow (`lib/indexnow`) and Bing Webmaster SubmitFeed (`lib/bing-webmaster`).
 6. **No file I/O.** This module returns the new XML string; the caller writes the file and opens the cross-repo PR.
 
 ## Usage
@@ -50,7 +50,7 @@ if (result.added.length > 0) {
   const pings = await pingAllSearchEngines(
     'https://disasterrecovery.com.au/sitemap.xml'
   );
-  // pings: PingResult[] — one per target, may be { pinged:false, reason:'rate-limited ...' }
+  // pings: PingResult[] — one per target, always { pinged:false, retired:true, reason } — nothing is sent
 }
 ```
 
@@ -81,7 +81,6 @@ const result = regenerateSitemapForLocations(currentXml, events, {
 
 - **No external XML library.** sitemap.org spec is small enough that a regex parser is safer (no XXE attack surface, no transitive churn). Trade-off: we don't preserve unknown extension elements (e.g. `image:image`) on round-trip. Acceptable since DR's sitemap only uses core urlset fields.
 - **Single sitemap only.** No sitemap-index support. Revisit when DR exceeds 50,000 URLs.
-- **In-memory ping rate limit.** Per-process counter. For multi-instance deploys this is best-effort — each Node process tracks its own. Acceptable for a daily cron; revisit with Redis if SYN-834 grows multiple workers regenerating in parallel.
 - **Pure regen function.** No file I/O. Caller controls when/where to write — keeps cross-repo deploy concerns out of this module.
 
 ## What this layer does NOT do
