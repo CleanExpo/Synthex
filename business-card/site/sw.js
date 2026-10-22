@@ -1,5 +1,5 @@
-// Built by build.py; do not edit by hand. Version 120242361cc2
-const CACHE = 'card-120242361cc2';
+// Built by build.py; do not edit by hand. Version 2a54be20cc81
+const CACHE = 'card-2a54be20cc81';
 const SHELL = [
   './',
   'phill-mcgurk.vcf',
