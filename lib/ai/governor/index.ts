@@ -18,6 +18,8 @@
  *      in an emergency. A killed runner must not cause a credential decrypt.
  *   3. BYOK — the brand's own key, or a refusal. Never a platform key.
  *   4. BUDGET — priced from the registry's own per-model rates.
+ *      4b. BUILD CAP — only when the call carries `build`: the build's
+ *      ledger spend (run_id = buildId) plus the estimate must fit its cap.
  *   5. CALL — the caller's provider call, reached only if 1-4 all passed.
  *   6. RECEIPT — written on every path, with the ACTUAL token counts when the
  *      call ran and zeros when it did not.
@@ -47,6 +49,7 @@ import { getModel, type ModelConfig } from '@/lib/ai/model-registry';
 import { resolveRunnerFlag } from './flags';
 import { resolveBrandApiKey } from './byok';
 import { checkBudget } from './budget';
+import { checkBuildCap } from './build-cap';
 import { estimateCostUsd, resolveModel } from './model';
 import { writeReceipt } from './receipts';
 import { GOVERNOR_MODE } from './mode';
@@ -64,6 +67,17 @@ export * from './types';
 export { resolveRunnerFlag } from './flags';
 export { resolveBrandApiKey } from './byok';
 export { checkBudget, readProviderCeiling, startOfUtcDay } from './budget';
+export {
+  checkBuildCap,
+  getBuildSpend,
+  resolveBuildCapUsd,
+  BuildSpendUnreadableError,
+  DEFAULT_BUILD_CAP_USD,
+  type GovernedBuild,
+  type BuildCapDecision,
+  type BuildCapDetail,
+  type BuildSpend,
+} from './build-cap';
 export { estimateCostUsd, resolveModel } from './model';
 export { writeReceipt } from './receipts';
 export { GOVERNOR_MODE } from './mode';
@@ -98,7 +112,11 @@ export async function governedCall<T>(
     estimate,
   } = input;
   const mode = input.mode ?? 'enforcing';
-  const runId = input.runId ?? randomUUID();
+  // A build's buildId IS the ledger run_id of every call in it, so the build's
+  // spend is one SUM over run_id (see build-cap.ts).
+  const runId = input.build
+    ? String(input.build.buildId ?? '')
+    : (input.runId ?? randomUUID());
   const decidedAt = new Date().toISOString();
 
   const baseProvenance = {
@@ -365,6 +383,45 @@ export async function governedCall<T>(
     );
   }
 
+  // --- 4b. Per-build spending cap (opt-in via input.build) ----------------
+  // Reached only when the brand's own budget already allows the call; the
+  // build cap is an extra ceiling, never a substitute for the brand budget.
+  const build = input.build;
+  if (build && input.runId !== undefined && input.runId !== build.buildId) {
+    // Two ledger keys for one call would put its spend outside the build's
+    // SUM. Refuse rather than guess which one the caller meant.
+    return deny(
+      'refused_budget_untrusted_input',
+      'budget_untrusted_input:build_run_id_mismatch',
+      {
+        ...baseProvenance,
+        modelId: resolved.id,
+        flagVerdict: flag.verdict,
+        keyVerdict: key.verdict,
+        budgetVerdict: 'budget_untrusted_input:build_run_id_mismatch',
+        budgetDetail: budget.detail,
+        errorClass: 'build_run_id_mismatch',
+      }
+    );
+  }
+  const buildCap = build ? await checkBuildCap(build, estimatedCostUsd) : null;
+  if (buildCap && !buildCap.allowed) {
+    return deny(
+      (buildCap.outcome ?? 'refused_build_cap_exceeded') as GovernorRefusal,
+      buildCap.verdict,
+      {
+        ...baseProvenance,
+        modelId: resolved.id,
+        flagVerdict: flag.verdict,
+        keyVerdict: key.verdict,
+        budgetVerdict: buildCap.verdict,
+        budgetDetail: budget.detail,
+        buildCap: buildCap.detail,
+        errorClass: buildCap.verdict,
+      }
+    );
+  }
+
   // --- 5. The provider call, then 6. its receipt -------------------------
   return run({
     ...baseProvenance,
@@ -373,6 +430,7 @@ export async function governedCall<T>(
     keyVerdict: key.verdict,
     budgetVerdict: budget.verdict,
     budgetDetail: budget.detail,
+    ...(buildCap ? { buildCap: buildCap.detail } : {}),
   });
 }
 
