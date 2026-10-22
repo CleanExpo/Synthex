@@ -368,6 +368,27 @@ try {
       ),
       'QR drawn'
     );
+    // no signal: the contact code carries the contact itself, noting where you met
+    await page.click('#pass-offline');
+    const vc = await page.getAttribute('#pass-qr', 'data-vcard');
+    check(
+      vc.startsWith('BEGIN:VCARD') &&
+        vc.includes('EMAIL:airestoreassist@gmail.com') &&
+        vc.includes('NOTE:Met at Melbourne ') &&
+        !vc.includes('TEL'),
+      'offline contact code holds the contact and where you met'
+    );
+    check(
+      await page.evaluate(
+        () => !!document.querySelector('#pass-qr canvas, #pass-qr img')
+      ),
+      'offline contact code drawn'
+    );
+    await page.click('#pass-offline');
+    check(
+      /[?&]to=Alex/.test(await page.getAttribute('#pass-qr', 'data-url')),
+      'switches back to the card code'
+    );
     await page.click('#pass-close');
     // sound: on by default, started by the first tap anywhere (the taps above); the button mutes and unmutes
     let s = await page.evaluate(() => window.CARD_SFX.state());

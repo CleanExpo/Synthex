@@ -272,6 +272,7 @@ body:not(.owner) .owner-only { display: none !important; }
       <div class="wide">
         <select id="pass-at" aria-label="Where you met"><option value="">Where we met: not set</option></select>
         <button type="button" id="pass-send">Send the link instead</button>
+        <button type="button" id="pass-offline" aria-pressed="false" style="grid-column:1/-1">No signal? Contact code</button>
       </div>
     </form>
     <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p></div>
@@ -974,14 +975,35 @@ async function shareLink(url, el) {
   copy(url, el);
 }
 let passAnim = null;
+// No signal at the venue? The contact code carries the contact itself, so their camera saves it with no
+// internet, noting where and when you met. Starts in this mode when the phone is offline.
+let passOffline = false;
+// Kept lean and plain ASCII so it fits a QR code a phone camera reads at arm's length
+function offlineVcard() {
+  const met = eventById($("pass-at").value), today = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const ascii = s => String(s || "").normalize("NFKD").replace(/[^\x20-\x7E]/g, "").replace(/[;,\\]/g, " ").trim();
+  const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "";
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + ascii(last) + ";" + ascii(parts.join(" ")) + ";;;", "FN:" + ascii(P.name)];
+  if (P.org) lines.push("ORG:" + ascii(P.org));
+  if (P.title) lines.push("TITLE:" + ascii(P.title.split(",")[0]));
+  (P.emails || []).slice(0, 1).forEach(e => lines.push("EMAIL:" + ascii(e.value)));
+  if (P.cardUrl) lines.push("URL:" + ascii(P.cardUrl));
+  lines.push("NOTE:Met " + (met ? "at " + ascii(met.label) + " " : "") + today, "END:VCARD");
+  return lines.join("\r\n");
+}
 function drawPassQR() {
-  const q = $("pass-qr"), url = cardLink($("pass-name").value, $("pass-at").value); q.textContent = ""; q.dataset.url = url;
-  if (url && window.QRCode) new QRCode(q, { text: url, width: 200, height: 200, colorDark: "#0A1120", colorLight: "#FFFFFF" });
+  const q = $("pass-qr"), url = cardLink($("pass-name").value, $("pass-at").value); q.textContent = "";
+  const text = passOffline ? offlineVcard() : url;
+  q.dataset.url = passOffline ? "" : url; q.dataset.vcard = passOffline ? text : "";
+  if (text && window.QRCode) new QRCode(q, { text, width: passOffline ? 240 : 200, height: passOffline ? 240 : 200, colorDark: "#0A1120", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.L });
   else q.textContent = url || "The code appears once the card has its own web address.";
   const who = cleanName($("pass-name").value);
-  $("pass-label").textContent = who ? "Scan, " + who : "Scan to get this card";
+  $("pass-label").textContent = passOffline ? "Scan to save " + ((P.name || "").split(" ")[0] || "me") : who ? "Scan, " + who : "Scan to get this card";
+  $("pass-offline").textContent = passOffline ? "Show the card code" : "No signal? Contact code";
+  $("pass-offline").setAttribute("aria-pressed", String(passOffline));
 }
 $("pass-btn").addEventListener("click", () => {
+  passOffline = navigator.onLine === false;
   $("pass-on").hidden = false; $("pass-at").value = currentAt(); drawPassQR(); SFX.whoosh();
   $("pass-hint").textContent = HOSTED ? "Point a phone camera at the code." : "Preview: the code points to the card's planned address (" + (CARD_URL || "not set") + "), which is not live yet.";
   const tile = $("pass-tile"), top = () => $("pass-form").getBoundingClientRect().bottom + 12;
@@ -1000,6 +1022,7 @@ $("pass-btn").addEventListener("click", () => {
 });
 $("pass-form").addEventListener("submit", e => { e.preventDefault(); drawPassQR(); $("pass-name").blur(); });
 $("pass-at").addEventListener("change", drawPassQR);
+$("pass-offline").addEventListener("click", () => { passOffline = !passOffline; drawPassQR(); });
 $("pass-send").addEventListener("click", e => shareLink(cardLink($("pass-name").value, $("pass-at").value), e.currentTarget));
 $("pass-close").addEventListener("click", () => { $("pass-on").hidden = true; if (passAnim) cancelAnimationFrame(passAnim); });
 
