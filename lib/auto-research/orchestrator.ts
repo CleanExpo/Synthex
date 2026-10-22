@@ -13,6 +13,10 @@ import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { runActor } from './apify/client';
 import { ACTOR_REGISTRY } from './apify/actors';
+import {
+  linkedInPostSearchCall,
+  linkedInSearchPosts,
+} from './apify/linkedinPostSearch';
 import { analyseScrapedPosts } from './trend-analyzer';
 import { optimisePrompts } from './prompt-optimizer';
 import { updateClientInsights } from '@/lib/obsidian/business-dna-vault';
@@ -62,11 +66,25 @@ async function runResearch(
       if (!actor) continue;
 
       try {
-        // 2. Scrape via Apify
-        const posts = await runActor<ScrapedPost>(
-          actor.actorId,
-          actor.buildInput({ limit })
-        );
+        // 2. Scrape via Apify. LinkedIn stays on the registry actor unless
+        // SYNTHEX_LINKEDIN_POST_SEARCH_ACTOR is exactly the optional actor.
+        const linkedIn =
+          platform === 'linkedin'
+            ? linkedInPostSearchCall(
+                process.env.SYNTHEX_LINKEDIN_POST_SEARCH_ACTOR,
+                { limit },
+                actor
+              )
+            : null;
+        const posts = linkedIn
+          ? linkedInSearchPosts(
+              await runActor<unknown>(linkedIn.actorId, linkedIn.input),
+              linkedIn.optional
+            )
+          : await runActor<ScrapedPost>(
+              actor.actorId,
+              actor.buildInput({ limit })
+            );
 
         logger.info('AutoResearch: scraped platform', {
           platform,
