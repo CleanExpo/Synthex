@@ -44,6 +44,7 @@ a { color: var(--brand); }
 .stage:has(video.hero-full) .name p { display: none; }
 .stage:has(video.hero-full) .rabbit { top: 12%; }
 .intro-below { margin: -16px 0 0; color: var(--muted); }
+.edition-label { margin: -18px 0 0; justify-self: center; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .replay { justify-self: center; font: 500 13px var(--body); color: var(--muted); background: none; border: 1px solid var(--line);
   border-radius: 999px; padding: 7px 14px; cursor: pointer; margin-top: -14px; }
 .stage .name { z-index: 3; }
@@ -164,6 +165,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
   </section>
 
   <p class="intro-below" id="intro-below" hidden></p>
+  <p class="edition-label" id="edition-label" hidden></p>
   <button class="replay" type="button" id="replay" hidden>Replay · another edition</button>
 
   <button class="btn primary passbtn" type="button" id="pass-btn">Pass it on<small>Let someone scan this card off your screen</small></button>
@@ -474,14 +476,20 @@ function startHero() {
   $("greet").classList.add("on");
 }
 
-// Openers available to this view: the signature reveal plus every edition this page can play
-function heroList() {
+// Openers this view can play: the signature reveal plus every edition shipped with the page
+function allHeroes() {
   const list = [];
   if ((B.hero || {}).status === "found") list.push(["signature", B.hero]);
   Object.entries(B.editions || {}).forEach(([n, e]) => {
     if (e && e.status === "found" && ((HOSTED && e.hostedVideo) || e.videoDataUri)) list.push([n, e]);
   });
   return list;
+}
+// The card rotates only the light subset named in the kit (B.rotation); ?edition= can still open any of them
+function heroList() {
+  const all = allHeroes(), rot = Array.isArray(B.rotation) ? B.rotation : null;
+  const list = rot ? all.filter(([n]) => rot.includes(n)) : all;
+  return list.length ? list : all;
 }
 // Rotation: remembers the last opener this browser saw and plays the next; falls back to a random pick
 function nextIndex(len) {
@@ -496,7 +504,7 @@ function nextIndex(len) {
 function pickHero() {
   const list = heroList(); if (!list.length) return null;
   const forced = (QS.get("edition") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 30);
-  return list.find(([n]) => n === forced) || list[nextIndex(list.length)];
+  return allHeroes().find(([n]) => n === forced) || list[nextIndex(list.length)];
 }
 function mountHero(entry) {
   const old = $("hero-video"); if (old) old.remove();
@@ -520,6 +528,9 @@ function mountHero(entry) {
   v.addEventListener("error", () => { v.remove(); placeholders.forEach(el => { el.hidden = false; }); });
   $("water").after(v);
   $("intro-below").hidden = hero.fit !== "cover";
+  const lbl = $("edition-label");
+  lbl.textContent = name === "signature" ? "Signature reveal" : name.charAt(0).toUpperCase() + name.slice(1) + " edition";
+  lbl.hidden = allHeroes().length < 2;
   return v;
 }
 // Replay: crack again and play the next edition
@@ -567,9 +578,19 @@ $("pass-btn").addEventListener("click", () => {
 $("pass-close").addEventListener("click", () => { $("pass-on").hidden = true; if (passAnim) cancelAnimationFrame(passAnim); });
 
 // "Get your own card": every card carries its own id as the referrer, so we know which card sold which
+// The target comes only from the kit (B.shopUrl), so it can move to the unite-group.in showroom in one edit
 (function ownCard() {
   const a = $("own-card"), ref = encodeURIComponent(KIT.id || "unknown");
-  if (HOSTED) { a.href = "get-your-card.html?ref=" + ref; return; }
+  if (HOSTED && B.shopUrl) {
+    const link = () => {
+      const ed = ($("hero-video") && $("hero-video").dataset.edition) || "signature";
+      return B.shopUrl + (B.shopUrl.includes("?") ? "&" : "?") + "ref=" + ref + "&edition=" + encodeURIComponent(ed);
+    };
+    a.href = link();
+    a.addEventListener("click", () => { a.href = link(); });   // carries whichever edition is showing now
+    $("own-card-note").textContent = "Start with the edition you just saw";
+    return;
+  }
   a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
   $("own-card-note").textContent = "Opens on the hosted card, not in this preview";
 })();

@@ -95,6 +95,10 @@
       "status": "missing",
       "note": "no real photos of Phill supplied yet"
     },
+    "rotation": ["signature", "origami", "blueprint", "restoration"],
+    "rotationReason": "Card stays light: smallest files with the strongest logo hold. Signature 0.97 MB carries the crack moment; Origami 0.77 MB (smallest) has the boldest logo; Blueprint 0.98 MB clean navy hold; Restoration 1.05 MB tells the restoration story. All ten stay recorded for ?edition= and the unite-group.in showroom. Chosen 22/10/2026; Phill can swap any via the board.",
+    "shopUrl": "get-your-card.html",
+    "shopUrlNote": "Single switch for the Get your own card target. Change to the unite-group.in showroom page once it is live.",
     "reviews": {
       "status": "missing",
       "note": "Google Business Profile not yet connected in the Nexus portal; the card needs only the public Place ID from that connection"

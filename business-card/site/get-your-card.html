@@ -54,6 +54,12 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.45
 .phone iframe { width: 100%; height: 100%; border: 0; display: block; }
 .fine { font-size: 12.5px; color: var(--muted); margin: 0; }
 .ref { font: 12px var(--mono); color: var(--muted); }
+.eds { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
+.ed { position: relative; display: grid; gap: 6px; cursor: pointer; font: 500 12.5px var(--font); text-align: center; color: var(--fg); }
+.ed input { position: absolute; opacity: 0; pointer-events: none; }
+.ed img { width: 100%; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 10px; border: 3px solid transparent; background: #0A1120; }
+.ed:has(input:checked) img { border-color: var(--brand); }
+.ed:has(input:focus-visible) img { outline: 2px solid var(--fg); outline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -83,8 +89,15 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.45
         <label for="hex">Or enter your exact brand colour<input id="hex" type="text" placeholder="#E55A2B" maxlength="7" autocomplete="off"></label>
       </section>
 
+      <section class="step" id="step-edition">
+        <h2><span class="n">03</span>Your opener</h2>
+        <p class="fine">Each card cracks open onto a short film that ends on your logo. These examples end on the Unite-Group logo; yours ends on your own.</p>
+        <div class="eds" id="eds" role="radiogroup" aria-label="Opener edition"></div>
+        <p class="fine" id="eds-note"></p>
+      </section>
+
       <section class="step" id="step-details">
-        <h2><span class="n">03</span>Your details</h2>
+        <h2><span class="n">04</span>Your details</h2>
         <div class="grid2">
           <label for="d-name">Your name<input id="d-name" autocomplete="name" value="Sam Example"></label>
           <label for="d-title">Role<input id="d-title" value="Owner, Example Restorations"></label>
@@ -97,13 +110,13 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.45
       </section>
 
       <section class="step" id="step-links">
-        <h2><span class="n">04</span>Businesses to link</h2>
+        <h2><span class="n">05</span>Businesses to link</h2>
         <label for="links">One per line: name, then the web address<textarea id="links">Example Restorations | https://www.example-restorations.com.au
 Our Google reviews | https://www.google.com/maps</textarea></label>
       </section>
 
       <section class="step" id="step-package">
-        <h2><span class="n">05</span>Choose your card</h2>
+        <h2><span class="n">06</span>Choose your card</h2>
         <div class="pkgs" role="radiogroup" aria-label="Package">
           <label class="pkg"><input type="radio" name="pkg" value="card"><strong>Card</strong><span class="price">$99</span><small>Your card page, save to contacts, QR code, 3 links.</small></label>
           <label class="pkg"><input type="radio" name="pkg" value="living"><strong>Living card</strong><span class="price">$179</span><small>Plus a short motion intro made from your own photos.</small></label>
@@ -113,7 +126,7 @@ Our Google reviews | https://www.google.com/maps</textarea></label>
       </section>
 
       <section class="step" id="step-pay">
-        <h2><span class="n">06</span>Pay and we build it</h2>
+        <h2><span class="n">07</span>Pay and we build it</h2>
         <div class="notice" id="pay-off">
           <b>Coming soon</b>
           <p style="margin:0">Online payment isn't switched on yet. Register your interest now and we'll build your card and send you a private proof to approve before you pay anything.</p>
@@ -131,7 +144,7 @@ Our Google reviews | https://www.google.com/maps</textarea></label>
       </section>
 
       <section class="step" id="step-next">
-        <h2><span class="n">07</span>What happens next</h2>
+        <h2><span class="n">08</span>What happens next</h2>
         <p style="margin:0">We build your card from your logo and website, send you a private proof link, and you approve it or ask for one round of changes. Then it goes live at its own address with a QR code you can print.</p>
       </section>
     </div>
@@ -266,6 +279,22 @@ fetch("card-template.html").then(r => { if (!r.ok) throw new Error(r.status); re
   .then(t => { template = t; update(); })
   .catch(() => { $("preview-note").textContent = "The live preview could not load. Your details are still kept on this page."; renderFound(); });
 
+// Opener editions: the same catalogue the card ships (editions.json), preselected from ?edition=
+const WANT = (params.get("edition") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 30);
+fetch("editions.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(list => {
+  const box = $("eds");
+  list.forEach((e, i) => {
+    const lab = document.createElement("label"); lab.className = "ed";
+    const inp = document.createElement("input"); inp.type = "radio"; inp.name = "edition"; inp.value = e.name;
+    inp.checked = e.name === WANT || (!WANT && i === 0);
+    const img = document.createElement("img"); img.src = e.poster; img.alt = e.label; img.loading = "lazy";
+    lab.append(inp, img, e.label); box.append(lab);
+  });
+  if (WANT && !list.some(e => e.name === WANT)) box.querySelector("input").checked = true;
+  $("eds-note").textContent = WANT && list.some(e => e.name === WANT) ? "Preselected: the edition you just saw." : "";
+}).catch(() => { $("eds-note").textContent = "The editions could not load. We'll pick one with you when we build your card."; });
+function edition() { const c = document.querySelector('input[name="edition"]:checked'); return c ? c.value : (WANT || "signature"); }
+
 function pkg() { const c = document.querySelector('input[name="pkg"]:checked'); return c ? c.value : "living-inbox"; }
 
 if (PAYMENT_LINKS) {
@@ -284,6 +313,7 @@ $("interest").addEventListener("click", () => {
   const text = [
     "Card interest from " + (k.person.name || "(no name)") + ", " + (k.person.org || "(no business)"),
     "Package: " + pkg(),
+    "Opener edition: " + edition(),
     "Website: " + $("site").value.trim(),
     "Mobile: " + ($("d-mobile").value.trim() || "-") + "   Email: " + ($("d-email").value.trim() || "-"),
     "Lead colour: " + (lead ? lead + " (" + leadSource + ")" : "not supplied"),
