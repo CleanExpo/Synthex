@@ -22,6 +22,7 @@ export function buildCourse(facts: CourseFacts, provider: JsonLd): PackOutput {
   assertNoAccreditationClaims({
     'course.name': facts.name,
     'course.description': facts.description,
+    'course.url': facts.url,
   });
   return {
     jsonLd: {

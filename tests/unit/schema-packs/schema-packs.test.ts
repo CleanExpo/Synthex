@@ -180,6 +180,31 @@ describe('accreditation-claim guard (CARSI is not an RTO)', () => {
     ).toThrow(AccreditationClaimError);
   });
 
+  it('refuses a claim in the course URL slug', () => {
+    expect(() =>
+      buildCourse(
+        {
+          name: 'Water Damage',
+          description: 'Practical training.',
+          url: 'https://carsi.com.au/courses/nationally-recognised',
+        },
+        org
+      )
+    ).toThrow(AccreditationClaimError);
+  });
+
+  it('refuses a claim in an organisation sameAs link inside the course-provider pack', () => {
+    expect(() =>
+      courseProviderPack({
+        organization: {
+          ...CARSI,
+          sameAs: ['https://example.com/carsi-rto-listing'],
+        },
+        courses: [],
+      })
+    ).toThrow(AccreditationClaimError);
+  });
+
   it('refuses a claim in the organisation description inside the course-provider pack', () => {
     expect(() =>
       courseProviderPack({

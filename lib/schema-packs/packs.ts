@@ -28,6 +28,16 @@ export function courseProviderPack(input: {
     'organization.name': input.organization.name,
     'organization.legalName': input.organization.legalName,
     'organization.description': input.organization.description,
+    'organization.url': input.organization.url,
+    'organization.logo': input.organization.logo,
+    'organization.email': input.organization.email,
+    'organization.telephone': input.organization.telephone,
+    ...Object.fromEntries(
+      (input.organization.sameAs ?? []).map((link, i) => [
+        `organization.sameAs[${i}]`,
+        link,
+      ])
+    ),
   });
   const org = buildOrganization(input.organization, {
     type: 'EducationalOrganization',
