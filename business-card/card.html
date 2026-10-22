@@ -140,6 +140,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 .passon .tile { position: absolute; left: 0; top: 0; background: #FFFFFF; border-radius: 18px; padding: 14px; border: 4px solid var(--brand);
   box-shadow: 0 0 40px color-mix(in srgb, var(--brand) 60%, transparent); display: grid; gap: 8px; justify-items: center; will-change: transform; }
 .passon .tile p { margin: 0; color: #0A1120; font: 600 13px var(--display); }
+.passon .tile .qr-domain { font: 500 12px var(--mono); color: #3A4150; }
 .passon .close { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: max(16px, env(safe-area-inset-top, 0px));
   font: 600 15px var(--body); color: #FFFFFF; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 10px 16px; cursor: pointer; }
 .passon .hint { position: absolute; left: 0; right: 0; bottom: max(24px, env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 14px; color: rgba(255,255,255,.75); padding: 0 16px; }
@@ -183,6 +184,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 /* One action for visitors: save; everything marked owner-only shows only in the owner's view */
 body:not(.owner) .owner-only { display: none !important; }
 .save-hero { font-size: 19px; padding: 18px; text-align: center; justify-items: center; box-shadow: 0 10px 30px color-mix(in srgb, var(--brand) 35%, transparent); }
+#burst { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 55; pointer-events: none; }
 .save-hint { margin: -16px 0 0; text-align: center; font-weight: 600; color: var(--fg); }
 .btn.quiet { background: none; text-align: center; justify-items: center; font-weight: 500; color: var(--fg); }
 .ownlink { justify-self: center; font-size: 14px; color: var(--muted); }
@@ -237,6 +239,7 @@ body:not(.owner) .owner-only { display: none !important; }
 
   <button class="btn primary save-hero" type="button" id="save">Save to my phone</button>
   <p class="save-hint" id="save-hint" role="status" hidden></p>
+  <canvas id="burst" aria-hidden="true"></canvas>
   <div class="out" id="save-out" hidden>
     <span class="tag">Preview limit</span>
     <p class="fine" style="margin:0">This preview blocks the contact file. On the card's own address it saves in one tap. For now, copy the details below.</p>
@@ -258,7 +261,7 @@ body:not(.owner) .owner-only { display: none !important; }
         <button type="button" id="pass-offline" aria-pressed="false" style="grid-column:1/-1">No signal? Contact code</button>
       </div>
     </form>
-    <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p></div>
+    <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p><p id="pass-domain" class="qr-domain"></p></div>
     <p class="hint" id="pass-hint">Point a phone camera at the code.</p>
   </div>
 
@@ -982,6 +985,7 @@ function drawPassQR() {
   else q.textContent = url || "The code appears once the card has its own web address.";
   const who = cleanName($("pass-name").value);
   $("pass-label").textContent = passOffline ? "Scan to save " + ((P.name || "").split(" ")[0] || "me") : who ? "Scan, " + who : "Scan to get this card";
+  $("pass-domain").textContent = passOffline ? "Saves with no internet" : (url ? new URL(url).host : "");
   $("pass-offline").textContent = passOffline ? "Show the card code" : "No signal? Contact code";
   $("pass-offline").setAttribute("aria-pressed", String(passOffline));
 }
@@ -1050,6 +1054,7 @@ function lockScreen() {
   x.fillText(P.name || "", W / 2, qy + size + 200);
   x.font = "500 52px " + getComputedStyle(document.documentElement).getPropertyValue("--body");
   x.fillStyle = "rgba(255,255,255,.75)"; x.fillText("Scan for my card", W / 2, qy + size + 290);
+  try { if (url) { x.font = "500 44px " + getComputedStyle(document.documentElement).getPropertyValue("--mono"); x.fillStyle = "rgba(255,255,255,.6)"; x.fillText(new URL(url).host, W / 2, qy + size + 370); } } catch (e) {}
   const finish = () => c.toBlob(async blob => {
     const name = (KIT.id || "card") + "-lock-screen.png";
     const img = $("lock-img"); img.src = URL.createObjectURL(blob); img.hidden = false; img.dataset.height = String(H);
@@ -1097,7 +1102,9 @@ $("save").addEventListener("click", () => {
   if (HOSTED && KIT.id) {
     // Phones finish the save themselves: say the one tap that is left (Android browsers download the file)
     const android = /Android/i.test(navigator.userAgent);
-    $("save-hint").textContent = android ? "Now open the downloaded file and tap Save." : "Now tap Create New Contact.";
+    const warm = GREET ? (EVENT ? "Great to meet you at " + EVENT.label + ", " + GREET + ". " : "Great to meet you, " + GREET + ". ") : "";
+    $("save-hint").textContent = warm + (android ? "Now open the downloaded file and tap Save." : "Now tap Create New Contact.");
+    SFX.chime(); confetti("burst");
     $("save-hint").hidden = false;
     location.href = KIT.id + ".vcf"; return;
   }
@@ -1165,9 +1172,9 @@ function surprise() {
   $("surprise").hidden = false; const g = $("gift"); g.style.animation = "none"; void g.offsetWidth; g.style.animation = "";
   SFX.chime(); confetti();
 }
-function confetti() {
+function confetti(id = "confetti") {
   if (REDUCED) return;
-  const c = $("confetti"), x = c.getContext("2d"), d = Math.min(devicePixelRatio || 1, 2);
+  const c = $(id), x = c.getContext("2d"), d = Math.min(devicePixelRatio || 1, 2);
   c.width = innerWidth * d; c.height = innerHeight * d;
   const brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#FFFFFF";
   const cols = [brand, "#FFFFFF", "#FFD9CC"], bits = Array.from({ length: 90 }, () => ({
