@@ -281,6 +281,22 @@ describe('PATCH /api/approvals/[id] approve checks the wording is unchanged', ()
     expect(lastAudit('approval_approve')).toBeUndefined();
   });
 
+  it('refuses with 409 content_changed when the post was deleted after submission, and records no approval', async () => {
+    seedPost();
+    const id = await submit();
+    mockDb.posts.delete('post-1');
+
+    const res = await act(id, 'approve', 'reviewer-1');
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.code).toBe('content_changed');
+    const row = mockDb.approvals.get(id)!;
+    expect(row.status).toBe('pending');
+    expect(row.steps[0].currentApprovals).toBe(0);
+    expect(lastAudit('approval_approve')).toBeUndefined();
+  });
+
   it('resubmit re-binds to the current wording, after which approval succeeds', async () => {
     seedPost();
     const id = await submit();

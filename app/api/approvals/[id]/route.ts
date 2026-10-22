@@ -635,7 +635,9 @@ export async function PATCH(
         where: { id: approval.contentId },
         select: { content: true, platform: true },
       });
-      if (post && action === 'approve') {
+      if (action === 'approve') {
+        // A missing post fails a bound request; only an unbound (legacy)
+        // request may still be approved without one.
         binding = checkPostBinding(approval.metadata, post);
       }
       if (post && action === 'resubmit') {
@@ -663,7 +665,7 @@ export async function PATCH(
               error: 'Conflict',
               code: 'content_changed',
               message:
-                'The post was edited after it was sent for approval. Resubmit it so reviewers approve the current wording.',
+                'The post was edited or removed after it was sent for approval. Resubmit it so reviewers approve the current wording.',
             },
             { status: 409 }
           );
