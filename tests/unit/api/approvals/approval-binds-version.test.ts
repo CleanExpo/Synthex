@@ -25,6 +25,8 @@ const mockDb = {
   approvals: new Map<string, Row>(),
   audit: [] as Row[],
   currentUser: 'submitter-1',
+  // What getEffectiveOrganizationId returns; null means no org context.
+  orgId: 'org-1' as string | null,
   nextId: 1,
 };
 
@@ -47,6 +49,21 @@ const mockPrisma: Record<string, any> = {
     findUnique: async ({ where }: { where: Row }) => {
       const row = mockDb.posts.get(where.id);
       return row ? mockClone(row) : null;
+    },
+    // Honours the post -> campaign scope the POST route asks for: by
+    // campaign.organizationId, or by campaign.userId (the owner).
+    findFirst: async ({ where }: { where: Row }) => {
+      const row = mockDb.posts.get(where.id);
+      if (!row) return null;
+      const scope = where.campaign ?? {};
+      if (
+        'organizationId' in scope &&
+        row.organizationId !== scope.organizationId
+      ) {
+        return null;
+      }
+      if ('userId' in scope && row.ownerId !== scope.userId) return null;
+      return mockClone(row);
     },
   },
   approvalRequest: {
@@ -101,7 +118,7 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 
 jest.mock('@/lib/multi-business', () => ({
   __esModule: true,
-  getEffectiveOrganizationId: async () => 'org-1',
+  getEffectiveOrganizationId: async () => mockDb.orgId,
 }));
 
 jest.mock('@/lib/rate-limit', () => ({
@@ -127,13 +144,35 @@ import {
 const SUBMITTED_TEXT = 'RestoreAssist: start a 14-day trial this week.';
 const EDITED_TEXT = 'RestoreAssist: guaranteed results, start today.';
 
-function seedPost(content = SUBMITTED_TEXT) {
+function seedPost(
+  content = SUBMITTED_TEXT,
+  organizationId: string | null = 'org-1',
+  ownerId = 'submitter-1'
+) {
   mockDb.posts.set('post-1', {
     id: 'post-1',
     content,
     platform: 'linkedin',
     status: 'draft',
+    // Stand in for post.campaign.organizationId and post.campaign.userId.
+    organizationId,
+    ownerId,
   });
+}
+
+async function postApproval() {
+  mockDb.currentUser = 'submitter-1';
+  return POST(
+    createMockNextRequest({
+      method: 'POST',
+      url: 'http://localhost/api/approvals',
+      body: {
+        contentId: 'post-1',
+        contentType: 'post',
+        title: 'Approve post',
+      },
+    })
+  );
 }
 
 function editPost(content: string) {
@@ -211,6 +250,7 @@ beforeEach(() => {
   mockDb.posts.clear();
   mockDb.approvals.clear();
   mockDb.audit.length = 0;
+  mockDb.orgId = 'org-1';
   mockDb.nextId = 1;
 });
 
@@ -235,6 +275,43 @@ describe('POST /api/approvals binds a post approval to its wording', () => {
     expect(
       mockDb.approvals.get(id)!.metadata[CONTENT_FINGERPRINT_KEY]
     ).not.toBe(forged);
+  });
+
+  it('refuses with 404 a post from another organisation, and creates no approval', async () => {
+    seedPost(SUBMITTED_TEXT, 'org-2');
+
+    const res = await postApproval();
+    const body = await res.json();
+
+    expect(res.status).toBe(404);
+    expect(body).toEqual({ error: 'Not Found', message: 'Post not found' });
+    expect(mockDb.approvals.size).toBe(0);
+    expect(lastAudit('approval_request_created')).toBeUndefined();
+  });
+
+  it('with no org context, binds a post on a campaign the caller owns', async () => {
+    mockDb.orgId = null;
+    seedPost(SUBMITTED_TEXT, null, 'submitter-1');
+
+    const res = await postApproval();
+
+    expect(res.status).toBeLessThan(300);
+    const [row] = [...mockDb.approvals.values()];
+    expect(row.metadata[CONTENT_FINGERPRINT_KEY]).toBe(
+      postContentFingerprint({ content: SUBMITTED_TEXT, platform: 'linkedin' })
+    );
+  });
+
+  it("with no org context, refuses with 404 another user's post, and creates no approval", async () => {
+    mockDb.orgId = null;
+    seedPost(SUBMITTED_TEXT, null, 'someone-else');
+
+    const res = await postApproval();
+    const body = await res.json();
+
+    expect(res.status).toBe(404);
+    expect(body).toEqual({ error: 'Not Found', message: 'Post not found' });
+    expect(mockDb.approvals.size).toBe(0);
   });
 });
 
@@ -307,6 +384,34 @@ describe('PATCH /api/approvals/[id] approve checks the wording is unchanged', ()
     expect(mockDb.approvals.get(id)!.metadata[CONTENT_FINGERPRINT_KEY]).toBe(
       postContentFingerprint({ content: EDITED_TEXT, platform: 'linkedin' })
     );
+
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    expect(mockDb.approvals.get(id)!.status).toBe('approved');
+  });
+
+  it('resubmit after an edit resets every step, so an earlier approval of the old wording does not count', async () => {
+    seedPost();
+    const id = await submit();
+    // Step 0 approves the submitted wording; then the post is edited.
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    expect(mockDb.approvals.get(id)!.steps[0].status).toBe('approved');
+    editPost(EDITED_TEXT);
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(409);
+
+    expect((await act(id, 'resubmit', 'submitter-1')).status).toBe(200);
+
+    const row = mockDb.approvals.get(id)!;
+    expect(row.currentStep).toBe(0);
+    for (const step of row.steps) {
+      expect(step.status).toBe('pending');
+      expect(step.currentApprovals).toBe(0);
+      expect(step.approvedBy).toBeUndefined();
+    }
+
+    // The new wording needs both steps approved again.
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    expect(mockDb.approvals.get(id)!.status).not.toBe('approved');
 
     expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
     expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);

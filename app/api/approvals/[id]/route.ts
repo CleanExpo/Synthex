@@ -28,6 +28,7 @@ import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
 import {
   bindPostFingerprint,
   checkPostBinding,
+  CONTENT_FINGERPRINT_KEY,
   type ContentBinding,
 } from '@/lib/approvals/content-fingerprint';
 
@@ -847,6 +848,24 @@ export async function PATCH(
         currentStep.status = 'pending';
         currentStep.currentApprovals = 0;
 
+        // If the wording changed since it was bound, approvals of earlier
+        // steps were for the old wording: reset every step and start again.
+        const previousFingerprint = (
+          approval.metadata as Record<string, unknown> | null
+        )?.[CONTENT_FINGERPRINT_KEY];
+        if (
+          reboundMetadata !== null &&
+          reboundMetadata[CONTENT_FINGERPRINT_KEY] !== previousFingerprint
+        ) {
+          for (const step of steps) {
+            step.status = 'pending';
+            step.currentApprovals = 0;
+            delete step.approvedBy;
+            delete step.approvedAt;
+          }
+          newCurrentStep = 0;
+        }
+
         if (comment) {
           currentStep.comments.push({
             id: `cmt_${Date.now()}`,
@@ -861,8 +880,8 @@ export async function PATCH(
 
         newStatus = 'in_review';
 
-        // Notify step assignees
-        for (const assigneeId of currentStep.assignedTo) {
+        // Notify the assignees of the step the request now waits on
+        for (const assigneeId of steps[newCurrentStep].assignedTo) {
           if (assigneeId !== '*') {
             await createApprovalNotification(
               assigneeId,
