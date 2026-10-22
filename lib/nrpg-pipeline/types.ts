@@ -99,10 +99,10 @@ export interface NrpgPipelineOptions {
   /** Override the postcode resolver dataset (tests). */
   postcodeResolveOptions?: ResolveOptions;
 
-  /** Override fetch for sitemap pings (tests). */
+  /** Ignored: the sitemap pings are retired and send nothing. */
   pingFetch?: typeof fetch;
 
-  /** Skip the Google + Bing webmaster ping (e.g. local dev). Defaults to false. */
+  /** Skip the (retired) ping results entirely. Defaults to false. */
   skipPing?: boolean;
 }
 
