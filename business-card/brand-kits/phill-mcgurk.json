@@ -19,16 +19,15 @@
       "source": "config/brand-logo-sources.json: exact bytes from unite-group.in, vector traced deterministically"
     },
     "colours": {
-      "primary": {"value": "#E55A2B", "source": "packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026"},
-      "logo": {"value": "#00DCE3", "source": "measured from public/logos/unite/primary.svg (the unite-group.in logo)"},
+      "primary": {"value": "#E55A2B", "source": "packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026", "decision": "Lead colour, decided by Phill 22/10/2026: \"Keep the verified orange #E55A2B as the main colour.\""},
+      "logo": {"value": "#00DCE3", "use": "logo only", "source": "measured from public/logos/unite/primary.svg (the unite-group.in logo)"},
       "secondary": {"status": "missing", "note": "#1E293B is proposed in unite.ts:17 but not verified"},
       "accent": {"status": "missing", "note": "#FBBF24 is proposed in unite.ts:18 but not verified"},
       "background": {"status": "missing", "note": "no confirmed page colour; the template uses plain white"},
       "text": {"status": "missing", "note": "no confirmed text colour; the template uses near-black"}
     },
-    "conflicts": [
-      "The brand config's verified primary is orange #E55A2B, but the logo on unite-group.in is cyan #00DCE3. Phill to confirm which leads."
-    ],
+    "conflicts": [],
+    "resolved": ["Orange #E55A2B vs the logo's cyan #00DCE3: orange leads; cyan stays inside the logo only (Phill, 22/10/2026)."],
     "fonts": {
       "display": {"family": "Inter", "weight": 700, "licence": "SIL Open Font License 1.1", "embedAllowed": true, "googleFonts": "Inter:wght@400;600;700", "source": "packages/brand-config/src/brands/unite.ts:25 (font not yet verified against the website)"},
       "body": {"family": "Inter", "weight": 400, "licence": "SIL Open Font License 1.1", "embedAllowed": true, "googleFonts": "Inter:wght@400;600;700", "source": "packages/brand-config/src/brands/unite.ts:29"}

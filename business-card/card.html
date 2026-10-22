@@ -10,7 +10,7 @@
   --stage: #14171C;       /* template neutral: motion stage */
   --brand: #3A3F48;       /* replaced by the kit's primary colour */
   --brand-ink: #FFFFFF;   /* text on the brand colour, chosen by contrast */
-  --glow: #8A93A3;        /* replaced by the kit's logo colour, else primary */
+  --glow: #8A93A3;        /* replaced by the kit's primary colour */
   --warn: #B4462B;        /* semantic: not connected yet */
   --ok: #1E7B55;          /* semantic: live */
   --muted: color-mix(in srgb, var(--fg) 62%, var(--bg));
@@ -231,8 +231,8 @@ function lum(hex) {
   if (isSet(c.background)) root.setProperty("--bg", c.background.value);
   if (isSet(c.text)) root.setProperty("--fg", c.text.value);
   if (isSet(c.primary)) { root.setProperty("--brand", c.primary.value); root.setProperty("--brand-ink", lum(c.primary.value) > .45 ? "#111111" : "#FFFFFF"); }
-  const glow = isSet(c.logo) ? c.logo.value : isSet(c.primary) ? c.primary.value : null;
-  if (glow) root.setProperty("--glow", glow);
+  // The lead colour drives every accent; a logo's own colours stay inside the logo
+  if (isSet(c.primary)) root.setProperty("--glow", c.primary.value);
   const fonts = B.fonts || {}, families = [];
   ["display", "body"].forEach(role => {
     const f = fonts[role]; if (!f) return;

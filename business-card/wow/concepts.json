@@ -20,7 +20,7 @@
       "inputs": ["inputs/unite-logo.png"],
       "aspect": "9:16",
       "durationSeconds": 3,
-      "prompt": "Pitch-black background. Hundreds of tiny cyan points of light drift in and lock together into exactly this logo, then a single soft pulse of light runs across it. Keep the logo's shape, lettering and cyan colour exactly as in the source image. No other text, no people.",
+      "prompt": "Pitch-black background. Hundreds of tiny warm orange (#E55A2B) points of light drift in and lock together into exactly this logo, then a single soft orange pulse runs across it. The logo itself keeps its shape, lettering and original colour exactly as in the source image. No other text, no people.",
       "whyItWows": "The first second someone opens the card, the brand builds itself in their hand."
     },
     {
@@ -33,7 +33,7 @@
       "inputs": ["inputs/card-screen.png"],
       "aspect": "9:16",
       "durationSeconds": 3,
-      "prompt": "Start tight on this phone screen showing the glowing living card exactly as in the source image. The camera pulls back and up to reveal the phone lying on a table among dozens of plain, identical white paper business cards. Only the phone is lit and moving; the paper cards are flat and grey. No faces.",
+      "prompt": "Start tight on this phone screen showing the glowing living card exactly as in the source image. The camera pulls back and up to reveal the phone lying on a table among dozens of plain, identical white paper business cards. Only the phone is lit, with a warm orange (#E55A2B) glow around it; the paper cards are flat and grey. No faces.",
       "whyItWows": "Phill's 'one donkey among the horses' idea in a single shot: everyone else hands out paper."
     },
     {
@@ -46,7 +46,7 @@
       "inputs": ["inputs/card-screen.png"],
       "aspect": "9:16",
       "durationSeconds": 3,
-      "prompt": "A hand holds a matte black NFC card against the top of this phone. On contact a ring of cyan light ripples out from the card and the phone screen blooms into the living card shown in the source image. Slow push-in. Only a hand is visible, no face.",
+      "prompt": "A hand holds a matte black NFC card against the top of this phone. On contact a ring of warm orange (#E55A2B) light ripples out from the card and the phone screen blooms into the living card shown in the source image. Slow push-in. Only a hand is visible, no face.",
       "whyItWows": "Shows the trade-show moment: no app, no typing, one tap."
     },
     {
@@ -59,7 +59,7 @@
       "inputs": ["inputs/card-screen.png"],
       "aspect": "9:16",
       "durationSeconds": 3,
-      "prompt": "The camera flies forward into the dark motion panel of this card, through the cyan logo, into a deep space of soft cyan light, as if the card opens into a world behind the screen. Keep the logo exactly as in the source. No people.",
+      "prompt": "The camera flies forward into the dark motion panel of this card, through the logo, into a deep space of soft warm orange (#E55A2B) light, as if the card opens into a world behind the screen. Keep the logo exactly as in the source. No people.",
       "whyItWows": "Turns a contact card into a doorway, which is where the game and the businesses live."
     },
     {
