@@ -8,7 +8,7 @@
  */
 
 const ACCREDITATION_CLAIM =
-  /nationally\s+recogni[sz]ed|\bAQF\b|registered\s+training\s+organi[sz]ation|\bRTO\b/i;
+  /national(?:ly)?[\s-]+(?:recogni[sz]ed|recognition|accredited)|\bAQF\b|registered[\s-]+training[\s-]+organi[sz]ations?|\bRTOs?\b/i;
 
 export class AccreditationClaimError extends Error {
   constructor(readonly field: string) {

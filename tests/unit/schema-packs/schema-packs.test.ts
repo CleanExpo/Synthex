@@ -162,6 +162,11 @@ describe('accreditation-claim guard (CARSI is not an RTO)', () => {
     'An AQF Certificate IV pathway',
     'CARSI, a Registered Training Organisation',
     'Delivered by an RTO',
+    'A nationally-recognised course',
+    'Partnered with RTOs across Australia',
+    'Training with national recognition',
+    'Nationally accredited training',
+    'CARSI, a Registered-Training-Organisation',
   ])('refuses %p in course copy', text => {
     expect(() =>
       buildCourse(
@@ -187,12 +192,16 @@ describe('accreditation-claim guard (CARSI is not an RTO)', () => {
     ).toThrow(AccreditationClaimError);
   });
 
-  it('allows ordinary course copy', () => {
+  it.each([
+    'Hands-on training aligned to IICRC S520.',
+    'Delivered on-site in Porto and Toronto',
+    'Shortcourse for property managers',
+  ])('allows ordinary course copy %p', text => {
     expect(() =>
       buildCourse(
         {
           name: 'Mould Remediation',
-          description: 'Hands-on training aligned to IICRC S520.',
+          description: text,
           url: 'https://carsi.com.au/c',
         },
         org
