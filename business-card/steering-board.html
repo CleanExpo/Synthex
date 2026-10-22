@@ -131,6 +131,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
 <script>
 const LANES = [
+  { id: "wow",     name: "Wow concepts", blurb: "Three-second ideas for what makes this card stand out. Each starts from a real file: the Unite Group logo or the real card. Clips appear here once they are made." },
   { id: "motion",  name: "Motion and visuals", blurb: "How Phill appears on the card. Everything is made from his real photos, never invented faces." },
   { id: "card",    name: "Card features",      blurb: "What the card does in someone's hand." },
   { id: "reviews", name: "Review engine",      blurb: "Turning happy customers into public reviews, inside Google's and the ACCC's rules." },
@@ -200,9 +201,17 @@ function cardEl(i) {
   if (i.effort) tag("Effort " + i.effort);
   if (i.cost) tag(i.cost);
   if (i.needs) tag("Needs: " + i.needs);
+  if (i.feature) tag("Higgsfield: " + i.feature);
+  if (i.lane === "wow" && !i.video) tag(i.blocked ? "Waiting on real photos" : "Clip not made yet", "warn");
   body.append(h, meta);
   top.append(grip, body); c.append(top);
-  if (i.image) { const img = document.createElement("img"); img.src = i.image; img.alt = i.imageAlt || i.title; c.append(img); }
+  if (i.video) {
+    const v = document.createElement("video"); v.src = i.video; if (i.image) v.poster = i.image;
+    v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.controls = true;
+    v.setAttribute("playsinline", ""); v.setAttribute("aria-label", i.title + " (clip)");
+    v.style.width = "100%"; v.style.maxWidth = "100%"; v.style.borderRadius = "10px"; v.style.display = "block";
+    c.append(v);
+  } else if (i.image) { const img = document.createElement("img"); img.src = i.image; img.alt = i.imageAlt || i.title; c.append(img); }
   const d = document.createElement("p"); d.textContent = i.detail || ""; c.append(d);
   if (i.evidence) { const ev = document.createElement("div"); ev.className = "ev"; ev.textContent = i.evidence; c.append(ev); }
 
