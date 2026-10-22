@@ -9,6 +9,7 @@
  *
  * Protocol: https://www.indexnow.org/documentation (read 22/10/2026).
  */
+import { randomBytes } from 'crypto';
 import {
   INDEXNOW_ENDPOINT,
   INDEXNOW_MAX_URLS_PER_REQUEST,
@@ -20,6 +21,9 @@ import {
   submitToIndexNow,
   type IndexNowOutcome,
 } from '@/lib/indexnow';
+
+// Fixture key generated per run so no key-shaped literal lives in source.
+const TEST_KEY = randomBytes(8).toString('hex');
 
 type FetchCall = [string, RequestInit];
 
@@ -162,8 +166,8 @@ describe('classifyIndexNowStatus', () => {
 describe('buildIndexNowRequests', () => {
   const base = {
     host: 'carsi.com.au',
-    key: 'abcdef0123456789',
-    keyLocation: 'https://carsi.com.au/abcdef0123456789.txt',
+    key: TEST_KEY,
+    keyLocation: `https://carsi.com.au/${TEST_KEY}.txt`,
   };
 
   it('builds the documented body {host,key,keyLocation,urlList}', () => {
@@ -171,8 +175,8 @@ describe('buildIndexNowRequests', () => {
     expect(bodies).toEqual([
       {
         host: 'carsi.com.au',
-        key: 'abcdef0123456789',
-        keyLocation: 'https://carsi.com.au/abcdef0123456789.txt',
+        key: TEST_KEY,
+        keyLocation: `https://carsi.com.au/${TEST_KEY}.txt`,
         urlList: ['https://carsi.com.au/p/0', 'https://carsi.com.au/p/1'],
       },
     ]);
@@ -222,8 +226,8 @@ describe('buildIndexNowRequests', () => {
 describe('submitToIndexNow', () => {
   const input = {
     host: 'carsi.com.au',
-    key: 'abcdef0123456789',
-    keyLocation: 'https://carsi.com.au/abcdef0123456789.txt',
+    key: TEST_KEY,
+    keyLocation: `https://carsi.com.au/${TEST_KEY}.txt`,
   };
 
   it('POSTs JSON to the IndexNow endpoint and reports 200 as ok', async () => {

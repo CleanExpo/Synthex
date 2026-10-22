@@ -7,6 +7,7 @@
  * Misses: live behaviour of ssl.bing.com (no real call; the endpoint shapes
  * come from the Microsoft Learn JSON samples, read 22/10/2026).
  */
+import { randomBytes } from 'crypto';
 import {
   BING_SUBMIT_URL_BATCH_MAX,
   BING_WEBMASTER_JSON_BASE,
@@ -15,8 +16,8 @@ import {
   type BingResult,
 } from '@/lib/bing-webmaster';
 
-// Obviously fake fixture key; never a real credential.
-const FAKE_KEY = 'FAKE-TEST-KEY-not-a-real-key-0000';
+// Fixture key generated per run so no key-shaped literal lives in source.
+const FAKE_KEY = randomBytes(16).toString('hex');
 
 type FetchCall = [string, RequestInit | undefined];
 
