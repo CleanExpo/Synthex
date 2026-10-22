@@ -95,6 +95,7 @@
       "status": "missing",
       "note": "no real photos of Phill supplied yet"
     },
+    "editions": {},
     "hero": {
       "status": "found",
       "video": "business-card/brand-kits/media/unite-nexus-reveal-h264.mp4",
@@ -111,6 +112,7 @@
   },
   "person": {
     "name": "Phill McGurk",
+    "cardUrl": "https://card.unite-group.ink",
     "title": "Founder, Unite Group",
     "intro": "Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.",
     "motto": "Found. Trusted. Chosen.",

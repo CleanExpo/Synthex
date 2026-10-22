@@ -683,6 +683,279 @@
       "image": "/_blob/f5758255717293f8df930655f701d7d1",
       "feature": "Higgsfield image generation",
       "detail": "A fire-to-finished reveal that suits a restoration brand. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v1",
+      "lane": "wow",
+      "rank": 8,
+      "recommended": true,
+      "title": "Clip concept: one orange card among falling white cards",
+      "video": "/_blob/9557ac7da7a093401c58a36c1c9931e8",
+      "image": "/_blob/d3d442d5a0015073914f5addaafd1dab",
+      "feature": "Higgsfield image-to-video zoom-in",
+      "job": "1a3c8d62-a7f1-4d13-a1e8-fc3fb34eeb3d",
+      "detail": "The 'one donkey among the horses' idea, moving. Strong hero for launch videos. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v2",
+      "lane": "wow",
+      "rank": 9,
+      "recommended": true,
+      "title": "Clip concept: flood wipes to the restored room",
+      "video": "/_blob/db3f2fb5190a116880ba8335301d3dfa",
+      "image": "/_blob/1b3831e8a87c4d8908a6997ec34d9675",
+      "feature": "Higgsfield image-to-video transition",
+      "job": "9721bf4b-452d-454d-9882-9ef87d4a6caa",
+      "detail": "For restoration and RestoreAssist staff cards. For real marketing, use real job photos. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v3",
+      "lane": "wow",
+      "rank": 10,
+      "title": "Clip concept: the card rises in orange fire",
+      "video": "/_blob/45ca7cbeec2e5354149374025f0f87cb",
+      "image": "/_blob/a678137a7c7e7b836cadb9e385bc1410",
+      "feature": "Higgsfield image-to-video",
+      "job": "5ed8806e-9578-4c83-b281-23c43936801d",
+      "detail": "Not yet reviewed frame by frame. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v4",
+      "lane": "wow",
+      "rank": 11,
+      "title": "Clip concept: shattered-U reveal (rejected logo)",
+      "video": "/_blob/97e88a56286c81d54d878b8b05bb8aba",
+      "image": "/_blob/1e93d02c10a4c332c538cbbe425a8fb1",
+      "feature": "Higgsfield image-to-video",
+      "job": "f51278f4-e500-480c-9bde-fc2fe7674e5d",
+      "detail": "Uses a logo you rejected, so shown for the motion style only. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x1",
+      "lane": "wow",
+      "rank": 12,
+      "title": "Concept: AR hologram over a metal NFC card",
+      "image": "/_blob/5b711bc03d62e4eb481c42c6ff50416d",
+      "feature": "Higgsfield image generation",
+      "job": "1ad1f0af-0be7-4d37-afbe-b1f9365da608",
+      "detail": "Where the premium physical card could go. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x2",
+      "lane": "wow",
+      "rank": 13,
+      "title": "Concept: metal NFC card and phone flat-lay",
+      "image": "/_blob/067c97b792e645eae9c68a634a1acd04",
+      "feature": "Higgsfield image generation",
+      "job": "e9e905ff-3896-47c0-b76f-e62d22d3667c",
+      "detail": "Product shot for the A$149 metal card. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x3",
+      "lane": "wow",
+      "rank": 14,
+      "title": "Concept: before-and-after slider on a phone",
+      "image": "/_blob/d443908f786e487c92170886afafaca4",
+      "feature": "Higgsfield image generation",
+      "job": "b3bcbc2b-3c06-4abc-9b22-7fd12759afae",
+      "detail": "A card feature for restorers: drag to compare. Real job photos in the real thing. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x4",
+      "lane": "wow",
+      "rank": 15,
+      "title": "Concept: trade-show crowd with orange phones",
+      "image": "/_blob/45ed53ac7110692c8f597e2ba6795d41",
+      "feature": "Higgsfield image generation",
+      "job": "01189839-01eb-4386-889d-3ed21214d577",
+      "detail": "The Brisbane and Melbourne talk moment. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x5",
+      "lane": "wow",
+      "rank": 16,
+      "title": "Concept: wallet pass, 'opened 12 times'",
+      "image": "/_blob/b72d519ab5012291ee890038a9c456dd",
+      "feature": "Higgsfield image generation",
+      "job": "1a298c28-6136-4e5a-a43b-a2c15a0a9b5c",
+      "detail": "Shows open analytics: you see when your card is opened. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "built-crack",
+      "lane": "wow",
+      "rank": 0,
+      "recommended": true,
+      "title": "Built: your card cracks open, then the logo reveal plays",
+      "detail": "The screen appears to crack from an impact point, the shards fall away, and the Unite-Group Nexus reveal plays beneath. Drawn in code, so it starts instantly; skipped for people who turn motion off. Add ?to=Sarah to the link and it greets her by name. 'Pass it on' shows a bouncing QR code so a second person can scan your card off your screen.",
+      "evidence": "Browser-tested on the locally hosted card 22/10/2026 [VERIFIED]; not yet tried on a physical phone [UNCONFIRMED]."
+    },
+    {
+      "id": "built-editions",
+      "lane": "card",
+      "rank": 1,
+      "recommended": true,
+      "title": "Ten editions of your card, one link each",
+      "detail": "The card's opener can be swapped per edition (Blueprint, Forge, Constellation, Ink, Rewind, Skyline, Origami, Portal, Restoration, Magnet) with a link like card.unite-group.ink/?edition=forge. Ready in the card; each edition appears once its clip is delivered.",
+      "evidence": "Edition switching built; edition clips still rendering [UNCONFIRMED]."
+    },
+    {
+      "id": "g-ladder",
+      "lane": "growth",
+      "rank": 2,
+      "recommended": true,
+      "title": "Pricing ladder: Signature A$249 inc GST",
+      "detail": "Signature A$249 inc GST (bespoke motion, multi-business links, analytics, 12 months hosting and inbox). Live A$19/mo from month 13, or A$29 with the review engine. Crew pack A$990 for 5 staff cards, then A$9/card/mo; extra cards A$149. Network tier quoted for franchises and NRPG. NFC card A$59, metal A$149. No DIY tier at launch.",
+      "evidence": "Coordinator research 22/10/2026; competitor prices partly [UNCONFIRMED] (some sources blocked); Tapt pricing spot-checked by the coordinator [VERIFIED]."
+    },
+    {
+      "id": "g-showroom",
+      "lane": "growth",
+      "rank": 3,
+      "recommended": true,
+      "title": "First 30 days: five flagship cards as the showroom",
+      "detail": "Build five standout cards first. Phill sends his card instead of an email signature and posts LinkedIn videos of it opening. Crew packs to ten founding RestoreAssist firms. CARSI graduate credential cards. A disclosed, non-cash referral reward (a free Live year).",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "g-legal",
+      "lane": "growth",
+      "rank": 4,
+      "recommended": true,
+      "title": "Legal must-haves before selling",
+      "detail": "Refund and remake policy under the ACL; GST-inclusive prices; an APP privacy notice; written likeness and voice consent; an IP Australia search and designer rework for the AI-generated logo; Higgsfield's commercial terms.",
+      "evidence": "Coordinator research 22/10/2026; several sources were blocked, so [UNCONFIRMED]."
+    },
+    {
+      "id": "g-moat",
+      "lane": "growth",
+      "rank": 5,
+      "title": "Our edge is the moment, not the contact swap",
+      "detail": "Blinq (2.5M users) and free Apple NameDrop already swap contacts. Competitors sell commodity hardware or A$7-15/mo seats; HiHello's branded video is template-bound. Sell the card as a crafted brand asset with a cinematic opening.",
+      "evidence": "Coordinator research 22/10/2026; 'nobody sells it as a crafted brand asset' is [INFERENCE]."
+    },
+    {
+      "id": "m-name",
+      "lane": "card",
+      "rank": 2,
+      "recommended": true,
+      "title": "Greets the person by name",
+      "detail": "'Great to meet you, Sam' at the top of the opener. Built: add ?to=Sam to the link.",
+      "evidence": "Built and browser-tested [VERIFIED]."
+    },
+    {
+      "id": "m-wallet",
+      "lane": "card",
+      "rank": 3,
+      "recommended": true,
+      "title": "Wallet pass with open alerts",
+      "detail": "The card sits in Apple and Google Wallet and tells you when it is opened.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-slider",
+      "lane": "card",
+      "rank": 4,
+      "recommended": true,
+      "title": "Before-and-after slider",
+      "detail": "Drag across a real job to compare the damage and the finished work.",
+      "evidence": "Coordinator research 22/10/2026; needs real job photos [VERIFIED rule]."
+    },
+    {
+      "id": "m-emergency",
+      "lane": "card",
+      "rank": 5,
+      "title": "Booking or emergency button",
+      "detail": "One tap to book or call the after-hours line.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-glass",
+      "lane": "card",
+      "rank": 6,
+      "title": "'Glass phone': logo floating over the live camera",
+      "detail": "The logo hovers over the camera view and tilts with the phone. Needs camera and motion permission.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-ask",
+      "lane": "card",
+      "rank": 7,
+      "title": "'Ask me anything' voice or agent",
+      "detail": "Ask the card a question and get an answer in the owner's voice, from approved facts only.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-stepout",
+      "lane": "card",
+      "rank": 8,
+      "title": "Owner steps out of the screen",
+      "detail": "A real video of the owner steps over the card. Only from real footage, with written consent.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]; real-images rule applies [VERIFIED]."
+    },
+    {
+      "id": "m-proof",
+      "lane": "card",
+      "rank": 9,
+      "title": "Proof wall: every customer asked",
+      "detail": "Real reviews and job photos, with every customer invited and no filtering.",
+      "evidence": "Review gating breaks Google's rules [VERIFIED: research-notes.md]."
+    },
+    {
+      "id": "eco-passport",
+      "lane": "ecosystem",
+      "rank": 6,
+      "recommended": true,
+      "title": "Property passport that stays with the house",
+      "detail": "Every job done on a property (drying records, repairs, warranties) in one link that passes to the next owner. No restoration example found: a white-space bet.",
+      "evidence": "Coordinator research 22/10/2026; 'no hits found' is a search result, not proof [UNCONFIRMED]."
+    },
+    {
+      "id": "eco-quote",
+      "lane": "ecosystem",
+      "rank": 7,
+      "title": "Cinematic restoration quotes with a Q&A agent",
+      "detail": "The quote arrives as a short film of the job with answers on tap.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-claim",
+      "lane": "ecosystem",
+      "rank": 8,
+      "title": "Live insurance-claim job links",
+      "detail": "Policyholder and insurer follow the job live from RestoreAssist.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-cert",
+      "lane": "ecosystem",
+      "rank": 9,
+      "title": "Animated, verifiable CARSI certificates",
+      "detail": "Each certificate is a living card that anyone can verify.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-onboard",
+      "lane": "ecosystem",
+      "rank": 10,
+      "title": "RestoreAssist trial onboarding reveal",
+      "detail": "A new trial firm's own card cracks open as the welcome moment.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-sig",
+      "lane": "ecosystem",
+      "rank": 11,
+      "title": "Live email signature",
+      "detail": "The email signature becomes a tiny living card that opens the full one.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-nfc",
+      "lane": "ecosystem",
+      "rank": 12,
+      "title": "Warranty and NFC packaging",
+      "detail": "Tap the product packaging or warranty card to open the business's card.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
     }
   ]
 }

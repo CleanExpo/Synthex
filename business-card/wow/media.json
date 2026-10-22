@@ -96,6 +96,109 @@
       "sha256": "b8c6b6bc0810c647b61cd10a27ce3f89749abb74396174ff20239366fa51759b",
       "label": "AI-generated in Higgsfield (concept, not a real photo)",
       "phoneJpg": "business-card/wow/out/h6-embers.jpg"
+    },
+    {
+      "kind": "video",
+      "title": "One orange card among falling white cards, pushing in",
+      "job": "1a3c8d62-a7f1-4d13-a1e8-fc3fb34eeb3d",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072144_1a3c8d62-a7f1-4d13-a1e8-fc3fb34eeb3d.mp4",
+      "file": "business-card/wow/out/v1-falling-cards.mp4",
+      "bytes": 882595,
+      "sha256": "36c9addec2852b3627cd6706ad40681ccaedf84e395967c737809d105614b9c2",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "h264": "business-card/wow/out/v1-falling-cards-h264.mp4",
+      "poster": "business-card/wow/out/v1-falling-cards-poster.jpg"
+    },
+    {
+      "kind": "video",
+      "title": "Flood wiping to the restored room",
+      "job": "9721bf4b-452d-454d-9882-9ef87d4a6caa",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072133_9721bf4b-452d-454d-9882-9ef87d4a6caa.mp4",
+      "file": "business-card/wow/out/v2-flood-to-restored.mp4",
+      "bytes": 852289,
+      "sha256": "2ab4b68c30293730d757386a11d39409e743a4ae5982892c4466e7e86d1e40f7",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "h264": "business-card/wow/out/v2-flood-to-restored-h264.mp4",
+      "poster": "business-card/wow/out/v2-flood-to-restored-poster.jpg"
+    },
+    {
+      "kind": "video",
+      "title": "Card rising in orange fire",
+      "job": "5ed8806e-9578-4c83-b281-23c43936801d",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072133_5ed8806e-9578-4c83-b281-23c43936801d.mp4",
+      "file": "business-card/wow/out/v3-card-from-fire.mp4",
+      "bytes": 1018433,
+      "sha256": "4c9f47f74ab123fe52c215908cf17a2daf2e08c8ac39ccb85f78facab030d03b",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "h264": "business-card/wow/out/v3-card-from-fire-h264.mp4",
+      "poster": "business-card/wow/out/v3-card-from-fire-poster.jpg"
+    },
+    {
+      "kind": "video",
+      "title": "Shattered-U reveal (rejected logo, concept only)",
+      "job": "f51278f4-e500-480c-9bde-fc2fe7674e5d",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072344_f51278f4-e500-480c-9bde-fc2fe7674e5d.mp4",
+      "file": "business-card/wow/out/v4-shattered-u.mp4",
+      "bytes": 1180711,
+      "sha256": "f1c91fddd2b4219f466921153c67d57f6a24da6e63ae6fd36bb39d43b7cf656f",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "h264": "business-card/wow/out/v4-shattered-u-h264.mp4",
+      "poster": "business-card/wow/out/v4-shattered-u-poster.jpg"
+    },
+    {
+      "kind": "still",
+      "title": "AR hologram over a metal NFC card",
+      "job": "1ad1f0af-0be7-4d37-afbe-b1f9365da608",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072823_1ad1f0af-0be7-4d37-afbe-b1f9365da608.png",
+      "file": "business-card/wow/out/x1-ar-hologram.png",
+      "bytes": 4481936,
+      "sha256": "1d5ef089cb2b0b3048aa47b92a2ea307cf32ce4108e710ca79e07a3bde4a5f3a",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/x1-ar-hologram.jpg"
+    },
+    {
+      "kind": "still",
+      "title": "Metal NFC card and phone luxury flat-lay",
+      "job": "e9e905ff-3896-47c0-b76f-e62d22d3667c",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072823_e9e905ff-3896-47c0-b76f-e62d22d3667c.png",
+      "file": "business-card/wow/out/x2-metal-flatlay.png",
+      "bytes": 6381659,
+      "sha256": "3bb0fa86a95eb2d386d8a3482c999d488d4a777bfc736834d9aab98b750d6e21",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/x2-metal-flatlay.jpg"
+    },
+    {
+      "kind": "still",
+      "title": "Before/after slider on a phone",
+      "job": "b3bcbc2b-3c06-4abc-9b22-7fd12759afae",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072823_b3bcbc2b-3c06-4abc-9b22-7fd12759afae.png",
+      "file": "business-card/wow/out/x3-before-after-slider.png",
+      "bytes": 6112128,
+      "sha256": "cd15383b6d70a3edfb3130e8cbbc55dc084bc86071e8408f3edfce3ba9c45a01",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/x3-before-after-slider.jpg"
+    },
+    {
+      "kind": "still",
+      "title": "Trade-show crowd with orange phones",
+      "job": "01189839-01eb-4386-889d-3ed21214d577",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072823_01189839-01eb-4386-889d-3ed21214d577.png",
+      "file": "business-card/wow/out/x4-trade-show.png",
+      "bytes": 6640168,
+      "sha256": "57853592526dee6506dc188e24974cb73b1a1fcc7e2d0a119a35db8257b81c6e",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/x4-trade-show.jpg"
+    },
+    {
+      "kind": "still",
+      "title": "Wallet pass with an 'opened 12 times' notification",
+      "job": "1a298c28-6136-4e5a-a43b-a2c15a0a9b5c",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072823_1a298c28-6136-4e5a-a43b-a2c15a0a9b5c.png",
+      "file": "business-card/wow/out/x5-wallet-pass.png",
+      "bytes": 5619346,
+      "sha256": "e557dd1fbc4b9c79715e83511e06c28fe1ef66f67d1ba09279b9ffc716f7d6f5",
+      "label": "AI-generated in Higgsfield (concept, not a real photo)",
+      "phoneJpg": "business-card/wow/out/x5-wallet-pass.jpg"
     }
   ],
   "note": "Full-size PNG stills stay local (the repo ignores *.png); 1600 px JPG copies are committed and are what the board shows."
