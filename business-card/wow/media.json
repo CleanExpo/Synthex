@@ -444,14 +444,29 @@
       "url": null,
       "file": null,
       "label": "AI-generated in Higgsfield; not used: the wordmark is cropped to 'NITE-GROUP NEXU' from 2.6 s. Local copy: /Users/phill-mac/session-handoffs/unite-group-nexus-website-brief/rerender/edition-forge-src.mp4 (sha256 aa61cc5b...)"
+    },
+    {
+      "kind": "video",
+      "title": "Edition opener (cracked U): Forge (retry)",
+      "job": "cb3e17f6-bb76-4ab5-9d8b-93f1b9b56c94",
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_122737_cb3e17f6-bb76-4ab5-9d8b-93f1b9b56c94.mp4",
+      "file": "business-card/brand-kits/media/edition-forge-u-src.mp4",
+      "bytes": 1300875,
+      "sha256": "c5e52895585c977781f97a6c24cf5e04fd3f72a40432c8fcd629ed637fa9e8a2",
+      "h264": "business-card/brand-kits/media/edition-forge.mp4",
+      "h264_sha256": "32110223c98b80f9cb94b045243c3e95a719dfe3527be5de53cce9116fcf1cf7",
+      "poster": "business-card/brand-kits/media/edition-forge-poster.jpg",
+      "stopAt": 3.95,
+      "label": "AI-generated in Higgsfield (edition opener, concept, not a real photo); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026"
     }
   ],
   "note": "Full-size PNG stills stay local (the repo ignores *.png); 1600 px JPG copies are committed and are what the board shows.",
   "rerenderCredits": {
     "date": "22/10/2026",
-    "credits": 280,
+    "credits": 308,
     "each": 28,
-    "jobs": 10,
-    "balance": "4428.04 to 4148.04, as reported by the showroom session"
+    "jobs": 11,
+    "note": "10 editions plus one Forge retry",
+    "balance": "4428.04 to 4120.04, as reported by the showroom session"
   }
 }

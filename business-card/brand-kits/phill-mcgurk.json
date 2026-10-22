@@ -115,7 +115,7 @@
       "blueprint",
       "restoration"
     ],
-    "rotationReason": "Card stays light and shows range: signature carries the crack and rests on the logo; Origami has the largest U; Blueprint is the clean navy one; Restoration tells the restoration story. All re-rendered on the cracked U 22/10/2026. Every other found edition plays with ?edition=<name>. Forge is off until re-rendered.",
+    "rotationReason": "Card stays light and shows range: signature carries the crack and rests on the logo; Origami has the largest U; Blueprint is the clean navy one; Restoration tells the restoration story. All re-rendered on the cracked U 22/10/2026. Every other found edition plays with ?edition=<name>.",
     "shopUrl": "get-your-card.html",
     "shopUrlNote": "Single switch for the Get your own card target. Change to https://unite-group.in/cards/order only once `curl -sI` on it returns 200 (22/10/2026: 307 to the login page).",
     "reviews": {
@@ -148,13 +148,12 @@
         "source": "Re-render ending on the cracked U: job 77aaf2d3-29ec-4675-b3f6-025eb31c1071 (source sha256 20c5b196...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. Ends on the U and wordmark on deep navy plaster; stop frame checked by eye 22/10/2026."
       },
       "forge": {
-        "status": "superseded",
+        "status": "found",
         "fit": "cover",
         "video": "business-card/brand-kits/media/edition-forge.mp4",
         "poster": "business-card/brand-kits/media/edition-forge-poster.jpg",
         "stopAt": 3.95,
-        "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026; re-render job 82052d23-66d2-445a-8f17-7e549bce2d99 rejected",
-        "supersededReason": "old clip (4712e0de) ends on the wings mark; the cracked-U re-render (82052d23) frames too tight, the wordmark is cropped to 'NITE-GROUP NEXU' from 2.6 s. Off the card until a new render passes."
+        "source": "Re-render ending on the cracked U: retry job cb3e17f6-bb76-4ab5-9d8b-93f1b9b56c94 (source sha256 c5e52895...); Higgsfield seedance_2_5, omni_reference to the kit PNG 01-approved-logo/unite-group-nexus-logo-square-1024x1024.png (Higgsfield media 46f088b5-4507-488d-a068-4382271deb6c); 28 credits; rendered in the showroom session with Phill's approval 22/10/2026. First take 82052d23-66d2-445a-8f17-7e549bce2d99 rejected (wordmark cropped). Molten metal fills a stone mould, then ends on the U and wordmark on plain black; stop frame checked by eye 22/10/2026."
       },
       "constellation": {
         "status": "found",
@@ -264,11 +263,11 @@
       "forge": {
         "status": "superseded",
         "fit": "cover",
-        "video": "business-card/brand-kits/media/edition-forge.mp4",
-        "poster": "business-card/brand-kits/media/edition-forge-poster.jpg",
+        "video": "business-card/brand-kits/media/edition-forge-src.mp4",
         "stopAt": 3.95,
         "source": "Higgsfield edition clip (seedance 2.5, references logo 05e8ec98), job 4712e0de-ce47-46f8-b093-04520c11d639 (source sha256 3ebd3cdf…); ends on the logo set in dark stone; stop frame checked by eye 22/10/2026",
-        "supersededReason": "ends on the old wings mark"
+        "supersededReason": "ends on the old wings mark",
+        "videoNote": "wings H.264 copy replaced in place; this is its Higgsfield source"
       },
       "constellation": {
         "status": "superseded",

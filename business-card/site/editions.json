@@ -24,6 +24,12 @@
     "video": "media/edition-blueprint.mp4"
   },
   {
+    "name": "forge",
+    "label": "Forge edition",
+    "poster": "media/edition-forge-poster.jpg",
+    "video": "media/edition-forge.mp4"
+  },
+  {
     "name": "constellation",
     "label": "Constellation edition",
     "poster": "media/edition-constellation-poster.jpg",
