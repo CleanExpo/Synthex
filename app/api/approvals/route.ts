@@ -20,6 +20,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { bindPostFingerprint } from '@/lib/approvals/content-fingerprint';
 
 // =============================================================================
 // Types
@@ -412,6 +413,19 @@ export async function POST(request: NextRequest) {
         steps = createDefaultSteps();
       }
 
+      // Bind a post approval to the wording being submitted, so a later edit
+      // cannot ride on this approval (see PATCH /api/approvals/[id]).
+      const boundMetadata =
+        contentType === 'post'
+          ? bindPostFingerprint(
+              metadata,
+              await prisma.post.findUnique({
+                where: { id: contentId },
+                select: { content: true, platform: true },
+              })
+            )
+          : metadata;
+
       // Create approval request and audit log atomically
       const approval = await prisma.$transaction(async tx => {
         const created = await tx.approvalRequest.create({
@@ -428,7 +442,7 @@ export async function POST(request: NextRequest) {
             title,
             description,
             dueDate: dueDate ? new Date(dueDate) : null,
-            metadata: metadata as Prisma.InputJsonValue,
+            metadata: boundMetadata as Prisma.InputJsonValue,
             organizationId,
           },
           include: {

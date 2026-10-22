@@ -25,6 +25,11 @@ import {
 } from '@/lib/marketing-agency/authority-approval';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
+import {
+  bindPostFingerprint,
+  checkPostBinding,
+  type ContentBinding,
+} from '@/lib/approvals/content-fingerprint';
 
 // =============================================================================
 // Types
@@ -618,6 +623,26 @@ export async function PATCH(
     let newStatus = approval.status;
     let newCurrentStep = approval.currentStep;
 
+    // A post approval binds to the wording that was submitted: approving checks
+    // it is unchanged, and resubmitting re-binds to the current wording.
+    let binding: ContentBinding | null = null;
+    let reboundMetadata: Record<string, unknown> | null = null;
+    if (
+      approval.contentType === 'post' &&
+      (action === 'approve' || action === 'resubmit')
+    ) {
+      const post = await prisma.post.findUnique({
+        where: { id: approval.contentId },
+        select: { content: true, platform: true },
+      });
+      if (post && action === 'approve') {
+        binding = checkPostBinding(approval.metadata, post);
+      }
+      if (post && action === 'resubmit') {
+        reboundMetadata = bindPostFingerprint(approval.metadata, post);
+      }
+    }
+
     // Process action
     switch (action) {
       case 'approve': {
@@ -629,6 +654,18 @@ export async function PATCH(
               message: 'You are not assigned to approve this step',
             },
             { status: 403 }
+          );
+        }
+
+        if (binding !== null && binding.kind === 'changed') {
+          return NextResponse.json(
+            {
+              error: 'Conflict',
+              code: 'content_changed',
+              message:
+                'The post was edited after it was sent for approval. Resubmit it so reviewers approve the current wording.',
+            },
+            { status: 409 }
           );
         }
 
@@ -881,6 +918,9 @@ export async function PATCH(
           status: newStatus,
           currentStep: newCurrentStep,
           steps: steps as unknown as Prisma.InputJsonValue,
+          ...(reboundMetadata
+            ? { metadata: reboundMetadata as Prisma.InputJsonValue }
+            : {}),
         },
         include: {
           submitter: {
@@ -907,6 +947,14 @@ export async function PATCH(
             previousStatus: approval.status,
             newStatus,
             comment: comment?.substring(0, 100),
+            ...(binding
+              ? {
+                  contentBinding:
+                    binding.kind === 'unbound'
+                      ? 'unbound_legacy'
+                      : binding.kind,
+                }
+              : {}),
           },
           severity: action === 'reject' ? 'medium' : 'low',
           category: 'content',
