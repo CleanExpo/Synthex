@@ -383,3 +383,91 @@ describe('the ledger seam', () => {
     expect(mockDb.ledger[0].runner).toBeUndefined();
   });
 });
+
+describe('cron/autopilot runs inside a capped build (build: { buildId: run id })', () => {
+  // Every gate before the build cap passes here, so the cap is actually
+  // evaluated: an enabled flag, an active brand key, a generous org budget.
+  function passEarlierGates(buildSpentUsd: number) {
+    mockDb.overrides.runnerFlag = {
+      findMany: () => [
+        { runner: 'cron-autopilot', enabled: true, killSwitch: false },
+      ],
+    };
+    mockDb.overrides.aPICredential = {
+      findMany: () => [
+        {
+          id: 'cred-1',
+          encryptedKey: 'encrypted-placeholder',
+          isActive: true,
+          revokedAt: null,
+        },
+      ],
+    };
+    mockDb.overrides.orgBudgetPolicy = {
+      findUnique: () => ({
+        dailyCeilingUsd: 1000,
+        providerDailyCeilingsUsd: null,
+        enforcementMode: 'enforce',
+      }),
+    };
+    mockDb.overrides.pipelineCostLedger = {
+      groupBy: () => [],
+      aggregate: () => ({ _sum: { costUsd: buildSpentUsd } }),
+    };
+  }
+
+  function loadWith(mode: 'shadow' | 'enforcing') {
+    let handler: any;
+    jest.isolateModules(() => {
+      jest.doMock('@/lib/ai/governor/mode', () => ({ GOVERNOR_MODE: mode }));
+      jest.doMock('@/lib/encryption/api-key-encryption', () => ({
+        decryptApiKey: () => 'BRAND-OWN-KEY-PLACEHOLDER',
+      }));
+      handler = require('@/app/api/cron/autopilot/route').GET;
+    });
+    jest.dontMock('@/lib/ai/governor/mode');
+    jest.dontMock('@/lib/encryption/api-key-encryption');
+    return handler;
+  }
+
+  const req = () =>
+    createMockNextRequest({ url: 'http://localhost/api/cron/autopilot' });
+
+  it('C5 the receipt is filed under the AutopilotRun id and carries the build-cap decision for it', async () => {
+    passEarlierGates(0);
+    const res = await loadWith('shadow')(req());
+    await flush();
+
+    expect(res.status).toBe(200);
+    expect(mockDb.ledger).toEqual([
+      expect.objectContaining({
+        runId: 'run-1',
+        outcome: 'completed',
+        provenance: expect.objectContaining({
+          buildCap: expect.objectContaining({
+            buildId: 'run-1',
+            verdict: 'within_build_cap',
+          }),
+        }),
+      }),
+    ]);
+  });
+
+  it('C5 enforcing: a run already at its cap is refused at the build cap and creates no post', async () => {
+    passEarlierGates(12);
+    const createPost = jest.fn(() => ({ id: 'post-1' }));
+    mockDb.overrides.post = { create: createPost };
+    const res = await loadWith('enforcing')(req());
+    await flush();
+
+    expect(res.status).toBe(200);
+    expect(mockComplete).not.toHaveBeenCalled();
+    expect(createPost).not.toHaveBeenCalled();
+    expect(mockDb.ledger).toEqual([
+      expect.objectContaining({
+        runId: 'run-1',
+        outcome: 'refused_build_cap_exceeded',
+      }),
+    ]);
+  });
+});
