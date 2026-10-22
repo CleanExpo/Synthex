@@ -1,0 +1,158 @@
+# Channel read-back: design spec
+
+**Status:** proposal (22/10/2026), not approved for build
+**Client metric:** both — read-back says which CARSI and RestoreAssist posts sent people to the enrolment and trial sign-up pages (link clicks per post plus the UTM tag already put on each link), so the agency can keep doing what produced enrolments and sign-ups and stop what did not.
+**Rests on:** synthex-intel-07-advantages-and-proposals (proposal 3), synthex-intel-01-synthex-as-built (§1 analytics read-back row, §4 functional defects), synthex-intel-03-ai-marketing-platforms (measurement row: "replicate a cross-channel layer; call platform reporting APIs"), and repo evidence in `lib/analytics/ingest-post-metrics.ts`, `lib/social/*-service.ts`, `lib/queue/workers/analytics-worker.ts` and the local branch `feat/social-results-readback` (head `a8f6ae0f0`).
+**Relation to the fleet programme:** none of P-1..P9 or M1..M14 covers social read-back. It feeds P6 (outcomes, M4/M5) by giving the outcome writer a post to attribute an event to (O3 "attribution to the post or keyword that preceded the event"), and it is the meter that the fleet rule "no actuator without a meter" asks for before P7 (delegated publish) posts anything to YouTube, TikTok or X.
+
+## Finish line
+
+For every platform Synthex publishes to (path B adapters: Facebook, Instagram, LinkedIn, Threads, TikTok, X, YouTube), each published post less than 90 days old has one `PlatformMetrics` `_latest` row refreshed on an age-based cadence. Every count in that row is either a number the platform returned or is listed as unread in `metadata.readStatus`, and no unread count is shown as 0 anywhere a person or agent reads it. Link clicks per post, where the platform offers them, are stored as `clicks`. A coverage command prints, per organisation and platform, posts published, posts read in the last 26 hours, and unread fields. It exits non-zero when a platform the organisation publishes to has no fresh read. For the CARSI and RestoreAssist organisations it shows a fresh read for every platform they actually published to in the last 30 days.
+
+## Decision up front
+
+Build in-house by extending the existing seam, `ingestConnectionPostMetrics`, and call each platform's own reporting API directly. Do not add a connector framework. First land the unfinished branch `feat/social-results-readback` for YouTube, then add Facebook per-post, TikTok and X to the ingest set, each with the branch's rule that an unread count is unknown, never 0. Borrow the normalised column set (platform, post id, clicks, impressions, likes, shares, comments) from Fivetran's Apache-2.0 `dbt_social_media_reporting` as a naming pattern. Do not depend on it, because it is dbt SQL for a warehouse Synthex does not run. X read-back is the only slice with a new direct cost, because X is now pay-per-use. It is founder-gated and stays off until a spend cap is set. Build a platform's slice only when CARSI or RestoreAssist actually publishes there. Otherwise that slice is deferred, per the disposition test.
+
+## Goals & non-goals
+
+**Goals**
+- G1. Read back per-post results for YouTube (branch), TikTok, X and Facebook (per post, not only Page totals) into `PlatformMetrics`, and keep Instagram and LinkedIn working.
+- G2. Make honest-unknown hold all the way through. Today the branch keeps `null` only inside `metadata.snapshots`, and the table columns still receive 0 for any count not read [VERIFIED lib/analytics/ingest-post-metrics.ts:95-98].
+- G3. Store link clicks per post wherever the platform offers them. That is the number that leads to a CARSI enrolment or a RestoreAssist trial sign-up.
+- G4. Keep tokens and scopes healthy, and mark a connection "needs reconnect for read-back" when a required read scope is missing, rather than failing silently.
+- G5. Provide a coverage meter that can go red.
+
+**Non-goals**
+- Paid-ads reporting (TikTok Marketing API, Meta Ads, Google Ads). That is a separate meter.
+- TikTok Research API. Commercial use is not eligible (see Approach, TikTok).
+- Pinterest and Reddit. `getPostMetrics` exists, but there is no publish adapter in path B [VERIFIED lib/social/index.ts:125-131], so they are deferred until something publishes there.
+- A warehouse, dbt, Airbyte or any ELT platform.
+- Any framing of this as a product feature. It is internal measurement for Unite Group businesses.
+- Building the outcome writer itself (P6 owns M4/M5). This spec only supplies the post id and clicks that P6 attributes to.
+
+## Approach
+
+### What exists on main (f12eb4294)
+- The hourly cron `analytics-sync` [VERIFIED vercel.json:209-210] calls `ingestConnectionPostMetrics` for every active connection [VERIFIED app/api/cron/analytics-sync/route.ts:82].
+- The ingest set is `instagram` and `linkedin` only [VERIFIED lib/analytics/ingest-post-metrics.ts:41-53]. Every other platform is a logged no-op. It reads the 50 newest published posts per connection on every pass [VERIFIED lib/analytics/ingest-post-metrics.ts:56] and upserts one `${postId}_latest` row.
+- Facebook. PR #1045 fixed `FacebookService` insights (`post_media_view`, `post_total_media_view_unique`) [VERIFIED lib/social/facebook-service.ts:99] and the worker's Page metrics (`page_media_view`, `page_post_engagements`, `page_follows`) [VERIFIED lib/queue/workers/analytics-worker.ts:165-208]. The worker writes only Page-level `lastMetrics` into `PlatformConnection.metadata` [VERIFIED lib/queue/workers/analytics-worker.ts:41-62]. **So Facebook per-post results are not read back into `PlatformMetrics` either.** The ingest file's comment says the factory routes Facebook to `InstagramService` [VERIFIED lib/analytics/ingest-post-metrics.ts:43-51], but it now routes to `FacebookService` [VERIFIED lib/social/index.ts:116-117], so that reason is stale. `FacebookService.getPostMetrics` still turns unread likes, comments and shares into 0 [VERIFIED lib/social/facebook-service.ts:389-391].
+- TikTok. `getPostMetrics` calls `/video/query/` for one id with like, comment, share and view counts, and turns each unread value into 0 [VERIFIED lib/social/tiktok-service.ts:640,659]. The worker's TikTok branch calls the TikTok **Business** API with a Login Kit user token [VERIFIED lib/queue/workers/analytics-worker.ts:237]. That is a different product, so it should be expected to fail [INFERENCE].
+- X. `getPostMetrics` asks for `public_metrics` and `organic_metrics` [VERIFIED lib/social/twitter-sync-service.ts:579]. It returns `retweets`, `replies` and `quotes`, but `normaliseMetrics` reads `shares` and `comments` [VERIFIED lib/analytics/ingest-post-metrics.ts:102-104]. So even if X were added to the set, reposts and replies would be stored as 0. Impressions are also turned into 0 when unread [VERIFIED lib/social/twitter-sync-service.ts:589].
+- YouTube on main. The worker sums channel-level day rows with `row[1] || 0` [VERIFIED lib/queue/workers/analytics-worker.ts:297]. Per-video read-back is not in the ingest set.
+- Links already carry `utm_source=synthex`, `utm_medium=<platform>`, `utm_campaign=<slug>` and `utm_content=<draft>` [VERIFIED lib/marketing-agency/studio/approve-and-schedule.ts:329-330]. This is the join from a post to a site visit, and on to an enrolment or a sign-up.
+
+### What `feat/social-results-readback` already does (6 non-merge commits, read with `git log/diff origin/main...feat/social-results-readback`)
+1. Adds `youtube` to `ANALYTICS_INGEST_PLATFORMS`.
+2. Adds the `yt-analytics.readonly` scope to both OAuth paths: `app/api/auth/oauth/[platform]/route.ts` and `lib/oauth/providers/youtube.ts`. It notes that existing connections need a reconnect.
+3. `YouTubeService.getPostMetrics` reads Data API counts through a `readCount` that returns `undefined` for an omitted or empty count (for example, likes hidden by the creator). It adds a lifetime YouTube Analytics read per video (`engagedViews, averageViewDuration, averageViewPercentage, shares`, with `filters=video==<id>`). It reads cells by column name, and a missing row or missing scope leaves those values unknown.
+4. LinkedIn `getPostMetrics` returns `undefined` instead of 0 for omitted counts.
+5. Adds age snapshots `d1`, `d3` and `d7` inside the `_latest` row's `metadata.snapshots`. Each is written once, only within the window [hours, 2×hours), and a count not read is stored as `null` there. Watch-time fields go in `metadata`.
+6. Instagram changes, plus a 597-line test file `tests/unit/analytics/results-readback.test.ts` and a tripwire seed update.
+
+### What remains after the branch
+- R1. The table columns are still non-null `Int @default(0)` [VERIFIED prisma/schema.prisma:956-963], and `normaliseMetrics` still writes 0 for anything unread. So the `_latest` row, which is what dashboards aggregate, still shows an unread YouTube like count as 0. Only the snapshot keeps `null`.
+- R2. TikTok, X and Facebook per-post are not in the ingest set, and each has its own coalesce-to-0 or field-name defect (listed above).
+- R3. The cadence is 50 posts every hour, whatever their age. That wastes quota now and would cost money on X.
+- R4. Nothing tells a person that a YouTube connection lacks `yt-analytics.readonly`. The Analytics read just returns unknown.
+- R5. There is no coverage meter.
+- R6. The branch is local only, 8 commits ahead including 2 merges, and has not been reviewed or pushed [VERIFIED git log origin/main..feat/social-results-readback, 22/10/2026].
+
+### Slices (thinnest first; each is one reviewable PR)
+- **S0. Land the YouTube branch.** Rebase onto main, run its tests, get an independent review, then follow the normal release gate. No schema change. Precondition: CARSI or RestoreAssist has a YouTube connection that published in the last 30 days (Q1). If not, still land it, because it also carries the LinkedIn and Instagram honest-unknown fixes, but YouTube read-back stays dormant.
+- **S1. Honest-unknown at row level, without a migration.** Have `normaliseMetrics` return the counts plus a `readStatus` map (`{likes:'read'|'unread', …}`), and write it to `metadata.readStatus` on every upsert. Compute `engagementRate` only when every interaction count and a denominator were read (the branch already does this for snapshots). Change readers that show counts (dashboard aggregate, `performance_*` studio tools) to show "not read" when `readStatus` says unread. Fix the Facebook, TikTok and X coalesces to `readCount` in the same PR, because they share one test pattern.
+- **S2. Facebook per post.** Add `facebook` to the set, correct the stale comment, and map `views` and `reach`. Facebook does not return per-post clicks from these two metrics, so `clicks` stays unread [INFERENCE from lib/social/facebook-service.ts:99].
+- **S3. TikTok.** Add `tiktok` to the set. Batch up to 20 `video_ids` per `/v2/video/query/` call (TikTok's limit) [VERIFIED https://developers.tiktok.com/doc/tiktok-api-v2-video-query fetched 22/10/2026], which needs scope `video.list` (already granted [VERIFIED lib/oauth/providers/tiktok.ts:32]). The fields available are view, like, comment and share counts only, with no watch time, profile visits or link clicks [VERIFIED same URL]. So TikTok's `clicks` stays unread, and TikTok's link to sign-ups comes only from the UTM landing side. Replace the worker's Business API branch with `/v2/user/info/?fields=follower_count,…`, which needs `user.info.stats` and therefore a scope addition and reconnect. Postiz requests that scope too [VERIFIED gh api repos/gitroomhq/postiz-app, file tiktok.provider.ts lines 39-46]. Do not use the Research API: it is for non-commercial academic and nonprofit research only [VERIFIED https://developers.tiktok.com/products/research-api/ fetched 22/10/2026].
+- **S4. X (founder-gated, new cost).** Map `retweet_count→shares`, `reply_count→comments` and `quote_count→metadata.quotes`. Request `non_public_metrics` so `url_link_clicks→clicks` and `user_profile_clicks→metadata.profileClicks`. Non-public and organic metrics need user-context OAuth, cover only posts you own, and are available only for posts created in the last 30 days [VERIFIED https://docs.x.com/x-api/fundamentals/metrics fetched 22/10/2026]. After day 30, freeze the last read of those fields (mark `readStatus: 'frozen_at_30d'`) and refresh only public counts. Pricing is pay-per-use credits with no tiers: post read US$0.005, owned reads US$0.001 per resource, and a 3 million post-read cap a month [VERIFIED https://docs.x.com/x-api/getting-started/pricing fetched 22/10/2026]. The page does not say whether a single post lookup by its owner bills at the owned-read rate [UNVERIFIED].
+- **S5. Cadence by age.** Read hourly up to 72 h, daily up to 30 days, weekly up to 90 days, then stop. This still lands at least one pass inside every snapshot window (d1 [24,48) h, d3 [72,144) h, d7 [168,336) h). Use batch calls where offered: YouTube `videos.list` costs 1 unit per call against a 10,000-unit default daily quota [VERIFIED https://developers.google.com/youtube/v3/determine_quota_cost fetched 22/10/2026], and takes up to 50 ids per call [UNVERIFIED].
+- **S6. Scope health.** Compare `PlatformConnection.scope` with each platform's read-scope list. If one is missing, set `metadata.readback = {state:'needs_reconnect', missing:[…]}` and show it on the connections page and the coverage meter. The existing refresh machinery stays as it is: the `refresh-tokens` cron every 6 hours [VERIFIED vercel.json:177-178] and the per-connection refresh coordinator in the factory [VERIFIED lib/social/index.ts:146-156].
+- **S7. Coverage meter and outcome join.** `scripts/analytics/readback-coverage.mjs` (proposed). The P6 outcome writer joins a CARSI enrolment or RestoreAssist sign-up to a post by `utm_content=<draft>` → `PlatformPost`. This spec only guarantees that the post side exists.
+- **S8. Threads.** Same pattern, only if a Unite Group brand publishes there (Q1).
+
+### Mapping to O1-O7 and the client metric (disposition test)
+Social counts are not themselves any of O1-O7. They move the client metric only through attribution:
+- **O3 (bookings and enquiries):** a CARSI enrolment or RestoreAssist trial sign-up arrives with `utm_medium=<platform>` and `utm_content=<draft>`. Read-back supplies the post's clicks and views as the denominator for click-to-sign-up conversion.
+- **O7 (cost per verified lead):** per-post generation and media cost ÷ verified leads attributed to that post.
+
+For a single-location business with no social video, S3 and S4 do not move O1-O7 and should be deferred. For CARSI and RestoreAssist, each platform slice passes only if that brand published there in the last 30 days (Q1). Otherwise the recommendation for that slice is **defer**. S0, S1 and S7 pass in every case, because they stop wrong zeros reaching decisions and provide the meter.
+
+## Open-source candidates
+
+| Project | Licence | Stars | pushed_at | What it gives us | Decision | Evidence |
+|---|---|---|---|---|---|---|
+| [airbytehq/airbyte](https://github.com/airbytehq/airbyte) | NOASSERTION (repo); per connector ELv2 | 22252 | 2026-10-21 | `source-youtube-analytics` (beta, community), `source-twitter` (beta, community), `source-tiktok-marketing` (ads, certified). Each needs the Airbyte platform to run. | study-pattern | [VERIFIED gh api repos/airbytehq/airbyte]; connector licences from each `metadata.yaml` (`license: ELv2`) read via gh api contents, 22/10/2026 |
+| [dlt-hub/verified-sources](https://github.com/dlt-hub/verified-sources) | Apache-2.0 | 124 | 2026-07-03 | No YouTube, TikTok, X or organic social source in `sources/` (only facebook_ads, google_analytics etc.) | reject | [VERIFIED gh api repos/dlt-hub/verified-sources] and `contents/sources` listing |
+| [gitroomhq/postiz-app](https://github.com/gitroomhq/postiz-app) | AGPL-3.0 | 37540 | 2026-10-21 | Per-provider `analytics()` and `postAnalytics()` for X, TikTok and YouTube. Shows the scope sets (`user.info.stats`, `yt-analytics.readonly`). Its X code adds counts with `|| 0`, the defect this spec removes. | study-pattern | [VERIFIED gh api repos/gitroomhq/postiz-app]; files `libraries/nestjs-libraries/src/integrations/social/{x,tiktok,youtube}.provider.ts` |
+| [fivetran/dbt_social_media_reporting](https://github.com/fivetran/dbt_social_media_reporting) | Apache-2.0 | 24 | 2026-08-19 | A normalised cross-channel rollup: `platform, post_id, created_timestamp, post_url, clicks, impressions, likes, shares, comments` over Facebook Pages, Instagram Business, LinkedIn Pages, Twitter Organic and YouTube Analytics. No TikTok. | study-pattern | [VERIFIED gh api repos/fivetran/dbt_social_media_reporting]; `models/social_media_reporting.yml` |
+| [fivetran/dbt_youtube_analytics](https://github.com/fivetran/dbt_youtube_analytics) | Apache-2.0 | 4 | 2026-08-18 | Per-video YouTube model naming, a reference for the watch-time fields | study-pattern | [VERIFIED gh api repos/fivetran/dbt_youtube_analytics] |
+| [fivetran/dbt_twitter_organic](https://github.com/fivetran/dbt_twitter_organic) | Apache-2.0 | 4 | 2026-08-18 | X organic per-post model naming (clicks, impressions, engagements) | study-pattern | [VERIFIED gh api repos/fivetran/dbt_twitter_organic] |
+| [singer-io/tap-tiktok-ads](https://github.com/singer-io/tap-tiktok-ads) | AGPL-3.0 | 20 | 2026-09-22 | TikTok **ads** only, not organic; AGPL | reject | [VERIFIED gh api repos/singer-io/tap-tiktok-ads] |
+
+- **airbytehq/airbyte.** The connectors are Elastic License 2.0, which our rules allow only as a service or as a pattern. Running Airbyte for three endpoints is far heavier than the ~100 lines per platform Synthex already has. Useful for checking stream and field names. Not adopted.
+- **gitroomhq/postiz-app.** The most complete open reference for exactly these three platforms in a TypeScript stack. Read it to confirm scopes and endpoints. Copy nothing (AGPL). Its zero-coalescing is the anti-pattern this spec removes.
+- **fivetran/dbt_social_media_reporting.** The answer to "is there a normalised social-metrics schema worth adopting?": yes, as vocabulary. Its rollup columns already match `PlatformMetrics`. Adopt its names for any cross-channel view (`platform`, `post_url`), and add TikTok in the same shape. Do not run dbt.
+- Searches `gh search repos "youtube analytics tap"` and `"social media analytics normalized schema"` returned no results on 22/10/2026. `"tiktok organic"` returned only repos with 0-1 stars. This covers only those queries; it does not show that nothing exists.
+- Nothing is installed by this spec. A supply-chain review runs before any dependency lands. None is proposed.
+
+## Data model
+
+None for S0-S7. Everything new goes in the existing `PlatformMetrics.metadata Json?` [VERIFIED prisma/schema.prisma:965] and `PlatformConnection.metadata` [VERIFIED prisma/schema.prisma:910]. Both are already scoped to an organisation through `PlatformPost.connectionId → PlatformConnection.organizationId` [VERIFIED prisma/schema.prisma:898].
+
+```
+PlatformMetrics.metadata (per _latest row)
+  readStatus:  { likes|comments|shares|views|reach|impressions|clicks|saves: 'read'|'unread'|'not_offered'|'frozen_at_30d' }
+  source:      { api: 'youtube-data-v3'|'youtube-analytics-v2'|'tiktok-display-v2'|'x-v2'|'graph-v23.0'|…, readAt }
+  snapshots:   { d1|d3|d7: {…counts|null, ageHours, recordedAt} }   // from the branch
+  watch:       { averageViewDurationSec, averageViewPercentage, engagedViews, … }  // from the branch
+  quotes, profileClicks (X), favorites (YouTube)
+PlatformConnection.metadata.readback
+  { state: 'ok'|'needs_reconnect'|'paused_cost_cap', missing: string[], lastFullRead }
+```
+
+Later option, not proposed now: make the eight count columns nullable. That needs a migration under `prisma/migrations/**`, which is a protected path [VERIFIED scripts/fleet/policy.json:75], so it would need a declared fleet commit or the founder's `human-required` label. Every aggregate reader would also need to handle `null`. Choose it only if `readStatus` proves too easy to ignore.
+
+## Security & cost guardrails
+
+- **Tokens:** encrypted at rest and decrypted only in the ingest call [VERIFIED lib/analytics/ingest-post-metrics.ts:150]. A rotating refresh token (TikTok returns a possibly different `refresh_token`; access tokens last 24 h and refresh tokens 365 days [VERIFIED https://developers.tiktok.com/doc/oauth-user-access-token-management fetched 22/10/2026]; X OAuth 2.0 issues refresh tokens only with `offline.access` [VERIFIED https://docs.x.com/fundamentals/authentication/oauth-2-0/authorization-code fetched 22/10/2026]) must be persisted through the existing coordinator, never by a second writer. No token appears in logs or in `metadata`.
+- **Scopes:** read scopes are added only where a slice needs them (`yt-analytics.readonly`, `user.info.stats`). Each addition forces a reconnect, which the founder or a client admin clicks. Agents cannot grant scopes.
+- **Cost:** YouTube, TikTok and Meta reads are free within quota. X reads are paid per use. S4 ships with `X_READBACK_ENABLED=false` by default and a per-organisation monthly cap in AUD, checked before each batch through the existing spend governor (`lib/ai/governor/*`). When the cap is reached it sets `readback.state='paused_cost_cap'`, which shows as unknown, not 0. No credits are bought by an agent, ever. Enabling X read-back is a new direct cost and is founder-only (Q2).
+- **Rough X volume** [INFERENCE]: with S5's cadence, a post is read about 72 + 27 + 9 ≈ 108 times over 90 days. At US$0.001-0.005 per read, that is about US$0.11-0.54 per post. With the current hourly 50-post sweep it would be up to 1,200 reads a day per connection. S5 must land before S4.
+- **Quota exhaustion:** a 403 or 429 marks the connection's pass as `unread`, leaves the earlier numbers as they were, and logs once per pass.
+- **Org scoping:** the cron already loops per organisation. The coverage command and the studio tools filter by `organizationId`.
+
+## Risk & assumption register
+
+| ID | Risk or assumption | Likelihood | Impact | Mitigation | Owner |
+|---|---|---|---|---|---|
+| A1 | CARSI and RestoreAssist actually publish to YouTube, TikTok or X | M | H | Q1. The coverage command lists active connections and published counts. A slice for a platform with no posts is deferred. | Founder |
+| A2 | YouTube `reports.query` with `filters=video==` returns lifetime per-video values for the four metrics the branch requests | M | M | The metrics page does not state video-filter support for these metrics [VERIFIED https://developers.google.com/youtube/analytics/metrics fetched 22/10/2026]. S0 verifies against one real video before merge. An empty row stays unknown. | Builder |
+| A3 | The scope page says `reports.query` "now require[s] access to" `youtube.readonly` [VERIFIED https://developers.google.com/youtube/analytics/reference/reports/query fetched 22/10/2026]. The samples use `yt-analytics.readonly`. | M | L | Request both (the branch does). S6 flags either one missing. | Builder |
+| R1 | Readers keep summing columns and ignore `readStatus`, so 0 still reaches a person | H | H | S1 changes the readers in the same PR. A test plants an unread count and asserts the UI and studio tool say "not read". | Builder |
+| R2 | X costs grow unnoticed | M | M | Off by default, AUD cap, S5 cadence first, governor check before each batch | Founder |
+| R3 | Engagement is mistaken for outcome | M | H | Reports rank posts by attributed sign-ups or enrolments (P6), and show engagement only as a secondary column | Builder |
+| R4 | The worker's TikTok Business API branch keeps failing and is read as "no audience" | H | L | S3 replaces it. The failure stores `lastSyncError`, not zeros. | Builder |
+| R5 | TikTok rate limits and YouTube Analytics quota are not stated on the fetched pages | M | M | Back off on 429. Measure in S3 and S0. [UNVERIFIED] | Builder |
+| R6 | The 50-post hourly sweep starves newer posts on a busy connection | L | M | S5 cadence by age | Builder |
+
+## Open questions
+
+1. **(Founder only)** Q1. Which channels do CARSI and RestoreAssist actually publish to in the FD-10 window? The default is to build only those slices. The coverage command answers this from data once S7 runs.
+2. **(Founder only)** Q2. Is X read-back worth a new pay-per-use cost, and what monthly AUD cap applies? The default is X off. Does a funded X developer account exist for Synthex's X app? [UNVERIFIED]
+3. **(Founder only)** Q3. Who clicks reconnect for each CARSI and RestoreAssist YouTube or TikTok connection to grant the new read scopes, and when?
+4. Q4. Should the eight count columns become nullable later (protected migration), or is `metadata.readStatus` enough? Decide after S1 has run for two weeks.
+5. Q5. Does P6's outcome event carry `utm_content` from the landing page, so the post join in S7 is exact? This depends on the P6 build.
+
+## Verification plan
+
+| Check | Command | Expected (can go red) |
+|---|---|---|
+| Branch tests pass after rebase | `npx vitest run tests/unit/analytics/results-readback.test.ts tests/unit/api/cron-analytics-sync.test.ts` | Exit 0. Planted red: change `readCount` in `lib/social/youtube-service.ts` to return `0` for an empty string, and the suite fails. |
+| No zero-coalescing left in read paths | `grep -nE "(_count\|Count)[^;]*\|\| 0" lib/social/{tiktok,twitter-sync,facebook,youtube,linkedin}-service.ts lib/queue/workers/analytics-worker.ts` | No output after S1-S4. Today it matches, e.g. `lib/social/tiktok-service.ts:659`, `lib/social/twitter-sync-service.ts:589`. |
+| Ingest set covers the platforms with a publish adapter (where Q1 says yes) | `node -e "import('./lib/analytics/ingest-post-metrics.ts')"` is not runnable as is, so use a vitest case: `expect([...ANALYTICS_INGEST_PLATFORMS].sort()).toEqual(['facebook','instagram','linkedin','tiktok','youtube'])` (plus `twitter` when Q2 = yes) | Fails today, where the set is `instagram`, `linkedin` |
+| X field mapping | Unit test: a fixture with `public_metrics.retweet_count=3, reply_count=2` and `non_public_metrics.url_link_clicks=7` gives `shares=3, comments=2, clicks=7` | Fails on main: shares and comments are 0 |
+| Unread stays unread end to end | Unit test: TikTok fixture omits `share_count`; the row has `metadata.readStatus.shares==='unread'`; `performance_*` output shows `null` or "not read" | Fails on main: 0 |
+| X 30-day boundary | Unit test: a post aged 31 days gives no `non_public_metrics` request, and `readStatus.clicks==='frozen_at_30d'` keeps the last value | Fails without S4 |
+| Cost cap | Unit test: governor cap reached gives no X call and `readback.state==='paused_cost_cap'` | Fails without S4 guard |
+| Coverage meter (production, read-only) | `node scripts/analytics/readback-coverage.mjs --org <carsi-org-id> --max-age-hours 26` | Prints platform, published_30d, read_26h, unread_fields. Exits 1 if any platform with published_30d > 0 has read_26h = 0. Positive control: run against a test org with one post whose `_latest` row is 30 h old, and it must exit 1. |
+| Scope health | Unit test: a YouTube connection whose `scope` lacks `yt-analytics.readonly` gives `readback.state==='needs_reconnect'` with `missing` listing it | Fails on main (no flag) |
+
+Runtime claims ("read-back works for CARSI") need the coverage command's output from production after deploy. Local tests alone are only "local checks pass".
