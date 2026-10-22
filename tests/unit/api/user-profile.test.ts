@@ -24,7 +24,8 @@ jest.mock('@/lib/prisma', () => ({
 // Mock auth
 const mockGetUserIdFromRequestOrCookies = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({
-  getUserIdFromRequestOrCookies: (...args: unknown[]) => mockGetUserIdFromRequestOrCookies(...args),
+  getUserIdFromRequestOrCookies: (...args: unknown[]) =>
+    mockGetUserIdFromRequestOrCookies(...args),
   unauthorizedResponse: () => {
     const { NextResponse } = require('next/server');
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -112,7 +113,7 @@ describe('User Profile API - /api/user/profile', () => {
       expect(body.profile.email).toBe('');
     });
 
-    it('should return default profile on database error', async () => {
+    it('should return 500, not a default profile, on database error', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-err');
       mockPrisma.user.findUnique.mockRejectedValue(new Error('DB error'));
 
@@ -120,10 +121,10 @@ describe('User Profile API - /api/user/profile', () => {
       const res = await GET(req);
       const body = await res.json();
 
-      // Route returns a default profile instead of 500
-      expect(res.status).toBe(200);
-      expect(body.profile).toBeDefined();
-      expect(body.profile.name).toBe('');
+      // A failed read must not look like an empty profile (honest status)
+      expect(res.status).toBe(500);
+      expect(body.error).toBe('Failed to fetch profile');
+      expect(body.profile).toBeUndefined();
     });
 
     it('should handle null optional fields gracefully', async () => {
@@ -302,7 +303,9 @@ describe('User Profile API - /api/user/profile', () => {
     it('should return 401 when not authenticated', async () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue(null);
 
-      const req = createRequest('DELETE', { confirmation: 'DELETE_MY_ACCOUNT' });
+      const req = createRequest('DELETE', {
+        confirmation: 'DELETE_MY_ACCOUNT',
+      });
       const res = await DELETE(req);
       const body = await res.json();
 
@@ -336,7 +339,9 @@ describe('User Profile API - /api/user/profile', () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
       mockPrisma.user.delete.mockResolvedValue({ id: 'user-123' });
 
-      const req = createRequest('DELETE', { confirmation: 'DELETE_MY_ACCOUNT' });
+      const req = createRequest('DELETE', {
+        confirmation: 'DELETE_MY_ACCOUNT',
+      });
       const res = await DELETE(req);
       const body = await res.json();
 
@@ -352,7 +357,9 @@ describe('User Profile API - /api/user/profile', () => {
       mockGetUserIdFromRequestOrCookies.mockResolvedValue('user-123');
       mockPrisma.user.delete.mockRejectedValue(new Error('FK constraint'));
 
-      const req = createRequest('DELETE', { confirmation: 'DELETE_MY_ACCOUNT' });
+      const req = createRequest('DELETE', {
+        confirmation: 'DELETE_MY_ACCOUNT',
+      });
       const res = await DELETE(req);
       const body = await res.json();
 
