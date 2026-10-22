@@ -41,7 +41,7 @@ a { color: var(--brand); }
 .stage .ph small { font-family: var(--mono); font-size: 10.5px; color: rgba(255,255,255,.72); text-align: right; max-width: 52%; line-height: 1.35; }
 .stage .ph .tag { color: #FFD9CC; border-color: rgba(255,217,204,.6); }
 .logo { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); width: 62%; max-width: 260px; display: grid; place-items: center; }
-.logo img { width: 100%; height: auto; display: block; }
+.logo img { width: 100%; height: auto; display: block; border-radius: 14px; }
 .logo .tag { color: #FFD9CC; border-color: rgba(255,217,204,.6); }
 .stage .name { position: absolute; left: 18px; right: 18px; bottom: 18px; }
 .name h1 { font-family: var(--display); font-weight: 700; font-size: clamp(38px, 12vw, 54px); line-height: .95; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
@@ -254,10 +254,23 @@ function lum(hex) {
     document.head.appendChild(l);
   }
   const logo = B.logo || {};
-  const src = logo.dataUri || (HOSTED && logo.url) || null;
+  const src = (HOSTED ? logo.hostedUrl : logo.dataUri) || logo.dataUri || null;
   if (logo.status === "found" && src) {
     const img = document.createElement("img"); img.src = src; img.alt = (B.name || "Business") + " logo";
     $("logo").textContent = ""; $("logo").appendChild(img);
+  }
+  // Hero: the card opens with the brand's own reveal clip when the kit has one; the logo stays as the fallback
+  const hero = B.hero || {};
+  const heroSrc = hero.status === "found" ? ((HOSTED ? hero.hostedVideo : hero.videoDataUri) || hero.videoDataUri) : null;
+  if (heroSrc) {
+    const v = document.createElement("video");
+    v.muted = true; v.autoplay = true; v.playsInline = true; v.loop = !!hero.loop;
+    v.setAttribute("playsinline", ""); v.setAttribute("aria-label", (B.name || "Brand") + " reveal");
+    const poster = HOSTED ? hero.hostedPoster : hero.posterDataUri; if (poster) v.poster = poster;
+    v.src = heroSrc;
+    v.addEventListener("playing", () => { $("logo").hidden = true; $("water").hidden = true; document.querySelector(".stage .ph").hidden = true; });
+    v.addEventListener("error", () => { v.remove(); });
+    $("water").after(v);
   }
   const missing = Object.entries(c).filter(([, v]) => v && v.status === "missing").map(([k]) => k);
   if (logo.status !== "found") missing.unshift("logo");

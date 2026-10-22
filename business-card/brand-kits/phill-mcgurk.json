@@ -13,14 +13,23 @@
     "tagline": {"text": "Connected service for the field.", "source": "packages/brand-config/src/brands/unite.ts:9"},
     "logo": {
       "status": "found",
-      "url": "https://unite-group.in/logos/unite-group-nexus-logo.png",
-      "file": "public/logos/unite/primary.svg",
-      "background": "dark",
-      "source": "config/brand-logo-sources.json: exact bytes from unite-group.in, vector traced deterministically"
+      "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EylNYIXHhxzWzWXcjAi4t8Vhpf/hf_20261022_072225_8411d0b4-af07-419b-a516-cd872c1207b2.png",
+      "file": "business-card/brand-kits/media/unite-nexus-2026.png",
+      "sha256": "52858877c0a7dfee0520fabb7644206d413ce4d83b288511f74f959a0a60f313",
+      "background": "light grey render; a clean navy version is being made",
+      "source": "Generated in Higgsfield, job 8411d0b4-af07-419b-a516-cd872c1207b2 (image 4 of the logo round)",
+      "decision": "Chosen by Phill 22/10/2026: \"We have to go with image 4. thats a clear winner\". Founder-chosen, AI-generated, not yet trademark-checked. Used on the card only; no live website logo changed."
     },
+    "previousLogos": [
+      {
+        "label": "Unite-Group Nexus mark used on unite-group.in until 22/10/2026",
+        "file": "public/logos/unite/primary.svg",
+        "colour": "#00DCE3",
+        "source": "config/brand-logo-sources.json: exact bytes from unite-group.in (sha256 f73cd4c5…), vector traced deterministically"
+      }
+    ],
     "colours": {
       "primary": {"value": "#E55A2B", "source": "packages/brand-config/src/brands/unite.ts:16, marked verified 05/05/2026", "decision": "Lead colour, decided by Phill 22/10/2026: \"Keep the verified orange #E55A2B as the main colour.\""},
-      "logo": {"value": "#00DCE3", "use": "logo only", "source": "measured from public/logos/unite/primary.svg (the unite-group.in logo)"},
       "secondary": {"status": "missing", "note": "#1E293B is proposed in unite.ts:17 but not verified"},
       "accent": {"status": "missing", "note": "#FBBF24 is proposed in unite.ts:18 but not verified"},
       "background": {"status": "missing", "note": "no confirmed page colour; the template uses plain white"},
@@ -34,6 +43,7 @@
     },
     "about": {"status": "missing", "note": "no approved About copy for Unite Group in brand-config"},
     "imagery": {"status": "missing", "note": "no real photos of Phill supplied yet"},
+    "hero": {"status": "missing", "note": "4-second logo-reveal clip in progress in Higgsfield (job 9d9d98d9-dc53-47df-a610-ede9fa7179d8); add video and poster files here when it lands"},
     "services": []
   },
   "person": {
