@@ -3,8 +3,10 @@
  * the exported zod schemas `Kit` / `ClientManifest`.
  * CATCHES: a kit missing a required field, a kit or manifest field with the
  * wrong shape, an in-repo artefact / test / verifier path that does not exist
- * in this checkout, a manifest null not declared in `unknown`, a kit cost
- * estimate above the per-build ceiling, a missing or duplicated kit id.
+ * in this checkout, a client-manifest `claimsFile` path that does not exist
+ * (#1061), K3 not pointing at the shipped lib/schema-packs implementation, a
+ * manifest null not declared in `unknown`, a kit cost estimate above the
+ * per-build ceiling, a missing or duplicated kit id.
  * MISSES: in-skills paths (they live under ~/.claude/skills, outside the repo),
  * whether `wired` is true in production, and whether time/cost estimates are
  * accurate (they are judgements until measured).
@@ -40,6 +42,28 @@ function missingRepoPaths(kits: readonly unknown[]): string[] {
   return missing;
 }
 
+/** Every repo path a client manifest names that does not exist in the checkout. */
+function missingManifestPaths(manifests: readonly unknown[]): string[] {
+  const missing: string[] = [];
+  for (const raw of manifests) {
+    const m = ClientManifest.parse(raw);
+    const p = m.claimsFile?.value;
+    if (p && !fs.existsSync(path.join(REPO_ROOT, p)))
+      missing.push(`${m.slug}: ${p}`);
+  }
+  return missing;
+}
+
+const K3_IMPL = 'lib/schema-packs/';
+const K3_TEST = 'tests/unit/schema-packs/schema-packs.test.ts';
+
+/** In-repo artefacts a kit names under the K3 implementation directory. */
+function schemaPackArtefacts(kit: unknown) {
+  return Kit.parse(kit).artefacts.filter(
+    a => a.kind === 'in-repo' && a.path.startsWith(K3_IMPL)
+  );
+}
+
 describe('kit catalogue', () => {
   it('holds K1-K14 and the manifest entry M, each exactly once', () => {
     expect(KITS.map(k => k.id)).toEqual([
@@ -71,6 +95,21 @@ describe('kit catalogue', () => {
 
   it('every in-repo artefact path exists at HEAD', () => {
     expect(missingRepoPaths(KITS)).toEqual([]);
+  });
+
+  it('K3 links the shipped schema packs and their test', () => {
+    const linked = schemaPackArtefacts(KITS.find(k => k.id === 'K3'));
+    expect(linked.length).toBeGreaterThan(0);
+    for (const a of linked)
+      expect(a.kind === 'in-repo' ? a.testPath : null).toBe(K3_TEST);
+  });
+
+  it('control: a K3 entry without the schema-packs link is caught', () => {
+    const planted = clone(KITS.find(k => k.id === 'K3')!);
+    planted.artefacts = planted.artefacts.filter(
+      a => !(a.kind === 'in-repo' && a.path.startsWith(K3_IMPL))
+    );
+    expect(schemaPackArtefacts(planted)).toEqual([]);
   });
 
   it('no kit estimates direct spend above the per-build ceiling', () => {
@@ -127,6 +166,23 @@ describe('client manifests', () => {
   ] as const)('%s validates through ClientManifest', (_slug, manifest) => {
     const result = ClientManifest.safeParse(manifest);
     expect(result.success ? [] : result.error.issues).toEqual([]);
+  });
+
+  it('every manifest claimsFile path exists at HEAD', () => {
+    expect(
+      missingManifestPaths([carsiManifest, restoreassistManifest])
+    ).toEqual([]);
+  });
+
+  it('control: a planted missing claimsFile path is caught', () => {
+    const planted = clone(carsiManifest);
+    planted.claimsFile = {
+      value: 'packages/brand-config/src/brands/__planted_missing__.md',
+      source: 'planted',
+    };
+    expect(missingManifestPaths([planted])).toEqual([
+      'carsi: packages/brand-config/src/brands/__planted_missing__.md',
+    ]);
   });
 
   it('CARSI is recorded as not an RTO', () => {
