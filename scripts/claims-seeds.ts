@@ -277,12 +277,14 @@ export interface RetiredSeed {
   reason: string;
 }
 
+// No derived count: sibling branches that each add seeds would rewrite the
+// same line with different totals and always conflict (#1057, #1060). The
+// seeds are sorted, so distinct additions land on different lines and merge.
 const render = (list: Seed[], retired: RetiredSeed[] = []) =>
   `${JSON.stringify(
     {
       generator: 'scripts/claims-seeds.ts',
       base: BASE.slice(0, 8),
-      count: list.length,
       seeds: list,
       retired,
     },
