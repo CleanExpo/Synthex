@@ -4,5 +4,59 @@
     "label": "Signature reveal",
     "poster": "media/unite-nexus-u-reveal-poster.jpg",
     "video": "media/unite-nexus-u-reveal-h264.mp4"
+  },
+  {
+    "name": "portal",
+    "label": "Portal edition",
+    "poster": "media/edition-portal-poster.jpg",
+    "video": "media/edition-portal.mp4"
+  },
+  {
+    "name": "restoration",
+    "label": "Restoration edition",
+    "poster": "media/edition-restoration-poster.jpg",
+    "video": "media/edition-restoration.mp4"
+  },
+  {
+    "name": "blueprint",
+    "label": "Blueprint edition",
+    "poster": "media/edition-blueprint-poster.jpg",
+    "video": "media/edition-blueprint.mp4"
+  },
+  {
+    "name": "constellation",
+    "label": "Constellation edition",
+    "poster": "media/edition-constellation-poster.jpg",
+    "video": "media/edition-constellation.mp4"
+  },
+  {
+    "name": "ink",
+    "label": "Ink edition",
+    "poster": "media/edition-ink-poster.jpg",
+    "video": "media/edition-ink.mp4"
+  },
+  {
+    "name": "rewind",
+    "label": "Rewind edition",
+    "poster": "media/edition-rewind-poster.jpg",
+    "video": "media/edition-rewind.mp4"
+  },
+  {
+    "name": "skyline",
+    "label": "Skyline edition",
+    "poster": "media/edition-skyline-poster.jpg",
+    "video": "media/edition-skyline.mp4"
+  },
+  {
+    "name": "origami",
+    "label": "Origami edition",
+    "poster": "media/edition-origami-poster.jpg",
+    "video": "media/edition-origami.mp4"
+  },
+  {
+    "name": "magnet",
+    "label": "Magnet edition",
+    "poster": "media/edition-magnet-poster.jpg",
+    "video": "media/edition-magnet.mp4"
   }
 ]
