@@ -23,7 +23,6 @@ import type { BrandIdentity } from '@/lib/landing-page';
 import type { GbpApiClient, GbpPlace } from '@/lib/gbp';
 import type { BingLocality, BingPlacesApiClient } from '@/lib/bing-places';
 import type { PostcodeDatasetRow } from '@/lib/postcode';
-import { _resetPingRateLimitForTests } from '@/lib/sitemap/ping-client';
 
 // Reset budget ledger module state between tests by re-requiring would
 // require module-cache shenanigans; instead we inject a custom budget
@@ -250,7 +249,6 @@ function baseOpts(
 beforeEach(() => {
   budgetEntries.length = 0;
   nextLedgerId = 1;
-  _resetPingRateLimitForTests();
 });
 
 // ─── TESTS ────────────────────────────────────────────────────────────────
@@ -417,6 +415,10 @@ describe('createNrpgPipelineHandler — sitemap ping behaviour', () => {
     const first = await handler(event({ sourceOfTruthJobId: 'job_first' }));
     expect(first.sitemap?.result?.regen.added.length).toBeGreaterThan(0);
     expect(currentXml.length).toBeGreaterThan(0);
+    // Google/Bing sitemap pings are retired: reported honestly, never sent.
+    const firstPings = first.sitemap?.result?.pings ?? [];
+    expect(firstPings.length).toBeGreaterThan(0);
+    expect(firstPings.every(p => !p.pinged && p.retired === true)).toBe(true);
 
     // Second run reads the now-populated XML; idempotent merge → zero adds
     const second = await handler(event({ sourceOfTruthJobId: 'job_first' }));

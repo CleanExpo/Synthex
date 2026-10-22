@@ -7,13 +7,17 @@
  *  - parseSitemap / buildSitemap: round-trip + sort + entity escape
  *  - regenerateSitemapForLocations: validation, idempotency, dedupe-within-batch,
  *    custom changefreq/priority/now, lastmod NOT updated for existing entries
- *  - pingSearchEngine: rate limit + fetch failure + URL encoding
- *  - pingAllSearchEngines: hits both targets
+ *  - pingSearchEngine / pingAllSearchEngines: the Google and Bing sitemap
+ *    ping endpoints are retired, so no request is sent and every result says
+ *    so (pinged=false, retired=true) and names the replacement routes.
+ *    SEAM: the exported ping functions plus a scan of the ping-client source.
+ *    Catches: a retired ping URL reintroduced, a fake pinged=true. Misses:
+ *    whether the replacement routes ran (their own tests cover that).
  *
  * @see SYN-840 (parent: SYN-834 epic)
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import {
   slugifySuburb,
   buildLandingPageUrl,
@@ -23,11 +27,8 @@ import {
   pingSearchEngine,
   pingAllSearchEngines,
 } from '@/lib/sitemap';
-import {
-  _resetPingRateLimitForTests,
-  _setNowForTests,
-  _resetNowForTests,
-} from '@/lib/sitemap/ping-client';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import type { LocationOpenedEvent } from '@/lib/sitemap/types';
 
 jest.mock('@/lib/logger', () => ({
@@ -337,118 +338,66 @@ describe('regenerateSitemapForLocations — merge behaviour', () => {
   });
 });
 
-describe('pingSearchEngine', () => {
-  beforeEach(() => {
-    _resetPingRateLimitForTests();
-    _resetNowForTests();
+/** Fails if a source text contains a retired sitemap ping endpoint. */
+function checkNoRetiredPingUrl(source: string): void {
+  const hit = source.match(/(?:google|bing)\.com\/ping\?sitemap=/);
+  if (hit) throw new Error(`retired ping endpoint present: ${hit[0]}`);
+}
+
+describe('pingSearchEngine (retired endpoints)', () => {
+  it.each(['google', 'bing'] as const)(
+    'sends nothing to %s and reports the ping as retired',
+    async target => {
+      const fetchImpl = jest.fn(async () => ({ status: 200 }) as Response);
+      const result = await pingSearchEngine(
+        target,
+        'https://disasterrecovery.com.au/sitemap.xml',
+        { fetchImpl: fetchImpl as unknown as typeof fetch }
+      );
+      expect(fetchImpl).not.toHaveBeenCalled();
+      expect(result.pinged).toBe(false);
+      expect(result.retired).toBe(true);
+      expect(result.status).toBeUndefined();
+    }
+  );
+
+  it('names the replacement routes in the reason', async () => {
+    const result = await pingSearchEngine('bing', 'https://e.com/s.xml');
+    expect(result.reason).toMatch(/Search Console/);
+    expect(result.reason).toMatch(/IndexNow/);
+    expect(result.reason).toMatch(/SubmitFeed/);
   });
 
-  it('returns pinged=false when sitemapUrl missing', async () => {
-    const result = await pingSearchEngine('google', '');
-    expect(result.pinged).toBe(false);
-    expect(result.reason).toMatch(/sitemapUrl required/);
-  });
-
-  it('sends GET to Google with encoded sitemap URL', async () => {
-    const fetchImpl = jest.fn(async () => ({ status: 200 }) as Response);
-    const result = await pingSearchEngine(
-      'google',
-      'https://disasterrecovery.com.au/sitemap.xml',
-      { fetchImpl: fetchImpl as unknown as typeof fetch }
+  it('the ping client source holds no retired endpoint', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'lib/sitemap/ping-client.ts'),
+      'utf8'
     );
-    expect(result.pinged).toBe(true);
-    expect(result.status).toBe(200);
-    expect(fetchImpl).toHaveBeenCalledTimes(1);
-    const calledUrl = (fetchImpl.mock.calls[0] as unknown as [string])[0];
-    expect(calledUrl).toContain('https://www.google.com/ping?sitemap=');
-    expect(calledUrl).toContain(
-      encodeURIComponent('https://disasterrecovery.com.au/sitemap.xml')
-    );
+    expect(() => checkNoRetiredPingUrl(source)).not.toThrow();
   });
 
-  it('sends GET to Bing', async () => {
-    const fetchImpl = jest.fn(async () => ({ status: 202 }) as Response);
-    const result = await pingSearchEngine(
-      'bing',
-      'https://example.com/sitemap.xml',
-      { fetchImpl: fetchImpl as unknown as typeof fetch }
-    );
-    expect(result.pinged).toBe(true);
-    const calledUrl = (fetchImpl.mock.calls[0] as unknown as [string])[0];
-    expect(calledUrl).toContain('https://www.bing.com/ping?sitemap=');
-  });
-
-  it('rate-limits to 1/hour per target', async () => {
-    const fetchImpl = jest.fn(async () => ({ status: 200 }) as Response);
-    let now = 1_700_000_000_000;
-    _setNowForTests(() => now);
-
-    const first = await pingSearchEngine('google', 'https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    expect(first.pinged).toBe(true);
-
-    // 30 minutes later → should be rate-limited
-    now += 30 * 60 * 1000;
-    const second = await pingSearchEngine('google', 'https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    expect(second.pinged).toBe(false);
-    expect(second.reason).toMatch(/rate-limited/);
-
-    // 60 minutes after the first → should be allowed again
-    now += 31 * 60 * 1000;
-    const third = await pingSearchEngine('google', 'https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    expect(third.pinged).toBe(true);
-    expect(fetchImpl).toHaveBeenCalledTimes(2);
-  });
-
-  it('rate limit is per-target — Bing not blocked by recent Google ping', async () => {
-    const fetchImpl = jest.fn(async () => ({ status: 200 }) as Response);
-    await pingSearchEngine('google', 'https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    const bing = await pingSearchEngine('bing', 'https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    expect(bing.pinged).toBe(true);
-  });
-
-  it('returns pinged=false on fetch failure (does not throw)', async () => {
-    const fetchImpl = jest.fn(async () => {
-      throw new Error('network down');
-    });
-    const result = await pingSearchEngine('google', 'https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
-    });
-    expect(result.pinged).toBe(false);
-    expect(result.reason).toMatch(/fetch failed: network down/);
+  it('retired ping URL reintroduced (control: planted failure is caught)', () => {
+    const planted =
+      'return `https://www.google.com/ping?sitemap=${encoded}`; // reintroduced';
+    expect(() => checkNoRetiredPingUrl(planted)).toThrow(/retired/);
   });
 });
 
-describe('pingAllSearchEngines', () => {
-  beforeEach(() => {
-    _resetPingRateLimitForTests();
-    _resetNowForTests();
-  });
-
-  it('hits both Google and Bing', async () => {
+describe('pingAllSearchEngines (retired endpoints)', () => {
+  it('returns one retired result per target and sends nothing', async () => {
     const fetchImpl = jest.fn(async () => ({ status: 200 }) as Response);
     const results = await pingAllSearchEngines('https://e.com/s.xml', {
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
-    expect(results).toHaveLength(2);
-    const targets = results.map(r => r.target).sort();
-    expect(targets).toEqual(['bing', 'google']);
-    expect(results.every(r => r.pinged)).toBe(true);
+    expect(results.map(r => r.target).sort()).toEqual(['bing', 'google']);
+    expect(results.every(r => r.pinged === false && r.retired === true)).toBe(
+      true
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it('honours targets override', async () => {
-    const fetchImpl = jest.fn(async () => ({ status: 200 }) as Response);
     const results = await pingAllSearchEngines('https://e.com/s.xml', {
-      fetchImpl: fetchImpl as unknown as typeof fetch,
       targets: ['bing'],
     });
     expect(results).toHaveLength(1);
