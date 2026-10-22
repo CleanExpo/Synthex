@@ -2,14 +2,15 @@
  * K2 — "Synthex may create Analytics for me" consent and grant record.
  *
  * SEAM: exported functions of lib/google/ga4-admin-consent.ts.
- * CATCHES: a consent token usable by another user, after expiry or after
- * tampering; a grant recorded when Google did not actually grant
+ * CATCHES: a consent token usable by another user, for another organisation,
+ * after expiry or after tampering; a grant recorded when Google did not actually grant
  * analytics.edit (granular consent lets the user untick it); an authority
  * check that passes on scope alone or metadata alone.
  * MISSES: the OAuth starter wiring (ga4-admin-consent-oauth test) and the
  * provision route (ga4-provision test).
  */
 
+import crypto from 'crypto';
 import {
   GA4_ADMIN_SCOPE,
   GA4_ADMIN_CONSENT_VERSION,
@@ -43,28 +44,55 @@ describe('consent statement', () => {
 
 describe('consent token', () => {
   it('verifies for the same user inside the window', () => {
-    const token = signGa4AdminConsent('user-1', NOW);
-    expect(verifyGa4AdminConsent(token, 'user-1', NOW + 60_000)).toEqual({
+    const token = signGa4AdminConsent('user-1', 'org-1', NOW);
+    expect(
+      verifyGa4AdminConsent(token, 'user-1', 'org-1', NOW + 60_000)
+    ).toEqual({
       version: GA4_ADMIN_CONSENT_VERSION,
       acceptedAt: new Date(NOW).toISOString(),
     });
   });
 
   it('rejects another user, an expired token and a tampered token', () => {
-    const token = signGa4AdminConsent('user-1', NOW);
-    expect(verifyGa4AdminConsent(token, 'user-2', NOW)).toBeNull();
+    const token = signGa4AdminConsent('user-1', 'org-1', NOW);
+    expect(verifyGa4AdminConsent(token, 'user-2', 'org-1', NOW)).toBeNull();
     expect(
-      verifyGa4AdminConsent(token, 'user-1', NOW + 11 * 60_000)
+      verifyGa4AdminConsent(token, 'user-1', 'org-1', NOW + 11 * 60_000)
     ).toBeNull();
     const [payload, sig] = token.split('.');
     const forged = Buffer.from(
-      JSON.stringify({ u: 'user-2', v: GA4_ADMIN_CONSENT_VERSION, t: NOW })
+      JSON.stringify({
+        u: 'user-2',
+        o: 'org-1',
+        v: GA4_ADMIN_CONSENT_VERSION,
+        t: NOW,
+      })
     ).toString('base64url');
-    expect(verifyGa4AdminConsent(`${forged}.${sig}`, 'user-2', NOW)).toBeNull();
     expect(
-      verifyGa4AdminConsent(`${payload}.x${sig}`, 'user-1', NOW)
+      verifyGa4AdminConsent(`${forged}.${sig}`, 'user-2', 'org-1', NOW)
     ).toBeNull();
-    expect(verifyGa4AdminConsent('', 'user-1', NOW)).toBeNull();
+    expect(
+      verifyGa4AdminConsent(`${payload}.x${sig}`, 'user-1', 'org-1', NOW)
+    ).toBeNull();
+    expect(verifyGa4AdminConsent('', 'user-1', 'org-1', NOW)).toBeNull();
+  });
+
+  it('rejects another organisation, a missing organisation and a token signed without one', () => {
+    const token = signGa4AdminConsent('user-1', 'org-1', NOW);
+    expect(verifyGa4AdminConsent(token, 'user-1', 'org-2', NOW)).toBeNull();
+    expect(verifyGa4AdminConsent(token, 'user-1', null, NOW)).toBeNull();
+    expect(verifyGa4AdminConsent(token, 'user-1', '', NOW)).toBeNull();
+    // A pre-binding token shape (no organisation), correctly signed, is refused.
+    const legacy = Buffer.from(
+      JSON.stringify({ u: 'user-1', v: GA4_ADMIN_CONSENT_VERSION, t: NOW })
+    ).toString('base64url');
+    const legacySig = crypto
+      .createHmac('sha256', process.env.OAUTH_STATE_SECRET as string)
+      .update(legacy)
+      .digest('base64url');
+    expect(
+      verifyGa4AdminConsent(`${legacy}.${legacySig}`, 'user-1', 'org-1', NOW)
+    ).toBeNull();
   });
 });
 

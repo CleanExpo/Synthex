@@ -11,7 +11,9 @@
  *   { createAnalytics: { accepted: true, consentVersion, statement } }
  * with the exact GA4_ADMIN_CONSENT_STATEMENT it displayed. Only then is a
  * short-lived consent token passed to the starter, which adds the edit scope.
- * Without the body the connect stays read-only, as before.
+ * The token is bound to the organisation the statement was accepted for, and
+ * that same organisation is passed to the starter, so the grant can only be
+ * stored against it. Without the body the connect stays read-only, as before.
  *
  * SYN-793
  */
@@ -21,6 +23,7 @@ import { z } from 'zod';
 import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { logger } from '@/lib/logger';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
+import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import {
   GA4_ADMIN_CONSENT_STATEMENT,
   GA4_ADMIN_CONSENT_VERSION,
@@ -65,9 +68,22 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const consentToken = parsed.data.createAnalytics
-      ? signGa4AdminConsent(userId)
-      : null;
+    let consentToken: string | null = null;
+    let consentOrganizationId: string | null = null;
+    if (parsed.data.createAnalytics) {
+      consentOrganizationId = await getEffectiveOrganizationId(userId);
+      if (!consentOrganizationId) {
+        return NextResponse.json(
+          {
+            error: 'Organization required',
+            message:
+              'Select or create the business that Synthex may create Analytics for, then accept the statement again.',
+          },
+          { status: 403 }
+        );
+      }
+      consentToken = signGa4AdminConsent(userId, consentOrganizationId);
+    }
 
     // Delegate OAuth URL generation to the existing platform starter.
     // We re-use its signed-state + PKCE + credential resolution paths.
@@ -84,8 +100,9 @@ export async function POST(request: NextRequest) {
     const returnTo = '/dashboard/settings?tab=integrations&ga4=connected';
     const starterUrl =
       `${appUrl}/api/auth/oauth/${GA4_PLATFORM}?returnTo=${encodeURIComponent(returnTo)}` +
-      (consentToken
-        ? `&ga4AdminConsent=${encodeURIComponent(consentToken)}`
+      (consentToken && consentOrganizationId
+        ? `&organizationId=${encodeURIComponent(consentOrganizationId)}` +
+          `&ga4AdminConsent=${encodeURIComponent(consentToken)}`
         : '');
 
     const cookie = request.headers.get('cookie') ?? '';

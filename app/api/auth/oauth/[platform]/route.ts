@@ -290,15 +290,22 @@ export async function GET(
     const returnTo = request.nextUrl.searchParams.get('returnTo') ?? undefined;
 
     // GA4 onboarding authority (K2): a consent token from the explicit
-    // "Synthex may create Analytics for me" step unlocks the edit scope. A
-    // token that is present but invalid is refused, never silently downgraded.
+    // "Synthex may create Analytics for me" step unlocks the edit scope. The
+    // token must name the organisation this flow stores the connection
+    // against (resolved above), so acceptance for one client never becomes
+    // authority for another. A token that is present but invalid is refused,
+    // never silently downgraded.
     let ga4AdminConsent: Ga4AdminConsent | null = null;
     const ga4ConsentToken =
       platform === 'googleanalytics'
         ? request.nextUrl.searchParams.get('ga4AdminConsent')
         : null;
     if (ga4ConsentToken) {
-      ga4AdminConsent = verifyGa4AdminConsent(ga4ConsentToken, user.id);
+      ga4AdminConsent = verifyGa4AdminConsent(
+        ga4ConsentToken,
+        user.id,
+        organizationId
+      );
       if (!ga4AdminConsent) {
         return NextResponse.json(
           {

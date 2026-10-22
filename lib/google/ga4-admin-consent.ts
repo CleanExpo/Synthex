@@ -4,8 +4,11 @@
  *
  * `analytics.edit` is requested from Google only after the onboarding step
  * shows GA4_ADMIN_CONSENT_STATEMENT and the user accepts it. The step mints a
- * short-lived HMAC consent token bound to the user; the OAuth starter adds the
- * scope only for a valid token. After Google's consent screen, the callback
+ * short-lived HMAC consent token bound to the user AND the organisation the
+ * statement was accepted for; the OAuth starter adds the scope only for a
+ * valid token whose organisation is the one the OAuth flow will store the
+ * connection against (acceptance for one client is never authority for
+ * another). After Google's consent screen, the callback
  * records the grant (scopes, who, when, statement) in the GA4
  * PlatformConnection metadata — only when Google actually granted the scope.
  * No schema change: the grant lives in PlatformConnection.metadata.
@@ -55,21 +58,31 @@ function hmac(payload: string): string {
 /** Mint the consent token after the user accepted the statement. */
 export function signGa4AdminConsent(
   userId: string,
+  organizationId: string,
   now: number = Date.now()
 ): string {
   const payload = Buffer.from(
-    JSON.stringify({ u: userId, v: GA4_ADMIN_CONSENT_VERSION, t: now })
+    JSON.stringify({
+      u: userId,
+      o: organizationId,
+      v: GA4_ADMIN_CONSENT_VERSION,
+      t: now,
+    })
   ).toString('base64url');
   return `${payload}.${hmac(payload)}`;
 }
 
-/** Returns the consent when the token is genuine, current and for this user. */
+/**
+ * Returns the consent when the token is genuine, current, for this user and
+ * for this organisation.
+ */
 export function verifyGa4AdminConsent(
   token: string | null | undefined,
   userId: string,
+  organizationId: string | null | undefined,
   now: number = Date.now()
 ): Ga4AdminConsent | null {
-  if (!token) return null;
+  if (!token || !organizationId) return null;
   const [payload, sig, extra] = token.split('.');
   if (!payload || !sig || extra !== undefined) return null;
   const expected = Buffer.from(hmac(payload));
@@ -80,13 +93,14 @@ export function verifyGa4AdminConsent(
   ) {
     return null;
   }
-  let data: { u?: unknown; v?: unknown; t?: unknown };
+  let data: { u?: unknown; o?: unknown; v?: unknown; t?: unknown };
   try {
     data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
   } catch {
     return null;
   }
   if (data.u !== userId || data.v !== GA4_ADMIN_CONSENT_VERSION) return null;
+  if (typeof data.o !== 'string' || data.o !== organizationId) return null;
   if (
     typeof data.t !== 'number' ||
     now - data.t > CONSENT_TTL_MS ||

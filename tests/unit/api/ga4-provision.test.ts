@@ -6,9 +6,12 @@
  * behind global fetch. Nothing reaches Google.
  * CATCHES: provisioning without the recorded analytics.edit grant; any Google
  * call before the grant check; a Google 403 reported as success; a duplicate
- * property / stream on a re-run; the measurement ID not stored on the org's
- * GA4 integration record.
- * MISSES: real Google behaviour; the onboarding UI.
+ * property / stream on a re-run; duplicate property / stream / key events when
+ * two runs for the same GA4 account overlap (the advisory lock is modelled by
+ * a per-key promise chain behind tx.$executeRaw); the measurement ID not
+ * stored on the org's GA4 integration record.
+ * MISSES: real Google behaviour; real Postgres advisory-lock semantics; the
+ * onboarding UI.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -29,11 +32,49 @@ jest.mock('@/lib/multi-business', () => ({
 
 const mockFindFirst = jest.fn();
 const mockUpsert = jest.fn();
+/** Keys passed to pg_advisory_xact_lock, in call order. */
+const lockedKeys: string[] = [];
+/**
+ * Fake interactive transaction. tx.$executeRaw models a transaction-scoped
+ * advisory lock: the key is the first bound value of the tagged template, a
+ * second holder of the same key waits until the first transaction ends.
+ */
+const advisoryLocks = new Map<string, Promise<void>>();
+async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
+  let release: () => void = () => undefined;
+  const tx = {
+    $executeRaw: async (
+      _strings: TemplateStringsArray,
+      ...values: unknown[]
+    ) => {
+      const key = String(values[0]);
+      lockedKeys.push(key);
+      const previous = advisoryLocks.get(key) ?? Promise.resolve();
+      const mine = new Promise<void>(resolve => {
+        release = resolve;
+      });
+      advisoryLocks.set(
+        key,
+        previous.then(() => mine)
+      );
+      await previous;
+      return 1;
+    },
+    gA4Property: { upsert: (...a: unknown[]) => mockUpsert(...a) },
+  };
+  try {
+    return await fn(tx);
+  } finally {
+    release();
+  }
+}
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     platformConnection: { findFirst: (...a: unknown[]) => mockFindFirst(...a) },
     gA4Property: { upsert: (...a: unknown[]) => mockUpsert(...a) },
+    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
+      fakeTransaction(fn),
   },
 }));
 
@@ -153,6 +194,64 @@ function installGoogle(opts: { existing?: boolean; forbid?: boolean } = {}) {
   return calls;
 }
 
+/**
+ * Stateful fake GA4 Admin API: what a POST creates, the next GET lists. Every
+ * response yields to the event loop first, so two unserialised runs both list
+ * before either creates.
+ */
+function installStatefulGoogle() {
+  const calls: GoogleCall[] = [];
+  const properties: Array<{
+    name: string;
+    displayName: string;
+    parent: string;
+  }> = [];
+  const streams: Array<{
+    name: string;
+    type: string;
+    webStreamData: { defaultUri: string; measurementId: string };
+  }> = [];
+  const keyEvents: Array<{ eventName: string }> = [];
+  global.fetch = jest.fn(async (u: string, init?: RequestInit) => {
+    await new Promise(resolve => setTimeout(resolve, 5));
+    const url = String(u);
+    const method = (init?.method ?? 'GET').toUpperCase();
+    calls.push({ method, url });
+    const path = new URL(url).pathname.replace('/v1beta/', '');
+    if (path === 'properties') {
+      if (method === 'GET') return res(200, { properties: [...properties] });
+      const created = {
+        name: `properties/${700 + properties.length}`,
+        displayName: 'CARSI',
+        parent: 'accounts/123',
+      };
+      properties.push(created);
+      return res(200, created);
+    }
+    if (path.endsWith('/dataStreams')) {
+      if (method === 'GET') return res(200, { dataStreams: [...streams] });
+      const created = {
+        name: `${path}/${streams.length + 1}`,
+        type: 'WEB_DATA_STREAM',
+        webStreamData: {
+          defaultUri: 'https://carsi.com.au',
+          measurementId: `G-NEW000${streams.length + 1}`,
+        },
+      };
+      streams.push(created);
+      return res(200, created);
+    }
+    if (path.endsWith('/keyEvents')) {
+      if (method === 'GET') return res(200, { keyEvents: [...keyEvents] });
+      const body = JSON.parse(String(init?.body));
+      keyEvents.push({ eventName: body.eventName });
+      return res(200, { name: `${path}/${keyEvents.length}`, ...body });
+    }
+    return res(404, { error: { code: 404, message: 'nope' } });
+  }) as unknown as typeof fetch;
+  return { calls, properties, streams, keyEvents };
+}
+
 function post(body: object = BODY) {
   return POST(
     createMockNextRequest({
@@ -165,6 +264,8 @@ function post(body: object = BODY) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  lockedKeys.length = 0;
+  advisoryLocks.clear();
   mockGetUserId.mockResolvedValue('user-1');
   mockGetOrgId.mockResolvedValue('org-1');
   mockToken.mockResolvedValue('access-token');
@@ -270,6 +371,39 @@ describe('POST /api/integrations/ga4/provision', () => {
     });
     expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
     expect(mockUpsert.mock.calls[0][0].create.measurementId).toBe('G-EXIST01');
+  });
+
+  it('two overlapping runs for the same GA4 account create one property, one stream and one set of key events', async () => {
+    const google = installStatefulGoogle();
+    const [first, second] = await Promise.all([post(), post()]);
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(lockedKeys).toEqual(['ga4-provision:123', 'ga4-provision:123']);
+    expect(google.properties).toHaveLength(1);
+    expect(google.streams).toHaveLength(1);
+    expect(google.keyEvents.map(e => e.eventName)).toEqual([
+      'generate_lead',
+      'sign_up',
+    ]);
+    expect(
+      google.calls.filter(
+        c =>
+          c.method === 'POST' &&
+          new URL(c.url).pathname === '/v1beta/properties'
+      )
+    ).toHaveLength(1);
+    const bodies = [await first.json(), await second.json()];
+    expect(bodies.map(b => b.property.created).sort()).toEqual([false, true]);
+    expect(bodies[0].dataStream.measurementId).toBe(
+      bodies[1].dataStream.measurementId
+    );
+  });
+
+  it('locks on the GA4 account whether or not the request uses the accounts/ prefix', async () => {
+    installStatefulGoogle();
+    await post({ ...BODY, accountId: 'accounts/123' });
+    await post();
+    expect(lockedKeys).toEqual(['ga4-provision:123', 'ga4-provision:123']);
   });
 
   it('reports a Google 403 as "needs Analytics edit consent", not success, and stores nothing', async () => {

@@ -174,6 +174,11 @@ export interface CreatePropertyResult {
   created: boolean;
 }
 
+/**
+ * Lists then creates, so it is idempotent only for one caller at a time:
+ * callers must serialise per GA4 account (the provision route holds a
+ * transaction-scoped advisory lock), as must the stream and key-event helpers.
+ */
 export async function createProperty(
   deps: Ga4AdminDeps,
   input: CreatePropertyInput

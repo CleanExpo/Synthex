@@ -9,7 +9,10 @@
  * Refuses (403 GA4_EDIT_CONSENT_REQUIRED) before any Google call unless the
  * org's googleanalytics PlatformConnection holds analytics.edit AND a recorded
  * grant. Idempotent: a re-run finds the existing property / stream / key
- * events and creates nothing. A Google 403 is reported as missing consent or
+ * events and creates nothing. Concurrent runs for the same GA4 account are
+ * serialised by a transaction-scoped Postgres advisory lock (the
+ * lib/platform-connections/refresh-lock.ts pattern), so the second run waits,
+ * re-lists and reuses what the first created instead of creating duplicates. A Google 403 is reported as missing consent or
  * missing account permission, never as success.
  *
  * The GA4 account must already exist: Google creates accounts only through
@@ -32,6 +35,13 @@ import {
 import { logger } from '@/lib/logger';
 
 const GA4_PLATFORM = 'googleanalytics';
+/**
+ * Provisioning makes up to seven GA4 Admin round-trips while holding the lock,
+ * and a concurrent run waits for the lock inside its own transaction, so the
+ * interactive-transaction timeout covers both.
+ */
+const PROVISION_TX_TIMEOUT_MS = 60_000;
+const PROVISION_TX_MAX_WAIT_MS = 10_000;
 /** GA4 recommended lead events (kit K2 tracking plan). */
 const DEFAULT_KEY_EVENTS = ['generate_lead', 'sign_up'];
 
@@ -124,41 +134,56 @@ export async function POST(request: NextRequest) {
 
     const input = parsed.data;
     const deps = { accessToken };
-    const property = await createProperty(deps, {
-      accountId: input.accountId,
-      displayName: input.displayName,
-      timeZone: input.timeZone,
-      currencyCode: input.currencyCode,
-    });
-    const dataStream = await createWebDataStream(deps, {
-      propertyId: property.propertyId,
-      defaultUri: input.defaultUri,
-    });
-    const keyEvents = await createKeyEvents(deps, {
-      propertyId: property.propertyId,
-      eventNames: input.keyEvents,
-    });
+    // Lock on the external resource (the GA4 account), not the tenant: two
+    // overlapping runs against one account must not both pass the list step
+    // and both create. Every list-then-create below runs under the lock, so a
+    // run that waited re-lists and finds what the first run created.
+    const lockKey = `ga4-provision:${input.accountId.replace(/^accounts\//, '')}`;
+    const { property, dataStream, keyEvents, ga4Property } =
+      await prisma.$transaction(
+        async tx => {
+          // Transaction-scoped: released at COMMIT/ROLLBACK on the one backend
+          // this interactive transaction holds (safe under a transaction pooler).
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+          const property = await createProperty(deps, {
+            accountId: input.accountId,
+            displayName: input.displayName,
+            timeZone: input.timeZone,
+            currencyCode: input.currencyCode,
+          });
+          const dataStream = await createWebDataStream(deps, {
+            propertyId: property.propertyId,
+            defaultUri: input.defaultUri,
+          });
+          const keyEvents = await createKeyEvents(deps, {
+            propertyId: property.propertyId,
+            eventNames: input.keyEvents,
+          });
 
-    const ga4Property = await prisma.gA4Property.upsert({
-      where: {
-        organizationId_propertyId: {
-          organizationId,
-          propertyId: property.propertyId,
+          const ga4Property = await tx.gA4Property.upsert({
+            where: {
+              organizationId_propertyId: {
+                organizationId,
+                propertyId: property.propertyId,
+              },
+            },
+            update: {
+              measurementId: dataStream.measurementId,
+              displayName: property.displayName,
+              syncStatus: 'active',
+            },
+            create: {
+              organizationId,
+              propertyId: property.propertyId,
+              measurementId: dataStream.measurementId,
+              displayName: property.displayName,
+              syncStatus: 'active',
+            },
+          });
+          return { property, dataStream, keyEvents, ga4Property };
         },
-      },
-      update: {
-        measurementId: dataStream.measurementId,
-        displayName: property.displayName,
-        syncStatus: 'active',
-      },
-      create: {
-        organizationId,
-        propertyId: property.propertyId,
-        measurementId: dataStream.measurementId,
-        displayName: property.displayName,
-        syncStatus: 'active',
-      },
-    });
+        { timeout: PROVISION_TX_TIMEOUT_MS, maxWait: PROVISION_TX_MAX_WAIT_MS }
+      );
 
     logger.info('GA4 provisioned for organisation', {
       organizationId,

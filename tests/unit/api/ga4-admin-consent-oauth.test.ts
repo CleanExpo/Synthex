@@ -7,7 +7,8 @@
  * boundary mocks; consent tokens are real HMAC tokens from the lib.
  * CATCHES: analytics.edit in the authorisation URL without a valid consent
  * token (including via the GOOGLEANALYTICS_OAUTH_SCOPE env override); a forged
- * or other-user token accepted; a consent step that accepts a paraphrased
+ * or other-user token accepted; a token accepted for one organisation replayed
+ * for another the same user can access; a consent step that accepts a paraphrased
  * statement; loss of include_granted_scopes (existing grants must survive).
  * MISSES: Google's consent screen itself and the callback's grant write
  * (buildGa4AdminGrant is covered in ga4-admin-consent.test.ts).
@@ -30,9 +31,10 @@ jest.mock('@/lib/security/api-security-checker', () => ({
   DEFAULT_POLICIES: { AUTHENTICATED_READ: 'AUTHENTICATED_READ' },
 }));
 
+const mockHasOrganizationAccess = jest.fn();
 jest.mock('@/lib/multi-business', () => ({
   getEffectiveOrganizationId: async () => 'org-1',
-  hasOrganizationAccess: async () => true,
+  hasOrganizationAccess: (...a: unknown[]) => mockHasOrganizationAccess(...a),
 }));
 
 jest.mock('@/lib/platform-credentials', () => ({
@@ -85,6 +87,8 @@ beforeEach(() => {
     email: 'owner@example.com',
   });
   mockGetUserId.mockResolvedValue('user-1');
+  // The user can access both of their businesses.
+  mockHasOrganizationAccess.mockResolvedValue(true);
 });
 
 afterAll(() => {
@@ -143,7 +147,7 @@ describe('GET /api/auth/oauth/googleanalytics', () => {
   });
 
   it('with a valid consent token requests analytics.edit and carries the consent in state', async () => {
-    const token = signGa4AdminConsent('user-1');
+    const token = signGa4AdminConsent('user-1', 'org-1');
     const { res, url } = await starterUrl(
       `?ga4AdminConsent=${encodeURIComponent(token)}`
     );
@@ -155,12 +159,29 @@ describe('GET /api/auth/oauth/googleanalytics', () => {
   });
 
   it("refuses another user's consent token instead of silently downgrading", async () => {
-    const token = signGa4AdminConsent('user-2');
+    const token = signGa4AdminConsent('user-2', 'org-1');
     const { res, url } = await starterUrl(
       `?ga4AdminConsent=${encodeURIComponent(token)}`
     );
     expect(res.status).toBe(403);
     expect(url).toBeNull();
+  });
+
+  it('refuses a consent token accepted for one organisation when replayed for another', async () => {
+    const token = signGa4AdminConsent('user-1', 'org-1');
+    const forOrg1 = await starterUrl(
+      `?organizationId=org-1&ga4AdminConsent=${encodeURIComponent(token)}`
+    );
+    expect(forOrg1.res.status).toBe(200);
+    expect(scopesOf(forOrg1.url)).toContain(GA4_ADMIN_SCOPE);
+    expect(decodeState(forOrg1.url).organizationId).toBe('org-1');
+
+    const replay = await starterUrl(
+      `?organizationId=org-2&ga4AdminConsent=${encodeURIComponent(token)}`
+    );
+    expect(mockHasOrganizationAccess).toHaveBeenCalledWith('user-1', 'org-2');
+    expect(replay.res.status).toBe(403);
+    expect(replay.url).toBeNull();
   });
 
   it('(control: planted failure is caught) with the scope guard bypassed, the detector sees analytics.edit', async () => {
@@ -220,7 +241,7 @@ describe('POST /api/integrations/ga4/connect (consent step)', () => {
     expect(new URL(fetched[0]).searchParams.has('ga4AdminConsent')).toBe(false);
   });
 
-  it('with the accepted statement passes a consent token bound to the user', async () => {
+  it('with the accepted statement passes a consent token bound to the user and the organisation', async () => {
     const res = await post({
       createAnalytics: {
         accepted: true,
@@ -229,8 +250,11 @@ describe('POST /api/integrations/ga4/connect (consent step)', () => {
       },
     });
     expect(res.status).toBe(200);
-    const token = new URL(fetched[0]).searchParams.get('ga4AdminConsent');
-    expect(verifyGa4AdminConsent(token, 'user-1')).not.toBeNull();
+    const starter = new URL(fetched[0]);
+    const token = starter.searchParams.get('ga4AdminConsent');
+    expect(starter.searchParams.get('organizationId')).toBe('org-1');
+    expect(verifyGa4AdminConsent(token, 'user-1', 'org-1')).not.toBeNull();
+    expect(verifyGa4AdminConsent(token, 'user-1', 'org-2')).toBeNull();
   });
 
   it('rejects a paraphrased statement or an unticked box without starting OAuth', async () => {
