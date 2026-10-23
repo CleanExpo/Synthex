@@ -1088,7 +1088,7 @@ const ThumbView: React.FC<{ film: Film }> = ({ film }) => {
               font: `700 58px ${font(b.display)}`,
               color: b.ink,
               lineHeight: 1.1,
-              maxWidth: 680,
+              maxWidth: 720,
             }}
           >
             {line.before}{' '}
