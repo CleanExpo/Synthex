@@ -585,13 +585,15 @@ function lum(hex) {
 })();
 
 function vcard() {
-  const esc = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,");
+  // text values escape line breaks as \n (vCard 3.0); raw values (phone, email) drop them, so no value can start a new field
+  const esc = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
+  const raw = s => String(s).replace(/[\r\n]/g, "");
   const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "", first = parts.join(" ");
   const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + esc(last) + ";" + esc(first) + ";;;", "FN:" + esc(P.name || "")];
   if (P.org) lines.push("ORG:" + esc(P.org));
   if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
-  (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + (p.type || "VOICE") + ":" + p.tel));
-  (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + e.value));
+  (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + raw(p.type || "VOICE").replace(/[^A-Za-z,]/g, "") + ":" + raw(p.tel)));
+  (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + raw(e.value)));
   // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
   (P.links || []).filter(l => safeUrl(l.url)).forEach((l, i) => {
     lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));

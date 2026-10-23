@@ -10,6 +10,7 @@ import sys
 
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
 SAFE_URL = re.compile(r'^https://[^\s"<>]+$')   # same rule as SAFE_URL in card.html and site/build.py
+CTRL = re.compile(r'[\x00-\x1f\x7f]')         # a line break in a contact value would start a new vCard field
 
 
 def sourced(entry):
@@ -67,6 +68,15 @@ def check(kit):
             u = l.get(key)
             if u is not None and not SAFE_URL.match(str(u)):
                 errs.append(f"link #{i + 1} ({l.get('label')}) {key} must be plain https with no spaces or line breaks")
+        if CTRL.search(str(l.get("label") or "")):
+            errs.append(f"link #{i + 1} label must not contain line breaks or control characters")
+    # phone and email go into the saved contact unescaped: a line break there would start a new field
+    pr = kit.get("person") or {}
+    vals = [(f"phone #{i + 1}", f"{ph.get('type', '')}{ph.get('tel', '')}") for i, ph in enumerate(pr.get("phones") or [])]
+    vals += [(f"email #{i + 1}", e.get("value")) for i, e in enumerate(pr.get("emails") or [])]
+    for name, v in vals:
+        if v is not None and CTRL.search(str(v)):
+            errs.append(f"{name} must not contain line breaks or control characters")
     return errs
 
 

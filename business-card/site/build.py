@@ -65,7 +65,14 @@ SAFE_URL = re.compile(r'^https://[^\s"<>]+$')
 
 
 def esc(s):
-    return str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
+    """vCard text value: escape \\ ; , and turn line breaks into \\n so no value can start a new field."""
+    s = str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
+    return re.sub(r"\r\n|\r|\n", r"\\n", s)
+
+
+def raw(s):
+    """vCard raw value (phone, email): line breaks dropped."""
+    return re.sub(r"[\r\n]", "", str(s))
 
 
 def vcard(p):
@@ -79,9 +86,9 @@ def vcard(p):
     if p.get("title"):
         lines.append("TITLE:" + esc(p["title"].split(",")[0]))
     for ph in p.get("phones", []):
-        lines.append(f"TEL;TYPE={ph.get('type', 'VOICE')}:{ph['tel']}")
+        lines.append("TEL;TYPE=" + re.sub(r"[^A-Za-z,]", "", raw(ph.get("type", "VOICE"))) + ":" + raw(ph["tel"]))
     for e in p.get("emails", []):
-        lines.append("EMAIL;TYPE=WORK:" + e["value"])
+        lines.append("EMAIL;TYPE=WORK:" + raw(e["value"]))
     # the first two live links are the homepages; every other live business follows as a labelled link
     for i, link in enumerate([l for l in p.get("links", []) if SAFE_URL.match(str(l.get("url") or ""))], 1):
         lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
