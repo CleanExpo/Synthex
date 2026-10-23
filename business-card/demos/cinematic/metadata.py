@@ -38,7 +38,9 @@ def main():
                             "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", mp4], check=True)
         secs = float(subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", mp4],
                                     capture_output=True, text=True).stdout or film["durationInFrames"] / FPS)
-        chapters = [f"00:00 {film['scenes'][0]['chapter']}"] + [f"{stamp(s['from'])} {s['chapter']}" for s in film["scenes"][1:]]
+        # a scene under 10 s folds into the chapter before it (YouTube rejects chapters shorter than 10 s)
+        long_enough = [s for s in film["scenes"][1:] if s["frames"] >= 10 * FPS]
+        chapters = [f"00:00 {film['scenes'][0]['chapter']}"] + [f"{stamp(s['from'])} {s['chapter']}" for s in long_enough]
         desc = "\n".join([
             f"{seo['summary']}",
             "",
@@ -68,9 +70,8 @@ def main():
                            "endOffset": int((s["from"] + s["frames"]) / FPS), "url": "https://www.youtube.com/watch?v={youtubeId}&t=" + str(int(s["from"] / FPS))}
                           for s in film["scenes"]]}
         json.dump(vo, open(os.path.join(cine, "videoobject.json"), "w"), indent=1, ensure_ascii=False)
-        short = [s["n"] for s in film["scenes"] if s["frames"] < 10 * FPS]
-        if short:
-            sys.exit(f"{bid}: scenes {short} are under 10 s, which YouTube will not accept as chapters")
+        if len(chapters) < 3:
+            sys.exit(f"{bid}: only {len(chapters)} chapters of 10 s or more; YouTube needs 3")
         print(f"{bid}: title {len(yt['title'])} chars, description {len(desc)} chars, {len(chapters)} chapters, {secs:.0f}s")
 
 
