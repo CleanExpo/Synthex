@@ -17,14 +17,23 @@ import {
   registerRoot,
   spring,
   staticFile,
-  useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
+import {
+  DEFAULT_STYLE,
+  Style,
+  StagePaper,
+  StyleOverlay,
+  StyleProvider,
+  useFrame,
+  useStyle,
+} from './style';
 
 type Piece = {
   i: number;
   tag: string;
   text: string;
+  pic?: boolean;
   x: number;
   y: number;
   w: number;
@@ -49,6 +58,7 @@ type Scene = {
   slot?: string | null;
   image?: string | null;
   photo?: string;
+  chapter?: string;
 };
 type Film = {
   id: string;
@@ -60,6 +70,7 @@ type Film = {
   logo: { seg: string; piece: Piece | null };
   endFrom: number;
   durationInFrames: number;
+  style?: Style;
 };
 
 const W = 1920,
@@ -143,11 +154,55 @@ const PieceView: React.FC<{
   src: string;
   seed: string;
 }> = ({ p, t, src, seed }) => {
+  const st = useStyle();
   const s = (k: string) => random(`${seed}-${p.i}-${k}`) * 2 - 1;
   const away = Math.min(t, 1),
     out = Math.max(t - 1, 0),
     scatter = 1 - away;
   const glow = away > 0.96 && out === 0 ? 1 - (away - 0.96) / 0.04 : 0;
+  const mode = st.motion.arrival;
+  if (mode === 'outline' || mode === 'slide') {
+    // outline: the piece is drawn as a blueprint box, then fills with its real pixels; slide: it snaps in along the grid
+    const fill =
+      mode === 'outline'
+        ? interpolate(away, [0.45, 1], [0, 1], clamp)
+        : interpolate(away, [0, 0.4], [0, 1], clamp);
+    const dx = mode === 'slide' ? -220 * scatter + 900 * out : 0;
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          left: p.x,
+          top: p.y,
+          width: p.w,
+          height: p.h,
+          transform: `translateX(${dx}px) translateY(${mode === 'outline' ? -600 * out : 0}px)`,
+          opacity: interpolate(out, [0.5, 1], [1, 0], clamp),
+          outline:
+            mode === 'outline'
+              ? `1.5px solid rgba(31,95,191,${0.8 * (1 - fill) * Math.min(1, away * 3)})`
+              : undefined,
+          outlineOffset: 3,
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(${src})`,
+            backgroundPosition: `-${p.x}px -${p.y}px`,
+            backgroundSize: `${W}px ${H}px`,
+            opacity: fill,
+            clipPath:
+              mode === 'outline'
+                ? `inset(0 ${100 - 100 * fill}% 0 0)`
+                : undefined,
+          }}
+        />
+      </div>
+    );
+  }
+  const jitter = mode === 'stopmotion' ? s('j') * 1.6 : 0; // a hand-placed cut-out never sits perfectly square
   return (
     <div
       style={{
@@ -159,7 +214,7 @@ const PieceView: React.FC<{
         backgroundImage: `url(${src})`,
         backgroundPosition: `-${p.x}px -${p.y}px`,
         backgroundSize: `${W}px ${H}px`,
-        transform: `translate3d(${s('x') * 700 * scatter + s('ox') * 900 * out}px, ${s('y') * 450 * scatter + s('oy') * 600 * out}px, ${(-1400 + s('z') * 600) * scatter + 1500 * out}px) rotateX(${s('rx') * 75 * scatter + s('orx') * 50 * out}deg) rotateY(${s('ry') * 75 * scatter + s('ory') * 50 * out}deg)`,
+        transform: `translate3d(${s('x') * 700 * scatter + s('ox') * 900 * out}px, ${s('y') * 450 * scatter + s('oy') * 600 * out}px, ${(-1400 + s('z') * 600) * scatter + 1500 * out}px) rotateX(${s('rx') * 75 * scatter + s('orx') * 50 * out}deg) rotateY(${s('ry') * 75 * scatter + s('ory') * 50 * out}deg) rotateZ(${jitter}deg)`,
         opacity:
           interpolate(away, [0, 0.15], [0, 1], clamp) *
           interpolate(out, [0.6, 1], [1, 0], clamp),
@@ -184,36 +239,114 @@ const gridPieces = (): Piece[] =>
 
 // the real screen as a framed panel on the bright stage, assembling from its pieces, then pulling apart toward the camera
 const Assemble: React.FC<{ sc: Scene; pieces: Piece[] }> = ({ sc, pieces }) => {
-  const f = useCurrentFrame();
+  const f = useFrame();
   const { fps } = useVideoConfig();
   const grid = pieces.length < 4;
   const list = grid ? gridPieces() : pieces;
   const src = staticFile(`${sc.seg}/${grid ? 'full' : 'pieces'}.png`);
-  const stagger = Math.min(4, 40 / list.length);
+  const st = useStyle();
+  const fb = useFilmBrand();
+  const stagger = Math.min(st.motion.stagger, 40 / list.length);
   const breakAt = sc.frames - 24;
-  const tilt = interpolate(f, [0, 50], [1, 0], { easing: IRIS, ...clamp });
-  const push = interpolate(f, [50, breakAt], [1, 1.05], clamp);
+  const board = st.motion.arrival === 'board'; // isometric board: the stage stays tilted like a table top
+  const tilt = board
+    ? 1
+    : interpolate(f, [0, 50], [1, 0], { easing: IRIS, ...clamp });
+  const push = interpolate(f, [50, breakAt], [1, 1 + st.motion.push], clamp);
+  const bleed = st.scenes.plate === 'bleed';
+  const [tx, tz] = st.motion.tilt;
   const plate =
     interpolate(f, [8, 40], [0, 1], clamp) *
     interpolate(f, [breakAt + 6, sc.frames], [1, 0], clamp);
+  const screen = st.scenes.screen ?? (bleed ? 'bleed' : 'frame');
+  // the headline piece: where the camera goes in the full-bleed treatment, and what the blueprint labels first
+  const hero =
+    list.find(q => q.tag === 'h1') ??
+    [...list].sort((a, c) => c.w * c.h - a.w * a.h)[0];
+  const cam =
+    screen === 'bleed' && hero
+      ? interpolate(f, [36, breakAt], [1, 1.5], { easing: IRIS, ...clamp })
+      : 1;
+  const origin =
+    screen === 'bleed' && hero
+      ? `${hero.x + hero.w / 2}px ${hero.y + hero.h / 2}px`
+      : '50% 50%';
+  const flat = screen === 'duotone' || screen === 'blueprint';
+  const base =
+    screen === 'split'
+      ? 0.6
+      : screen === 'collage'
+        ? 0.76
+        : bleed
+          ? 1
+          : board
+            ? 0.72
+            : 0.8 + 0.06 * (1 - tilt);
+  const shift = screen === 'split' ? 'translateX(330px) ' : '';
+  const labels =
+    screen === 'blueprint'
+      ? [...list]
+          .filter(q => q.text)
+          .sort((a, c) => c.w * c.h - a.w * a.h)
+          .slice(0, 4)
+      : [];
+  const settle = interpolate(f, [55, 80], [0, 1], clamp);
   return (
     <AbsoluteFill style={{ perspective: 1700, perspectiveOrigin: '50% 40%' }}>
+      {screen === 'split' && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 110,
+            top: 330,
+            width: 560,
+            opacity: plate,
+          }}
+        >
+          <div
+            style={{
+              width: 120,
+              height: 6,
+              background: fb.accent,
+              marginBottom: 28,
+            }}
+          />
+          <div
+            style={{
+              font: `800 58px ${font(fb.display)}`,
+              color: fb.ink,
+              lineHeight: 1.05,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            {sc.chapter}
+          </div>
+        </div>
+      )}
       <AbsoluteFill
         style={{
-          transformStyle: 'preserve-3d',
-          transformOrigin: '50% 50%',
-          transform: `scale(${(0.8 + 0.06 * (1 - tilt)) * push}) rotateX(${28 * tilt}deg) rotateZ(${-6 * tilt}deg)`,
+          transformStyle: flat ? 'flat' : 'preserve-3d',
+          transformOrigin: origin,
+          transform: `${shift}scale(${base * push * cam}) rotateX(${tx * tilt}deg) rotateZ(${tz * tilt + (screen === 'collage' ? -2.5 : 0)}deg)`,
+          filter:
+            screen === 'duotone'
+              ? 'grayscale(1) contrast(1.2) brightness(1.05)'
+              : screen === 'blueprint'
+                ? `grayscale(${1 - 0.6 * settle}) contrast(1.05)`
+                : undefined,
+          clipPath: screen === 'collage' ? TORN : undefined,
         }}
       >
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            borderRadius: 22,
+            borderRadius: bleed ? 0 : 22,
             overflow: 'hidden',
             opacity: plate,
-            boxShadow:
-              '0 40px 90px rgba(11,27,51,0.22), 0 0 0 1px rgba(11,27,51,0.08)',
+            boxShadow: bleed
+              ? 'none'
+              : '0 40px 90px rgba(11,27,51,0.22), 0 0 0 1px rgba(11,27,51,0.08)',
           }}
         >
           {!grid && (
@@ -227,7 +360,7 @@ const Assemble: React.FC<{ sc: Scene; pieces: Piece[] }> = ({ sc, pieces }) => {
           const inT = spring({
             frame: f - 4 - k * stagger,
             fps,
-            config: { damping: 14, stiffness: 80, mass: 1 },
+            config: st.motion.spring,
           });
           const outT = interpolate(
             f,
@@ -245,43 +378,173 @@ const Assemble: React.FC<{ sc: Scene; pieces: Piece[] }> = ({ sc, pieces }) => {
             />
           );
         })}
+        {screen === 'blueprint' &&
+          list.map(p => (
+            <div
+              key={`o${p.i}`}
+              style={{
+                position: 'absolute',
+                left: p.x - 4,
+                top: p.y - 4,
+                width: p.w + 8,
+                height: p.h + 8,
+                border: `2px dashed ${fb.accent}`,
+                opacity: 0.75 * plate,
+              }}
+            />
+          ))}
+        {labels.map((p, k) => (
+          <div
+            key={`l${p.i}`}
+            style={{
+              position: 'absolute',
+              left: p.x + p.w + 24,
+              top: p.y + p.h / 2 - 16 + k * 4,
+              opacity: settle * plate,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              font: `700 22px ${font(fb.body)}`,
+              color: fb.accent,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <span style={{ width: 60, height: 2, background: fb.accent }} />
+            {String(k + 1).padStart(2, '0')}{' '}
+            {p.tag === 'h1'
+              ? 'HEADLINE'
+              : p.tag === 'a' || p.tag === 'button'
+                ? 'ACTION'
+                : p.pic
+                  ? 'PROOF'
+                  : 'DETAIL'}
+          </div>
+        ))}
       </AbsoluteFill>
+      {screen === 'duotone' && (
+        <AbsoluteFill
+          style={{
+            background: fb.accent,
+            mixBlendMode: 'screen',
+            opacity: 0.55 * plate,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {screen === 'collage' && (
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              left: 300,
+              top: 120,
+              width: 190,
+              height: 50,
+              background: 'rgba(250,240,200,0.75)',
+              transform: 'rotate(-14deg)',
+              opacity: plate,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              right: 300,
+              top: 150,
+              width: 190,
+              height: 50,
+              background: 'rgba(250,240,200,0.75)',
+              transform: 'rotate(11deg)',
+              opacity: plate,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.12)',
+            }}
+          />
+        </>
+      )}
     </AbsoluteFill>
   );
 };
+
+// a hand-torn paper edge for the collage treatment (fixed points so every frame tears the same way)
+const TORN = `polygon(${[
+  [0, 2],
+  [8, 0],
+  [17, 1.5],
+  [29, 0],
+  [41, 2],
+  [55, 0.5],
+  [68, 2],
+  [80, 0],
+  [92, 1.5],
+  [100, 0],
+  [99, 14],
+  [100, 31],
+  [98.5, 52],
+  [100, 70],
+  [99, 88],
+  [100, 100],
+  [88, 98.5],
+  [74, 100],
+  [61, 98],
+  [47, 100],
+  [33, 98.5],
+  [19, 100],
+  [7, 98],
+  [0, 100],
+  [1, 81],
+  [0, 63],
+  [1.5, 44],
+  [0, 26],
+]
+  .map(([x, y]) => `${x}% ${y}%`)
+  .join(', ')})`;
+
+const BrandCtx = React.createContext<Brand>({
+  display: 'Inter',
+  body: 'Inter',
+  accent: '#1f5fbf',
+  ink: '#111827',
+});
+const useFilmBrand = () => React.useContext(BrandCtx);
 
 const Headline: React.FC<{ sc: Scene; b: Brand; size: number }> = ({
   sc,
   b,
   size,
-}) => (
-  <div
-    style={{
-      font: `700 ${size}px ${font(b.display)}`,
-      color: b.ink,
-      textAlign: 'center',
-      lineHeight: 1.08,
-      letterSpacing: '-0.02em',
-      maxWidth: 1600,
-    }}
-  >
-    {sc.before}{' '}
-    <span
+}) => {
+  const st = useStyle();
+  return (
+    <div
       style={{
-        font: `900 ${size * 1.12}px ${PIXEL}`,
-        color: b.accent,
-        letterSpacing: 0,
+        font: `${st.type.headlineWeight} ${size}px ${font(b.display)}`,
+        color: b.ink,
+        textAlign: st.type.align,
+        lineHeight: 1.08,
+        letterSpacing: '-0.02em',
+        maxWidth: 1600,
       }}
     >
-      {sc.pixel}
-    </span>
-    {sc.after === '.' ? '.' : ` ${sc.after}`}
-  </div>
-);
+      {sc.before}{' '}
+      <span
+        style={{
+          font: st.type.pixelWord
+            ? `900 ${size * 1.12}px ${PIXEL}`
+            : `900 ${size}px ${font(b.display)}`,
+          color: b.accent,
+          letterSpacing: 0,
+          textTransform: st.type.pixelWord ? undefined : 'lowercase',
+        }}
+      >
+        {sc.pixel}
+      </span>
+      {sc.after === '.' ? '.' : ` ${sc.after}`}
+    </div>
+  );
+};
 
 // the business's own steps as numbered tiles that drop in like kit parts, with hard offset shadows
 const Steps: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
-  const f = useCurrentFrame();
+  const f = useFrame();
   const { fps } = useVideoConfig();
   const items = sc.items || [];
   const cols = items.length <= 4 ? 2 : items.length <= 6 ? 3 : 4;
@@ -292,6 +555,28 @@ const Steps: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
     config: { damping: 16, stiffness: 90 },
   });
   const out = interpolate(f, [sc.frames - 16, sc.frames], [1, 0], clamp);
+  const tiles = useStyle().scenes.tiles;
+  const tileLook = (kk: number, k: number): React.CSSProperties =>
+    tiles === 'rule'
+      ? {
+          background: 'transparent',
+          border: 'none',
+          borderTop: `4px solid ${b.accent}`,
+          boxShadow: 'none',
+        }
+      : tiles === 'paper'
+        ? {
+            background: CARD,
+            transform: `rotate(${(k % 2 ? 1 : -1) * 1.4}deg) translateY(${-200 * (1 - kk)}px)`,
+            boxShadow: '0 10px 18px rgba(60,40,10,0.22)',
+          }
+        : tiles === 'ink'
+          ? {
+              background: `${b.accent}26`,
+              border: `2px solid ${b.accent}`,
+              boxShadow: `${6 * kk}px ${6 * kk}px 0 ${b.accent}88`,
+            }
+          : {};
   return (
     <AbsoluteFill
       style={{
@@ -351,6 +636,7 @@ const Steps: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
                 alignItems: 'baseline',
                 opacity: Math.min(1, kk * 1.5),
                 transform: `translate3d(0, ${-260 * (1 - kk)}px, ${-500 * (1 - kk)}px) rotateX(${50 * (1 - kk)}deg)`,
+                ...tileLook(kk, k),
               }}
             >
               <div
@@ -394,7 +680,7 @@ const Steps: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
 
 // owned equipment photos standing on the bright stage, lifting in and turning slowly; a site card can dock beside them
 const Kit: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
-  const f = useCurrentFrame();
+  const f = useFrame();
   const { fps } = useVideoConfig();
   const kit = sc.kit || [];
   const card = sc.card;
@@ -496,7 +782,7 @@ const Kit: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
 
 // a bright full-bleed photo of real people with one headline over it; a labelled placeholder until Phill's photo exists
 const Photo: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
-  const f = useCurrentFrame();
+  const f = useFrame();
   const drift = interpolate(f, [0, sc.frames], [1.04, 1.12]);
   const rise = interpolate(f, [8, 38], [40, 0], { easing: IRIS, ...clamp });
   const out = interpolate(f, [sc.frames - 14, sc.frames], [1, 0], clamp);
@@ -576,7 +862,7 @@ const Photo: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
 };
 
 const Ticker: React.FC<{ b: Brand; topics: string[] }> = ({ b, topics }) => {
-  const f = useCurrentFrame();
+  const f = useFrame();
   const line = topics.join('  •  ') + '  •  ';
   return (
     <div
@@ -610,7 +896,7 @@ const Ticker: React.FC<{ b: Brand; topics: string[] }> = ({ b, topics }) => {
 
 // the logo, a real piece of the home page, flies in and locks; the business name sits under it
 const Lockup: React.FC<{ film: Film }> = ({ film }) => {
-  const f = useCurrentFrame();
+  const f = useFrame();
   const { fps } = useVideoConfig();
   const k = spring({ frame: f, fps, config: { damping: 15, stiffness: 90 } });
   const name = spring({
@@ -620,42 +906,65 @@ const Lockup: React.FC<{ film: Film }> = ({ film }) => {
   });
   const p = film.logo.piece,
     b = film.brand;
-  const scale = p ? Math.min(3.6, 900 / p.w, 260 / p.h) : 1;
+  const scale = p ? Math.min(2.2, 900 / p.w, 260 / p.h) : 1; // beyond about 2x a captured raster logo goes soft
+  const mode = useStyle().scenes.lockup ?? 'centre';
+  const left = mode === 'left';
   return (
     <AbsoluteFill
       style={{
-        alignItems: 'center',
+        alignItems: left ? 'flex-start' : 'center',
         justifyContent: 'center',
         flexDirection: 'column',
         gap: 40,
+        paddingLeft: left ? 160 : 0,
         perspective: 1200,
       }}
     >
+      {left && (
+        <div
+          style={{ width: 160, height: 8, background: b.accent, opacity: name }}
+        />
+      )}
       {p && (
         <div
           style={{
             width: p.w,
             height: p.h,
-            borderRadius: 8,
+            borderRadius: mode === 'scrap' ? 2 : 8,
+            transformOrigin: left ? 'left center' : 'center',
+            filter:
+              mode === 'duotone' ? 'grayscale(1) contrast(1.3)' : undefined,
+            outline:
+              mode === 'outline'
+                ? `2px dashed ${b.accent}`
+                : mode === 'scrap'
+                  ? '14px solid #fffdf8'
+                  : undefined,
+            outlineOffset: mode === 'outline' ? 10 : 0,
+            boxShadow:
+              mode === 'scrap' ? '0 18px 30px rgba(60,40,10,0.25)' : undefined,
             backgroundImage: `url(${staticFile(`${film.logo.seg}/full.png`)})`,
             backgroundPosition: `-${p.x}px -${p.y}px`,
             backgroundSize: `${W}px ${H}px`,
-            transform: `translateZ(${-1200 * (1 - k)}px) rotateX(${70 * (1 - k)}deg) scale(${scale})`,
+            transform: `translateZ(${-1200 * (1 - k)}px) rotateX(${70 * (1 - k)}deg) scale(${scale}) rotate(${mode === 'scrap' ? -3 : 0}deg)`,
             opacity: k,
             marginBottom: ((scale - 1) * p.h) / 2,
           }}
         />
       )}
-      <div
-        style={{
-          font: `800 ${p ? 64 : 120}px ${font(b.display)}`,
-          color: b.ink,
-          opacity: name,
-          transform: `translateY(${30 * (1 - name)}px)`,
-        }}
-      >
-        {film.name}
-      </div>
+      {/* the name, unless the logo already says it (its label names the business) */}
+      {!(p && p.text.toLowerCase().includes(film.name.toLowerCase())) && (
+        <div
+          style={{
+            font: `800 ${p ? (left ? 96 : 64) : 120}px ${font(b.display)}`,
+            color: mode === 'duotone' ? b.accent : b.ink,
+            opacity: name,
+            transform: `translateY(${30 * (1 - name)}px)`,
+          }}
+        >
+          {film.name}
+        </div>
+      )}
       <div
         style={{
           font: `600 30px ${font(b.body)}`,
@@ -675,46 +984,52 @@ const FilmView: React.FC<{ film: Film }> = ({ film }) => {
   const pieces = usePieces(film);
   if (!pieces) return null;
   const b = film.brand;
+  const style = film.style ?? DEFAULT_STYLE;
   return (
-    <AbsoluteFill>
-      <Paper b={b} />
-      {film.scenes.map(sc => (
-        <Sequence key={sc.n} from={sc.from} durationInFrames={sc.frames}>
-          {sc.type === 'assemble' && (
-            <Assemble sc={sc} pieces={pieces[sc.seg]} />
-          )}
-          {sc.type === 'steps' && <Steps sc={sc} b={b} />}
-          {sc.type === 'kit' && <Kit sc={sc} b={b} />}
-          {sc.type === 'photo' && <Photo sc={sc} b={b} />}
-          {sc.ticker && film.topics.length > 0 && (
-            <Ticker b={b} topics={film.topics} />
-          )}
-          <Sequence from={LEAD}>
-            <Audio src={staticFile(sc.vo)} />
+    <StyleProvider value={style}>
+      <BrandCtx.Provider value={b}>
+        <AbsoluteFill>
+          <StagePaper accent={b.accent} ink={b.ink} />
+          {film.scenes.map(sc => (
+            <Sequence key={sc.n} from={sc.from} durationInFrames={sc.frames}>
+              {sc.type === 'assemble' && (
+                <Assemble sc={sc} pieces={pieces[sc.seg]} />
+              )}
+              {sc.type === 'steps' && <Steps sc={sc} b={b} />}
+              {sc.type === 'kit' && <Kit sc={sc} b={b} />}
+              {sc.type === 'photo' && <Photo sc={sc} b={b} />}
+              {sc.ticker && style.scenes.ticker && film.topics.length > 0 && (
+                <Ticker b={b} topics={film.topics} />
+              )}
+              <Sequence from={LEAD}>
+                <Audio src={staticFile(sc.vo)} />
+              </Sequence>
+              {sc.type !== 'photo' && (
+                <Sequence from={22}>
+                  <Audio src={staticFile('_sfx/assemble.mp3')} volume={0.4} />
+                </Sequence>
+              )}
+              {sc.type === 'assemble' && (
+                <Sequence from={sc.frames - 24}>
+                  <Audio src={staticFile('_sfx/whoosh.mp3')} volume={0.45} />
+                </Sequence>
+              )}
+              {sc.type === 'photo' && (
+                <Audio src={staticFile('_sfx/whoosh.mp3')} volume={0.35} />
+              )}
+            </Sequence>
+          ))}
+          <Sequence from={film.endFrom}>
+            <Lockup film={film} />
+            <Audio src={staticFile('_sfx/impact.mp3')} volume={0.55} />
           </Sequence>
-          {sc.type !== 'photo' && (
-            <Sequence from={22}>
-              <Audio src={staticFile('_sfx/assemble.mp3')} volume={0.4} />
-            </Sequence>
-          )}
-          {sc.type === 'assemble' && (
-            <Sequence from={sc.frames - 24}>
-              <Audio src={staticFile('_sfx/whoosh.mp3')} volume={0.45} />
-            </Sequence>
-          )}
-          {sc.type === 'photo' && (
-            <Audio src={staticFile('_sfx/whoosh.mp3')} volume={0.35} />
-          )}
-        </Sequence>
-      ))}
-      <Sequence from={film.endFrom}>
-        <Lockup film={film} />
-        <Audio src={staticFile('_sfx/impact.mp3')} volume={0.55} />
-      </Sequence>
-      <Sequence from={0} durationInFrames={90}>
-        <Audio src={staticFile('_sfx/impact.mp3')} volume={0.55} />
-      </Sequence>
-    </AbsoluteFill>
+          <Sequence from={0} durationInFrames={90}>
+            <Audio src={staticFile('_sfx/impact.mp3')} volume={0.55} />
+          </Sequence>
+          <StyleOverlay accent={b.accent} />
+        </AbsoluteFill>
+      </BrandCtx.Provider>
+    </StyleProvider>
   );
 };
 

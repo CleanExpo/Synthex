@@ -1,0 +1,48 @@
+{
+  "id": "paper-collage",
+  "name": "Paper Collage",
+  "signals": "Handmade, local and human: the client's own cut-outs placed by hand, moving on twos.",
+  "fits": ["family trades", "community", "local services"],
+  "palette": {
+    "paper": "#ead9bd",
+    "pattern": "kraft",
+    "patternInk": "ink",
+    "overlay": "grain"
+  },
+  "type": {
+    "pixelWord": false,
+    "headlineWeight": 800,
+    "align": "center"
+  },
+  "motion": {
+    "arrival": "stopmotion",
+    "tilt": [10, -3],
+    "stagger": 3,
+    "spring": {
+      "damping": 11,
+      "stiffness": 90,
+      "mass": 1
+    },
+    "quantise": 2,
+    "push": 0.03
+  },
+  "scenes": {
+    "plate": "frame",
+    "tiles": "paper",
+    "ticker": false,
+    "screen": "collage",
+    "lockup": "scrap"
+  },
+  "sound": "Paper rustle, scissors snip, a strip of tape on each landing.",
+  "refs": ["https://www.stashmedia.tv/?p=111511"],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

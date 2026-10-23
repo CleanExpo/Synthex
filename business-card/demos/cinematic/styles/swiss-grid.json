@@ -1,0 +1,56 @@
+{
+  "id": "swiss-grid",
+  "name": "Swiss Grid",
+  "signals": "Authority and calm: strict columns, flush-left type, pieces snap along the grid.",
+  "fits": [
+    "compliance",
+    "professional services",
+    "training",
+    "insurance-facing"
+  ],
+  "palette": {
+    "paper": "#fbfaf7",
+    "pattern": "columns",
+    "patternInk": "ink",
+    "overlay": "none"
+  },
+  "type": {
+    "pixelWord": false,
+    "headlineWeight": 800,
+    "align": "left"
+  },
+  "motion": {
+    "arrival": "slide",
+    "tilt": [0, 0],
+    "stagger": 3,
+    "spring": {
+      "damping": 40,
+      "stiffness": 140,
+      "mass": 1
+    },
+    "quantise": 1,
+    "push": 0.02
+  },
+  "scenes": {
+    "plate": "frame",
+    "tiles": "rule",
+    "ticker": true,
+    "screen": "split",
+    "lockup": "left"
+  },
+  "sound": "Single clean click per snap, minimal piano bed.",
+  "refs": [
+    "https://www.remotion.dev/docs/spring",
+    "https://getlago.com/blog/we-killed-our-motion-design-job"
+  ],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

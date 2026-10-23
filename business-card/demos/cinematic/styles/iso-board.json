@@ -1,0 +1,48 @@
+{
+  "id": "iso-board",
+  "name": "Iso Board",
+  "signals": "Organised and systemic: the screen lies on a table-top board and pieces slide into place.",
+  "fits": ["operations", "multi-site trades", "networks", "courses"],
+  "palette": {
+    "paper": "#f2f4ef",
+    "pattern": "hex",
+    "patternInk": "ink",
+    "overlay": "none"
+  },
+  "type": {
+    "pixelWord": true,
+    "headlineWeight": 700,
+    "align": "center"
+  },
+  "motion": {
+    "arrival": "board",
+    "tilt": [52, -38],
+    "stagger": 4,
+    "spring": {
+      "damping": 16,
+      "stiffness": 90,
+      "mass": 1
+    },
+    "quantise": 1,
+    "push": 0.03
+  },
+  "scenes": {
+    "plate": "frame",
+    "tiles": "offset",
+    "ticker": true,
+    "screen": "frame",
+    "lockup": "centre"
+  },
+  "sound": "Tabletop slides, small dings as pieces stop.",
+  "refs": ["https://www.remotion.dev/docs/spring"],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

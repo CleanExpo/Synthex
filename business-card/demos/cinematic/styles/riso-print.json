@@ -1,0 +1,48 @@
+{
+  "id": "riso-print",
+  "name": "Riso Print",
+  "signals": "Crafted and warm: two-ink print dots with slight misregistration over the real screens.",
+  "fits": ["training", "events", "community", "education"],
+  "palette": {
+    "paper": "#f6f0e6",
+    "pattern": "halftone",
+    "patternInk": "accent",
+    "overlay": "riso"
+  },
+  "type": {
+    "pixelWord": true,
+    "headlineWeight": 800,
+    "align": "center"
+  },
+  "motion": {
+    "arrival": "fly",
+    "tilt": [22, -4],
+    "stagger": 4,
+    "spring": {
+      "damping": 13,
+      "stiffness": 85,
+      "mass": 1
+    },
+    "quantise": 1,
+    "push": 0.04
+  },
+  "scenes": {
+    "plate": "frame",
+    "tiles": "ink",
+    "ticker": true,
+    "screen": "duotone",
+    "lockup": "duotone"
+  },
+  "sound": "Printer roller under the move, paper feed on each new screen.",
+  "refs": ["https://buck.co/work/nothing-playground"],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

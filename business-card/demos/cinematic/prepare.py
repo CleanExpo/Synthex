@@ -68,7 +68,8 @@ def main():
             t += frames
         first = json.load(open(os.path.join(cine, "seg01", "pieces.json")))
         logo = next((p for p in first["pieces"] if p["i"] == first.get("logo")), None)
-        film = {"id": biz["id"], "name": biz["name"], "url": biz["url"], "brand": plan["brand"], "topics": plan.get("topics", []),
+        style = json.load(open(os.path.join(HERE, "styles", plan.get("style", "kit-bench") + ".json"), encoding="utf-8"))
+        film = {"id": biz["id"], "name": biz["name"], "url": biz["url"], "brand": plan["brand"], "topics": plan.get("topics", []), "style": style,
                 "scenes": scenes, "logo": {"seg": f"{biz['id']}/cine/seg01", "piece": logo}, "endFrom": t,
                 "durationInFrames": t + round(END * FPS)}
         json.dump(film, open(os.path.join(cine, "film.json"), "w"), indent=1)
