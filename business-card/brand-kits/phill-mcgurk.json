@@ -381,36 +381,69 @@
       {
         "label": "Disaster Recovery",
         "url": "https://www.disasterrecovery.com.au",
-        "note": "Restoration, Brisbane"
+        "note": "Restoration, Brisbane",
+        "video": {
+          "youtubeId": "I-_EB_Vxim8",
+          "thumb": "business-card/demos/thumbs/disaster-recovery.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"One Thing (Preview) | Lodging a flood claim at night | Disaster Recovery\" on @NationalRestorationProfessiona (NRPG channel); thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        },
+        "visitor": true
       },
       {
         "label": "CARSI",
         "url": "https://carsi.com.au",
-        "note": "IICRC CEC training"
+        "note": "IICRC CEC training",
+        "video": {
+          "youtubeId": "fUi127T4aI0",
+          "thumb": "business-card/demos/thumbs/carsi.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"CARSI: Online Restoration and Cleaning Training for Australian Technicians (IICRC CEC Provider)\" on @professionalcarpetcleaners2345; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        },
+        "visitor": true
       },
       {
         "label": "Unite Group",
         "url": "https://maps.google.com/?cid=16425003964954420216",
         "note": "The group",
         "urlNote": "unite-group.in sends visitors to a login page, so the card links the group's public Google listing (Unite-Group Nexus) until the site is public.",
-        "visitor": true
+        "visitor": true,
+        "video": {
+          "youtubeId": "vQ5XkygiJlo",
+          "thumb": "business-card/demos/thumbs/unite-group.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"The Relay | Every recovery, connected | Unite-Group Nexus\" on @RestoreAssistApp; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        }
       },
       {
         "label": "Synthex",
         "url": "https://synthex.social",
         "note": "Group marketing",
-        "visitor": true
+        "visitor": true,
+        "video": {
+          "youtubeId": "7L_swG39cEo",
+          "thumb": "business-card/demos/thumbs/synthex.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"Marketing That Decides Before It Produces (Opportunity Map Walkthrough)\" on @SynthexMedia-25; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        }
       },
       {
         "label": "RestoreAssist",
         "url": "https://restoreassist.app",
         "note": "Restoration job app",
-        "visitor": true
+        "visitor": true,
+        "video": {
+          "youtubeId": "EMIoECpg-ow",
+          "thumb": "business-card/demos/thumbs/restoreassist.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"RestoreAssist: Restoration Management Software for Contractors in Australia and New Zealand\" on Ai Restore Assist; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        }
       },
       {
         "label": "NRPG",
         "url": "https://nrpg.business",
-        "note": "Contractor network"
+        "note": "Contractor network",
+        "video": {
+          "youtubeId": "Mi_PXlaVF7A",
+          "thumb": "business-card/demos/thumbs/nrpg.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"The Long Way Round (Preview) | Certified restoration contractors | NRPG\" on @NationalRestorationProfessiona; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        },
+        "visitor": true
       },
       {
         "label": "TradeHall",
