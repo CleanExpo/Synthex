@@ -15,6 +15,11 @@ for k in range(n + 2):
     a = ["magick", f"{out}/band.png"]
     for i in range(n):
         cx = first + i * step; lit = i < min(k, n); y0 = int(1590 * s)
+        if n == 1:   # one business is not a chain: its name and role as a title, no empty link (23/10/2026)
+            a += ["-stroke", "none", "-gravity", "north", "-fill", "white" if lit else "rgba(255,255,255,0.7)", "-font", F,
+                  "-pointsize", px(150), "-annotate", f"+0+{y0 - int(20 * s)}", names[i],
+                  "-fill", ON if lit else OFF, "-pointsize", px(72), "-annotate", f"+0+{y0 + int(175 * s)}", roles[i]]
+            continue
         a += ["-fill", "none", "-stroke", ON if lit else OFF, "-strokewidth", px(26),
               "-draw", f"roundrectangle {cx - int(200 * s)},{y0} {cx + int(200 * s)},{y0 + int(190 * s)} {px(95)},{px(95)}"]
         if i < n - 1:

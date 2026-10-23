@@ -35,6 +35,18 @@ python3 -I business-card/demos/film-harness/gates.py business-card/demos/film-ha
   story block, and the signed checklist. A gate that cannot run fails.
 - Then the independent motion review and the blind judge. Scores go in `scoreboard.json`.
 
+## Shot-list options added for the business films (23/10/2026)
+
+- `logo`: `bg` (card colour, default black), `vignette` (default true; false for wordmarks), `width` (fraction of
+  the frame for a wide wordmark). Use the live site's own logo file, or render a code-drawn logo from the live page at
+  10x; never draw a logo past 1.25x its source width.
+- `music.lift_at` later than the payoff: the build skips into the track so the lift still lands on the payoff
+  (`music_skip` in the timeline).
+- payoff part `hold`: freeze the part's last frame for that many seconds, for a clean stretch that ends under the fade.
+- `screentrack` prep: `grow` (mask growth past the tracked corners, default 1.07; lower it where a bright background
+  meets the screen edge) and `ref` (reference frame, when the largest bright shape is the screen merged with a mug).
+- One name in `chain` draws a title (name and role), not an empty link.
+
 ## Better every time
 
 `scoreboard.json` holds every judged version. A new film goes to Phill only when it scores at least the best
