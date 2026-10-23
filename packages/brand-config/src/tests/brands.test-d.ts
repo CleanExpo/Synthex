@@ -21,22 +21,26 @@ doNotExecute(() => {
   // RA — Wave 1 navy palette must narrow to the exact literals.
   const raPrimary: Equal<typeof ra.colour.primary, '#1C2E47'> = true;
   const raSlug: Equal<typeof ra.slug, 'ra'> = true;
-  const raFirstTone: Equal<typeof ra.voice.tone[0], 'direct'> = true;
-  void raPrimary; void raSlug; void raFirstTone;
+  const raFirstTone: Equal<(typeof ra.voice.tone)[0], 'direct'> = true;
+  void raPrimary;
+  void raSlug;
+  void raFirstTone;
 
   // DR — navy primary, linkedin default channel.
   const drPrimary: Equal<typeof dr.colour.primary, '#0B2545'> = true;
   const drChannel: Equal<typeof dr.defaultChannel, 'linkedin'> = true;
-  void drPrimary; void drChannel;
+  void drPrimary;
+  void drChannel;
 
-  // NRPG — emerald-600.
-  const nrpgPrimary: Equal<typeof nrpg.colour.primary, '#059669'> = true;
+  // NRPG — blue from the approved logo.
+  const nrpgPrimary: Equal<typeof nrpg.colour.primary, '#0047FF'> = true;
   void nrpgPrimary;
 
   // CARSI — blue-600.
   const carsiPrimary: Equal<typeof carsi.colour.primary, '#2563EB'> = true;
   const carsiChannel: Equal<typeof carsi.defaultChannel, 'youtube'> = true;
-  void carsiPrimary; void carsiChannel;
+  void carsiPrimary;
+  void carsiChannel;
 
   // Synthex — candy-orange.
   const synthexPrimary: Equal<typeof synthex.colour.primary, '#FF6B35'> = true;
@@ -49,7 +53,8 @@ doNotExecute(() => {
   // John Coutis — charcoal hero with gold accent.
   const jcPrimary: Equal<typeof johnCoutis.colour.primary, '#1A1A1A'> = true;
   const jcAccent: Equal<typeof johnCoutis.colour.accent, '#D4A437'> = true;
-  void jcPrimary; void jcAccent;
+  void jcPrimary;
+  void jcAccent;
 
   // Negative check — if the narrowing was lost, typeof X would be `string`
   // (or BrandSlug for slug). Confirm the broad type is NOT equal to the

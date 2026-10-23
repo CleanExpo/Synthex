@@ -3,21 +3,21 @@ version: alpha
 name: NRPG
 description: Visual identity for NRPG — standards for the response network. Paired runtime config at nrpg.ts.
 colors:
-  primary: "#059669"
-  secondary: "#2A3D5F"
-  accent: "#F2B33D"
-  neutral-50: "#F5F7F8"
-  neutral-100: "#E4E9EC"
-  neutral-500: "#6F7B82"
-  neutral-900: "#0E1518"
-  success: "#3FA34D"
-  warning: "#E0A800"
-  danger: "#C0392B"
-  on-primary: "#FFFFFF"
-  on-secondary: "#FFFFFF"
-  on-accent: "#0E1518"
-  surface: "{colors.neutral-50}"
-  on-surface: "{colors.neutral-900}"
+  primary: '#0047FF'
+  secondary: '#0F2742'
+  accent: '#F2B33D'
+  neutral-50: '#F5F7F8'
+  neutral-100: '#E4E9EC'
+  neutral-500: '#6F7B82'
+  neutral-900: '#0E1518'
+  success: '#3FA34D'
+  warning: '#E0A800'
+  danger: '#C0392B'
+  on-primary: '#FFFFFF'
+  on-secondary: '#FFFFFF'
+  on-accent: '#0E1518'
+  surface: '{colors.neutral-50}'
+  on-surface: '{colors.neutral-900}'
 typography:
   display-xl:
     fontFamily: Inter
@@ -72,30 +72,30 @@ rounded:
   full: 9999px
 components:
   cta-primary:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.neutral-900}"
-    rounded: "{rounded.DEFAULT}"
-    padding: "{spacing.md}"
-    typography: "{typography.body-lg}"
+    backgroundColor: '{colors.accent}'
+    textColor: '{colors.neutral-900}'
+    rounded: '{rounded.DEFAULT}'
+    padding: '{spacing.md}'
+    typography: '{typography.body-lg}'
   cta-secondary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.neutral-50}"
-    rounded: "{rounded.DEFAULT}"
-    padding: "{spacing.md}"
+    backgroundColor: '{colors.primary}'
+    textColor: '{colors.neutral-50}'
+    rounded: '{rounded.DEFAULT}'
+    padding: '{spacing.md}'
   card:
-    backgroundColor: "{colors.neutral-50}"
-    rounded: "{rounded.md}"
-    padding: "{spacing.lg}"
+    backgroundColor: '{colors.neutral-50}'
+    rounded: '{rounded.md}'
+    padding: '{spacing.lg}'
 ---
 
 ## Overview
 
-Standards-body authority. Emerald carries the response-network identity — calm, qualified, organised. Slate-blue grounds the hierarchy; amber accent flags certifications and verified actions. Voice is direct, factual, regulatory.
+Standards-body authority. Blue carries the response-network identity — calm, qualified, organised. Navy grounds the hierarchy; amber accent flags certifications and verified actions. Voice is direct, factual, regulatory.
 
 ## Colors
 
-- **Primary (#059669):** Emerald — network identity, hero surfaces.
-- **Secondary (#2A3D5F):** Slate-blue — structural type, secondary surfaces.
+- **Primary (#0047FF):** Blue — network identity, hero surfaces (from the approved logo, 23/10/2026).
+- **Secondary (#0F2742):** Navy — structural type, secondary surfaces.
 - **Accent (#F2B33D):** Amber — verification badges, certified-action call-outs.
 
 ## Typography
@@ -108,12 +108,12 @@ Inter throughout, ExtraBold for display, Regular for body.
 
 ## Elevation & Depth
 
-Flat-first. Hairline emerald borders signal grouped certified content.
+Flat-first. Hairline blue borders signal grouped certified content.
 
 ## Components
 
 - **cta-primary** — Amber on neutral-900 type. One per scene.
-- **cta-secondary** — Emerald on neutral-50.
+- **cta-secondary** — Blue on neutral-50.
 - **card** — Neutral-50, 12px radius.
 
 ## Do's and Don'ts
