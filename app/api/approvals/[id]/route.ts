@@ -25,6 +25,13 @@ import {
 } from '@/lib/marketing-agency/authority-approval';
 import { extractCampaignAuthorityManifest } from '@/lib/marketing-agency/campaign-authority-manifest';
 import type { ContentCalendarData, CalendarSlot } from '@/lib/calendar/types';
+import {
+  bindPostFingerprint,
+  checkPostBinding,
+  CONTENT_FINGERPRINT_KEY,
+  type ContentBinding,
+  type FingerprintablePost,
+} from '@/lib/approvals/content-fingerprint';
 
 // =============================================================================
 // Types
@@ -130,6 +137,18 @@ function transformApprovalForResponse(approval: {
     createdAt: approval.createdAt.toISOString(),
     updatedAt: approval.updatedAt.toISOString(),
   };
+}
+
+function contentChangedResponse() {
+  return NextResponse.json(
+    {
+      error: 'Conflict',
+      code: 'content_changed',
+      message:
+        'The post was edited or removed after it was sent for approval. Resubmit it so reviewers approve the current wording.',
+    },
+    { status: 409 }
+  );
 }
 
 /**
@@ -618,6 +637,30 @@ export async function PATCH(
     let newStatus = approval.status;
     let newCurrentStep = approval.currentStep;
 
+    // A post approval binds to the wording that was submitted: approving checks
+    // it is unchanged, and resubmitting re-binds to the current wording.
+    let binding: ContentBinding | null = null;
+    let reboundMetadata: Record<string, unknown> | null = null;
+    if (
+      approval.contentType === 'post' &&
+      (action === 'approve' || action === 'resubmit')
+    ) {
+      const post = await prisma.post.findUnique({
+        where: { id: approval.contentId },
+        select: { content: true, platform: true },
+      });
+      if (action === 'approve') {
+        // A missing post fails a bound request; only an unbound (legacy)
+        // request may still be approved without one.
+        binding = checkPostBinding(approval.metadata, post);
+      }
+      if (post && action === 'resubmit') {
+        reboundMetadata = bindPostFingerprint(approval.metadata, post);
+      }
+    }
+
+    let notifyAfterCommit: (() => Promise<void>) | null = null;
+
     // Process action
     switch (action) {
       case 'approve': {
@@ -630,6 +673,10 @@ export async function PATCH(
             },
             { status: 403 }
           );
+        }
+
+        if (binding !== null && binding.kind === 'changed') {
+          return contentChangedResponse();
         }
 
         // Increment approvals
@@ -663,37 +710,41 @@ export async function PATCH(
           }
         }
 
-        // Notify submitter
-        await createApprovalNotification(
-          approval.submittedBy,
-          id,
-          approval.organizationId,
-          userId,
-          userName,
-          'approve',
-          approval.title
-        );
+        // Notify only once the approval has committed: the wording is
+        // re-checked inside the transaction and may still refuse it.
+        notifyAfterCommit = async () => {
+          // Notify submitter
+          await createApprovalNotification(
+            approval.submittedBy,
+            id,
+            approval.organizationId,
+            userId,
+            userName,
+            'approve',
+            approval.title
+          );
 
-        // Notify next step assignees if advancing
-        if (
-          newCurrentStep > approval.currentStep &&
-          newCurrentStep < steps.length
-        ) {
-          const nextStep = steps[newCurrentStep];
-          for (const assigneeId of nextStep.assignedTo) {
-            if (assigneeId !== '*' && assigneeId !== userId) {
-              await createApprovalNotification(
-                assigneeId,
-                id,
-                approval.organizationId,
-                userId,
-                userName,
-                'approve',
-                approval.title
-              );
+          // Notify next step assignees if advancing
+          if (
+            newCurrentStep > approval.currentStep &&
+            newCurrentStep < steps.length
+          ) {
+            const nextStep = steps[newCurrentStep];
+            for (const assigneeId of nextStep.assignedTo) {
+              if (assigneeId !== '*' && assigneeId !== userId) {
+                await createApprovalNotification(
+                  assigneeId,
+                  id,
+                  approval.organizationId,
+                  userId,
+                  userName,
+                  'approve',
+                  approval.title
+                );
+              }
             }
           }
-        }
+        };
         break;
       }
 
@@ -808,8 +859,26 @@ export async function PATCH(
         currentStep.status = 'pending';
         currentStep.currentApprovals = 0;
 
+        // If the wording changed since it was bound, approvals of earlier
+        // steps were for the old wording: reset every step and start again.
+        const previousFingerprint = (
+          approval.metadata as Record<string, unknown> | null
+        )?.[CONTENT_FINGERPRINT_KEY];
+        if (
+          reboundMetadata !== null &&
+          reboundMetadata[CONTENT_FINGERPRINT_KEY] !== previousFingerprint
+        ) {
+          for (const step of steps) {
+            step.status = 'pending';
+            step.currentApprovals = 0;
+            delete step.approvedBy;
+            delete step.approvedAt;
+          }
+          newCurrentStep = 0;
+        }
+
         if (comment) {
-          currentStep.comments.push({
+          steps[newCurrentStep].comments.push({
             id: `cmt_${Date.now()}`,
             userId,
             userName,
@@ -822,8 +891,8 @@ export async function PATCH(
 
         newStatus = 'in_review';
 
-        // Notify step assignees
-        for (const assigneeId of currentStep.assignedTo) {
+        // Notify the assignees of the step the request now waits on
+        for (const assigneeId of steps[newCurrentStep].assignedTo) {
           if (assigneeId !== '*') {
             await createApprovalNotification(
               assigneeId,
@@ -875,12 +944,27 @@ export async function PATCH(
 
     // Update approval request and log in a transaction
     const updated = await prisma.$transaction(async tx => {
+      if (action === 'approve' && binding?.kind === 'match') {
+        // Re-read the post under a row lock, so an edit that commits after
+        // the check above cannot let this approval save for the old wording.
+        const locked = await tx.$queryRaw<FingerprintablePost[]>`
+          SELECT content, platform FROM posts
+          WHERE id = ${approval.contentId}
+          FOR UPDATE
+        `;
+        binding = checkPostBinding(approval.metadata, locked[0] ?? null);
+        if (binding.kind === 'changed') return null;
+      }
+
       const result = await tx.approvalRequest.update({
         where: { id },
         data: {
           status: newStatus,
           currentStep: newCurrentStep,
           steps: steps as unknown as Prisma.InputJsonValue,
+          ...(reboundMetadata
+            ? { metadata: reboundMetadata as Prisma.InputJsonValue }
+            : {}),
         },
         include: {
           submitter: {
@@ -907,6 +991,14 @@ export async function PATCH(
             previousStatus: approval.status,
             newStatus,
             comment: comment?.substring(0, 100),
+            ...(binding
+              ? {
+                  contentBinding:
+                    binding.kind === 'unbound'
+                      ? 'unbound_legacy'
+                      : binding.kind,
+                }
+              : {}),
           },
           severity: action === 'reject' ? 'medium' : 'low',
           category: 'content',
@@ -916,6 +1008,18 @@ export async function PATCH(
 
       return result;
     });
+
+    if (updated === null) return contentChangedResponse();
+
+    if (notifyAfterCommit) {
+      try {
+        await notifyAfterCommit();
+      } catch (notifyError: unknown) {
+        // The approval is already saved; a failed notification must not
+        // report it as failed.
+        logger.error('Approval notification error:', notifyError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -14,8 +14,9 @@
  * a cron that publishes an unapproved post; a past scheduledAt being skipped.
  *
  * MISSES: real Postgres transaction semantics; content/version binding between
- * an approval request and the post body (no such binding exists in the data
- * model today); the CalendarPost path (no publisher reads CalendarPost).
+ * an approval request and the post body (covered by
+ * approval-binds-version.test.ts); the CalendarPost path (no publisher reads
+ * CalendarPost).
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
