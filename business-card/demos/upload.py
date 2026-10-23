@@ -80,11 +80,14 @@ def main():
         sys.exit(f"{account}: expected one channel behind this connection, got {len(items)}")
     channel = items[0]["id"]
     print(account, "is", channel, items[0]["snippet"]["title"])
+    by_id = {b["id"]: b for b in tours["businesses"]}
     for biz in tours["businesses"]:
         if (only and biz["id"] not in only) or biz["id"] in videos:
             continue
-        if biz.get("youtubeChannelId") != channel:
-            print(f"{biz['id']}: skipped, its own channel is {biz.get('youtubeChannelId') or 'not set up yet'}, not {channel}")
+        # youtubeChannelOf: this business publishes on another business's channel (NRPG and TradeHall on Disaster Recovery's)
+        own = by_id.get(biz.get("youtubeChannelOf"), biz).get("youtubeChannelId")
+        if own != channel:
+            print(f"{biz['id']}: skipped, its own channel is {own or 'not set up yet'}, not {channel}")
             continue
         d = os.path.join(out, biz["id"])
         desc = open(os.path.join(d, "description.txt"), encoding="utf-8").read()

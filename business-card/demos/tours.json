@@ -1,6 +1,6 @@
 {
   "_about": "One narrated demo per business, made from the live public site. Each segment shows one page (panning between the given fractions of its height) while its narration plays. Narration only repeats what each site says about itself (headings captured 23/10/2026, capture-report.json); no prices are quoted. About 150 words a minute. Built by demos/build.py.",
-  "voice": "ELEVENLABS_VOICE_ID (Steve - Australian Male, ElevenLabs library voice)",
+  "voice": "MARGOT_ELEVENLABS_VOICE_ID (Margot, Product Ambassador; ElevenLabs library voice Emily - Australian Female)",
   "businesses": [
     {
       "id": "disaster-recovery",
@@ -181,7 +181,8 @@
           "to": 1.0,
           "say": "Built for the jobs you actually get called to: water damage, fire and smoke, storm and flood, and mould remediation. Designed in Australia. That is RestoreAssist."
         }
-      ]
+      ],
+      "youtubeChannelId": "UCseWy5OySgZzJUIMKZ-kT5Q"
     },
     {
       "id": "synthex",
@@ -294,7 +295,8 @@
           "to": 0.6,
           "say": "The resource hub carries guides and checklists, so people know what to do before help arrives. NRPG. Certified contractors, one network."
         }
-      ]
+      ],
+      "youtubeChannelOf": "disaster-recovery"
     },
     {
       "id": "tradehall",
@@ -344,7 +346,8 @@
           "to": 1.0,
           "say": "There are free trade tools too, like a drying calculator, with no sign-in. Founding booths open at launch. The NRPG Trade Hall: the trade show that never closes."
         }
-      ]
+      ],
+      "youtubeChannelOf": "disaster-recovery"
     }
   ]
 }

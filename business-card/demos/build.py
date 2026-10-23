@@ -3,7 +3,7 @@
 Usage: python3 -I build.py <out dir> [id ...]
 
 For each business in tours.json:
-  1. narration: one ElevenLabs clip per segment (cached by text), the library voice in ELEVENLABS_VOICE_ID
+  1. narration: one ElevenLabs clip per segment (cached by voice and text), in Margot's voice
   2. picture:   each segment pans smoothly down its page capture for exactly as long as its narration
   3. a title card (blurred hero + name) at the start and an end card (name, address, card) at the finish
   4. captions burnt in, plus captions.srt for upload; loudness normalised to -14 LUFS
@@ -27,6 +27,7 @@ W, H, FPS = 1920, 1080, 30
 GAP = 1.1           # breath after each narration clip (also leaves time to read the screen)
 SPEED = 0.9         # ElevenLabs delivery speed: a calmer pace than the voice's default
 INTRO, OUTRO = 4.0, 7.0
+MARGOT_VOICE = "p43fx6U8afP2xoq1Ai9f"   # Margot, Product Ambassador: she voices every product film (never ELEVENLABS_VOICE_ID)
 CARD_URL = "card.unite-group.ink"
 CARD_LIVE = os.environ.get("CARD_LIVE") == "1"   # set once the card answers on its own address
 
@@ -212,7 +213,7 @@ def main():
     for biz in tours["businesses"]:
         if only and biz["id"] not in only:
             continue
-        build(biz, out, e["ELEVENLABS_API_KEY"], e["ELEVENLABS_VOICE_ID"])
+        build(biz, out, e["ELEVENLABS_API_KEY"], e.get("MARGOT_ELEVENLABS_VOICE_ID", MARGOT_VOICE))
 
 
 if __name__ == "__main__":
