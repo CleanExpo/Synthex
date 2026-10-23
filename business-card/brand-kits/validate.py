@@ -9,6 +9,7 @@ import re
 import sys
 
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
+SAFE_URL = re.compile(r'^https://[^\s"<>]+$')   # same rule as SAFE_URL in card.html and site/build.py
 
 
 def sourced(entry):
@@ -58,6 +59,14 @@ def check(kit):
     for i, s in enumerate(b.get("services") or []):
         if not (sourced(s) and s.get("name")):
             errs.append(f"service #{i + 1} needs a name and a source")
+
+    # every link the card or the contact can use: plain https, no whitespace, quote or angle bracket
+    # (a javascript: link would run when tapped; a line break would inject fields into the contact)
+    for i, l in enumerate((kit.get("person") or {}).get("links") or []):
+        for key in ("url", "pendingUrl"):
+            u = l.get(key)
+            if u is not None and not SAFE_URL.match(str(u)):
+                errs.append(f"link #{i + 1} ({l.get('label')}) {key} must be plain https with no spaces or line breaks")
     return errs
 
 

@@ -467,6 +467,8 @@ const KIT = (() => { try { return JSON.parse(document.getElementById("brand-kit"
 const B = KIT.brand || {}, P = KIT.person || {};
 const $ = id => document.getElementById(id);
 const HOSTED = window.CARD_HOSTED === true;
+// A link from the kit is used only when it is plain https with no space, quote or angle bracket (no javascript:, no line breaks)
+const SAFE_URL = /^https:\/\/[^\s"<>]+$/, safeUrl = u => SAFE_URL.test(u || "");
 const QS = new URLSearchParams(location.search);
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isSet = c => c && typeof c.value === "string" && !c.status;
@@ -556,17 +558,17 @@ function lum(hex) {
   const links = (P.links || []);
   if (links.length) {
     $("links-section").hidden = false;
-    links.filter(l => l.url).forEach(l => {
+    links.filter(l => safeUrl(l.url)).forEach(l => {
       const el = document.createElement("a"); el.href = l.url; el.target = "_blank"; el.rel = "noopener";
       el.title = l.note || ""; el.append(l.label); $("links").append(el);
     });
   }
   // Unite-Group Nexus: a tile per business in the kit's order. A film opens its panel (thumbnail, watch, visit);
   // a site without a film links out; a business whose page is not live yet shows as coming soon.
-  const shelf = links.filter(l => (l.visitor && /^https:\/\//.test(l.url || "")) || (!l.url && l.pendingUrl));
+  const shelf = links.filter(l => (l.visitor && safeUrl(l.url)) || (!l.url && l.pendingUrl));
   if (shelf.length) {
     shelf.forEach(l => {
-      const v = l.video || {}, film = /^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || ""), live = /^https:\/\//.test(l.url || "");
+      const v = l.video || {}, film = /^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || ""), live = safeUrl(l.url);
       const t = document.createElement(live ? "a" : "div");
       t.className = "tile" + (/nexus/i.test(l.label) ? " wide" : "") + (live ? "" : " soon wide slim");
       if (live) { t.href = l.url; t.target = "_blank"; t.rel = "noopener"; }
@@ -608,7 +610,7 @@ function vcard() {
   (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + (p.type || "VOICE") + ":" + p.tel));
   (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + e.value));
   // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
-  (P.links || []).filter(l => /^https:\/\//.test(l.url || "")).forEach((l, i) => {
+  (P.links || []).filter(l => safeUrl(l.url)).forEach((l, i) => {
     lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));
   });
   if (P.vcardNote) lines.push("NOTE:" + esc(P.vcardNote));

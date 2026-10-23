@@ -14,6 +14,7 @@ The logo and hero clip ("file", "video", "poster", relative to the repository ro
 media/ for the hosted page and embedded as data URIs in preview.html, so neither loads anything from
 another host. vercel.json is kept by hand.
 """
+import re
 import base64
 import hashlib
 import json
@@ -59,6 +60,10 @@ MIME = {".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".j
         ".mp4": "video/mp4", ".webm": "video/webm"}
 
 
+# Same rule as SAFE_URL in card.html: plain https, no whitespace, quote or angle bracket (no javascript:, no CRLF injection)
+SAFE_URL = re.compile(r'^https://[^\s"<>]+$')
+
+
 def esc(s):
     return str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
 
@@ -78,7 +83,7 @@ def vcard(p):
     for e in p.get("emails", []):
         lines.append("EMAIL;TYPE=WORK:" + e["value"])
     # the first two live links are the homepages; every other live business follows as a labelled link
-    for i, link in enumerate([l for l in p.get("links", []) if str(l.get("url") or "").startswith("https://")], 1):
+    for i, link in enumerate([l for l in p.get("links", []) if SAFE_URL.match(str(l.get("url") or ""))], 1):
         lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
     if p.get("vcardNote"):
         lines.append("NOTE:" + esc(p["vcardNote"]))
