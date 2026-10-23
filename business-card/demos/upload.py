@@ -90,28 +90,54 @@ def main():
             print(f"{biz['id']}: skipped, its own channel is {own or 'not set up yet'}, not {channel}")
             continue
         d = os.path.join(out, biz["id"])
-        desc = open(os.path.join(d, "description.txt"), encoding="utf-8").read()
-        title = f"{biz['name']}: {biz['tagline']} (demo)"[:100]
-        tags = [biz["name"], "restoration", "Australia", "demo"]
-        res = composio("YOUTUBE_UPLOAD_VIDEO", {"title": title, "description": desc, "tags": tags, "categoryId": CATEGORY,
-                                                "privacyStatus": "unlisted", "videoFilePath": os.path.join(d, f"{biz['id']}-demo.mp4")},
-                       account, file=os.path.join(d, f"{biz['id']}-demo.mp4"))
+        # the cinematic film and its search-ready details (cinematic/metadata.py); never the old screen-scroll demo
+        yt = json.load(open(os.path.join(d, "cine", "youtube.json"), encoding="utf-8"))
+        res = composio("YOUTUBE_UPLOAD_VIDEO", {"title": yt["title"], "description": yt["description"], "tags": yt["tags"],
+                                                "categoryId": yt["categoryId"], "privacyStatus": yt["privacyStatus"], "videoFilePath": yt["video"]},
+                       account, file=yt["video"])
         vid = json.dumps(res)
         m = re.search(r'"id"\s*:\s*"([A-Za-z0-9_-]{11})"', vid)
         if not m:
             sys.exit(f"{biz['id']}: uploaded but no video id in the reply: {vid[:400]}")
-        videos[biz["id"]] = {"youtubeId": m.group(1), "account": account, "channel": channel}
+        yid = m.group(1)
+        videos[biz["id"]] = {"youtubeId": yid, "account": account, "channel": channel}
         json.dump(videos, open(vpath, "w"), indent=2)
+        done = []
+        # captions (Margot's words, timed) so search and accessibility read the film
+        try:
+            composio("YOUTUBE_UPLOAD_CAPTION_TRACK", {"videoId": yid, "language": "en-AU", "name": "English (Australia)", "isDraft": False},
+                     account, file=yt["captions"])
+            done.append("captions")
+        except SystemExit as e:
+            print(f"{biz['id']}: captions not uploaded ({e}); upload {yt['captions']} in YouTube Studio")
+        # the business's playlist, made once and reused
+        try:
+            lists = json.dumps(composio("YOUTUBE_LIST_USER_PLAYLISTS", {"maxResults": 50}, account))
+            pm = re.search(r'"id"\s*:\s*"(PL[A-Za-z0-9_-]+)"[^{}]*?"title"\s*:\s*"' + re.escape(yt["playlist"]) + '"', lists)
+            pid = pm.group(1) if pm else re.search(r'"(PL[A-Za-z0-9_-]+)"', json.dumps(composio(
+                "YOUTUBE_CREATE_PLAYLIST", {"title": yt["playlist"], "privacyStatus": "unlisted"}, account))).group(1)
+            composio("YOUTUBE_ADD_VIDEO_TO_PLAYLIST", {"playlistId": pid, "videoId": yid}, account)
+            done.append("playlist")
+        except (SystemExit, AttributeError) as e:
+            print(f"{biz['id']}: playlist not set ({e}); add it to '{yt['playlist']}' in YouTube Studio")
         # the thumbnail tool takes a public image URL: thumbs.json maps each id to one (e.g. a Higgsfield media URL)
         tpath = os.path.join(out, "thumbs.json")
         turl = (json.load(open(tpath)) if os.path.exists(tpath) else {}).get(biz["id"])
-        if turl:
-            try:
-                composio("YOUTUBE_UPDATE_THUMBNAIL", {"videoId": m.group(1), "thumbnailUrl": turl}, account)
-            except SystemExit as e:
-                print(f"{biz['id']}: thumbnail not set ({e}); set it in YouTube Studio from {d}/thumbnail.jpg")
-        else:
-            print(f"{biz['id']}: no public thumbnail URL; set it in YouTube Studio from {d}/thumbnail.jpg")
+        try:
+            if not turl:
+                raise SystemExit("no public URL in thumbs.json")
+            composio("YOUTUBE_UPDATE_THUMBNAIL", {"videoId": yid, "thumbnailUrl": turl}, account)
+            done.append("thumbnail")
+        except SystemExit as e:
+            print(f"{biz['id']}: thumbnail not set ({e}); set it in YouTube Studio from {yt['thumbnail']}")
+        # the website's VideoObject now points at the real video
+        vpath_o = os.path.join(d, "cine", "videoobject.json")
+        if os.path.exists(vpath_o):
+            import datetime
+            txt = open(vpath_o, encoding="utf-8").read().replace("{youtubeId}", yid).replace("{uploadDate}", datetime.date.today().isoformat())
+            open(vpath_o, "w", encoding="utf-8").write(txt)
+            done.append("videoobject")
+        print(f"{biz['id']}: set {', '.join(done) or 'nothing extra'}; in YouTube Studio tick: {'; '.join(yt['studioOnly'])}")
         print(f"{biz['id']}: https://youtu.be/{m.group(1)}")
 
 
