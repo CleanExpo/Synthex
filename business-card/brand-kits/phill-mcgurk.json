@@ -379,17 +379,6 @@
     ],
     "links": [
       {
-        "label": "Disaster Recovery",
-        "url": "https://www.disasterrecovery.com.au",
-        "note": "Restoration, Brisbane",
-        "video": {
-          "youtubeId": "I-_EB_Vxim8",
-          "thumb": "business-card/demos/thumbs/disaster-recovery.jpg",
-          "source": "YouTube listing given by Phill 23/10/2026: \"One Thing (Preview) | Lodging a flood claim at night | Disaster Recovery\" on @NationalRestorationProfessiona (NRPG channel); thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
-        },
-        "visitor": true
-      },
-      {
         "label": "CARSI",
         "url": "https://carsi.com.au",
         "note": "IICRC CEC training",
@@ -401,16 +390,15 @@
         "visitor": true
       },
       {
-        "label": "Unite Group",
-        "url": "https://maps.google.com/?cid=16425003964954420216",
-        "note": "The group",
-        "urlNote": "unite-group.in sends visitors to a login page, so the card links the group's public Google listing (Unite-Group Nexus) until the site is public.",
-        "visitor": true,
+        "label": "Disaster Recovery",
+        "url": "https://www.disasterrecovery.com.au",
+        "note": "Restoration, Brisbane",
         "video": {
-          "youtubeId": "vQ5XkygiJlo",
-          "thumb": "business-card/demos/thumbs/unite-group.jpg",
-          "source": "YouTube listing given by Phill 23/10/2026: \"The Relay | Every recovery, connected | Unite-Group Nexus\" on @RestoreAssistApp; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
-        }
+          "youtubeId": "I-_EB_Vxim8",
+          "thumb": "business-card/demos/thumbs/disaster-recovery.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"One Thing (Preview) | Lodging a flood claim at night | Disaster Recovery\" on @NationalRestorationProfessiona (NRPG channel); thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        },
+        "visitor": true
       },
       {
         "label": "Synthex",
@@ -421,17 +409,6 @@
           "youtubeId": "7L_swG39cEo",
           "thumb": "business-card/demos/thumbs/synthex.jpg",
           "source": "YouTube listing given by Phill 23/10/2026: \"Marketing That Decides Before It Produces (Opportunity Map Walkthrough)\" on @SynthexMedia-25; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
-        }
-      },
-      {
-        "label": "RestoreAssist",
-        "url": "https://restoreassist.app",
-        "note": "Restoration job app",
-        "visitor": true,
-        "video": {
-          "youtubeId": "EMIoECpg-ow",
-          "thumb": "business-card/demos/thumbs/restoreassist.jpg",
-          "source": "YouTube listing given by Phill 23/10/2026: \"RestoreAssist: Restoration Management Software for Contractors in Australia and New Zealand\" on Ai Restore Assist; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
         }
       },
       {
@@ -446,6 +423,17 @@
         "visitor": true
       },
       {
+        "label": "RestoreAssist",
+        "url": "https://restoreassist.app",
+        "note": "Restoration job app",
+        "visitor": true,
+        "video": {
+          "youtubeId": "EMIoECpg-ow",
+          "thumb": "business-card/demos/thumbs/restoreassist.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"RestoreAssist: Restoration Management Software for Contractors in Australia and New Zealand\" on Ai Restore Assist; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        }
+      },
+      {
         "label": "TradeHall",
         "url": "https://cleanexpo247-hall.vercel.app",
         "note": "NRPG Trade Hall",
@@ -458,6 +446,18 @@
         "pendingUrl": "https://disasterrecovery.com.au/nrpg-restorationworld",
         "note": "NRPG Restoration World",
         "urlNote": "Phill 23/10/2026: Restoration World lives at disasterrecovery.com.au/nrpg-restorationworld for now (cleanexpo247.com is registered but parked with no DNS). 23/10/2026 that path returns 404 on the live site and is not in its sitemap; the project is the private repo CleanExpo/Restoration-World (Godot). Set url to pendingUrl and visitor to true once it answers 200."
+      },
+      {
+        "label": "Unite-Group Nexus",
+        "url": "https://maps.google.com/?cid=16425003964954420216",
+        "note": "The group behind them all",
+        "urlNote": "unite-group.in sends visitors to a login page, so the card links the group's public Google listing (Unite-Group Nexus) until the site is public.",
+        "visitor": true,
+        "video": {
+          "youtubeId": "vQ5XkygiJlo",
+          "thumb": "business-card/demos/thumbs/unite-group.jpg",
+          "source": "YouTube listing given by Phill 23/10/2026: \"The Relay | Every recovery, connected | Unite-Group Nexus\" on @RestoreAssistApp; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+        }
       }
     ],
     "vcardNote": "IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC",

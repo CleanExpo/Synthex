@@ -512,7 +512,7 @@ try {
       'businesses with a demo video: ' + withVideo.length
     );
     for (const l of withVideo) {
-      await page.click(`#bizline a:text-is("${l.label}")`);
+      await page.click(`#nexus .tile:has(.tname:text-is("${l.label}"))`);
       await page.waitForTimeout(400);
       const yt = 'https://youtu.be/' + l.video.youtubeId;
       const got = await page.evaluate(() => ({
@@ -532,6 +532,9 @@ try {
       );
       await page.click('#biz-close');
     }
+    // "first screen" is the top of the card; clicking the lower business tiles scrolled away from it
+    await page.evaluate(() => scrollTo(0, 0));
+    await page.waitForTimeout(200);
     const primaries = await page.evaluate(
       () =>
         [...document.querySelectorAll('.btn.primary')].filter(b => {

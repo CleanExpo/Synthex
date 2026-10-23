@@ -77,8 +77,9 @@ def vcard(p):
         lines.append(f"TEL;TYPE={ph.get('type', 'VOICE')}:{ph['tel']}")
     for e in p.get("emails", []):
         lines.append("EMAIL;TYPE=WORK:" + e["value"])
-    for link in [l for l in p.get("links", []) if l.get("url")][:2]:
-        lines.append("URL:" + link["url"])
+    # the first two live links are the homepages; every other live business follows as a labelled link
+    for i, link in enumerate([l for l in p.get("links", []) if str(l.get("url") or "").startswith("https://")], 1):
+        lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
     if p.get("vcardNote"):
         lines.append("NOTE:" + esc(p["vcardNote"]))
     lines.append("END:VCARD")

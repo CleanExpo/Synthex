@@ -187,8 +187,28 @@ body:not(.owner) .owner-only { display: none !important; }
 #burst { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 55; pointer-events: none; }
 .save-hint { margin: -16px 0 0; text-align: center; font-weight: 600; color: var(--fg); }
 .btn.quiet { background: none; text-align: center; justify-items: center; font-weight: 500; color: var(--fg); }
-.bizline { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 14px; font-size: 14px; }
-.bizline a { color: var(--fg); text-decoration: none; border-bottom: 1px solid var(--line); padding-bottom: 1px; }
+/* Unite-Group Nexus: one tile per business, a shelf of films (Phill, 23/10/2026: "something to look at") */
+.nexus { display: grid; gap: 14px; }
+.nexus-head { display: grid; gap: 2px; }
+.nexus-head h2 { font-size: 22px; letter-spacing: -0.01em; }
+.nexus-head p { margin: 0; font-size: 14px; color: var(--muted); }
+.nexus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
+.tile { display: grid; gap: 6px; align-content: start; color: var(--fg); text-decoration: none; min-width: 0; }
+.tile.wide { grid-column: 1 / -1; }
+.tile .tshot { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; background: var(--stage); border: 1px solid var(--line); }
+.tile .tshot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.tile:hover .tshot img, .tile:focus-visible .tshot img { transform: scale(1.04); }
+.tile .tshot .play { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; border-radius: 50%; background: rgba(4,8,14,.72); box-shadow: 0 0 0 2px var(--brand); }
+.tile .tshot .play::after { content: ""; position: absolute; left: 12px; top: 9px; border-left: 9px solid #FFFFFF; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+.tile .tshot .mark { position: absolute; inset: 0; display: grid; place-items: center; padding: 10px; text-align: center; color: var(--glow-text); font: 700 17px/1.2 var(--display); }
+.tile .tname { font: 700 15px/1.25 var(--display); }
+.tile .trole { font-size: 12.5px; color: var(--muted); line-height: 1.3; }
+.tile .tlabel { font-size: 12.5px; font-weight: 700; color: var(--brand-text); }
+.tile.soon { cursor: default; }
+.tile.soon .tlabel { color: var(--muted); }
+.tile.wide .tshot { aspect-ratio: 21 / 9; }
+.tile.slim .tshot { aspect-ratio: auto; min-height: 64px; }
+@media (prefers-reduced-motion: reduce) { .tile .tshot img { transition: none; } }
 .ownlink { justify-self: center; font-size: 14px; color: var(--muted); }
 /* A business's demo: its desktop screenshot as the thumbnail, linking to the video on YouTube */
 .bizthumb { position: relative; display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 9; background: var(--stage); }
@@ -393,7 +413,10 @@ body:not(.owner) .owner-only { display: none !important; }
     <div class="brands" id="links"></div>
   </section>
 
-  <nav class="bizline" id="bizline" aria-label="Businesses" hidden></nav>
+  <section class="nexus" id="nexus" aria-labelledby="nexus-h" hidden>
+    <div class="nexus-head"><h2 id="nexus-h">Unite-Group Nexus</h2><p>The businesses behind this card. Tap one to watch its film.</p></div>
+    <div class="nexus-grid" id="nexus-grid"></div>
+  </section>
   <div class="surprise bizsheet" id="biz-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="biz-h">
     <div class="gift">
       <h2 id="biz-h"></h2>
@@ -521,17 +544,32 @@ function lum(hex) {
       el.title = l.note || ""; el.append(l.label); $("links").append(el);
     });
   }
-  // The businesses a visitor can reach: a quiet line of names, not buttons
-  const vis = links.filter(l => l.visitor && /^https:\/\//.test(l.url || ""));
-  if (vis.length) {
-    vis.forEach(l => {
-      const a = document.createElement("a"); a.href = l.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label;
-      // a business with a demo video opens its panel (desktop thumbnail, watch, visit) instead of leaving the card
-      const v = l.video || {};
-      if (/^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || "")) a.addEventListener("click", e => { e.preventDefault(); openBiz(l); });
-      $("bizline").append(a);
+  // Unite-Group Nexus: a tile per business in the kit's order. A film opens its panel (thumbnail, watch, visit);
+  // a site without a film links out; a business whose page is not live yet shows as coming soon.
+  const shelf = links.filter(l => (l.visitor && /^https:\/\//.test(l.url || "")) || (!l.url && l.pendingUrl));
+  if (shelf.length) {
+    shelf.forEach(l => {
+      const v = l.video || {}, film = /^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || ""), live = /^https:\/\//.test(l.url || "");
+      const t = document.createElement(live ? "a" : "div");
+      t.className = "tile" + (/nexus/i.test(l.label) ? " wide" : "") + (live ? "" : " soon wide slim");
+      if (live) { t.href = l.url; t.target = "_blank"; t.rel = "noopener"; }
+      const shot = document.createElement("span"); shot.className = "tshot";
+      const src = film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : "";
+      if (src) {
+        const img = document.createElement("img"); img.src = src; img.alt = ""; img.loading = "lazy"; shot.append(img);
+        const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play);
+      } else {
+        const mark = document.createElement("span"); mark.className = "mark"; mark.textContent = l.label; shot.append(mark);
+      }
+      const name = document.createElement("span"); name.className = "tname"; name.textContent = l.label;
+      const role = document.createElement("span"); role.className = "trole"; role.textContent = l.note || "";
+      const label = document.createElement("span"); label.className = "tlabel";
+      label.textContent = film ? "Watch the film ›" : live ? "Visit site ›" : "Coming soon";
+      t.append(shot, name, role, label);
+      if (film) t.addEventListener("click", e => { e.preventDefault(); openBiz(l); });
+      $("nexus-grid").append(t);
     });
-    $("bizline").hidden = false;
+    $("nexus").hidden = false;
   }
   const f = P.features || {};
   if (f.discover && P.ideas) $("door-discover").hidden = false;
@@ -552,7 +590,10 @@ function vcard() {
   if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
   (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + (p.type || "VOICE") + ":" + p.tel));
   (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + e.value));
-  (P.links || []).filter(l => l.url).slice(0, 2).forEach(l => lines.push("URL:" + l.url));
+  // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
+  (P.links || []).filter(l => /^https:\/\//.test(l.url || "")).forEach((l, i) => {
+    lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));
+  });
   if (P.vcardNote) lines.push("NOTE:" + esc(P.vcardNote));
   lines.push("END:VCARD");
   return lines.join("\r\n") + "\r\n";
