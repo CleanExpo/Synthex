@@ -918,17 +918,24 @@ export async function GET(
           platform === 'googleanalytics'
             ? (stateData.ga4AdminConsent as Ga4AdminConsent | undefined)
             : undefined;
-        const ga4AdminGrant = ga4AdminConsent
-          ? buildGa4AdminGrant({
-              consent: ga4AdminConsent,
-              grantedScope: tokenData.scope,
-              userId,
-              email: (stateData.email as string | undefined) ?? null,
-            })
-          : null;
+        // The grant is this user's, so the credential it runs on must be too:
+        // without a refresh token from THIS exchange, the stored connection
+        // keeps an earlier refresh token that may be another person's Google
+        // login, and provisioning would refresh through it. No grant then.
+        const ga4AdminGrant =
+          ga4AdminConsent && tokenData.refreshToken
+            ? buildGa4AdminGrant({
+                consent: ga4AdminConsent,
+                grantedScope: tokenData.scope,
+                userId,
+                email: (stateData.email as string | undefined) ?? null,
+              })
+            : null;
         if (ga4AdminConsent && !ga4AdminGrant) {
           logger.warn(
-            'GA4 create consent accepted in Synthex but the edit scope was not granted at Google',
+            tokenData.refreshToken
+              ? 'GA4 create consent accepted in Synthex but the edit scope was not granted at Google'
+              : 'GA4 create consent not recorded: Google returned no refresh token for this user',
             { userId, organizationId: rawOrgId }
           );
         }

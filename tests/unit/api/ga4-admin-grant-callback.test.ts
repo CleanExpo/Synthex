@@ -87,7 +87,8 @@ function stateFor(withConsent: boolean) {
   });
 }
 
-function googleReturns(scope: string) {
+function googleReturns(scope: string, opts: { refreshToken?: boolean } = {}) {
+  const withRefresh = opts.refreshToken ?? true;
   global.fetch = jest.fn(async (url: unknown) => {
     const u = String(url);
     if (u.includes('oauth2.googleapis.com/token')) {
@@ -96,7 +97,7 @@ function googleReturns(scope: string) {
         status: 200,
         json: async () => ({
           access_token: 'access-token',
-          refresh_token: 'refresh-token',
+          ...(withRefresh ? { refresh_token: 'refresh-token' } : {}),
           expires_in: 3600,
           token_type: 'Bearer',
           scope,
@@ -180,6 +181,27 @@ describe('GET /api/auth/callback/googleanalytics — GA4 edit grant record', () 
     const conn = await persistedConnection(true);
     expect(conn.metadata.ga4AdminGrant).toBeUndefined();
     expect(readGa4AdminGrant(conn)).toBeNull();
+  });
+
+  it('(Codex r6) records no grant when Google returns no refresh token, so a grant never runs on an earlier user’s retained refresh token', async () => {
+    // The org already has a GA4 connection (user A's refresh token on it).
+    // User B consents; Google grants the edit scope but sends no refresh token.
+    mockPrisma.platformConnection.findFirst.mockResolvedValue({ id: 'conn-a' });
+    mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-a' });
+    googleReturns(`${READONLY} ${GA4_ADMIN_SCOPE}`, { refreshToken: false });
+    await GET(
+      createMockNextRequest({
+        url: `http://localhost/api/auth/callback/googleanalytics?code=c&state=${encodeURIComponent(stateFor(true))}`,
+      }),
+      { params: Promise.resolve({ platform: 'googleanalytics' }) }
+    );
+    expect(mockPrisma.platformConnection.update).toHaveBeenCalledTimes(1);
+    const data = mockPrisma.platformConnection.update.mock.calls[0][0].data;
+    expect(data).not.toHaveProperty('refreshToken');
+    expect(data.metadata.ga4AdminGrant).toBeUndefined();
+    expect(
+      readGa4AdminGrant({ scope: data.scope, metadata: data.metadata })
+    ).toBeNull();
   });
 
   it('records no grant without the signed consent, even if Google returns the edit scope', async () => {
