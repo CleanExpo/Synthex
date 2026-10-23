@@ -7,16 +7,18 @@ import crypto from 'node:crypto';
 const root = path.join(__dirname, '../..');
 
 describe('complete offline logo packs', () => {
-  it('uses the NRPG Group shield instead of the rejected legacy NRP badge', () => {
+  it('uses the NRPG logo Phill approved on 23/10/2026, not either earlier badge', () => {
     const source = sources.find(item => item.slug === 'nrpg')!;
     const bytes = fs.readFileSync(path.join(root, source.primary.path));
     expect(crypto.createHash('sha256').update(bytes).digest('hex')).toBe(
       source.primary.sha256
     );
-    expect(source.primary.sha256).not.toBe(
-      '5a661ed9e9ce13a3e7a1ef71143b87bf6ea070822f012507c891ad7cdb232bd6'
-    );
-    expect(source.primary.url).toContain('nrpg-logo-full.png');
+    for (const rejected of [
+      '5a661ed9e9ce13a3e7a1ef71143b87bf6ea070822f012507c891ad7cdb232bd6', // legacy NRP badge
+      '0dff636d5f96c15acac66aa7a2f0a73ed837f1ce101126d402de77d593b63399', // gold 3D badge with a Gemini watermark
+    ])
+      expect(source.primary.sha256).not.toBe(rejected);
+    expect(source.primary.url).toContain('brand-assets/nrpg/01-approved-logo/');
     expect(
       fs.readFileSync(path.join(root, 'public/logos/nrpg/primary.svg'), 'utf8')
     ).toContain('NRPG National Restoration Professionals Group');

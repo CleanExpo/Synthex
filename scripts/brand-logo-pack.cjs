@@ -62,7 +62,9 @@ function greyscale(svg, inverted = false) {
 
 function darkSurface(svg, slug) {
   // Opaque badges and bright marks retain their colour and internal detail.
-  if (!['carsi', 'ccw', 'dr'].includes(slug)) return svg;
+  if (!['carsi', 'ccw', 'dr', 'nrpg'].includes(slug)) return svg;
+  // NRPG's slate group name turns light blue on dark, as in its approved dark lockup (brand-assets/nrpg).
+  if (slug === 'nrpg') svg = svg.replace(/#5B6B7F/gi, '#AFC4E8');
   return svg.replace(/#[0-9a-f]{6}/gi, colour => {
     const rgb = [1, 3, 5].map(offset =>
       parseInt(colour.slice(offset, offset + 2), 16)
