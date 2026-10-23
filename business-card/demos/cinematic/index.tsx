@@ -808,19 +808,6 @@ const Photo: React.FC<{ sc: Scene; b: Brand }> = ({ sc, b }) => {
               objectFit: 'cover',
             }}
           />
-        ) : sc.slot ? (
-          <div
-            style={{
-              border: `3px dashed ${b.accent}99`,
-              borderRadius: 18,
-              padding: '14px 28px',
-              color: `${b.ink}bb`,
-              font: `600 28px ${font(b.body)}`,
-              background: '#ffffffb0',
-            }}
-          >
-            YOUR PHOTO HERE: {sc.photo} (with their OK)
-          </div>
         ) : null}
       </AbsoluteFill>
       {sc.image && (
