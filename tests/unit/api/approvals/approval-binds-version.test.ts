@@ -13,8 +13,10 @@
  * MISSES: real Postgres transactions and the FOR UPDATE row lock (the mock
  * proves only that the wording is re-read inside the transaction, after an
  * edit made between the first check and the commit); calendar-slot and campaign approvals
- * (only contentType 'post' is bound); edits to media or scheduling, which the
- * fingerprint (platform + text) does not cover.
+ * (only contentType 'post' is bound); edits to scheduling, which the
+ * fingerprint (platform, text, images, link) does not cover. The mock honours
+ * each query's select and the locked re-read's column list, so a route that
+ * stops loading metadata loses the image and link binding here too.
  */
 
 import { createMockNextRequest } from '@/tests/helpers/mock-request';
@@ -40,6 +42,16 @@ function mockClone<T>(value: T): T {
   return value === undefined ? value : JSON.parse(JSON.stringify(value));
 }
 
+// Honours a Prisma select, so a route that does not load a field never sees it.
+function mockPick(row: Row, select?: Row): Row {
+  if (!select) return mockClone(row);
+  const out: Row = {};
+  for (const key of Object.keys(select)) {
+    if (select[key] && key in row) out[key] = mockClone(row[key]);
+  }
+  return out;
+}
+
 function mockApprovalView(row: Row): Row {
   return {
     ...mockClone(row),
@@ -52,13 +64,13 @@ function mockApprovalView(row: Row): Row {
 
 const mockPrisma: Record<string, any> = {
   post: {
-    findUnique: async ({ where }: { where: Row }) => {
+    findUnique: async ({ where, select }: { where: Row; select?: Row }) => {
       const row = mockDb.posts.get(where.id);
-      return row ? mockClone(row) : null;
+      return row ? mockPick(row, select) : null;
     },
     // Honours the post -> campaign scope the POST route asks for: by
     // campaign.organizationId, or by campaign.userId (the owner).
-    findFirst: async ({ where }: { where: Row }) => {
+    findFirst: async ({ where, select }: { where: Row; select?: Row }) => {
       const row = mockDb.posts.get(where.id);
       if (!row) return null;
       const scope = where.campaign ?? {};
@@ -69,7 +81,7 @@ const mockPrisma: Record<string, any> = {
         return null;
       }
       if ('userId' in scope && row.ownerId !== scope.userId) return null;
-      return mockClone(row);
+      return mockPick(row, select);
     },
   },
   approvalRequest: {
@@ -111,10 +123,16 @@ const mockPrisma: Record<string, any> = {
     },
   },
   notification: { create: async () => ({}) },
-  // The locked post re-read: SELECT content, platform FROM posts WHERE id = $1.
-  $queryRaw: async (_sql: TemplateStringsArray, ...values: unknown[]) => {
+  // The locked post re-read: SELECT <columns> FROM posts WHERE id = $1.
+  // Returns only the columns the route's SQL names.
+  $queryRaw: async (sql: TemplateStringsArray, ...values: unknown[]) => {
     const row = mockDb.posts.get(values[0] as string);
-    return row ? [{ content: row.content, platform: row.platform }] : [];
+    if (!row) return [];
+    const columns = /SELECT\s+([\s\S]+?)\s+FROM\s+posts/i
+      .exec(sql.join('?'))![1]
+      .split(',')
+      .map(c => c.trim());
+    return [Object.fromEntries(columns.map(c => [c, mockClone(row[c])]))];
   },
 };
 mockPrisma.$transaction = async (cb: (tx: unknown) => unknown) => {
@@ -163,6 +181,8 @@ import {
 
 const SUBMITTED_TEXT = 'RestoreAssist: start a 14-day trial this week.';
 const EDITED_TEXT = 'RestoreAssist: guaranteed results, start today.';
+const SUBMITTED_IMAGES = ['https://cdn.synthex.test/restoreassist-trial.png'];
+const SUBMITTED_LINK = 'https://restoreassist.test/trial?utm_source=linkedin';
 
 function seedPost(
   content = SUBMITTED_TEXT,
@@ -174,6 +194,9 @@ function seedPost(
     content,
     platform: 'linkedin',
     status: 'draft',
+    // What the publish cron sends besides the text: images as media, linkUrl
+    // as the LinkedIn article card.
+    metadata: { images: [...SUBMITTED_IMAGES], linkUrl: SUBMITTED_LINK },
     // Stand in for post.campaign.organizationId and post.campaign.userId.
     organizationId,
     ownerId,
@@ -197,6 +220,11 @@ async function postApproval() {
 
 function editPost(content: string) {
   mockDb.posts.get('post-1')!.content = content;
+}
+
+function editPostMetadata(patch: Row) {
+  const post = mockDb.posts.get('post-1')!;
+  post.metadata = { ...post.metadata, ...patch };
 }
 
 async function submit(metadata: Record<string, unknown> = {}) {
@@ -282,7 +310,11 @@ describe('POST /api/approvals binds a post approval to its wording', () => {
     const id = await submit();
 
     expect(mockDb.approvals.get(id)!.metadata[CONTENT_FINGERPRINT_KEY]).toBe(
-      postContentFingerprint({ content: SUBMITTED_TEXT, platform: 'linkedin' })
+      postContentFingerprint({
+        content: SUBMITTED_TEXT,
+        platform: 'linkedin',
+        metadata: { images: SUBMITTED_IMAGES, linkUrl: SUBMITTED_LINK },
+      })
     );
   });
 
@@ -320,7 +352,11 @@ describe('POST /api/approvals binds a post approval to its wording', () => {
     expect(res.status).toBeLessThan(300);
     const [row] = [...mockDb.approvals.values()];
     expect(row.metadata[CONTENT_FINGERPRINT_KEY]).toBe(
-      postContentFingerprint({ content: SUBMITTED_TEXT, platform: 'linkedin' })
+      postContentFingerprint({
+        content: SUBMITTED_TEXT,
+        platform: 'linkedin',
+        metadata: { images: SUBMITTED_IMAGES, linkUrl: SUBMITTED_LINK },
+      })
     );
   });
 
@@ -439,7 +475,11 @@ describe('PATCH /api/approvals/[id] approve checks the wording is unchanged', ()
 
     expect((await act(id, 'resubmit', 'submitter-1')).status).toBe(200);
     expect(mockDb.approvals.get(id)!.metadata[CONTENT_FINGERPRINT_KEY]).toBe(
-      postContentFingerprint({ content: EDITED_TEXT, platform: 'linkedin' })
+      postContentFingerprint({
+        content: EDITED_TEXT,
+        platform: 'linkedin',
+        metadata: { images: SUBMITTED_IMAGES, linkUrl: SUBMITTED_LINK },
+      })
     );
 
     expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
@@ -473,6 +513,71 @@ describe('PATCH /api/approvals/[id] approve checks the wording is unchanged', ()
     expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
     expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
     expect(mockDb.approvals.get(id)!.status).toBe('approved');
+  });
+
+  it.each([
+    ['swapped image', { images: ['https://evil.example/offer.png'] }],
+    [
+      'added image',
+      { images: [...SUBMITTED_IMAGES, 'https://evil.example/2.png'] },
+    ],
+    ['removed images', { images: [] }],
+    ['changed link', { linkUrl: 'https://evil.example/phish' }],
+    ['removed link', { linkUrl: undefined }],
+  ])(
+    'refuses with 409 content_changed when only the %s changed after submission, and records no approval',
+    async (_label, patch) => {
+      seedPost();
+      const id = await submit();
+      editPostMetadata(patch);
+
+      const res = await act(id, 'approve', 'reviewer-1');
+      const body = await res.json();
+
+      expect(res.status).toBe(409);
+      expect(body.code).toBe('content_changed');
+      const row = mockDb.approvals.get(id)!;
+      expect(row.status).toBe('pending');
+      expect(row.steps[0].currentApprovals).toBe(0);
+      expect(lastAudit('approval_approve')).toBeUndefined();
+    }
+  );
+
+  it('still approves when only metadata the publisher does not send changed', async () => {
+    seedPost();
+    const id = await submit();
+    editPostMetadata({ history: [{ event: 'scheduled' }], retryCount: 1 });
+
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    expect(lastAudit('approval_approve')!.details.contentBinding).toBe('match');
+  });
+
+  it('refuses an approval when the image is swapped between the check and the commit', async () => {
+    seedPost();
+    const id = await submit();
+    mockDb.notifications.length = 0;
+    mockDb.onTransaction = () =>
+      editPostMetadata({ images: ['https://evil.example/offer.png'] });
+
+    const res = await act(id, 'approve', 'reviewer-1');
+    const body = await res.json();
+
+    expect(res.status).toBe(409);
+    expect(body.code).toBe('content_changed');
+    expect(mockDb.approvals.get(id)!.steps[0].currentApprovals).toBe(0);
+    expect(mockDb.notifications).toEqual([]);
+  });
+
+  it('resubmit after a link change re-binds to the new link, after which approval succeeds', async () => {
+    seedPost();
+    const id = await submit();
+    editPostMetadata({ linkUrl: 'https://restoreassist.test/new-offer' });
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(409);
+
+    expect((await act(id, 'resubmit', 'submitter-1')).status).toBe(200);
+
+    expect((await act(id, 'approve', 'reviewer-1')).status).toBe(200);
+    expect(lastAudit('approval_approve')!.details.contentBinding).toBe('match');
   });
 
   it('still approves a legacy request with no fingerprint and records it as unbound_legacy', async () => {

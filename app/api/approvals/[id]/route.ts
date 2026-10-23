@@ -145,7 +145,7 @@ function contentChangedResponse() {
       error: 'Conflict',
       code: 'content_changed',
       message:
-        'The post was edited or removed after it was sent for approval. Resubmit it so reviewers approve the current wording.',
+        'The post was edited or removed after it was sent for approval. Resubmit it so reviewers approve the current version.',
     },
     { status: 409 }
   );
@@ -637,8 +637,9 @@ export async function PATCH(
     let newStatus = approval.status;
     let newCurrentStep = approval.currentStep;
 
-    // A post approval binds to the wording that was submitted: approving checks
-    // it is unchanged, and resubmitting re-binds to the current wording.
+    // A post approval binds to the version that was submitted (text, images,
+    // link): approving checks it is unchanged, and resubmitting re-binds to
+    // the current version.
     let binding: ContentBinding | null = null;
     let reboundMetadata: Record<string, unknown> | null = null;
     if (
@@ -647,7 +648,7 @@ export async function PATCH(
     ) {
       const post = await prisma.post.findUnique({
         where: { id: approval.contentId },
-        select: { content: true, platform: true },
+        select: { content: true, platform: true, metadata: true },
       });
       if (action === 'approve') {
         // A missing post fails a bound request; only an unbound (legacy)
@@ -948,7 +949,7 @@ export async function PATCH(
         // Re-read the post under a row lock, so an edit that commits after
         // the check above cannot let this approval save for the old wording.
         const locked = await tx.$queryRaw<FingerprintablePost[]>`
-          SELECT content, platform FROM posts
+          SELECT content, platform, metadata FROM posts
           WHERE id = ${approval.contentId}
           FOR UPDATE
         `;
