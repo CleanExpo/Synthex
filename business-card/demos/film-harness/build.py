@@ -71,7 +71,7 @@ cmd = ["magick", P(L["file"]), "-filter", "Lanczos", "-resize", f"{LW}x{H}", "-g
 if L.get("vignette", True):   # the radial vignette suits a square mark on black; it would darken the ends of a wordmark
     cmd += ["(", "-size", f"{H}x{H}", "radial-gradient:white-black", "-gravity", "center", "-background", "black", "-extent", f"{W}x{H}", ")",
             "-compose", "multiply", "-composite"]
-subprocess.run(cmd + [card], check=True)   # the approved logo file, never redrawn
+subprocess.run(cmd + ["-alpha", "off", card], check=True)   # the approved logo file, never redrawn
 run("-loop", "1", "-t", str(LOGO), "-i", card, "-f", "lavfi", "-t", str(LOGO), "-i", "anullsrc=r=48000:cl=stereo",
     "-vf", f"scale={int(W * 1.5)}:-1,zoompan=z='1+0.04*on/{int(LOGO * FPS)}':d={int(LOGO * FPS)}:s={W}x{H}:fps={FPS},format=yuv420p",
     "-map", "0:v", "-map", "1:a", "-c:v", "libx264", "-crf", "16", "-c:a", "aac", "-shortest", os.path.join(WORK, "logo.mp4"))
