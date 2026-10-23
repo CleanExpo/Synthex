@@ -453,21 +453,59 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect(propertyPost).toBeDefined();
   });
 
-  it('an org that already holds its GA4 property reuses it and never creates a second one', async () => {
-    mockOwned.mockResolvedValue([{ propertyId: '555', displayName: 'CARSI' }]);
+  it('an org that already holds its GA4 property is told so, and Synthex makes no Google call (no second property, no write to the old one)', async () => {
+    mockOwned.mockResolvedValue([
+      { propertyId: '555', displayName: 'CARSI', measurementId: 'G-EXIST01' },
+    ]);
     const calls = installGoogle({ existing: true });
     const r = await post({ ...BODY, displayName: 'A different name' });
-    expect(r.status).toBe(200);
+    expect(r.status).toBe(409);
     const body = await r.json();
-    expect(body.property).toEqual({
-      propertyId: '555',
-      displayName: 'CARSI',
-      created: false,
-    });
+    expect(body.code).toBe('GA4_ALREADY_PROVISIONED');
+    expect(body.propertyId).toBe('555');
+    expect(body.measurementId).toBe('G-EXIST01');
+    expect(calls).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('(Codex r4) an owned property under another account is not written to when the user chose account 123', async () => {
+    mockOwned.mockResolvedValue([
+      { propertyId: '555', displayName: 'CARSI', measurementId: null },
+    ]);
+    const calls = installGoogle({ existing: true });
+    const r = await post({ ...BODY, accountId: '123' });
+    expect(r.status).toBe(409);
+    expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
     expect(
-      calls.filter(c => new URL(c.url).pathname === '/v1beta/properties')
+      calls.filter(c => new URL(c.url).pathname.includes('/properties/555/'))
     ).toHaveLength(0);
-    expect(mockUpsert.mock.calls[0][0].create.propertyId).toBe('555');
+  });
+
+  it('(Codex r4) an owned property also linked to another org gets no Google write', async () => {
+    mockOwned.mockResolvedValue([
+      { propertyId: '555', displayName: 'CARSI', measurementId: null },
+    ]);
+    mockOtherOwner.mockResolvedValue({ id: 'row-of-org-2' });
+    const calls = installGoogle({ existing: true });
+    const r = await post();
+    expect(r.status).toBe(409);
+    expect(calls).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('(Codex r4) a member who did not sign the grant cannot use another member’s grant', async () => {
+    mockGetUserId.mockResolvedValue('user-1');
+    mockFindFirst.mockResolvedValue({
+      id: 'conn-1',
+      scope: `${READONLY} ${GA4_ADMIN_SCOPE}`,
+      metadata: { ga4AdminGrant: { ...GRANT, grantedByUserId: 'user-2' } },
+    });
+    const calls = installGoogle();
+    const r = await post();
+    expect(r.status).toBe(403);
+    expect((await r.json()).code).toBe('GA4_EDIT_CONSENT_REQUIRED');
+    expect(calls).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 
   it('refuses a same-name account property already linked to another organisation, before any stream or key-event write', async () => {
@@ -491,8 +529,9 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
-  it('refuses a second web stream for a different website on the org property, and stores nothing', async () => {
-    mockOwned.mockResolvedValue([{ propertyId: '555', displayName: 'CARSI' }]);
+  it('refuses a second web stream for a different website on the reused property, and stores nothing', async () => {
+    // Retry path: the same-name property 555 (with its carsi.com.au stream)
+    // is found in the account and linked to no organisation.
     const calls = installGoogle({ existing: true });
     const r = await post({
       ...BODY,

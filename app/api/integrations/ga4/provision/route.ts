@@ -17,9 +17,10 @@
  *
  * Bound to the signed statement (GA4_ADMIN_CONSENT_STATEMENT): the body may
  * only ask for an Australian time zone, AUD and the generate_lead / sign_up key
- * events (400 otherwise), and an org gets ONE property — one it already holds
- * is reused, never added to (409 when it holds more than one), and a same-name
- * account property already linked to another org is refused (409). The
+ * events (400 otherwise), and an org gets ONE property: an org that already
+ * holds one gets 409 GA4_ALREADY_PROVISIONED with no Google call, and a
+ * same-name account property already linked to another org is refused (409).
+ * Only the member who granted the consent can use it (403 otherwise). The
  * property gets ONE web stream: a stream for a different site already on it
  * is refused (409), never added to.
  *
@@ -89,6 +90,14 @@ const provisionSchema = z.object({
 class AmbiguousOrgPropertyError extends Error {}
 /** The same-name property Google returned is linked to another organisation. */
 class PropertyOwnedElsewhereError extends Error {}
+/** The org already holds its one GA4 property. */
+class AlreadyProvisionedError extends Error {
+  constructor(
+    readonly existing: { propertyId: string; measurementId: string | null }
+  ) {
+    super('GA4 already provisioned for this organisation');
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -138,6 +147,19 @@ export async function POST(request: NextRequest) {
         { status: 403 }
       );
     }
+    // The consent is per user: only the person who accepted the statement and
+    // granted Google's scope can use it. Another member of the org cannot.
+    if (grant.grantedByUserId !== userId) {
+      return NextResponse.json(
+        {
+          error: 'Analytics edit consent required',
+          code: 'GA4_EDIT_CONSENT_REQUIRED',
+          message:
+            '"Synthex may create Analytics for me" was granted by another member of this organisation. Only the person who granted it can set up Analytics with it.',
+        },
+        { status: 403 }
+      );
+    }
 
     let accessToken: string;
     try {
@@ -174,31 +196,27 @@ export async function POST(request: NextRequest) {
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orgLockKey}))`;
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
           // The grant covers ONE property for the business. An org that already
-          // has its GA4 property reuses it; a different display name or account
-          // in the request must not create a second one.
+          // holds a GA4 property is told so and nothing is written: Synthex
+          // cannot vouch for the account or ownership of a property it did not
+          // create in this run, so it never writes to one.
           const owned = await tx.gA4Property.findMany({
             where: { organizationId },
-            select: { propertyId: true, displayName: true },
+            select: { propertyId: true, measurementId: true },
           });
           if (owned.length > 1) throw new AmbiguousOrgPropertyError();
-          const property =
-            owned.length === 1
-              ? {
-                  propertyId: owned[0].propertyId,
-                  displayName: owned[0].displayName ?? input.displayName,
-                  created: false,
-                }
-              : await createProperty(deps, {
-                  accountId: input.accountId,
-                  displayName: input.displayName,
-                  timeZone: input.timeZone,
-                  currencyCode: input.currencyCode,
-                });
-          // createProperty reuses an account property by display name alone. A
-          // same-name property already linked to ANOTHER organisation is that
-          // client's, not this one's: refuse before writing a stream or key
-          // event to it.
-          if (!property.created && owned.length === 0) {
+          if (owned.length === 1) throw new AlreadyProvisionedError(owned[0]);
+          const property = await createProperty(deps, {
+            accountId: input.accountId,
+            displayName: input.displayName,
+            timeZone: input.timeZone,
+            currencyCode: input.currencyCode,
+          });
+          // createProperty reuses an account property by display name alone
+          // (the retry path after a run that created the property but failed
+          // before the upsert). A same-name property already linked to ANOTHER
+          // organisation is that client's: refuse before any stream or key
+          // event write.
+          if (!property.created) {
             const otherOwner = await tx.gA4Property.findFirst({
               where: {
                 propertyId: property.propertyId,
@@ -263,6 +281,19 @@ export async function POST(request: NextRequest) {
           code: 'GA4_PROPERTY_AMBIGUOUS',
           message:
             'This organisation is linked to more than one GA4 property, so Synthex will not create or choose one. Remove the extra link first.',
+        },
+        { status: 409 }
+      );
+    }
+    if (error instanceof AlreadyProvisionedError) {
+      return NextResponse.json(
+        {
+          error: 'Google Analytics is already set up for this organisation',
+          code: 'GA4_ALREADY_PROVISIONED',
+          message:
+            'This organisation already has its GA4 property. Synthex creates one property per business and does not change an existing one.',
+          propertyId: error.existing.propertyId,
+          measurementId: error.existing.measurementId,
         },
         { status: 409 }
       );

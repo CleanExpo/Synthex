@@ -78,7 +78,7 @@ agentic-capability status at /docs/agent-capabilities.
 Generated from the route source of 776 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
 
 - OpenAPI document, `docs/api/openapi.generated.json`: the generated OpenAPI contract for the routes under /api/.
-- Error codes, `docs/api/error-codes.md`: 16 structured error codes, with HTTP status and meaning.
+- Error codes, `docs/api/error-codes.md`: 17 structured error codes, with HTTP status and meaning.
 - Rate limits, `docs/api/rate-limits.md`: 40 limiters, their limits and windows, and the routes that use them.
 
 ## Error codes
@@ -86,6 +86,7 @@ Generated from the route source of 776 route files under app/api. These files li
 - APPROVAL_REQUIRED: HTTP 400
 - DB_AUTH_FAILED: HTTP 503
 - FEATURE_NOT_PROVISIONED: HTTP 503, unresolved
+- GA4_ALREADY_PROVISIONED: HTTP 409
 - GA4_EDIT_CONSENT_REQUIRED: HTTP 403
 - GA4_PROPERTY_AMBIGUOUS: HTTP 409
 - GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409

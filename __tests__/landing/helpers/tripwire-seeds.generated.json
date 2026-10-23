@@ -53,6 +53,16 @@
       "firstSeen": "275b7861"
     },
     {
+      "text": "- Error codes, `docs/api/error-codes.md`: 16 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "794daf37"
+    },
+    {
+      "text": "- FEATURE_NOT_PROVISIONED: HTTP 503, unresolved - GA4_EDIT_CONSENT_REQUIRED: HTTP 403",
+      "file": "public/llms.txt",
+      "firstSeen": "dba7235d"
+    },
+    {
       "text": "- FEATURE_NOT_PROVISIONED: HTTP 503, unresolved - GITHUB_TOKEN_REQUIRED: HTTP 200",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
