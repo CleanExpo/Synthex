@@ -18,14 +18,28 @@ First test market: people Phill meets at the Brisbane and Melbourne shows who as
 
 ## Price point
 
+**Decided by Phill, 23/10/2026** ("pursue these new prices"): two tiers. AUD (including GST) for Australia and
+New Zealand; USD everywhere else (Phill, same day). A VPN must not unlock AUD: see purchase-flow.md, "Currency".
+
+| Tier                  | What's included                                                                                                                                                                    | AU and NZ     | Rest of world |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------- |
+| Living Card           | Card page, save to contacts, QR code, three styles to choose from, one film made from the buyer's own website                                                                      | A$249 inc GST | US$249        |
+| Living Card Signature | Everything above, plus an animated opener from a real screenshot and five more one-off styles, each with a 30–45 s film; generative work capped (about 250 credits), more is extra | A$449 inc GST | US$449        |
+
+Why $449, not $279: five generated variants cost more than a $30 step covers once GST and curation time are counted
+(wiki `creative-harness/ch-03-card-package-economics.md`). USD uses the same numbers as AUD: overseas buyers pay
+more, which covers international card fees and currency conversion. The earlier sketch below is kept for history.
+
+### Earlier sketch (superseded 23/10/2026)
+
 Phill's ceiling: **up to AUD $249 per card**. `[VERIFIED: the brief]` Suggested shape, to test rather
 than publish `[INFERENCE]`:
 
-| Tier | What's included | Indicative price (AUD, inc. GST) |
-| --- | --- | --- |
-| Card | Hosted card page, details, save to contacts, QR code, 3 brand links | $99 |
-| Living card | Card plus one motion loop made from the buyer's own photos | $179 |
-| Living card + inbox | Living card plus contact form, spam filtering and auto-acknowledgement, 12 months | $249 |
+| Tier                | What's included                                                                   | Indicative price (AUD, inc. GST) |
+| ------------------- | --------------------------------------------------------------------------------- | -------------------------------- |
+| Card                | Hosted card page, details, save to contacts, QR code, 3 brand links               | $99                              |
+| Living card         | Card plus one motion loop made from the buyer's own photos                        | $179                             |
+| Living card + inbox | Living card plus contact form, spam filtering and auto-acknowledgement, 12 months | $249                             |
 
 ### Recommended ladder (go-to-market research, 22/10/2026)
 
@@ -33,13 +47,13 @@ This supersedes the indicative tiers above. `[INFERENCE from the coordinating se
 competitor sources were blocked, so competitor figures are partly UNCONFIRMED; Tapt's pricing was
 spot-checked and matched]`
 
-| Offer | Price (AUD inc GST) | What's in it |
-| --- | --- | --- |
-| Signature | A$249 | Bespoke motion opener, multi-business links, open analytics, 12 months of hosting and the enquiry inbox |
-| Live (from month 13) | A$19/mo, or A$29/mo with the review engine | Keeps the card live and updated |
-| Crew pack | A$990 for 5 staff cards, then A$9/card/mo; extra cards A$149 | For RestoreAssist firms and other teams |
-| Network | Quoted | Franchises and the NRPG network |
-| NFC card | A$59; metal A$149 | The physical tap card |
+| Offer                | Price (AUD inc GST)                                          | What's in it                                                                                            |
+| -------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Signature            | A$249                                                        | Bespoke motion opener, multi-business links, open analytics, 12 months of hosting and the enquiry inbox |
+| Live (from month 13) | A$19/mo, or A$29/mo with the review engine                   | Keeps the card live and updated                                                                         |
+| Crew pack            | A$990 for 5 staff cards, then A$9/card/mo; extra cards A$149 | For RestoreAssist firms and other teams                                                                 |
+| Network              | Quoted                                                       | Franchises and the NRPG network                                                                         |
+| NFC card             | A$59; metal A$149                                            | The physical tap card                                                                                   |
 
 No DIY tier at launch: the card is sold as a crafted brand asset, not a template. First 30 days: five
 flagship cards as the showroom, Phill's card in place of his email signature with LinkedIn videos of it
@@ -86,7 +100,7 @@ yearly renewal; that decision is open. `[UNCONFIRMED]`
    the referrer. A viewer who wants one sets it up themselves (website, logo, details, live preview,
    package) and pays, which starts this flow again at step 1. Payment is switched off until Phill
    approves the live Stripe account, prices and terms (see purchase-flow.md). `[VERIFIED: built and
-   browser-tested locally]`
+browser-tested locally]`
 
 Turnaround target: 3 business days. `[INFERENCE]`
 

@@ -53,6 +53,8 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.45
 .phone { border: 10px solid #16181D; border-radius: 34px; overflow: hidden; height: 720px; max-height: 80vh; background: #fff; }
 .phone iframe { width: 100%; height: 100%; border: 0; display: block; }
 .fine { font-size: 12.5px; color: var(--muted); margin: 0; }
+.linkish { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
+.linkish:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 .ref { font: 12px var(--mono); color: var(--muted); }
 .eds { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; }
 .ed { position: relative; display: grid; gap: 6px; cursor: pointer; font: 500 12.5px var(--font); text-align: center; color: var(--fg); }
@@ -118,11 +120,11 @@ Our Google reviews | https://www.google.com/maps</textarea></label>
       <section class="step" id="step-package">
         <h2><span class="n">06</span>Choose your card</h2>
         <div class="pkgs" role="radiogroup" aria-label="Package">
-          <label class="pkg"><input type="radio" name="pkg" value="card"><strong>Card</strong><span class="price">$99</span><small>Your card page, save to contacts, QR code, 3 links.</small></label>
-          <label class="pkg"><input type="radio" name="pkg" value="living"><strong>Living card</strong><span class="price">$179</span><small>Plus a short motion intro made from your own photos.</small></label>
-          <label class="pkg"><input type="radio" name="pkg" value="living-inbox" checked><strong>Living card + inbox</strong><span class="price">$249</span><small>Plus an enquiry inbox that filters spam and replies for you, and the rule-safe review flow. 12 months.</small></label>
+          <label class="pkg"><input type="radio" name="pkg" value="living" checked><strong>Living Card</strong><span class="price" data-price="249">$249</span><small>Your card page, save to contacts, QR code, three styles to choose from, and your own film made from your website.</small></label>
+          <label class="pkg"><input type="radio" name="pkg" value="signature"><strong>Living Card Signature</strong><span class="price" data-price="449">$449</span><small>Everything in Living Card, plus an animated opener made from your real site, and five more one-off styles, each with its own 30 to 45 second film.</small></label>
         </div>
-        <p class="fine">AUD. Indicative prices, not yet final.</p>
+        <p class="fine"><span id="cur-note">AUD, including GST.</span> <button class="linkish" type="button" id="cur-switch"></button></p>
+        <p class="fine">Films are narrated by an AI voice and built only from your own website and photos.</p>
       </section>
 
       <section class="step" id="step-pay">
@@ -159,7 +161,10 @@ Our Google reviews | https://www.google.com/maps</textarea></label>
 
 <script>
 // Payments stay off until Phill approves the live Stripe account, price and terms (see purchase-flow.md).
-// When approved, set this to { card: "https://buy.stripe.com/...", living: "...", "living-inbox": "..." }.
+// When approved, set this to { aud: { living: "https://buy.stripe.com/...", signature: "..." }, usd: { living: "...", signature: "..." } }.
+// AUD is for cards issued in Australia or New Zealand; everyone else pays USD (Phill, 23/10/2026). The page only
+// shows a currency; the charge is enforced by the card's issuing country in Stripe (purchase-flow.md, "Currency"),
+// which a VPN cannot change.
 const PAYMENT_LINKS = null;
 const INTEREST_TO = "airestoreassist@gmail.com"; // the card's assistant inbox (Phill, 23/10/2026)
 
@@ -295,24 +300,46 @@ fetch("editions.json").then(r => { if (!r.ok) throw new Error(r.status); return 
 }).catch(() => { $("eds-note").textContent = "The editions could not load. We'll pick one with you when we build your card."; });
 function edition() { const c = document.querySelector('input[name="edition"]:checked'); return c ? c.value : (WANT || "signature"); }
 
-function pkg() { const c = document.querySelector('input[name="pkg"]:checked'); return c ? c.value : "living-inbox"; }
+function pkg() { const c = document.querySelector('input[name="pkg"]:checked'); return c ? c.value : "living"; }
 
+// Which prices to show: AUD where the visitor looks to be in Australia or New Zealand, USD elsewhere. This is only a
+// display guess (time zone, or a country header the host can inject as window.CARD_COUNTRY); payment checks the card.
+const ANZ = c => c === "AU" || c === "NZ";
+let currency = (() => {
+  if (typeof window.CARD_COUNTRY === "string") return ANZ(window.CARD_COUNTRY.toUpperCase()) ? "aud" : "usd";
+  const tz = (Intl.DateTimeFormat().resolvedOptions().timeZone || "");
+  return /^Australia\//.test(tz) || tz === "Pacific/Auckland" || tz === "Pacific/Chatham" || tz === "Antarctica/Macquarie" ? "aud" : "usd";
+})();
+function showCurrency() {
+  document.querySelectorAll(".price[data-price]").forEach(el => {
+    el.textContent = (currency === "aud" ? "A$" : "US$") + el.dataset.price;
+  });
+  $("cur-note").textContent = currency === "aud"
+    ? "AUD, including GST. AUD prices are for cards issued in Australia or New Zealand."
+    : "USD. Australian GST does not apply. Cards issued in Australia or New Zealand pay in AUD.";
+  $("cur-switch").textContent = currency === "aud" ? "Paying with a card from elsewhere? Show USD" : "Paying with an Australian or New Zealand card? Show AUD";
+  if (typeof setLink === "function") setLink();
+}
+$("cur-switch").addEventListener("click", () => { currency = currency === "aud" ? "usd" : "aud"; showCurrency(); });
+
+var setLink = null;
 if (PAYMENT_LINKS) {
   $("pay-off").hidden = true; $("pay-on").hidden = false;
-  const setLink = () => {
-    const base = PAYMENT_LINKS[pkg()]; if (!base) return;
-    const u = new URL(base); u.searchParams.set("client_reference_id", REF + "__" + pkg());
+  setLink = () => {
+    const base = (PAYMENT_LINKS[currency] || {})[pkg()]; if (!base) return;
+    const u = new URL(base); u.searchParams.set("client_reference_id", REF + "__" + pkg() + "__" + currency);
     const em = $("d-email").value.trim(); if (em) u.searchParams.set("prefilled_email", em);
     $("pay-on").href = u.toString();
   };
   document.querySelectorAll('input[name="pkg"], #d-email').forEach(el => el.addEventListener("input", setLink)); setLink();
 }
+showCurrency();
 
 $("interest").addEventListener("click", () => {
   const k = kit();
   const text = [
     "Card interest from " + (k.person.name || "(no name)") + ", " + (k.person.org || "(no business)"),
-    "Package: " + pkg(),
+    "Package: " + pkg() + " (" + (currency === "aud" ? "AUD" : "USD") + ")",
     "Opener edition: " + edition(),
     "Website: " + $("site").value.trim(),
     "Mobile: " + ($("d-mobile").value.trim() || "-") + "   Email: " + ($("d-email").value.trim() || "-"),

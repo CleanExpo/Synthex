@@ -14,7 +14,7 @@ agency, and the card is a separate showpiece.
 | `card.html`                    | The prototype card. Published privately at https://claude.ai/artifact/RPL8XEM3jmUAKXmACms55x                                                          |
 | `phill-mcgurk.vcf`             | The contact file a hosted version serves for one-tap "Save to contacts"                                                                               |
 | `inbox-triage-framework.md`    | Design for the assistant inbox behind the Connect form                                                                                                |
-| `product-sketch.md`            | Sketch for selling these cards (up to AUD $249 each)                                                                                                  |
+| `product-sketch.md`            | Selling these cards: Living Card A$249 / Signature A$449 (AU, NZ); US$249 / US$449 elsewhere                                                          |
 | `steering-board.html`          | Phill's decision board. Published privately at https://claude.ai/artifact/XuXp2GMawpsNjLJV3wNp37                                                      |
 | `board-seed.json`              | The options written to the board's store (choices live in the store, not this file)                                                                   |
 | `restoreassist-staff-cards.md` | Track 2: staff cards inside RestoreAssist, what data already exists, ecosystem ideas                                                                  |
