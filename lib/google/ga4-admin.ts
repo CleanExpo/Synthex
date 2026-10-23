@@ -26,7 +26,8 @@ export type Ga4AdminErrorCode =
   | 'PERMISSION_DENIED'
   | 'UNAUTHENTICATED'
   | 'UPSTREAM_ERROR'
-  | 'INVALID_RESPONSE';
+  | 'INVALID_RESPONSE'
+  | 'STREAM_EXISTS';
 
 export class Ga4AdminError extends Error {
   constructor(
@@ -278,6 +279,15 @@ export async function createWebDataStream(
       normaliseUri(s.webStreamData.defaultUri) === wanted
   );
   if (match) return toStreamResult(match, false);
+  // The client consented to ONE web data stream for their website. A property
+  // that already has a web stream for a different site does not get a second.
+  if (existing.some(s => s.type === 'WEB_DATA_STREAM')) {
+    throw new Ga4AdminError(
+      'STREAM_EXISTS',
+      'This GA4 property already has a web data stream for a different website, and the consent covers one stream. Use that website, or remove the other stream first.',
+      409
+    );
+  }
 
   const created = await call<AdminDataStream>(deps, 'POST', path, {
     type: 'WEB_DATA_STREAM',

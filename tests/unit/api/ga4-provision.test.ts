@@ -491,6 +491,19 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
+  it('refuses a second web stream for a different website on the org property, and stores nothing', async () => {
+    mockOwned.mockResolvedValue([{ propertyId: '555', displayName: 'CARSI' }]);
+    const calls = installGoogle({ existing: true });
+    const r = await post({
+      ...BODY,
+      defaultUri: 'https://another-client.example',
+    });
+    expect(r.status).toBe(409);
+    expect((await r.json()).code).toBe('GA4_STREAM_EXISTS');
+    expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
   it('refuses with 409 when the org already holds more than one GA4 property', async () => {
     mockOwned.mockResolvedValue([
       { propertyId: '555', displayName: 'CARSI' },

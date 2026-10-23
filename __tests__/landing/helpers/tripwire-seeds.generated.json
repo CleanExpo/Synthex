@@ -48,6 +48,11 @@
       "firstSeen": "b9eaed67"
     },
     {
+      "text": "- Error codes, `docs/api/error-codes.md`: 15 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "275b7861"
+    },
+    {
       "text": "- FEATURE_NOT_PROVISIONED: HTTP 503, unresolved - GITHUB_TOKEN_REQUIRED: HTTP 200",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
@@ -61,6 +66,11 @@
       "text": "- GA4_PROPERTY_AMBIGUOUS: HTTP 409 - GITHUB_TOKEN_REQUIRED: HTTP 200",
       "file": "public/llms.txt",
       "firstSeen": "b9eaed67"
+    },
+    {
+      "text": "- GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409 - GITHUB_TOKEN_REQUIRED: HTTP 200",
+      "file": "public/llms.txt",
+      "firstSeen": "275b7861"
     },
     {
       "text": "- Parent Organisation: Unite-Group (https://unite-group.com.au)",

@@ -292,6 +292,29 @@ describe('createWebDataStream', () => {
     expect(posts(api.calls)).toHaveLength(0);
   });
 
+  it('refuses a second web stream for a different site (one stream is consented)', async () => {
+    const state = emptyState();
+    state.streams['555'] = [
+      {
+        name: 'properties/555/dataStreams/9',
+        type: 'WEB_DATA_STREAM',
+        displayName: 'carsi',
+        webStreamData: {
+          defaultUri: 'https://carsi.com.au',
+          measurementId: 'G-EXIST01',
+        },
+      },
+    ];
+    const api = fakeAdminApi(state);
+    const err = await createWebDataStream(deps(api.fetchImpl), {
+      propertyId: '555',
+      defaultUri: 'https://another-client.example',
+    }).catch(e => e);
+    expect(err).toBeInstanceOf(Ga4AdminError);
+    expect(err.code).toBe('STREAM_EXISTS');
+    expect(posts(api.calls)).toHaveLength(0);
+  });
+
   it('throws when Google returns a stream without a measurement ID', async () => {
     const fetchImpl = (async (_u: string, init?: RequestInit) =>
       (init?.method ?? 'GET') === 'GET'

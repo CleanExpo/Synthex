@@ -19,7 +19,9 @@
  * only ask for an Australian time zone, AUD and the generate_lead / sign_up key
  * events (400 otherwise), and an org gets ONE property — one it already holds
  * is reused, never added to (409 when it holds more than one), and a same-name
- * account property already linked to another org is refused (409).
+ * account property already linked to another org is refused (409). The
+ * property gets ONE web stream: a stream for a different site already on it
+ * is refused (409), never added to.
  *
  * The GA4 account must already exist: Google creates accounts only through
  * accounts.provisionAccountTicket plus the user accepting the Terms of Service.
@@ -299,6 +301,16 @@ export async function POST(request: NextRequest) {
             message: error.message,
           },
           { status: 403 }
+        );
+      }
+      if (error.code === 'STREAM_EXISTS') {
+        return NextResponse.json(
+          {
+            error: 'GA4 property already has a web data stream',
+            code: 'GA4_STREAM_EXISTS',
+            message: error.message,
+          },
+          { status: 409 }
         );
       }
       if (error.code === 'UNAUTHENTICATED') {
