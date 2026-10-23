@@ -73,9 +73,24 @@
       "firstSeen": "dba7235d"
     },
     {
+      "text": "- GA4_PROPERTY_AMBIGUOUS: HTTP 409 - GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409",
+      "file": "public/llms.txt",
+      "firstSeen": "275b7861"
+    },
+    {
       "text": "- GA4_PROPERTY_AMBIGUOUS: HTTP 409 - GITHUB_TOKEN_REQUIRED: HTTP 200",
       "file": "public/llms.txt",
       "firstSeen": "b9eaed67"
+    },
+    {
+      "text": "- GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409",
+      "file": "public/llms.txt",
+      "firstSeen": "275b7861"
+    },
+    {
+      "text": "- GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409 - GA4_STREAM_EXISTS: HTTP 409",
+      "file": "public/llms.txt",
+      "firstSeen": "794daf37"
     },
     {
       "text": "- GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409 - GITHUB_TOKEN_REQUIRED: HTTP 200",

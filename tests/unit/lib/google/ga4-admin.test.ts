@@ -160,7 +160,7 @@ describe('createProperty', () => {
     });
   });
 
-  it('reuses an existing property with the same display name and never creates a duplicate', async () => {
+  it('refuses (PROPERTY_NAME_TAKEN) a same-name property: never adopts it and never creates a duplicate', async () => {
     expect(await createsNoDuplicate(createProperty)).toBe(true);
   });
 
@@ -213,7 +213,10 @@ describe('createProperty', () => {
   });
 });
 
-/** True when createFn reuses an existing same-name property without any POST. */
+/**
+ * True when createFn, finding a same-name property, neither adopts it nor
+ * creates a duplicate: it refuses with PROPERTY_NAME_TAKEN and makes no POST.
+ */
 async function createsNoDuplicate(createFn: typeof createProperty) {
   const state = emptyState();
   state.properties.push({
@@ -222,15 +225,15 @@ async function createsNoDuplicate(createFn: typeof createProperty) {
     parent: 'accounts/123',
   });
   const api = fakeAdminApi(state);
-  const result = await createFn(deps(api.fetchImpl), {
+  const outcome = await createFn(deps(api.fetchImpl), {
     accountId: '123',
     displayName: 'CARSI',
-  });
+  }).catch(e => e);
   return (
     posts(api.calls).length === 0 &&
     state.properties.filter(p => p.displayName === 'CARSI').length === 1 &&
-    result.propertyId === '555' &&
-    result.created === false
+    outcome instanceof Ga4AdminError &&
+    outcome.code === 'PROPERTY_NAME_TAKEN'
   );
 }
 

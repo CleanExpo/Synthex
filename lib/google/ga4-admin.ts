@@ -27,7 +27,8 @@ export type Ga4AdminErrorCode =
   | 'UNAUTHENTICATED'
   | 'UPSTREAM_ERROR'
   | 'INVALID_RESPONSE'
-  | 'STREAM_EXISTS';
+  | 'STREAM_EXISTS'
+  | 'PROPERTY_NAME_TAKEN';
 
 export class Ga4AdminError extends Error {
   constructor(
@@ -176,9 +177,12 @@ export interface CreatePropertyResult {
 }
 
 /**
- * Lists then creates, so it is idempotent only for one caller at a time:
- * callers must serialise per GA4 account (the provision route holds a
- * transaction-scoped advisory lock), as must the stream and key-event helpers.
+ * Creates a NEW property, never adopts one. A display name proves nothing
+ * about who a property belongs to or how it is configured (time zone,
+ * currency), so an existing property with the same name in the account is
+ * refused (PROPERTY_NAME_TAKEN), not reused. Lists then creates, so callers
+ * must serialise per GA4 account (the provision route holds a
+ * transaction-scoped advisory lock).
  */
 export async function createProperty(
   deps: Ga4AdminDeps,
@@ -197,11 +201,11 @@ export async function createProperty(
   );
   const match = existing.find(p => p.displayName?.trim() === displayName);
   if (match) {
-    return {
-      propertyId: lastSegment(match.name),
-      displayName: match.displayName ?? displayName,
-      created: false,
-    };
+    throw new Ga4AdminError(
+      'PROPERTY_NAME_TAKEN',
+      `A GA4 property called "${displayName}" already exists in this account. Synthex only sets up properties it creates, so choose a different name.`,
+      409
+    );
   }
 
   const created = await call<AdminProperty>(deps, 'POST', 'properties', {

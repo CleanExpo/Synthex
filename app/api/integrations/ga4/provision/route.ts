@@ -2,27 +2,24 @@
  * POST /api/integrations/ga4/provision
  *
  * Kit K2 "measurement": under the client's onboarding grant ("Synthex may
- * create Analytics for me", analytics.edit), create — or reuse — the org's GA4
- * property, its web data stream and the lead key events, then store the
- * measurement ID on the org's GA4 integration record (GA4Property).
+ * create Analytics for me", analytics.edit), create the org's GA4 property, its
+ * web data stream and the lead key events, then store the measurement ID on
+ * the org's GA4 integration record (GA4Property).
  *
  * Refuses (403 GA4_EDIT_CONSENT_REQUIRED) before any Google call unless the
  * org's googleanalytics PlatformConnection holds analytics.edit AND a recorded
- * grant. Idempotent: a re-run finds the existing property / stream / key
- * events and creates nothing. Concurrent runs for the same GA4 account are
- * serialised by a transaction-scoped Postgres advisory lock (the
- * lib/platform-connections/refresh-lock.ts pattern), so the second run waits,
- * re-lists and reuses what the first created instead of creating duplicates. A Google 403 is reported as missing consent or
- * missing account permission, never as success.
+ * grant, and only the member who granted it can use it. Synthex only ever
+ * writes to a property it creates in this run: an org that already holds one
+ * gets 409 GA4_ALREADY_PROVISIONED with no Google call, and a property with
+ * the same name already in the account gets 409 GA4_PROPERTY_NAME_TAKEN (it is
+ * never adopted). Concurrent runs for one org or one GA4 account are
+ * serialised by transaction-scoped Postgres advisory locks (the
+ * lib/platform-connections/refresh-lock.ts pattern). A Google 403 is reported
+ * as missing consent or missing account permission, never as success.
  *
  * Bound to the signed statement (GA4_ADMIN_CONSENT_STATEMENT): the body may
  * only ask for an Australian time zone, AUD and the generate_lead / sign_up key
- * events (400 otherwise), and an org gets ONE property: an org that already
- * holds one gets 409 GA4_ALREADY_PROVISIONED with no Google call, and a
- * same-name account property already linked to another org is refused (409).
- * Only the member who granted the consent can use it (403 otherwise). The
- * property gets ONE web stream: a stream for a different site already on it
- * is refused (409), never added to.
+ * events (400 otherwise).
  *
  * The GA4 account must already exist: Google creates accounts only through
  * accounts.provisionAccountTicket plus the user accepting the Terms of Service.
@@ -88,8 +85,6 @@ const provisionSchema = z.object({
 
 /** The org already holds more than one GA4 property; which to reuse is unclear. */
 class AmbiguousOrgPropertyError extends Error {}
-/** The same-name property Google returned is linked to another organisation. */
-class PropertyOwnedElsewhereError extends Error {}
 /** The org already holds its one GA4 property. */
 class AlreadyProvisionedError extends Error {
   constructor(
@@ -180,10 +175,10 @@ export async function POST(request: NextRequest) {
 
     const input = parsed.data;
     const deps = { accessToken };
-    // Lock on the external resource (the GA4 account), not the tenant: two
-    // overlapping runs against one account must not both pass the list step
-    // and both create. Every list-then-create below runs under the lock, so a
-    // run that waited re-lists and finds what the first run created.
+    // Lock on the external resource (the GA4 account) as well as the tenant:
+    // two overlapping runs against one account must not both pass the list
+    // step and both create. A run that waited re-lists, finds the property the
+    // first run created, and is refused instead of creating a duplicate.
     const lockKey = `ga4-provision:${input.accountId.replace(/^accounts\//, '')}`;
     const orgLockKey = `ga4-provision-org:${organizationId}`;
     const { property, dataStream, keyEvents, ga4Property } =
@@ -211,21 +206,9 @@ export async function POST(request: NextRequest) {
             timeZone: input.timeZone,
             currencyCode: input.currencyCode,
           });
-          // createProperty reuses an account property by display name alone
-          // (the retry path after a run that created the property but failed
-          // before the upsert). A same-name property already linked to ANOTHER
-          // organisation is that client's: refuse before any stream or key
-          // event write.
-          if (!property.created) {
-            const otherOwner = await tx.gA4Property.findFirst({
-              where: {
-                propertyId: property.propertyId,
-                NOT: { organizationId },
-              },
-              select: { id: true },
-            });
-            if (otherOwner) throw new PropertyOwnedElsewhereError();
-          }
+          // createProperty never adopts an existing property (a same name is
+          // PROPERTY_NAME_TAKEN), so everything below writes only to the
+          // property this run just created.
           const dataStream = await createWebDataStream(deps, {
             propertyId: property.propertyId,
             defaultUri: input.defaultUri,
@@ -298,22 +281,21 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-    if (error instanceof PropertyOwnedElsewhereError) {
-      return NextResponse.json(
-        {
-          error: 'GA4 property belongs to another organisation',
-          code: 'GA4_PROPERTY_OWNED_ELSEWHERE',
-          message:
-            'A property with this name in the GA4 account is already linked to another organisation, so Synthex will not use it. Choose a different property name.',
-        },
-        { status: 409 }
-      );
-    }
     if (error instanceof Ga4AdminError) {
       logger.warn('GA4 provision refused by Google', {
         code: error.code,
         status: error.status,
       });
+      if (error.code === 'PROPERTY_NAME_TAKEN') {
+        return NextResponse.json(
+          {
+            error: 'A GA4 property with this name already exists',
+            code: 'GA4_PROPERTY_NAME_TAKEN',
+            message: error.message,
+          },
+          { status: 409 }
+        );
+      }
       if (error.code === 'NEEDS_EDIT_CONSENT') {
         return NextResponse.json(
           {

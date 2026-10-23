@@ -34,8 +34,6 @@ const mockFindFirst = jest.fn();
 const mockUpsert = jest.fn();
 /** GA4Property rows the org already holds (tx.gA4Property.findMany). */
 const mockOwned = jest.fn();
-/** A GA4Property row for the property under ANOTHER org (tx.gA4Property.findFirst). */
-const mockOtherOwner = jest.fn();
 /** Keys passed to pg_advisory_xact_lock, in call order. */
 const lockedKeys: string[] = [];
 /**
@@ -69,7 +67,6 @@ async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
     gA4Property: {
       upsert: (...a: unknown[]) => mockUpsert(...a),
       findMany: (...a: unknown[]) => mockOwned(...a),
-      findFirst: (...a: unknown[]) => mockOtherOwner(...a),
     },
   };
   try {
@@ -280,7 +277,6 @@ beforeEach(() => {
   mockGetOrgId.mockResolvedValue('org-1');
   mockToken.mockResolvedValue('access-token');
   mockOwned.mockResolvedValue([]);
-  mockOtherOwner.mockResolvedValue(null);
   mockUpsert.mockImplementation(async (args: { create: object }) => ({
     id: 'ga4-row',
     ...args.create,
@@ -371,25 +367,26 @@ describe('POST /api/integrations/ga4/provision', () => {
     );
   });
 
-  it('a re-run reuses the existing property and stream and creates nothing', async () => {
+  it('never adopts a same-name property already in the account: 409 GA4_PROPERTY_NAME_TAKEN, no write to it, nothing stored', async () => {
+    // Property 555 "CARSI" exists in account 123 (it could be another
+    // business's, or set to another time zone and currency).
     const calls = installGoogle({ existing: true });
     const r = await post();
-    expect(r.status).toBe(200);
-    const body = await r.json();
-    expect(body.property.created).toBe(false);
-    expect(body.dataStream).toMatchObject({
-      measurementId: 'G-EXIST01',
-      created: false,
-    });
+    expect(r.status).toBe(409);
+    expect((await r.json()).code).toBe('GA4_PROPERTY_NAME_TAKEN');
     expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
-    expect(mockUpsert.mock.calls[0][0].create.measurementId).toBe('G-EXIST01');
+    expect(
+      calls.filter(c => new URL(c.url).pathname.includes('/properties/555/'))
+    ).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 
   it('two overlapping runs for the same GA4 account create one property, one stream and one set of key events', async () => {
     const google = installStatefulGoogle();
     const [first, second] = await Promise.all([post(), post()]);
-    expect(first.status).toBe(200);
-    expect(second.status).toBe(200);
+    // The run that waited for the lock finds the first run's property by
+    // name and is refused rather than adopting or duplicating it.
+    expect([first.status, second.status].sort()).toEqual([200, 409]);
     expect(lockedKeys.filter(k => k === 'ga4-provision:123')).toHaveLength(2);
     expect(google.properties).toHaveLength(1);
     expect(google.streams).toHaveLength(1);
@@ -404,11 +401,11 @@ describe('POST /api/integrations/ga4/provision', () => {
           new URL(c.url).pathname === '/v1beta/properties'
       )
     ).toHaveLength(1);
-    const bodies = [await first.json(), await second.json()];
-    expect(bodies.map(b => b.property.created).sort()).toEqual([false, true]);
-    expect(bodies[0].dataStream.measurementId).toBe(
-      bodies[1].dataStream.measurementId
-    );
+    const [ok, refused] =
+      first.status === 200 ? [first, second] : [second, first];
+    expect((await ok.json()).property.created).toBe(true);
+    expect((await refused.json()).code).toBe('GA4_PROPERTY_NAME_TAKEN');
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
   });
 
   it('locks on the GA4 account whether or not the request uses the accounts/ prefix', async () => {
@@ -485,7 +482,6 @@ describe('POST /api/integrations/ga4/provision', () => {
     mockOwned.mockResolvedValue([
       { propertyId: '555', displayName: 'CARSI', measurementId: null },
     ]);
-    mockOtherOwner.mockResolvedValue({ id: 'row-of-org-2' });
     const calls = installGoogle({ existing: true });
     const r = await post();
     expect(r.status).toBe(409);
@@ -505,41 +501,6 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect(r.status).toBe(403);
     expect((await r.json()).code).toBe('GA4_EDIT_CONSENT_REQUIRED');
     expect(calls).toHaveLength(0);
-    expect(mockUpsert).not.toHaveBeenCalled();
-  });
-
-  it('refuses a same-name account property already linked to another organisation, before any stream or key-event write', async () => {
-    mockOtherOwner.mockImplementation(
-      async (args: {
-        where: { propertyId: string; NOT: { organizationId: string } };
-      }) =>
-        args.where.propertyId === '555' &&
-        args.where.NOT.organizationId === 'org-1'
-          ? { id: 'row-of-org-2' }
-          : null
-    );
-    const calls = installGoogle({ existing: true });
-    const r = await post();
-    expect(r.status).toBe(409);
-    expect((await r.json()).code).toBe('GA4_PROPERTY_OWNED_ELSEWHERE');
-    expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
-    expect(
-      calls.filter(c => new URL(c.url).pathname.includes('/properties/555/'))
-    ).toHaveLength(0);
-    expect(mockUpsert).not.toHaveBeenCalled();
-  });
-
-  it('refuses a second web stream for a different website on the reused property, and stores nothing', async () => {
-    // Retry path: the same-name property 555 (with its carsi.com.au stream)
-    // is found in the account and linked to no organisation.
-    const calls = installGoogle({ existing: true });
-    const r = await post({
-      ...BODY,
-      defaultUri: 'https://another-client.example',
-    });
-    expect(r.status).toBe(409);
-    expect((await r.json()).code).toBe('GA4_STREAM_EXISTS');
-    expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
