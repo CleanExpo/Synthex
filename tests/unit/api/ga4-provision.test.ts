@@ -32,6 +32,8 @@ jest.mock('@/lib/multi-business', () => ({
 
 const mockFindFirst = jest.fn();
 const mockUpsert = jest.fn();
+/** GA4Property rows the org already holds (tx.gA4Property.findMany). */
+const mockOwned = jest.fn();
 /** Keys passed to pg_advisory_xact_lock, in call order. */
 const lockedKeys: string[] = [];
 /**
@@ -41,7 +43,9 @@ const lockedKeys: string[] = [];
  */
 const advisoryLocks = new Map<string, Promise<void>>();
 async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
-  let release: () => void = () => undefined;
+  // Every key this transaction locked is released when it ends, as Postgres
+  // releases all transaction-scoped advisory locks at COMMIT/ROLLBACK.
+  const releases: Array<() => void> = [];
   const tx = {
     $executeRaw: async (
       _strings: TemplateStringsArray,
@@ -51,7 +55,7 @@ async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
       lockedKeys.push(key);
       const previous = advisoryLocks.get(key) ?? Promise.resolve();
       const mine = new Promise<void>(resolve => {
-        release = resolve;
+        releases.push(resolve);
       });
       advisoryLocks.set(
         key,
@@ -60,12 +64,15 @@ async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
       await previous;
       return 1;
     },
-    gA4Property: { upsert: (...a: unknown[]) => mockUpsert(...a) },
+    gA4Property: {
+      upsert: (...a: unknown[]) => mockUpsert(...a),
+      findMany: (...a: unknown[]) => mockOwned(...a),
+    },
   };
   try {
     return await fn(tx);
   } finally {
-    release();
+    releases.forEach(release => release());
   }
 }
 jest.mock('@/lib/prisma', () => ({
@@ -269,6 +276,7 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue('user-1');
   mockGetOrgId.mockResolvedValue('org-1');
   mockToken.mockResolvedValue('access-token');
+  mockOwned.mockResolvedValue([]);
   mockUpsert.mockImplementation(async (args: { create: object }) => ({
     id: 'ga4-row',
     ...args.create,
@@ -378,7 +386,7 @@ describe('POST /api/integrations/ga4/provision', () => {
     const [first, second] = await Promise.all([post(), post()]);
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
-    expect(lockedKeys).toEqual(['ga4-provision:123', 'ga4-provision:123']);
+    expect(lockedKeys.filter(k => k === 'ga4-provision:123')).toHaveLength(2);
     expect(google.properties).toHaveLength(1);
     expect(google.streams).toHaveLength(1);
     expect(google.keyEvents.map(e => e.eventName)).toEqual([
@@ -403,7 +411,72 @@ describe('POST /api/integrations/ga4/provision', () => {
     installStatefulGoogle();
     await post({ ...BODY, accountId: 'accounts/123' });
     await post();
-    expect(lockedKeys).toEqual(['ga4-provision:123', 'ga4-provision:123']);
+    expect(lockedKeys).toEqual([
+      'ga4-provision-org:org-1',
+      'ga4-provision:123',
+      'ga4-provision-org:org-1',
+      'ga4-provision:123',
+    ]);
+  });
+
+  it.each([
+    ['a non-Australian time zone', { timeZone: 'America/New_York' }],
+    ['a currency other than AUD', { currencyCode: 'USD' }],
+    ['a key event outside the statement', { keyEvents: ['purchase'] }],
+    [
+      'a consented event plus one outside it',
+      { keyEvents: ['generate_lead', 'purchase'] },
+    ],
+  ])(
+    'refuses %s (beyond the signed statement) before any Google call',
+    async (_label, extra) => {
+      const calls = installGoogle();
+      const r = await post({ ...BODY, ...extra });
+      expect(r.status).toBe(400);
+      expect(calls).toHaveLength(0);
+      expect(mockUpsert).not.toHaveBeenCalled();
+    }
+  );
+
+  it('accepts another Australian time zone within the statement', async () => {
+    const calls = installGoogle();
+    const r = await post({ ...BODY, timeZone: 'Australia/Sydney' });
+    expect(r.status).toBe(200);
+    const propertyPost = calls.find(
+      c =>
+        c.method === 'POST' && new URL(c.url).pathname === '/v1beta/properties'
+    );
+    expect(propertyPost).toBeDefined();
+  });
+
+  it('an org that already holds its GA4 property reuses it and never creates a second one', async () => {
+    mockOwned.mockResolvedValue([{ propertyId: '555', displayName: 'CARSI' }]);
+    const calls = installGoogle({ existing: true });
+    const r = await post({ ...BODY, displayName: 'A different name' });
+    expect(r.status).toBe(200);
+    const body = await r.json();
+    expect(body.property).toEqual({
+      propertyId: '555',
+      displayName: 'CARSI',
+      created: false,
+    });
+    expect(
+      calls.filter(c => new URL(c.url).pathname === '/v1beta/properties')
+    ).toHaveLength(0);
+    expect(mockUpsert.mock.calls[0][0].create.propertyId).toBe('555');
+  });
+
+  it('refuses with 409 when the org already holds more than one GA4 property', async () => {
+    mockOwned.mockResolvedValue([
+      { propertyId: '555', displayName: 'CARSI' },
+      { propertyId: '556', displayName: 'CARSI old' },
+    ]);
+    const calls = installGoogle();
+    const r = await post();
+    expect(r.status).toBe(409);
+    expect((await r.json()).code).toBe('GA4_PROPERTY_AMBIGUOUS');
+    expect(calls).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 
   it('reports a Google 403 as "needs Analytics edit consent", not success, and stores nothing', async () => {

@@ -45420,8 +45420,8 @@
                     "type": "string"
                   },
                   "currencyCode": {
+                    "const": "AUD",
                     "default": "AUD",
-                    "pattern": "^[A-Z]{3}$",
                     "type": "string"
                   },
                   "defaultUri": {
@@ -45440,17 +45440,19 @@
                       "sign_up"
                     ],
                     "items": {
-                      "pattern": "^[a-z][a-z0-9_]{0,39}$",
+                      "enum": [
+                        "generate_lead",
+                        "sign_up"
+                      ],
                       "type": "string"
                     },
-                    "maxItems": 10,
+                    "maxItems": 2,
                     "minItems": 1,
                     "type": "array"
                   },
                   "timeZone": {
                     "default": "Australia/Brisbane",
-                    "maxLength": 64,
-                    "minLength": 1,
+                    "pattern": "^Australia\\/[A-Za-z_]+$",
                     "type": "string"
                   }
                 },
@@ -45498,6 +45500,16 @@
               }
             },
             "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
           },
           "500": {
             "content": {

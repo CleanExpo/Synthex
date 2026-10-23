@@ -15,6 +15,11 @@
  * re-lists and reuses what the first created instead of creating duplicates. A Google 403 is reported as missing consent or
  * missing account permission, never as success.
  *
+ * Bound to the signed statement (GA4_ADMIN_CONSENT_STATEMENT): the body may
+ * only ask for an Australian time zone, AUD and the generate_lead / sign_up key
+ * events (400 otherwise), and an org gets ONE property — one it already holds
+ * is reused, never added to (409 when it holds more than one).
+ *
  * The GA4 account must already exist: Google creates accounts only through
  * accounts.provisionAccountTicket plus the user accepting the Terms of Service.
  */
@@ -42,9 +47,17 @@ const GA4_PLATFORM = 'googleanalytics';
  */
 const PROVISION_TX_TIMEOUT_MS = 60_000;
 const PROVISION_TX_MAX_WAIT_MS = 10_000;
-/** GA4 recommended lead events (kit K2 tracking plan). */
-const DEFAULT_KEY_EVENTS = ['generate_lead', 'sign_up'];
+/**
+ * GA4 recommended lead events (kit K2 tracking plan). These are also the ONLY
+ * events GA4_ADMIN_CONSENT_STATEMENT lets Synthex mark as key events.
+ */
+const DEFAULT_KEY_EVENTS = ['generate_lead', 'sign_up'] as const;
 
+/**
+ * The request may only ask for what the client's signed statement covers:
+ * one property in an Australian time zone priced in AUD, and the two lead
+ * events. Anything broader needs a new statement, not a wider request body.
+ */
 const provisionSchema = z.object({
   accountId: z
     .string()
@@ -54,17 +67,23 @@ const provisionSchema = z.object({
     ),
   displayName: z.string().trim().min(1).max(100),
   defaultUri: z.string().url().max(500),
-  timeZone: z.string().min(1).max(64).default('Australia/Brisbane'),
-  currencyCode: z
+  timeZone: z
     .string()
-    .regex(/^[A-Z]{3}$/)
-    .default('AUD'),
+    .regex(
+      /^Australia\/[A-Za-z_]+$/,
+      'timeZone must be an Australian time zone (the consented scope)'
+    )
+    .default('Australia/Brisbane'),
+  currencyCode: z.literal('AUD').default('AUD'),
   keyEvents: z
-    .array(z.string().regex(/^[a-z][a-z0-9_]{0,39}$/))
+    .array(z.enum(DEFAULT_KEY_EVENTS))
     .min(1)
-    .max(10)
-    .default(DEFAULT_KEY_EVENTS),
+    .max(DEFAULT_KEY_EVENTS.length)
+    .default([...DEFAULT_KEY_EVENTS]),
 });
+
+/** The org already holds more than one GA4 property; which to reuse is unclear. */
+class AmbiguousOrgPropertyError extends Error {}
 
 export async function POST(request: NextRequest) {
   try {
@@ -139,18 +158,37 @@ export async function POST(request: NextRequest) {
     // and both create. Every list-then-create below runs under the lock, so a
     // run that waited re-lists and finds what the first run created.
     const lockKey = `ga4-provision:${input.accountId.replace(/^accounts\//, '')}`;
+    const orgLockKey = `ga4-provision-org:${organizationId}`;
     const { property, dataStream, keyEvents, ga4Property } =
       await prisma.$transaction(
         async tx => {
           // Transaction-scoped: released at COMMIT/ROLLBACK on the one backend
           // this interactive transaction holds (safe under a transaction pooler).
+          // The org lock is always taken first, so two provision runs can never
+          // hold the two locks in opposite orders.
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orgLockKey}))`;
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-          const property = await createProperty(deps, {
-            accountId: input.accountId,
-            displayName: input.displayName,
-            timeZone: input.timeZone,
-            currencyCode: input.currencyCode,
+          // The grant covers ONE property for the business. An org that already
+          // has its GA4 property reuses it; a different display name or account
+          // in the request must not create a second one.
+          const owned = await tx.gA4Property.findMany({
+            where: { organizationId },
+            select: { propertyId: true, displayName: true },
           });
+          if (owned.length > 1) throw new AmbiguousOrgPropertyError();
+          const property =
+            owned.length === 1
+              ? {
+                  propertyId: owned[0].propertyId,
+                  displayName: owned[0].displayName ?? input.displayName,
+                  created: false,
+                }
+              : await createProperty(deps, {
+                  accountId: input.accountId,
+                  displayName: input.displayName,
+                  timeZone: input.timeZone,
+                  currencyCode: input.currencyCode,
+                });
           const dataStream = await createWebDataStream(deps, {
             propertyId: property.propertyId,
             defaultUri: input.defaultUri,
@@ -199,6 +237,17 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    if (error instanceof AmbiguousOrgPropertyError) {
+      return NextResponse.json(
+        {
+          error: 'Organisation already has more than one GA4 property',
+          code: 'GA4_PROPERTY_AMBIGUOUS',
+          message:
+            'This organisation is linked to more than one GA4 property, so Synthex will not create or choose one. Remove the extra link first.',
+        },
+        { status: 409 }
+      );
+    }
     if (error instanceof Ga4AdminError) {
       logger.warn('GA4 provision refused by Google', {
         code: error.code,
