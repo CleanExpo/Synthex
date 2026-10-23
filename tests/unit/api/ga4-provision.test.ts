@@ -34,6 +34,8 @@ const mockFindFirst = jest.fn();
 const mockUpsert = jest.fn();
 /** GA4Property rows the org already holds (tx.gA4Property.findMany). */
 const mockOwned = jest.fn();
+/** A GA4Property row for the property under ANOTHER org (tx.gA4Property.findFirst). */
+const mockOtherOwner = jest.fn();
 /** Keys passed to pg_advisory_xact_lock, in call order. */
 const lockedKeys: string[] = [];
 /**
@@ -67,6 +69,7 @@ async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
     gA4Property: {
       upsert: (...a: unknown[]) => mockUpsert(...a),
       findMany: (...a: unknown[]) => mockOwned(...a),
+      findFirst: (...a: unknown[]) => mockOtherOwner(...a),
     },
   };
   try {
@@ -277,6 +280,7 @@ beforeEach(() => {
   mockGetOrgId.mockResolvedValue('org-1');
   mockToken.mockResolvedValue('access-token');
   mockOwned.mockResolvedValue([]);
+  mockOtherOwner.mockResolvedValue(null);
   mockUpsert.mockImplementation(async (args: { create: object }) => ({
     id: 'ga4-row',
     ...args.create,
@@ -464,6 +468,27 @@ describe('POST /api/integrations/ga4/provision', () => {
       calls.filter(c => new URL(c.url).pathname === '/v1beta/properties')
     ).toHaveLength(0);
     expect(mockUpsert.mock.calls[0][0].create.propertyId).toBe('555');
+  });
+
+  it('refuses a same-name account property already linked to another organisation, before any stream or key-event write', async () => {
+    mockOtherOwner.mockImplementation(
+      async (args: {
+        where: { propertyId: string; NOT: { organizationId: string } };
+      }) =>
+        args.where.propertyId === '555' &&
+        args.where.NOT.organizationId === 'org-1'
+          ? { id: 'row-of-org-2' }
+          : null
+    );
+    const calls = installGoogle({ existing: true });
+    const r = await post();
+    expect(r.status).toBe(409);
+    expect((await r.json()).code).toBe('GA4_PROPERTY_OWNED_ELSEWHERE');
+    expect(calls.filter(c => c.method === 'POST')).toHaveLength(0);
+    expect(
+      calls.filter(c => new URL(c.url).pathname.includes('/properties/555/'))
+    ).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 
   it('refuses with 409 when the org already holds more than one GA4 property', async () => {

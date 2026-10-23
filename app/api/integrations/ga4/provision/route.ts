@@ -18,7 +18,8 @@
  * Bound to the signed statement (GA4_ADMIN_CONSENT_STATEMENT): the body may
  * only ask for an Australian time zone, AUD and the generate_lead / sign_up key
  * events (400 otherwise), and an org gets ONE property — one it already holds
- * is reused, never added to (409 when it holds more than one).
+ * is reused, never added to (409 when it holds more than one), and a same-name
+ * account property already linked to another org is refused (409).
  *
  * The GA4 account must already exist: Google creates accounts only through
  * accounts.provisionAccountTicket plus the user accepting the Terms of Service.
@@ -84,6 +85,8 @@ const provisionSchema = z.object({
 
 /** The org already holds more than one GA4 property; which to reuse is unclear. */
 class AmbiguousOrgPropertyError extends Error {}
+/** The same-name property Google returned is linked to another organisation. */
+class PropertyOwnedElsewhereError extends Error {}
 
 export async function POST(request: NextRequest) {
   try {
@@ -189,6 +192,20 @@ export async function POST(request: NextRequest) {
                   timeZone: input.timeZone,
                   currencyCode: input.currencyCode,
                 });
+          // createProperty reuses an account property by display name alone. A
+          // same-name property already linked to ANOTHER organisation is that
+          // client's, not this one's: refuse before writing a stream or key
+          // event to it.
+          if (!property.created && owned.length === 0) {
+            const otherOwner = await tx.gA4Property.findFirst({
+              where: {
+                propertyId: property.propertyId,
+                NOT: { organizationId },
+              },
+              select: { id: true },
+            });
+            if (otherOwner) throw new PropertyOwnedElsewhereError();
+          }
           const dataStream = await createWebDataStream(deps, {
             propertyId: property.propertyId,
             defaultUri: input.defaultUri,
@@ -244,6 +261,17 @@ export async function POST(request: NextRequest) {
           code: 'GA4_PROPERTY_AMBIGUOUS',
           message:
             'This organisation is linked to more than one GA4 property, so Synthex will not create or choose one. Remove the extra link first.',
+        },
+        { status: 409 }
+      );
+    }
+    if (error instanceof PropertyOwnedElsewhereError) {
+      return NextResponse.json(
+        {
+          error: 'GA4 property belongs to another organisation',
+          code: 'GA4_PROPERTY_OWNED_ELSEWHERE',
+          message:
+            'A property with this name in the GA4 account is already linked to another organisation, so Synthex will not use it. Choose a different property name.',
         },
         { status: 409 }
       );
