@@ -2,8 +2,8 @@
  * lib/sitemap — public entry point.
  *
  * SYN-840 sitemap.xml regeneration for the SYN-834 NRPG → DR pipeline.
- * Pure XML merge + Google/Bing ping client (rate-limited 1/hour per
- * target).
+ * Pure XML merge + the retired Google/Bing ping client (sends nothing;
+ * every result is reported as retired).
  *
  * @see SYN-840 (parent: SYN-834 epic)
  * @see lib/sitemap/README.md

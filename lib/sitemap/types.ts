@@ -85,8 +85,10 @@ export type PingTarget = 'google' | 'bing';
  */
 export interface PingResult {
   target: PingTarget;
-  /** True iff the ping was sent (false if rate-limited or failed). */
+  /** True iff the ping was sent. Always false now: the endpoints are retired. */
   pinged: boolean;
+  /** True when the target's ping endpoint is retired and nothing was sent. */
+  retired?: boolean;
   /** Reason for skip — present iff pinged=false. */
   reason?: string;
   /** ISO timestamp of the attempt. */
