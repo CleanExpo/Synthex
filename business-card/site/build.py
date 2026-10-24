@@ -38,6 +38,8 @@ PRIVATE = {"sources", "prepared", "source", "decision", "likenessConsent", "conf
            "previousLogos", "previousHeroes", "previousEditions", "rotationReason", "supersededReason",
            "videoNote", "urlNote", "shopUrlNote", "contactSource", "visitorLinksSource", "reviewPromptsSource",
            "placeIdSource", "profileUrlSource", "titleSource"}
+# Phill 24/10/2026: no certifications on the card. Checked at any length; the record check skips short text.
+NO_CREDENTIALS = ("IICRC", "47496", "BFRS", "GBAC")
 
 
 def public(v, removed, path=()):
@@ -226,6 +228,11 @@ def main(card_path, kit_path, out):
                          and (r in html or json.dumps(r, ensure_ascii=False)[1:-1].replace("<", "\\u003c") in html)})
         if leaked:
             sys.exit("kit working record reached the page: " + "; ".join(x[:60] for x in leaked))
+        # whole words only: inline media is base64, where these letters turn up by chance
+        banned = [t for t in NO_CREDENTIALS
+                  if re.search(r"(?<![A-Za-z0-9+/])" + t + r"(?![A-Za-z0-9+/])", html, re.IGNORECASE)]
+        if banned:
+            sys.exit("certification text reached the page: " + ", ".join(banned))
         return html
 
     # Home-screen app: only when the kit names its own app icons
