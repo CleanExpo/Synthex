@@ -117,6 +117,8 @@ const device = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Androi
 $("device").value = device + ", " + browser;
 $("fb").addEventListener("submit", e => {
   e.preventDefault();
+  // a name of only spaces is no name: clear it so the browser asks again
+  if (!$("first").value.trim()) { $("first").value = ""; $("fb").reportValidity(); return; }
   const mods = [...document.querySelectorAll("#mods input:checked")].map(i => i.value);
   if ($("mods-other").value.trim()) mods.push($("mods-other").value.trim());
   const text = [
@@ -140,18 +142,30 @@ $("fb").addEventListener("submit", e => {
 // Same values as "capture" in brand-kits/phill-mcgurk.json (tests/capture.mjs keeps them equal): the publishable
 // key only, so a visitor can add a row and never read one (UNI-3000)
 const CAPTURE = { url: "https://lksfwktwtmyznckodsau.supabase.co", key: "sb_publishable_9MoYN-p4J5ExROt1MkQDBg_B4uYqYWT", slug: "phill-mcgurk" };
-let savedBody = "";
+let savedBody = "", sendingBody = "";
+// cut by code points, never inside a character: the database counts characters, not UTF-16 units
+const cut = (s, n) => Array.from(String(s)).slice(0, n).join("");
+const bytes = s => new TextEncoder().encode(s).length;
 function save(text, mods) {
   const say = t => { $("saved").textContent = t; };
   if (!/^https?:$/.test(location.protocol)) { say("Not saved: text it to Phill instead"); return; }
-  const clip = v => String(v).slice(0, 300);
   const answers = {
-    save: pick("save"), save_how: clip($("save-how").value.trim()), film: pick("film"), clear: pick("clear"),
-    clear_why: clip($("clear-why").value.trim()), bugs: clip($("bugs").value.trim()), want: clip(mods.join(", ")),
+    save: pick("save"), save_how: cut($("save-how").value.trim(), 300), film: pick("film"), clear: pick("clear"),
+    clear_why: cut($("clear-why").value.trim(), 300), bugs: cut($("bugs").value.trim(), 300), want: cut(mods.join(", "), 300),
     use: pick("use"), pay: pick("pay")
   };
-  const body = JSON.stringify({ card_slug: CAPTURE.slug, first_name: $("first").value.trim().slice(0, 60), answers, device: $("device").value.trim().slice(0, 200) || null });
+  // the table caps answers at 4000 bytes as stored text (which adds a space after every : and ,): stay under 3600
+  // by shortening the longest free-text answer until it fits; the text message keeps every word
+  const free = ["save_how", "clear_why", "bugs", "want"];
+  while (bytes(JSON.stringify(answers)) > 3600) {
+    const k = free.reduce((a, b) => (bytes(answers[b]) > bytes(answers[a]) ? b : a));
+    const chars = Array.from(answers[k]);
+    answers[k] = chars.slice(0, Math.floor(chars.length * 0.9)).join("");
+  }
+  const body = JSON.stringify({ card_slug: CAPTURE.slug, first_name: cut($("first").value.trim(), 60), answers, device: cut($("device").value.trim(), 200) || null });
   if (body === savedBody) { say("Saved. Thank you, Phill has your answers."); return; }
+  if (body === sendingBody) return;
+  sendingBody = body;
   say("Sending");
   const ctl = typeof AbortController === "function" ? new AbortController() : null;
   const timer = ctl && setTimeout(() => ctl.abort(), 10000);
@@ -161,6 +175,7 @@ function save(text, mods) {
     body, signal: ctl ? ctl.signal : undefined, credentials: "omit", referrerPolicy: "no-referrer"
   }).then(r => r.status === 201, () => false).then(ok => {
     if (timer) clearTimeout(timer);
+    sendingBody = "";
     if (ok) savedBody = body;
     say(ok ? "Saved. Thank you, Phill has your answers." : "Not saved: text it to Phill instead");
   });

@@ -1306,24 +1306,30 @@ const CAPTURE = (() => {
   return HOSTED && c && /^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(c.url) && /^sb_publishable_[A-Za-z0-9_-]+$/.test(c.key) &&
     /^[a-z0-9-]{1,64}$/.test(c.slug) ? c : null;
 })();
-const sent = new Set();
-// POST one row; the tag says Saved only on 201, and a resend of the same row is not saved twice
+const sent = new Set(), sending = new Map();
+// cut by code points, never inside a character: the database counts characters, not UTF-16 units
+const cut = (s, n) => Array.from(s).slice(0, n).join("");
+// POST one row; the tag says Saved only on 201, and a resend of the same row (even mid-flight) is not saved twice
 function sendRow(table, row, tag) {
-  const body = JSON.stringify(row);
-  if (sent.has(table + body)) { tag.textContent = "Saved"; return Promise.resolve(true); }
+  const body = JSON.stringify(row), id = table + body;
+  if (sent.has(id)) { tag.textContent = "Saved"; return Promise.resolve(true); }
+  if (sending.has(id)) return sending.get(id);
   tag.textContent = "Sending";
   const ctl = typeof AbortController === "function" ? new AbortController() : null;
   const timer = ctl && setTimeout(() => ctl.abort(), 10000);
-  return fetch(CAPTURE.url + "/rest/v1/" + table, {
+  const p = fetch(CAPTURE.url + "/rest/v1/" + table, {
     method: "POST",
     headers: { apikey: CAPTURE.key, "Content-Type": "application/json", Prefer: "return=minimal" },
     body, signal: ctl ? ctl.signal : undefined, credentials: "omit", referrerPolicy: "no-referrer"
   }).then(r => r.status === 201, () => false).then(ok => {
     if (timer) clearTimeout(timer);
-    if (ok) sent.add(table + body);
+    sending.delete(id);
+    if (ok) sent.add(id);
     tag.textContent = ok ? "Saved" : "Not saved: copy it or email it instead";
     return ok;
   });
+  sending.set(id, p);
+  return p;
 }
 if (CAPTURE) $("enquiry-go").textContent = "Send my message";
 $("enquiry").addEventListener("submit", e => {
@@ -1341,14 +1347,16 @@ $("enquiry").addEventListener("submit", e => {
   $("out").hidden = false;
   if (!CAPTURE) return;
   // the form opens holding an example entry: sending that unchanged would only save a fake enquiry
-  const untouched = [...e.currentTarget.elements].every(el => !("defaultValue" in el) || el.type === "submit" || el.value === el.defaultValue);
+  const untouched = [...e.currentTarget.elements].every(el =>
+    el.tagName === "SELECT" ? [...el.options].every(o => o.selected === o.defaultSelected)
+      : !("defaultValue" in el) || el.type === "submit" || el.value === el.defaultValue);
   if (untouched) { $("send-state").textContent = "Example only, not saved"; return; }
   // the copy and email above stay ready whatever happens here
   const row = {
     card_slug: CAPTURE.slug,
-    first_name: name.split(/\s+/)[0].slice(0, 60),
-    business: ((f.get("business") || "").trim().slice(0, 120)) || null,
-    ask: `${f.get("type")}: ${msg}${met ? "\n\nMet at: " + met.label : ""}`.slice(0, 2000),
+    first_name: cut(name.split(/\s+/)[0], 60),
+    business: cut((f.get("business") || "").trim(), 120) || null,
+    ask: cut(`${f.get("type")}: ${msg}${met ? "\n\nMet at: " + met.label : ""}`, 2000),
     reply_email: email.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null,
     source: "card"
   };

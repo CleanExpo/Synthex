@@ -109,7 +109,7 @@ check(
 
 const browser = await chromium.launch();
 // reply: 201 | a status | 'abort'. Every request to any Supabase host is recorded and answered here.
-async function visit(reply) {
+async function visit(reply, delayMs = 0) {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
     isMobile: true,
@@ -125,6 +125,7 @@ async function visit(reply) {
       headers: q.headers(),
       body: q.postData(),
     });
+    if (delayMs) await new Promise(res => setTimeout(res, delayMs));
     if (reply === 'abort') return r.abort();
     return r.fulfill({ status: reply, body: '' });
   });
@@ -228,6 +229,27 @@ try {
     );
     await ctx.close();
   }
+  // 1b. changing only the topic is a real enquiry; two quick presses while the first is in flight save one row
+  {
+    const { ctx, page, calls } = await visit(201, 1500);
+    await page.goto(BASE + '?me=1');
+    await page.click('#door-connect');
+    await page.selectOption('#f-type', 'Training');
+    await page.click('#enquiry button[type=submit]');
+    await page.click('#enquiry button[type=submit]');
+    await settle(page);
+    await page.waitForTimeout(1800);
+    const row = calls[0] ? JSON.parse(calls[0].body) : {};
+    check(
+      calls.length === 1 &&
+        (row.ask || '').startsWith('Training: ') &&
+        (await page.textContent('#send-state')) === 'Saved',
+      'a topic-only change is saved, and a double press mid-flight saves one row (' +
+        calls.length +
+        ' POSTs)'
+    );
+    await ctx.close();
+  }
   // 2. Connect when saving fails: Not saved, and the copy and email stay ready
   for (const reply of [401, 500, 'abort']) {
     const { ctx, page, calls } = await visit(reply);
@@ -299,6 +321,55 @@ try {
       errors.length === 0,
       'no feedback page errors' +
         (errors.length ? ': ' + errors.join(' | ') : '')
+    );
+    await ctx.close();
+  }
+  // 3b. emoji answers stay under the table's 4000-byte cap as Postgres stores them (a space after every : and ,);
+  // a name of only spaces sends nothing; a double press mid-flight sends once
+  {
+    const { ctx, page, calls } = await visit(201, 1500);
+    await page.goto(BASE + 'feedback.html');
+    await page.fill('#first', '   ');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(300);
+    check(
+      calls.length === 0 && (await page.isHidden('#out')),
+      'a first name of only spaces sends and prepares nothing'
+    );
+    await page.fill('#first', 'Émoji');
+    const many = '😀'.repeat(400);
+    await page.fill('#save-how', many);
+    await page.fill('#clear-why', many);
+    await page.fill('#bugs', many);
+    await page.fill('#mods-other', '😀'.repeat(300));
+    await page.click('button[type="submit"]');
+    await page.click('button[type="submit"]');
+    await page.waitForFunction(
+      () => document.getElementById('saved').textContent !== 'Sending',
+      null,
+      { timeout: 15000 }
+    );
+    await page.waitForTimeout(1800);
+    const row = calls[0] ? JSON.parse(calls[0].body) : {};
+    const stored = JSON.stringify(row.answers || {})
+      .replace(/":"/g, '": "')
+      .replace(/","/g, '", "');
+    const whole = Object.values(row.answers || {}).every(
+      v =>
+        !/[\uD800-\uDFFF]/.test(
+          v.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
+        )
+    );
+    check(
+      calls.length === 1 &&
+        Buffer.byteLength(stored) <= 4000 &&
+        whole &&
+        row.first_name === 'Émoji',
+      `emoji feedback: one POST, ${Buffer.byteLength(stored)} bytes as stored, no broken characters`
+    );
+    check(
+      (await page.textContent('#saved')).startsWith('Saved'),
+      'emoji feedback shows Saved'
     );
     await ctx.close();
   }
