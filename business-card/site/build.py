@@ -228,9 +228,9 @@ def main(card_path, kit_path, out):
                          and (r in html or json.dumps(r, ensure_ascii=False)[1:-1].replace("<", "\\u003c") in html)})
         if leaked:
             sys.exit("kit working record reached the page: " + "; ".join(x[:60] for x in leaked))
-        # whole words only: inline media is base64, where these letters turn up by chance
-        banned = [t for t in NO_CREDENTIALS
-                  if re.search(r"(?<![A-Za-z0-9+/])" + t + r"(?![A-Za-z0-9+/])", html, re.IGNORECASE)]
+        # any spelling, any neighbours; only inline media is left out, as its base64 holds these letters by chance
+        text = re.sub(r"data:[\w.+-]+/[\w.+-]+;base64,[A-Za-z0-9+/=]+", "", html).lower()
+        banned = [t for t in NO_CREDENTIALS if t.lower() in text]
         if banned:
             sys.exit("certification text reached the page: " + ", ".join(banned))
         return html
