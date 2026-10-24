@@ -95,12 +95,13 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
         <p class="fine">Filled in from your browser so problems can be reproduced. Change it if it is wrong.</p>
       </fieldset>
 
-      <button class="btn" type="submit">Prepare my feedback</button>
-      <p class="fine">Your answers go into a text message for you to send to Phill. Nothing is sent until you press Send. Want to show a problem? Add a screenshot to that message.</p>
+      <button class="btn" type="submit">Send my feedback</button>
+      <p class="fine">Pressing Send saves your answers for Phill. A text message with the same answers is prepared too, in case saving does not work. Want to show a problem? Add a screenshot to that text.</p>
     </div>
   </form>
 
   <section id="out" hidden style="display:grid;gap:10px">
+    <p class="fine" id="saved" role="status" style="font-weight:600">Sending</p>
     <pre id="out-text"></pre>
     <a class="btn" id="out-sms" href="#">Text it to Phill</a>
     <p class="fine">Your messages app opens with your answers ready (they are copied too). Pick Phill as the recipient, then press Send.</p>
@@ -134,7 +135,36 @@ $("fb").addEventListener("submit", e => {
   $("out-sms").href = "sms:?&body=" + encodeURIComponent(text);
   $("out").hidden = false;
   $("out").scrollIntoView({ block: "start" });
+  save(text, mods);
 });
+// Same values as "capture" in brand-kits/phill-mcgurk.json (tests/capture.mjs keeps them equal): the publishable
+// key only, so a visitor can add a row and never read one (UNI-3000)
+const CAPTURE = { url: "https://lksfwktwtmyznckodsau.supabase.co", key: "sb_publishable_9MoYN-p4J5ExROt1MkQDBg_B4uYqYWT", slug: "phill-mcgurk" };
+let savedBody = "";
+function save(text, mods) {
+  const say = t => { $("saved").textContent = t; };
+  if (!/^https?:$/.test(location.protocol)) { say("Not saved: text it to Phill instead"); return; }
+  const clip = v => String(v).slice(0, 300);
+  const answers = {
+    save: pick("save"), save_how: clip($("save-how").value.trim()), film: pick("film"), clear: pick("clear"),
+    clear_why: clip($("clear-why").value.trim()), bugs: clip($("bugs").value.trim()), want: clip(mods.join(", ")),
+    use: pick("use"), pay: pick("pay")
+  };
+  const body = JSON.stringify({ card_slug: CAPTURE.slug, first_name: $("first").value.trim().slice(0, 60), answers, device: $("device").value.trim().slice(0, 200) || null });
+  if (body === savedBody) { say("Saved. Thank you, Phill has your answers."); return; }
+  say("Sending");
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl && setTimeout(() => ctl.abort(), 10000);
+  fetch(CAPTURE.url + "/rest/v1/card_feedback", {
+    method: "POST",
+    headers: { apikey: CAPTURE.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body, signal: ctl ? ctl.signal : undefined, credentials: "omit", referrerPolicy: "no-referrer"
+  }).then(r => r.status === 201, () => false).then(ok => {
+    if (timer) clearTimeout(timer);
+    if (ok) savedBody = body;
+    say(ok ? "Saved. Thank you, Phill has your answers." : "Not saved: text it to Phill instead");
+  });
+}
 $("out-sms").addEventListener("click", () => { try { navigator.clipboard.writeText($("out-text").textContent).catch(() => {}); } catch (err) {} });
 $("out-copy").addEventListener("click", async e => {
   try { await navigator.clipboard.writeText($("out-text").textContent); e.target.textContent = "Copied"; }
