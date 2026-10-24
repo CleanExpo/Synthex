@@ -211,6 +211,14 @@ export function checkBeatPlan(
   const totalSeconds =
     Math.max(...plan.map(b => b.end)) - Math.min(...plan.map(b => b.start));
   let aloneSeconds = 0;
+  const byStart = [...plan].sort((a, b) => a.start - b.start);
+  for (let i = 1; i < byStart.length; i += 1) {
+    if (byStart[i].start < byStart[i - 1].end - 1e-9) {
+      issues.push(
+        `Beat "${byStart[i].id}" overlaps beat "${byStart[i - 1].id}"`
+      );
+    }
+  }
   for (const beat of plan) {
     const length = beat.end - beat.start;
     const covered = beat.visual
@@ -248,16 +256,43 @@ export function checkBeatPlan(
   };
 }
 
-/** Beats must all point at anchors that exist; used before any paid call. */
+/**
+ * Beats must point at anchors that exist, must not overlap, and together must
+ * cover every spoken word, so no stretch of the runtime is left without screen
+ * instructions. Used before any paid call.
+ */
 export function assertBeatsMatchScript(
   beats: BeatSpec[],
   script: AnchoredScript
 ): void {
+  const spans: { id: string; span: WordSpan }[] = [];
   for (const beat of beats) {
-    if (!script.anchors[beat.id]) {
+    const span = Object.prototype.hasOwnProperty.call(script.anchors, beat.id)
+      ? script.anchors[beat.id]
+      : undefined;
+    if (!span) {
       throw new Error(
         `Beat "${beat.id}" has no @{${beat.id}} anchor in the script`
       );
     }
+    spans.push({ id: beat.id, span });
+  }
+  spans.sort((a, b) => a.span.startWord - b.span.startWord);
+  let next = 0;
+  for (const { id, span } of spans) {
+    if (span.startWord < next) {
+      throw new Error(`Beat "${id}" overlaps the previous beat`);
+    }
+    if (span.startWord > next) {
+      throw new Error(
+        `Words ${next} to ${span.startWord - 1} are not covered by any beat`
+      );
+    }
+    next = span.endWord + 1;
+  }
+  if (next < script.words.length) {
+    throw new Error(
+      `Words ${next} to ${script.words.length - 1} are not covered by any beat`
+    );
   }
 }

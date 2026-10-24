@@ -142,6 +142,13 @@ export async function buildMargotShort(
     speech.audioBase64,
     speech.contentType ?? 'audio/mpeg'
   );
+  // An empty URL would make HeyGen fall back to its own text-to-speech voice,
+  // which is not Margot's. Stop before the render.
+  if (!audioUrl || !audioUrl.trim()) {
+    throw new Error(
+      'Audio URL is empty; refusing a HeyGen render with a stand-in voice'
+    );
+  }
   const heygen = await deps.heygen.createAvatarVideo({
     avatarId: margot.avatarId,
     audioUrl,

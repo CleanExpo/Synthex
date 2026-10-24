@@ -117,7 +117,10 @@ function assTime(seconds: number): string {
 
 /** Script text must never open an ASS override block or break a line. */
 function escapeAssText(text: string): string {
-  return text.replace(/[{}\\]/g, '').replace(/[\r\n]+/g, ' ');
+  return text
+    .replace(/\p{Extended_Pictographic}|\p{Emoji_Modifier}|\u200d|\ufe0f/gu, '')
+    .replace(/[{}\\]/g, '')
+    .replace(/[\r\n]+/g, ' ');
 }
 
 export function toAss(
@@ -143,11 +146,12 @@ export function toAss(
     let cursor = cue.visibleStart;
     const parts: string[] = [];
     for (const w of cue.words) {
-      // A gap before the word is silent time; fold it into this word's sweep start.
-      const gap = Math.max(0, w.start - cursor);
-      const dur = Math.max(0.01, w.end - w.start);
-      const cs = Math.round((gap + dur) * 100);
-      parts.push(`{\\kf${cs}}${escapeAssText(w.text)}`);
+      // Silence before a word is a plain delay (\\k), so the sweep starts with the word.
+      const gapCs = Math.round(Math.max(0, w.start - cursor) * 100);
+      const durCs = Math.round(Math.max(0.01, w.end - w.start) * 100);
+      parts.push(
+        `${gapCs > 0 ? `{\\k${gapCs}}` : ''}{\\kf${durCs}}${escapeAssText(w.text)}`
+      );
       cursor = w.end;
     }
     lines.push(

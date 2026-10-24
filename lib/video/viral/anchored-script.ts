@@ -31,7 +31,7 @@ export function parseAnchoredScript(source: string): AnchoredScript {
   const words: ScriptWord[] = [];
   const cueStarts: number[] = [0];
   const open = new Map<string, number>();
-  const anchors: Record<string, WordSpan> = {};
+  const anchors: Record<string, WordSpan> = Object.create(null);
 
   for (const part of source.split(TOKEN)) {
     if (part === '||') {
@@ -47,7 +47,7 @@ export function parseAnchoredScript(source: string): AnchoredScript {
     if (tag) {
       const [, closing, id] = tag;
       if (!closing) {
-        if (open.has(id) || anchors[id])
+        if (open.has(id) || id in anchors)
           throw new Error(`Anchor "${id}" is opened twice`);
         open.set(id, words.length);
       } else {

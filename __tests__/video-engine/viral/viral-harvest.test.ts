@@ -398,13 +398,11 @@ describe('buildMargotShort (mocked providers)', () => {
         .mockResolvedValue({ success: true, audioBase64: 'AAA', alignment }),
       uploadAudio: jest.fn().mockResolvedValue('https://example.test/a.mp3'),
       heygen: {
-        createAvatarVideo: jest
-          .fn()
-          .mockResolvedValue({
-            id: 'job1',
-            provider: 'heygen',
-            status: 'mocked',
-          }),
+        createAvatarVideo: jest.fn().mockResolvedValue({
+          id: 'job1',
+          provider: 'heygen',
+          status: 'mocked',
+        }),
       },
     };
   }

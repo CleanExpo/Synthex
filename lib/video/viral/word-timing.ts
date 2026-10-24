@@ -269,6 +269,15 @@ export function charactersToWords(a: CharacterAlignment): EvidenceWord[] {
   ) {
     throw new Error('Character alignment arrays differ in length');
   }
+  if (n === 0) throw new Error('Character alignment has no timestamps');
+  for (let i = 0; i < n; i += 1) {
+    if (
+      !Number.isFinite(a.character_start_times_seconds[i]) ||
+      !Number.isFinite(a.character_end_times_seconds[i])
+    ) {
+      throw new Error(`Character alignment time at ${i} is not finite`);
+    }
+  }
   const words: EvidenceWord[] = [];
   let text = '';
   let start = 0;
