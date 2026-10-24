@@ -501,9 +501,7 @@ try {
     const { ctx, page, errors } = await phone();
     await page.goto(BASE + '?to=Sam');
     await page.waitForTimeout(1200);
-    const kit = await page.evaluate(() =>
-      JSON.parse(document.getElementById('brand-kit').textContent)
-    );
+    const kit = await page.evaluate(() => window.BRAND_KIT);
     const withVideo = kit.person.links.filter(
       l => l.visitor && l.url && l.video && l.video.youtubeId
     );

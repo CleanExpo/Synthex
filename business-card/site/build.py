@@ -22,7 +22,7 @@ import os
 import sys
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-SLOT = '<script id="brand-kit" type="application/json">{}</script>'
+SLOT = '<script id="brand-kit">window.BRAND_KIT = {};</script>'
 HEAD = (
     '<!doctype html>\n<html lang="en-AU">\n<head>\n<meta charset="utf-8">\n'
     '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
@@ -150,8 +150,11 @@ def main(card_path, kit_path, out):
     name = kit["person"]["name"]
 
     def render(k):
-        embedded = json.dumps(k, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
-        html = page.replace(SLOT, f'<script id="brand-kit" type="application/json">{embedded}</script>')
+        # JSON is a JS literal; "<" never appears outside a string, so escaping it inside strings stops
+        # </script> and <!-- from ending the script; U+2028/2029 are escaped for older parsers.
+        embedded = (json.dumps(k, ensure_ascii=False, separators=(",", ":"))
+                    .replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
+        html = page.replace(SLOT, f'<script id="brand-kit">window.BRAND_KIT = {embedded};</script>')
         return html.replace("<title>Living Card</title>", f"<title>{name} Card</title>", 1)
 
     # Home-screen app: only when the kit names its own app icons
