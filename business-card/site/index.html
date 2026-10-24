@@ -622,6 +622,7 @@ function lum(hex) {
         const open = $("film-features").hidden; $("film-features").hidden = !open;
         $("film-more").setAttribute("aria-expanded", String(open));
         if (open) { $("film-explainer").pause(); const p = $("film-features").play(); if (p && p.catch) p.catch(() => {}); }
+        else $("film-features").pause(); // a closed film must not keep talking
       });
     }
   }

@@ -558,6 +558,14 @@ try {
         )) === false,
         'opening a film starts no card music'
       );
+      await f.page.click('#film-more');
+      check(
+        await f.page.evaluate(() => {
+          const v = document.getElementById('film-features');
+          return v.hidden && v.paused;
+        }),
+        'closing the second film hides it and stops it'
+      );
       const wheel = await f.page.evaluate(() =>
         [...document.querySelectorAll('#rw-biz .need')].map(b => b.textContent)
       );
