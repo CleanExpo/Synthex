@@ -20,6 +20,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { bindPostFingerprint } from '@/lib/approvals/content-fingerprint';
 
 // =============================================================================
 // Types
@@ -412,6 +413,31 @@ export async function POST(request: NextRequest) {
         steps = createDefaultSteps();
       }
 
+      // Bind a post approval to the version being submitted (text, images,
+      // link), so a later edit
+      // cannot ride on this approval (see PATCH /api/approvals/[id]). The post
+      // must belong to the caller's organisation (post -> campaign -> org), or,
+      // with no org context, to a campaign the caller owns (as in
+      // /api/scheduler/posts/bulk). Anyone else's post is reported as not
+      // found, never bound.
+      let boundMetadata = metadata;
+      if (contentType === 'post') {
+        const post = await prisma.post.findFirst({
+          where: {
+            id: contentId,
+            campaign: organizationId ? { organizationId } : { userId },
+          },
+          select: { content: true, platform: true, metadata: true },
+        });
+        if (!post) {
+          return NextResponse.json(
+            { error: 'Not Found', message: 'Post not found' },
+            { status: 404 }
+          );
+        }
+        boundMetadata = bindPostFingerprint(metadata, post);
+      }
+
       // Create approval request and audit log atomically
       const approval = await prisma.$transaction(async tx => {
         const created = await tx.approvalRequest.create({
@@ -428,7 +454,7 @@ export async function POST(request: NextRequest) {
             title,
             description,
             dueDate: dueDate ? new Date(dueDate) : null,
-            metadata: metadata as Prisma.InputJsonValue,
+            metadata: boundMetadata as Prisma.InputJsonValue,
             organizationId,
           },
           include: {
