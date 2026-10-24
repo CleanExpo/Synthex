@@ -160,6 +160,8 @@ async function provision(request: NextRequest, userId: string) {
 
     const connection = await prisma.platformConnection.findFirst({
       where: { organizationId, platform: GA4_PLATFORM, isActive: true },
+      // Same ordering persistPlatformConnection uses to pick the canonical row.
+      orderBy: { updatedAt: 'desc' },
       select: { id: true, scope: true, metadata: true },
     });
     const grant = connection ? readGa4AdminGrant(connection) : null;

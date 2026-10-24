@@ -352,6 +352,35 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect((await post()).status).toBe(403);
   });
 
+  it('uses the newest active connection (updatedAt desc), the same row persistPlatformConnection treats as canonical, not an older row that owns a grant', async () => {
+    const older = {
+      id: 'conn-old',
+      updatedAt: new Date('2026-10-01T00:00:00Z'),
+      scope: `${READONLY} ${GA4_ADMIN_SCOPE}`,
+      metadata: { ga4AdminGrant: GRANT },
+    };
+    const newest = {
+      id: 'conn-new',
+      updatedAt: new Date('2026-10-20T00:00:00Z'),
+      scope: `${READONLY} ${GA4_ADMIN_SCOPE}`,
+      metadata: { ga4AdminGrant: { ...GRANT } },
+    };
+    // Rows come back in an order that only honours an explicit orderBy: with
+    // no ordering the first stored row (the older one) wins.
+    mockFindFirst.mockImplementation(
+      async (args: { orderBy?: { updatedAt?: 'asc' | 'desc' } }) => {
+        const rows = [older, newest];
+        if (args.orderBy?.updatedAt === 'desc') {
+          rows.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+        }
+        return rows[0];
+      }
+    );
+    installGoogle();
+    expect((await post()).status).toBe(200);
+    expect(mockToken).toHaveBeenCalledWith('conn-new');
+  });
+
   it('refuses without the analytics.edit grant and never calls Google', async () => {
     expect(await refusesWithoutGrant(POST)).toBe(true);
   });
