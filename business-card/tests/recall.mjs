@@ -126,7 +126,7 @@ for (const name of names)
     ),
     name
   );
-console.log(
+console.info(
   'PASS both vCards, all seven rendered tile names, recall fields, punctuation, injection prevention, CRLF and UTF-8 folding'
 );
 
@@ -204,7 +204,7 @@ for (const [input, isHosted] of [
     if (!isHosted) assert.equal($('vcard-text').textContent, met);
   }
 }
-console.log(
+console.info(
   'PASS normal-file and personalised browser downloads, local-only processing and preview fallback'
 );
 
@@ -237,10 +237,10 @@ const result = spawnSync('python', ['-I', '-c', python], {
   cwd: process.cwd(),
 });
 assert.equal(result.status, 0, result.stderr + result.stdout);
-console.log(result.stdout.trim());
+console.info(result.stdout.trim());
 fs.mkdirSync('.test-tmp/recall', { recursive: true });
 fs.writeFileSync('.test-tmp/recall/empty.vcf', empty);
 fs.writeFileSync('.test-tmp/recall/brisbane-expo.vcf', met);
-console.log(
+console.info(
   'All recall checks passed. Real-device contact import and search still require phone testing.'
 );

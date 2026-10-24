@@ -583,9 +583,27 @@ try {
         'reduced motion keeps the opener still: ' + JSON.stringify(hv)
       );
       await rm.ctx.close();
-      // feedback page: every answer lands in the prepared email
+      // feedback page: by text, never email; every answer lands in the prepared message; no phone number on the page
       const fb = await phone();
       await fb.page.goto(BASE + 'feedback.html');
+      const fbHtml = await fb.page.content();
+      check(
+        (await fb.page.$$('input[type="email"]')).length === 0 &&
+          !/mailto:/i.test(fbHtml) &&
+          !/\+?\d[\d ()-]{7,}\d/.test(
+            fbHtml.replace(
+              /<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g,
+              ''
+            )
+          ),
+        'feedback page has no email field, no mailto and no phone number'
+      );
+      await fb.page.click('button[type="submit"]');
+      check(
+        await fb.page.isHidden('#out'),
+        'feedback needs a first name before it is prepared'
+      );
+      await fb.page.fill('#first', 'Probe');
       await fb.page.check('input[name="save"][value="Partly"]');
       await fb.page.check('input[name="pay"][value="Maybe"]');
       await fb.page.check('#mods input[value="Menu"]');
@@ -599,11 +617,15 @@ try {
           'Would want: Menu',
           'Broken, slow or odd: Probe bug',
           'Phone and browser: ',
+          'feedback from Probe',
         ].every(s => fbText.includes(s)) &&
-          (await fb.page.getAttribute('#out-mail', 'href')).startsWith(
-            'mailto:airestoreassist@gmail.com?'
-          ),
-        'feedback page prepares every answer for email'
+          decodeURIComponent(
+            ((await fb.page.getAttribute('#out-sms', 'href')) || '').replace(
+              /^sms:\?&body=/,
+              ''
+            )
+          ) === fbText,
+        'feedback page prepares every answer as a text with no number'
       );
       check(
         fb.errors.length === 0,

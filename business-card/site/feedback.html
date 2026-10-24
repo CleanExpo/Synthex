@@ -8,7 +8,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
 <style>
 /* Friend feedback on the Living Card preview, in the same Unite Group kit as get-your-card.html.
-   Nothing is sent from this page: it prepares an email the friend sends from their own app. */
+   Nothing is sent from this page: it prepares a text message the friend sends from their own phone
+   (no phone number or email address on the page). */
 :root {
   --bg: #FFFFFF; --fg: #16181D; --brand: #E55A2B; --brand-ink: #FFFFFF;
   --muted: color-mix(in srgb, var(--fg) 62%, var(--bg)); --line: color-mix(in srgb, var(--fg) 14%, var(--bg));
@@ -45,6 +46,10 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
 
   <form id="fb">
     <div style="display:grid;gap:16px">
+      <fieldset><legend>Your first name</legend>
+        <input type="text" id="first" name="first" required maxlength="40" autocomplete="given-name" aria-label="Your first name">
+      </fieldset>
+
       <fieldset><legend>Did saving the contact to your phone work?</legend>
         <div class="opts" data-q="Saving the contact"><label><input type="radio" name="save" value="Yes">Yes</label><label><input type="radio" name="save" value="Partly">Partly</label><label><input type="radio" name="save" value="No">No</label><label><input type="radio" name="save" value="Did not try">Did not try</label></div>
         <textarea id="save-how" aria-label="What happened when you saved it" placeholder="What happened? (optional)"></textarea>
@@ -91,19 +96,18 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
       </fieldset>
 
       <button class="btn" type="submit">Prepare my feedback</button>
-      <p class="fine">This opens an email to Phill's card inbox with your answers. Nothing is sent until you press Send in your email app. Want to show a problem? Attach a screenshot to that email.</p>
+      <p class="fine">Your answers go into a text message for you to send to Phill. Nothing is sent until you press Send. Want to show a problem? Add a screenshot to that message.</p>
     </div>
   </form>
 
   <section id="out" hidden style="display:grid;gap:10px">
     <pre id="out-text"></pre>
-    <a class="btn" id="out-mail" href="#">Open in my email app</a>
+    <a class="btn" id="out-sms" href="#">Text it to Phill</a>
+    <p class="fine">Your messages app opens with your answers ready (they are copied too). Pick Phill as the recipient, then press Send.</p>
     <button class="btn ghost" type="button" id="out-copy">Copy my answers</button>
   </section>
 </main>
 <script>
-// The card's public inbox (the same address its saved contact carries)
-const TO = "airestoreassist@gmail.com";
 const $ = id => document.getElementById(id);
 const pick = n => (document.querySelector('input[name="' + n + '"]:checked') || {}).value || "-";
 const ua = navigator.userAgent;
@@ -115,7 +119,7 @@ $("fb").addEventListener("submit", e => {
   const mods = [...document.querySelectorAll("#mods input:checked")].map(i => i.value);
   if ($("mods-other").value.trim()) mods.push($("mods-other").value.trim());
   const text = [
-    "Living Card feedback",
+    "Living Card feedback from " + $("first").value.trim(),
     "Saving the contact: " + pick("save") + ($("save-how").value.trim() ? " (" + $("save-how").value.trim() + ")" : ""),
     "Film worth watching: " + pick("film"),
     "Clear what it is: " + pick("clear") + ($("clear-why").value.trim() ? " (" + $("clear-why").value.trim() + ")" : ""),
@@ -126,10 +130,12 @@ $("fb").addEventListener("submit", e => {
     "Phone and browser: " + ($("device").value.trim() || "-")
   ].join("\n");
   $("out-text").textContent = text;
-  $("out-mail").href = "mailto:" + TO + "?subject=" + encodeURIComponent("[Card feedback]") + "&body=" + encodeURIComponent(text);
+  // sms: with no number: the friend picks Phill in their own messages app
+  $("out-sms").href = "sms:?&body=" + encodeURIComponent(text);
   $("out").hidden = false;
   $("out").scrollIntoView({ block: "start" });
 });
+$("out-sms").addEventListener("click", () => { try { navigator.clipboard.writeText($("out-text").textContent).catch(() => {}); } catch (err) {} });
 $("out-copy").addEventListener("click", async e => {
   try { await navigator.clipboard.writeText($("out-text").textContent); e.target.textContent = "Copied"; }
   catch (err) { e.target.textContent = "Select the text above to copy"; }
