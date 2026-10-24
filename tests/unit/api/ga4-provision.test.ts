@@ -509,14 +509,24 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
-  it('is rate limited before any auth, database or Google work', async () => {
+  it('an anonymous request gets 401 without touching the rate limit (it cannot spend the IP bucket signed-in users share)', async () => {
+    mockGetUserId.mockResolvedValue(null);
+    const calls = installGoogle();
+    const r = await post();
+    expect(r.status).toBe(401);
+    expect(mockWriteDefault).not.toHaveBeenCalled();
+    expect(mockFindFirst).not.toHaveBeenCalled();
+    expect(calls).toHaveLength(0);
+  });
+
+  it('a signed-in request over the limit gets 429 before any database or Google work', async () => {
     mockWriteDefault.mockImplementation(async () =>
       Response.json({ error: 'Too Many Requests' }, { status: 429 })
     );
     const calls = installGoogle();
     const r = await post();
     expect(r.status).toBe(429);
-    expect(mockGetUserId).not.toHaveBeenCalled();
+    expect(mockGetUserId).toHaveBeenCalled();
     expect(mockFindFirst).not.toHaveBeenCalled();
     expect(calls).toHaveLength(0);
   });

@@ -117,20 +117,22 @@ class AlreadyProvisionedError extends Error {
 class ProvisioningInProgressError extends Error {}
 
 export async function POST(request: NextRequest) {
-  return writeDefault(request, () => provision(request));
+  // Authenticate BEFORE rate limiting, as app/api/onboarding/complete does:
+  // writeDefault keys on the caller's IP, so an anonymous request must not be
+  // able to spend the bucket that signed-in users on the same IP share.
+  const userId = await getUserIdFromRequestOrCookies(request);
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  return writeDefault(request, () => provision(request, userId));
 }
 
-async function provision(request: NextRequest) {
+async function provision(request: NextRequest, userId: string) {
   /** Set once Google has created the property; reported if a later step fails. */
   let createdPropertyId: string | null = null;
   /** Gives the marker's lease back so a retry need not wait for it to expire. */
   let releaseLease: (() => Promise<unknown>) | null = null;
   try {
-    const userId = await getUserIdFromRequestOrCookies(request);
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     let body: unknown;
     try {
       body = await request.json();
