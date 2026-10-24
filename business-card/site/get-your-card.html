@@ -340,6 +340,8 @@ $("interest").addEventListener("click", () => {
   const k = kit();
   const text = [
     "Card interest from " + (k.person.name || "(no name)") + ", " + (k.person.org || "(no business)"),
+    "Role: " + (k.person.title || "-"),
+    "Intro: " + (k.person.intro || "-"),
     "Package: " + pkg() + " (" + (currency === "aud" ? "AUD" : "USD") + ")",
     "Opener edition: " + edition(),
     "Website: " + $("site").value.trim(),

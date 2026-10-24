@@ -1,5 +1,5 @@
-// Built by build.py; do not edit by hand. Version 1beeb682f150
-const CACHE = 'card-1beeb682f150';
+// Built by build.py; do not edit by hand. Version 638b37488334
+const CACHE = 'card-638b37488334';
 const SHELL = [
   './',
   'phill-mcgurk.vcf',
@@ -51,14 +51,32 @@ self.addEventListener('fetch', e => {
   )
     return;
   if (r.mode === 'navigate') {
+    // only the card page itself replaces the offline copy: the contact file, the order page or an error page never do
+    const u = new URL(r.url),
+      scope = new URL(self.registration.scope).pathname;
+    const card =
+      u.origin === location.origin &&
+      (u.pathname === scope || u.pathname === scope + 'index.html');
     e.respondWith(
       fetch(r)
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put('./', copy));
+          if (
+            card &&
+            res.ok &&
+            (res.headers.get('content-type') || '').includes('text/html')
+          ) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put('./', copy));
+          }
           return res;
         })
-        .catch(() => caches.match('./'))
+        .catch(() =>
+          card
+            ? caches.match('./')
+            : caches
+                .match(r, { ignoreSearch: true })
+                .then(hit => hit || caches.match('./'))
+        )
     );
     return;
   }

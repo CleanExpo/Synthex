@@ -40,7 +40,7 @@ if said is None:
 else:
     heard = words(said); extra = [w for w in heard if w not in script]
     covered = len(set(heard) & script) / max(len(script), 1)
-    gate("speech", len(extra) <= 1 and covered >= 0.8, f"extra words {extra[:8]}; script covered {covered:.0%}")
+    gate("speech", not extra and covered >= 0.8, f"extra words {extra[:8]}; script covered {covered:.0%}")
 
 # 5. music: licensed source declared, never a library preview, and the music file itself has no words in it
 M = S["music"]; mfile = M["file"] if M["file"].startswith("/") else os.path.join(S["root"], M["file"])

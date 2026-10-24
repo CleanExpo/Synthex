@@ -482,8 +482,13 @@ try {
       await page.evaluate(() => !!navigator.serviceWorker.controller),
       'service worker controls the page'
     );
+    // other pages in the card's folder (the order page, a missing page) must not replace the offline card
+    await page.goto(BASE + 'get-your-card.html');
+    await page.waitForTimeout(800);
+    await page.goto(BASE + 'no-such-page');
+    await page.waitForTimeout(500);
     await ctx.setOffline(true);
-    await page.reload();
+    await page.goto(BASE + '?to=Sam&at=brisbane');
     await page.waitForTimeout(1500);
     check(
       (await page.title()) === 'Phill McGurk Card' &&
@@ -513,6 +518,16 @@ try {
     check(
       (await order.page.evaluate(() => window.PWNED || 0)) === 0,
       'a typed </script> stays data in the order preview'
+    );
+    // the interest email carries every card detail the form collects, role and intro included
+    await order.page.fill('#d-title', 'Owner, Probe Restorations');
+    await order.page.fill('#d-intro', 'Probe intro line');
+    await order.page.click('#interest');
+    const interest = await order.page.textContent('#interest-text');
+    check(
+      interest.includes('Role: Owner, Probe Restorations') &&
+        interest.includes('Intro: Probe intro line'),
+      'interest email carries the role and intro'
     );
     check(
       order.errors.length === 0,

@@ -32,6 +32,38 @@ HEAD = (
     'body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n'
     '<script>window.CARD_HOSTED = true;</script>\n{app}</head>\n<body>\n'
 )
+# The kit's working record (where each value came from, earlier versions, consent, notes for the owner)
+# never reaches the public page: the card reads none of it.
+PRIVATE = {"sources", "prepared", "source", "decision", "likenessConsent", "conflicts", "resolved",
+           "previousLogos", "previousHeroes", "previousEditions", "rotationReason", "supersededReason",
+           "videoNote", "urlNote", "shopUrlNote", "contactSource", "visitorLinksSource", "reviewPromptsSource",
+           "placeIdSource", "profileUrlSource"}
+
+
+def public(v, removed, path=()):
+    """The kit without its working record; every string left out is added to removed."""
+    if isinstance(v, dict):
+        out = {}
+        for k, x in v.items():
+            # a local file path or the inbox's own note is for the owner, not the visitor
+            if k in PRIVATE or path + (k,) == ("person", "inbox", "note") or (isinstance(x, str) and x.startswith("file:")):
+                removed.extend(strings(x))
+            else:
+                out[k] = public(x, removed, path + (k,))
+        return out
+    if isinstance(v, list):
+        return [public(x, removed, path) for x in v]
+    return v
+
+
+def strings(v):
+    if isinstance(v, dict):
+        return [s for x in v.values() for s in strings(x)]
+    if isinstance(v, list):
+        return [s for x in v for s in strings(x)]
+    return [v] if isinstance(v, str) else []
+
+
 QR_LIB = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
 # Service worker: pages come from the network when there is one and from the saved copy when there isn't;
 # everything else is saved on first use. Clips are streamed (range requests) and never saved.
@@ -46,8 +78,15 @@ self.addEventListener("fetch", e => {{
   const r = e.request;
   if (r.method !== "GET" || r.headers.has("range") || /\\.(mp4|webm)$/.test(new URL(r.url).pathname)) return;
   if (r.mode === "navigate") {{
-    e.respondWith(fetch(r).then(res => {{ const copy = res.clone(); caches.open(CACHE).then(c => c.put("./", copy)); return res; }})
-      .catch(() => caches.match("./")));
+    // only the card page itself replaces the offline copy: the contact file, the order page or an error page never do
+    const u = new URL(r.url), scope = new URL(self.registration.scope).pathname;
+    const card = u.origin === location.origin && (u.pathname === scope || u.pathname === scope + "index.html");
+    e.respondWith(fetch(r).then(res => {{
+      if (card && res.ok && (res.headers.get("content-type") || "").includes("text/html")) {{
+        const copy = res.clone(); caches.open(CACHE).then(c => c.put("./", copy));
+      }}
+      return res;
+    }}).catch(() => card ? caches.match("./") : caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || caches.match("./"))));
     return;
   }}
   e.respondWith(caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || fetch(r).then(res => {{
@@ -151,12 +190,21 @@ def main(card_path, kit_path, out):
     name = kit["person"]["name"]
 
     def render(k):
+        removed = []
+        shown = public(k, removed)
         # JSON is a JS literal; "<" never appears outside a string, so escaping it inside strings stops
         # </script> and <!-- from ending the script; U+2028/2029 are escaped for older parsers.
-        embedded = (json.dumps(k, ensure_ascii=False, separators=(",", ":"))
+        embedded = (json.dumps(shown, ensure_ascii=False, separators=(",", ":"))
                     .replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
         html = page.replace(SLOT, f'<script id="brand-kit">window.BRAND_KIT = {embedded};</script>')
-        return html.replace("<title>Living Card</title>", f"<title>{escape(name, quote=False)} Card</title>", 1)
+        html = html.replace("<title>Living Card</title>", f"<title>{escape(name, quote=False)} Card</title>", 1)
+        # the page must not carry anything the strip left out (unless the visitor-facing kit holds the same text)
+        kept = set(strings(shown))
+        leaked = sorted({r for r in removed if len(r) >= 12 and r not in kept
+                         and (r in html or json.dumps(r, ensure_ascii=False)[1:-1].replace("<", "\\u003c") in html)})
+        if leaked:
+            sys.exit("kit working record reached the page: " + "; ".join(x[:60] for x in leaked))
+        return html
 
     # Home-screen app: only when the kit names its own app icons
     icons = (kit.get("brand") or {}).get("appIcons") or {}
