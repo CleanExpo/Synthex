@@ -590,10 +590,15 @@ try {
       check(
         (await fb.page.$$('input[type="email"]')).length === 0 &&
           !/mailto:/i.test(fbHtml) &&
+          // what a visitor can see or tap: visible text plus every attribute value (scripts and styles excluded by the browser)
           !/\+?\d[\d ()-]{7,}\d/.test(
-            fbHtml.replace(
-              /<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g,
-              ''
+            await fb.page.evaluate(() =>
+              [
+                document.body.innerText,
+                ...[...document.body.querySelectorAll('*')].flatMap(el =>
+                  [...el.attributes].map(a => a.value)
+                ),
+              ].join('\n')
             )
           ),
         'feedback page has no email field, no mailto and no phone number'
