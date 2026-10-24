@@ -137,7 +137,9 @@ export interface PlannedBeat {
 export function planBeats(
   beats: BeatSpec[],
   anchors: Record<string, WordSpan>,
-  timings: WordTiming[]
+  timings: WordTiming[],
+  /** End of the audio, when the voice runs past the last script word. */
+  audioEnd?: number
 ): PlannedBeat[] {
   const at = (index: number, label: string): WordTiming => {
     const w = timings[index];
@@ -186,6 +188,7 @@ export function planBeats(
   ordered.forEach((beat, i) => {
     if (i === 0) beat.start = 0;
     if (i + 1 < ordered.length) beat.end = ordered[i + 1].start;
+    else if (audioEnd !== undefined) beat.end = Math.max(beat.end, audioEnd);
   });
   // A visual that opens or closes a beat holds through the pause around it.
   for (const spec of beats) {

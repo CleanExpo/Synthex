@@ -91,6 +91,11 @@ export async function buildMargotShort(
   deps: MargotShortDeps
 ): Promise<MargotShortResult> {
   const margot = resolveMargot(input.env ?? process.env);
+  if (!input.consent) {
+    throw new Error(
+      'HeyGen consent is missing; refusing to spend on speech first'
+    );
+  }
   const filled = swapSlots(input.template, input.slots ?? {});
   if (filled.host !== 'margot') {
     throw new Error(
@@ -130,7 +135,12 @@ export async function buildMargotShort(
     script.words,
     charactersToWords(speech.alignment)
   );
-  const plan = planBeats(filled.beats, script.anchors, timings);
+  const evidence = charactersToWords(speech.alignment);
+  const audioEnd = Math.max(
+    ...evidence.map(w => w.end),
+    ...timings.map(t => t.end)
+  );
+  const plan = planBeats(filled.beats, script.anchors, timings, audioEnd);
   const check = checkBeatPlan(plan);
   if (!check.ok)
     throw new Error(
@@ -157,7 +167,7 @@ export async function buildMargotShort(
     title: input.title,
   });
 
-  const seconds = Math.max(...timings.map(t => t.end));
+  const seconds = audioEnd;
   return {
     spokenText: script.spokenText,
     timings,
