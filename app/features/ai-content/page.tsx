@@ -181,10 +181,11 @@ export default function AiContentPage() {
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-white mb-4">
-            See Synthex write your content
+            See your growth directions
           </h2>
           <p className="text-white/50 mb-8">
-            Paste your website URL and get real AI-generated content.
+            Build a free Opportunity Map from your website URL and see where
+            content could grow your reach.
           </p>
           <Link
             href="/opportunity-map"

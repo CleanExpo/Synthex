@@ -182,6 +182,70 @@ describe('POST /api/approvals — step assignees', () => {
     }
   });
 
+  it('does not assign a removed owner or an owner who never accepted: only accepted members still in the organisation', async () => {
+    mockOwnershipFindMany.mockResolvedValue([]);
+    type Row = {
+      userId: string;
+      role: string;
+      acceptedAt: Date | null;
+      user: { organizationId: string | null };
+    };
+    const rows: Row[] = [
+      {
+        userId: 'owner-active',
+        role: 'Owner',
+        acceptedAt: new Date('2026-10-01'),
+        user: { organizationId: 'org-1' },
+      },
+      {
+        // Removed: the removal route only clears User.organizationId.
+        userId: 'owner-removed',
+        role: 'owner',
+        acceptedAt: new Date('2026-09-01'),
+        user: { organizationId: null },
+      },
+      {
+        userId: 'owner-pending',
+        role: 'owner',
+        acceptedAt: null,
+        user: { organizationId: 'org-1' },
+      },
+      {
+        userId: 'owner-elsewhere',
+        role: 'owner',
+        acceptedAt: new Date('2026-09-01'),
+        user: { organizationId: 'org-2' },
+      },
+    ];
+    // A fake table that honours the parts of `where` the route relies on.
+    mockTeamMemberFindMany.mockImplementation(
+      async ({
+        where,
+      }: {
+        where: {
+          role: { equals: string };
+          acceptedAt?: { not: null };
+          user?: { organizationId: string };
+        };
+      }) =>
+        rows
+          .filter(r => r.role.toLowerCase() === where.role.equals)
+          .filter(r => !where.acceptedAt || r.acceptedAt !== null)
+          .filter(
+            r =>
+              !where.user || r.user.organizationId === where.user.organizationId
+          )
+          .map(r => ({ userId: r.userId }))
+    );
+
+    const res = await createApproval();
+
+    expect(res.status).toBe(200);
+    for (const step of createdSteps()) {
+      expect(step.assignedTo).toEqual(['owner-active']);
+    }
+  });
+
   it('assigns the submitter when the user has no organisation', async () => {
     mockGetEffectiveOrg.mockResolvedValue(null);
 

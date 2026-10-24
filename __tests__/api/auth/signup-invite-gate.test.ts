@@ -149,9 +149,10 @@ describe('POST /api/auth/signup — invite-only mode on', () => {
   });
 
   // Both requests read useCount 0 before either writes. The database row is
-  // modelled by `row`: a conditional claim only matches while useCount still
-  // equals the value in its where clause, as Postgres would.
-  it('lets only one of two racing signups consume a single-use code', async () => {
+  // modelled by `row`: a conditional claim only matches while its where clause
+  // still holds against the CURRENT row (useCount below maxUses, as Postgres
+  // would evaluate it), whatever the request read earlier.
+  function fakeInviteRow(maxUses: number) {
     const row = { id: 'code-1', useCount: 0 };
     mockInviteFindUnique.mockResolvedValue({
       id: 'code-1',
@@ -159,19 +160,51 @@ describe('POST /api/auth/signup — invite-only mode on', () => {
       isActive: true,
       expiresAt: null,
       useCount: 0,
-      maxUses: 1,
+      maxUses,
       email: null,
     });
     mockInviteUpdateMany.mockImplementation(
-      async ({ where }: { where: { id: string; useCount?: number } }) => {
+      async ({
+        where,
+      }: {
+        where: { id: string; useCount?: number | { lt: number } };
+      }) => {
         if (where.id !== row.id) return { count: 0 };
-        if (where.useCount !== undefined && where.useCount !== row.useCount) {
+        const u = where.useCount;
+        if (typeof u === 'number' && u !== row.useCount) return { count: 0 };
+        if (u && typeof u === 'object' && !(row.useCount < u.lt)) {
           return { count: 0 };
         }
         row.useCount += 1;
         return { count: 1 };
       }
     );
+    return row;
+  }
+
+  it('lets both of two racing signups consume a multi-use code that has uses left', async () => {
+    const row = fakeInviteRow(5);
+
+    const [a, b] = await Promise.all([
+      signup({
+        ...baseBody,
+        email: 'first@example.com',
+        inviteCode: 'SX-ABCDEF',
+      }),
+      signup({
+        ...baseBody,
+        email: 'second@example.com',
+        inviteCode: 'SX-ABCDEF',
+      }),
+    ]);
+
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(mockUserCreate).toHaveBeenCalledTimes(2);
+    expect(row.useCount).toBe(2);
+  });
+
+  it('lets only one of two racing signups consume a single-use code', async () => {
+    const row = fakeInviteRow(1);
 
     const [a, b] = await Promise.all([
       signup({

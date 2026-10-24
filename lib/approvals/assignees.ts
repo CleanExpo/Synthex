@@ -6,8 +6,8 @@
  * organisation, open and approve the request.
  *
  * Operators are the organisation's durable owners, read from the same two
- * signals issuer-rank.ts trusts: an active BusinessOwnership, or a
- * TeamMember whose role is 'owner'. With no organisation, or no operator on
+ * signals issuer-rank.ts trusts: an active BusinessOwnership, or an accepted
+ * TeamMember whose role is 'owner' and who is still linked to the organisation. With no organisation, or no operator on
  * record (a sole-operator org), the submitter is the assignee so the request
  * is never left with nobody able to clear it.
  */
@@ -28,6 +28,11 @@ export async function resolveApprovalAssignees(
       where: {
         organizationId,
         role: { equals: 'owner', mode: 'insensitive' },
+        // Removing a member only unlinks User.organizationId and leaves the
+        // TeamMember row, so a removed owner must not stay an assignee. Only
+        // accepted memberships of people still in this organisation count.
+        acceptedAt: { not: null },
+        user: { organizationId },
       },
       select: { userId: true },
     }),

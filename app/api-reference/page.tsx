@@ -343,8 +343,7 @@ console.log(content);
               Ready to Build?
             </h2>
             <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-              Get your API key and start building powerful integrations with
-              Synthex.
+              Tell the Unite-Group team what you want to build with Synthex.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/opportunity-map">

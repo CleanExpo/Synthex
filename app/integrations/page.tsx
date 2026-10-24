@@ -294,8 +294,8 @@ export default function IntegrationsPage() {
               Ready to connect everything?
             </h2>
             <p className="text-gray-400 mb-8">
-              Set up your integrations in minutes and start publishing
-              AI-powered content across all your channels.
+              Build an Opportunity Map, then talk to the Unite-Group team about
+              the channels you use.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link href="/opportunity-map">

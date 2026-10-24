@@ -1968,6 +1968,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Build a free Opportunity Map and the Unite-Group team will contact you about it.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "2124fda4"
+    },
+    {
       "text": "Building an audience before your product launches.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3083,6 +3088,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Get your API key and start building powerful integrations with Synthex.",
+      "file": "app/api-reference/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Glassmorphism",
       "file": "app/demo/DemoClient.tsx",
       "firstSeen": "base"
@@ -4083,6 +4093,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Paste your website URL and get real AI-generated content.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "Paste your website URL and get real AI-generated content in under 3 seconds.",
       "file": "app/features/ai-content/page.tsx",
       "firstSeen": "base"
@@ -4181,6 +4196,11 @@
       "text": "Platform-specific AI content 9",
       "file": "app/features/platforms/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "Platform-specific AI content Publish to your platforms today",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "9d979490"
     },
     {
       "text": "Platform | Synthex",
@@ -4376,6 +4396,11 @@
       "text": "Publish to all 9 platforms today",
       "file": "app/features/platforms/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "Publish to your platforms today",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "9d979490"
     },
     {
       "text": "Pull top-3 complaint reasons + percentages for general insurance",
@@ -4633,6 +4658,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "See Synthex write your content",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "See what Synthex drafts for you",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "Service Organization Control",
       "file": "app/security/page.tsx",
       "firstSeen": "base"
@@ -4645,6 +4680,11 @@
     {
       "text": "Setup time",
       "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Set up your integrations in minutes and start publishing AI-powered content across all your channels.",
+      "file": "app/integrations/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4886,6 +4926,11 @@
       "text": "Start with Synthex free → AI Content →",
       "file": "app/compare/hootsuite/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "Start with your website URL and approve your first draft.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "9d979490"
     },
     {
       "text": "Start your 14-day trial and see what Synthex can do for your local marketing — with the same transparent measurement we use on this page.",

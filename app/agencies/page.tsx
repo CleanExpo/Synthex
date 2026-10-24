@@ -75,7 +75,7 @@ const FAQS = [
   },
   {
     q: 'How do we start?',
-    a: "Synthex is Unite-Group's in-house marketing agency, so there is no sign-up. Build a free Opportunity Map and the Unite-Group team will contact you about it.",
+    a: "Synthex is Unite-Group's in-house marketing agency, so there is no sign-up. Build a free Opportunity Map. The Unite-Group team follows up only if you choose to share it, add your contact details and confirm you are happy to be contacted.",
   },
 ];
 

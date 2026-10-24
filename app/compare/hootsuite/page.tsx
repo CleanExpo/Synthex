@@ -167,10 +167,11 @@ export default function VsHootsuitePage() {
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-white mb-4">
-            See what Synthex drafts for you
+            See where Synthex could grow your reach
           </h2>
           <p className="text-white/50 mb-8">
-            Start with your website URL and approve your first draft.
+            Build a free Opportunity Map from your website URL, then choose
+            whether to share it with the Unite-Group team.
           </p>
           <Link
             href="/opportunity-map"

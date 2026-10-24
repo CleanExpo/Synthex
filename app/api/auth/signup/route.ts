@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       let validatedInvite: {
         id: string;
         code: string;
-        useCount: number;
+        maxUses: number;
       } | null = null;
 
       if (isInviteOnlyMode() && !inviteCode) {
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         validatedInvite = {
           id: invite.id,
           code: invite.code,
-          useCount: invite.useCount,
+          maxUses: invite.maxUses,
         };
       }
 
@@ -164,17 +164,19 @@ export async function POST(request: NextRequest) {
 
       try {
         // The invite is consumed in the same transaction as the account. The
-        // claim only matches while useCount is still the value read above, so
-        // two concurrent signups on a single-use code cannot both succeed, and
-        // a failed claim rolls the account back instead of leaving the code
-        // reusable.
+        // claim enforces the limit itself (useCount still below maxUses, code
+        // not expired), so two concurrent signups on a single-use code cannot
+        // both succeed while a multi-use code is not refused to a signup that
+        // still has a use left, and a failed claim rolls the account back
+        // instead of leaving the code reusable.
         const createdUser = await prisma.$transaction(async tx => {
           if (validatedInvite) {
             const claimed = await tx.inviteCode.updateMany({
               where: {
                 id: validatedInvite.id,
                 isActive: true,
-                useCount: validatedInvite.useCount,
+                useCount: { lt: validatedInvite.maxUses },
+                OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
               },
               data: { useCount: { increment: 1 }, usedAt: new Date() },
             });
