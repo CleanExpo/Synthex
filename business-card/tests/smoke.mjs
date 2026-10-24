@@ -376,7 +376,7 @@ try {
     const vc = await page.getAttribute('#pass-qr', 'data-vcard');
     check(
       vc.startsWith('BEGIN:VCARD') &&
-        vc.includes('EMAIL:airestoreassist@gmail.com') &&
+        vc.includes('EMAIL:contact@unite-group.in') &&
         vc.includes('NOTE:Met at Melbourne ') &&
         !vc.includes('TEL'),
       'offline contact code holds the contact and where you met'
