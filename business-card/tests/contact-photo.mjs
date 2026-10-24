@@ -3,6 +3,7 @@
 // Run from business-card/: node tests/contact-photo.mjs
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 
 const dir = '.test-tmp/contact-photo';
@@ -122,6 +123,74 @@ try {
 } finally {
   fs.rmSync('brand-kits/media/zz-test-alias.jpg');
   fs.rmSync('brand-kits/media/zz-test-copy.jpg');
+}
+
+// an edited copy (one byte added) no longer matches any file, so only approval can make a picture the owner's
+fs.writeFileSync(
+  'brand-kits/media/zz-test-edited.jpg',
+  Buffer.concat([
+    fs.readFileSync('brand-kits/media/margot-explainer-poster.jpg'),
+    Buffer.from([0]),
+  ])
+);
+fs.copyFileSync(
+  'brand-kits/media/app-icon-192.png',
+  'brand-kits/media/zz-test-owner.png'
+);
+const sha = f =>
+  createHash('sha256')
+    .update(fs.readFileSync('brand-kits/media/' + f))
+    .digest('hex');
+try {
+  refused(
+    'edited-as-owner',
+    { kind: 'owner', file: media('zz-test-edited.jpg') },
+    /owner photo needs approved\.sha256/
+  );
+  refused(
+    'edited-as-logo',
+    { kind: 'logo', file: media('zz-test-edited.jpg') },
+    /one of the brand's own logo files/
+  );
+  refused(
+    'approval-for-other-bytes',
+    {
+      kind: 'owner',
+      file: media('zz-test-edited.jpg'),
+      approved: {
+        sha256: sha('zz-test-owner.png'),
+        by: 'Phill',
+        date: '24/10/2026',
+      },
+    },
+    /owner photo needs approved\.sha256/
+  );
+  refused(
+    'approval-without-who',
+    {
+      kind: 'owner',
+      file: media('zz-test-owner.png'),
+      approved: { sha256: sha('zz-test-owner.png') },
+    },
+    /owner photo needs approved\.sha256/
+  );
+  const owner = build('owner', {
+    kind: 'owner',
+    file: media('zz-test-owner.png'),
+    approved: {
+      sha256: sha('zz-test-owner.png'),
+      by: 'Phill',
+      date: '24/10/2026',
+    },
+  });
+  assert.equal(
+    owner.status,
+    0,
+    'an approved owner photo builds: ' + owner.stderr
+  );
+} finally {
+  fs.rmSync('brand-kits/media/zz-test-edited.jpg');
+  fs.rmSync('brand-kits/media/zz-test-owner.png');
 }
 
 // the good case: the owner's logo, the same bytes in the served contact and in the page's own Save

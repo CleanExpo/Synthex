@@ -152,6 +152,25 @@ def contact_photo(person):
     return kind[0], base64.b64encode(data).decode()
 
 
+def approved_contact_photo(kit, data):
+    """A picture is only the owner's if the kit says so in a way an edited copy cannot fake: a logo must be
+    byte-for-byte one of the brand's own logo files; an owner photo must carry the owner's approval of
+    exactly these bytes (approved.sha256, with who approved it and when)."""
+    cp = kit["person"]["contactPhoto"]
+    digest = hashlib.sha256(data).hexdigest()
+    brand = kit.get("brand") or {}
+    if cp["kind"] == "logo":
+        logos = [(brand.get("logo") or {}).get("file")] + list(((brand.get("appIcons") or {}).get("files") or {}).values())
+        for rel in filter(None, logos):
+            path = os.path.join(REPO, rel)
+            if os.path.isfile(path) and hashlib.sha256(open(path, "rb").read()).hexdigest() == digest:
+                return
+        sys.exit("contact photo: a logo must be one of the brand's own logo files (brand.logo or brand.appIcons)")
+    ok = cp.get("approved") or {}
+    if not (ok.get("sha256") == digest and str(ok.get("by") or "").strip() and str(ok.get("date") or "").strip()):
+        sys.exit("contact photo: an owner photo needs approved.sha256 of exactly this file, with approved.by and approved.date")
+
+
 def esc(s):
     """vCard text value: escape \\ ; , and turn line breaks into \\n so no value can start a new field."""
     s = str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
@@ -212,6 +231,7 @@ def main(card_path, kit_path, out):
         sys.exit("brand kit needs an id and person.name")
     os.makedirs(os.path.join(out, "media"), exist_ok=True)
     photo_type, photo = contact_photo(kit["person"])
+    approved_contact_photo(kit, base64.b64decode(photo))
     hosted = json.loads(json.dumps(kit))   # served as files next to index.html
     preview = json.loads(json.dumps(kit))  # self-contained for a claude.ai preview: media as data URIs
     # the page's own Save builds the same contact, so it carries the picture itself, not its file path
