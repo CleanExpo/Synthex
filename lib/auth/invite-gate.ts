@@ -94,18 +94,56 @@ export async function hasSelfProvisionEvidence(
   return hasInviteCodeEvidence(email, userId);
 }
 
+type InviteCodeRow = {
+  usedBy: string | null;
+  isActive: boolean;
+  expiresAt: Date | null;
+  maxUses: number;
+  useCount: number;
+};
+
+/**
+ * Invite-code evidence. A code this user already redeemed (usedBy = userId)
+ * always counts: it proves an existing invited user. A code locked to this
+ * email counts only while it could still be redeemed: active, not expired,
+ * uses left, and not consumed by a different user. Prisma cannot compare
+ * useCount with maxUses in a where clause, so the rows are judged here.
+ */
 async function hasInviteCodeEvidence(
   email: string,
   userId?: string
 ): Promise<boolean> {
-  const code = await prisma.inviteCode.findFirst({
+  const codes: InviteCodeRow[] = await prisma.inviteCode.findMany({
     where: {
       OR: [
         ...(userId ? [{ usedBy: userId }] : []),
-        { email: { equals: email, mode: 'insensitive' }, isActive: true },
+        { email: { equals: email, mode: 'insensitive' } },
       ],
     },
-    select: { id: true },
+    select: {
+      usedBy: true,
+      isActive: true,
+      expiresAt: true,
+      maxUses: true,
+      useCount: true,
+    },
   });
-  return Boolean(code);
+  const now = Date.now();
+  return codes.some(
+    c =>
+      (userId !== undefined && c.usedBy === userId) ||
+      isRedeemable(c, userId, now)
+  );
+}
+
+function isRedeemable(
+  c: InviteCodeRow,
+  userId: string | undefined,
+  now: number
+): boolean {
+  if (!c.isActive) return false;
+  if (c.expiresAt && c.expiresAt.getTime() <= now) return false;
+  if (c.useCount >= c.maxUses) return false;
+  if (c.usedBy && c.usedBy !== userId) return false;
+  return true;
 }

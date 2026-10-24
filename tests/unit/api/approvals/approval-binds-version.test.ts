@@ -110,6 +110,10 @@ const mockPrisma: Record<string, any> = {
     }),
   },
   workflowTemplate: { findUnique: async () => null },
+  // resolveApprovalAssignees (lib/approvals/assignees): the test reviewer is the
+  // org's operator, so the steps are assigned to them and the binding is tested.
+  businessOwnership: { findMany: async () => [{ ownerId: 'reviewer-1' }] },
+  teamMember: { findMany: async () => [] },
   auditLog: {
     create: async ({ data }: { data: Row }) => {
       mockDb.audit.push(mockClone(data));

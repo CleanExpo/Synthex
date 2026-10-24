@@ -115,9 +115,9 @@ export default function ContactPage() {
 
         <PublicPageCtaBand
           eyebrow="Not ready to request access?"
-          title="Review the pilot path first."
-          href="/pricing"
-          label="View pilot access"
+          title="Start with a free Opportunity Map."
+          href="/opportunity-map"
+          label="Build the free Opportunity Map"
         />
 
         <PublicGovernanceStrip />

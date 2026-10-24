@@ -234,16 +234,14 @@ export const PAGE_METADATA = {
   }),
 
   pricing: generateProductMetadata({
-    title: 'Pricing',
+    title: 'Work with Synthex',
     description:
-      'AI marketing with your own API keys. Enterprise plans with custom rates available.',
+      "Synthex is Unite-Group's in-house marketing agency. Start with a free Opportunity Map and the Unite-Group team will pick it up from there.",
     path: '/pricing',
     keywords: [
-      'pricing plans',
-      'BYOK',
-      'bring your own API keys',
-      'affordable AI',
-      'custom rates',
+      'Unite-Group marketing agency',
+      'marketing opportunity map',
+      'in-house marketing agency',
     ],
   }),
 

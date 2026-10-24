@@ -15208,7 +15208,7 @@
         "x-synthex-auth-exempt-prefix": "app/api/auth/",
         "x-synthex-schema": "resolved",
         "x-synthex-success": "unresolved",
-        "x-synthex-success-reason": "returns variable response"
+        "x-synthex-success-reason": "returns NullKeyword, variable response, variable user"
       },
       "x-synthex-route-file": "app/api/auth/signup/route.ts"
     },

@@ -97,10 +97,10 @@ export default function VsHootsuitePage() {
             to your connected platforms.
           </p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
           >
-            Try Synthex free — no card required
+            Talk to us
           </Link>
         </div>
       </section>
@@ -167,16 +167,17 @@ export default function VsHootsuitePage() {
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-white mb-4">
-            See what Synthex drafts for you
+            See where Synthex could grow your reach
           </h2>
           <p className="text-white/50 mb-8">
-            Start with your website URL and approve your first draft.
+            Build a free Opportunity Map from your website URL, then choose
+            whether to share it with the Unite-Group team.
           </p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-10 py-4 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-base"
           >
-            Start with Synthex free →
+            Talk to us →
           </Link>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm text-white/30">
             <Link
@@ -192,10 +193,10 @@ export default function VsHootsuitePage() {
               Platforms →
             </Link>
             <Link
-              href="/pricing"
+              href="/opportunity-map"
               className="hover:text-orange-400 transition-colors"
             >
-              Pricing →
+              Talk to us →
             </Link>
           </div>
         </div>

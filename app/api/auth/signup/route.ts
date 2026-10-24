@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { authStrict } from '@/lib/middleware/api-rate-limit';
 import { logger } from '@/lib/logger';
 import { email as emailService } from '@/lib/email/index';
+import { isInviteOnlyMode } from '@/lib/auth/invite-gate';
 
 // Input validation schema
 const signupSchema = z.object({
@@ -72,9 +73,25 @@ export async function POST(request: NextRequest) {
       const { name, email, password, timezone, inviteCode } =
         validationResult.data;
 
-      // Invite codes are optional. If one is supplied, it must be valid
-      // (exists, active, not expired, not maxed out, email match).
-      let validatedInvite: { id: string; code: string } | null = null;
+      // Invite-only gate (fail closed). Unless NEXT_PUBLIC_INVITE_ONLY_MODE is
+      // the literal 'false' (unset keeps the gate on), an account needs a
+      // valid invite code. A pending TeamInvitation
+      // is NOT accepted here: it carries no secret, so knowing an invitee's
+      // email would let anyone claim the account with their own password.
+      // With the gate off, codes are optional. A supplied code must always be
+      // valid (exists, active, not expired, not maxed out, email match).
+      let validatedInvite: {
+        id: string;
+        code: string;
+        maxUses: number;
+      } | null = null;
+
+      if (isInviteOnlyMode() && !inviteCode) {
+        return NextResponse.json(
+          { error: 'An invite code is required to create an account.' },
+          { status: 400 }
+        );
+      }
 
       if (inviteCode) {
         const invite = await prisma.inviteCode.findUnique({
@@ -123,7 +140,11 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        validatedInvite = { id: invite.id, code: invite.code };
+        validatedInvite = {
+          id: invite.id,
+          code: invite.code,
+          maxUses: invite.maxUses,
+        };
       }
 
       const existingByEmail = await prisma.user.findFirst({
@@ -142,36 +163,53 @@ export async function POST(request: NextRequest) {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       try {
-        const createdUser = await prisma.user.create({
-          data: {
-            email,
-            password: hashedPassword,
-            name: name || email.split('@')[0],
-            authProvider: 'email',
-            conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
-            emailVerified: true,
-            ...(timezone && { timezone }),
-          },
+        // The invite is consumed in the same transaction as the account. The
+        // claim enforces the limit itself (useCount still below maxUses, code
+        // not expired), so two concurrent signups on a single-use code cannot
+        // both succeed while a multi-use code is not refused to a signup that
+        // still has a use left, and a failed claim rolls the account back
+        // instead of leaving the code reusable.
+        const createdUser = await prisma.$transaction(async tx => {
+          if (validatedInvite) {
+            const claimed = await tx.inviteCode.updateMany({
+              where: {
+                id: validatedInvite.id,
+                isActive: true,
+                useCount: { lt: validatedInvite.maxUses },
+                OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+              },
+              data: { useCount: { increment: 1 }, usedAt: new Date() },
+            });
+            if (claimed.count !== 1) return null;
+          }
+
+          const user = await tx.user.create({
+            data: {
+              email,
+              password: hashedPassword,
+              name: name || email.split('@')[0],
+              authProvider: 'email',
+              conversionCopyVariant: Math.random() < 0.5 ? 'win' : 'control',
+              emailVerified: true,
+              ...(timezone && { timezone }),
+            },
+          });
+
+          if (validatedInvite) {
+            await tx.inviteCode.update({
+              where: { id: validatedInvite.id },
+              data: { usedBy: user.id },
+            });
+          }
+
+          return user;
         });
 
-        // Mark invite code as used (if invite-only mode)
-        if (validatedInvite) {
-          try {
-            await prisma.inviteCode.update({
-              where: { id: validatedInvite.id },
-              data: {
-                useCount: { increment: 1 },
-                usedBy: createdUser.id,
-                usedAt: new Date(),
-              },
-            });
-          } catch (inviteError) {
-            logger.error(
-              '[SIGNUP] Failed to mark invite code as used:',
-              inviteError
-            );
-            // Non-blocking — user already created, don't fail the signup
-          }
+        if (!createdUser) {
+          return NextResponse.json(
+            { error: 'This invite code has already been used.' },
+            { status: 400 }
+          );
         }
 
         await prisma.auditLog.create({

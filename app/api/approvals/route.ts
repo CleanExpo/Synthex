@@ -20,6 +20,7 @@ import { getUserIdFromRequestOrCookies } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business';
 import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
+import { resolveApprovalAssignees } from '@/lib/approvals/assignees';
 import { bindPostFingerprint } from '@/lib/approvals/content-fingerprint';
 
 // =============================================================================
@@ -97,7 +98,7 @@ const createApprovalSchema = z.object({
 /**
  * Create default approval steps (2-step workflow)
  */
-function createDefaultSteps(): ApprovalStep[] {
+function createDefaultSteps(assignees: string[]): ApprovalStep[] {
   const now = new Date().toISOString();
   return [
     {
@@ -106,7 +107,7 @@ function createDefaultSteps(): ApprovalStep[] {
       type: 'review',
       name: 'Initial Review',
       status: 'pending',
-      assignedTo: ['*'], // Anyone can approve
+      assignedTo: [...assignees],
       comments: [],
       requiredApprovals: 1,
       currentApprovals: 0,
@@ -119,7 +120,7 @@ function createDefaultSteps(): ApprovalStep[] {
       type: 'final_approval',
       name: 'Final Approval',
       status: 'pending',
-      assignedTo: ['*'],
+      assignedTo: [...assignees],
       comments: [],
       requiredApprovals: 1,
       currentApprovals: 0,
@@ -140,7 +141,8 @@ function createStepsFromTemplate(
     assigneeRole?: string;
     requiredApprovals?: number;
     isOptional?: boolean;
-  }>
+  }>,
+  assignees: string[]
 ): ApprovalStep[] {
   const now = new Date().toISOString();
   return templateSteps.map((step, index) => ({
@@ -149,7 +151,7 @@ function createStepsFromTemplate(
     type: (step.type as ApprovalStep['type']) || 'review',
     name: step.name,
     status: 'pending' as const,
-    assignedTo: ['*'], // Would resolve by role in full implementation
+    assignedTo: [...assignees],
     comments: [],
     requiredApprovals: step.requiredApprovals ?? 1,
     currentApprovals: 0,
@@ -387,6 +389,9 @@ export async function POST(request: NextRequest) {
         ? await getEffectiveOrganizationId(userId)
         : null;
 
+      // Steps go to named operators, never '*' (which any user could act on).
+      const assignees = await resolveApprovalAssignees(organizationId, userId);
+
       // Determine steps - from template or default
       let steps: ApprovalStep[];
 
@@ -404,13 +409,14 @@ export async function POST(request: NextRequest) {
               assigneeRole?: string;
               requiredApprovals?: number;
               isOptional?: boolean;
-            }>
+            }>,
+            assignees
           );
         } else {
-          steps = createDefaultSteps();
+          steps = createDefaultSteps(assignees);
         }
       } else {
-        steps = createDefaultSteps();
+        steps = createDefaultSteps(assignees);
       }
 
       // Bind a post approval to the version being submitted (text, images,

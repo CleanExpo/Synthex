@@ -95,7 +95,7 @@ export default function FeaturesPage() {
             </Link>
           </Button>
           <Button asChild variant="glass-secondary" size="lg">
-            <Link href="/pricing">Request a pilot</Link>
+            <Link href="/opportunity-map">Talk to us</Link>
           </Button>
         </PublicPageHero>
 
@@ -120,8 +120,8 @@ export default function FeaturesPage() {
         <PublicPageCtaBand
           title="Built for controlled launch, then scale."
           description="The interface stays simple while the work behind it stays serious: every card can carry evidence, approval state, production cost and next action."
-          href="/pricing"
-          label="Request a pilot"
+          href="/opportunity-map"
+          label="Talk to us"
         />
       </PublicPageFrame>
     </SiteShell>

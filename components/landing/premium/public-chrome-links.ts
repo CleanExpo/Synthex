@@ -22,7 +22,6 @@ export const footerLinkColumns = [
       { href: '/opportunity-map', label: 'Free map' },
       { href: '/features', label: 'Product' },
       { href: '/security', label: 'Security' },
-      { href: '/pricing', label: 'Request a pilot' },
     ],
   },
   {

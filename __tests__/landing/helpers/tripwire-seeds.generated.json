@@ -408,6 +408,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "•••• •••• •••• ••••",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
+      "text": "•••• •••• •••• •••• Expires 12/25",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "•••• •••• •••• 4242",
       "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
@@ -530,6 +540,16 @@
     {
       "text": "$24,500 Active Users",
       "file": "app/design-system/DesignSystemClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "$249",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "$249 /month",
+      "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -940,6 +960,11 @@
     {
       "text": "Three lessons from implementing...",
       "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Three phases.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -1478,8 +1503,28 @@
       "firstSeen": "base"
     },
     {
+      "text": "Add Payment Method",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Advanced analytics",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "AFCA FY24 Annual Review Pull top-3 complaint reasons + percentages for general insurance",
       "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "affordable AI",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "affordable AI custom rates",
+      "file": "lib/seo/metadata.ts",
       "firstSeen": "base"
     },
     {
@@ -1556,6 +1601,11 @@
       "text": "AI marketing time saving",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "AI marketing with your own API keys.",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "9d979490"
     },
     {
       "text": "AI Overviews answer 60%+ of US search queries and CTR drops up to 65% where they appear.",
@@ -1700,6 +1750,11 @@
     {
       "text": "Approval needed ≤15 min each",
       "file": "app/quick-access-preview/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Approve clearly.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -1913,6 +1968,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Build a free Opportunity Map and the Unite-Group team will contact you about it.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "2124fda4"
+    },
+    {
       "text": "Building an audience before your product launches.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -1948,6 +2008,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Business and product intake",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Businesses using AI marketing automation save an average of ten hours per week on content creation.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -1973,6 +2038,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "BYOK",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "BYOK bring your own API keys",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "BYOK shared module (cross-brand) 5 templates × 4 brands = 20 renders · 5× efficiency multiplier",
       "file": "lib/quick-access/items.ts",
       "firstSeen": "base"
@@ -1980,6 +2055,21 @@
     {
       "text": "California Consumer Privacy Act",
       "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Campaign angles and channel plan",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Cancel Subscription",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Can Synthex publish directly to social platforms?",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -2080,6 +2170,11 @@
     {
       "text": "Certified GDPR",
       "file": "app/security/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Change Plan",
+      "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -2243,6 +2338,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "Connect your platforms free →",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
+      "text": "Connect your platforms free → Platform-specific AI content",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "Consistency, not size, is what drives Instagram growth.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -2343,6 +2448,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "Create an account to plan and approve posts",
+      "file": "components/demo/CaptionDemo.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
+      "text": "Create my workspace",
+      "file": "components/intentscape/IntentScapeProductTour.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Creating content with Synthex takes seconds, not hours.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -2363,8 +2478,18 @@
       "firstSeen": "base"
     },
     {
+      "text": "Current Plan",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "customer relationships, and growth.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "custom rates",
+      "file": "lib/seo/metadata.ts",
       "firstSeen": "base"
     },
     {
@@ -2470,6 +2595,11 @@
     {
       "text": "Donor base grew by two hundred and sixty percent.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Drafts, boards and creative packets can be prepared in sandbox, but public output requires the configured approval path.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -2583,6 +2713,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Enterprise plans with custom rates available.",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "Every client cited LinkedIn as how they discovered and chose to trust this consultant.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -2620,6 +2755,16 @@
     {
       "text": "Example: \"Join 10,000 businesses using Synthex\" is social proof.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Expires 12/25",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Expires 12/25 Update",
+      "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -2913,8 +3058,38 @@
       "firstSeen": "base"
     },
     {
+      "text": "Get API Key",
+      "file": "app/api-reference/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Get API Key API Endpoints",
+      "file": "app/api-reference/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Get API Key Read Documentation",
+      "file": "app/api-reference/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Get Started Free",
+      "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Get Started Free 9 Platforms",
       "file": "app/integrations/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Get Started SYNTHEX",
+      "file": "components/marketing/MarketingLayout.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Get your API key and start building powerful integrations with Synthex.",
+      "file": "app/api-reference/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3108,6 +3283,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "How pilot access works",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "How Synthex protects your data — encryption, access controls, compliance, and security practices.",
       "file": "app/security/page.tsx",
       "firstSeen": "base"
@@ -3120,6 +3300,11 @@
     {
       "text": "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(impressions,reach,engagement)",
       "file": "lib/social/instagram-service.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ideation covers campaign angles, website direction, lead magnets, thumbnails, brand planning and email campaign concepts before production begins.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3283,6 +3468,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Is there a free trial?",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Is your business on it?",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3296,6 +3486,11 @@
       "text": "It follows that the usage is billed at the provider&apos;s own rates with nothing added on top, and the job data goes to an account the business controls, not one held on its behalf.",
       "file": "app/(landing)/restoreassist/pricing/page.tsx",
       "firstSeen": "74908118"
+    },
+    {
+      "text": "It is a controlled path: plan the campaign, approve the assets, then move into production with clear gates.",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
     },
     {
       "text": "Join 5,000+ Australian businesses posting to 9 platforms automatically.",
@@ -3463,6 +3658,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Manage your payment information",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Manage your payment information •••• •••• •••• 4242",
       "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
@@ -3508,6 +3708,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Metered production",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Mission-driven storytelling is the most powerful fundraising tool available.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3525,6 +3730,11 @@
     {
       "text": "Mon",
       "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Monthly ideation package",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3555,6 +3765,11 @@
     {
       "text": "Motion — sweep signature frames @ 30fps ·",
       "file": "app/dashboard/admin/vision-board/ra-launch-2026-05/panels/MotionPanel.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Move selected cards into website, lead magnet, thumbnail, email, post or video production.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3633,6 +3848,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Next campaign cards",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "No \"hire me\" posts.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -3695,6 +3915,11 @@
     {
       "text": "No sales posts in the first four weeks.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "No surprise production.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3868,6 +4093,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Paste your website URL and get real AI-generated content.",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "Paste your website URL and get real AI-generated content in under 3 seconds.",
       "file": "app/features/ai-content/page.tsx",
       "firstSeen": "base"
@@ -3881,6 +4111,11 @@
       "text": "Paths below are repository paths.",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
+    },
+    {
+      "text": "Payment Method",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
     },
     {
       "text": "Peak Time",
@@ -3898,6 +4133,31 @@
       "firstSeen": "base"
     },
     {
+      "text": "Perfect for growing businesses",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Perfect for growing businesses $249",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Performance review",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pilot Access | Synthex",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pilot access is not a confusing SaaS menu.",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Pilot for the entire training-video system · 4 scenes · ~45 min recording time",
       "file": "lib/quick-access/items.ts",
       "firstSeen": "base"
@@ -3908,8 +4168,23 @@
       "firstSeen": "base"
     },
     {
+      "text": "Pilot questions",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pilot scoping",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "pilot unlocks 39 more videos",
       "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Plan first",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -3921,6 +4196,11 @@
       "text": "Platform-specific AI content 9",
       "file": "app/features/platforms/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "Platform-specific AI content Publish to your platforms today",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "9d979490"
     },
     {
       "text": "Platform | Synthex",
@@ -4023,8 +4303,38 @@
       "firstSeen": "base"
     },
     {
+      "text": "Pricing →",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pricing comparison",
+      "file": "app/support/SupportClient.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Pricing entry point",
       "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Pricing is scoped around business context, approvals, provider gates and production responsibility.",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "pricing plans",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "pricing plans BYOK",
+      "file": "lib/seo/metadata.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Priority support",
+      "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4053,13 +4363,28 @@
       "firstSeen": "base"
     },
     {
+      "text": "Pro Plan",
+      "file": "app/demo/settings/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "prospects who had already read their content and considered them the obvious expert.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
     },
     {
+      "text": "Provider-gated media work",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "published 2",
       "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Publishing remains approval-gated.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4071,6 +4396,11 @@
       "text": "Publish to all 9 platforms today",
       "file": "app/features/platforms/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "Publish to your platforms today",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "9d979490"
     },
     {
       "text": "Pull top-3 complaint reasons + percentages for general insurance",
@@ -4140,6 +4470,11 @@
     {
       "text": "Recommendations",
       "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Recurring support opens after the approval, publishing and reporting path is working cleanly.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4213,6 +4548,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "Review the pilot path first.",
+      "file": "app/contact/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Risks, gates and next decisions",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "ROI marketing stats",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -4255,6 +4600,16 @@
     {
       "text": "saving $2,000–5,000 per claim.",
       "file": "lib/vision-board/nir-storyboard.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Scale only what works",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Scale when the gates are proven",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4303,6 +4658,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "See Synthex write your content",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "See what Synthex drafts for you",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "Service Organization Control",
       "file": "app/security/page.tsx",
       "firstSeen": "base"
@@ -4315,6 +4680,11 @@
     {
       "text": "Setup time",
       "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Set up your integrations in minutes and start publishing AI-powered content across all your channels.",
+      "file": "app/integrations/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4473,8 +4843,43 @@
       "firstSeen": "base"
     },
     {
+      "text": "Start free — no card required",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start free →",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start free → AI Content →",
+      "file": "app/features/platforms/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Start free → All 9 platforms →",
       "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start free and upgrade when you're ready.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start free today →",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start free today → AI Content →",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start Free Trial",
+      "file": "app/integrations/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4485,6 +4890,11 @@
     {
       "text": "Start in the AI Content Studio to generate copy, images, and video briefs in minutes.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start small.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4505,6 +4915,26 @@
     {
       "text": "Start with Synthex at synthex dot social.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start with Synthex free →",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start with Synthex free → AI Content →",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Start with your website URL and approve your first draft.",
+      "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
+      "text": "Start your 14-day trial and see what Synthex can do for your local marketing — with the same transparent measurement we use on this page.",
+      "file": "app/benchmark/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -4633,6 +5063,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Storyboard and asset briefs",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "streaming deepseek/deepseek-v4-flash",
       "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
@@ -4758,6 +5193,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Synthex is currently being prepared as a controlled marketing command system.",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Synthex is easiest to understand as five steps: capture the idea, ground the plan, choose assets, approve production and learn from the outcome.",
       "file": "app/features/page.tsx",
       "firstSeen": "base"
@@ -4778,6 +5218,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Synthex pilot access for evidence-backed marketing command workflows, campaign planning, Gen Media and approval-gated execution.",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Synthex researches different explanations, shows three directions and waits for you to choose.",
       "file": "components/intentscape/IntentScapeProductTour.tsx",
       "firstSeen": "base"
@@ -4790,6 +5235,11 @@
     {
       "text": "Synthex solves that problem automatically at synthex dot social.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Synthex starts by turning your business context, ideas and channels into a clear campaign card set.",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -5188,6 +5638,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "The system checks evidence, consent, licensing, brand fit, provider readiness and human approval before any production or spend path is opened.",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "The Tuesday special became booked out every week within two months.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -5263,8 +5718,18 @@
       "firstSeen": "base"
     },
     {
+      "text": "Try it free",
+      "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "9d979490"
+    },
+    {
       "text": "Try it free — see your content in 3 seconds",
       "file": "app/features/ai-content/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Try Synthex free — no card required",
+      "file": "app/compare/hootsuite/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -5330,6 +5795,11 @@
     {
       "text": "Under 60 seconds.",
       "file": "app/compare/hootsuite/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Unlimited social accounts",
+      "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -5468,6 +5938,21 @@
       "firstSeen": "base"
     },
     {
+      "text": "View Full Docs Get API Key",
+      "file": "app/api-reference/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "View pilot access",
+      "file": "app/contact/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "View Pricing",
+      "file": "app/case-studies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "was promoted across all platforms with daily countdown content.",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
@@ -5508,8 +5993,18 @@
       "firstSeen": "base"
     },
     {
+      "text": "What happens before paid media or Gen Media production?",
+      "file": "app/pricing/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "What if you could schedule an entire month of social media content in under thirty minutes?",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "What is included in ideation?",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -5530,6 +6025,11 @@
     {
       "text": "When each trade files its own layout, an adjuster reads fifty versions of the same job.",
       "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Why does this page not show cheap self-serve SaaS tiers?",
+      "file": "app/pricing/page.tsx",
       "firstSeen": "base"
     },
     {
@@ -5568,6 +6068,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Yes — no credit card required.",
+      "file": "app/agencies/page.tsx",
+      "firstSeen": "base"
+    },
+    {
       "text": "Yes, we use enterprise-grade encryption for all data.",
       "file": "app/support/SupportClient.tsx",
       "firstSeen": "base"
@@ -5575,6 +6080,11 @@
     {
       "text": "Yet most small businesses post inconsistently and see minimal results.",
       "file": "lib/remotion/educational-content.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "You're currently on the Pro plan",
+      "file": "app/demo/settings/page.tsx",
       "firstSeen": "base"
     },
     {

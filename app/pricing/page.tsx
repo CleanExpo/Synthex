@@ -1,12 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  ArrowRight,
-  CheckCircle2,
-  ImageIcon,
-  ListTodo,
-  Shield,
-} from '@/components/icons';
+import { ArrowRight, ListTodo, Mail, Shield } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   PublicGovernanceStrip,
@@ -20,72 +14,59 @@ import { PublicPageCard } from '@/components/landing/premium/public-page-card';
 import { SiteShell } from '@/components/landing/public-v2';
 import { RouteIdentity } from '@/components/system/RouteIdentity';
 
+/**
+ * Kept at its old address so existing links still land somewhere useful.
+ * Synthex is Unite-Group's in-house marketing agency (FD-8): it has no price
+ * list and no self-serve sign-up. Enquiries go to the Unite-Group CRM through
+ * the Opportunity Map handoff (app/api/opportunity-map/handoff/route.ts).
+ */
 export const metadata: Metadata = {
-  title: 'Pilot Access | Synthex',
+  title: 'Work with Synthex | Synthex',
   description:
-    'Synthex pilot access for evidence-backed marketing command workflows, campaign planning, Gen Media and approval-gated execution.',
+    "Synthex is Unite-Group's in-house marketing agency. Start with a free Opportunity Map and the Unite-Group team will pick it up from there.",
 };
 
 const faqs = [
   {
-    question: 'Why does this page not show cheap self-serve SaaS tiers?',
+    question: 'Can I sign up to Synthex myself?',
     answer:
-      'Synthex is currently being prepared as a controlled marketing command system. Pricing is scoped around business context, approvals, provider gates and production responsibility.',
+      "No. Synthex is Unite-Group's in-house marketing agency, run by the Unite-Group team. Logins are for that team only.",
   },
   {
-    question: 'Can Synthex publish directly to social platforms?',
+    question: 'How do I talk to the team?',
     answer:
-      'Publishing remains approval-gated. Drafts, boards and creative packets can be prepared in sandbox, but public output requires the configured approval path.',
-  },
-  {
-    question: 'What is included in ideation?',
-    answer:
-      'Ideation covers campaign angles, website direction, lead magnets, thumbnails, brand planning and email campaign concepts before production begins.',
-  },
-  {
-    question: 'What happens before paid media or Gen Media production?',
-    answer:
-      'The system checks evidence, consent, licensing, brand fit, provider readiness and human approval before any production or spend path is opened.',
+      'Build a free Opportunity Map and choose to be contacted about it. Your details and the map go to the Unite-Group team together, so the first conversation starts from what the map found.',
   },
 ];
 
-const pilotSteps = [
+const steps = [
   {
     icon: ListTodo,
-    eyebrow: 'Pilot scoping',
-    title: 'Plan first',
-    copy: 'Synthex starts by turning your business context, ideas and channels into a clear campaign card set.',
-    points: [
-      'Business and product intake',
-      'Campaign angles and channel plan',
-      'Risks, gates and next decisions',
-    ],
+    eyebrow: 'Step one',
+    title: 'Build the free map',
+    copy: 'Give the Opportunity Map your website and a little context. It returns ranked growth directions with the evidence behind them.',
+    points: ['No login', 'No auto-publish', 'Takes a few minutes'],
   },
   {
-    icon: ImageIcon,
-    eyebrow: 'Metered production',
-    title: 'Produce only what is approved',
-    copy: 'Move selected cards into website, lead magnet, thumbnail, email, post or video production.',
+    icon: Mail,
+    eyebrow: 'Step two',
+    title: 'Ask to be contacted',
+    copy: 'If the map is useful, tick the consent box. The map and your contact details go to the Unite-Group team.',
     points: [
-      'Storyboard and asset briefs',
-      'Provider-gated media work',
-      'Human approval before output',
+      'You choose whether to share',
+      'One hand-off, no repeat discovery',
     ],
   },
   {
     icon: Shield,
-    eyebrow: 'Scoped retainer',
-    title: 'Scale when the gates are proven',
-    copy: 'Recurring support opens after the approval, publishing and reporting path is working cleanly.',
-    points: [
-      'Monthly ideation package',
-      'Performance review',
-      'Next campaign cards',
-    ],
+    eyebrow: 'Step three',
+    title: 'The team takes it from there',
+    copy: 'Unite-Group operators run the marketing work in Synthex, with human approval before anything is published.',
+    points: ['Approval before publishing', 'Evidence kept with each decision'],
   },
 ];
 
-function PricingFAQSchema() {
+function WorkWithUsFaqSchema() {
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -107,31 +88,32 @@ function PricingFAQSchema() {
   );
 }
 
-export default function PricingPage() {
+export default function WorkWithUsPage() {
   return (
     <SiteShell>
       <RouteIdentity route="/pricing" />
-      <PricingFAQSchema />
+      <WorkWithUsFaqSchema />
       <PublicPageFrame>
         <PublicPageHero
-          eyebrow="Pilot access"
+          eyebrow="Work with Synthex"
           title={
             <>
-              Start small. Approve clearly.{' '}
-              <PublicGradientText>Scale only what works</PublicGradientText>.
+              Synthex is Unite-Group&apos;s{' '}
+              <PublicGradientText>in-house marketing agency</PublicGradientText>
+              .
             </>
           }
-          description="Pilot access is not a confusing SaaS menu. It is a controlled path: plan the campaign, approve the assets, then move into production with clear gates."
+          description="There is nothing to buy and no account to create. Talk to the Unite-Group team, starting with a free Opportunity Map."
         />
 
         <PublicPageSection
           className="bg-sx-bg-primary"
           gradientVariant="mid"
-          eyebrow="How pilot access works"
-          title="Three phases. No surprise production."
+          eyebrow="How to talk to us"
+          title="Three steps from a map to a conversation."
         >
           <div className="grid gap-4 lg:grid-cols-3">
-            {pilotSteps.map((step, index) => (
+            {steps.map((step, index) => (
               <PublicPageCard key={step.title} {...step} index={index} />
             ))}
           </div>
@@ -152,7 +134,7 @@ export default function PricingPage() {
 
         <PublicGovernanceStrip />
 
-        <PublicPageFaq title="Pilot questions" items={faqs} />
+        <PublicPageFaq title="Common questions" items={faqs} />
       </PublicPageFrame>
     </SiteShell>
   );
