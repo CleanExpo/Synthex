@@ -76,7 +76,9 @@ import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
 import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
 import {
   type Ga4AdminConsent,
+  type Ga4AdminGrant,
   buildGa4AdminGrant,
+  readGa4AdminGrant,
 } from '@/lib/google/ga4-admin-consent';
 
 // =============================================================================
@@ -940,6 +942,32 @@ export async function GET(
           );
         }
 
+        // A plain reconnect (no new consent) must not erase the grant already
+        // recorded on this organisation's connection: persistence replaces the
+        // whole metadata blob. Carry it forward only while the stored
+        // credential is untouched (Google sent no new refresh token), the same
+        // person is reconnecting, and Google still reports analytics.edit.
+        let carriedGa4AdminGrant: Ga4AdminGrant | null = null;
+        if (
+          platform === 'googleanalytics' &&
+          !ga4AdminGrant &&
+          !tokenData.refreshToken &&
+          rawOrgId
+        ) {
+          const current = await prisma.platformConnection.findFirst({
+            where: { organizationId: rawOrgId, platform },
+            orderBy: { updatedAt: 'desc' },
+            select: { metadata: true },
+          });
+          const previous = readGa4AdminGrant({
+            scope: tokenData.scope,
+            metadata: current?.metadata,
+          });
+          if (previous && previous.grantedByUserId === userId) {
+            carriedGa4AdminGrant = previous;
+          }
+        }
+
         await persistPlatformConnection({
           userId,
           organizationId: rawOrgId,
@@ -970,7 +998,9 @@ export async function GET(
                   },
                 }
               : {}),
-            ...(ga4AdminGrant ? { ga4AdminGrant } : {}),
+            ...(ga4AdminGrant || carriedGa4AdminGrant
+              ? { ga4AdminGrant: ga4AdminGrant ?? carriedGa4AdminGrant }
+              : {}),
           },
         });
       } catch (dbError) {

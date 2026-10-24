@@ -210,4 +210,75 @@ describe('GET /api/auth/callback/googleanalytics — GA4 edit grant record', () 
     expect(conn.metadata.ga4AdminGrant).toBeUndefined();
     expect(readGa4AdminGrant(conn)).toBeNull();
   });
+
+  describe('reconnect without a new consent keeps the recorded grant', () => {
+    const existingGrant = {
+      scopes: [READONLY, GA4_ADMIN_SCOPE],
+      grantedByUserId: 'user-42',
+      grantedByEmail: 'owner@example.com',
+      grantedAt: '2026-10-01T00:00:00.000Z',
+      consentAcceptedAt: '2026-10-01T00:00:00.000Z',
+      consentVersion: GA4_ADMIN_CONSENT_VERSION,
+      consentStatement: 'statement',
+    };
+
+    async function reconnect(opts: {
+      refreshToken: boolean;
+      scope: string;
+      grantedBy?: string;
+    }) {
+      mockPrisma.platformConnection.findFirst.mockResolvedValue({
+        id: 'conn-a',
+        metadata: {
+          ga4AdminGrant: {
+            ...existingGrant,
+            grantedByUserId: opts.grantedBy ?? 'user-42',
+          },
+        },
+      });
+      mockPrisma.platformConnection.update.mockResolvedValue({ id: 'conn-a' });
+      googleReturns(opts.scope, { refreshToken: opts.refreshToken });
+      await GET(
+        createMockNextRequest({
+          url: `http://localhost/api/auth/callback/googleanalytics?code=c&state=${encodeURIComponent(stateFor(false))}`,
+        }),
+        { params: Promise.resolve({ platform: 'googleanalytics' }) }
+      );
+      expect(mockPrisma.platformConnection.update).toHaveBeenCalledTimes(1);
+      return mockPrisma.platformConnection.update.mock.calls[0][0].data;
+    }
+
+    it('carries the grant forward when the same user reconnects, the credential is unchanged and analytics.edit is still granted', async () => {
+      const data = await reconnect({
+        refreshToken: false,
+        scope: `${READONLY} ${GA4_ADMIN_SCOPE}`,
+      });
+      expect(data.metadata.ga4AdminGrant).toMatchObject({
+        grantedByUserId: 'user-42',
+        grantedAt: existingGrant.grantedAt,
+      });
+    });
+
+    it('drops the grant when a new refresh token replaces the credential', async () => {
+      const data = await reconnect({
+        refreshToken: true,
+        scope: `${READONLY} ${GA4_ADMIN_SCOPE}`,
+      });
+      expect(data.metadata.ga4AdminGrant).toBeUndefined();
+    });
+
+    it('drops the grant when a different user reconnects', async () => {
+      const data = await reconnect({
+        refreshToken: false,
+        scope: `${READONLY} ${GA4_ADMIN_SCOPE}`,
+        grantedBy: 'someone-else',
+      });
+      expect(data.metadata.ga4AdminGrant).toBeUndefined();
+    });
+
+    it('drops the grant when Google no longer reports analytics.edit', async () => {
+      const data = await reconnect({ refreshToken: false, scope: READONLY });
+      expect(data.metadata.ga4AdminGrant).toBeUndefined();
+    });
+  });
 });

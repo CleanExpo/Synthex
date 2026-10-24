@@ -14,8 +14,14 @@
  * the same name already in the account gets 409 GA4_PROPERTY_NAME_TAKEN (it is
  * never adopted). Concurrent runs for one org or one GA4 account are
  * serialised by transaction-scoped Postgres advisory locks (the
- * lib/platform-connections/refresh-lock.ts pattern). A Google 403 is reported
- * as missing consent or missing account permission, never as success.
+ * lib/platform-connections/refresh-lock.ts pattern). The locked transaction is
+ * short: it lists, creates the property and COMMITS a "provisioning" marker
+ * row holding the new propertyId. The web stream and key events are created
+ * after that commit, outside any transaction, so a failure there leaves the
+ * marker; a retry resumes those idempotent steps on the marker's property
+ * instead of hitting PROPERTY_NAME_TAKEN on its own orphan. A lease on the
+ * marker (lastSyncAt) stops two resumes running at once. A Google 403 is
+ * reported as missing consent or missing account permission, never as success.
  *
  * Bound to the signed statement (GA4_ADMIN_CONSENT_STATEMENT): the body may
  * only ask for an Australian time zone, AUD and the generate_lead / sign_up key
@@ -39,15 +45,20 @@ import {
   Ga4AdminError,
 } from '@/lib/google/ga4-admin';
 import { logger } from '@/lib/logger';
+import { writeDefault } from '@/lib/rate-limit';
 
 const GA4_PLATFORM = 'googleanalytics';
 /**
- * Provisioning makes up to seven GA4 Admin round-trips while holding the lock,
- * and a concurrent run waits for the lock inside its own transaction, so the
+ * The locked transaction makes two GA4 Admin round-trips (list, create) and a
+ * concurrent run waits for the lock inside its own transaction, so the
  * interactive-transaction timeout covers both.
  */
-const PROVISION_TX_TIMEOUT_MS = 60_000;
+const PROVISION_TX_TIMEOUT_MS = 30_000;
 const PROVISION_TX_MAX_WAIT_MS = 10_000;
+/** GA4Property.syncStatus while a run has created the property but not finished. */
+const PROVISIONING = 'provisioning';
+/** How long a run owns its marker before another may resume it. */
+const PROVISION_LEASE_MS = 2 * 60_000;
 /**
  * GA4 recommended lead events (kit K2 tracking plan). These are also the ONLY
  * events GA4_ADMIN_CONSENT_STATEMENT lets Synthex mark as key events.
@@ -94,7 +105,18 @@ class AlreadyProvisionedError extends Error {
   }
 }
 
+/** Another run holds the provisioning lease for this org's property. */
+class ProvisioningInProgressError extends Error {}
+
 export async function POST(request: NextRequest) {
+  return writeDefault(request, () => provision(request));
+}
+
+async function provision(request: NextRequest) {
+  /** Set once Google has created the property; reported if a later step fails. */
+  let createdPropertyId: string | null = null;
+  /** Gives the marker's lease back so a retry need not wait for it to expire. */
+  let releaseLease: (() => Promise<unknown>) | null = null;
   try {
     const userId = await getUserIdFromRequestOrCookies(request);
     if (!userId) {
@@ -181,67 +203,120 @@ export async function POST(request: NextRequest) {
     // first run created, and is refused instead of creating a duplicate.
     const lockKey = `ga4-provision:${input.accountId.replace(/^accounts\//, '')}`;
     const orgLockKey = `ga4-provision-org:${organizationId}`;
-    const { property, dataStream, keyEvents, ga4Property } =
-      await prisma.$transaction(
-        async tx => {
-          // Transaction-scoped: released at COMMIT/ROLLBACK on the one backend
-          // this interactive transaction holds (safe under a transaction pooler).
-          // The org lock is always taken first, so two provision runs can never
-          // hold the two locks in opposite orders.
-          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orgLockKey}))`;
-          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
-          // The grant covers ONE property for the business. An org that already
-          // holds a GA4 property is told so and nothing is written: Synthex
-          // cannot vouch for the account or ownership of a property it did not
-          // create in this run, so it never writes to one.
-          const owned = await tx.gA4Property.findMany({
-            where: { organizationId },
-            select: { propertyId: true, measurementId: true },
-          });
-          if (owned.length > 1) throw new AmbiguousOrgPropertyError();
-          if (owned.length === 1) throw new AlreadyProvisionedError(owned[0]);
-          const property = await createProperty(deps, {
-            accountId: input.accountId,
-            displayName: input.displayName,
-            timeZone: input.timeZone,
-            currencyCode: input.currencyCode,
-          });
-          // createProperty never adopts an existing property (a same name is
-          // PROPERTY_NAME_TAKEN), so everything below writes only to the
-          // property this run just created.
-          const dataStream = await createWebDataStream(deps, {
-            propertyId: property.propertyId,
-            defaultUri: input.defaultUri,
-          });
-          const keyEvents = await createKeyEvents(deps, {
-            propertyId: property.propertyId,
-            eventNames: input.keyEvents,
-          });
-
-          const ga4Property = await tx.gA4Property.upsert({
+    const claim = await prisma.$transaction(
+      async tx => {
+        // Transaction-scoped: released at COMMIT/ROLLBACK on the one backend
+        // this interactive transaction holds (safe under a transaction pooler).
+        // The org lock is always taken first, so two provision runs can never
+        // hold the two locks in opposite orders.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${orgLockKey}))`;
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`;
+        // The grant covers ONE property for the business. An org that already
+        // holds a GA4 property is told so and nothing is written: Synthex
+        // cannot vouch for the account or ownership of a property it did not
+        // create, so it never writes to one. The one exception is the marker
+        // this route itself committed after creating a property (syncStatus
+        // "provisioning"): that property is Synthex's own, so its remaining
+        // steps are resumed.
+        const owned = await tx.gA4Property.findMany({
+          where: { organizationId },
+          select: {
+            id: true,
+            propertyId: true,
+            displayName: true,
+            measurementId: true,
+            syncStatus: true,
+          },
+        });
+        if (owned.length > 1) throw new AmbiguousOrgPropertyError();
+        if (owned.length === 1) {
+          const marker = owned[0];
+          if (marker.syncStatus !== PROVISIONING) {
+            throw new AlreadyProvisionedError(marker);
+          }
+          const now = Date.now();
+          const leased = await tx.gA4Property.updateMany({
             where: {
-              organizationId_propertyId: {
-                organizationId,
-                propertyId: property.propertyId,
-              },
+              id: marker.id,
+              syncStatus: PROVISIONING,
+              OR: [
+                { lastSyncAt: null },
+                { lastSyncAt: { lt: new Date(now - PROVISION_LEASE_MS) } },
+              ],
             },
-            update: {
-              measurementId: dataStream.measurementId,
-              displayName: property.displayName,
-              syncStatus: 'active',
-            },
-            create: {
-              organizationId,
-              propertyId: property.propertyId,
-              measurementId: dataStream.measurementId,
-              displayName: property.displayName,
-              syncStatus: 'active',
-            },
+            data: { lastSyncAt: new Date(now) },
           });
-          return { property, dataStream, keyEvents, ga4Property };
+          if (leased.count === 0) throw new ProvisioningInProgressError();
+          return {
+            markerId: marker.id,
+            property: {
+              propertyId: marker.propertyId,
+              displayName: marker.displayName ?? input.displayName,
+              created: false,
+            },
+          };
+        }
+        const property = await createProperty(deps, {
+          accountId: input.accountId,
+          displayName: input.displayName,
+          timeZone: input.timeZone,
+          currencyCode: input.currencyCode,
+        });
+        // Committed with this transaction, BEFORE any dependent Google call, so
+        // a failure below cannot orphan the property.
+        const marker = await tx.gA4Property.create({
+          data: {
+            organizationId,
+            propertyId: property.propertyId,
+            displayName: property.displayName,
+            syncStatus: PROVISIONING,
+            lastSyncAt: new Date(),
+          },
+          select: { id: true },
+        });
+        return { markerId: marker.id, property };
+      },
+      { timeout: PROVISION_TX_TIMEOUT_MS, maxWait: PROVISION_TX_MAX_WAIT_MS }
+    );
+    const { property } = claim;
+    createdPropertyId = property.propertyId;
+    releaseLease = () =>
+      prisma.gA4Property.updateMany({
+        where: { id: claim.markerId, syncStatus: PROVISIONING },
+        data: { lastSyncAt: null },
+      });
+
+    // Outside any transaction: no database connection is held across Google.
+    // Both calls list before they create, so a resume after a partial run
+    // adopts what the earlier run made in THIS property and creates the rest.
+    const dataStream = await createWebDataStream(deps, {
+      propertyId: property.propertyId,
+      defaultUri: input.defaultUri,
+    });
+    const keyEvents = await createKeyEvents(deps, {
+      propertyId: property.propertyId,
+      eventNames: input.keyEvents,
+    });
+    const ga4Property = await prisma.gA4Property.upsert({
+      where: {
+        organizationId_propertyId: {
+          organizationId,
+          propertyId: property.propertyId,
         },
-        { timeout: PROVISION_TX_TIMEOUT_MS, maxWait: PROVISION_TX_MAX_WAIT_MS }
-      );
+      },
+      update: {
+        measurementId: dataStream.measurementId,
+        displayName: property.displayName,
+        syncStatus: 'active',
+      },
+      create: {
+        organizationId,
+        propertyId: property.propertyId,
+        measurementId: dataStream.measurementId,
+        displayName: property.displayName,
+        syncStatus: 'active',
+      },
+    });
 
     logger.info('GA4 provisioned for organisation', {
       organizationId,
@@ -257,6 +332,29 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
+    if (releaseLease) {
+      try {
+        await releaseLease();
+      } catch (releaseError) {
+        logger.warn('GA4 provision lease release failed', {
+          error:
+            releaseError instanceof Error
+              ? releaseError.message
+              : String(releaseError),
+        });
+      }
+    }
+    if (error instanceof ProvisioningInProgressError) {
+      return NextResponse.json(
+        {
+          error: 'GA4 setup is already running for this organisation',
+          code: 'GA4_PROVISIONING_IN_PROGRESS',
+          message:
+            'Another request is finishing this organisation’s GA4 setup. Try again in a minute.',
+        },
+        { status: 409 }
+      );
+    }
     if (error instanceof AmbiguousOrgPropertyError) {
       return NextResponse.json(
         {
@@ -285,6 +383,7 @@ export async function POST(request: NextRequest) {
       logger.warn('GA4 provision refused by Google', {
         code: error.code,
         status: error.status,
+        createdPropertyId,
       });
       if (error.code === 'PROPERTY_NAME_TAKEN') {
         return NextResponse.json(
@@ -341,13 +440,18 @@ export async function POST(request: NextRequest) {
           error: 'GA4 provisioning failed',
           code: error.code,
           message: error.message,
+          // The property exists in Google already; a retry resumes it.
+          ...(createdPropertyId ? { propertyId: createdPropertyId } : {}),
         },
         { status: 502 }
       );
     }
-    logger.error('GA4 provision error:', error);
+    logger.error('GA4 provision error:', { error, createdPropertyId });
     return NextResponse.json(
-      { error: 'Failed to provision Google Analytics' },
+      {
+        error: 'Failed to provision Google Analytics',
+        ...(createdPropertyId ? { propertyId: createdPropertyId } : {}),
+      },
       { status: 500 }
     );
   }

@@ -48,10 +48,14 @@ function secret(): string {
   return s;
 }
 
+/**
+ * Domain-separated from OAuth state, which is signed with the same secret over
+ * the bare payload: a consent token must never verify as an OAuth state.
+ */
 function hmac(payload: string): string {
   return crypto
     .createHmac('sha256', secret())
-    .update(payload)
+    .update('ga4-admin-consent:v1:' + payload)
     .digest('base64url');
 }
 

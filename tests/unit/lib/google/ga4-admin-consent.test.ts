@@ -88,10 +88,30 @@ describe('consent token', () => {
     ).toString('base64url');
     const legacySig = crypto
       .createHmac('sha256', process.env.OAUTH_STATE_SECRET as string)
-      .update(legacy)
+      .update('ga4-admin-consent:v1:' + legacy)
       .digest('base64url');
     expect(
       verifyGa4AdminConsent(`${legacy}.${legacySig}`, 'user-1', 'org-1', NOW)
+    ).toBeNull();
+  });
+
+  it('is domain-separated from OAuth state: a consent token is not a valid OAuth state signature, and an OAuth-state-style signature is not a valid consent', () => {
+    const secret = process.env.OAUTH_STATE_SECRET as string;
+    const stateSig = (payload: string) =>
+      crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+    const token = signGa4AdminConsent('user-1', 'org-1', NOW);
+    const [payload, sig] = token.split('.');
+    // The callback verifies state as HMAC(secret, payload): the consent
+    // token's signature must not match it.
+    expect(sig).not.toBe(stateSig(payload));
+    // And a payload signed the OAuth-state way is not accepted as consent.
+    expect(
+      verifyGa4AdminConsent(
+        `${payload}.${stateSig(payload)}`,
+        'user-1',
+        'org-1',
+        NOW
+      )
     ).toBeNull();
   });
 });

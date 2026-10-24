@@ -30,8 +30,22 @@ jest.mock('@/lib/multi-business', () => ({
   getEffectiveOrganizationId: (...a: unknown[]) => mockGetOrgId(...a),
 }));
 
+jest.mock('@/lib/rate-limit', () => ({
+  writeDefault: (_req: unknown, handler: () => Promise<Response>) =>
+    mockWriteDefault(handler),
+}));
+const mockWriteDefault = jest.fn((handler: () => Promise<Response>) =>
+  handler()
+);
+
 const mockFindFirst = jest.fn();
 const mockUpsert = jest.fn();
+/** tx.gA4Property.create: the committed "provisioning" marker. */
+const mockCreate = jest.fn();
+/** gA4Property.updateMany: marker lease take (in tx) and release (after). */
+const mockUpdateMany = jest.fn();
+/** Open interactive transactions right now (a Google call must see 0 after the claim). */
+let openTx = 0;
 /** GA4Property rows the org already holds (tx.gA4Property.findMany). */
 const mockOwned = jest.fn();
 /** Keys passed to pg_advisory_xact_lock, in call order. */
@@ -67,11 +81,15 @@ async function fakeTransaction<T>(fn: (tx: unknown) => Promise<T>): Promise<T> {
     gA4Property: {
       upsert: (...a: unknown[]) => mockUpsert(...a),
       findMany: (...a: unknown[]) => mockOwned(...a),
+      create: (...a: unknown[]) => mockCreate(...a),
+      updateMany: (...a: unknown[]) => mockUpdateMany(...a),
     },
   };
+  openTx++;
   try {
     return await fn(tx);
   } finally {
+    openTx--;
     releases.forEach(release => release());
   }
 }
@@ -79,7 +97,10 @@ jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     platformConnection: { findFirst: (...a: unknown[]) => mockFindFirst(...a) },
-    gA4Property: { upsert: (...a: unknown[]) => mockUpsert(...a) },
+    gA4Property: {
+      upsert: (...a: unknown[]) => mockUpsert(...a),
+      updateMany: (...a: unknown[]) => mockUpdateMany(...a),
+    },
     $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
       fakeTransaction(fn),
   },
@@ -116,6 +137,8 @@ const BODY = {
 interface GoogleCall {
   method: string;
   url: string;
+  /** True when an interactive database transaction was open for this call. */
+  inTx: boolean;
 }
 
 function res(status: number, body: unknown) {
@@ -128,12 +151,14 @@ function res(status: number, body: unknown) {
 }
 
 /** Fake GA4 Admin API. `existing` pre-seeds a property + stream. */
-function installGoogle(opts: { existing?: boolean; forbid?: boolean } = {}) {
+function installGoogle(
+  opts: { existing?: boolean; forbid?: boolean; failStream?: boolean } = {}
+) {
   const calls: GoogleCall[] = [];
   global.fetch = jest.fn(async (u: string, init?: RequestInit) => {
     const url = String(u);
     const method = (init?.method ?? 'GET').toUpperCase();
-    calls.push({ method, url });
+    calls.push({ method, url, inTx: openTx > 0 });
     if (method === 'POST' && opts.forbid) {
       return res(403, {
         error: {
@@ -145,6 +170,9 @@ function installGoogle(opts: { existing?: boolean; forbid?: boolean } = {}) {
       });
     }
     const path = new URL(url).pathname.replace('/v1beta/', '');
+    if (opts.failStream && method === 'POST' && path.endsWith('/dataStreams')) {
+      return res(500, { error: { code: 500, message: 'backend error' } });
+    }
     if (path === 'properties') {
       return method === 'GET'
         ? res(200, {
@@ -223,7 +251,7 @@ function installStatefulGoogle() {
     await new Promise(resolve => setTimeout(resolve, 5));
     const url = String(u);
     const method = (init?.method ?? 'GET').toUpperCase();
-    calls.push({ method, url });
+    calls.push({ method, url, inTx: openTx > 0 });
     const path = new URL(url).pathname.replace('/v1beta/', '');
     if (path === 'properties') {
       if (method === 'GET') return res(200, { properties: [...properties] });
@@ -276,7 +304,11 @@ beforeEach(() => {
   mockGetUserId.mockResolvedValue('user-1');
   mockGetOrgId.mockResolvedValue('org-1');
   mockToken.mockResolvedValue('access-token');
+  openTx = 0;
+  mockWriteDefault.mockImplementation(handler => handler());
   mockOwned.mockResolvedValue([]);
+  mockCreate.mockResolvedValue({ id: 'marker-1' });
+  mockUpdateMany.mockResolvedValue({ count: 1 });
   mockUpsert.mockImplementation(async (args: { create: object }) => ({
     id: 'ga4-row',
     ...args.create,
@@ -365,6 +397,120 @@ describe('POST /api/integrations/ga4/provision', () => {
         }),
       })
     );
+  });
+
+  it('commits the provisioning marker with the new propertyId BEFORE the stream and key events, and makes those calls outside any transaction', async () => {
+    const calls = installGoogle();
+    const order: string[] = [];
+    mockCreate.mockImplementation(async () => {
+      order.push('marker');
+      return { id: 'marker-1' };
+    });
+    const realFetch = global.fetch;
+    global.fetch = jest.fn(async (u: string, init?: RequestInit) => {
+      const path = new URL(String(u)).pathname;
+      if (path.endsWith('/dataStreams')) order.push('stream');
+      return realFetch(u, init);
+    }) as unknown as typeof fetch;
+    expect((await post()).status).toBe(200);
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          organizationId: 'org-1',
+          propertyId: '777',
+          syncStatus: 'provisioning',
+        }),
+      })
+    );
+    expect(order.indexOf('marker')).toBeLessThan(order.indexOf('stream'));
+    const dependent = calls.filter(c =>
+      /\/(dataStreams|keyEvents)/.test(new URL(c.url).pathname)
+    );
+    expect(dependent.length).toBeGreaterThan(0);
+    expect(dependent.every(c => !c.inTx)).toBe(true);
+  });
+
+  it('a failure after the property is created keeps the marker, gives the lease back and reports the propertyId', async () => {
+    installGoogle({ failStream: true });
+    const r = await post();
+    expect(r.status).toBe(502);
+    expect((await r.json()).propertyId).toBe('777');
+    expect(mockCreate).toHaveBeenCalledTimes(1);
+    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'marker-1', syncStatus: 'provisioning' },
+        data: { lastSyncAt: null },
+      })
+    );
+  });
+
+  it('a retry resumes the marker: no new property, the stream and key events are created, the row goes active', async () => {
+    mockOwned.mockResolvedValue([
+      {
+        id: 'marker-1',
+        propertyId: '777',
+        displayName: 'CARSI',
+        measurementId: null,
+        syncStatus: 'provisioning',
+      },
+    ]);
+    const calls = installGoogle();
+    const r = await post();
+    expect(r.status).toBe(200);
+    const body = await r.json();
+    expect(body.property).toEqual({
+      propertyId: '777',
+      displayName: 'CARSI',
+      created: false,
+    });
+    expect(
+      calls.filter(
+        c =>
+          c.method === 'POST' &&
+          new URL(c.url).pathname === '/v1beta/properties'
+      )
+    ).toHaveLength(0);
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        update: expect.objectContaining({
+          measurementId: 'G-NEW0001',
+          syncStatus: 'active',
+        }),
+      })
+    );
+  });
+
+  it('a marker whose lease another run holds is refused with 409 and no Google call', async () => {
+    mockOwned.mockResolvedValue([
+      {
+        id: 'marker-1',
+        propertyId: '777',
+        displayName: 'CARSI',
+        measurementId: null,
+        syncStatus: 'provisioning',
+      },
+    ]);
+    mockUpdateMany.mockResolvedValue({ count: 0 });
+    const calls = installGoogle();
+    const r = await post();
+    expect(r.status).toBe(409);
+    expect((await r.json()).code).toBe('GA4_PROVISIONING_IN_PROGRESS');
+    expect(calls).toHaveLength(0);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('is rate limited before any auth, database or Google work', async () => {
+    mockWriteDefault.mockImplementation(async () =>
+      Response.json({ error: 'Too Many Requests' }, { status: 429 })
+    );
+    const calls = installGoogle();
+    const r = await post();
+    expect(r.status).toBe(429);
+    expect(mockGetUserId).not.toHaveBeenCalled();
+    expect(mockFindFirst).not.toHaveBeenCalled();
+    expect(calls).toHaveLength(0);
   });
 
   it('never adopts a same-name property already in the account: 409 GA4_PROPERTY_NAME_TAKEN, no write to it, nothing stored', async () => {
