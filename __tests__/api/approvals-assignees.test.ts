@@ -38,6 +38,7 @@ const mockOwnershipFindMany = jest.fn();
 const mockTeamMemberFindMany = jest.fn();
 const mockTemplateFindUnique = jest.fn();
 const mockApprovalCreate = jest.fn();
+const mockPostFindFirst = jest.fn();
 
 jest.mock('@/lib/prisma', () => {
   const instance = {
@@ -45,6 +46,7 @@ jest.mock('@/lib/prisma', () => {
     businessOwnership: {
       findMany: (...a: unknown[]) => mockOwnershipFindMany(...a),
     },
+    post: { findFirst: (...a: unknown[]) => mockPostFindFirst(...a) },
     teamMember: { findMany: (...a: unknown[]) => mockTeamMemberFindMany(...a) },
     workflowTemplate: {
       findUnique: (...a: unknown[]) => mockTemplateFindUnique(...a),
@@ -86,6 +88,11 @@ function createApproval(body: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  mockPostFindFirst.mockResolvedValue({
+    content: 'Launch post',
+    platform: 'linkedin',
+    metadata: {},
+  });
   mockGetUserId.mockResolvedValue('user-submitter');
   mockUserFindUnique.mockResolvedValue({
     isMultiBusinessOwner: false,
