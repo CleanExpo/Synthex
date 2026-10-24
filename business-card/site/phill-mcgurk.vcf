@@ -2,11 +2,12 @@ BEGIN:VCARD
 VERSION:3.0
 N:McGurk;Phill;;;
 FN:Phill McGurk
-ORG:Unite Group
-TITLE:Founder
+ORG:Unite-Group
+TITLE:Senior Project Manager
+NICKNAME:Living Card,Marketing,AI,Restoration,Disaster Recovery,Training,Bu
+ siness card guy,CARSI,RestoreAssist,NRPG,Synthex,TradeHall
 EMAIL;TYPE=WORK:airestoreassist@gmail.com
-item0.URL:https://card.unite-group.ink
-item0.X-ABLabel:Living card
+URL:https://card.unite-group.ink/
 item1.URL:https://carsi.com.au
 item1.X-ABLabel:_$!<HomePage>!$_
 item2.URL:https://www.disasterrecovery.com.au
@@ -21,5 +22,6 @@ item6.URL:https://cleanexpo247-hall.vercel.app
 item6.X-ABLabel:TradeHall
 item7.URL:https://maps.google.com/?cid=16425003964954420216
 item7.X-ABLabel:Unite-Group Nexus
-NOTE:IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC
+NOTE:Search me by: CARSI\, RestoreAssist\, Disaster Recovery\, NRPG\, Synth
+ ex\, TradeHall\, Living Card\, marketing\, restoration
 END:VCARD

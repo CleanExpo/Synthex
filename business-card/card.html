@@ -269,6 +269,10 @@ body:not(.owner) .owner-only { display: none !important; }
 
   <p class="intro-below" id="intro-below" hidden></p>
 
+  <label class="fine" for="met">Where did we meet? (optional)
+    <input id="met" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Brisbane expo, Dave's BBQ" aria-describedby="met-private">
+  </label>
+  <small class="fine" id="met-private">Added only to the contact you save, so you can search for it later. Nothing is sent anywhere.</small>
   <button class="btn primary save-hero" type="button" id="save">Save to my phone</button>
   <p class="save-hint" id="save-hint" role="status" hidden></p>
   <a class="btn quiet" id="email-direct" hidden>Email</a>
@@ -382,9 +386,9 @@ body:not(.owner) .owner-only { display: none !important; }
         <p class="fine"><span class="tag">Draft</span> Prepared for this prototype and not yet approved. General guidance, not an audit of your business.</p>
       </div>
 
-      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>The game that runs through the talk. One rabbit is hiding above.</span></button>
+      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>A hidden rabbit has a practical idea to share.</span></button>
       <div class="panel" id="p-solve" hidden>
-        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Find all five during the talk. No draw: everyone who finds them all gets the same reward.</p>
+        <p style="margin:0">You found the hidden rabbit. Nice eyes. Tap it for a practical idea.</p>
         <p class="fine"><span class="tag">Not connected yet</span> The game is Rana's build. Its permanent address is not set yet, so it is not linked here.</p>
       </div>
 
@@ -451,7 +455,7 @@ body:not(.owner) .owner-only { display: none !important; }
   <footer>
     <span id="brand-credit" hidden>Brand kit: none loaded.</span>
     <a id="feedback-link" href="feedback.html" hidden>Trying this card? Tell us how it went</a>
-    <span>Your phone keeps a copy of this card so it opens offline, plus settings such as sound. Nothing leaves your phone until you tap to send it.</span>
+    <span>Your phone keeps a copy of this card so it opens offline, and which opener you last saw. Nothing leaves your phone until you tap to send it.</span>
   </footer>
 </div>
 
@@ -615,25 +619,42 @@ function lum(hex) {
   });
 })();
 
-function vcard() {
+function meetingMemory(value) {
+  return String(value).replace(/[\r\n\u2028\u2029]/g, " ").trim();
+}
+function vcard(met = "") {
+  met = meetingMemory(met);
   // text values escape line breaks as \n (vCard 3.0); raw values (phone, email) drop them, so no value can start a new field
   const esc = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
   const raw = s => String(s).replace(/[\r\n]/g, "");
   const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "", first = parts.join(" ");
   const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + esc(last) + ";" + esc(first) + ";;;", "FN:" + esc(P.name || "")];
   if (P.org) lines.push("ORG:" + esc(P.org));
-  if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
+  if (P.title) lines.push("TITLE:" + esc(P.vcardTitle || P.title));
+  const nicknames = [...(P.vcardNicknames || []), ...(met ? [met] : [])];
+  if (nicknames.length) lines.push("NICKNAME:" + nicknames.map(esc).join(","));
   (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + raw(p.type || "VOICE").replace(/[^A-Za-z,]/g, "") + ":" + raw(p.tel)));
   (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + raw(e.value)));
   // the saved contact always leads back to the live card
-  if (safeUrl(P.cardUrl)) lines.push("item0.URL:" + P.cardUrl, "item0.X-ABLabel:Living card");
+  if (safeUrl(P.cardUrl)) lines.push("URL:" + P.cardUrl.replace(/\/$/, "") + "/");
   // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
   (P.links || []).filter(l => safeUrl(l.url)).forEach((l, i) => {
     lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));
   });
-  if (P.vcardNote) lines.push("NOTE:" + esc(P.vcardNote));
+  const note = [met ? "Met: " + met : "", P.vcardNote].filter(Boolean).join("\n");
+  if (note) lines.push("NOTE:" + esc(note));
   lines.push("END:VCARD");
-  return lines.join("\r\n") + "\r\n";
+  // vCard 3.0: CRLF and at most 75 UTF-8 octets per physical line.
+  const folded = [], encoder = new TextEncoder();
+  lines.forEach(line => {
+    let chunk = "";
+    for (const char of line) {
+      if (encoder.encode(chunk + char).length > 75) { folded.push(chunk); chunk = " "; }
+      chunk += char;
+    }
+    folded.push(chunk);
+  });
+  return folded.join("\r\n") + "\r\n";
 }
 function contactText() {
   return [P.name, P.title].filter(Boolean).join(", ") + "\n" +
@@ -1201,6 +1222,7 @@ if (HOSTED) {
 
 // Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
 $("save").addEventListener("click", () => {
+  const met = meetingMemory($("met").value);
   if (HOSTED && KIT.id) {
     // Phones finish the save themselves: say the one tap that is left (Android browsers download the file)
     const android = /Android/i.test(navigator.userAgent);
@@ -1208,14 +1230,17 @@ $("save").addEventListener("click", () => {
     $("save-hint").textContent = warm + (android ? "Now open the downloaded file and tap Save." : "Now tap Create New Contact.");
     SFX.chime(); confetti("burst");
     $("save-hint").hidden = false;
-    location.href = KIT.id + ".vcf"; return;
+    if (!met) { location.href = KIT.id + ".vcf"; return; }
   }
   try {
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([vcard()], { type: "text/vcard" }));
+    const url = URL.createObjectURL(new Blob([vcard(met)], { type: "text/vcard;charset=utf-8" }));
+    a.href = url;
     a.download = (KIT.id || "contact") + ".vcf"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (HOSTED) return;
   } catch (e) { /* blocked: the fallback below covers it */ }
-  $("vcard-text").textContent = contactText();
+  $("vcard-text").textContent = vcard(met);
   $("save-out").hidden = false;
 });
 $("copy-vcard").addEventListener("click", e => copy($("vcard-text").textContent, e.currentTarget));

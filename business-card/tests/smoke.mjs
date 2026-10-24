@@ -517,7 +517,7 @@ try {
     {
       const vcf = fs.readFileSync(path.join(SITE, 'phill-mcgurk.vcf'), 'utf8');
       check(
-        /^item0\.URL:https:\/\/card\.unite-group\.ink\r$/m.test(vcf),
+        /^URL:https:\/\/card\.unite-group\.ink\/\r$/m.test(vcf),
         'saved contact links the live card'
       );
       const f = await phone();
@@ -772,9 +772,15 @@ try {
     const own = await phone();
     await own.page.goto(BASE + '?me=1');
     await own.page.waitForTimeout(800);
-    for (const sel of ['#pass-btn', '#mine', '#creds']) {
+    for (const sel of ['#pass-btn', '#mine']) {
       check(await own.page.isVisible(sel), 'owner sees: ' + sel);
     }
+    // Phill 24/10/2026: no certifications on the card, so the credentials row stays empty and out of sight
+    check(
+      (await own.page.isHidden('#creds')) &&
+        !(await own.page.textContent('body')).includes('IICRC'),
+      'no certifications shown, even to the owner'
+    );
     await own.ctx.close();
   } else if (MODE === 'hostile') {
     // Site built from a kit whose person.name tries to leave the <title> and the head's attributes:

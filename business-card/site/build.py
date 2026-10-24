@@ -37,7 +37,7 @@ HEAD = (
 PRIVATE = {"sources", "prepared", "source", "decision", "likenessConsent", "conflicts", "resolved",
            "previousLogos", "previousHeroes", "previousEditions", "rotationReason", "supersededReason",
            "videoNote", "urlNote", "shopUrlNote", "contactSource", "visitorLinksSource", "reviewPromptsSource",
-           "placeIdSource", "profileUrlSource"}
+           "placeIdSource", "profileUrlSource", "titleSource"}
 
 
 def public(v, removed, path=()):
@@ -128,21 +128,33 @@ def vcard(p):
     if p.get("org"):
         lines.append("ORG:" + esc(p["org"]))
     if p.get("title"):
-        lines.append("TITLE:" + esc(p["title"].split(",")[0]))
+        lines.append("TITLE:" + esc(p.get("vcardTitle") or p["title"]))
+    if p.get("vcardNicknames"):
+        lines.append("NICKNAME:" + ",".join(esc(n) for n in p["vcardNicknames"]))
     for ph in p.get("phones", []):
         lines.append("TEL;TYPE=" + re.sub(r"[^A-Za-z,]", "", raw(ph.get("type", "VOICE"))) + ":" + raw(ph["tel"]))
     for e in p.get("emails", []):
         lines.append("EMAIL;TYPE=WORK:" + raw(e["value"]))
     # the saved contact always leads back to the live card
     if SAFE_URL.match(str(p.get("cardUrl") or "")):
-        lines += [f"item0.URL:{p['cardUrl']}", "item0.X-ABLabel:Living card"]
+        lines.append("URL:" + p["cardUrl"].rstrip("/") + "/")
     # the first two live links are the homepages; every other live business follows as a labelled link
     for i, link in enumerate([l for l in p.get("links", []) if SAFE_URL.match(str(l.get("url") or ""))], 1):
         lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
     if p.get("vcardNote"):
         lines.append("NOTE:" + esc(p["vcardNote"]))
     lines.append("END:VCARD")
-    return "\r\n".join(lines) + "\r\n"
+    # Fold at 75 UTF-8 octets, including continuation spaces; never split a character.
+    folded = []
+    for line in lines:
+        chunk = ""
+        for char in line:
+            if len((chunk + char).encode("utf-8")) > 75:
+                folded.append(chunk)
+                chunk = " "
+            chunk += char
+        folded.append(chunk)
+    return "\r\n".join(folded) + "\r\n"
 
 
 def main(card_path, kit_path, out):

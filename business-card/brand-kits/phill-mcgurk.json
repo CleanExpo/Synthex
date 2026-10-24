@@ -359,32 +359,11 @@
       "scope": "Use of Phill's existing HeyGen avatar and existing ElevenLabs voice clone (both made from his own recordings) for his bio, image and motion. No new avatar or voice is to be created from scratch.",
       "source": "Phill's words relayed by the coordinating session: \"that can be used for my bio, my image, my motion, whatever it needs to be\""
     },
-    "title": "Founder, Unite Group",
+    "title": "Senior Project Manager, Unite-Group",
     "intro": "Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.",
     "motto": "Found. Trusted. Chosen.",
-    "org": "Unite Group",
-    "credentials": [
-      {
-        "abbr": "MC",
-        "text": "IICRC Master Restoration Technician"
-      },
-      {
-        "abbr": "IICRC",
-        "text": "47496"
-      },
-      {
-        "abbr": "BFRS",
-        "text": "Bio Forensic Restoration Specialist"
-      },
-      {
-        "abbr": "CFO",
-        "text": "Certified Forensic Operator"
-      },
-      {
-        "abbr": "GBAC",
-        "text": "certified"
-      }
-    ],
+    "org": "Unite-Group",
+    "credentials": [],
     "phones": [],
     "emails": [
       {
@@ -397,7 +376,7 @@
       {
         "label": "CARSI",
         "url": "https://carsi.com.au",
-        "note": "IICRC CEC training",
+        "note": "Restoration and cleaning training",
         "video": {
           "youtubeId": "fUi127T4aI0",
           "thumb": "business-card/demos/thumbs/carsi.jpg",
@@ -476,7 +455,7 @@
         }
       }
     ],
-    "vcardNote": "IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC",
+    "vcardNote": "Search me by: CARSI, RestoreAssist, Disaster Recovery, NRPG, Synthex, TradeHall, Living Card, marketing, restoration",
     "features": {
       "whiteRabbit": true,
       "discover": true,
@@ -565,6 +544,22 @@
       }
     ],
     "contactSource": "Phill 23/10/2026: 'The only contact is through the AI email that I have set up'. Mobile, office and personal emails removed from the card and contact file.",
-    "visitorLinksSource": "Phill 23/10/2026: RestoreAssist, Unite Group, Synthex, TradeHall and Restoration World connected to the card. Restoration World waits until its page is live."
+    "visitorLinksSource": "Phill 23/10/2026: RestoreAssist, Unite Group, Synthex, TradeHall and Restoration World connected to the card. Restoration World waits until its page is live.",
+    "vcardTitle": "Senior Project Manager",
+    "vcardNicknames": [
+      "Living Card",
+      "Marketing",
+      "AI",
+      "Restoration",
+      "Disaster Recovery",
+      "Training",
+      "Business card guy",
+      "CARSI",
+      "RestoreAssist",
+      "NRPG",
+      "Synthex",
+      "TradeHall"
+    ],
+    "titleSource": "Phill 24/10/2026: \"I dont want the IICRC certifications and others on my business card. I just want Unite-Group - Senior Project Manager\""
   }
 }
