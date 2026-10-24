@@ -496,6 +496,30 @@ try {
       'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
     );
     await ctx.close();
+    // Order page: the live preview must carry what the buyer types into the card template, and a typed
+    // </script> must stay data (the template's kit marker and this page's replace call must agree).
+    const order = await phone();
+    await order.page.goto(BASE + 'get-your-card.html');
+    const typed = 'Zoe Probe</script><script>parent.PWNED=1</script>';
+    await order.page.fill('#d-name', typed);
+    await order.page.waitForTimeout(1500);
+    const frame = order.page.frames().find(f => f !== order.page.mainFrame());
+    const kitName = frame
+      ? await frame.evaluate(
+          () => ((window.BRAND_KIT || {}).person || {}).name || null
+        )
+      : null;
+    check(kitName === typed, 'order preview receives the buyer details');
+    check(
+      (await order.page.evaluate(() => window.PWNED || 0)) === 0,
+      'a typed </script> stays data in the order preview'
+    );
+    check(
+      order.errors.length === 0,
+      'no order page errors' +
+        (order.errors.length ? ': ' + order.errors.join(' | ') : '')
+    );
+    await order.ctx.close();
   } else if (MODE === 'panel') {
     // Each business with a demo video: tapping its name opens a panel whose thumbnail and Watch go to YouTube
     const { ctx, page, errors } = await phone();
