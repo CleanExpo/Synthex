@@ -16,7 +16,8 @@
  *                       `phase_0_0_target`, i.e. if a Phase 0.0 item is still open.
  *   --json              Emit the probe/compare result as JSON on stdout.
  *
- * Every read is a GET. This script issues no mutating request and must never be
+ * Every read is a GET, except the merge settings, which come from a GraphQL query
+ * (see mergeSettings). This script issues no mutating request and must never be
  * given one: it is the thing that notices when somebody else does.
  *
  * It fails CLOSED. An API error, a missing permission, an absent declaration and an
@@ -117,6 +118,66 @@ async function get(path) {
   return (await request(`${API}/${path}`)).body;
 }
 
+/**
+ * The repository's merge settings, read over GraphQL.
+ *
+ * REST `GET /repos/{repo}` only includes `allow_auto_merge` and
+ * `delete_branch_on_merge` for a caller with admin rights on the repository. The
+ * scheduled job's REPO_CONTROLS_TOKEN has Administration: Read, which is not that,
+ * so the REST payload omitted both fields and the scheduled runs reported them as
+ * `live: null` - drift that was not there (run 39838861091, 22/10/2026). GraphQL's `autoMergeAllowed` and
+ * `deleteBranchOnMerge` are readable without admin, so they are read from here on
+ * every run, admin token or not, and the code path is the same locally and in CI.
+ *
+ * This is a POST, but a query: it reads and cannot mutate. It fails closed like
+ * `request()`, and a value that is not a boolean is a failure, not a null that the
+ * comparison would then report as drift (or, against a null target, as a match).
+ */
+async function mergeSettings(repo) {
+  const [owner, name] = repo.split('/');
+  const url = `${API}/graphql`;
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      signal: AbortSignal.timeout(20_000),
+      headers: {
+        Authorization: `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'synthex-check-repo-controls',
+      },
+      body: JSON.stringify({
+        query:
+          'query($owner:String!,$name:String!){repository(owner:$owner,name:$name){autoMergeAllowed deleteBranchOnMerge}}',
+        variables: { owner, name },
+      }),
+    });
+  } catch (e) {
+    const why =
+      e?.name === 'TimeoutError'
+        ? 'timed out after 20s'
+        : String(e?.message ?? e);
+    fail(`POST ${url} -> ${why}. ${CANNOT_READ}`);
+  }
+  if (!res.ok) {
+    const body = await res.text();
+    fail(`POST ${url} -> ${res.status}. ${CANNOT_READ} ${body.slice(0, 300)}`);
+  }
+  const body = await res.json();
+  const r = body?.data?.repository;
+  if (
+    body?.errors ||
+    typeof r?.autoMergeAllowed !== 'boolean' ||
+    typeof r?.deleteBranchOnMerge !== 'boolean'
+  ) {
+    fail(
+      `POST ${url} did not return both merge settings as booleans. ${CANNOT_READ} ` +
+        JSON.stringify(body).slice(0, 300)
+    );
+  }
+  return r;
+}
+
 /** The `rel="next"` URL from a Link header, or null at the last page. */
 function nextLink(link) {
   const m = link && /<([^>]+)>;\s*rel="next"/.exec(link);
@@ -207,6 +268,7 @@ async function probe(repo, declaredDefaultBranch) {
     vars,
     secrets,
     protectedBranches,
+    merge,
   ] = await Promise.all([
     get(`repos/${repo}/branches/${defaultBranch}/protection`),
     // The top-level protection payload omits required_pull_request_reviews on this
@@ -223,6 +285,7 @@ async function probe(repo, declaredDefaultBranch) {
     getAll(`repos/${repo}/actions/variables`, 'variables'),
     getAll(`repos/${repo}/actions/secrets`, 'secrets'),
     getAll(`repos/${repo}/branches?protected=true`),
+    mergeSettings(repo),
   ]);
 
   const reviewerRule =
@@ -352,8 +415,8 @@ async function probe(repo, declaredDefaultBranch) {
     // branch pull requests actually target has no protection at all. Reading the
     // live value back turns that input into something the check also asserts.
     'repo.default_branch': r.default_branch ?? null,
-    'repo.allow_auto_merge': r.allow_auto_merge ?? null,
-    'repo.delete_branch_on_merge': r.delete_branch_on_merge ?? null,
+    'repo.allow_auto_merge': merge.autoMergeAllowed,
+    'repo.delete_branch_on_merge': merge.deleteBranchOnMerge,
     'repo.web_commit_signoff_required': r.web_commit_signoff_required ?? null,
 
     'protection.required_status_checks.strict':

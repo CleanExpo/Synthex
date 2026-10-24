@@ -413,7 +413,8 @@ export async function POST(request: NextRequest) {
         steps = createDefaultSteps();
       }
 
-      // Bind a post approval to the wording being submitted, so a later edit
+      // Bind a post approval to the version being submitted (text, images,
+      // link), so a later edit
       // cannot ride on this approval (see PATCH /api/approvals/[id]). The post
       // must belong to the caller's organisation (post -> campaign -> org), or,
       // with no org context, to a campaign the caller owns (as in
@@ -426,7 +427,7 @@ export async function POST(request: NextRequest) {
             id: contentId,
             campaign: organizationId ? { organizationId } : { userId },
           },
-          select: { content: true, platform: true },
+          select: { content: true, platform: true, metadata: true },
         });
         if (!post) {
           return NextResponse.json(
