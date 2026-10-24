@@ -18,6 +18,12 @@ import {
 } from '@/lib/auth/pkce';
 import { getOAuthBaseUrl } from '@/lib/auth/oauth-base-url';
 import { getMetaLoginConfigId } from '@/lib/integrations/platform-readiness';
+import {
+  type Ga4AdminConsent,
+  verifyGa4AdminConsent,
+  withGa4AdminScope,
+  withoutGa4AdminScope,
+} from '@/lib/google/ga4-admin-consent';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 import {
@@ -37,6 +43,8 @@ const oauthConfig: Record<
     accessType?: string;
     prompt?: string;
     codeChallengeMethod?: string;
+    /** Google incremental authorisation: keep scopes granted earlier. */
+    includeGrantedScopes?: boolean;
     /** duration query param (Reddit-specific) */
     duration?: string;
   }
@@ -127,9 +135,14 @@ const oauthConfig: Record<
     authUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
     tokenUrl: 'https://oauth2.googleapis.com/token',
     userInfoUrl: 'https://www.googleapis.com/oauth2/v2/userinfo',
+    // Read-only by default. The edit scope (GA4 property creation, kit K2) is
+    // added only with a valid "Synthex may create Analytics for me" consent
+    // token from POST /api/integrations/ga4/connect — see
+    // lib/google/ga4-admin-consent.ts.
     scope: 'https://www.googleapis.com/auth/analytics.readonly profile email',
     accessType: 'offline',
     prompt: 'consent',
+    includeGrantedScopes: true,
   },
   // Google Drive — full access so clients can store all their content
   googledrive: {
@@ -276,6 +289,35 @@ export async function GET(
     // callback can postMessage success back to the opener and close itself.
     const returnTo = request.nextUrl.searchParams.get('returnTo') ?? undefined;
 
+    // GA4 onboarding authority (K2): a consent token from the explicit
+    // "Synthex may create Analytics for me" step unlocks the edit scope. The
+    // token must name the organisation this flow stores the connection
+    // against (resolved above), so acceptance for one client never becomes
+    // authority for another. A token that is present but invalid is refused,
+    // never silently downgraded.
+    let ga4AdminConsent: Ga4AdminConsent | null = null;
+    const ga4ConsentToken =
+      platform === 'googleanalytics'
+        ? request.nextUrl.searchParams.get('ga4AdminConsent')
+        : null;
+    if (ga4ConsentToken) {
+      ga4AdminConsent = verifyGa4AdminConsent(
+        ga4ConsentToken,
+        user.id,
+        organizationId
+      );
+      if (!ga4AdminConsent) {
+        return NextResponse.json(
+          {
+            error: 'Consent required',
+            message:
+              'The "Synthex may create Analytics for me" consent is missing or expired. Accept it again, then reconnect Google Analytics.',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Generate HMAC-signed state parameter for security (includes org context)
     const statePayload = Buffer.from(
       JSON.stringify({
@@ -287,6 +329,7 @@ export async function GET(
         flow: 'integration',
         nonce: crypto.randomBytes(16).toString('hex'),
         returnTo,
+        ...(ga4AdminConsent ? { ga4AdminConsent } : {}),
       })
     ).toString('base64url');
     const state = signState(statePayload);
@@ -305,7 +348,17 @@ export async function GET(
     // Passing a raw scope list alongside config_id can make Meta reject the
     // dialog even when the config itself is valid.
     if (!metaLoginConfigId) {
-      authParams.set('scope', getOAuthScope(platform, config.scope));
+      let scope = getOAuthScope(platform, config.scope);
+      if (platform === 'googleanalytics') {
+        // Never request the edit scope without consent, even via an env override.
+        scope = ga4AdminConsent
+          ? withGa4AdminScope(scope)
+          : withoutGa4AdminScope(scope);
+      }
+      authParams.set('scope', scope);
+    }
+    if (config.includeGrantedScopes) {
+      authParams.set('include_granted_scopes', 'true');
     }
 
     // Platform-specific params

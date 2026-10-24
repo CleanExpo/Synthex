@@ -45232,6 +45232,40 @@
     "/api/integrations/ga4/connect": {
       "post": {
         "operationId": "post_integrations_ga4_connect",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "createAnalytics": {
+                    "properties": {
+                      "accepted": {
+                        "const": true,
+                        "type": "boolean"
+                      },
+                      "consentVersion": {
+                        "const": "ga4-admin-v1",
+                        "type": "string"
+                      },
+                      "statement": {
+                        "const": "Synthex may create Analytics for me. With this permission Synthex will, in the Google Analytics account I choose: create one GA4 property for my business (Australian time zone, AUD), create one web data stream for my website (this gives the G- measurement ID for the tracking tag), and mark lead and sign-up events (generate_lead, sign_up) as key events. Synthex will not delete properties or change who has access to my account. I can remove this permission at any time from my Google Account.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "accepted",
+                      "consentVersion",
+                      "statement"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Success"
@@ -45255,6 +45289,16 @@
               }
             },
             "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "500": {
             "content": {
@@ -45292,7 +45336,7 @@
           "@/lib/auth/",
           "lib/auth/"
         ],
-        "x-synthex-schema": "none"
+        "x-synthex-schema": "resolved"
       },
       "x-synthex-route-file": "app/api/integrations/ga4/connect/route.ts"
     },
@@ -45362,6 +45406,150 @@
         "x-synthex-schema": "none"
       },
       "x-synthex-route-file": "app/api/integrations/ga4/properties/route.ts"
+    },
+    "/api/integrations/ga4/provision": {
+      "post": {
+        "operationId": "post_integrations_ga4_provision",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "accountId": {
+                    "pattern": "^(accounts\\/)?\\d+$",
+                    "type": "string"
+                  },
+                  "currencyCode": {
+                    "const": "AUD",
+                    "default": "AUD",
+                    "type": "string"
+                  },
+                  "defaultUri": {
+                    "format": "uri",
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "maxLength": 100,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "keyEvents": {
+                    "default": [
+                      "generate_lead",
+                      "sign_up"
+                    ],
+                    "items": {
+                      "enum": [
+                        "generate_lead",
+                        "sign_up"
+                      ],
+                      "type": "string"
+                    },
+                    "maxItems": 2,
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  "timeZone": {
+                    "default": "Australia/Brisbane",
+                    "pattern": "^Australia\\/[A-Za-z_]+$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accountId",
+                  "displayName",
+                  "defaultUri"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal server error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Upstream error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "tags": [
+          "integrations"
+        ],
+        "x-synthex-auth": [
+          "@/lib/auth/",
+          "lib/auth/"
+        ],
+        "x-synthex-schema": "resolved"
+      },
+      "x-synthex-route-file": "app/api/integrations/ga4/provision/route.ts"
     },
     "/api/integrations/ga4/select-property": {
       "post": {

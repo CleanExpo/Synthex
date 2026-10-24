@@ -74,6 +74,12 @@ import { logger } from '@/lib/logger';
 import { captureServerException } from '@/lib/observability/sentry-server';
 import { isInviteOnlyMode, hasInviteEvidence } from '@/lib/auth/invite-gate';
 import { META_GRAPH_BASE } from '@/lib/social/meta-graph-version';
+import {
+  type Ga4AdminConsent,
+  type Ga4AdminGrant,
+  buildGa4AdminGrant,
+  readGa4AdminGrant,
+} from '@/lib/google/ga4-admin-consent';
 
 // =============================================================================
 // OAuth Configuration
@@ -907,6 +913,61 @@ export async function GET(
               })
             : null;
 
+        // K2 onboarding authority: record the GA4 edit grant (scopes, who,
+        // when, statement) only when the signed state carries the accepted
+        // consent AND Google actually granted the scope.
+        const ga4AdminConsent =
+          platform === 'googleanalytics'
+            ? (stateData.ga4AdminConsent as Ga4AdminConsent | undefined)
+            : undefined;
+        // The grant is this user's, so the credential it runs on must be too:
+        // without a refresh token from THIS exchange, the stored connection
+        // keeps an earlier refresh token that may be another person's Google
+        // login, and provisioning would refresh through it. No grant then.
+        const ga4AdminGrant =
+          ga4AdminConsent && tokenData.refreshToken
+            ? buildGa4AdminGrant({
+                consent: ga4AdminConsent,
+                grantedScope: tokenData.scope,
+                userId,
+                email: (stateData.email as string | undefined) ?? null,
+              })
+            : null;
+        if (ga4AdminConsent && !ga4AdminGrant) {
+          logger.warn(
+            tokenData.refreshToken
+              ? 'GA4 create consent accepted in Synthex but the edit scope was not granted at Google'
+              : 'GA4 create consent not recorded: Google returned no refresh token for this user',
+            { userId, organizationId: rawOrgId }
+          );
+        }
+
+        // A plain reconnect (no new consent) must not erase the grant already
+        // recorded on this organisation's connection: persistence replaces the
+        // whole metadata blob. Carry it forward only while the stored
+        // credential is untouched (Google sent no new refresh token), the same
+        // person is reconnecting, and Google still reports analytics.edit.
+        let carriedGa4AdminGrant: Ga4AdminGrant | null = null;
+        if (
+          platform === 'googleanalytics' &&
+          !ga4AdminGrant &&
+          !tokenData.refreshToken &&
+          rawOrgId
+        ) {
+          const current = await prisma.platformConnection.findFirst({
+            where: { organizationId: rawOrgId, platform },
+            orderBy: { updatedAt: 'desc' },
+            select: { metadata: true },
+          });
+          const previous = readGa4AdminGrant({
+            scope: tokenData.scope,
+            metadata: current?.metadata,
+          });
+          if (previous && previous.grantedByUserId === userId) {
+            carriedGa4AdminGrant = previous;
+          }
+        }
+
         await persistPlatformConnection({
           userId,
           organizationId: rawOrgId,
@@ -936,6 +997,9 @@ export async function GET(
                     memberId: userInfo.id ?? null,
                   },
                 }
+              : {}),
+            ...(ga4AdminGrant || carriedGa4AdminGrant
+              ? { ga4AdminGrant: ga4AdminGrant ?? carriedGa4AdminGrant }
               : {}),
           },
         });

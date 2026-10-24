@@ -75,10 +75,10 @@ agentic-capability status at /docs/agent-capabilities.
 
 ## Machine contract
 
-Generated from the route source of 775 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
+Generated from the route source of 776 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
 
 - OpenAPI document, `docs/api/openapi.generated.json`: the generated OpenAPI contract for the routes under /api/.
-- Error codes, `docs/api/error-codes.md`: 12 structured error codes, with HTTP status and meaning.
+- Error codes, `docs/api/error-codes.md`: 18 structured error codes, with HTTP status and meaning.
 - Rate limits, `docs/api/rate-limits.md`: 40 limiters, their limits and windows, and the routes that use them.
 
 ## Error codes
@@ -86,6 +86,12 @@ Generated from the route source of 775 route files under app/api. These files li
 - APPROVAL_REQUIRED: HTTP 400
 - DB_AUTH_FAILED: HTTP 503
 - FEATURE_NOT_PROVISIONED: HTTP 503, unresolved
+- GA4_ALREADY_PROVISIONED: HTTP 409
+- GA4_EDIT_CONSENT_REQUIRED: HTTP 403
+- GA4_PROPERTY_AMBIGUOUS: HTTP 409
+- GA4_PROPERTY_NAME_TAKEN: HTTP 409
+- GA4_PROVISIONING_IN_PROGRESS: HTTP 409
+- GA4_STREAM_EXISTS: HTTP 409
 - GITHUB_TOKEN_REQUIRED: HTTP 200
 - LINEAR_API_KEY_REQUIRED: HTTP 200, 503
 - NOT_FOUND: HTTP 404
@@ -105,7 +111,7 @@ Generated from the route source of 775 route files under app/api. These files li
 - billing ('billing'): 20 requests per 60 s; 3 routes
 - mutation ('mutation'): 60 requests per 60 s; 2 routes
 - readDefault ('read-default'): 120 requests per 60 s; 4 routes
-- writeDefault ('write-default'): 30 requests per 60 s; 30 routes
+- writeDefault ('write-default'): 30 requests per 60 s; 31 routes
 - withRateLimit (/api/ai/generate-content override): free 5, pro 20, growth 100, scale 500, professional 20, business 100, custom 500 requests per 60 s; 1 route
 - withRateLimit (tier default): free 100, pro 500, growth 2000, scale 10000, professional 500, business 2000, custom 10000 requests per 60 s; 34 routes
 - checkRateLimit org/IP buckets: 12 configurations; see docs/api/rate-limits.md
