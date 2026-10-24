@@ -206,10 +206,6 @@ async function provision(request: NextRequest, userId: string) {
     }
 
     const input = parsed.data;
-    const deps = {
-      accessToken,
-      signal: AbortSignal.timeout(PROVISION_CLAIM_GOOGLE_BUDGET_MS),
-    };
     // Lock on the external resource (the GA4 account) as well as the tenant:
     // two overlapping runs against one account must not both pass the list
     // step and both create. A run that waited re-lists, finds the property the
@@ -269,6 +265,12 @@ async function provision(request: NextRequest, userId: string) {
             },
           };
         }
+        // The deadline starts here, after both locks are held: time spent
+        // waiting for another run's lock must not use up the Google budget.
+        const deps = {
+          accessToken,
+          signal: AbortSignal.timeout(PROVISION_CLAIM_GOOGLE_BUDGET_MS),
+        };
         const property = await createProperty(deps, {
           accountId: input.accountId,
           displayName: input.displayName,

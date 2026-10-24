@@ -438,6 +438,25 @@ describe('POST /api/integrations/ga4/provision', () => {
     expect(calls.every(c => c.signal instanceof AbortSignal)).toBe(true);
   });
 
+  it('starts the claim deadline only after both advisory locks are held (waiting for a lock must not spend the Google budget)', async () => {
+    installGoogle();
+    const original = AbortSignal.timeout.bind(AbortSignal);
+    const locksHeldWhenStarted: number[] = [];
+    const spy = jest
+      .spyOn(AbortSignal, 'timeout')
+      .mockImplementation((ms: number) => {
+        // 20_000 is the claim-phase budget; the dependent calls use 90_000.
+        if (ms === 20_000) locksHeldWhenStarted.push(lockedKeys.length);
+        return original(ms);
+      });
+    try {
+      expect((await post()).status).toBe(200);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(locksHeldWhenStarted).toEqual([2]);
+  });
+
   it('a failure after the property is created keeps the marker, gives the lease back and reports the propertyId', async () => {
     installGoogle({ failStream: true });
     const r = await post();
