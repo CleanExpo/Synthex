@@ -45,8 +45,8 @@ def public(v, removed, path=()):
     if isinstance(v, dict):
         out = {}
         for k, x in v.items():
-            # a local file path or the inbox's own note is for the owner, not the visitor
-            if k in PRIVATE or path + (k,) == ("person", "inbox", "note") or (isinstance(x, str) and x.startswith("file:")):
+            # a local file path is for the owner, and so is every note except a link's (the card shows that one)
+            if k in PRIVATE or (k == "note" and path != ("person", "links")) or (isinstance(x, str) and x.startswith("file:")):
                 removed.extend(strings(x))
             else:
                 out[k] = public(x, removed, path + (k,))
