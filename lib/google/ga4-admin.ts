@@ -44,6 +44,8 @@ export class Ga4AdminError extends Error {
 export interface Ga4AdminDeps {
   accessToken: string;
   fetch?: typeof fetch;
+  /** Aborts every request of this run (a deadline), so no call outlives it. */
+  signal?: AbortSignal;
 }
 
 interface GoogleErrorBody {
@@ -103,15 +105,28 @@ async function call<T>(
   body?: unknown
 ): Promise<T> {
   const doFetch = deps.fetch ?? globalThis.fetch;
-  const res = await doFetch(`${ADMIN_BASE}/${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${deps.accessToken}`,
-      Accept: 'application/json',
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
+  let res: Response;
+  try {
+    res = await doFetch(`${ADMIN_BASE}/${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${deps.accessToken}`,
+        Accept: 'application/json',
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+      ...(deps.signal ? { signal: deps.signal } : {}),
+    });
+  } catch (err) {
+    if (deps.signal?.aborted) {
+      throw new Ga4AdminError(
+        'UPSTREAM_ERROR',
+        'The GA4 Admin API did not answer in time.',
+        504
+      );
+    }
+    throw err;
+  }
   if (!res.ok) throw await toError(res);
   return (await res.json()) as T;
 }

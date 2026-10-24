@@ -137,6 +137,7 @@ const BODY = {
 interface GoogleCall {
   method: string;
   url: string;
+  signal: AbortSignal | null | undefined;
   /** True when an interactive database transaction was open for this call. */
   inTx: boolean;
 }
@@ -158,7 +159,7 @@ function installGoogle(
   global.fetch = jest.fn(async (u: string, init?: RequestInit) => {
     const url = String(u);
     const method = (init?.method ?? 'GET').toUpperCase();
-    calls.push({ method, url, inTx: openTx > 0 });
+    calls.push({ method, url, inTx: openTx > 0, signal: init?.signal });
     if (method === 'POST' && opts.forbid) {
       return res(403, {
         error: {
@@ -251,7 +252,7 @@ function installStatefulGoogle() {
     await new Promise(resolve => setTimeout(resolve, 5));
     const url = String(u);
     const method = (init?.method ?? 'GET').toUpperCase();
-    calls.push({ method, url, inTx: openTx > 0 });
+    calls.push({ method, url, inTx: openTx > 0, signal: init?.signal });
     const path = new URL(url).pathname.replace('/v1beta/', '');
     if (path === 'properties') {
       if (method === 'GET') return res(200, { properties: [...properties] });
@@ -428,6 +429,13 @@ describe('POST /api/integrations/ga4/provision', () => {
     );
     expect(dependent.length).toBeGreaterThan(0);
     expect(dependent.every(c => !c.inTx)).toBe(true);
+  });
+
+  it('every Google call carries a deadline signal (the dependent calls share one well inside the lease)', async () => {
+    const calls = installGoogle();
+    expect((await post()).status).toBe(200);
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls.every(c => c.signal instanceof AbortSignal)).toBe(true);
   });
 
   it('a failure after the property is created keeps the marker, gives the lease back and reports the propertyId', async () => {

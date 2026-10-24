@@ -391,3 +391,29 @@ describe('createKeyEvents', () => {
     expect(err.code).toBe('PERMISSION_DENIED');
   });
 });
+
+describe('deadline signal', () => {
+  it('passes the signal to every request and maps an abort to UPSTREAM_ERROR 504 (not a raw AbortError)', async () => {
+    const controller = new AbortController();
+    const seen: Array<AbortSignal | null | undefined> = [];
+    const hangingFetch = ((_url: unknown, init?: RequestInit) => {
+      seen.push(init?.signal);
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () =>
+          reject(new DOMException('aborted', 'AbortError'))
+        );
+      });
+    }) as unknown as typeof fetch;
+    const pending = createWebDataStream(
+      { accessToken: 't', fetch: hangingFetch, signal: controller.signal },
+      { propertyId: '777', defaultUri: 'https://carsi.com.au' }
+    );
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({
+      name: 'Ga4AdminError',
+      code: 'UPSTREAM_ERROR',
+      status: 504,
+    });
+    expect(seen[0]).toBe(controller.signal);
+  });
+});

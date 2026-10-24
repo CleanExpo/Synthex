@@ -58,7 +58,15 @@ const PROVISION_TX_MAX_WAIT_MS = 10_000;
 /** GA4Property.syncStatus while a run has created the property but not finished. */
 const PROVISIONING = 'provisioning';
 /** How long a run owns its marker before another may resume it. */
-const PROVISION_LEASE_MS = 2 * 60_000;
+const PROVISION_LEASE_MS = 5 * 60_000;
+/**
+ * Deadline for a run's Google calls, well inside the lease: every request is
+ * aborted at it, so a run can never still be writing when its lease expires
+ * and another run takes over.
+ */
+const PROVISION_GOOGLE_BUDGET_MS = 90_000;
+/** Deadline for the two Google calls made inside the locked transaction. */
+const PROVISION_CLAIM_GOOGLE_BUDGET_MS = 20_000;
 /**
  * GA4 recommended lead events (kit K2 tracking plan). These are also the ONLY
  * events GA4_ADMIN_CONSENT_STATEMENT lets Synthex mark as key events.
@@ -196,7 +204,10 @@ async function provision(request: NextRequest) {
     }
 
     const input = parsed.data;
-    const deps = { accessToken };
+    const deps = {
+      accessToken,
+      signal: AbortSignal.timeout(PROVISION_CLAIM_GOOGLE_BUDGET_MS),
+    };
     // Lock on the external resource (the GA4 account) as well as the tenant:
     // two overlapping runs against one account must not both pass the list
     // step and both create. A run that waited re-lists, finds the property the
@@ -289,11 +300,16 @@ async function provision(request: NextRequest) {
     // Outside any transaction: no database connection is held across Google.
     // Both calls list before they create, so a resume after a partial run
     // adopts what the earlier run made in THIS property and creates the rest.
-    const dataStream = await createWebDataStream(deps, {
+    // They share one deadline inside the lease (see PROVISION_GOOGLE_BUDGET_MS).
+    const dependentDeps = {
+      accessToken,
+      signal: AbortSignal.timeout(PROVISION_GOOGLE_BUDGET_MS),
+    };
+    const dataStream = await createWebDataStream(dependentDeps, {
       propertyId: property.propertyId,
       defaultUri: input.defaultUri,
     });
-    const keyEvents = await createKeyEvents(deps, {
+    const keyEvents = await createKeyEvents(dependentDeps, {
       propertyId: property.propertyId,
       eventNames: input.keyEvents,
     });
