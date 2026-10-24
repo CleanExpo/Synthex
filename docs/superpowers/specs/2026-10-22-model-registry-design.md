@@ -18,6 +18,7 @@ Disposition test: it does not move O1-O7 or the client metric for a single-locat
 ## Goals & non-goals
 
 **Goals**
+
 - G1. One lifecycle contract for every model ID: `retireDate`, `replacement`, `announcedOn`, `source` URL, `sampling` rule, `capability` (text, image, video, embedding, audio).
 - G2. Status computed at check time from `retireDate` and an `asOf` date, never stored, so it cannot go stale the way a typed enum does.
 - G3. A CI check that fails on a retired or within-60-days model ID outside tests and fixtures, with a positive control.
@@ -26,6 +27,7 @@ Disposition test: it does not move O1-O7 or the client metric for a single-locat
 - G6. A weekly watcher that refreshes retire dates from vendor deprecation pages and reports, never edits.
 
 **Non-goals**
+
 - NG1. Automatic model switching. The Model Scout cron already "does not auto-switch models — surfaces signals only" [VERIFIED app/api/cron/model-scout/route.ts:10]; this keeps that rule.
 - NG2. Moving the registry into the database. The Governor header says the registry stays a file in git so a model change is a reviewable PR [VERIFIED lib/ai/governor/model.ts:4-10].
 - NG3. Choosing replacement models for quality. This spec records the vendor-named replacement; picking the best model per task stays with evals and P8.
@@ -35,25 +37,38 @@ Disposition test: it does not move O1-O7 or the client metric for a single-locat
 ## Approach
 
 **Slice 0 — fix the live breakages found by hand (one PR, no new machinery).**
+
 - `lib/services/campaign-concept-studio.ts:23` defaults the image model to `dall-e-3` [VERIFIED lib/services/campaign-concept-studio.ts:23], and `.env.example` sets `CAMPAIGN_CONCEPT_IMAGE_MODEL=dall-e-3` [VERIFIED .env.example:82]. OpenAI's deprecations page lists DALL-E as shut down on 12/05/2026 [UNVERIFIED in this run: the wiki coordinator note says it opened the page; this run confirmed only the `gpt-image-1` row, below]. Route this default through `selectImageModel` instead of a literal.
 - The text registry lists `gpt-4-turbo` as not deprecated [VERIFIED lib/ai/model-registry.ts:68,79]; OpenAI shuts it down on 23/10/2026 per the wiki table [INFERENCE from synthex-intel-05 line 124]. It lists `gemini-2-0-flash` and `google/gemini-2.0-flash` as not deprecated [VERIFIED lib/ai/model-registry.ts:324,342] [VERIFIED lib/ai/model-registry.ts:504,515], though Google shut Gemini 2.0 Flash on 01/06/2026 [INFERENCE from synthex-intel-05 line 169].
 - `prisma/schema.prisma` defaults `targetModel` to `claude-3-5-haiku-20241022` [VERIFIED prisma/schema.prisma:4797], retired 19/02/2026 per the wiki. Changing a column default needs a migration, and `prisma/migrations/**` is a protected path [VERIFIED scripts/fleet/policy.json:75]: declared fleet commit or the founder's `human-required` label.
 - Honest scope note: most of the "21 `claude-3-opus` references" sit in `config/openrouter_settings.json` and `config/platform-master-config.json`. `git grep -F openrouter_settings` outside `docs/` found no reader, and the two files that import `platform-master-config.json` contain none of its model keys (`reasoning_model`, `primary_model`, `complex_tasks`) [INFERENCE from git grep over app, lib, scripts, components on 22/10/2026]. They look like dead config: delete or leave to proposal 5's removal list, but they are not live outages.
 
 **Slice 1 — the lifecycle contract and the CI check (thinnest guard).**
+
 1. Add `lib/ai/model-lifecycle.ts` exporting:
    ```ts
-   export type ModelCapability = 'text' | 'image' | 'video' | 'embedding' | 'audio';
+   export type ModelCapability =
+     | 'text'
+     | 'image'
+     | 'video'
+     | 'embedding'
+     | 'audio';
    export interface Lifecycle {
-     retireDate?: string;      // YYYY-MM-DD from the vendor page; absent = no date announced
+     retireDate?: string; // YYYY-MM-DD from the vendor page; absent = no date announced
      announcedOn?: string;
-     replacement?: string;     // vendor-named replacement ID, or 'none' (e.g. Sora)
-     source: string;           // vendor deprecation/models URL the date came from
-     verifiedOn: string;       // date a human or the watcher last matched it to source
+     replacement?: string; // vendor-named replacement ID, or 'none' (e.g. Sora)
+     source: string; // vendor deprecation/models URL the date came from
+     verifiedOn: string; // date a human or the watcher last matched it to source
    }
    export type ModelStatus = 'active' | 'deprecated' | 'retired';
-   export function statusOf(l: Lifecycle, asOf: Date, warnDays = 60): ModelStatus;
-   export const TOMBSTONES: Array<{ id: string; provider: string; capability: ModelCapability } & Lifecycle>;
+   export function statusOf(
+     l: Lifecycle,
+     asOf: Date,
+     warnDays = 60
+   ): ModelStatus;
+   export const TOMBSTONES: Array<
+     { id: string; provider: string; capability: ModelCapability } & Lifecycle
+   >;
    ```
    `statusOf`: no `retireDate` gives active; a `retireDate` after `asOf` gives deprecated; `retireDate <= asOf` gives retired. A separate `daysToRetire(l, asOf)` feeds the CI rule, which fails on retired, or on deprecated with `daysToRetire <= warnDays`.
 2. Add an optional `lifecycle?: Lifecycle` and `sampling?: 'accepts' | 'omit'` to `ModelConfig` (text, keeping `isDeprecated` as a derived compatibility field until callers move), `ImageModel` (keeping `deprecated` likewise) and `VideoModelSpec`. Existing `isModelAvailable` [VERIFIED lib/ai/model-registry.ts:649-654] and `selectImageModel` [VERIFIED lib/services/ai/image/registry.ts:433-459] then read `statusOf(...) !== 'retired'`, so the Governor's `model_deprecated` refusal [VERIFIED lib/ai/governor/model.ts:67-72] starts honouring dates with no Governor code change.
@@ -63,6 +78,7 @@ Disposition test: it does not move O1-O7 or the client metric for a single-locat
 6. Note the check is date-dependent by design: a green commit can turn red as a retire date approaches. That is the purpose. `--as-of` keeps tests reproducible.
 
 **Slice 2 — the sampling rule from the registry.**
+
 - Today `anthropicOmitsSampling` matches `claude-(sonnet|opus|haiku)-[5-9]` and `claude-opus-4-[6-9]` [VERIFIED lib/ai/providers/anthropic-provider.ts:27-31]. It does not match `claude-fable-*` (Fable 5, Fable 5.1), so a temperature on a Fable call would pass through [INFERENCE from the regex text; whether Fable rejects it is UNVERIFIED]. models.dev marks `claude-opus-4-7`, `claude-opus-4-8` and `claude-sonnet-5` as `temperature = false` and `claude-sonnet-4-6`, `claude-opus-4-6` and `claude-haiku-4-5-20251001` as `temperature = true` [VERIFIED gh api repos/anomalyco/models.dev], so the regex agrees with it today on the IDs both cover (it omits for `opus-4-6` too, which is safe). OpenRouter's `supported_parameters` omits `temperature` for `anthropic/claude-opus-4.8` and `anthropic/claude-sonnet-5` [VERIFIED https://openrouter.ai/api/v1/models fetched 22/10/2026].
 - Change: `anthropicOmitsSampling(id)` returns the registry's `sampling === 'omit'` when the ID is registered, and falls back to the regex plus `claude-fable-` for unknown IDs. Unknown Claude IDs default to omit (fail safe: a missing temperature never 400s).
 - Other call sites that set temperature (searched `app/` and `lib/`, 124 lines in 60+ files mention `temperature`; the ones below were opened):
@@ -73,6 +89,7 @@ Disposition test: it does not move O1-O7 or the client metric for a single-locat
 - Add a lint rule to the audit: a `temperature`/`top_p`/`top_k` key in an object literal that also contains a literal Claude ID is a finding.
 
 **Slice 3 — the weekly watcher (reuse, do not rebuild).**
+
 - The vault's `academy-weekly-llm-monitor` already sweeps Anthropic, OpenAI and Google changelogs weekly and writes into `knowledge/ai-llm`; its last logged run is 06/09/2026 [VERIFIED /Users/phill-mac/2nd Brain/Wiki/log.md:150]. Its definition and scheduler were not found in `~/2nd Brain`, `~/.claude/scheduled-tasks` or `~/Library/LaunchAgents` [UNVERIFIED where it is defined or why it stopped]. Before building, find and restart it; if it cannot be found, recreate it under the same name, output path and log format.
 - Add a diff step: fetch the three deprecation pages (Anthropic, OpenAI, Google), which return HTTP 200 as static HTML containing the rows (`claude-sonnet-4-5-20250929` with "November 30, 2026"; `gpt-image-1` with "October 23, 2026"; `gemini-2.5-flash-image` with "March 15, 2027") [VERIFIED https://platform.claude.com/docs/en/about-claude/model-deprecations fetched 22/10/2026] [VERIFIED https://developers.openai.com/api/docs/deprecations fetched 22/10/2026] [VERIFIED https://ai.google.dev/gemini-api/docs/deprecations fetched 22/10/2026]. No headless browser is needed. Extract `(id, retire date, replacement)` rows, diff against last week's snapshot, write the changes under a dated heading in synthex-intel-05 and a `proposed-lifecycle.json` patch.
 - Run the slice 1 check against the patch with `--as-of today` and list Synthex file:line hits as backlog findings.
@@ -81,19 +98,20 @@ Disposition test: it does not move O1-O7 or the client metric for a single-locat
 
 ## Open-source candidates
 
-| Project | Licence | Stars | pushed_at | What it gives us | Decision | Evidence |
-|---|---|---|---|---|---|---|
-| [anomalyco/models.dev](https://github.com/anomalyco/models.dev) (the `sst/models.dev` call redirected here) | MIT | 7336 | 2026-10-21 | Open catalogue of providers and models in TOML, served as `https://models.dev/api.json`. Per-model `temperature` boolean, modalities, limits, cost. `status` is only `alpha`/`beta`/`deprecated` with no date, and `claude-sonnet-4-5-20250929` carries no status despite its 30/11/2026 retirement | call-as-service (read `api.json` as a cross-check for sampling flags and new IDs) | [VERIFIED gh api repos/anomalyco/models.dev] |
-| [BerriAI/litellm](https://github.com/BerriAI/litellm) | NOASSERTION (LICENSE file: MIT outside `enterprise/`) | 61751 | 2026-10-21 | `model_prices_and_context_window.json`: 4,245 entries, 867 with `deprecation_date`. Has `gpt-image-1` 2026-10-23, `o4-mini` 2026-10-23, `claude-sonnet-4-5-20250929` 2026-11-30. Missing `claude-3-opus-20240229` and `dall-e-3` outright (retired models are dropped, so absence is not "unknown"), no date on `gpt-4o` (OpenAI: 14/01/2027), and a Vertex date of 2026-10-20 on `gemini-2.5-flash` that Google's Gemini API page contradicts | call-as-service (read raw JSON as a second cross-check; never the source of truth) | [VERIFIED gh api repos/BerriAI/litellm] |
-| [vercel/ai](https://github.com/vercel/ai) | NOASSERTION (LICENSE file: Apache-2.0) | 27436 | 2026-10-21 | Already a dependency (`ai` ^6.0.277, `@ai-sdk/anthropic`). `createProviderRegistry` resolves `provider:model` strings to provider instances; the only "deprecated" markers in `provider-registry.ts` are on API methods, not models. No lifecycle data | study-pattern (the `provider:model` ID shape for `model-catalogue.ts`; no new install) | [VERIFIED gh api repos/vercel/ai] |
-| [OpenRouterTeam/ai-sdk-provider](https://github.com/OpenRouterTeam/ai-sdk-provider) | Apache-2.0 | 691 | 2026-10-21 | The repo is OpenRouter's AI SDK provider; the useful part is the hosted `GET /api/v1/models` (no key needed): 468 models, `expiration_date` set on only 11, none of them the IDs Synthex uses; `supported_parameters` shows which models accept `temperature` | call-as-service (the endpoint, as a sampling cross-check for OpenRouter-routed IDs) | [VERIFIED gh api repos/OpenRouterTeam/ai-sdk-provider] |
-| [dgtlmoon/changedetection.io](https://github.com/dgtlmoon/changedetection.io) | Apache-2.0 | 35185 | 2026-10-19 | Self-hosted page-change watcher with notifications. It can watch the three vendor deprecation pages, but they are static HTML, so a fetch-and-diff step in the existing monitor does the same job without a new always-on service | study-pattern (revisit as call-as-service only if a vendor page moves behind client-side rendering) | [VERIFIED gh api repos/dgtlmoon/changedetection.io] |
-| [agentstation/starmap](https://github.com/agentstation/starmap) | AGPL-3.0 | 4 | 2026-10-20 | Auto-updating model catalogue CLI/server. AGPL and very low adoption | reject | [VERIFIED gh api repos/agentstation/starmap] |
-| [techdevsynergy/llm-model-deprecation](https://github.com/techdevsynergy/llm-model-deprecation) | none (no licence) | 0 | 2026-03-09 | Deprecation-status checker; stale (over 6 months since push), unlicensed, no users | reject | [VERIFIED gh api repos/techdevsynergy/llm-model-deprecation] |
+| Project                                                                                                     | Licence                                               | Stars | pushed_at  | What it gives us                                                                                                                                                                                                                                                                                                                                                                                                                               | Decision                                                                                            | Evidence                                                     |
+| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ----- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [anomalyco/models.dev](https://github.com/anomalyco/models.dev) (the `sst/models.dev` call redirected here) | MIT                                                   | 7336  | 2026-10-21 | Open catalogue of providers and models in TOML, served as `https://models.dev/api.json`. Per-model `temperature` boolean, modalities, limits, cost. `status` is only `alpha`/`beta`/`deprecated` with no date, and `claude-sonnet-4-5-20250929` carries no status despite its 30/11/2026 retirement                                                                                                                                            | call-as-service (read `api.json` as a cross-check for sampling flags and new IDs)                   | [VERIFIED gh api repos/anomalyco/models.dev]                 |
+| [BerriAI/litellm](https://github.com/BerriAI/litellm)                                                       | NOASSERTION (LICENSE file: MIT outside `enterprise/`) | 61751 | 2026-10-21 | `model_prices_and_context_window.json`: 4,245 entries, 867 with `deprecation_date`. Has `gpt-image-1` 2026-10-23, `o4-mini` 2026-10-23, `claude-sonnet-4-5-20250929` 2026-11-30. Missing `claude-3-opus-20240229` and `dall-e-3` outright (retired models are dropped, so absence is not "unknown"), no date on `gpt-4o` (OpenAI: 14/01/2027), and a Vertex date of 2026-10-20 on `gemini-2.5-flash` that Google's Gemini API page contradicts | call-as-service (read raw JSON as a second cross-check; never the source of truth)                  | [VERIFIED gh api repos/BerriAI/litellm]                      |
+| [vercel/ai](https://github.com/vercel/ai)                                                                   | NOASSERTION (LICENSE file: Apache-2.0)                | 27436 | 2026-10-21 | Already a dependency (`ai` ^6.0.277, `@ai-sdk/anthropic`). `createProviderRegistry` resolves `provider:model` strings to provider instances; the only "deprecated" markers in `provider-registry.ts` are on API methods, not models. No lifecycle data                                                                                                                                                                                         | study-pattern (the `provider:model` ID shape for `model-catalogue.ts`; no new install)              | [VERIFIED gh api repos/vercel/ai]                            |
+| [OpenRouterTeam/ai-sdk-provider](https://github.com/OpenRouterTeam/ai-sdk-provider)                         | Apache-2.0                                            | 691   | 2026-10-21 | The repo is OpenRouter's AI SDK provider; the useful part is the hosted `GET /api/v1/models` (no key needed): 468 models, `expiration_date` set on only 11, none of them the IDs Synthex uses; `supported_parameters` shows which models accept `temperature`                                                                                                                                                                                  | call-as-service (the endpoint, as a sampling cross-check for OpenRouter-routed IDs)                 | [VERIFIED gh api repos/OpenRouterTeam/ai-sdk-provider]       |
+| [dgtlmoon/changedetection.io](https://github.com/dgtlmoon/changedetection.io)                               | Apache-2.0                                            | 35185 | 2026-10-19 | Self-hosted page-change watcher with notifications. It can watch the three vendor deprecation pages, but they are static HTML, so a fetch-and-diff step in the existing monitor does the same job without a new always-on service                                                                                                                                                                                                              | study-pattern (revisit as call-as-service only if a vendor page moves behind client-side rendering) | [VERIFIED gh api repos/dgtlmoon/changedetection.io]          |
+| [agentstation/starmap](https://github.com/agentstation/starmap)                                             | AGPL-3.0                                              | 4     | 2026-10-20 | Auto-updating model catalogue CLI/server. AGPL and very low adoption                                                                                                                                                                                                                                                                                                                                                                           | reject                                                                                              | [VERIFIED gh api repos/agentstation/starmap]                 |
+| [techdevsynergy/llm-model-deprecation](https://github.com/techdevsynergy/llm-model-deprecation)             | none (no licence)                                     | 0     | 2026-03-09 | Deprecation-status checker; stale (over 6 months since push), unlicensed, no users                                                                                                                                                                                                                                                                                                                                                             | reject                                                                                              | [VERIFIED gh api repos/techdevsynergy/llm-model-deprecation] |
 
 **Answers to the OSS questions.**
-- *Does an existing model-catalogue dataset cover this?* Partly, and none is safe as the source. models.dev has the best sampling metadata (`temperature`) but no retire dates. LiteLLM has dates on about a fifth of entries, drops retired models and mixes Vertex and Gemini-API dates; for `gemini-2.5-flash` its Vertex row says 2026-10-20 while Google's Gemini API page says the 2.5 models "are not deprecated" and access is limited to past users [VERIFIED https://ai.google.dev/gemini-api/docs/deprecations fetched 22/10/2026]. OpenRouter dates almost nothing. The Vercel AI SDK registry is an alias resolver with no lifecycle. So: vendor pages are the source; models.dev, LiteLLM and OpenRouter are cross-checks that raise a flag when they disagree.
-- *Can a page-change watcher watch vendor deprecation pages?* Yes: changedetection.io (Apache-2.0, active) could, and the pages are fetchable as plain HTML. It is not needed: the existing monitor plus a diff step covers it without another service to host.
+
+- _Does an existing model-catalogue dataset cover this?_ Partly, and none is safe as the source. models.dev has the best sampling metadata (`temperature`) but no retire dates. LiteLLM has dates on about a fifth of entries, drops retired models and mixes Vertex and Gemini-API dates; for `gemini-2.5-flash` its Vertex row says 2026-10-20 while Google's Gemini API page says the 2.5 models "are not deprecated" and access is limited to past users [VERIFIED https://ai.google.dev/gemini-api/docs/deprecations fetched 22/10/2026]. OpenRouter dates almost nothing. The Vercel AI SDK registry is an alias resolver with no lifecycle. So: vendor pages are the source; models.dev, LiteLLM and OpenRouter are cross-checks that raise a flag when they disagree.
+- _Can a page-change watcher watch vendor deprecation pages?_ Yes: changedetection.io (Apache-2.0, active) could, and the pages are fetchable as plain HTML. It is not needed: the existing monitor plus a diff step covers it without another service to host.
 - Nothing is installed by this spec. If a later slice adds any package, a supply-chain review runs before it lands.
 
 ## Data model
@@ -114,16 +132,16 @@ The watcher's snapshot and `proposed-lifecycle.json` live in the vault, not in t
 
 ## Risk & assumption register
 
-| # | Risk or assumption | Likelihood | Impact | Mitigation |
-|---|---|---|---|---|
-| R1 | Date-based CI turns `main` red with no code change as a retire date nears | High (by design) | Medium: blocks unrelated PRs | 60-day warning window gives two months; findings name the replacement; `--as-of` for tests. Founder decides whether red blocks merges or only warns in the first month (Q2) |
-| R2 | Vendor page layout changes and the parser extracts nothing | Medium | High: silent staleness | Zero extracted rows on a page that had rows last week is an error, reported as "not checked" |
-| R3 | Cross-check sources disagree with vendor pages (LiteLLM Vertex date vs Gemini API) | Observed | Medium | Vendor page wins; disagreement is a human flag, never auto-applied |
-| R4 | IDs built at runtime (concatenation, env vars) escape the static check | Certain for some | Medium | The audit already documents this hole; the runtime Governor refusal is the boundary. Env defaults like `process.env.X \|\| 'dall-e-3'` are literals and are caught |
-| R5 | Alias IDs (`claude-sonnet-5`) and dated snapshots (`claude-haiku-4-5-20251001`) are tracked separately | Medium | Low | `model-catalogue.ts` records alias-to-snapshot pairs; a retire date on a snapshot applies to its alias only if the vendor page says so |
-| R6 | The vault monitor has not run since 06/09/2026 and its definition was not found | Observed | Medium: slice 3 has no host | Find or recreate it first (Q3) |
-| R7 | OpenRouter silently drops or rejects `temperature` for Claude 4.7+ | Unknown | Low to medium | Apply the registry sampling rule in the OpenRouter client regardless |
-| R8 | A dead config file is actually read by a path git grep did not cover | Low | Medium | The audit scans config JSON anyway; deletion goes through a normal reviewed PR |
+| #   | Risk or assumption                                                                                     | Likelihood       | Impact                       | Mitigation                                                                                                                                                                  |
+| --- | ------------------------------------------------------------------------------------------------------ | ---------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | Date-based CI turns `main` red with no code change as a retire date nears                              | High (by design) | Medium: blocks unrelated PRs | 60-day warning window gives two months; findings name the replacement; `--as-of` for tests. Founder decides whether red blocks merges or only warns in the first month (Q2) |
+| R2  | Vendor page layout changes and the parser extracts nothing                                             | Medium           | High: silent staleness       | Zero extracted rows on a page that had rows last week is an error, reported as "not checked"                                                                                |
+| R3  | Cross-check sources disagree with vendor pages (LiteLLM Vertex date vs Gemini API)                     | Observed         | Medium                       | Vendor page wins; disagreement is a human flag, never auto-applied                                                                                                          |
+| R4  | IDs built at runtime (concatenation, env vars) escape the static check                                 | Certain for some | Medium                       | The audit already documents this hole; the runtime Governor refusal is the boundary. Env defaults like `process.env.X \|\| 'dall-e-3'` are literals and are caught          |
+| R5  | Alias IDs (`claude-sonnet-5`) and dated snapshots (`claude-haiku-4-5-20251001`) are tracked separately | Medium           | Low                          | `model-catalogue.ts` records alias-to-snapshot pairs; a retire date on a snapshot applies to its alias only if the vendor page says so                                      |
+| R6  | The vault monitor has not run since 06/09/2026 and its definition was not found                        | Observed         | Medium: slice 3 has no host  | Find or recreate it first (Q3)                                                                                                                                              |
+| R7  | OpenRouter silently drops or rejects `temperature` for Claude 4.7+                                     | Unknown          | Low to medium                | Apply the registry sampling rule in the OpenRouter client regardless                                                                                                        |
+| R8  | A dead config file is actually read by a path git grep did not cover                                   | Low              | Medium                       | The audit scans config JSON anyway; deletion goes through a normal reviewed PR                                                                                              |
 
 ## Open questions
 

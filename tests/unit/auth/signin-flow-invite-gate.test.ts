@@ -2,7 +2,8 @@
  * Track A — consumption boundary (handoff-20260711-074357).
  *
  * lib/auth/signInFlow.ts handleOAuthLogin is the shared OAuth first-login
- * path (Google + GitHub). Invite-only mode is opt-in (`NEXT_PUBLIC_INVITE_ONLY_MODE=true`).
+ * path (Google + GitHub). Invite-only mode is fail closed: ON unless
+ * `NEXT_PUBLIC_INVITE_ONLY_MODE` is the literal 'false'. With it on, the flow
  * must NOT create an account for an uninvited email; existing linked
  * accounts keep logging in.
  */
@@ -24,7 +25,7 @@ jest.mock('@/lib/auth/monitoring', () => ({
 
 const mockUserCreate = jest.fn();
 const mockTeamFindFirst = jest.fn();
-const mockCodeFindFirst = jest.fn();
+const mockCodeFindMany = jest.fn();
 
 const prismaMock = {
   user: {
@@ -33,7 +34,7 @@ const prismaMock = {
     update: jest.fn(async () => ({})),
   },
   teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
-  inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
+  inviteCode: { findMany: (...a: unknown[]) => mockCodeFindMany(...a) },
 };
 
 jest.mock('@/lib/prisma', () => ({
@@ -60,7 +61,7 @@ beforeEach(() => {
   delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   jest.clearAllMocks();
   mockTeamFindFirst.mockResolvedValue(null);
-  mockCodeFindFirst.mockResolvedValue(null);
+  mockCodeFindMany.mockResolvedValue([]);
   mockUserCreate.mockResolvedValue({
     id: 'user-new',
     email: PROFILE.email,
@@ -75,11 +76,12 @@ afterAll(() => {
 });
 
 describe('signInFlow.handleOAuthLogin — invite gate on OAuth first login', () => {
-  it('creates an account for an uninvited email when invite-only is unset', async () => {
+  it('refuses to create an account for an uninvited email when invite-only is unset (fail closed)', async () => {
     const result = await signInFlow.handleOAuthLogin('github', PROFILE);
 
-    expect(mockUserCreate).toHaveBeenCalled();
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/invite-only/i);
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 
   it('refuses to create an account for an uninvited email when invite-only is on', async () => {

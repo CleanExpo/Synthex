@@ -111,10 +111,10 @@ export function CaptionDemo() {
               {result.caption}
             </p>
             <Link
-              href="/signup"
+              href="/opportunity-map"
               className="mt-6 inline-flex items-center gap-2 font-semibold text-orange-400 hover:text-orange-300"
             >
-              Create an account to plan and approve posts
+              Talk to us about planning and approving posts
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

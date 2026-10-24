@@ -1,9 +1,8 @@
 /**
  * Track A — consumption boundary (handoff-20260711-074357).
  *
- * Route-level regression tests proving the three open-market bypasses are
- * Route-level regression tests for invite-only mode. The gate is OFF unless
- * NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'true':
+ * Route-level regression tests for invite-only mode. The gate is ON (fail
+ * closed) unless NEXT_PUBLIC_INVITE_ONLY_MODE is the literal string 'false':
  *
  *   1. POST /api/auth/unified {action:'signup'} — the parallel signup door
  *      that never honoured the invite gate.
@@ -81,7 +80,7 @@ const mockOrgUpdate = jest.fn();
 const mockProgressUpsert = jest.fn();
 const mockProgressFindUnique = jest.fn();
 const mockTeamFindFirst = jest.fn();
-const mockCodeFindFirst = jest.fn();
+const mockCodeFindMany = jest.fn();
 const mockTransaction = jest.fn();
 
 const prismaMock = {
@@ -101,7 +100,7 @@ const prismaMock = {
     findUnique: (...a: unknown[]) => mockProgressFindUnique(...a),
   },
   teamInvitation: { findFirst: (...a: unknown[]) => mockTeamFindFirst(...a) },
-  inviteCode: { findFirst: (...a: unknown[]) => mockCodeFindFirst(...a) },
+  inviteCode: { findMany: (...a: unknown[]) => mockCodeFindMany(...a) },
   $transaction: (...a: unknown[]) => mockTransaction(...a),
 };
 
@@ -137,7 +136,7 @@ beforeEach(() => {
   mockOrgUpdate.mockResolvedValue({});
   mockProgressUpsert.mockResolvedValue({});
   mockTeamFindFirst.mockResolvedValue(null);
-  mockCodeFindFirst.mockResolvedValue(null);
+  mockCodeFindMany.mockResolvedValue([]);
   mockGetUserId.mockResolvedValue('user-1');
   mockSecurityCheck.mockResolvedValue({
     allowed: true,
@@ -176,7 +175,7 @@ describe('POST /api/auth/unified {action:signup} — invite gate', () => {
     name: 'New User',
   };
 
-  it('allows signup when invite-only mode is unset (market open)', async () => {
+  it('refuses signup (403) when invite-only mode is unset (fail closed)', async () => {
     const res = await unifiedPost(
       createMockNextRequest({
         method: 'POST',
@@ -184,8 +183,8 @@ describe('POST /api/auth/unified {action:signup} — invite gate', () => {
         body: signupBody,
       })
     );
-    expect(res.status).toBe(200);
-    expect(mockUserCreate).toHaveBeenCalled();
+    expect(res.status).toBe(403);
+    expect(mockUserCreate).not.toHaveBeenCalled();
   });
 
   it('refuses signup (403) when the flag is explicitly "true"', async () => {

@@ -57,7 +57,7 @@ export function FloatingParticles() {
 
 const NAV_LINKS = [
   { href: '/features', label: 'Features', key: 'features' },
-  { href: '/pricing', label: 'Pricing', key: 'pricing' },
+  { href: '/opportunity-map', label: 'Talk to us', key: 'enquire' },
   { href: '/about', label: 'About', key: 'about' },
   // { href: '/blog', label: 'Blog', key: 'blog' }, // Blog link hidden until content is ready
 ];
@@ -95,9 +95,9 @@ export function MarketingNav({ currentPage }: { currentPage?: string }) {
             >
               Login
             </Link>
-            <Link href="/signup">
+            <Link href="/opportunity-map">
               <Button className="bg-orange-500 hover:bg-orange-400 text-charcoal-900 text-sm px-6 py-2 rounded-full font-bold transition-all">
-                Get Started
+                Talk to us
               </Button>
             </Link>
           </div>
@@ -163,9 +163,9 @@ export function MarketingNav({ currentPage }: { currentPage?: string }) {
             >
               Login
             </Link>
-            <Link href="/signup" onClick={() => setMobileOpen(false)}>
+            <Link href="/opportunity-map" onClick={() => setMobileOpen(false)}>
               <Button className="w-full bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full mt-2">
-                Get Started
+                Talk to us
               </Button>
             </Link>
           </div>
@@ -207,10 +207,10 @@ export function MarketingFooter() {
               </li>
               <li>
                 <Link
-                  href="/pricing"
+                  href="/opportunity-map"
                   className="text-gray-500 hover:text-orange-400 transition-colors text-sm"
                 >
-                  Pricing
+                  Talk to us
                 </Link>
               </li>
               <li>

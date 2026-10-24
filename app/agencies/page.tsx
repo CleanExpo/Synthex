@@ -74,8 +74,8 @@ const FAQS = [
     a: 'Yes. Synthex is fully multi-tenant — each business gets its own brand voice, posting schedule, and analytics. Perfect for agencies managing multiple clients.',
   },
   {
-    q: 'Is there a free trial?',
-    a: "Yes — no credit card required. Start free and upgrade when you're ready.",
+    q: 'How do we start?',
+    a: "Synthex is Unite-Group's in-house marketing agency, so there is no sign-up. Build a free Opportunity Map. The Unite-Group team follows up only if you choose to share it, add your contact details and confirm you are happy to be contacted.",
   },
 ];
 
@@ -124,10 +124,10 @@ export default function AgenciesPage() {
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
-              href="/signup"
+              href="/opportunity-map"
               className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
             >
-              Start free — no card required
+              Talk to us
             </Link>
             <Link
               href="/features"
@@ -217,10 +217,10 @@ export default function AgenciesPage() {
             post first.
           </p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-10 py-4 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-base"
           >
-            Start free today →
+            Talk to us →
           </Link>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm text-white/30">
             <Link
@@ -236,10 +236,10 @@ export default function AgenciesPage() {
               All Platforms →
             </Link>
             <Link
-              href="/pricing"
+              href="/opportunity-map"
               className="hover:text-orange-400 transition-colors"
             >
-              Pricing →
+              Talk to us →
             </Link>
           </div>
         </div>

@@ -4,25 +4,25 @@ Research that Synthex agents should draw on before designing or building: what S
 
 ## Where it is
 
-| Who | Where |
-|---|---|
+| Who                                       | Where                                                                                                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Agents with the `second-brain` MCP server | Tools `unite_group_search`, `unite_group_find_similar`, `unite_group_stats` (registered for Claude Code at user scope on the Mac Mini, 22/10/2026) |
-| Agents with file access on the Mac Mini | `/Users/phill-mac/2nd Brain/Wiki/synthex-intelligence/` (read `index.md` first) |
-| Anyone with GitHub access | `CleanExpo/brain-1`, folder `Wiki/synthex-intelligence/` |
-| Humans in Obsidian | `Wiki/synthex-intelligence` (a link to the same folder) |
+| Agents with file access on the Mac Mini   | `/Users/phill-mac/2nd Brain/Wiki/synthex-intelligence/` (read `index.md` first)                                                                    |
+| Anyone with GitHub access                 | `CleanExpo/brain-1`, folder `Wiki/synthex-intelligence/`                                                                                           |
+| Humans in Obsidian                        | `Wiki/synthex-intelligence` (a link to the same folder)                                                                                            |
 
 ## The pages
 
-| Page | What it answers |
-|---|---|
-| `synthex-intel-00-hub` | Start here: the five quadrants and what to do about them |
-| `synthex-intel-01-synthex-as-built` | What Synthex does today, from the code: capabilities, fleet, integrations, gaps, unfinished branches |
-| `synthex-intel-02-agency-groups` | WPP, Publicis, Omnicom, Dentsu, Havas, Accenture Song, Monks and Stagwell reverse-engineered; what an autonomous agency can and cannot do better |
-| `synthex-intel-03-ai-marketing-platforms` | AI marketing platforms by category, and build, buy or call for each marketing function |
-| `synthex-intel-04-automation-stacks` | n8n, Replit, Higgsfield, the "Atlas" products and agent frameworks; ten patterns to adopt and the anti-patterns |
-| `synthex-intel-05-llm-vendor-docs-2026-10` | Current model IDs, prices, shutdowns and API changes from vendor docs, with a model-routing table |
-| `synthex-intel-06-trends-and-signals` | AI marketing trends, Australian rules, what is overhyped, and a 34-source tracking list |
-| `synthex-intel-07-advantages-and-proposals` | Eleven ranked proposals for Synthex |
+| Page                                        | What it answers                                                                                                                                  |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `synthex-intel-00-hub`                      | Start here: the five quadrants and what to do about them                                                                                         |
+| `synthex-intel-01-synthex-as-built`         | What Synthex does today, from the code: capabilities, fleet, integrations, gaps, unfinished branches                                             |
+| `synthex-intel-02-agency-groups`            | WPP, Publicis, Omnicom, Dentsu, Havas, Accenture Song, Monks and Stagwell reverse-engineered; what an autonomous agency can and cannot do better |
+| `synthex-intel-03-ai-marketing-platforms`   | AI marketing platforms by category, and build, buy or call for each marketing function                                                           |
+| `synthex-intel-04-automation-stacks`        | n8n, Replit, Higgsfield, the "Atlas" products and agent frameworks; ten patterns to adopt and the anti-patterns                                  |
+| `synthex-intel-05-llm-vendor-docs-2026-10`  | Current model IDs, prices, shutdowns and API changes from vendor docs, with a model-routing table                                                |
+| `synthex-intel-06-trends-and-signals`       | AI marketing trends, Australian rules, what is overhyped, and a 34-source tracking list                                                          |
+| `synthex-intel-07-advantages-and-proposals` | Eleven ranked proposals for Synthex                                                                                                              |
 
 ## How to use it without bloating context
 

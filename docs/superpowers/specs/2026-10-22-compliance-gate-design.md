@@ -18,6 +18,7 @@ Build, in-house, small. The gate is a set of deterministic rules added to the tw
 ## Goals & non-goals
 
 **Goals**
+
 - One compliance decision inside the existing approval path, fail-closed: unknown, unreadable or missing means blocked.
 - Spam Act basics on every commercial email and SMS: consent recorded, sender identified, a working unsubscribe that is honoured.
 - RFC 8058 one-click unsubscribe that a mailbox provider can actually call.
@@ -26,6 +27,7 @@ Build, in-house, small. The gate is a set of deterministic rules added to the tw
 - A rule set where every rule carries its source, a verified-on date and a lawyer-review flag.
 
 **Non-goals**
+
 - Not a legal opinion. The gate enforces rules a person wrote down. It cannot decide whether copy is true.
 - No consent-ledger table or suppression table in this spec. They are asked, not built (DECISIONS A-24 / D3).
 - No C2PA signing in the first three slices.
@@ -78,16 +80,16 @@ Build, in-house, small. The gate is a set of deterministic rules added to the tw
 
 ## Open-source candidates
 
-| Project | Licence | Stars | pushed_at | What it gives us | Decision | Evidence |
-| --- | --- | --- | --- | --- | --- | --- |
-| [errata-ai/vale](https://github.com/errata-ai/vale) | MIT | 6272 | 2026-10-16 | A prose linter with YAML rule files (existence, substitution, conditional). The best-maintained pattern for one claims rule file per brand. It is a Go binary, so running it inside Next.js would be awkward | study-pattern | [VERIFIED gh api repos/errata-ai/vale] |
-| [contentauth/c2pa-js](https://github.com/contentauth/c2pa-js) | MIT | 40 | 2026-10-19 | A monorepo that holds the live Node binding (`packages/c2pa-node`), plus wasm, web and types. It can sign and read C2PA manifests for generated media. 40 stars is a thin community | depend (deferred to slice 5, after supply-chain review) | [VERIFIED gh api repos/contentauth/c2pa-js] |
-| [contentauth/c2pa-rs](https://github.com/contentauth/c2pa-rs) | NOASSERTION | 435 | 2026-10-19 | The reference Rust SDK under the bindings. The repo holds `LICENSE-MIT` and `LICENSE-APACHE` files (contents API), but GitHub reports no single SPDX ID | study-pattern | [VERIFIED gh api repos/contentauth/c2pa-rs] |
-| [contentauth/c2patool](https://github.com/contentauth/c2patool) | Apache-2.0 | 151 | 2026-10-21 | A CLI to read and add C2PA manifests. Useful in a verification script to prove that a disclosure survived export | call-as-service (as a CLI in checks, slice 5) | [VERIFIED gh api repos/contentauth/c2patool] |
-| [textlint/textlint](https://github.com/textlint/textlint) | MIT | 3202 | 2026-10-18 | A pluggable prose linter in JavaScript. It could host the claims rules in-process if a hand-written matcher proves too weak | study-pattern | [VERIFIED gh api repos/textlint/textlint] |
-| [Lickgrass/one-click-unsub](https://github.com/Lickgrass/one-click-unsub) | MIT | 2 | 2026-10-17 | RFC 8058 HMAC tokens, header builder and Fetch handlers. Exactly slice 1's shape, but 2 stars | study-pattern | [VERIFIED gh api repos/Lickgrass/one-click-unsub] |
-| [get-alex/alex](https://github.com/get-alex/alex) | MIT | 5105 | 2024-11-27 | An inclusive-language linter. Stale, and not about claims | reject | [VERIFIED gh api repos/get-alex/alex] |
-| [contentauth/c2pa-node-v2](https://github.com/contentauth/c2pa-node-v2) | MIT | 11 | 2026-06-19 | An older Node binding, archived (as is `contentauth/c2pa-node`) | reject | [VERIFIED gh api repos/contentauth/c2pa-node-v2] |
+| Project                                                                   | Licence     | Stars | pushed_at  | What it gives us                                                                                                                                                                                             | Decision                                                | Evidence                                          |
+| ------------------------------------------------------------------------- | ----------- | ----- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- | ------------------------------------------------- |
+| [errata-ai/vale](https://github.com/errata-ai/vale)                       | MIT         | 6272  | 2026-10-16 | A prose linter with YAML rule files (existence, substitution, conditional). The best-maintained pattern for one claims rule file per brand. It is a Go binary, so running it inside Next.js would be awkward | study-pattern                                           | [VERIFIED gh api repos/errata-ai/vale]            |
+| [contentauth/c2pa-js](https://github.com/contentauth/c2pa-js)             | MIT         | 40    | 2026-10-19 | A monorepo that holds the live Node binding (`packages/c2pa-node`), plus wasm, web and types. It can sign and read C2PA manifests for generated media. 40 stars is a thin community                          | depend (deferred to slice 5, after supply-chain review) | [VERIFIED gh api repos/contentauth/c2pa-js]       |
+| [contentauth/c2pa-rs](https://github.com/contentauth/c2pa-rs)             | NOASSERTION | 435   | 2026-10-19 | The reference Rust SDK under the bindings. The repo holds `LICENSE-MIT` and `LICENSE-APACHE` files (contents API), but GitHub reports no single SPDX ID                                                      | study-pattern                                           | [VERIFIED gh api repos/contentauth/c2pa-rs]       |
+| [contentauth/c2patool](https://github.com/contentauth/c2patool)           | Apache-2.0  | 151   | 2026-10-21 | A CLI to read and add C2PA manifests. Useful in a verification script to prove that a disclosure survived export                                                                                             | call-as-service (as a CLI in checks, slice 5)           | [VERIFIED gh api repos/contentauth/c2patool]      |
+| [textlint/textlint](https://github.com/textlint/textlint)                 | MIT         | 3202  | 2026-10-18 | A pluggable prose linter in JavaScript. It could host the claims rules in-process if a hand-written matcher proves too weak                                                                                  | study-pattern                                           | [VERIFIED gh api repos/textlint/textlint]         |
+| [Lickgrass/one-click-unsub](https://github.com/Lickgrass/one-click-unsub) | MIT         | 2     | 2026-10-17 | RFC 8058 HMAC tokens, header builder and Fetch handlers. Exactly slice 1's shape, but 2 stars                                                                                                                | study-pattern                                           | [VERIFIED gh api repos/Lickgrass/one-click-unsub] |
+| [get-alex/alex](https://github.com/get-alex/alex)                         | MIT         | 5105  | 2024-11-27 | An inclusive-language linter. Stale, and not about claims                                                                                                                                                    | reject                                                  | [VERIFIED gh api repos/get-alex/alex]             |
+| [contentauth/c2pa-node-v2](https://github.com/contentauth/c2pa-node-v2)   | MIT         | 11    | 2026-06-19 | An older Node binding, archived (as is `contentauth/c2pa-node`)                                                                                                                                              | reject                                                  | [VERIFIED gh api repos/contentauth/c2pa-node-v2]  |
 
 - **vale.** The rule format (a pattern, a message and a level per YAML file) maps cleanly onto one claims file per brand. Copy the idea into TypeScript. Do not ship the binary.
 - **c2pa-js.** This is the only maintained Node path to C2PA. The archived `c2pa-node` repos point to it. Revisit it when slice 5 is triggered.
@@ -101,6 +103,7 @@ Build, in-house, small. The gate is a set of deterministic rules added to the tw
 ## Data model
 
 None for slices 1-3.
+
 - The compliance result lives in the existing slot or calendar JSON manifest, which is org-scoped through `ContentCalendar.organizationId` as `runSafetyChecks` already queries it.
 - Suppression for Synthex users stays in `user.preferences.emailStatus`.
 - Rule files are code, versioned in the repo.
@@ -118,17 +121,17 @@ None for slices 1-3.
 
 ## Risk & assumption register
 
-| ID | Risk or assumption | Likelihood | Impact | Mitigation | Owner |
-| --- | --- | --- | --- | --- | --- |
-| R1 | The rule set is legally wrong or incomplete, and the gate passes non-compliant items | M | H | Every rule carries a source and a `lawyerReviewed:false` flag. Q1 requires a lawyer before activation | Founder |
-| R2 | Drip or welcome emails are commercial, and a recipient who unsubscribed is still mailed today | M | H | Slice 1 first, or retire the drips under proposal 5. Q2 | Founder |
-| R3 | Fail-closed blocks legitimate sends when the suppression read errors | M | M | A visible blocker code and an ops alert. A blocked send is recoverable; a sent breach is not | Builder |
-| R4 | Platform AI-label rules change faster than the rule set | H | M | Each rule has a verified-on date. A refresh agent (synthex-intel-07 proposal 11) re-fetches the source pages | Builder |
-| R5 | CARSI's RTO status is unknown, so the ASQA rules may be misapplied | M | M | Q3. Until it is answered, block any "nationally recognised" or "accredited" wording | Founder |
-| R6 | A pattern matcher misses a claim reworded by a model | H | M | Claims rules are a tripwire, not a fact-checker (the same stance as the public-claims test). Human approval stays required for flagged classes | Builder |
-| R7 | A new `failedGate` is added outside the held list and retries forever | L | M | Put blockers inside Gate 4. A unit test asserts that every `SafetyGate` value is classified held or retry | Builder |
-| A1 | The social queue is not yet scheduled on main (proposal 1), so slice 2 has no live exposure until then | — | — | Build slice 2 with P7, not before | — |
-| A2 | Gmail's 5,000-a-day threshold does not apply at today's volume, but RFC 8058 headers cost nothing and also help other providers | — | — | Set the headers on every commercial send | — |
+| ID  | Risk or assumption                                                                                                              | Likelihood | Impact | Mitigation                                                                                                                                     | Owner   |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| R1  | The rule set is legally wrong or incomplete, and the gate passes non-compliant items                                            | M          | H      | Every rule carries a source and a `lawyerReviewed:false` flag. Q1 requires a lawyer before activation                                          | Founder |
+| R2  | Drip or welcome emails are commercial, and a recipient who unsubscribed is still mailed today                                   | M          | H      | Slice 1 first, or retire the drips under proposal 5. Q2                                                                                        | Founder |
+| R3  | Fail-closed blocks legitimate sends when the suppression read errors                                                            | M          | M      | A visible blocker code and an ops alert. A blocked send is recoverable; a sent breach is not                                                   | Builder |
+| R4  | Platform AI-label rules change faster than the rule set                                                                         | H          | M      | Each rule has a verified-on date. A refresh agent (synthex-intel-07 proposal 11) re-fetches the source pages                                   | Builder |
+| R5  | CARSI's RTO status is unknown, so the ASQA rules may be misapplied                                                              | M          | M      | Q3. Until it is answered, block any "nationally recognised" or "accredited" wording                                                            | Founder |
+| R6  | A pattern matcher misses a claim reworded by a model                                                                            | H          | M      | Claims rules are a tripwire, not a fact-checker (the same stance as the public-claims test). Human approval stays required for flagged classes | Builder |
+| R7  | A new `failedGate` is added outside the held list and retries forever                                                           | L          | M      | Put blockers inside Gate 4. A unit test asserts that every `SafetyGate` value is classified held or retry                                      | Builder |
+| A1  | The social queue is not yet scheduled on main (proposal 1), so slice 2 has no live exposure until then                          | —          | —      | Build slice 2 with P7, not before                                                                                                              | —       |
+| A2  | Gmail's 5,000-a-day threshold does not apply at today's volume, but RFC 8058 headers cost nothing and also help other providers | —          | —      | Set the headers on every commercial send                                                                                                       | —       |
 
 ## Open questions
 
@@ -191,6 +194,7 @@ npm run type-check && npm run lint              # expect: exit 0
 ```
 
 **Not checked in this spec.**
+
 - No test above has been written or run.
 - The ACCC, Ad Standards, Google Ads help and Attorney-General pages were not fetched (403, or not reached), so those rules are [UNVERIFIED].
 - `twilio-provider.ts` was not read.

@@ -114,10 +114,10 @@ export default function PlatformsPage() {
             ))}
           </div>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-sm"
           >
-            Connect your platforms free →
+            Talk to us →
           </Link>
         </div>
       </section>
@@ -159,14 +159,17 @@ export default function PlatformsPage() {
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-black text-white mb-4">
-            Publish to your platforms today
+            Map your platforms first
           </h2>
-          <p className="text-white/50 mb-8">No card required.</p>
+          <p className="text-white/50 mb-8">
+            Build an Opportunity Map, then talk to the Unite-Group team about
+            your channels. No card required.
+          </p>
           <Link
-            href="/signup"
+            href="/opportunity-map"
             className="inline-flex items-center justify-center px-10 py-4 bg-orange-500 hover:bg-orange-400 text-charcoal-900 font-bold rounded-full transition-all text-base"
           >
-            Start free →
+            Talk to us →
           </Link>
           <div className="mt-6 flex items-center justify-center gap-6 text-sm text-white/30">
             <Link

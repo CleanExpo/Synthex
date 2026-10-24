@@ -19,8 +19,7 @@
 
 import type { Metadata } from 'next';
 import { getPublicBenchmarks } from '@/lib/analytics/public-benchmarks';
-import { BenchmarkAnalyticsIsland } from './analytics-island';
-import { BenchmarkTrialForm } from '@/components/marketing/BenchmarkTrialForm';
+import { BenchmarkAnalyticsIsland, BenchmarkCtaLink } from './analytics-island';
 
 export const revalidate = 600; // 10 minutes
 
@@ -77,10 +76,12 @@ export default async function BenchmarkPage() {
             size disclosed next to each claim.
           </p>
 
-          <BenchmarkTrialForm
-            buttonClassName={CTA_BUTTON_CLASSES}
-            formId="benchmark-trial-form-hero"
-          />
+          <BenchmarkCtaLink
+            href="/opportunity-map"
+            className={CTA_BUTTON_CLASSES}
+          >
+            Talk to us
+          </BenchmarkCtaLink>
         </div>
       </section>
 
@@ -197,14 +198,16 @@ export default async function BenchmarkPage() {
             Ready to be measured?
           </h2>
           <p className="text-lg text-gray-400 mb-8">
-            Start your 14-day trial and see what Synthex can do for your local
-            marketing — with the same transparent measurement we use on this
-            page.
+            Start with a free Opportunity Map and the Unite-Group team will pick
+            it up from there — with the same transparent measurement we use on
+            this page.
           </p>
-          <BenchmarkTrialForm
-            buttonClassName={CTA_BUTTON_CLASSES}
-            formId="benchmark-trial-form-footer"
-          />
+          <BenchmarkCtaLink
+            href="/opportunity-map"
+            className={CTA_BUTTON_CLASSES}
+          >
+            Talk to us
+          </BenchmarkCtaLink>
         </div>
       </section>
     </main>
