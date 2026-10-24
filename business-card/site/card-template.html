@@ -406,10 +406,10 @@ body:not(.owner) .owner-only { display: none !important; }
           </label>
           <label for="f-msg">Message<textarea id="f-msg" name="message" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea></label>
           <p class="fine" style="margin:0">Example entry shown. Replace it with your own.</p>
-          <button class="btn primary" type="submit">Prepare my message</button>
+          <button class="btn primary" type="submit" id="enquiry-go">Prepare my message</button>
         </form>
         <div class="out" id="out" hidden>
-          <span class="tag">Not sent</span>
+          <span class="tag" id="send-state" role="status">Not sent</span>
           <pre id="out-text"></pre>
           <div class="row">
             <button class="btn" type="button" id="copy-msg">Copy message</button>
@@ -1282,12 +1282,45 @@ if (P.inbox && P.inbox.address && ["proposed", "found"].includes(P.inbox.status)
   const li = $("status-inbox"); li.className = "on"; li.querySelector("b").textContent = P.inbox.status === "found" ? "Live" : "Proposed";
   li.lastChild.textContent = "Connect sends your message from your own email to " + who + "'s assistant inbox, tagged with where you met.";
 }
+// Hosted cards with kit.capture save what a visitor sends straight to the owner's database, with the
+// publishable key only: insert-only for anon, nobody but the owner reads it back (UNI-3000)
+const CAPTURE = (() => {
+  const c = KIT.capture;
+  return HOSTED && c && /^https:\/\/[a-z0-9]{20}\.supabase\.co$/.test(c.url) && /^sb_publishable_[A-Za-z0-9_-]+$/.test(c.key) &&
+    /^[a-z0-9-]{1,64}$/.test(c.slug) ? c : null;
+})();
+const sent = new Set(), sending = new Map();
+// cut by code points, never inside a character: the database counts characters, not UTF-16 units
+const cut = (s, n) => Array.from(s).slice(0, n).join("");
+// POST one row; the tag says Saved only on 201, and a resend of the same row (even mid-flight) is not saved twice
+function sendRow(table, row, tag) {
+  const body = JSON.stringify(row), id = table + body;
+  if (sent.has(id)) { tag.textContent = "Saved"; return Promise.resolve(true); }
+  if (sending.has(id)) return sending.get(id);
+  tag.textContent = "Sending";
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl && setTimeout(() => ctl.abort(), 10000);
+  const p = fetch(CAPTURE.url + "/rest/v1/" + table, {
+    method: "POST",
+    headers: { apikey: CAPTURE.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body, signal: ctl ? ctl.signal : undefined, credentials: "omit", referrerPolicy: "no-referrer"
+  }).then(r => r.status === 201, () => false).then(ok => {
+    if (timer) clearTimeout(timer);
+    sending.delete(id);
+    if (ok) sent.add(id);
+    tag.textContent = ok ? "Saved" : "Not saved: copy it or email it instead";
+    return ok;
+  });
+  sending.set(id, p);
+  return p;
+}
+if (CAPTURE) $("enquiry-go").textContent = "Send my message";
 $("enquiry").addEventListener("submit", e => {
   e.preventDefault();
   const f = new FormData(e.currentTarget);
   const name = (f.get("name") || "").trim(), email = (f.get("email") || "").trim(), msg = (f.get("message") || "").trim();
   if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
-    $("out-text").textContent = "Add your name, a working email and a message, then try again."; $("out").hidden = false; return;
+    $("out-text").textContent = "Add your name, a working email and a message, then try again."; $("send-state").textContent = "Not sent"; $("out").hidden = false; return;
   }
   const met = eventById(currentAt());
   const subject = `[Card${met ? " · " + met.label : ""}] ${f.get("type")}: ${name}`;
@@ -1295,6 +1328,22 @@ $("enquiry").addEventListener("submit", e => {
   $("out-text").textContent = `To: ${INBOX}\nSubject: ${subject}\n\n${body}`;
   $("mail-msg").href = `mailto:${INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   $("out").hidden = false;
+  if (!CAPTURE) return;
+  // the form opens holding an example entry: sending that unchanged would only save a fake enquiry
+  const untouched = [...e.currentTarget.elements].every(el =>
+    el.tagName === "SELECT" ? [...el.options].every(o => o.selected === o.defaultSelected)
+      : !("defaultValue" in el) || el.type === "submit" || el.value === el.defaultValue);
+  if (untouched) { $("send-state").textContent = "Example only, not saved"; return; }
+  // the copy and email above stay ready whatever happens here
+  const row = {
+    card_slug: CAPTURE.slug,
+    first_name: cut(name.split(/\s+/)[0], 60),
+    business: cut((f.get("business") || "").trim(), 120) || null,
+    ask: cut(`${f.get("type")}: ${msg}${met ? "\n\nMet at: " + met.label : ""}`, 2000),
+    reply_email: email.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null,
+    source: "card"
+  };
+  sendRow("card_enquiries", row, $("send-state"));
 });
 $("copy-msg").addEventListener("click", e => copy($("out-text").textContent, e.currentTarget));
 
