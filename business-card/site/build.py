@@ -110,6 +110,36 @@ MIME = {".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".j
 SAFE_URL = re.compile(r'^https://[^\s"<>]+$')
 
 
+# Phill 24/10/2026: the contact picture is the owner's logo or a photo of the owner. Never Margot, a film
+# still or an edition poster, and small enough to sit inside a contact file.
+PHOTO_KINDS = ("logo", "owner")
+PHOTO_TYPES = {".png": ("PNG", b"\x89PNG\r\n\x1a\n"), ".jpg": ("JPEG", b"\xff\xd8\xff"), ".jpeg": ("JPEG", b"\xff\xd8\xff")}
+PHOTO_NOT = re.compile(r"margot|films?/|edition|poster|reveal|hero", re.I)
+PHOTO_MAX = 120_000
+
+
+def contact_photo(person):
+    """The contact picture as (vCard TYPE, base64), or the build stops with the reason."""
+    cp = person.get("contactPhoto")
+    if not isinstance(cp, dict):
+        sys.exit("contact photo: the kit needs person.contactPhoto, the owner's logo or a photo of the owner")
+    if cp.get("kind") not in PHOTO_KINDS:
+        sys.exit(f"contact photo: kind must be logo or owner, not {cp.get('kind')!r}")
+    rel = str(cp.get("file") or "")
+    if not rel or PHOTO_NOT.search(rel):
+        sys.exit(f"contact photo: {rel or 'no file'} is not the owner's logo or photo (no Margot, film or edition stills)")
+    kind = PHOTO_TYPES.get(os.path.splitext(rel)[1].lower())
+    path = os.path.join(REPO, rel)
+    if not kind or not os.path.isfile(path):
+        sys.exit(f"contact photo: {rel} must be an existing PNG or JPEG file")
+    data = open(path, "rb").read()
+    if not data.startswith(kind[1]):
+        sys.exit(f"contact photo: {rel} is not really a {kind[0]}")
+    if len(data) > PHOTO_MAX:
+        sys.exit(f"contact photo: {rel} is {len(data)} bytes; use a copy of about 256 px (at most {PHOTO_MAX} bytes)")
+    return kind[0], base64.b64encode(data).decode()
+
+
 def esc(s):
     """vCard text value: escape \\ ; , and turn line breaks into \\n so no value can start a new field."""
     s = str(s).replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,")
@@ -145,6 +175,8 @@ def vcard(p):
         lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
     if p.get("vcardNote"):
         lines.append("NOTE:" + esc(p["vcardNote"]))
+    photo_type, photo = contact_photo(p)
+    lines.append(f"PHOTO;ENCODING=b;TYPE={photo_type}:{photo}")
     lines.append("END:VCARD")
     # Fold at 75 UTF-8 octets, including continuation spaces; never split a character.
     folded = []
@@ -167,8 +199,13 @@ def main(card_path, kit_path, out):
     if not kit.get("id") or not (kit.get("person") or {}).get("name"):
         sys.exit("brand kit needs an id and person.name")
     os.makedirs(os.path.join(out, "media"), exist_ok=True)
+    photo_type, photo = contact_photo(kit["person"])
     hosted = json.loads(json.dumps(kit))   # served as files next to index.html
     preview = json.loads(json.dumps(kit))  # self-contained for a claude.ai preview: media as data URIs
+    # the page's own Save builds the same contact, so it carries the picture itself, not its file path
+    for k in (hosted, preview):
+        k["person"]["contactPhoto"] = {"kind": kit["person"]["contactPhoto"]["kind"],
+                                       "dataUri": f"data:image/{photo_type.lower()};base64,{photo}"}
     brand_h, brand_p = hosted.get("brand") or {}, preview.get("brand") or {}
 
     def media(rel):

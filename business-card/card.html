@@ -643,6 +643,9 @@ function vcard(met = "") {
   });
   const note = [met ? "Met: " + met : "", P.vcardNote].filter(Boolean).join("\n");
   if (note) lines.push("NOTE:" + esc(note));
+  // the owner's logo or photo, as the build embeds it (same line as build.py writes)
+  const photo = /^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/.exec((P.contactPhoto || {}).dataUri || "");
+  if (photo) lines.push("PHOTO;ENCODING=b;TYPE=" + photo[1].toUpperCase() + ":" + photo[2]);
   lines.push("END:VCARD");
   // vCard 3.0: CRLF and at most 75 UTF-8 octets per physical line.
   const folded = [], encoder = new TextEncoder();

@@ -560,6 +560,11 @@
       "Synthex",
       "TradeHall"
     ],
-    "titleSource": "Phill 24/10/2026: \"I dont want the IICRC certifications and others on my business card. I just want Unite-Group - Senior Project Manager\""
+    "titleSource": "Phill 24/10/2026: \"I dont want the IICRC certifications and others on my business card. I just want Unite-Group - Senior Project Manager\"",
+    "contactPhoto": {
+      "kind": "logo",
+      "file": "business-card/brand-kits/media/app-icon-192.png",
+      "source": "Phill 24/10/2026 (via the MacBook lead): the contact picture is the owner's logo or a photo of the owner, never Margot. The Unite-Group U app icon; the 192 px copy, because the 512 px one is 311 KB, too large for a contact file."
+    }
   }
 }
