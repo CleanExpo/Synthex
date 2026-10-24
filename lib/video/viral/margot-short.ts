@@ -135,9 +135,8 @@ export async function buildMargotShort(
     script.words,
     charactersToWords(speech.alignment)
   );
-  const evidence = charactersToWords(speech.alignment);
   const audioEnd = Math.max(
-    ...evidence.map(w => w.end),
+    ...speech.alignment.character_end_times_seconds,
     ...timings.map(t => t.end)
   );
   const plan = planBeats(filled.beats, script.anchors, timings, audioEnd);
