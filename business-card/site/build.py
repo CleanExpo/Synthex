@@ -15,6 +15,7 @@ media/ for the hosted page and embedded as data URIs in preview.html, so neither
 another host. vercel.json is kept by hand.
 """
 import re
+from html import escape
 import base64
 import hashlib
 import json
@@ -155,7 +156,7 @@ def main(card_path, kit_path, out):
         embedded = (json.dumps(k, ensure_ascii=False, separators=(",", ":"))
                     .replace("<", "\\u003c").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029"))
         html = page.replace(SLOT, f'<script id="brand-kit">window.BRAND_KIT = {embedded};</script>')
-        return html.replace("<title>Living Card</title>", f"<title>{name} Card</title>", 1)
+        return html.replace("<title>Living Card</title>", f"<title>{escape(name, quote=False)} Card</title>", 1)
 
     # Home-screen app: only when the kit names its own app icons
     icons = (kit.get("brand") or {}).get("appIcons") or {}
@@ -171,13 +172,14 @@ def main(card_path, kit_path, out):
                               for s, src in sorted(shipped.items(), key=lambda kv: int(kv[0])) if s != "180"]}
         with open(os.path.join(out, "manifest.webmanifest"), "w", encoding="utf-8", newline="\n") as f:
             json.dump(manifest, f, indent=2)
+        # kit text reaches the head as HTML text or attribute values, so it is escaped there
         app = ('<link rel="manifest" href="manifest.webmanifest">\n'
-               f'<link rel="apple-touch-icon" href="{shipped.get("180", shipped[max(shipped, key=int)])}">\n'
-               f'<meta name="theme-color" content="{bg}">\n'
+               f'<link rel="apple-touch-icon" href="{escape(shipped.get("180", shipped[max(shipped, key=int)]))}">\n'
+               f'<meta name="theme-color" content="{escape(bg)}">\n'
                '<meta name="apple-mobile-web-app-capable" content="yes">\n'
                '<meta name="mobile-web-app-capable" content="yes">\n'
                '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">\n'
-               f'<meta name="apple-mobile-web-app-title" content="{manifest["short_name"]}">\n')
+               f'<meta name="apple-mobile-web-app-title" content="{escape(manifest["short_name"])}">\n')
         page_html = HEAD.replace("{app}", app) + render(hosted) + TAIL
         shell = ["./", kit["id"] + ".vcf", "manifest.webmanifest", QR_LIB] + sorted(set(shipped.values()))
         if brand_h.get("logo", {}).get("hostedUrl"):

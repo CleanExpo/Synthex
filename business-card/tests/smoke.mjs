@@ -1,4 +1,4 @@
-// Phone-size checks for the hosted card. Usage: node smoke.mjs <site dir> [smoke|contrast]
+// Phone-size checks for the hosted card. Usage: node smoke.mjs <site dir> [smoke|panel|oneclick|shots|contrast|hostile]
 // Serves the built site on localhost (service workers need http(s)) and drives headless Chromium.
 import http from 'node:http';
 import fs from 'node:fs';
@@ -624,6 +624,38 @@ try {
       check(await own.page.isVisible(sel), 'owner sees: ' + sel);
     }
     await own.ctx.close();
+  } else if (MODE === 'hostile') {
+    // Site built from a kit whose person.name tries to leave the <title> and the head's attributes:
+    // node smoke.mjs <site> hostile '<that name>'
+    const name = process.argv[4] || '';
+    let { ctx, page, errors } = await phone();
+    await page.goto(BASE);
+    await page.waitForTimeout(800);
+    check(
+      (await page.evaluate(() => window.PWNED)) === undefined,
+      'no kit text runs as script'
+    );
+    check(
+      (await page.evaluate(
+        () => document.querySelector('title').textContent
+      )) ===
+        name + ' Card',
+      'page title carries the name as text'
+    );
+    check(
+      (await page.evaluate(() =>
+        document
+          .querySelector('meta[name="apple-mobile-web-app-title"]')
+          ?.getAttribute('content')
+      )) ===
+        name.split(' ')[0] + "'s card",
+      'home-screen title carries the name as text'
+    );
+    check(
+      !errors.length,
+      'no page errors' + (errors.length ? ': ' + errors.join('; ') : '')
+    );
+    await ctx.close();
   } else if (MODE === 'shots') {
     // Phone screenshots for review: node smoke.mjs <site> shots <out dir>
     const out = path.resolve(process.argv[4] || '.');
