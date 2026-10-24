@@ -70,6 +70,9 @@ QR_LIB = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
 SW = """// Built by build.py; do not edit by hand. Version {version}
 const CACHE = "card-{version}";
 const SHELL = {shell};
+const OFFLINE = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<p style="font:16px/1.5 system-ui,sans-serif;padding:24px">You are offline, and this page was not saved on your phone. ' +
+  '<a href="./">Open the card</a></p>';
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u =>
   c.add(new Request(u, u.startsWith("http") ? {{ mode: "no-cors" }} : {{}})).catch(() => {{}})))).then(() => self.skipWaiting())));
 self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
@@ -86,7 +89,8 @@ self.addEventListener("fetch", e => {{
         const copy = res.clone(); caches.open(CACHE).then(c => c.put("./", copy));
       }}
       return res;
-    }}).catch(() => card ? caches.match("./") : caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || caches.match("./"))));
+    }}).catch(() => card ? caches.match("./") : caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || new Response(OFFLINE,
+      {{ status: 503, headers: {{ "Content-Type": "text/html; charset=utf-8" }} }}))));
     return;
   }}
   e.respondWith(caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || fetch(r).then(res => {{
@@ -129,6 +133,9 @@ def vcard(p):
         lines.append("TEL;TYPE=" + re.sub(r"[^A-Za-z,]", "", raw(ph.get("type", "VOICE"))) + ":" + raw(ph["tel"]))
     for e in p.get("emails", []):
         lines.append("EMAIL;TYPE=WORK:" + raw(e["value"]))
+    # the saved contact always leads back to the live card
+    if SAFE_URL.match(str(p.get("cardUrl") or "")):
+        lines += [f"item0.URL:{p['cardUrl']}", "item0.X-ABLabel:Living card"]
     # the first two live links are the homepages; every other live business follows as a labelled link
     for i, link in enumerate([l for l in p.get("links", []) if SAFE_URL.match(str(l.get("url") or ""))], 1):
         lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
@@ -183,6 +190,9 @@ def main(card_path, kit_path, out):
 
     hero = (kit.get("brand") or {}).get("hero") or {}
     clip(hero, brand_h.get("hero", {}), brand_p.get("hero", {}), True)
+    # Margot's films: hosted only, so the preview stays small
+    for name_, film in ((kit.get("brand") or {}).get("films") or {}).items():
+        clip(film, brand_h["films"][name_], brand_p["films"][name_], False)
     # Editions (?edition=<name>): hosted only, so the preview stays small
     for name_, ed in ((kit.get("brand") or {}).get("editions") or {}).items():
         clip(ed, brand_h["editions"][name_], brand_p["editions"][name_], False)
@@ -236,10 +246,8 @@ def main(card_path, kit_path, out):
             src = brand_h.get("hero") if n == "signature" else (brand_h.get("editions") or {}).get(n)
             if src and src.get("hostedPoster"):
                 shell.append(src["hostedPoster"])
-        version = hashlib.sha256(page_html.encode("utf-8")).hexdigest()[:12]
-        with open(os.path.join(out, "sw.js"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(SW.format(version=version, shell=json.dumps(shell)))
     else:
+        shell = None
         page_html = HEAD.replace("{app}", "") + render(hosted) + TAIL
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(page_html)
@@ -260,6 +268,19 @@ def main(card_path, kit_path, out):
     # The unbranded template, for the live preview on get-your-card.html
     with open(os.path.join(out, "card-template.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(page)
+    # Written last: the cache version covers every file the worker can save (pages, catalogue, media), so any
+    # change to any of them gives a new cache and the old one is dropped
+    if shell is not None:
+        h = hashlib.sha256()
+        for root, dirs, files in sorted(os.walk(out)):
+            dirs.sort()
+            for name in sorted(files):
+                if name == "sw.js" or name.endswith(".pyc"):
+                    continue
+                p = os.path.join(root, name)
+                h.update(os.path.relpath(p, out).encode("utf-8")); h.update(open(p, "rb").read())
+        with open(os.path.join(out, "sw.js"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(SW.format(version=h.hexdigest()[:12], shell=json.dumps(shell)))
 
 
 if __name__ == "__main__":

@@ -132,6 +132,22 @@
       "profileUrl": "https://maps.google.com/?cid=16425003964954420216",
       "profileUrlSource": "Phill's link to the live Unite-Group Nexus Business Profile, 22/10/2026 (CID 0xe3f156152d7da3f8 = 16425003964954420216). The link redirects to Google Maps; the listing's contents were not checked from here. The ChIJ Place ID for the review form is still to come from the Business Profile dashboard or the Places API."
     },
+    "films": {
+      "explainer": {
+        "status": "found",
+        "label": "Margot explains the card",
+        "video": "business-card/brand-kits/media/margot-explainer.mp4",
+        "poster": "business-card/brand-kits/media/margot-explainer-poster.jpg",
+        "source": "Phill approved 24/10/2026 (session-handoffs/margot-films/APPROVED-margot-explainer-20261024.mp4); 720p H.264 web copy of that master"
+      },
+      "features": {
+        "status": "found",
+        "label": "Margot on what the card does",
+        "video": "business-card/brand-kits/media/margot-features.mp4",
+        "poster": "business-card/brand-kits/media/margot-features-poster.jpg",
+        "source": "Phill approved 24/10/2026 (session-handoffs/margot-films/APPROVED-margot-features-20261024.mp4); 720p H.264 web copy of that master"
+      }
+    },
     "editions": {
       "portal": {
         "status": "found",
@@ -463,7 +479,8 @@
     "vcardNote": "IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC",
     "features": {
       "whiteRabbit": true,
-      "discover": true
+      "discover": true,
+      "friendFeedback": true
     },
     "ideas": {
       "proof": [

@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Card Feedback</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+<style>
+/* Friend feedback on the Living Card preview, in the same Unite Group kit as get-your-card.html.
+   Nothing is sent from this page: it prepares an email the friend sends from their own app. */
+:root {
+  --bg: #FFFFFF; --fg: #16181D; --brand: #E55A2B; --brand-ink: #FFFFFF;
+  --muted: color-mix(in srgb, var(--fg) 62%, var(--bg)); --line: color-mix(in srgb, var(--fg) 14%, var(--bg));
+  --font: "Inter", system-ui, "Segoe UI", Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 64px; }
+[hidden] { display: none !important; }
+main { max-width: 640px; margin: 0 auto; display: grid; gap: 20px; }
+h1 { font-size: clamp(28px, 7vw, 38px); line-height: 1.1; margin: 0; }
+.lede { color: var(--muted); margin: 0; }
+fieldset { border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin: 0; display: grid; gap: 10px; min-width: 0; }
+legend { font-weight: 600; padding: 0 6px; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opts label { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.opts label:has(input:checked) { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.soon { font-size: 12px; color: var(--muted); }
+textarea, input[type=text] { font: 16px var(--font); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%; }
+textarea { min-height: 84px; resize: vertical; }
+.btn { display: block; width: 100%; min-height: 48px; font: 600 17px var(--font); border-radius: 14px; border: 0; background: var(--brand); color: var(--brand-ink); padding: 14px; cursor: pointer; text-align: center; text-decoration: none; }
+.btn.ghost { background: none; color: var(--fg); border: 1px solid var(--line); }
+.fine { font-size: 13.5px; color: var(--muted); margin: 0; }
+pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(in srgb, var(--fg) 5%, var(--bg)); border-radius: 12px; padding: 12px; margin: 0; }
+:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>How did the card go?</h1>
+    <p class="lede">You are one of the first people to try Phill's Living Card. Two minutes of honest answers shape what gets built next. Skip anything you like.</p>
+  </header>
+
+  <form id="fb">
+    <div style="display:grid;gap:16px">
+      <fieldset><legend>Did saving the contact to your phone work?</legend>
+        <div class="opts" data-q="Saving the contact"><label><input type="radio" name="save" value="Yes">Yes</label><label><input type="radio" name="save" value="Partly">Partly</label><label><input type="radio" name="save" value="No">No</label><label><input type="radio" name="save" value="Did not try">Did not try</label></div>
+        <textarea id="save-how" aria-label="What happened when you saved it" placeholder="What happened? (optional)"></textarea>
+      </fieldset>
+
+      <fieldset><legend>Was the film worth watching?</legend>
+        <div class="opts"><label><input type="radio" name="film" value="Yes">Yes</label><label><input type="radio" name="film" value="Somewhat">Somewhat</label><label><input type="radio" name="film" value="No">No</label><label><input type="radio" name="film" value="Did not watch">Did not watch</label></div>
+      </fieldset>
+
+      <fieldset><legend>Was it clear what the card is and what to do with it?</legend>
+        <div class="opts"><label><input type="radio" name="clear" value="Very clear">Very clear</label><label><input type="radio" name="clear" value="Mostly">Mostly</label><label><input type="radio" name="clear" value="Confusing">Confusing</label></div>
+        <textarea id="clear-why" aria-label="What was unclear" placeholder="What was unclear? (optional)"></textarea>
+      </fieldset>
+
+      <fieldset><legend>Anything broken, slow or odd?</legend>
+        <textarea id="bugs" aria-label="Anything broken, slow or odd" placeholder="What you tapped and what happened"></textarea>
+      </fieldset>
+
+      <fieldset><legend>What would you want on a card for your own business?</legend>
+        <p class="fine">Working today: save to phone, the opener film, business films, email, reviews and sharing. The rest are not built yet.</p>
+        <div class="opts" id="mods">
+          <label><input type="checkbox" value="Menu">Menu <span class="soon">coming soon</span></label>
+          <label><input type="checkbox" value="Specials">Specials <span class="soon">coming soon</span></label>
+          <label><input type="checkbox" value="Events">Events <span class="soon">coming soon</span></label>
+          <label><input type="checkbox" value="Portfolio">Portfolio <span class="soon">coming soon</span></label>
+          <label><input type="checkbox" value="Listings">Listings <span class="soon">coming soon</span></label>
+          <label><input type="checkbox" value="Booking">Book a time <span class="soon">coming soon</span></label>
+          <label><input type="checkbox" value="Quote request">Request a quote <span class="soon">coming soon</span></label>
+        </div>
+        <input type="text" id="mods-other" aria-label="Something else you would want" placeholder="Something else? (optional)">
+      </fieldset>
+
+      <fieldset><legend>Would you use a card like this?</legend>
+        <div class="opts"><label><input type="radio" name="use" value="Yes">Yes</label><label><input type="radio" name="use" value="Maybe">Maybe</label><label><input type="radio" name="use" value="No">No</label></div>
+      </fieldset>
+
+      <fieldset><legend>Would you pay for one?</legend>
+        <div class="opts"><label><input type="radio" name="pay" value="Yes">Yes</label><label><input type="radio" name="pay" value="Maybe">Maybe</label><label><input type="radio" name="pay" value="No">No</label></div>
+      </fieldset>
+
+      <fieldset><legend>Your phone and browser</legend>
+        <input type="text" id="device" aria-label="Your phone and browser">
+        <p class="fine">Filled in from your browser so problems can be reproduced. Change it if it is wrong.</p>
+      </fieldset>
+
+      <button class="btn" type="submit">Prepare my feedback</button>
+      <p class="fine">This opens an email to Phill's card inbox with your answers. Nothing is sent until you press Send in your email app. Want to show a problem? Attach a screenshot to that email.</p>
+    </div>
+  </form>
+
+  <section id="out" hidden style="display:grid;gap:10px">
+    <pre id="out-text"></pre>
+    <a class="btn" id="out-mail" href="#">Open in my email app</a>
+    <button class="btn ghost" type="button" id="out-copy">Copy my answers</button>
+  </section>
+</main>
+<script>
+// The card's public inbox (the same address its saved contact carries)
+const TO = "airestoreassist@gmail.com";
+const $ = id => document.getElementById(id);
+const pick = n => (document.querySelector('input[name="' + n + '"]:checked') || {}).value || "-";
+const ua = navigator.userAgent;
+const browser = /CriOS|Chrome\//.test(ua) && !/Edg\//.test(ua) ? "Chrome" : /Edg\//.test(ua) ? "Edge" : /Firefox|FxiOS/.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
+const device = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android phone" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows PC" : "Device";
+$("device").value = device + ", " + browser;
+$("fb").addEventListener("submit", e => {
+  e.preventDefault();
+  const mods = [...document.querySelectorAll("#mods input:checked")].map(i => i.value);
+  if ($("mods-other").value.trim()) mods.push($("mods-other").value.trim());
+  const text = [
+    "Living Card feedback",
+    "Saving the contact: " + pick("save") + ($("save-how").value.trim() ? " (" + $("save-how").value.trim() + ")" : ""),
+    "Film worth watching: " + pick("film"),
+    "Clear what it is: " + pick("clear") + ($("clear-why").value.trim() ? " (" + $("clear-why").value.trim() + ")" : ""),
+    "Broken, slow or odd: " + ($("bugs").value.trim() || "-"),
+    "Would want: " + (mods.join(", ") || "-"),
+    "Would use one: " + pick("use"),
+    "Would pay for one: " + pick("pay"),
+    "Phone and browser: " + ($("device").value.trim() || "-")
+  ].join("\n");
+  $("out-text").textContent = text;
+  $("out-mail").href = "mailto:" + TO + "?subject=" + encodeURIComponent("[Card feedback]") + "&body=" + encodeURIComponent(text);
+  $("out").hidden = false;
+  $("out").scrollIntoView({ block: "start" });
+});
+$("out-copy").addEventListener("click", async e => {
+  try { await navigator.clipboard.writeText($("out-text").textContent); e.target.textContent = "Copied"; }
+  catch (err) { e.target.textContent = "Select the text above to copy"; }
+});
+</script>
+</body>
+</html>

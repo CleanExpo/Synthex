@@ -21,6 +21,7 @@ body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--
 .wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 28px; }
 .cols { display: grid; gap: 28px; grid-template-columns: 1fr; align-items: start; }
 @media (min-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr) 400px; } .previewbox { position: sticky; top: 16px; } }
+@media (max-width: 899px) { .previewbox { order: -1; } }
 h1 { font-size: clamp(30px, 7vw, 44px); line-height: 1.05; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
 h2 { font-size: 20px; margin: 0; display: flex; gap: 10px; align-items: baseline; }
 h2 .n { font: 600 13px var(--mono); color: var(--brand); }
@@ -69,7 +70,7 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.45
   <header style="display:grid;gap:8px">
     <span class="ref" id="ref-line"></span>
     <h1>Get your own living card</h1>
-    <p class="lede">Built from your own logo, colours and details. You see it take shape on the right as you go. Nothing is charged today.</p>
+    <p class="lede">Built from your own logo, colours and details. You see it take shape in the live preview as you go. Nothing is charged today.</p>
   </header>
 
   <div class="cols">
@@ -123,7 +124,7 @@ Our Google reviews | https://www.google.com/maps</textarea></label>
           <label class="pkg"><input type="radio" name="pkg" value="living" checked><strong>Living Card</strong><span class="price" data-price="249">$249</span><small>Your card page, save to contacts, QR code, three styles to choose from, and your own film made from your website.</small></label>
           <label class="pkg"><input type="radio" name="pkg" value="signature"><strong>Living Card Signature</strong><span class="price" data-price="449">$449</span><small>Everything in Living Card, plus an animated opener made from your real site, and five more one-off styles, each with its own 30 to 45 second film.</small></label>
         </div>
-        <p class="fine"><span id="cur-note">AUD, including GST.</span> <button class="linkish" type="button" id="cur-switch"></button></p>
+        <p class="fine"><span id="cur-note">Prices in AUD.</span> <button class="linkish" type="button" id="cur-switch"></button></p>
         <p class="fine">Films are narrated by an AI voice and built only from your own website and photos.</p>
       </section>
 
@@ -174,7 +175,7 @@ const REF = (params.get("ref") || "").replace(/[^a-z0-9-]/gi, "").slice(0, 60) |
 $("ref-line").textContent = REF === "direct" ? "" : "Shared from " + REF + "'s card";
 $("inbox").textContent = INTEREST_TO;
 
-let template = null, logoUri = null, measured = [], lead = null, leadSource = null;
+let template = null, logoUri = null, measured = [], lead = null, leadSource = null, editions = [];
 
 // Colours measured from the buyer's own logo (their asset; nothing is guessed)
 function measure(img) {
@@ -240,6 +241,7 @@ $("logo").addEventListener("change", e => {
 $("hex").addEventListener("input", e => {
   const v = e.target.value.trim();
   if (/^#[0-9a-fA-F]{6}$/.test(v)) { lead = v.toUpperCase(); leadSource = "entered by you"; update(); }
+  else if (!v) { lead = measured[0] || null; leadSource = lead ? "measured from your logo" : null; update(); }
 });
 
 function kit() {
@@ -256,7 +258,8 @@ function kit() {
         background: { status: "missing" }, text: { status: "missing" }
       },
       fonts: {},
-      about: { status: "missing" }, imagery: { status: "missing" }
+      about: { status: "missing" }, imagery: { status: "missing" },
+      hero: opener()
     },
     person: {
       name: $("d-name").value.trim(), title: $("d-title").value.trim(), intro: $("d-intro").value.trim(), org: $("d-biz").value.trim(),
@@ -288,18 +291,25 @@ fetch("card-template.html").then(r => { if (!r.ok) throw new Error(r.status); re
 // Opener editions: the same catalogue the card ships (editions.json), preselected from ?edition=
 const WANT = (params.get("edition") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 30);
 fetch("editions.json").then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(list => {
+  editions = list;
   const box = $("eds");
   list.forEach((e, i) => {
     const lab = document.createElement("label"); lab.className = "ed";
     const inp = document.createElement("input"); inp.type = "radio"; inp.name = "edition"; inp.value = e.name;
     inp.checked = e.name === WANT || (!WANT && i === 0);
     const img = document.createElement("img"); img.src = e.poster; img.alt = e.label; img.loading = "lazy";
+    inp.addEventListener("change", update);
     lab.append(inp, img, e.label); box.append(lab);
   });
   if (WANT && !list.some(e => e.name === WANT)) box.querySelector("input").checked = true;
   $("eds-note").textContent = WANT && list.some(e => e.name === WANT) ? "Preselected: the edition you just saw." : "";
+  update();
 }).catch(() => { $("eds-note").textContent = "The editions could not load. We'll pick one with you when we build your card."; });
 function edition() { const c = document.querySelector('input[name="edition"]:checked'); return c ? c.value : (WANT || "signature"); }
+function opener() {
+  const e = editions.find(x => x.name === edition());
+  return e ? { status: "found", videoDataUri: e.video, posterDataUri: e.poster, background: { value: "#000511" } } : { status: "missing" };
+}
 
 function pkg() { const c = document.querySelector('input[name="pkg"]:checked'); return c ? c.value : "living"; }
 
@@ -316,8 +326,8 @@ function showCurrency() {
     el.textContent = (currency === "aud" ? "A$" : "US$") + el.dataset.price;
   });
   $("cur-note").textContent = currency === "aud"
-    ? "AUD, including GST. AUD prices are for cards issued in Australia or New Zealand."
-    : "USD. Australian GST does not apply. Cards issued in Australia or New Zealand pay in AUD.";
+    ? "Prices in AUD, for cards issued in Australia or New Zealand."
+    : "Prices in USD. Cards issued in Australia or New Zealand pay in AUD.";
   $("cur-switch").textContent = currency === "aud" ? "Paying with a card from elsewhere? Show USD" : "Paying with an Australian or New Zealand card? Show AUD";
   if (typeof setLink === "function") setLink();
 }

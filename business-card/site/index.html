@@ -141,6 +141,10 @@ textarea { min-height: 96px; resize: vertical; }
 .status-list .on b { color: var(--ok); }
 .status-list .off b { color: var(--warn); }
 footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+/* Margot's films: tap to play, never autoplay; the second one opens on request */
+.films { display: grid; gap: 10px; justify-items: center; }
+.films video { width: 100%; max-height: 72vh; aspect-ratio: 9 / 16; object-fit: contain; background: #000; border-radius: 18px; }
+#feedback-link { font-size: 15px; font-weight: 600; color: var(--brand); min-height: 44px; display: flex; align-items: center; }
 @media (prefers-reduced-motion: reduce) { .name h1 .w { animation: none; } .rabbit { transition: none; } }
 
 /* Crack & reveal: a code-drawn shatter over the stage on open */
@@ -186,7 +190,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
 /* Sound: off until the visitor taps it (phones block sound before a tap); all of it is synthesised in code, no audio files */
 .sound { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 6px; cursor: pointer;
-  font: 600 12px var(--body); color: #FFFFFF; background: rgba(4,8,14,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 11px;
+  font: 600 12px var(--body); color: #FFFFFF; background: rgba(4,8,14,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 14px; min-height: 44px; min-width: 44px;
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .sound svg { width: 16px; height: 16px; }
 .sound[aria-pressed="true"] { border-color: var(--brand); box-shadow: 0 0 14px color-mix(in srgb, var(--brand) 70%, transparent); }
@@ -253,7 +257,7 @@ body:not(.owner) .owner-only { display: none !important; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- The brand kit for this card. site/build.py fills it from business-card/brand-kits/<id>.json; empty means unbranded. -->
-<script id="brand-kit">window.BRAND_KIT = {"id":"phill-mcgurk","brand":{"name":"Unite Group","slug":"unite","tagline":{"text":"Connected service for the field."},"logo":{"status":"found","file":"business-card/brand-kits/media/unite-group-nexus-logo-square-1f404d60.png","background":"#000511 (dark navy scene, not transparent)","hostedUrl":"media/unite-group-nexus-logo-square-1f404d60.png"},"colours":{"primary":{"value":"#E55A2B"},"secondary":{"status":"missing"},"accent":{"status":"missing"},"background":{"status":"missing"},"text":{"status":"missing"}},"fonts":{"display":{"family":"Inter","weight":700,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700"},"body":{"family":"Inter","weight":400,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700"}},"about":{"status":"missing"},"imagery":{"status":"missing"},"rotation":["signature","origami","blueprint","restoration"],"shopUrl":"get-your-card.html","appIcons":{"status":"found","files":{"180":"business-card/brand-kits/media/app-icon-180.png","192":"business-card/brand-kits/media/app-icon-192.png","512":"business-card/brand-kits/media/app-icon-512.png"},"background":"#000511"},"reviews":{"status":"found","placeId":"ChIJHzPW_QTI1wQR-KN9LRVW8eM","business":"Unite-Group Nexus","profileUrl":"https://maps.google.com/?cid=16425003964954420216"},"editions":{"portal":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-portal.mp4","poster":"business-card/brand-kits/media/edition-portal-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-portal.mp4","hostedPoster":"media/edition-portal-poster.jpg"},"restoration":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-restoration.mp4","poster":"business-card/brand-kits/media/edition-restoration-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-restoration.mp4","hostedPoster":"media/edition-restoration-poster.jpg"},"blueprint":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-blueprint.mp4","poster":"business-card/brand-kits/media/edition-blueprint-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-blueprint.mp4","hostedPoster":"media/edition-blueprint-poster.jpg"},"forge":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-forge.mp4","poster":"business-card/brand-kits/media/edition-forge-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-forge.mp4","hostedPoster":"media/edition-forge-poster.jpg"},"constellation":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-constellation.mp4","poster":"business-card/brand-kits/media/edition-constellation-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-constellation.mp4","hostedPoster":"media/edition-constellation-poster.jpg"},"ink":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-ink.mp4","poster":"business-card/brand-kits/media/edition-ink-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-ink.mp4","hostedPoster":"media/edition-ink-poster.jpg"},"rewind":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-rewind.mp4","poster":"business-card/brand-kits/media/edition-rewind-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-rewind.mp4","hostedPoster":"media/edition-rewind-poster.jpg"},"skyline":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-skyline.mp4","poster":"business-card/brand-kits/media/edition-skyline-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-skyline.mp4","hostedPoster":"media/edition-skyline-poster.jpg"},"origami":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-origami.mp4","poster":"business-card/brand-kits/media/edition-origami-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-origami.mp4","hostedPoster":"media/edition-origami-poster.jpg"},"magnet":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-magnet.mp4","poster":"business-card/brand-kits/media/edition-magnet-poster.jpg","stopAt":3.45,"hostedVideo":"media/edition-magnet.mp4","hostedPoster":"media/edition-magnet-poster.jpg"}},"hero":{"status":"found","video":"business-card/brand-kits/media/unite-nexus-u-reveal-h264.mp4","poster":"business-card/brand-kits/media/unite-nexus-u-reveal-poster.jpg","stopAt":4.4,"loop":false,"background":{"value":"#000511"},"hostedVideo":"media/unite-nexus-u-reveal-h264.mp4","hostedPoster":"media/unite-nexus-u-reveal-poster.jpg"},"services":[]},"person":{"name":"Phill McGurk","cardUrl":"https://card.unite-group.ink","title":"Founder, Unite Group","intro":"Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.","motto":"Found. Trusted. Chosen.","org":"Unite Group","credentials":[{"abbr":"MC","text":"IICRC Master Restoration Technician"},{"abbr":"IICRC","text":"47496"},{"abbr":"BFRS","text":"Bio Forensic Restoration Specialist"},{"abbr":"CFO","text":"Certified Forensic Operator"},{"abbr":"GBAC","text":"certified"}],"phones":[],"emails":[{"label":"Email","value":"airestoreassist@gmail.com","primary":true}],"links":[{"label":"CARSI","url":"https://carsi.com.au","note":"IICRC CEC training","video":{"youtubeId":"fUi127T4aI0","thumb":"business-card/demos/thumbs/carsi.jpg","hostedThumb":"media/carsi.jpg"},"visitor":true},{"label":"Disaster Recovery","url":"https://www.disasterrecovery.com.au","note":"Restoration, Brisbane","video":{"youtubeId":"I-_EB_Vxim8","thumb":"business-card/demos/thumbs/disaster-recovery.jpg","hostedThumb":"media/disaster-recovery.jpg"},"visitor":true},{"label":"Synthex","url":"https://synthex.social","note":"Group marketing","visitor":true,"video":{"youtubeId":"7L_swG39cEo","thumb":"business-card/demos/thumbs/synthex.jpg","hostedThumb":"media/synthex.jpg"}},{"label":"NRPG","url":"https://nrpg.business","note":"Contractor network","video":{"youtubeId":"Mi_PXlaVF7A","thumb":"business-card/demos/thumbs/nrpg.jpg","hostedThumb":"media/nrpg.jpg"},"visitor":true},{"label":"RestoreAssist","url":"https://restoreassist.app","note":"Restoration job app","visitor":true,"video":{"youtubeId":"EMIoECpg-ow","thumb":"business-card/demos/thumbs/restoreassist.jpg","hostedThumb":"media/restoreassist.jpg"}},{"label":"TradeHall","url":"https://cleanexpo247-hall.vercel.app","note":"NRPG Trade Hall","visitor":true},{"label":"Restoration World","url":null,"pendingUrl":"https://disasterrecovery.com.au/nrpg-restorationworld","note":"NRPG Restoration World"},{"label":"Unite-Group Nexus","url":"https://maps.google.com/?cid=16425003964954420216","note":"The group behind them all","visitor":true,"video":{"youtubeId":"vQ5XkygiJlo","thumb":"business-card/demos/thumbs/unite-group.jpg","hostedThumb":"media/unite-group.jpg"}}],"vcardNote":"IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC","features":{"whiteRabbit":true,"discover":true},"ideas":{"proof":["Show proof of my work","Post one finished job, start to end","Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],"found":["Get found locally","Name the five jobs you want to be called for","Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],"team":["Skill up my team","Turn missed jobs into a training plan","Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],"reply":["Answer enquiries faster","Write your three most common replies once","Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]},"inbox":{"status":"found","address":"airestoreassist@gmail.com"},"reviewPlaces":[{"business":"Disaster Recovery","placeId":"ChIJFTIv0bpOkWsRz_SIAaNI3Lc","status":"found"},{"business":"CARSI","placeId":"ChIJnYFtIFhK6yQRanZxQxPD5Dg","status":"found","confirm":true},{"business":"Unite-Group Nexus","placeId":"ChIJHzPW_QTI1wQR-KN9LRVW8eM","status":"found"},{"business":"RestoreAssist","status":"missing"},{"business":"NRPG","status":"missing"}],"reviewPrompts":["How did it go?","What stood out for you?","How did you feel once it was done?","Would you recommend us? Why or why not?","What could we have done better?"],"events":[{"id":"brisbane","label":"Brisbane"},{"id":"melbourne","label":"Melbourne"}]}};</script>
+<script id="brand-kit">window.BRAND_KIT = {"id":"phill-mcgurk","brand":{"name":"Unite Group","slug":"unite","tagline":{"text":"Connected service for the field."},"logo":{"status":"found","file":"business-card/brand-kits/media/unite-group-nexus-logo-square-1f404d60.png","background":"#000511 (dark navy scene, not transparent)","hostedUrl":"media/unite-group-nexus-logo-square-1f404d60.png"},"colours":{"primary":{"value":"#E55A2B"},"secondary":{"status":"missing"},"accent":{"status":"missing"},"background":{"status":"missing"},"text":{"status":"missing"}},"fonts":{"display":{"family":"Inter","weight":700,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700"},"body":{"family":"Inter","weight":400,"licence":"SIL Open Font License 1.1","embedAllowed":true,"googleFonts":"Inter:wght@400;600;700"}},"about":{"status":"missing"},"imagery":{"status":"missing"},"rotation":["signature","origami","blueprint","restoration"],"shopUrl":"get-your-card.html","appIcons":{"status":"found","files":{"180":"business-card/brand-kits/media/app-icon-180.png","192":"business-card/brand-kits/media/app-icon-192.png","512":"business-card/brand-kits/media/app-icon-512.png"},"background":"#000511"},"reviews":{"status":"found","placeId":"ChIJHzPW_QTI1wQR-KN9LRVW8eM","business":"Unite-Group Nexus","profileUrl":"https://maps.google.com/?cid=16425003964954420216"},"films":{"explainer":{"status":"found","label":"Margot explains the card","video":"business-card/brand-kits/media/margot-explainer.mp4","poster":"business-card/brand-kits/media/margot-explainer-poster.jpg","hostedVideo":"media/margot-explainer.mp4","hostedPoster":"media/margot-explainer-poster.jpg"},"features":{"status":"found","label":"Margot on what the card does","video":"business-card/brand-kits/media/margot-features.mp4","poster":"business-card/brand-kits/media/margot-features-poster.jpg","hostedVideo":"media/margot-features.mp4","hostedPoster":"media/margot-features-poster.jpg"}},"editions":{"portal":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-portal.mp4","poster":"business-card/brand-kits/media/edition-portal-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-portal.mp4","hostedPoster":"media/edition-portal-poster.jpg"},"restoration":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-restoration.mp4","poster":"business-card/brand-kits/media/edition-restoration-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-restoration.mp4","hostedPoster":"media/edition-restoration-poster.jpg"},"blueprint":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-blueprint.mp4","poster":"business-card/brand-kits/media/edition-blueprint-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-blueprint.mp4","hostedPoster":"media/edition-blueprint-poster.jpg"},"forge":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-forge.mp4","poster":"business-card/brand-kits/media/edition-forge-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-forge.mp4","hostedPoster":"media/edition-forge-poster.jpg"},"constellation":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-constellation.mp4","poster":"business-card/brand-kits/media/edition-constellation-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-constellation.mp4","hostedPoster":"media/edition-constellation-poster.jpg"},"ink":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-ink.mp4","poster":"business-card/brand-kits/media/edition-ink-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-ink.mp4","hostedPoster":"media/edition-ink-poster.jpg"},"rewind":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-rewind.mp4","poster":"business-card/brand-kits/media/edition-rewind-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-rewind.mp4","hostedPoster":"media/edition-rewind-poster.jpg"},"skyline":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-skyline.mp4","poster":"business-card/brand-kits/media/edition-skyline-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-skyline.mp4","hostedPoster":"media/edition-skyline-poster.jpg"},"origami":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-origami.mp4","poster":"business-card/brand-kits/media/edition-origami-poster.jpg","stopAt":3.95,"hostedVideo":"media/edition-origami.mp4","hostedPoster":"media/edition-origami-poster.jpg"},"magnet":{"status":"found","fit":"cover","video":"business-card/brand-kits/media/edition-magnet.mp4","poster":"business-card/brand-kits/media/edition-magnet-poster.jpg","stopAt":3.45,"hostedVideo":"media/edition-magnet.mp4","hostedPoster":"media/edition-magnet-poster.jpg"}},"hero":{"status":"found","video":"business-card/brand-kits/media/unite-nexus-u-reveal-h264.mp4","poster":"business-card/brand-kits/media/unite-nexus-u-reveal-poster.jpg","stopAt":4.4,"loop":false,"background":{"value":"#000511"},"hostedVideo":"media/unite-nexus-u-reveal-h264.mp4","hostedPoster":"media/unite-nexus-u-reveal-poster.jpg"},"services":[]},"person":{"name":"Phill McGurk","cardUrl":"https://card.unite-group.ink","title":"Founder, Unite Group","intro":"Restorer, educator and builder of the systems behind CARSI, Disaster Recovery and RestoreAssist.","motto":"Found. Trusted. Chosen.","org":"Unite Group","credentials":[{"abbr":"MC","text":"IICRC Master Restoration Technician"},{"abbr":"IICRC","text":"47496"},{"abbr":"BFRS","text":"Bio Forensic Restoration Specialist"},{"abbr":"CFO","text":"Certified Forensic Operator"},{"abbr":"GBAC","text":"certified"}],"phones":[],"emails":[{"label":"Email","value":"airestoreassist@gmail.com","primary":true}],"links":[{"label":"CARSI","url":"https://carsi.com.au","note":"IICRC CEC training","video":{"youtubeId":"fUi127T4aI0","thumb":"business-card/demos/thumbs/carsi.jpg","hostedThumb":"media/carsi.jpg"},"visitor":true},{"label":"Disaster Recovery","url":"https://www.disasterrecovery.com.au","note":"Restoration, Brisbane","video":{"youtubeId":"I-_EB_Vxim8","thumb":"business-card/demos/thumbs/disaster-recovery.jpg","hostedThumb":"media/disaster-recovery.jpg"},"visitor":true},{"label":"Synthex","url":"https://synthex.social","note":"Group marketing","visitor":true,"video":{"youtubeId":"7L_swG39cEo","thumb":"business-card/demos/thumbs/synthex.jpg","hostedThumb":"media/synthex.jpg"}},{"label":"NRPG","url":"https://nrpg.business","note":"Contractor network","video":{"youtubeId":"Mi_PXlaVF7A","thumb":"business-card/demos/thumbs/nrpg.jpg","hostedThumb":"media/nrpg.jpg"},"visitor":true},{"label":"RestoreAssist","url":"https://restoreassist.app","note":"Restoration job app","visitor":true,"video":{"youtubeId":"EMIoECpg-ow","thumb":"business-card/demos/thumbs/restoreassist.jpg","hostedThumb":"media/restoreassist.jpg"}},{"label":"TradeHall","url":"https://cleanexpo247-hall.vercel.app","note":"NRPG Trade Hall","visitor":true},{"label":"Restoration World","url":null,"pendingUrl":"https://disasterrecovery.com.au/nrpg-restorationworld","note":"NRPG Restoration World"},{"label":"Unite-Group Nexus","url":"https://maps.google.com/?cid=16425003964954420216","note":"The group behind them all","visitor":true,"video":{"youtubeId":"vQ5XkygiJlo","thumb":"business-card/demos/thumbs/unite-group.jpg","hostedThumb":"media/unite-group.jpg"}}],"vcardNote":"IICRC Master Restoration Technician (47496) · BFRS · CFO · GBAC","features":{"whiteRabbit":true,"discover":true,"friendFeedback":true},"ideas":{"proof":["Show proof of my work","Post one finished job, start to end","Pick a job you are proud of. Share three photos: the problem, your work, the result, with one plain line under each. Use only photos you have permission to share."],"found":["Get found locally","Name the five jobs you want to be called for","Open your Google Business Profile and list your five most wanted services, each with one sentence and a suburb you actually work in."],"team":["Skill up my team","Turn missed jobs into a training plan","Write down every job your team turned away last quarter because nobody held the right ticket. That list is your training plan, in priority order."],"reply":["Answer enquiries faster","Write your three most common replies once","Save them as templates. Then aim to answer every new enquiry within one business hour, even if it is only to book a call."]},"inbox":{"status":"found","address":"airestoreassist@gmail.com"},"reviewPlaces":[{"business":"Disaster Recovery","placeId":"ChIJFTIv0bpOkWsRz_SIAaNI3Lc","status":"found"},{"business":"CARSI","placeId":"ChIJnYFtIFhK6yQRanZxQxPD5Dg","status":"found","confirm":true},{"business":"Unite-Group Nexus","placeId":"ChIJHzPW_QTI1wQR-KN9LRVW8eM","status":"found"},{"business":"RestoreAssist","status":"missing"},{"business":"NRPG","status":"missing"}],"reviewPrompts":["How did it go?","What stood out for you?","How did you feel once it was done?","Would you recommend us? Why or why not?","What could we have done better?"],"events":[{"id":"brisbane","label":"Brisbane"},{"id":"melbourne","label":"Melbourne"}]}};</script>
 
 <div class="wrap">
   <section class="stage" aria-label="Motion card">
@@ -284,6 +288,12 @@ body:not(.owner) .owner-only { display: none !important; }
 
   <button class="btn primary save-hero" type="button" id="save">Save to my phone</button>
   <p class="save-hint" id="save-hint" role="status" hidden></p>
+  <a class="btn quiet" id="email-direct" hidden>Email</a>
+  <section class="films" id="films" hidden aria-label="Films">
+    <video id="film-explainer" controls playsinline preload="none"></video>
+    <button class="btn quiet" type="button" id="film-more" hidden aria-expanded="false" aria-controls="film-features">Tap to hear more</button>
+    <video id="film-features" controls playsinline preload="none" hidden></video>
+  </section>
   <canvas id="burst" aria-hidden="true"></canvas>
   <div class="out" id="save-out" hidden>
     <span class="tag">Preview limit</span>
@@ -313,8 +323,7 @@ body:not(.owner) .owner-only { display: none !important; }
   <div class="surprise" id="surprise" hidden role="dialog" aria-modal="true" aria-labelledby="surprise-h">
     <canvas id="confetti" aria-hidden="true"></canvas>
     <div class="gift" id="gift">
-      <p class="gift-k">Rabbit 1 of 5 found</p>
-      <p class="fine" style="margin:0">The other four are hiding in Phill's talk.</p>
+      <p class="gift-k">You found the white rabbit</p>
       <h2 id="surprise-h"></h2>
       <p id="surprise-p"></p>
       <div class="row"><button class="btn primary" type="button" id="surprise-more">Another one</button><button class="btn" type="button" id="surprise-close">Close</button></div>
@@ -458,7 +467,8 @@ body:not(.owner) .owner-only { display: none !important; }
 
   <footer>
     <span id="brand-credit" hidden>Brand kit: none loaded.</span>
-    <span>Nothing on this card is sent or stored without your say-so.</span>
+    <a id="feedback-link" href="feedback.html" hidden>Trying this card? Tell us how it went</a>
+    <span>Your phone keeps a copy of this card so it opens offline, plus settings such as sound. Nothing leaves your phone until you tap to send it.</span>
   </footer>
 </div>
 
@@ -593,6 +603,26 @@ function lum(hex) {
   }
   const f = P.features || {};
   if (f.discover && P.ideas) $("door-discover").hidden = false;
+  // Margot's films (hosted only): a poster until tapped; the second film opens from "Tap to hear more"
+  const FILMS = B.films || {};
+  const film = (id, f) => {
+    if (!f || f.status !== "found" || !HOSTED || !f.hostedVideo) return false;
+    const v = $(id); v.src = f.hostedVideo; if (f.hostedPoster) v.poster = f.hostedPoster;
+    v.setAttribute("aria-label", f.label || "Film"); return true;
+  };
+  if (film("film-explainer", FILMS.explainer)) {
+    $("films").hidden = false;
+    if (film("film-features", FILMS.features)) {
+      $("film-more").hidden = false;
+      $("film-more").addEventListener("click", () => {
+        const open = $("film-features").hidden; $("film-features").hidden = !open;
+        $("film-more").setAttribute("aria-expanded", String(open));
+        if (open) { $("film-explainer").pause(); const p = $("film-features").play(); if (p && p.catch) p.catch(() => {}); }
+      });
+    }
+  }
+  // the friends preview asks for feedback (feedback.html ships with the hosted site only)
+  if (f.friendFeedback && HOSTED) $("feedback-link").hidden = false;
   if (f.whiteRabbit) {
     $("door-solve").hidden = false; $("rabbit").hidden = false;
     const li = document.createElement("li"); li.className = "off"; li.innerHTML = "<b>Not connected yet</b>"; li.append("The White Rabbit game link."); $("status-list").insertBefore(li, $("status-list").children[4]);
@@ -612,6 +642,8 @@ function vcard() {
   if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
   (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + raw(p.type || "VOICE").replace(/[^A-Za-z,]/g, "") + ":" + raw(p.tel)));
   (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + raw(e.value)));
+  // the saved contact always leads back to the live card
+  if (safeUrl(P.cardUrl)) lines.push("item0.URL:" + P.cardUrl, "item0.X-ABLabel:Living card");
   // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
   (P.links || []).filter(l => safeUrl(l.url)).forEach((l, i) => {
     lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));
@@ -642,7 +674,7 @@ async function copy(text, el) {
   const okId = id => /^[A-Za-z0-9_-]{10,}$/.test(id || "");
   const reviewUrl = id => "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(id);
   // Several businesses: the review wheel. The visitor names the one they actually used; nothing is pre-written.
-  const places = (P.reviewPlaces || []).filter(p => p.status === "found" && okId(p.placeId));
+  const places = (P.reviewPlaces || []).filter(p => p.status === "found" && !p.confirm && okId(p.placeId));
   if (places.length) {
     $("rw").hidden = false;
     let place = places.length === 1 ? places[0] : null;
@@ -715,13 +747,10 @@ async function copy(text, el) {
 })();
 
 // Sound: a quiet generative score plus small effects, synthesised with Web Audio (no files, nothing licensed).
-// On by default: phones allow sound only after a touch, so it starts on the visitor's first tap anywhere.
-// The button mutes it, and a visitor who muted it stays muted on their next visit.
+// Off until the visitor taps the sound button: saving the contact or opening a business never starts music.
 const SFX = (() => {
-  const KEY = "card-sound", btn = $("sound"), label = $("sound-label");
+  const btn = $("sound"), label = $("sound-label");
   let ctx = null, master = null, music = null, on = false;
-  const want = () => { try { return localStorage.getItem(KEY) !== "off"; } catch (e) { return true; } };
-  const remember = v => { try { localStorage.setItem(KEY, v ? "on" : "off"); } catch (e) {} };
   function audio() {
     if (ctx) return ctx;
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
@@ -779,7 +808,7 @@ const SFX = (() => {
     setTimeout(() => { try { m.lfo.stop(); m.bus.disconnect(); } catch (e) {} }, 2000);
   }
   function set(v) {
-    on = v; remember(v); btn.setAttribute("aria-pressed", String(v)); label.textContent = v ? "Sound" : "Tap for sound";
+    on = v; btn.setAttribute("aria-pressed", String(v)); label.textContent = v ? "Sound" : "Tap for sound";
     if (!v) { stopMusic(); return; }
     if (!audio()) { label.textContent = "No sound here"; on = false; return; }
     ctx.resume(); startMusic(); fx.chime();
@@ -801,8 +830,6 @@ const SFX = (() => {
     tick() { if (!on) return; tone(1800, ctx.currentTime, 0.06, { vol: 0.06, type: "triangle" }); },
   };
   btn.addEventListener("click", e => { e.stopPropagation(); set(!on); });
-  // Came back with sound on: start on the first tap anywhere (phones require one)
-  if (want()) addEventListener("pointerdown", function first(e) { removeEventListener("pointerdown", first); if (!on && !btn.contains(e.target)) set(true); }, { once: true });
   document.addEventListener("visibilitychange", () => { if (!ctx) return; document.hidden ? ctx.suspend() : (on && ctx.resume()); });
   document.addEventListener("click", e => { if (e.target.closest(".btn, .need, .door")) fx.tick(); });
   fx.state = () => ({ on, playing: !!music, audio: ctx ? ctx.state : "none" });   // read by the smoke test
@@ -893,7 +920,8 @@ function crackReveal(done) {
   requestAnimationFrame(frame);
 }
 function startHero() {
-  const v = $("hero-video"); if (v) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+  // with reduced motion the opener stays on its still poster
+  const v = $("hero-video"); if (v && !REDUCED) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
   $("greet").classList.add("on");
   phoenix();
 }
@@ -1227,6 +1255,13 @@ $("needs").addEventListener("click", e => {
 
 const INBOX = (P.inbox && P.inbox.status !== "missing" && P.inbox.address) || (P.inbox && P.inbox.fallback) || ((P.emails || [])[0] || {}).value || "";
 $("inbox-addr").textContent = INBOX || "no address supplied";
+// Visitors get one quiet way to write straight away, under Save
+if (/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(INBOX)) {
+  const first = (P.name || "").split(" ")[0];
+  $("email-direct").href = "mailto:" + INBOX + "?subject=" + encodeURIComponent("[Card] Hello" + (first ? " " + first : ""));
+  $("email-direct").textContent = first ? "Email " + first : "Email";
+  $("email-direct").hidden = false;
+}
 // An assistant inbox (proposed or found): messages land where the reply desk reads them; the owner still reads every one
 if (P.inbox && P.inbox.address && ["proposed", "found"].includes(P.inbox.status)) {
   const who = (P.name || "").split(" ")[0] || "the owner";

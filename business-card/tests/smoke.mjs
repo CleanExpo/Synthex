@@ -46,7 +46,10 @@ const TYPES = {
   '.svg': 'image/svg+xml',
 };
 
+// offline tests also take the server down: the service worker's own requests ignore the browser's offline switch
+let DOWN = false;
 const server = http.createServer((req, res) => {
+  if (DOWN) return req.socket.destroy();
   let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
   if (p.endsWith('/')) p += 'index.html';
   const f = path.join(SITE, p);
@@ -390,22 +393,22 @@ try {
       'switches back to the card code'
     );
     await page.click('#pass-close');
-    // sound: on by default, started by the first tap anywhere (the taps above); the button mutes and unmutes
+    // sound: the taps above (Save, the pass-it-on code) start no music; only the sound button turns it on and off
     let s = await page.evaluate(() => window.CARD_SFX.state());
     check(
-      s.on && s.playing && s.audio === 'running',
-      'sound started on first tap: ' + JSON.stringify(s)
+      !s.on && !s.playing,
+      'other taps start no sound: ' + JSON.stringify(s)
     );
-    await page.click('#sound');
-    s = await page.evaluate(() => window.CARD_SFX.state());
-    check(!s.on && !s.playing, 'sound button mutes: ' + JSON.stringify(s));
     await page.click('#sound');
     await page.waitForTimeout(300);
     s = await page.evaluate(() => window.CARD_SFX.state());
     check(
       s.on && s.playing && s.audio === 'running',
-      'sound button unmutes: ' + JSON.stringify(s)
+      'sound button turns it on: ' + JSON.stringify(s)
     );
+    await page.click('#sound');
+    s = await page.evaluate(() => window.CARD_SFX.state());
+    check(!s.on && !s.playing, 'sound button mutes: ' + JSON.stringify(s));
     // a fresh visitor whose very first tap is the sound button gets sound (not on-then-off)
     {
       const v = await phone();
@@ -488,6 +491,7 @@ try {
     await page.goto(BASE + 'no-such-page');
     await page.waitForTimeout(500);
     await ctx.setOffline(true);
+    DOWN = true;
     await page.goto(BASE + '?to=Sam&at=brisbane');
     await page.waitForTimeout(1500);
     check(
@@ -495,12 +499,119 @@ try {
         (await page.textContent('#person-name')).includes('Phill'),
       'card reloads offline'
     );
+    await page.goto(BASE + 'feedback.html'); // never opened by this visitor, so not saved
+    await page.waitForTimeout(800);
+    check(
+      (await page.textContent('body')).includes('You are offline'),
+      'an unsaved page offline says so instead of showing the card'
+    );
     await ctx.setOffline(false);
+    DOWN = false;
     check(
       errors.length === 0,
       'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
     );
     await ctx.close();
+    // Friends preview: the saved contact links back to the live card; one quiet Email action; Margot's films play
+    // only when tapped; a listing still awaiting the owner's confirmation is not offered for reviews
+    {
+      const vcf = fs.readFileSync(path.join(SITE, 'phill-mcgurk.vcf'), 'utf8');
+      check(
+        /^item0\.URL:https:\/\/card\.unite-group\.ink\r$/m.test(vcf),
+        'saved contact links the live card'
+      );
+      const f = await phone();
+      await f.page.goto(BASE + '?to=Sam');
+      await f.page.waitForTimeout(1500);
+      check(
+        ((await f.page.getAttribute('#email-direct', 'href')) || '').startsWith(
+          'mailto:airestoreassist@gmail.com?'
+        ) && (await f.page.isVisible('#email-direct')),
+        'visitors see a direct Email action'
+      );
+      const films = await f.page.evaluate(() =>
+        [...document.querySelectorAll('#films video')].map(v => ({
+          src: v.getAttribute('src'),
+          paused: v.paused,
+          hidden: v.hidden,
+        }))
+      );
+      check(
+        films.length === 2 &&
+          films[0].src === 'media/margot-explainer.mp4' &&
+          films.every(v => v.paused) &&
+          !films[0].hidden &&
+          films[1].hidden,
+        'Margot explainer shows, nothing plays on its own: ' +
+          JSON.stringify(films)
+      );
+      await f.page.click('#film-more');
+      check(
+        !(await f.page.evaluate(
+          () => document.getElementById('film-features').hidden
+        )),
+        'Tap to hear more opens the second film'
+      );
+      check(
+        (await f.page.evaluate(
+          () => (window.CARD_SFX.state() || {}).playing
+        )) === false,
+        'opening a film starts no card music'
+      );
+      const wheel = await f.page.evaluate(() =>
+        [...document.querySelectorAll('#rw-biz .need')].map(b => b.textContent)
+      );
+      check(
+        wheel.length > 0 && !wheel.includes('CARSI'),
+        'review wheel leaves out the unconfirmed listing: ' + wheel.join(', ')
+      );
+      check(
+        await f.page.isVisible('#feedback-link'),
+        'friends see the feedback link'
+      );
+      await f.ctx.close();
+      // reduced motion: the opener stays on its still poster
+      const rm = await phone({ reducedMotion: 'reduce' });
+      await rm.page.goto(BASE + '?to=Sam');
+      await rm.page.waitForTimeout(2500);
+      const hv = await rm.page.evaluate(() => {
+        const v = document.getElementById('hero-video');
+        return v ? { paused: v.paused, t: v.currentTime } : null;
+      });
+      check(
+        hv && hv.paused && hv.t === 0,
+        'reduced motion keeps the opener still: ' + JSON.stringify(hv)
+      );
+      await rm.ctx.close();
+      // feedback page: every answer lands in the prepared email
+      const fb = await phone();
+      await fb.page.goto(BASE + 'feedback.html');
+      await fb.page.check('input[name="save"][value="Partly"]');
+      await fb.page.check('input[name="pay"][value="Maybe"]');
+      await fb.page.check('#mods input[value="Menu"]');
+      await fb.page.fill('#bugs', 'Probe bug');
+      await fb.page.click('button[type="submit"]');
+      const fbText = await fb.page.textContent('#out-text');
+      check(
+        [
+          'Saving the contact: Partly',
+          'Would pay for one: Maybe',
+          'Would want: Menu',
+          'Broken, slow or odd: Probe bug',
+          'Phone and browser: ',
+        ].every(s => fbText.includes(s)) &&
+          (await fb.page.getAttribute('#out-mail', 'href')).startsWith(
+            'mailto:airestoreassist@gmail.com?'
+          ),
+        'feedback page prepares every answer for email'
+      );
+      check(
+        fb.errors.length === 0,
+        'no feedback page errors' +
+          (fb.errors.length ? ': ' + fb.errors.join(' | ') : '')
+      );
+      await fb.ctx.close();
+    }
     // Order page: the live preview must carry what the buyer types into the card template, and a typed
     // </script> must stay data (the template's kit marker and this page's replace call must agree).
     const order = await phone();
@@ -515,6 +626,32 @@ try {
         )
       : null;
     check(kitName === typed, 'order preview receives the buyer details');
+    const opener = frame
+      ? await frame.evaluate(
+          () => ((window.BRAND_KIT || {}).brand || {}).hero || null
+        )
+      : null;
+    check(
+      !!opener &&
+        opener.status === 'found' &&
+        /\.mp4$/.test(opener.videoDataUri || ''),
+      'order preview plays the chosen opener: ' + JSON.stringify(opener)
+    );
+    await order.page.fill('#hex', '#123456');
+    await order.page.fill('#hex', '');
+    await order.page.waitForTimeout(600);
+    const f2 = order.page.frames().find(f => f !== order.page.mainFrame());
+    const lead = f2
+      ? await f2.evaluate(
+          () =>
+            (((window.BRAND_KIT || {}).brand || {}).colours || {}).primary ||
+            null
+        )
+      : null;
+    check(
+      !!lead && lead.status === 'missing',
+      'clearing the colour drops it: ' + JSON.stringify(lead)
+    );
     check(
       (await order.page.evaluate(() => window.PWNED || 0)) === 0,
       'a typed </script> stays data in the order preview'
