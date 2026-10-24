@@ -219,7 +219,8 @@ kit = json.loads((root / 'brand-kits/phill-mcgurk.json').read_text(encoding='utf
 expected = (root / 'site/phill-mcgurk.vcf').read_bytes()
 assert b.vcard(kit['person']).encode('utf-8') == expected
 fixture = copy.deepcopy(kit)
-fixture['brand'] = {}
+# media-free, but the logo files stay listed: they are what proves the contact picture is the brand's own
+fixture['brand'] = {'appIcons': {'files': kit['brand']['appIcons']['files']}}
 for link in fixture['person']['links']:
     link.pop('video', None)
 folder = root / '.test-tmp/recall-build'
