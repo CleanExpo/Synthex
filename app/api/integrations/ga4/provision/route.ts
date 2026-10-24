@@ -48,12 +48,6 @@ import { logger } from '@/lib/logger';
 import { writeDefault } from '@/lib/rate-limit';
 
 const GA4_PLATFORM = 'googleanalytics';
-/**
- * The locked transaction makes two GA4 Admin round-trips (list, create) and a
- * concurrent run waits for the lock inside its own transaction, so the
- * interactive-transaction timeout covers both.
- */
-const PROVISION_TX_TIMEOUT_MS = 30_000;
 const PROVISION_TX_MAX_WAIT_MS = 10_000;
 /** GA4Property.syncStatus while a run has created the property but not finished. */
 const PROVISIONING = 'provisioning';
@@ -67,6 +61,13 @@ const PROVISION_LEASE_MS = 5 * 60_000;
 const PROVISION_GOOGLE_BUDGET_MS = 90_000;
 /** Deadline for the two Google calls made inside the locked transaction. */
 const PROVISION_CLAIM_GOOGLE_BUDGET_MS = 20_000;
+/**
+ * Prisma starts the interactive-transaction timer before the lock wait. A run
+ * can wait for a holder's full claim budget and then needs its own, plus the
+ * marker write, so the timeout must cover both budgets or the transaction
+ * rolls back after Google has already created the property.
+ */
+const PROVISION_TX_TIMEOUT_MS = 2 * PROVISION_CLAIM_GOOGLE_BUDGET_MS + 10_000;
 /**
  * GA4 recommended lead events (kit K2 tracking plan). These are also the ONLY
  * events GA4_ADMIN_CONSENT_STATEMENT lets Synthex mark as key events.

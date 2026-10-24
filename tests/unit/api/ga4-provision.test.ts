@@ -39,6 +39,7 @@ const mockWriteDefault = jest.fn((handler: () => Promise<Response>) =>
 );
 
 const mockFindFirst = jest.fn();
+const txTimeouts: Array<number | undefined> = [];
 const mockUpsert = jest.fn();
 /** tx.gA4Property.create: the committed "provisioning" marker. */
 const mockCreate = jest.fn();
@@ -101,8 +102,13 @@ jest.mock('@/lib/prisma', () => ({
       upsert: (...a: unknown[]) => mockUpsert(...a),
       updateMany: (...a: unknown[]) => mockUpdateMany(...a),
     },
-    $transaction: (fn: (tx: unknown) => Promise<unknown>) =>
-      fakeTransaction(fn),
+    $transaction: (
+      fn: (tx: unknown) => Promise<unknown>,
+      options?: { timeout?: number }
+    ) => {
+      txTimeouts.push(options?.timeout);
+      return fakeTransaction(fn);
+    },
   },
 }));
 
@@ -379,6 +385,15 @@ describe('POST /api/integrations/ga4/provision', () => {
     installGoogle();
     expect((await post()).status).toBe(200);
     expect(mockToken).toHaveBeenCalledWith('conn-new');
+  });
+
+  it('gives the claim transaction room for a full lock wait plus the full Google budget (the timer starts before the lock wait)', async () => {
+    installGoogle();
+    txTimeouts.length = 0;
+    expect((await post()).status).toBe(200);
+    // Lock wait can use up to the holder's 20_000 budget, then this run gets its own 20_000.
+    expect(txTimeouts.length).toBeGreaterThan(0);
+    for (const t of txTimeouts) expect(t).toBeGreaterThanOrEqual(2 * 20_000);
   });
 
   it('refuses without the analytics.edit grant and never calls Google', async () => {
