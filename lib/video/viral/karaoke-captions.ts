@@ -118,7 +118,10 @@ function assTime(seconds: number): string {
 /** Script text must never open an ASS override block or break a line. */
 function escapeAssText(text: string): string {
   return text
-    .replace(/\p{Extended_Pictographic}|\p{Emoji_Modifier}|\u200d|\ufe0f/gu, '')
+    .replace(
+      /\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20e3|\p{Emoji_Modifier}|\u200d|\ufe0f/gu,
+      ''
+    )
     .replace(/[{}\\]/g, '')
     .replace(/[\r\n]+/g, ' ');
 }

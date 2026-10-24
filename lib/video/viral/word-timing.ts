@@ -277,6 +277,9 @@ export function charactersToWords(a: CharacterAlignment): EvidenceWord[] {
     ) {
       throw new Error(`Character alignment time at ${i} is not finite`);
     }
+    if (a.character_end_times_seconds[i] < a.character_start_times_seconds[i]) {
+      throw new Error(`Character ${i} ends before it starts`);
+    }
   }
   const words: EvidenceWord[] = [];
   let text = '';
@@ -293,6 +296,9 @@ export function charactersToWords(a: CharacterAlignment): EvidenceWord[] {
     end = a.character_end_times_seconds[i];
   }
   if (text) words.push({ text, start, end });
+  if (words.length === 0) {
+    throw new Error('Character alignment has no spoken word');
+  }
   return words;
 }
 
@@ -340,7 +346,10 @@ export function timeScriptWords(
         text: script[g.sourceStart + k].text,
         start: t,
         end: next,
-        estimated: g.relation === 'replacement' || g.relation === 'merge',
+        estimated:
+          g.relation === 'replacement' ||
+          g.relation === 'merge' ||
+          g.cost > 0.06,
       });
       t = next;
     }

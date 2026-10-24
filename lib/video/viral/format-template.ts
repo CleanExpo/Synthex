@@ -144,13 +144,13 @@ export function planBeats(
     if (!w) throw new Error(`${label}: word ${index} does not exist`);
     return w;
   };
-  return beats.map(beat => {
+  const planned = beats.map(beat => {
     const span = anchors[beat.id];
     if (!span)
       throw new Error(
         `Beat "${beat.id}" has no @{${beat.id}} anchor in the script`
       );
-    const planned: PlannedBeat = {
+    const out: PlannedBeat = {
       id: beat.id,
       margot: beat.margot,
       start: at(span.startWord, `Beat ${beat.id}`).start,
@@ -168,14 +168,38 @@ export function planBeats(
       if (v.endWord < v.startWord) {
         throw new Error(`Beat "${beat.id}": visual ends before it starts`);
       }
-      planned.visual = {
+      out.visual = {
         ...v,
         start: at(v.startWord, `Beat ${beat.id} visual`).start,
         end: at(v.endWord, `Beat ${beat.id} visual`).end,
       };
     }
-    return planned;
+    return out;
   });
+  // Silence belongs to the beat before it, so every second of audio is planned
+  // exactly once: the first beat starts at zero, each beat runs to the start of
+  // the next, and the last ends with the final spoken word.
+  const ordered = planned
+    .map((beat, i) => ({ beat, order: anchors[beats[i].id].startWord }))
+    .sort((a, b) => a.order - b.order)
+    .map(x => x.beat);
+  ordered.forEach((beat, i) => {
+    if (i === 0) beat.start = 0;
+    if (i + 1 < ordered.length) beat.end = ordered[i + 1].start;
+  });
+  // A visual that opens or closes a beat holds through the pause around it.
+  for (const spec of beats) {
+    const beat = ordered.find(b => b.id === spec.id);
+    const span = anchors[spec.id];
+    if (!beat?.visual) continue;
+    if (spec.visual?.startWord === span.startWord) {
+      beat.visual.start = beat.start;
+    }
+    if (spec.visual?.endWord === span.endWord) {
+      beat.visual.end = beat.end;
+    }
+  }
+  return ordered;
 }
 
 export interface BeatPlanCheck {
