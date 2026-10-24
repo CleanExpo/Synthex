@@ -91,6 +91,38 @@ try {
 } finally {
   fs.rmSync('brand-kits/media/zz-test-renamed.jpg');
 }
+// a harmless name that links to, or is a copy of, Margot's poster is still Margot's poster
+fs.symlinkSync(
+  'margot-explainer-poster.jpg',
+  'brand-kits/media/zz-test-alias.jpg'
+);
+fs.copyFileSync(
+  'brand-kits/media/margot-explainer-poster.jpg',
+  'brand-kits/media/zz-test-copy.jpg'
+);
+try {
+  refused(
+    'alias',
+    { kind: 'owner', file: media('zz-test-alias.jpg') },
+    /plain file inside the repository, not a link/
+  );
+  refused(
+    'dot-dot',
+    {
+      kind: 'owner',
+      file: 'business-card/brand-kits/media/../media/zz-test-copy.jpg',
+    },
+    /not a link|is a copy of/
+  );
+  refused(
+    'renamed-copy',
+    { kind: 'owner', file: media('zz-test-copy.jpg') },
+    /is a copy of business-card\/.*margot-explainer-poster\.jpg/
+  );
+} finally {
+  fs.rmSync('brand-kits/media/zz-test-alias.jpg');
+  fs.rmSync('brand-kits/media/zz-test-copy.jpg');
+}
 
 // the good case: the owner's logo, the same bytes in the served contact and in the page's own Save
 const ok = build('logo', kit.person.contactPhoto);

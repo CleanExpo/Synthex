@@ -129,14 +129,26 @@ def contact_photo(person):
     if not rel or PHOTO_NOT.search(rel):
         sys.exit(f"contact photo: {rel or 'no file'} is not the owner's logo or photo (no Margot, film or edition stills)")
     kind = PHOTO_TYPES.get(os.path.splitext(rel)[1].lower())
-    path = os.path.join(REPO, rel)
+    path = os.path.abspath(os.path.join(REPO, rel))
     if not kind or not os.path.isfile(path):
         sys.exit(f"contact photo: {rel} must be an existing PNG or JPEG file")
+    # the name checked above must be the file read: no link or ../ may lead to another picture
+    if os.path.realpath(path) != path or not path.startswith(os.path.realpath(REPO) + os.sep):
+        sys.exit(f"contact photo: {rel} must be a plain file inside the repository, not a link")
     data = open(path, "rb").read()
     if not data.startswith(kind[1]):
         sys.exit(f"contact photo: {rel} is not really a {kind[0]}")
     if len(data) > PHOTO_MAX:
         sys.exit(f"contact photo: {rel} is {len(data)} bytes; use a copy of about 256 px (at most {PHOTO_MAX} bytes)")
+    # a renamed copy of a Margot, film or edition picture is still that picture
+    digest = hashlib.sha256(data).hexdigest()
+    for top, dirs, names in os.walk(os.path.join(REPO, "business-card")):
+        dirs[:] = [d for d in dirs if not d.startswith(".")]  # scratch copies (.test-tmp) are not sources
+        for n in names:
+            other = os.path.join(top, n)
+            if PHOTO_NOT.search(os.path.relpath(other, REPO)) and os.path.splitext(n)[1].lower() in PHOTO_TYPES:
+                if os.path.getsize(other) == len(data) and hashlib.sha256(open(other, "rb").read()).hexdigest() == digest:
+                    sys.exit(f"contact photo: {rel} is a copy of {os.path.relpath(other, REPO)}, not the owner's logo or photo")
     return kind[0], base64.b64encode(data).decode()
 
 
