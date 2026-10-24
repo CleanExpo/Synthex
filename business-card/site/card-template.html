@@ -124,6 +124,10 @@ textarea { min-height: 96px; resize: vertical; }
 .status-list .on b { color: var(--ok); }
 .status-list .off b { color: var(--warn); }
 footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+/* Margot's films: tap to play, never autoplay; the second one opens on request */
+.films { display: grid; gap: 10px; justify-items: center; }
+.films video { width: 100%; max-height: 72vh; aspect-ratio: 9 / 16; object-fit: contain; background: #000; border-radius: 18px; }
+#feedback-link { font-size: 15px; font-weight: 600; color: var(--brand); min-height: 44px; display: flex; align-items: center; }
 @media (prefers-reduced-motion: reduce) { .name h1 .w { animation: none; } .rabbit { transition: none; } }
 
 /* Crack & reveal: a code-drawn shatter over the stage on open */
@@ -169,7 +173,7 @@ footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--lin
 
 /* Sound: off until the visitor taps it (phones block sound before a tap); all of it is synthesised in code, no audio files */
 .sound { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 6px; cursor: pointer;
-  font: 600 12px var(--body); color: #FFFFFF; background: rgba(4,8,14,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 11px;
+  font: 600 12px var(--body); color: #FFFFFF; background: rgba(4,8,14,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 14px; min-height: 44px; min-width: 44px;
   -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .sound svg { width: 16px; height: 16px; }
 .sound[aria-pressed="true"] { border-color: var(--brand); box-shadow: 0 0 14px color-mix(in srgb, var(--brand) 70%, transparent); }
@@ -265,8 +269,18 @@ body:not(.owner) .owner-only { display: none !important; }
 
   <p class="intro-below" id="intro-below" hidden></p>
 
+  <label class="fine" for="met">Where did we meet? (optional)
+    <input id="met" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Brisbane expo, Dave's BBQ" aria-describedby="met-private">
+  </label>
+  <small class="fine" id="met-private">Added only to the contact you save, so you can search for it later. Nothing is sent anywhere.</small>
   <button class="btn primary save-hero" type="button" id="save">Save to my phone</button>
   <p class="save-hint" id="save-hint" role="status" hidden></p>
+  <a class="btn quiet" id="email-direct" hidden>Email</a>
+  <section class="films" id="films" hidden aria-label="Films">
+    <video id="film-explainer" controls playsinline preload="none"></video>
+    <button class="btn quiet" type="button" id="film-more" hidden aria-expanded="false" aria-controls="film-features">Tap to hear more</button>
+    <video id="film-features" controls playsinline preload="none" hidden></video>
+  </section>
   <canvas id="burst" aria-hidden="true"></canvas>
   <div class="out" id="save-out" hidden>
     <span class="tag">Preview limit</span>
@@ -296,8 +310,7 @@ body:not(.owner) .owner-only { display: none !important; }
   <div class="surprise" id="surprise" hidden role="dialog" aria-modal="true" aria-labelledby="surprise-h">
     <canvas id="confetti" aria-hidden="true"></canvas>
     <div class="gift" id="gift">
-      <p class="gift-k">Rabbit 1 of 5 found</p>
-      <p class="fine" style="margin:0">The other four are hiding in Phill's talk.</p>
+      <p class="gift-k">You found the white rabbit</p>
       <h2 id="surprise-h"></h2>
       <p id="surprise-p"></p>
       <div class="row"><button class="btn primary" type="button" id="surprise-more">Another one</button><button class="btn" type="button" id="surprise-close">Close</button></div>
@@ -373,9 +386,9 @@ body:not(.owner) .owner-only { display: none !important; }
         <p class="fine"><span class="tag">Draft</span> Prepared for this prototype and not yet approved. General guidance, not an audit of your business.</p>
       </div>
 
-      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>The game that runs through the talk. One rabbit is hiding above.</span></button>
+      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>A hidden rabbit has a practical idea to share.</span></button>
       <div class="panel" id="p-solve" hidden>
-        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Find all five during the talk. No draw: everyone who finds them all gets the same reward.</p>
+        <p style="margin:0">You found the hidden rabbit. Nice eyes. Tap it for a practical idea.</p>
         <p class="fine"><span class="tag">Not connected yet</span> The game is Rana's build. Its permanent address is not set yet, so it is not linked here.</p>
       </div>
 
@@ -441,7 +454,8 @@ body:not(.owner) .owner-only { display: none !important; }
 
   <footer>
     <span id="brand-credit" hidden>Brand kit: none loaded.</span>
-    <span>Nothing on this card is sent or stored without your say-so.</span>
+    <a id="feedback-link" href="feedback.html" hidden>Trying this card? Tell us how it went</a>
+    <span>Your phone keeps a copy of this card so it opens offline, and which opener you last saw. Nothing leaves your phone until you tap to send it.</span>
   </footer>
 </div>
 
@@ -576,6 +590,27 @@ function lum(hex) {
   }
   const f = P.features || {};
   if (f.discover && P.ideas) $("door-discover").hidden = false;
+  // Margot's films (hosted only): a poster until tapped; the second film opens from "Tap to hear more"
+  const FILMS = B.films || {};
+  const film = (id, f) => {
+    if (!f || f.status !== "found" || !HOSTED || !f.hostedVideo) return false;
+    const v = $(id); v.src = f.hostedVideo; if (f.hostedPoster) v.poster = f.hostedPoster;
+    v.setAttribute("aria-label", f.label || "Film"); return true;
+  };
+  if (film("film-explainer", FILMS.explainer)) {
+    $("films").hidden = false;
+    if (film("film-features", FILMS.features)) {
+      $("film-more").hidden = false;
+      $("film-more").addEventListener("click", () => {
+        const open = $("film-features").hidden; $("film-features").hidden = !open;
+        $("film-more").setAttribute("aria-expanded", String(open));
+        if (open) { $("film-explainer").pause(); const p = $("film-features").play(); if (p && p.catch) p.catch(() => {}); }
+        else $("film-features").pause(); // a closed film must not keep talking
+      });
+    }
+  }
+  // the friends preview asks for feedback (feedback.html ships with the hosted site only)
+  if (f.friendFeedback && HOSTED) $("feedback-link").hidden = false;
   if (f.whiteRabbit) {
     $("door-solve").hidden = false; $("rabbit").hidden = false;
     const li = document.createElement("li"); li.className = "off"; li.innerHTML = "<b>Not connected yet</b>"; li.append("The White Rabbit game link."); $("status-list").insertBefore(li, $("status-list").children[4]);
@@ -585,23 +620,45 @@ function lum(hex) {
   });
 })();
 
-function vcard() {
+function meetingMemory(value) {
+  return String(value).replace(/[\r\n\u2028\u2029]/g, " ").trim();
+}
+function vcard(met = "") {
+  met = meetingMemory(met);
   // text values escape line breaks as \n (vCard 3.0); raw values (phone, email) drop them, so no value can start a new field
   const esc = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
   const raw = s => String(s).replace(/[\r\n]/g, "");
   const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "", first = parts.join(" ");
   const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + esc(last) + ";" + esc(first) + ";;;", "FN:" + esc(P.name || "")];
   if (P.org) lines.push("ORG:" + esc(P.org));
-  if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
+  if (P.title) lines.push("TITLE:" + esc(P.vcardTitle || P.title));
+  const nicknames = [...(P.vcardNicknames || []), ...(met ? [met] : [])];
+  if (nicknames.length) lines.push("NICKNAME:" + nicknames.map(esc).join(","));
   (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + raw(p.type || "VOICE").replace(/[^A-Za-z,]/g, "") + ":" + raw(p.tel)));
   (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + raw(e.value)));
+  // the saved contact always leads back to the live card
+  if (safeUrl(P.cardUrl)) lines.push("URL:" + P.cardUrl.replace(/\/$/, "") + "/");
   // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
   (P.links || []).filter(l => safeUrl(l.url)).forEach((l, i) => {
     lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));
   });
-  if (P.vcardNote) lines.push("NOTE:" + esc(P.vcardNote));
+  const note = [met ? "Met: " + met : "", P.vcardNote].filter(Boolean).join("\n");
+  if (note) lines.push("NOTE:" + esc(note));
+  // the owner's logo or photo, as the build embeds it (same line as build.py writes)
+  const photo = /^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/.exec((P.contactPhoto || {}).dataUri || "");
+  if (photo) lines.push("PHOTO;ENCODING=b;TYPE=" + photo[1].toUpperCase() + ":" + photo[2]);
   lines.push("END:VCARD");
-  return lines.join("\r\n") + "\r\n";
+  // vCard 3.0: CRLF and at most 75 UTF-8 octets per physical line.
+  const folded = [], encoder = new TextEncoder();
+  lines.forEach(line => {
+    let chunk = "";
+    for (const char of line) {
+      if (encoder.encode(chunk + char).length > 75) { folded.push(chunk); chunk = " "; }
+      chunk += char;
+    }
+    folded.push(chunk);
+  });
+  return folded.join("\r\n") + "\r\n";
 }
 function contactText() {
   return [P.name, P.title].filter(Boolean).join(", ") + "\n" +
@@ -625,7 +682,7 @@ async function copy(text, el) {
   const okId = id => /^[A-Za-z0-9_-]{10,}$/.test(id || "");
   const reviewUrl = id => "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(id);
   // Several businesses: the review wheel. The visitor names the one they actually used; nothing is pre-written.
-  const places = (P.reviewPlaces || []).filter(p => p.status === "found" && okId(p.placeId));
+  const places = (P.reviewPlaces || []).filter(p => p.status === "found" && !p.confirm && okId(p.placeId));
   if (places.length) {
     $("rw").hidden = false;
     let place = places.length === 1 ? places[0] : null;
@@ -698,13 +755,10 @@ async function copy(text, el) {
 })();
 
 // Sound: a quiet generative score plus small effects, synthesised with Web Audio (no files, nothing licensed).
-// On by default: phones allow sound only after a touch, so it starts on the visitor's first tap anywhere.
-// The button mutes it, and a visitor who muted it stays muted on their next visit.
+// Off until the visitor taps the sound button: saving the contact or opening a business never starts music.
 const SFX = (() => {
-  const KEY = "card-sound", btn = $("sound"), label = $("sound-label");
+  const btn = $("sound"), label = $("sound-label");
   let ctx = null, master = null, music = null, on = false;
-  const want = () => { try { return localStorage.getItem(KEY) !== "off"; } catch (e) { return true; } };
-  const remember = v => { try { localStorage.setItem(KEY, v ? "on" : "off"); } catch (e) {} };
   function audio() {
     if (ctx) return ctx;
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
@@ -762,7 +816,7 @@ const SFX = (() => {
     setTimeout(() => { try { m.lfo.stop(); m.bus.disconnect(); } catch (e) {} }, 2000);
   }
   function set(v) {
-    on = v; remember(v); btn.setAttribute("aria-pressed", String(v)); label.textContent = v ? "Sound" : "Tap for sound";
+    on = v; btn.setAttribute("aria-pressed", String(v)); label.textContent = v ? "Sound" : "Tap for sound";
     if (!v) { stopMusic(); return; }
     if (!audio()) { label.textContent = "No sound here"; on = false; return; }
     ctx.resume(); startMusic(); fx.chime();
@@ -784,8 +838,6 @@ const SFX = (() => {
     tick() { if (!on) return; tone(1800, ctx.currentTime, 0.06, { vol: 0.06, type: "triangle" }); },
   };
   btn.addEventListener("click", e => { e.stopPropagation(); set(!on); });
-  // Came back with sound on: start on the first tap anywhere (phones require one)
-  if (want()) addEventListener("pointerdown", function first(e) { removeEventListener("pointerdown", first); if (!on && !btn.contains(e.target)) set(true); }, { once: true });
   document.addEventListener("visibilitychange", () => { if (!ctx) return; document.hidden ? ctx.suspend() : (on && ctx.resume()); });
   document.addEventListener("click", e => { if (e.target.closest(".btn, .need, .door")) fx.tick(); });
   fx.state = () => ({ on, playing: !!music, audio: ctx ? ctx.state : "none" });   // read by the smoke test
@@ -876,7 +928,8 @@ function crackReveal(done) {
   requestAnimationFrame(frame);
 }
 function startHero() {
-  const v = $("hero-video"); if (v) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+  // with reduced motion the opener stays on its still poster
+  const v = $("hero-video"); if (v && !REDUCED) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
   $("greet").classList.add("on");
   phoenix();
 }
@@ -1173,6 +1226,7 @@ if (HOSTED) {
 
 // Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
 $("save").addEventListener("click", () => {
+  const met = meetingMemory($("met").value);
   if (HOSTED && KIT.id) {
     // Phones finish the save themselves: say the one tap that is left (Android browsers download the file)
     const android = /Android/i.test(navigator.userAgent);
@@ -1180,14 +1234,17 @@ $("save").addEventListener("click", () => {
     $("save-hint").textContent = warm + (android ? "Now open the downloaded file and tap Save." : "Now tap Create New Contact.");
     SFX.chime(); confetti("burst");
     $("save-hint").hidden = false;
-    location.href = KIT.id + ".vcf"; return;
+    if (!met) { location.href = KIT.id + ".vcf"; return; }
   }
   try {
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([vcard()], { type: "text/vcard" }));
+    const url = URL.createObjectURL(new Blob([vcard(met)], { type: "text/vcard;charset=utf-8" }));
+    a.href = url;
     a.download = (KIT.id || "contact") + ".vcf"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    if (HOSTED) return;
   } catch (e) { /* blocked: the fallback below covers it */ }
-  $("vcard-text").textContent = contactText();
+  $("vcard-text").textContent = vcard(met);
   $("save-out").hidden = false;
 });
 $("copy-vcard").addEventListener("click", e => copy($("vcard-text").textContent, e.currentTarget));
@@ -1210,6 +1267,13 @@ $("needs").addEventListener("click", e => {
 
 const INBOX = (P.inbox && P.inbox.status !== "missing" && P.inbox.address) || (P.inbox && P.inbox.fallback) || ((P.emails || [])[0] || {}).value || "";
 $("inbox-addr").textContent = INBOX || "no address supplied";
+// Visitors get one quiet way to write straight away, under Save
+if (/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(INBOX)) {
+  const first = (P.name || "").split(" ")[0];
+  $("email-direct").href = "mailto:" + INBOX + "?subject=" + encodeURIComponent("[Card] Hello" + (first ? " " + first : ""));
+  $("email-direct").textContent = first ? "Email " + first : "Email";
+  $("email-direct").hidden = false;
+}
 // An assistant inbox (proposed or found): messages land where the reply desk reads them; the owner still reads every one
 if (P.inbox && P.inbox.address && ["proposed", "found"].includes(P.inbox.status)) {
   const who = (P.name || "").split(" ")[0] || "the owner";

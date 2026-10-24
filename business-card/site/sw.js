@@ -1,5 +1,5 @@
-// Built by build.py; do not edit by hand. Version c6391bd451ab
-const CACHE = 'card-c6391bd451ab';
+// Built by build.py; do not edit by hand. Version 464e22c1ba96
+const CACHE = 'card-464e22c1ba96';
 const SHELL = [
   './',
   'phill-mcgurk.vcf',
@@ -14,6 +14,10 @@ const SHELL = [
   'media/edition-blueprint-poster.jpg',
   'media/edition-restoration-poster.jpg',
 ];
+const OFFLINE =
+  '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<p style="font:16px/1.5 system-ui,sans-serif;padding:24px">You are offline, and this page was not saved on your phone. ' +
+  '<a href="./">Open the card</a></p>';
 self.addEventListener('install', e =>
   e.waitUntil(
     caches
@@ -75,7 +79,14 @@ self.addEventListener('fetch', e => {
             ? caches.match('./')
             : caches
                 .match(r, { ignoreSearch: true })
-                .then(hit => hit || caches.match('./'))
+                .then(
+                  hit =>
+                    hit ||
+                    new Response(OFFLINE, {
+                      status: 503,
+                      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                    })
+                )
         )
     );
     return;

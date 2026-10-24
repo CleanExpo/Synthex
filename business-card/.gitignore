@@ -6,3 +6,4 @@
 !brand-kits/validate.py
 # The hosted card serves its logo PNG from site/media.
 !site/media/*.png
+.test-tmp/

@@ -37,7 +37,9 @@ HEAD = (
 PRIVATE = {"sources", "prepared", "source", "decision", "likenessConsent", "conflicts", "resolved",
            "previousLogos", "previousHeroes", "previousEditions", "rotationReason", "supersededReason",
            "videoNote", "urlNote", "shopUrlNote", "contactSource", "visitorLinksSource", "reviewPromptsSource",
-           "placeIdSource", "profileUrlSource"}
+           "placeIdSource", "profileUrlSource", "titleSource"}
+# Phill 24/10/2026: no certifications on the card. Checked at any length; the record check skips short text.
+NO_CREDENTIALS = ("IICRC", "47496", "BFRS", "GBAC")
 
 
 def public(v, removed, path=()):
@@ -70,6 +72,9 @@ QR_LIB = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
 SW = """// Built by build.py; do not edit by hand. Version {version}
 const CACHE = "card-{version}";
 const SHELL = {shell};
+const OFFLINE = '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+  '<p style="font:16px/1.5 system-ui,sans-serif;padding:24px">You are offline, and this page was not saved on your phone. ' +
+  '<a href="./">Open the card</a></p>';
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => Promise.all(SHELL.map(u =>
   c.add(new Request(u, u.startsWith("http") ? {{ mode: "no-cors" }} : {{}})).catch(() => {{}})))).then(() => self.skipWaiting())));
 self.addEventListener("activate", e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k))))
@@ -86,7 +91,8 @@ self.addEventListener("fetch", e => {{
         const copy = res.clone(); caches.open(CACHE).then(c => c.put("./", copy));
       }}
       return res;
-    }}).catch(() => card ? caches.match("./") : caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || caches.match("./"))));
+    }}).catch(() => card ? caches.match("./") : caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || new Response(OFFLINE,
+      {{ status: 503, headers: {{ "Content-Type": "text/html; charset=utf-8" }} }}))));
     return;
   }}
   e.respondWith(caches.match(r, {{ ignoreSearch: true }}).then(hit => hit || fetch(r).then(res => {{
@@ -102,6 +108,67 @@ MIME = {".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".j
 
 # Same rule as SAFE_URL in card.html: plain https, no whitespace, quote or angle bracket (no javascript:, no CRLF injection)
 SAFE_URL = re.compile(r'^https://[^\s"<>]+$')
+
+
+# Phill 24/10/2026: the contact picture is the owner's logo or a photo of the owner. Never Margot, a film
+# still or an edition poster, and small enough to sit inside a contact file.
+PHOTO_KINDS = ("logo", "owner")
+PHOTO_TYPES = {".png": ("PNG", b"\x89PNG\r\n\x1a\n"), ".jpg": ("JPEG", b"\xff\xd8\xff"), ".jpeg": ("JPEG", b"\xff\xd8\xff")}
+PHOTO_NOT = re.compile(r"margot|films?/|edition|poster|reveal|hero", re.I)
+PHOTO_MAX = 120_000
+
+
+def contact_photo(person):
+    """The contact picture as (vCard TYPE, base64), or the build stops with the reason."""
+    cp = person.get("contactPhoto")
+    if not isinstance(cp, dict):
+        sys.exit("contact photo: the kit needs person.contactPhoto, the owner's logo or a photo of the owner")
+    if cp.get("kind") not in PHOTO_KINDS:
+        sys.exit(f"contact photo: kind must be logo or owner, not {cp.get('kind')!r}")
+    rel = str(cp.get("file") or "")
+    if not rel or PHOTO_NOT.search(rel):
+        sys.exit(f"contact photo: {rel or 'no file'} is not the owner's logo or photo (no Margot, film or edition stills)")
+    kind = PHOTO_TYPES.get(os.path.splitext(rel)[1].lower())
+    path = os.path.abspath(os.path.join(REPO, rel))
+    if not kind or not os.path.isfile(path):
+        sys.exit(f"contact photo: {rel} must be an existing PNG or JPEG file")
+    # the name checked above must be the file read: no link or ../ may lead to another picture
+    if os.path.realpath(path) != path or not path.startswith(os.path.realpath(REPO) + os.sep):
+        sys.exit(f"contact photo: {rel} must be a plain file inside the repository, not a link")
+    data = open(path, "rb").read()
+    if not data.startswith(kind[1]):
+        sys.exit(f"contact photo: {rel} is not really a {kind[0]}")
+    if len(data) > PHOTO_MAX:
+        sys.exit(f"contact photo: {rel} is {len(data)} bytes; use a copy of about 256 px (at most {PHOTO_MAX} bytes)")
+    # a renamed copy of a Margot, film or edition picture is still that picture
+    digest = hashlib.sha256(data).hexdigest()
+    for top, dirs, names in os.walk(os.path.join(REPO, "business-card")):
+        dirs[:] = [d for d in dirs if not d.startswith(".")]  # scratch copies (.test-tmp) are not sources
+        for n in names:
+            other = os.path.join(top, n)
+            if PHOTO_NOT.search(os.path.relpath(other, REPO)) and os.path.splitext(n)[1].lower() in PHOTO_TYPES:
+                if os.path.getsize(other) == len(data) and hashlib.sha256(open(other, "rb").read()).hexdigest() == digest:
+                    sys.exit(f"contact photo: {rel} is a copy of {os.path.relpath(other, REPO)}, not the owner's logo or photo")
+    return kind[0], base64.b64encode(data).decode()
+
+
+def approved_contact_photo(kit, data):
+    """A picture is only the owner's if the kit says so in a way an edited copy cannot fake: a logo must be
+    byte-for-byte one of the brand's own logo files; an owner photo must carry the owner's approval of
+    exactly these bytes (approved.sha256, with who approved it and when)."""
+    cp = kit["person"]["contactPhoto"]
+    digest = hashlib.sha256(data).hexdigest()
+    brand = kit.get("brand") or {}
+    if cp["kind"] == "logo":
+        logos = [(brand.get("logo") or {}).get("file")] + list(((brand.get("appIcons") or {}).get("files") or {}).values())
+        for rel in filter(None, logos):
+            path = os.path.join(REPO, rel)
+            if os.path.isfile(path) and hashlib.sha256(open(path, "rb").read()).hexdigest() == digest:
+                return
+        sys.exit("contact photo: a logo must be one of the brand's own logo files (brand.logo or brand.appIcons)")
+    ok = cp.get("approved") or {}
+    if not (ok.get("sha256") == digest and str(ok.get("by") or "").strip() and str(ok.get("date") or "").strip()):
+        sys.exit("contact photo: an owner photo needs approved.sha256 of exactly this file, with approved.by and approved.date")
 
 
 def esc(s):
@@ -124,18 +191,35 @@ def vcard(p):
     if p.get("org"):
         lines.append("ORG:" + esc(p["org"]))
     if p.get("title"):
-        lines.append("TITLE:" + esc(p["title"].split(",")[0]))
+        lines.append("TITLE:" + esc(p.get("vcardTitle") or p["title"]))
+    if p.get("vcardNicknames"):
+        lines.append("NICKNAME:" + ",".join(esc(n) for n in p["vcardNicknames"]))
     for ph in p.get("phones", []):
         lines.append("TEL;TYPE=" + re.sub(r"[^A-Za-z,]", "", raw(ph.get("type", "VOICE"))) + ":" + raw(ph["tel"]))
     for e in p.get("emails", []):
         lines.append("EMAIL;TYPE=WORK:" + raw(e["value"]))
+    # the saved contact always leads back to the live card
+    if SAFE_URL.match(str(p.get("cardUrl") or "")):
+        lines.append("URL:" + p["cardUrl"].rstrip("/") + "/")
     # the first two live links are the homepages; every other live business follows as a labelled link
     for i, link in enumerate([l for l in p.get("links", []) if SAFE_URL.match(str(l.get("url") or ""))], 1):
         lines += [f"item{i}.URL:{link['url']}", f"item{i}.X-ABLabel:" + ("_$!<HomePage>!$_" if i <= 2 else esc(link["label"]))]
     if p.get("vcardNote"):
         lines.append("NOTE:" + esc(p["vcardNote"]))
+    photo_type, photo = contact_photo(p)
+    lines.append(f"PHOTO;ENCODING=b;TYPE={photo_type}:{photo}")
     lines.append("END:VCARD")
-    return "\r\n".join(lines) + "\r\n"
+    # Fold at 75 UTF-8 octets, including continuation spaces; never split a character.
+    folded = []
+    for line in lines:
+        chunk = ""
+        for char in line:
+            if len((chunk + char).encode("utf-8")) > 75:
+                folded.append(chunk)
+                chunk = " "
+            chunk += char
+        folded.append(chunk)
+    return "\r\n".join(folded) + "\r\n"
 
 
 def main(card_path, kit_path, out):
@@ -146,8 +230,14 @@ def main(card_path, kit_path, out):
     if not kit.get("id") or not (kit.get("person") or {}).get("name"):
         sys.exit("brand kit needs an id and person.name")
     os.makedirs(os.path.join(out, "media"), exist_ok=True)
+    photo_type, photo = contact_photo(kit["person"])
+    approved_contact_photo(kit, base64.b64decode(photo))
     hosted = json.loads(json.dumps(kit))   # served as files next to index.html
     preview = json.loads(json.dumps(kit))  # self-contained for a claude.ai preview: media as data URIs
+    # the page's own Save builds the same contact, so it carries the picture itself, not its file path
+    for k in (hosted, preview):
+        k["person"]["contactPhoto"] = {"kind": kit["person"]["contactPhoto"]["kind"],
+                                       "dataUri": f"data:image/{photo_type.lower()};base64,{photo}"}
     brand_h, brand_p = hosted.get("brand") or {}, preview.get("brand") or {}
 
     def media(rel):
@@ -183,6 +273,9 @@ def main(card_path, kit_path, out):
 
     hero = (kit.get("brand") or {}).get("hero") or {}
     clip(hero, brand_h.get("hero", {}), brand_p.get("hero", {}), True)
+    # Margot's films: hosted only, so the preview stays small
+    for name_, film in ((kit.get("brand") or {}).get("films") or {}).items():
+        clip(film, brand_h["films"][name_], brand_p["films"][name_], False)
     # Editions (?edition=<name>): hosted only, so the preview stays small
     for name_, ed in ((kit.get("brand") or {}).get("editions") or {}).items():
         clip(ed, brand_h["editions"][name_], brand_p["editions"][name_], False)
@@ -204,6 +297,11 @@ def main(card_path, kit_path, out):
                          and (r in html or json.dumps(r, ensure_ascii=False)[1:-1].replace("<", "\\u003c") in html)})
         if leaked:
             sys.exit("kit working record reached the page: " + "; ".join(x[:60] for x in leaked))
+        # any spelling, any neighbours; only inline media is left out, as its base64 holds these letters by chance
+        text = re.sub(r"data:[\w.+-]+/[\w.+-]+;base64,[A-Za-z0-9+/=]+", "", html).lower()
+        banned = [t for t in NO_CREDENTIALS if t.lower() in text]
+        if banned:
+            sys.exit("certification text reached the page: " + ", ".join(banned))
         return html
 
     # Home-screen app: only when the kit names its own app icons
@@ -236,10 +334,8 @@ def main(card_path, kit_path, out):
             src = brand_h.get("hero") if n == "signature" else (brand_h.get("editions") or {}).get(n)
             if src and src.get("hostedPoster"):
                 shell.append(src["hostedPoster"])
-        version = hashlib.sha256(page_html.encode("utf-8")).hexdigest()[:12]
-        with open(os.path.join(out, "sw.js"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(SW.format(version=version, shell=json.dumps(shell)))
     else:
+        shell = None
         page_html = HEAD.replace("{app}", "") + render(hosted) + TAIL
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(page_html)
@@ -260,6 +356,19 @@ def main(card_path, kit_path, out):
     # The unbranded template, for the live preview on get-your-card.html
     with open(os.path.join(out, "card-template.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(page)
+    # Written last: the cache version covers every file the worker can save (pages, catalogue, media), so any
+    # change to any of them gives a new cache and the old one is dropped
+    if shell is not None:
+        h = hashlib.sha256()
+        for root, dirs, files in sorted(os.walk(out)):
+            dirs.sort()
+            for name in sorted(files):
+                if name == "sw.js" or name.endswith(".pyc"):
+                    continue
+                p = os.path.join(root, name)
+                h.update(os.path.relpath(p, out).encode("utf-8")); h.update(open(p, "rb").read())
+        with open(os.path.join(out, "sw.js"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(SW.format(version=h.hexdigest()[:12], shell=json.dumps(shell)))
 
 
 if __name__ == "__main__":
