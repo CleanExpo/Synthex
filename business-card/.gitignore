@@ -1,0 +1,8 @@
+# The repo ignores *.png; the card build needs these logo and input files, so they are committed.
+!brand-kits/media/*.png
+!wow/inputs/*.png
+# The repo ignores *.py; the card build script and kit validator are part of the card.
+!site/build.py
+!brand-kits/validate.py
+# The hosted card serves its logo PNG from site/media.
+!site/media/*.png

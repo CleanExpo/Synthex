@@ -1,0 +1,1318 @@
+<title>Living Card</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one narrow column, a 9:16 motion stage up top, then contact actions, the doors, the businesses and an honest status panel.
+   Brand template: every brand colour and font comes from the embedded brand kit (window.BRAND_KIT, #brand-kit). The values below are plain
+   template neutrals used only where the kit marks a value missing; they are not anyone's brand. */
+:root {
+  --bg: #FFFFFF;          /* template neutral: page */
+  --fg: #16181D;          /* template neutral: text */
+  --stage: #14171C;       /* template neutral: motion stage */
+  --brand: #3A3F48;       /* replaced by the kit's primary colour */
+  --brand-ink: #FFFFFF;   /* text on the brand colour, chosen by contrast */
+  --glow: #8A93A3;        /* replaced by the kit's primary colour */
+  --brand-text: #3A3F48;  /* the primary colour, deepened until text in it reads at 4.5:1 on the page */
+  --glow-text: #C9CED6;   /* the primary colour, lightened until text in it reads at 4.5:1 on the stage */
+  --warn: #B4462B;        /* semantic: not connected yet */
+  --ok: #1E7B55;          /* semantic: live */
+  --muted: color-mix(in srgb, var(--fg) 62%, var(--bg));
+  --panel: color-mix(in srgb, var(--fg) 5%, var(--bg));
+  --line: color-mix(in srgb, var(--fg) 14%, var(--bg));
+  --display: system-ui, "Segoe UI", Arial, sans-serif;
+  --body: system-ui, "Segoe UI", Arial, sans-serif;
+  --mono: ui-monospace, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+}
+.wrap { max-width: 440px; margin: 0 auto; display: grid; gap: 28px; }
+a { color: var(--brand-text); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 6px; }
+.tag { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 55%, transparent); padding: 3px 8px; border-radius: 999px; display: inline-block; }
+
+/* Motion stage */
+.stage { position: relative; aspect-ratio: 9 / 16; max-width: 100%; max-height: 72vh; width: 100%; margin: 0 auto;
+  border-radius: 22px; overflow: hidden; background: var(--stage); color: #FFFFFF; }
+.stage canvas, .stage video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* full-height edition clips fill the stage; a dark fade keeps the name readable on light footage */
+.stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 34%; z-index: 2; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(4,8,14,0), rgba(4,8,14,.82) 45%, rgba(4,8,14,.94)); }
+/* full-height editions place their wordmark low, so the overlay keeps only the name and motto; the intro moves below */
+.stage:has(video.hero-full) .name p { display: none; }
+.stage:has(video.hero-full) .rabbit { top: 12%; }
+.intro-below { margin: -16px 0 0; color: var(--muted); }
+.edition-label { margin: -18px 0 0; justify-self: center; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.replay { justify-self: center; font: 500 13px var(--body); color: var(--muted); background: none; border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; margin-top: -14px; }
+.stage .name { z-index: 3; }
+.stage video.hero { inset: auto; top: 4%; left: 0; height: auto; aspect-ratio: 1; object-fit: contain;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 10%, #000 78%, transparent 100%); }
+.stage .ph { position: absolute; top: 14px; left: 14px; right: 14px; display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.stage .ph small { font-family: var(--mono); font-size: 10.5px; color: rgba(255,255,255,.72); text-align: right; max-width: 52%; line-height: 1.35; }
+.stage .ph .tag { color: #FFD9CC; border-color: rgba(255,217,204,.6); }
+.logo { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); width: 62%; max-width: 260px; display: grid; place-items: center; }
+.logo img { width: 100%; height: auto; display: block; border-radius: 14px; }
+.logo .tag { color: #FFD9CC; border-color: rgba(255,217,204,.6); }
+.stage .name { position: absolute; left: 18px; right: 18px; bottom: 18px; }
+.name h1 { font-family: var(--display); font-weight: 700; font-size: clamp(38px, 12vw, 54px); line-height: .95; letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.name h1 .w { display: inline-block; animation: rise .9s cubic-bezier(.2,.8,.2,1) both; }
+.name h1 .w:nth-child(2) { animation-delay: .12s; }
+.name p { margin: 10px 0 0; color: rgba(255,255,255,.8); font-size: 15px; }
+.name .motto { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--glow-text); margin-top: 12px; }
+@keyframes rise { from { transform: translateY(14px); } to { transform: none; } }
+.rabbit { position: absolute; width: 46px; height: 46px; border: 0; background: none; padding: 0; cursor: pointer;
+  top: 60%; left: -60px; transition: left 2.6s cubic-bezier(.3,.7,.3,1), opacity .4s; color: #FFFFFF; }
+.rabbit.in { left: calc(100% - 78px); }
+.rabbit svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px var(--glow)); }
+.rabbit.found { opacity: 0; pointer-events: none; }
+.rabbit.in:not(.found) { animation: hop 1.6s ease-in-out 2.8s infinite; }
+@keyframes hop { 0%, 70%, 100% { transform: translateY(0); } 80% { transform: translateY(-14px); } 90% { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .rabbit.in:not(.found) { animation: none; } }
+.toast { position: absolute; left: 16px; right: 16px; top: 52%; background: rgba(10,12,16,.9); border: 1px solid var(--glow);
+  border-radius: 14px; padding: 14px 16px; font-size: 14.5px; }
+.toast b { color: var(--glow-text); font-family: var(--display); font-size: 17px; display: block; margin-bottom: 4px; }
+
+.creds { display: flex; flex-wrap: wrap; gap: 8px; }
+.creds span { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 9px; background: var(--panel); }
+.creds b { color: var(--brand-text); font-weight: 600; }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.btn { font: 600 15px/1.2 var(--body); color: var(--fg); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px; text-align: left; text-decoration: none; cursor: pointer; display: grid; gap: 4px; min-width: 0; }
+.btn small { font: 400 12px/1.3 var(--mono); color: var(--muted); overflow-wrap: anywhere; }
+.btn.primary { grid-column: 1 / -1; background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.btn.primary small { color: var(--brand-ink); }
+.btn:active { transform: translateY(1px); }
+
+h2 { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 6px 0 0; }
+.doors { display: grid; gap: 10px; }
+.door { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: baseline; padding: 16px; border-radius: 16px;
+  border: 1px solid var(--line); background: none; color: var(--fg); text-align: left; font: inherit; cursor: pointer; width: 100%; }
+.door[aria-expanded="true"] { border-color: var(--brand); background: var(--panel); }
+.door .k { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; color: var(--brand-text); grid-row: span 2; padding-top: 3px; }
+.door strong { font-family: var(--display); font-size: 19px; }
+.door span:last-child { display: none; }
+.panel { border-left: 2px solid var(--line); padding: 4px 0 4px 16px; display: grid; gap: 12px; }
+.needs { display: flex; flex-wrap: wrap; gap: 8px; }
+.need { font: 500 14px var(--body); color: var(--fg); background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 13px; cursor: pointer; }
+.need[aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.idea { background: var(--panel); border-radius: 14px; padding: 16px; display: grid; gap: 8px; }
+.idea h3 { margin: 0; font-family: var(--display); font-size: 18px; }
+.idea p { margin: 0; }
+.fine { font-size: 12.5px; color: var(--muted); }
+form { display: grid; gap: 12px; }
+label { display: grid; gap: 5px; font-size: 13.5px; color: var(--muted); }
+input, select, textarea { font: 16px var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; width: 100%; }
+textarea { min-height: 96px; resize: vertical; }
+.out { background: var(--panel); border: 1px dashed var(--warn); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.out pre { margin: 0; white-space: pre-wrap; font: 13px/1.45 var(--mono); overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.row .btn { padding: 10px 14px; }
+.brands { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.brands a, .brands span { font-size: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--fg); min-width: 0; }
+.brands small { display: block; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.status-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.status-list li { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); font-size: 14px; }
+.status-list b { font: 600 11px var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.status-list .on b { color: var(--ok); }
+.status-list .off b { color: var(--warn); }
+footer { color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+@media (prefers-reduced-motion: reduce) { .name h1 .w { animation: none; } .rabbit { transition: none; } }
+
+/* Crack & reveal: a code-drawn shatter over the stage on open */
+#crack { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; background: #04080E; }
+#embers { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+.greet { position: absolute; left: 14px; right: auto; max-width: calc(100% - 28px); top: 58px; z-index: 4; font: 600 15px var(--display); color: #FFFFFF;
+  background: rgba(4,8,14,.82); padding: 7px 12px; border-radius: 12px; text-shadow: none; opacity: 0; transition: opacity .6s ease .2s; }
+.greet.on { opacity: 1; }
+
+/* Pass it on: a bouncing QR so a second person scans the card off this screen */
+.passbtn { width: 100%; }
+.passon { position: fixed; inset: 0; z-index: 50; background: rgba(4,8,14,.94); color: #FFFFFF;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.passon .tile { position: absolute; left: 0; top: 0; background: #FFFFFF; border-radius: 18px; padding: 14px; border: 4px solid var(--brand);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--brand) 60%, transparent); display: grid; gap: 8px; justify-items: center; will-change: transform; }
+.passon .tile p { margin: 0; color: #0A1120; font: 600 13px var(--display); }
+.passon .tile .qr-domain { font: 500 12px var(--mono); color: #3A4150; }
+.passon .close { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: max(16px, env(safe-area-inset-top, 0px));
+  font: 600 15px var(--body); color: #FFFFFF; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.3); border-radius: 999px; padding: 10px 16px; cursor: pointer; }
+.passon .hint { position: absolute; left: 0; right: 0; bottom: max(24px, env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 14px; color: rgba(255,255,255,.75); padding: 0 16px; }
+/* Make it personal: the code carries the next person's name and where you met, so the card greets them */
+.passon .personal { position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px));
+  top: calc(max(16px, env(safe-area-inset-top, 0px)) + 52px); display: grid; grid-template-columns: 1fr auto; gap: 8px; z-index: 2; }
+.passon .personal input, .passon .personal select { background: rgba(255,255,255,.1); color: #FFFFFF; border-color: rgba(255,255,255,.3); padding: 9px 11px; }
+.passon .personal select option { color: #0A1120; }
+.passon .personal .wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.passon .personal button { font: 600 14px var(--body); border-radius: 10px; padding: 9px 12px; cursor: pointer; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.12); color: #FFFFFF; }
+.passon .personal button.go { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+
+/* Review wheel: pick the business, spin for an open question, answer in your own words, then post on Google */
+.rw { display: grid; gap: 12px; }
+.rw-step, .rw label > span { margin: 0; font: 600 15px var(--body); color: var(--fg); }
+.rw-step b, .rw-num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); font: 700 12px var(--body); margin-right: 6px; }
+.wheel { position: relative; height: 92px; overflow: hidden; border-radius: 14px; background: var(--stage); color: #FFFFFF;
+  border: 1px solid var(--line); }
+.wheel-track { position: absolute; top: 0; bottom: 0; left: 0; display: flex; will-change: transform; }
+.wheel-track span { flex: 0 0 220px; display: grid; place-items: center; text-align: center; padding: 0 14px; font: 600 16px/1.3 var(--display); opacity: .62; transition: opacity .2s; }
+.wheel-track span.on { opacity: 1; }
+.wheel-pin { position: absolute; left: 50%; top: 0; transform: translateX(-50%); border: 9px solid transparent; border-top-color: var(--brand); }
+.rw-tip { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--muted); }
+.rw-tip svg { width: 18px; height: 18px; flex: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Sound: off until the visitor taps it (phones block sound before a tap); all of it is synthesised in code, no audio files */
+.sound { position: absolute; right: 12px; top: 12px; z-index: 6; display: flex; align-items: center; gap: 6px; cursor: pointer;
+  font: 600 12px var(--body); color: #FFFFFF; background: rgba(4,8,14,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 7px 11px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sound svg { width: 16px; height: 16px; }
+.sound[aria-pressed="true"] { border-color: var(--brand); box-shadow: 0 0 14px color-mix(in srgb, var(--brand) 70%, transparent); }
+.sound .bars { display: none; gap: 2px; align-items: end; height: 12px; }
+.sound[aria-pressed="true"] .bars { display: inline-flex; }
+.sound[aria-pressed="true"] .off { display: none; }
+.sound .bars i { width: 2px; background: var(--brand); animation: eq 1.1s ease-in-out infinite; }
+.sound .bars i:nth-child(2) { animation-delay: .3s; } .sound .bars i:nth-child(3) { animation-delay: .6s; }
+@keyframes eq { 0%, 100% { height: 3px; } 50% { height: 12px; } }
+@media (prefers-reduced-motion: reduce) { .sound .bars i { animation: none; height: 8px; } }
+
+/* One action for visitors: save; everything marked owner-only shows only in the owner's view */
+body:not(.owner) .owner-only { display: none !important; }
+.save-hero { font-size: 19px; padding: 18px; text-align: center; justify-items: center; box-shadow: 0 10px 30px color-mix(in srgb, var(--brand) 35%, transparent); }
+#burst { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 55; pointer-events: none; }
+.save-hint { margin: -16px 0 0; text-align: center; font-weight: 600; color: var(--fg); }
+.btn.quiet { background: none; text-align: center; justify-items: center; font-weight: 500; color: var(--fg); }
+/* Unite-Group Nexus: one tile per business, a shelf of films (Phill, 23/10/2026: "something to look at") */
+.nexus { display: grid; gap: 14px; }
+.nexus-head { display: grid; gap: 2px; }
+.nexus-head h2 { font-size: 22px; letter-spacing: -0.01em; }
+.nexus-head p { margin: 0; font-size: 14px; color: var(--muted); }
+.nexus-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }
+.tile { display: grid; gap: 6px; align-content: start; color: var(--fg); text-decoration: none; min-width: 0; }
+.tile.wide { grid-column: 1 / -1; }
+.tile .tshot { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; background: var(--stage); border: 1px solid var(--line); }
+.tile .tshot img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.tile:hover .tshot img, .tile:focus-visible .tshot img { transform: scale(1.04); }
+.tile .tshot .play { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; border-radius: 50%; background: rgba(4,8,14,.72); box-shadow: 0 0 0 2px var(--brand); }
+.tile .tshot .play::after { content: ""; position: absolute; left: 12px; top: 9px; border-left: 9px solid #FFFFFF; border-top: 6px solid transparent; border-bottom: 6px solid transparent; }
+.tile .tshot .mark { position: absolute; inset: 0; display: grid; place-items: center; padding: 10px; text-align: center; color: var(--glow-text); font: 700 17px/1.2 var(--display); }
+.tile .tname { font: 700 15px/1.25 var(--display); }
+.tile .trole { font-size: 12.5px; color: var(--muted); line-height: 1.3; }
+.tile .tlabel { font-size: 12.5px; font-weight: 700; color: var(--brand-text); }
+.tile.soon { cursor: default; }
+.tile.soon .tlabel { color: var(--muted); }
+.tile.wide .tshot { aspect-ratio: 21 / 9; }
+.tile.slim .tshot { aspect-ratio: auto; min-height: 64px; }
+@media (prefers-reduced-motion: reduce) { .tile .tshot img { transition: none; } }
+.ownlink { justify-self: center; font-size: 14px; color: var(--muted); }
+/* A business's demo: its desktop screenshot as the thumbnail, linking to the video on YouTube */
+.bizthumb { position: relative; display: block; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16 / 9; background: var(--stage); }
+.bizthumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.bizthumb .play { position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: rgba(4,8,14,.75); box-shadow: 0 0 0 3px var(--brand); }
+.bizthumb .play::after { content: ""; position: absolute; left: 26px; top: 20px; border-left: 20px solid #FFFFFF; border-top: 12px solid transparent; border-bottom: 12px solid transparent; }
+.ownlink small { display: none; }
+/* The white rabbit's surprise: a gift that pops open with one practical idea */
+.surprise { position: fixed; inset: 0; z-index: 60; background: rgba(4,8,14,.88); display: grid; place-items: center; padding: 16px; }
+.surprise canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.gift { position: relative; max-width: 380px; width: 100%; background: var(--bg); color: var(--fg); border-radius: 22px; padding: 22px; display: grid; gap: 10px;
+  border: 3px solid var(--brand); animation: pop .55s cubic-bezier(.2,1.6,.4,1) both; }
+.gift h2 { font-size: 22px; } .gift p { margin: 0; }
+.gift-k { font: 600 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--brand-text); }
+@keyframes pop { from { transform: scale(.4) rotate(-6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .gift { animation: none; } }
+
+/* Your view: only the card's owner sees this (?me=1, or the home-screen app) */
+.mine { display: grid; gap: 12px; padding: 18px; border-radius: 18px; border: 1px dashed var(--brand); }
+.mine ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 14.5px; }
+.mine .lockimg { width: 100%; max-width: 220px; justify-self: center; border-radius: 18px; border: 1px solid var(--line); }
+.mine .ok { color: var(--ok); font-weight: 600; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<!-- The brand kit for this card. site/build.py fills it from business-card/brand-kits/<id>.json; empty means unbranded. -->
+<script id="brand-kit">window.BRAND_KIT = {};</script>
+
+<div class="wrap">
+  <section class="stage" aria-label="Motion card">
+    <canvas id="water" aria-hidden="true"></canvas>
+    <canvas id="crack" aria-hidden="true"></canvas>
+    <canvas id="embers" aria-hidden="true"></canvas>
+    <div class="greet" id="greet" hidden></div>
+    <div class="logo" id="logo"><span class="tag">Logo missing</span></div>
+    <div class="ph">
+      <span class="tag">PLACEHOLDER motion</span>
+      <small>A short loop made from the person's own photos replaces this.</small>
+    </div>
+    <button class="rabbit" id="rabbit" type="button" aria-label="A white rabbit. Tap it." hidden>
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" d="M22 4c-3 0-4 6-3 13l2 9c-6 3-10 9-10 16 0 10 8 17 19 17h14c4 0 6-2 6-4s-2-3-4-3h-2c4-3 6-7 6-12 0-9-7-15-16-16l-1-9C31 8 28 3 25 6c-1-1-2-2-3-2zm6 30a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+    </button>
+    <button class="sound" id="sound" type="button" aria-pressed="false" aria-label="Sound">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path class="off" d="M16 9l5 6m0-6l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span><span id="sound-label">Tap for sound</span>
+    </button>
+    <div class="name">
+      <h1 id="person-name"><span class="w">Name</span> <span class="w">missing</span></h1>
+      <p id="person-intro"></p>
+      <div class="motto" id="person-motto"></div>
+    </div>
+  </section>
+
+  <p class="intro-below" id="intro-below" hidden></p>
+
+  <button class="btn primary save-hero" type="button" id="save">Save to my phone</button>
+  <p class="save-hint" id="save-hint" role="status" hidden></p>
+  <canvas id="burst" aria-hidden="true"></canvas>
+  <div class="out" id="save-out" hidden>
+    <span class="tag">Preview limit</span>
+    <p class="fine" style="margin:0">This preview blocks the contact file. On the card's own address it saves in one tap. For now, copy the details below.</p>
+    <pre id="vcard-text"></pre>
+    <div class="row"><button class="btn" type="button" id="copy-vcard">Copy contact details</button></div>
+  </div>
+
+  <p class="edition-label owner-only" id="edition-label" hidden></p>
+  <button class="replay owner-only" type="button" id="replay" hidden>Replay · another edition</button>
+  <button class="btn primary passbtn owner-only" type="button" id="pass-btn">Pass it on</button>
+  <div class="passon" id="pass-on" hidden role="dialog" aria-modal="true" aria-label="Scan to get this card">
+    <button class="close" type="button" id="pass-close">Close</button>
+    <form class="personal" id="pass-form">
+      <input id="pass-name" autocomplete="off" maxlength="30" placeholder="Their first name (optional)" aria-label="Their first name">
+      <button class="go" type="submit">Update</button>
+      <div class="wide">
+        <select id="pass-at" aria-label="Where you met"><option value="">Where we met: not set</option></select>
+        <button type="button" id="pass-send">Send the link instead</button>
+        <button type="button" id="pass-offline" aria-pressed="false" style="grid-column:1/-1">No signal? Contact code</button>
+      </div>
+    </form>
+    <div class="tile" id="pass-tile"><div id="pass-qr"></div><p id="pass-label">Scan to get this card</p><p id="pass-domain" class="qr-domain"></p></div>
+    <p class="hint" id="pass-hint">Point a phone camera at the code.</p>
+  </div>
+
+  <div class="surprise" id="surprise" hidden role="dialog" aria-modal="true" aria-labelledby="surprise-h">
+    <canvas id="confetti" aria-hidden="true"></canvas>
+    <div class="gift" id="gift">
+      <p class="gift-k">Rabbit 1 of 5 found</p>
+      <p class="fine" style="margin:0">The other four are hiding in Phill's talk.</p>
+      <h2 id="surprise-h"></h2>
+      <p id="surprise-p"></p>
+      <div class="row"><button class="btn primary" type="button" id="surprise-more">Another one</button><button class="btn" type="button" id="surprise-close">Close</button></div>
+    </div>
+  </div>
+
+  <section class="mine" id="mine" aria-labelledby="mine-h" hidden>
+    <div>
+      <h2 id="mine-h" style="font-size:20px">Keep it on your phone</h2>
+      <p class="lede" style="margin:0">Only you see this panel. Visitors get the card without it.</p>
+    </div>
+    <label for="mine-at">Today I'm at
+      <select id="mine-at"><option value="">Nowhere in particular</option></select>
+    </label>
+    <p class="fine" style="margin:0">Every code and link you hand out today carries it, so the card greets them with where you met and their message to you is tagged with it.</p>
+    <div id="install-box" style="display:grid;gap:8px">
+      <strong>1. Put it on your home screen</strong>
+      <button class="btn primary" type="button" id="install-btn" hidden>Add to home screen<small>Opens like an app, even with no signal</small></button>
+      <ol id="install-steps">
+        <li>Open this card in Safari (iPhone) or Chrome (Android).</li>
+        <li>iPhone: tap Share, then <b>Add to Home Screen</b>. Android: tap the menu, then <b>Install app</b>.</li>
+        <li>Open it from the new icon. It works offline on a trade-show floor.</li>
+      </ol>
+      <p class="ok" id="install-done" hidden>It's on your home screen.</p>
+    </div>
+    <div style="display:grid;gap:8px">
+      <strong>2. Put the code on your lock screen</strong>
+      <button class="btn" type="button" id="lock-btn">Make my lock-screen code<small>A phone-sized picture with your code on it</small></button>
+      <img class="lockimg" id="lock-img" alt="Lock-screen picture with the card's code" hidden>
+      <p class="fine" id="lock-note" style="margin:0" hidden>Saved to your phone. Set it as your lock screen in Photos (Share, then Use as Wallpaper). Anyone can then scan it without you unlocking.</p>
+    </div>
+    <div style="display:grid;gap:8px">
+      <strong>3. Tap to share</strong>
+      <button class="btn" type="button" id="nfc-btn" hidden>Write to an NFC sticker<small>Hold a blank sticker to the back of this phone</small></button>
+      <p class="fine" id="nfc-note" style="margin:0">Put a blank NFC sticker (a few dollars) on your phone case. Any phone that taps it opens this card. On Android this button writes the sticker; on iPhone use the free NFC Tools app and paste the card's link.</p>
+    </div>
+  </section>
+
+  <button class="btn quiet" type="button" id="review-open" aria-expanded="false" aria-controls="review">Worked with us? Leave a review</button>
+  <section id="review" aria-labelledby="review-h" hidden style="display:grid;gap:10px;padding:18px;border-radius:18px;border:1px solid var(--line)">
+    <h2 id="review-h" class="sr-only">Review my business</h2>
+    <div class="rw" id="rw" hidden>
+      <p class="rw-step">Which one?</p>
+      <div class="needs" id="rw-biz" role="group" aria-label="Business you worked with"></div>
+      <div id="rw-play" hidden style="display:grid;gap:12px">
+        <div class="wheel" id="rw-wheel" aria-live="polite" hidden><div class="wheel-track" id="rw-track"></div><span class="wheel-pin" aria-hidden="true"></span></div>
+        <div class="row"><button class="btn" type="button" id="rw-spin">Stuck? Spin for a nudge</button><button class="btn" type="button" id="rw-stop" hidden>Stop</button></div>
+        <label for="rw-text" class="sr-only">Your review</label>
+        <textarea id="rw-text" placeholder="Say it your way. Good or bad, it helps the next person."></textarea>
+        <p class="rw-tip"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9zm3 4.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z"/></svg> Add a photo of the job on Google</p>
+      </div>
+    </div>
+    <a class="btn primary" id="review-btn" href="#" target="_blank" rel="noopener">Review my business<small id="review-sub">Opens Google's review form</small></a>
+    <a class="btn" id="maps-btn" target="_blank" rel="noopener" hidden>Find us on Google<small>Opens our Google Business Profile</small></a>
+    <p class="fine" id="review-note" style="margin:0"></p>
+  </section>
+
+  <div class="creds owner-only" id="creds" aria-label="Credentials"></div>
+
+  <section class="actions owner-only" id="actions" aria-label="Contact">
+    <button class="btn" type="button" id="share">Share this card<small id="share-sub"></small></button>
+  </section>
+
+  <section class="owner-only" aria-labelledby="doors-h" style="display:grid;gap:14px">
+    <div>
+      <h2 id="doors-h">What would be useful today?</h2>
+    </div>
+    <div class="doors">
+      <button class="door" id="door-discover" type="button" aria-expanded="false" aria-controls="p-discover" hidden><span class="k">DISCOVER</span><strong>One practical idea</strong><span>Choose a need, leave with one thing to do this week.</span></button>
+      <div class="panel" id="p-discover" hidden>
+        <div class="needs" id="needs" role="group" aria-label="Your need"></div>
+        <div class="idea" id="idea" hidden><h3 id="idea-h"></h3><p id="idea-p"></p></div>
+        <p class="fine"><span class="tag">Draft</span> Prepared for this prototype and not yet approved. General guidance, not an audit of your business.</p>
+      </div>
+
+      <button class="door" id="door-solve" type="button" aria-expanded="false" aria-controls="p-solve" hidden><span class="k">SOLVE</span><strong>Follow the White Rabbit</strong><span>The game that runs through the talk. One rabbit is hiding above.</span></button>
+      <div class="panel" id="p-solve" hidden>
+        <p style="margin:0">Rabbits appear on the slides. Each carries a letter. Find all five during the talk. No draw: everyone who finds them all gets the same reward.</p>
+        <p class="fine"><span class="tag">Not connected yet</span> The game is Rana's build. Its permanent address is not set yet, so it is not linked here.</p>
+      </div>
+
+      <button class="door" id="door-connect" type="button" aria-expanded="false" aria-controls="p-connect"><span class="k">CONNECT</span><strong>Get in touch</strong><span>Proposals, training, media or a job.</span></button>
+      <div class="panel" id="p-connect" hidden>
+        <form id="enquiry" novalidate>
+          <label for="f-name">Your name<input id="f-name" name="name" autocomplete="name" required value="Sam Example"></label>
+          <label for="f-email">Your email<input id="f-email" name="email" type="email" autocomplete="email" required value="sam@example.com.au"></label>
+          <label for="f-biz">Business<input id="f-biz" name="business" autocomplete="organization" value="Example Restorations, Ipswich"></label>
+          <label for="f-type">It's about
+            <select id="f-type" name="type">
+              <option>A job or quote</option><option selected>A proposal or partnership</option>
+              <option>Training</option><option>Media or speaking</option><option>Something else</option>
+            </select>
+          </label>
+          <label for="f-msg">Message<textarea id="f-msg" name="message" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea></label>
+          <p class="fine" style="margin:0">Example entry shown. Replace it with your own.</p>
+          <button class="btn primary" type="submit">Prepare my message</button>
+        </form>
+        <div class="out" id="out" hidden>
+          <span class="tag">Not sent</span>
+          <pre id="out-text"></pre>
+          <div class="row">
+            <button class="btn" type="button" id="copy-msg">Copy message</button>
+            <a class="btn" id="mail-msg" href="#">Open in email app</a>
+          </div>
+          <p class="fine" style="margin:0" id="inbox-line">Send it to <b id="inbox-addr"></b>. <span class="tag" id="inbox-tag">Not connected yet</span> <span id="inbox-why">No assistant inbox is set up, so this goes to the person's own address.</span></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="owner-only" aria-labelledby="brands-h" style="display:grid;gap:12px" id="links-section" hidden>
+    <h2 id="brands-h" style="font-size:20px">Businesses</h2>
+    <div class="brands" id="links"></div>
+  </section>
+
+  <section class="nexus" id="nexus" aria-labelledby="nexus-h" hidden>
+    <div class="nexus-head"><h2 id="nexus-h">Unite-Group Nexus</h2><p>The businesses behind this card. Tap one to watch its film.</p></div>
+    <div class="nexus-grid" id="nexus-grid"></div>
+  </section>
+  <div class="surprise bizsheet" id="biz-sheet" hidden role="dialog" aria-modal="true" aria-labelledby="biz-h">
+    <div class="gift">
+      <h2 id="biz-h"></h2>
+      <a class="bizthumb" id="biz-watch" target="_blank" rel="noopener"><img id="biz-thumb" alt=""><span class="play" aria-hidden="true"></span></a>
+      <div class="row"><a class="btn primary" id="biz-watch-btn" target="_blank" rel="noopener">Watch the demo</a><a class="btn" id="biz-visit" target="_blank" rel="noopener">Visit site</a><button class="btn" type="button" id="biz-close">Close</button></div>
+    </div>
+  </div>
+  <a class="ownlink" id="own-card" href="#">Want a card like this?<small id="own-card-note"></small></a>
+
+  <section id="live-status" aria-labelledby="live-h" style="display:grid;gap:10px" hidden>
+    <h2 id="live-h" style="font-size:20px">What works right now</h2>
+    <ul class="status-list" id="status-list">
+      <li class="on"><b>Live</b>Business links open the real websites.</li>
+      <li class="on"><b>Live</b>The email address copies to your clipboard.</li>
+      <li class="off" data-hosted="One-tap save to contacts opens this contact card on your phone."><b>Not connected yet</b>One-tap save to contacts. In this preview you copy the details instead; it needs the card on its own web address.</li>
+      <li class="off" id="status-inbox"><b>Not connected yet</b>Connect prepares your message; you send it from your own email. The assistant inbox is not set up.</li>
+      <li class="off" data-hosted="Add the card to a home screen; it opens even with no signal."><b>Not connected yet</b>Home-screen app and offline copy. They need the card on its own web address.</li>
+      <li class="off"><b>Not connected yet</b>The motion video made from real photos.</li>
+      <li class="off" data-hosted="Anyone with the link or the QR code can open this card."><b>Not connected yet</b>Public access. Only people this preview is shared with can open it, signed in to claude.ai.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <span id="brand-credit" hidden>Brand kit: none loaded.</span>
+    <span>Nothing on this card is sent or stored without your say-so.</span>
+  </footer>
+</div>
+
+<script>
+// The kit arrives as script data (window.BRAND_KIT), never re-read from page text.
+const KIT = window.BRAND_KIT && typeof window.BRAND_KIT === "object" ? window.BRAND_KIT : {};
+const B = KIT.brand || {}, P = KIT.person || {};
+const $ = id => document.getElementById(id);
+const HOSTED = window.CARD_HOSTED === true;
+// A link from the kit is used only when it is plain https with no space, quote or angle bracket (no javascript:, no line breaks)
+const SAFE_URL = /^https:\/\/[^\s"<>]+$/, safeUrl = u => SAFE_URL.test(u || "");
+const QS = new URLSearchParams(location.search);
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const isSet = c => c && typeof c.value === "string" && !c.status;
+
+// Brand: colours and fonts only from the kit; anything missing stays on the template neutrals and is named in the footer
+function lum(hex) {
+  const n = parseInt(hex.slice(1), 16), ch = [n >> 16, (n >> 8) & 255, n & 255].map(v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); });
+  return .2126 * ch[0] + .7152 * ch[1] + .0722 * ch[2];
+}
+(function applyBrand() {
+  const c = B.colours || {}, root = document.documentElement.style;
+  if (isSet(c.background)) root.setProperty("--bg", c.background.value);
+  if (isSet(c.text)) root.setProperty("--fg", c.text.value);
+  // Readable everywhere (WCAG AA 4.5:1): text on the brand colour takes whichever of white or near-black reads better;
+  // text in the brand colour is the same hue, deepened on the page or lightened on the dark stage until it reads
+  const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); };
+  const mix = (hex, to, t) => "#" + [1, 3, 5].map(i => { const a = parseInt(hex.substr(i, 2), 16), b = parseInt(to.substr(i, 2), 16);
+    return Math.round(a + (b - a) * t).toString(16).padStart(2, "0"); }).join("");
+  // targets carry margin: chips and open doors sit on a slightly tinted panel, and the stage motto sits over moving footage
+  const readable = (hex, on, toward, need) => { for (let t = 0; t <= 1; t += .02) { const v = mix(hex, toward, t); if (ratio(v, on) >= need) return v; } return toward; };
+  const css = getComputedStyle(document.documentElement);
+  if (isSet(c.primary)) {
+    const p = c.primary.value, page = css.getPropertyValue("--bg").trim(), stage = css.getPropertyValue("--stage").trim();
+    root.setProperty("--brand", p);
+    root.setProperty("--brand-ink", ratio(p, "#FFFFFF") >= ratio(p, "#111111") ? "#FFFFFF" : "#111111");
+    root.setProperty("--brand-text", readable(p, page, lum(page) > .4 ? "#000000" : "#FFFFFF", 5.4));
+    root.setProperty("--glow-text", readable(p, stage, "#FFFFFF", 8));
+  }
+  // The lead colour drives every accent; a logo's own colours stay inside the logo
+  if (isSet(c.primary)) root.setProperty("--glow", c.primary.value);
+  const fonts = B.fonts || {}, families = [];
+  ["display", "body"].forEach(role => {
+    const f = fonts[role]; if (!f) return;
+    const fam = f.status === "missing" || !f.embedAllowed ? f.fallback : f.family;
+    if (!fam) return;
+    root.setProperty("--" + role, '"' + fam + '", system-ui, "Segoe UI", Arial, sans-serif');
+    const g = f.status === "missing" || !f.embedAllowed ? f.fallbackGoogleFonts : f.googleFonts;
+    if (g && !families.includes(g)) families.push(g);
+  });
+  if (families.length) {
+    const l = document.createElement("link"); l.rel = "stylesheet";
+    l.href = "https://fonts.googleapis.com/css2?" + families.map(g => "family=" + g.replace(/ /g, "+")).join("&") + "&display=swap";
+    document.head.appendChild(l);
+  }
+  const logo = B.logo || {};
+  const src = (HOSTED ? logo.hostedUrl : logo.dataUri) || logo.dataUri || null;
+  if (logo.status === "found" && src) {
+    const img = document.createElement("img"); img.src = src; img.alt = (B.name || "Business") + " logo";
+    $("logo").textContent = ""; $("logo").appendChild(img);
+  }
+  // Hero: the card opens with the brand's own reveal clip when the kit has one; the logo stays as the fallback
+  // Editions: ?edition=forge forces one; otherwise each visit plays the next edition in turn
+  mountHero(pickHero());
+  const missing = Object.entries(c).filter(([, v]) => v && v.status === "missing").map(([k]) => k);
+  if (logo.status !== "found") missing.unshift("logo");
+  if ((B.about || {}).status === "missing") missing.push("about text");
+  if ((B.imagery || {}).status === "missing") missing.push("photos");
+  $("brand-credit").textContent = B.name
+    ? "Brand kit: " + B.name + ". Taken from its own sources only." + (missing.length ? " Not yet supplied: " + missing.join(", ") + "." : "")
+    : "Brand kit: none loaded.";
+})();
+
+// Person
+(function applyPerson() {
+  if (P.name) {
+    document.title = P.name + " Card";
+    const h = $("person-name"); h.textContent = "";
+    P.name.split(" ").forEach((w, i) => { if (i) h.append(" "); const s = document.createElement("span"); s.className = "w"; s.textContent = w; h.append(s); });
+  }
+  $("person-intro").textContent = P.title || "";   // one short line; the long story is not card material
+  $("intro-below").textContent = $("person-intro").textContent;
+  $("person-motto").textContent = P.motto || (B.tagline && B.tagline.text) || "";
+  (P.credentials || []).forEach(c => {
+    const s = document.createElement("span"); const b = document.createElement("b"); b.textContent = c.abbr;
+    s.title = c.abbr + " " + c.text; s.setAttribute("aria-label", s.title);
+    if (/^\d+$/.test(c.text)) s.append(b, " " + c.text); else s.append(b);   // keep licence numbers, drop long names
+    $("creds").append(s);
+  });
+  const share = $("share");
+  (P.phones || []).concat((P.emails || []).filter(e => e.primary)).forEach(item => {
+    const b = document.createElement("button"); b.className = "btn"; b.type = "button";
+    const value = item.display || item.value; b.dataset.copy = value;
+    const sm = document.createElement("small"); sm.textContent = value; b.append(item.label, sm);
+    if (String(value).includes("@")) b.style.gridColumn = "1 / -1";
+    b.addEventListener("click", () => copy(value, b)); $("actions").insertBefore(b, share);
+  });
+  const links = (P.links || []);
+  if (links.length) {
+    $("links-section").hidden = false;
+    links.filter(l => safeUrl(l.url)).forEach(l => {
+      const el = document.createElement("a"); el.href = l.url; el.target = "_blank"; el.rel = "noopener";
+      el.title = l.note || ""; el.append(l.label); $("links").append(el);
+    });
+  }
+  // Unite-Group Nexus: a tile per business in the kit's order. A film opens its panel (thumbnail, watch, visit);
+  // a site without a film links out; a business whose page is not live yet shows as coming soon.
+  const shelf = links.filter(l => (l.visitor && safeUrl(l.url)) || (!l.url && l.pendingUrl));
+  if (shelf.length) {
+    shelf.forEach(l => {
+      const v = l.video || {}, film = /^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || ""), live = safeUrl(l.url);
+      const t = document.createElement(live ? "a" : "div");
+      t.className = "tile" + (/nexus/i.test(l.label) ? " wide" : "") + (live ? "" : " soon wide slim");
+      if (live) { t.href = l.url; t.target = "_blank"; t.rel = "noopener"; }
+      const shot = document.createElement("span"); shot.className = "tshot";
+      const src = film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : "";
+      if (src) {
+        const img = document.createElement("img"); img.src = src; img.alt = ""; img.loading = "lazy"; shot.append(img);
+        const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play);
+      } else {
+        const mark = document.createElement("span"); mark.className = "mark"; mark.textContent = l.label; shot.append(mark);
+      }
+      const name = document.createElement("span"); name.className = "tname"; name.textContent = l.label;
+      const role = document.createElement("span"); role.className = "trole"; role.textContent = l.note || "";
+      const label = document.createElement("span"); label.className = "tlabel";
+      label.textContent = film ? "Watch the film ›" : live ? "Visit site ›" : "Coming soon";
+      t.append(shot, name, role, label);
+      if (film) t.addEventListener("click", e => { e.preventDefault(); openBiz(l); });
+      $("nexus-grid").append(t);
+    });
+    $("nexus").hidden = false;
+  }
+  const f = P.features || {};
+  if (f.discover && P.ideas) $("door-discover").hidden = false;
+  if (f.whiteRabbit) {
+    $("door-solve").hidden = false; $("rabbit").hidden = false;
+    const li = document.createElement("li"); li.className = "off"; li.innerHTML = "<b>Not connected yet</b>"; li.append("The White Rabbit game link."); $("status-list").insertBefore(li, $("status-list").children[4]);
+  }
+  Object.entries(P.ideas || {}).forEach(([k, v]) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "need"; b.dataset.need = k; b.textContent = v[0]; $("needs").append(b);
+  });
+})();
+
+function vcard() {
+  // text values escape line breaks as \n (vCard 3.0); raw values (phone, email) drop them, so no value can start a new field
+  const esc = s => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
+  const raw = s => String(s).replace(/[\r\n]/g, "");
+  const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "", first = parts.join(" ");
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + esc(last) + ";" + esc(first) + ";;;", "FN:" + esc(P.name || "")];
+  if (P.org) lines.push("ORG:" + esc(P.org));
+  if (P.title) lines.push("TITLE:" + esc(P.title.split(",")[0]));
+  (P.phones || []).forEach(p => lines.push("TEL;TYPE=" + raw(p.type || "VOICE").replace(/[^A-Za-z,]/g, "") + ":" + raw(p.tel)));
+  (P.emails || []).forEach(e => lines.push("EMAIL;TYPE=WORK:" + raw(e.value)));
+  // the first two live links are the homepages; every other live business follows as a labelled link (iPhone shows the label)
+  (P.links || []).filter(l => safeUrl(l.url)).forEach((l, i) => {
+    lines.push("item" + (i + 1) + ".URL:" + l.url, "item" + (i + 1) + ".X-ABLabel:" + (i < 2 ? "_$!<HomePage>!$_" : esc(l.label)));
+  });
+  if (P.vcardNote) lines.push("NOTE:" + esc(P.vcardNote));
+  lines.push("END:VCARD");
+  return lines.join("\r\n") + "\r\n";
+}
+function contactText() {
+  return [P.name, P.title].filter(Boolean).join(", ") + "\n" +
+    (P.phones || []).map(p => p.label + " " + p.display).join("\n") + "\n" +
+    (P.emails || []).map(e => e.value).join("\n");
+}
+
+async function copy(text, el) {
+  const small = el.querySelector("small"); const before = small ? small.textContent : el.textContent;
+  let ok = false;
+  try { await navigator.clipboard.writeText(text); ok = true; } catch (e) { ok = false; }
+  const msg = ok ? "Copied" : "Press and hold to copy: " + text;
+  if (small) small.textContent = msg; else el.textContent = msg;
+  if (ok) setTimeout(() => { if (small) small.textContent = before; else el.textContent = before; }, 1600);
+}
+
+// Review my business: Google's own write-review form for the owner's connected Business Profile.
+// The Place ID is the only review value the card ever holds; the connection itself lives in the Nexus portal.
+(function review() {
+  const r = B.reviews || {}, a = $("review-btn");
+  const okId = id => /^[A-Za-z0-9_-]{10,}$/.test(id || "");
+  const reviewUrl = id => "https://search.google.com/local/writereview?placeid=" + encodeURIComponent(id);
+  // Several businesses: the review wheel. The visitor names the one they actually used; nothing is pre-written.
+  const places = (P.reviewPlaces || []).filter(p => p.status === "found" && okId(p.placeId));
+  if (places.length) {
+    $("rw").hidden = false;
+    let place = places.length === 1 ? places[0] : null;
+    const setPlace = p => {
+      place = p; a.href = reviewUrl(p.placeId); a.style.opacity = ""; a.removeAttribute("aria-disabled");
+      a.firstChild.textContent = "Post on Google";
+      $("review-sub").textContent = "Copies your words. Paste, pick your stars, post.";
+      $("rw-play").hidden = false;
+    };
+    places.forEach(p => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "need"; b.textContent = p.business;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => { document.querySelectorAll("#rw-biz .need").forEach(n => n.setAttribute("aria-pressed", String(n === b))); setPlace(p); });
+      $("rw-biz").append(b);
+    });
+    a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
+    $("review-sub").textContent = "Pick one above first";
+    if (place) { $("rw-biz").firstChild.click(); }
+    // The wheel: open questions only (no rating, wording or staff names suggested); one invites criticism
+    const qs = (P.reviewPrompts || []).filter(q => typeof q === "string" && q.length < 90);
+    const track = $("rw-track"), W = 220, loops = 6;
+    for (let i = 0; i < qs.length * loops; i++) { const s = document.createElement("span"); s.textContent = qs[i % qs.length]; track.append(s); }
+    let x = 0, v = 0, raf = null, stopping = false, landed = -1;
+    const centre = () => $("rw-wheel").clientWidth / 2 - W / 2;
+    const paint = () => {
+      const span = qs.length * W, off = ((x % span) + span) % span;
+      track.style.transform = `translateX(${centre() - off - span}px)`;
+      const idx = Math.round(off / W) % qs.length;
+      [...track.children].forEach((s, i) => s.classList.toggle("on", i % qs.length === idx && Math.abs(v) < 4));
+      return idx;
+    };
+    const tick = () => {
+      const before = Math.floor(x / W); x += v; if (Math.floor(x / W) !== before) SFX.tick();
+      if (stopping) v *= 0.955;
+      if (stopping && v < 0.6) {   // settle on the nearest question
+        x = Math.round(x / W) * W; v = 0; landed = paint(); raf = null; stopping = false;
+        $("rw-spin").hidden = false; $("rw-stop").hidden = true; $("rw-spin").textContent = "Another nudge"; SFX.chime();
+        $("rw-text").placeholder = qs[landed]; return;
+      }
+      paint(); raf = requestAnimationFrame(tick);
+    };
+    const spin = () => {
+      if (!qs.length) return;
+      x += Math.floor(Math.random() * qs.length) * W; v = REDUCED ? 0.8 : 26 + Math.random() * 8; stopping = false;
+      $("rw-wheel").hidden = false; $("rw-spin").hidden = true; $("rw-stop").hidden = false;
+      if (!raf) raf = requestAnimationFrame(tick);
+      setTimeout(() => { stopping = true; }, REDUCED ? 0 : 2200 + Math.random() * 900);   // stops by itself, or tap Stop
+    };
+    $("rw-spin").addEventListener("click", spin);
+    $("rw-stop").addEventListener("click", () => { stopping = true; });
+    paint();
+    // Copy the visitor's own words, then let the link open Google's form for the chosen business
+    a.addEventListener("click", e => {
+      if (!place) { e.preventDefault(); return; }
+      const words = $("rw-text").value.trim();
+      if (words) { try { navigator.clipboard.writeText(words); } catch (err) {} }
+    });
+    window.CARD_REVIEW = { landed: () => (landed >= 0 ? qs[landed] : ""), place: () => (place ? place.placeId : "") };   // read by the smoke test
+  } else if (r.status === "found" && okId(r.placeId)) {
+    a.href = reviewUrl(r.placeId);
+    $("review-sub").textContent = "Opens Google's review form for " + (r.business || B.name || "this business");
+  } else {
+    a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
+    $("review-sub").textContent = "Not connected yet";
+    $("review-note").textContent = "Not connected yet: the owner connects their Google Business Profile in the Nexus portal, then this opens Google's review form.";
+  }
+  // Find us on Google: the public profile link, shown only for a Google Maps address
+  const MAPS_OK = /^https:\/\/(maps\.google\.com\/|www\.google\.com\/maps\/)/;
+  if (MAPS_OK.test(r.profileUrl || "")) { const m = $("maps-btn"); m.href = r.profileUrl; m.hidden = false; }
+})();
+
+// Sound: a quiet generative score plus small effects, synthesised with Web Audio (no files, nothing licensed).
+// On by default: phones allow sound only after a touch, so it starts on the visitor's first tap anywhere.
+// The button mutes it, and a visitor who muted it stays muted on their next visit.
+const SFX = (() => {
+  const KEY = "card-sound", btn = $("sound"), label = $("sound-label");
+  let ctx = null, master = null, music = null, on = false;
+  const want = () => { try { return localStorage.getItem(KEY) !== "off"; } catch (e) { return true; } };
+  const remember = v => { try { localStorage.setItem(KEY, v ? "on" : "off"); } catch (e) {} };
+  function audio() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    ctx = new AC(); master = ctx.createGain(); master.gain.value = 0.9;
+    const comp = ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination);
+    return ctx;
+  }
+  const hz = m => 440 * Math.pow(2, (m - 69) / 12);
+  function tone(freq, t, dur, { type = "sine", vol = 0.2, attack = 0.005, to = master } = {}) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + attack); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(to); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function noise(t, dur, { vol = 0.3, from = 6000, to = 6000, q = 0.7, kind = "bandpass" } = {}) {
+    const len = Math.ceil(ctx.sampleRate * dur), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = buf; f.type = kind; f.Q.value = q; f.frequency.setValueAtTime(from, t); f.frequency.exponentialRampToValueAtTime(to, t + dur);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + dur);
+  }
+  // The score: two slow chords (A minor 9, F major 7) on soft detuned voices under a breathing filter, with a
+  // sparse bell melody picked from the chord. Low and quiet so it sits under a conversation.
+  function startMusic() {
+    if (music) return;
+    const bus = ctx.createGain(), lp = ctx.createBiquadFilter(), lfo = ctx.createOscillator(), depth = ctx.createGain();
+    bus.gain.setValueAtTime(0, ctx.currentTime); bus.gain.linearRampToValueAtTime(0.11, ctx.currentTime + 3);
+    lp.type = "lowpass"; lp.frequency.value = 900; lp.Q.value = 0.8;
+    lfo.frequency.value = 0.07; depth.gain.value = 500; lfo.connect(depth); depth.connect(lp.frequency); lfo.start();
+    lp.connect(bus); bus.connect(master);
+    const chords = [[45, 52, 59, 60, 64], [41, 48, 55, 57, 64]];
+    let step = 0;
+    const play = () => {
+      const t = ctx.currentTime + 0.05, notes = chords[step % 2];
+      notes.forEach((m, i) => [-4, 4].forEach(cents => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = i ? "triangle" : "sine"; o.frequency.value = hz(m); o.detune.value = cents;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16 / notes.length, t + 2.5); g.gain.linearRampToValueAtTime(0, t + 8.4);
+        o.connect(g); g.connect(lp); o.start(t); o.stop(t + 8.6);
+      }));
+      [0, 2.25, 3.5, 5.75].forEach((dt, i) => {
+        if (Math.random() < 0.35) return;
+        const m = notes[1 + Math.floor(Math.random() * (notes.length - 1))] + 24;
+        tone(hz(m), t + dt + Math.random() * 0.2, 2.6, { vol: 0.05 - i * 0.006, to: bus, attack: 0.01 });
+      });
+      step++;
+    };
+    play(); music = { bus, lfo, timer: setInterval(play, 8000) };
+  }
+  function stopMusic() {
+    if (!music) return;
+    const m = music; music = null; clearInterval(m.timer);
+    m.bus.gain.cancelScheduledValues(ctx.currentTime); m.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
+    setTimeout(() => { try { m.lfo.stop(); m.bus.disconnect(); } catch (e) {} }, 2000);
+  }
+  function set(v) {
+    on = v; remember(v); btn.setAttribute("aria-pressed", String(v)); label.textContent = v ? "Sound" : "Tap for sound";
+    if (!v) { stopMusic(); return; }
+    if (!audio()) { label.textContent = "No sound here"; on = false; return; }
+    ctx.resume(); startMusic(); fx.chime();
+  }
+  const fx = {
+    // Glass: a bright crack, a few tinkling shards and a low thump
+    crack() { if (!on) return; const t = ctx.currentTime;
+      noise(t, 0.18, { vol: 0.5, from: 9000, to: 2500, q: 0.9 }); tone(70, t, 0.35, { vol: 0.35 });
+      for (let i = 0; i < 7; i++) tone(2400 + Math.random() * 2600, t + 0.08 + Math.random() * 0.5, 0.25, { vol: 0.05 }); },
+    // A small rising bell figure
+    chime() { if (!on) return; const t = ctx.currentTime; [76, 81, 88].forEach((m, i) => tone(hz(m), t + i * 0.09, 1.2, { vol: 0.12 })); },
+    // A soft swish for the pass-it-on code
+    whoosh() { if (!on) return; noise(ctx.currentTime, 0.45, { vol: 0.25, from: 400, to: 5000, q: 1.4 }); },
+    // The phoenix: a low rush of flame rising in pitch, with a soft crackle on top
+    flame() { if (!on) return; const t = ctx.currentTime;
+      noise(t, 1.6, { vol: 0.3, from: 180, to: 1400, q: 0.6, kind: "lowpass" }); tone(hz(45), t, 1.4, { vol: 0.18, attack: 0.3 });
+      for (let i = 0; i < 10; i++) noise(t + 0.2 + Math.random() * 1.2, 0.03, { vol: 0.12, from: 3000, to: 3000, q: 2 }); },
+    // A light tap for buttons
+    tick() { if (!on) return; tone(1800, ctx.currentTime, 0.06, { vol: 0.06, type: "triangle" }); },
+  };
+  btn.addEventListener("click", e => { e.stopPropagation(); set(!on); });
+  // Came back with sound on: start on the first tap anywhere (phones require one)
+  if (want()) addEventListener("pointerdown", function first(e) { removeEventListener("pointerdown", first); if (!on && !btn.contains(e.target)) set(true); }, { once: true });
+  document.addEventListener("visibilitychange", () => { if (!ctx) return; document.hidden ? ctx.suspend() : (on && ctx.resume()); });
+  document.addEventListener("click", e => { if (e.target.closest(".btn, .need, .door")) fx.tick(); });
+  fx.state = () => ({ on, playing: !!music, audio: ctx ? ctx.state : "none" });   // read by the smoke test
+  return fx;
+})();
+window.CARD_SFX = SFX;
+
+// Greeting: ?to=Sarah&at=brisbane opens with "Great to meet you at Brisbane, Sarah" (name: letters and spaces only;
+// the event must be one the kit lists, anything else is ignored)
+const cleanName = s => String(s || "").replace(/[^\p{L} '\-]/gu, "").replace(/\s+/g, " ").trim().slice(0, 30);
+const EVENTS = Array.isArray(P.events) ? P.events.filter(e => e && /^[a-z0-9-]{1,30}$/.test(e.id) && e.label) : [];
+const eventById = id => EVENTS.find(e => e.id === id) || null;
+const GREET = cleanName(QS.get("to"));
+const EVENT = eventById((QS.get("at") || "").toLowerCase());
+if (GREET || EVENT) {
+  $("greet").textContent = "Great to meet you" + (EVENT ? " at " + EVENT.label : "") + (GREET ? ", " + GREET : "");
+  $("greet").hidden = false;
+}
+// Your view: the owner opens ?me=1 once, or the home-screen app (which starts there); visitors never see it.
+// The claude.ai preview shows it so the owner can review it.
+const STANDALONE = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const OWNER = QS.get("me") === "1" || STANDALONE || !HOSTED;
+document.body.classList.toggle("owner", OWNER);
+const AT_KEY = "card-at:" + (KIT.id || "card");
+const savedAt = () => { try { return eventById(localStorage.getItem(AT_KEY) || ""); } catch (e) { return null; } };
+
+// Crack & reveal: the screen cracks from an impact point, the shards fall away, and the brand reveal plays beneath.
+// Drawn in code so it runs the instant the card opens. Skipped entirely when the viewer has asked for reduced motion.
+function crackReveal(done) {
+  const c = $("crack"), x = c.getContext("2d"), stage = c.parentElement;
+  const r = stage.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+  const W = c.width = Math.round(r.width * dpr), H = c.height = Math.round(r.height * dpr);
+  const cx = W * 0.5, cy = H * 0.4, diag = Math.hypot(W, H);
+  const brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#FFFFFF";
+  const rays = 15, rings = [0, 0.06, 0.16, 0.32, 0.55, 1.1];
+  const ang = Array.from({ length: rays }, (_, i) => (i / rays) * Math.PI * 2 + (Math.random() - 0.5) * 0.32);
+  const pt = (ri, ai) => {
+    const a = ang[ai % rays] + (ri ? (Math.random() - 0.5) * 0.12 : 0), d = rings[ri] * diag * (ri ? 0.9 + Math.random() * 0.2 : 0);
+    return [cx + Math.cos(a) * d, cy + Math.sin(a) * d];
+  };
+  const P = rings.map((_, ri) => ang.map((__, ai) => pt(ri, ai)));
+  const shards = [];
+  for (let ri = 0; ri < rings.length - 1; ri++) for (let ai = 0; ai < rays; ai++) {
+    const poly = [P[ri][ai], P[ri][(ai + 1) % rays], P[ri + 1][(ai + 1) % rays], P[ri + 1][ai]];
+    const mx = poly.reduce((s, p) => s + p[0], 0) / 4, my = poly.reduce((s, p) => s + p[1], 0) / 4;
+    const out = Math.atan2(my - cy, mx - cx);
+    shards.push({ poly, mx, my, vx: Math.cos(out) * (2 + Math.random() * 4) * dpr, vy: (-2 - Math.random() * 3) * dpr,
+      vr: (Math.random() - 0.5) * 0.12, delay: 330 + ri * 70 + Math.random() * 90 });
+  }
+  const glass = x.createLinearGradient(0, 0, W, H);
+  glass.addColorStop(0, "#0B1220"); glass.addColorStop(1, "#04080E");
+  try { navigator.vibrate && navigator.vibrate(25); } catch (e) {}
+  SFX.crack();
+  let started = false;
+  const t0 = performance.now();
+  function frame(now) {
+    const t = now - t0;
+    c.style.background = "transparent";   // the painted glass hands over to the drawn shards
+    x.clearRect(0, 0, W, H);
+    let alive = 0;
+    shards.forEach(s => {
+      const k = Math.max(0, t - s.delay) / 16.7;
+      const dx = s.vx * k, dy = s.vy * k + 0.55 * dpr * k * k, rot = s.vr * k, a = t < s.delay ? 1 : Math.max(0, 1 - k / 55);
+      if (a <= 0) return; alive++;
+      x.save(); x.globalAlpha = a; x.translate(s.mx + dx, s.my + dy); x.rotate(rot); x.translate(-s.mx, -s.my);
+      x.beginPath(); s.poly.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1])); x.closePath();
+      x.fillStyle = glass; x.fill();
+      x.lineWidth = 1.2 * dpr; x.strokeStyle = "rgba(255,255,255,0.55)"; x.stroke();
+      x.restore();
+    });
+    if (t < 330) {   // the cracks race out from the impact point
+      const g = Math.min(1, t / 260);
+      x.save(); x.lineCap = "round";
+      ang.forEach((_, ai) => {
+        x.beginPath(); x.moveTo(cx, cy);
+        for (let ri = 1; ri < rings.length; ri++) { const f = Math.min(1, g * rings.length - ri + 1); if (f <= 0) break;
+          const [px, py] = P[ri - 1][ai], [qx, qy] = P[ri][ai]; x.lineTo(px + (qx - px) * f, py + (qy - py) * f); }
+        x.lineWidth = 1.6 * dpr; x.strokeStyle = "rgba(255,255,255,0.9)"; x.shadowColor = brand; x.shadowBlur = 12 * dpr; x.stroke();
+      });
+      const glow = x.createRadialGradient(cx, cy, 0, cx, cy, 60 * dpr);
+      glow.addColorStop(0, "rgba(255,255,255,0.95)"); glow.addColorStop(0.3, brand); glow.addColorStop(1, "rgba(0,0,0,0)");
+      x.globalAlpha = 1 - g * 0.4; x.fillStyle = glow; x.beginPath(); x.arc(cx, cy, 60 * dpr, 0, Math.PI * 2); x.fill();
+      x.restore();
+    }
+    if (!started && t > 420) { started = true; done(); }
+    if (alive || t < 600) requestAnimationFrame(frame); else c.hidden = true;
+  }
+  requestAnimationFrame(frame);
+}
+function startHero() {
+  const v = $("hero-video"); if (v) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+  $("greet").classList.add("on");
+  phoenix();
+}
+
+// Phoenix: once the glass has shattered, the U rises from the embers. Two wings of fire sweep up and out
+// from the logo, then embers keep drifting upward for a while. Drawn in code (no media, nothing generated);
+// kept to the upper two-thirds of the stage so the name below stays clear. Skipped with reduced motion.
+let phoenixRun = 0;
+function phoenix() {
+  if (REDUCED) return;
+  const c = $("embers"), x = c.getContext("2d"), r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
+  const W = c.width = Math.round(r.width * d), H = c.height = Math.round(r.height * d);
+  const run = ++phoenixRun, cx = W / 2, cy = H * 0.42, ceiling = H * 0.62;
+  const brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#E55A2B";
+  const fire = t => (t < .35 ? "#FFF3C4" : t < .7 ? "#FFB347" : brand);   // hot core cooling to the brand colour
+  const sparks = [];
+  // Wings: particles launched along two arcs, left and right, rising and sweeping outward
+  // Wings: feathers of flame launched along two fans, left and right, rising and sweeping outward
+  for (let side of [-1, 1]) for (let i = 0; i < 150; i++) {
+    const k = (i % 50) / 50, row = Math.floor(i / 50), ang = -Math.PI / 2 + side * (0.2 + k * 1.25 + row * .08);
+    const sp = (3 + k * 4.2 - row * .6) * d * (0.85 + Math.random() * .3);
+    sparks.push({ x: cx + side * (4 + row * 6) * d, y: cy + row * 6 * d, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp - 1.4 * d,
+      life: 0, max: 40 + Math.random() * 24 + k * 26, r: (1.6 + Math.random() * 2.4) * d, delay: k * 12 + row * 4, streak: true });
+  }
+  // Body and head: a column of fire shooting straight up out of the U
+  for (let i = 0; i < 60; i++) {
+    sparks.push({ x: cx + (Math.random() - .5) * 14 * d, y: cy + 10 * d, vx: (Math.random() - .5) * .8 * d, vy: -(4 + Math.random() * 4) * d,
+      life: 0, max: 34 + Math.random() * 20, r: (2 + Math.random() * 2.6) * d, delay: 6 + Math.random() * 10, streak: true });
+  }
+  SFX.flame();
+  const t0 = performance.now();
+  (function frame(now) {
+    if (run !== phoenixRun) return;
+    const t = now - t0;
+    x.globalCompositeOperation = "source-over"; x.clearRect(0, 0, W, H);
+    x.globalCompositeOperation = "lighter";
+    // after the wings, a gentle stream of embers rises from the logo for twelve seconds
+    if (t > 900 && t < 12000 && Math.random() < .35) {
+      sparks.push({ x: cx + (Math.random() - .5) * W * .35, y: cy + H * .06, vx: (Math.random() - .5) * .6 * d, vy: -(0.6 + Math.random() * 1.2) * d,
+        life: 0, max: 90 + Math.random() * 80, r: (0.8 + Math.random() * 1.6) * d, delay: 0, drift: Math.random() * 6 });
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      if (s.delay > 0) { s.delay--; continue; }
+      s.px = s.x; s.py = s.y;
+      s.life++; s.x += s.vx + (s.drift ? Math.sin((s.life + s.drift * 10) / 14) * .3 * d : 0); s.y += s.vy; s.vy -= .015 * d; s.vx *= .985;
+      const k = s.life / s.max;
+      if (k >= 1 || s.y > ceiling) { sparks.splice(i, 1); continue; }
+      const a = (1 - k) * (k < .1 ? k * 10 : 1);
+      if (s.streak) {   // a streak from where it was: reads as a feather of flame
+        x.globalAlpha = a * .8; x.strokeStyle = fire(k); x.lineWidth = s.r * (1.4 - k); x.lineCap = "round";
+        x.beginPath(); x.moveTo(s.px - s.vx * 2.2, s.py - s.vy * 2.2); x.lineTo(s.x, s.y); x.stroke();
+      }
+      const g = x.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 4);
+      g.addColorStop(0, fire(k)); g.addColorStop(1, "rgba(0,0,0,0)");
+      x.globalAlpha = a * .9; x.fillStyle = g; x.beginPath(); x.arc(s.x, s.y, s.r * 4, 0, Math.PI * 2); x.fill();
+    }
+    x.globalAlpha = 1;
+    if (sparks.length || t < 12000) requestAnimationFrame(frame); else x.clearRect(0, 0, W, H);
+  })(t0);
+}
+
+// Openers this view can play: the signature reveal plus every edition shipped with the page
+function allHeroes() {
+  const list = [];
+  if ((B.hero || {}).status === "found") list.push(["signature", B.hero]);
+  Object.entries(B.editions || {}).forEach(([n, e]) => {
+    if (e && e.status === "found" && ((HOSTED && e.hostedVideo) || e.videoDataUri)) list.push([n, e]);
+  });
+  return list;
+}
+// The card rotates only the light subset named in the kit (B.rotation); ?edition= can still open any of them
+function heroList() {
+  const all = allHeroes(), rot = Array.isArray(B.rotation) ? B.rotation : null;
+  const list = rot ? all.filter(([n]) => rot.includes(n)) : all;
+  return list.length ? list : all;
+}
+// Rotation: remembers the last opener this browser saw and plays the next; falls back to a random pick
+function nextIndex(len) {
+  let i = NaN;
+  try {
+    const key = "card-edition:" + (KIT.id || "card");
+    i = (parseInt(localStorage.getItem(key) || "-1", 10) + 1) % len;
+    localStorage.setItem(key, String(i));
+  } catch (e) { i = NaN; }
+  return Number.isFinite(i) && i >= 0 ? i : Math.floor(Math.random() * len);
+}
+function pickHero() {
+  const list = heroList(); if (!list.length) return null;
+  const forced = (QS.get("edition") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 30);
+  return allHeroes().find(([n]) => n === forced) || list[nextIndex(list.length)];
+}
+function mountHero(entry) {
+  const old = $("hero-video"); if (old) old.remove();
+  const stage = document.querySelector(".stage"); stage.style.background = "";
+  const placeholders = [$("logo"), $("water"), document.querySelector(".stage .ph")];
+  if (!entry) { placeholders.forEach(el => { el.hidden = false; }); return null; }
+  const [name, hero] = entry;
+  const src = (HOSTED ? hero.hostedVideo : hero.videoDataUri) || hero.videoDataUri;
+  if (!src) { placeholders.forEach(el => { el.hidden = false; }); return null; }
+  const v = document.createElement("video");
+  v.className = hero.fit === "cover" ? "hero-full" : "hero"; v.id = "hero-video"; v.dataset.edition = name;
+  // the crack opener starts the clip; with reduced motion the poster stays still
+  v.muted = true; v.playsInline = true; v.loop = !!hero.loop; v.autoplay = false; v.preload = REDUCED ? "none" : "auto";
+  v.setAttribute("playsinline", ""); v.setAttribute("aria-label", (B.name || "Brand") + " logo reveal, " + name + " edition");
+  const poster = (HOSTED ? hero.hostedPoster : hero.posterDataUri) || hero.posterDataUri; if (poster) v.poster = poster;
+  if (hero.background && hero.background.value) stage.style.background = hero.background.value;
+  v.src = src;
+  // Hold on the settled logo instead of running into any trailing black
+  if (hero.stopAt) v.addEventListener("timeupdate", () => { if (v.currentTime >= hero.stopAt) v.pause(); });
+  placeholders.forEach(el => { el.hidden = true; });
+  v.addEventListener("error", () => { v.remove(); placeholders.forEach(el => { el.hidden = false; }); });
+  $("water").after(v);
+  $("intro-below").hidden = hero.fit !== "cover";
+  const lbl = $("edition-label");
+  lbl.textContent = name === "signature" ? "Signature reveal" : name.charAt(0).toUpperCase() + name.slice(1) + " edition";
+  lbl.hidden = allHeroes().length < 2;
+  return v;
+}
+// Replay: crack again and play the next edition
+(function replay() {
+  const list = heroList(), btn = $("replay");
+  if (list.length < 2) return;
+  btn.hidden = false;
+  btn.addEventListener("click", () => {
+    const cur = ($("hero-video") || {}).dataset ? $("hero-video").dataset.edition : "";
+    let entry = list[nextIndex(list.length)];
+    if (entry[0] === cur) entry = list[nextIndex(list.length)];
+    mountHero(entry);
+    if (REDUCED) return;
+    const c = $("crack"); c.hidden = false; c.style.background = "#04080E";
+    crackReveal(startHero);
+  });
+})();
+if (REDUCED) { $("crack").hidden = true; startHero(); }
+else setTimeout(() => crackReveal(startHero), 250);
+
+// Pass it on: a bouncing QR of this card so a second phone can scan it straight off this screen
+const CARD_URL = (() => {
+  if (!HOSTED) return P.cardUrl || "";
+  const u = new URL(location.href); ["to", "at", "me", "edition"].forEach(k => u.searchParams.delete(k)); u.hash = ""; return u.toString();
+})();
+// A link to this card for the next person: their name and where you met ride along so the card greets them
+function cardLink(to, at) {
+  if (!CARD_URL) return "";
+  const u = new URL(CARD_URL);
+  const n = cleanName(to); if (n) u.searchParams.set("to", n);
+  if (eventById(at)) u.searchParams.set("at", at);
+  return u.toString();
+}
+const currentAt = () => (OWNER && savedAt() ? savedAt().id : (EVENT ? EVENT.id : ""));
+EVENTS.forEach(e => ["pass-at", "mine-at"].forEach(id => { const o = document.createElement("option"); o.value = e.id; o.textContent = e.label; $(id).append(o); }));
+$("pass-at").options[0].textContent = "Where we met: not set";
+async function shareLink(url, el) {
+  if (navigator.share) { try { await navigator.share({ title: (P.name || "My") + " card", url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+  copy(url, el);
+}
+let passAnim = null;
+// No signal at the venue? The contact code carries the contact itself, so their camera saves it with no
+// internet, noting where and when you met. Starts in this mode when the phone is offline.
+let passOffline = false;
+// Kept lean and plain ASCII so it fits a QR code a phone camera reads at arm's length
+function offlineVcard() {
+  const met = eventById($("pass-at").value), today = new Date().toLocaleDateString("en-AU", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const ascii = s => String(s || "").normalize("NFKD").replace(/[^\x20-\x7E]/g, "").replace(/[;,\\]/g, " ").trim();
+  const parts = (P.name || "").split(" "), last = parts.length > 1 ? parts.pop() : "";
+  const lines = ["BEGIN:VCARD", "VERSION:3.0", "N:" + ascii(last) + ";" + ascii(parts.join(" ")) + ";;;", "FN:" + ascii(P.name)];
+  if (P.org) lines.push("ORG:" + ascii(P.org));
+  if (P.title) lines.push("TITLE:" + ascii(P.title.split(",")[0]));
+  (P.emails || []).slice(0, 1).forEach(e => lines.push("EMAIL:" + ascii(e.value)));
+  if (P.cardUrl) lines.push("URL:" + ascii(P.cardUrl));
+  lines.push("NOTE:Met " + (met ? "at " + ascii(met.label) + " " : "") + today, "END:VCARD");
+  return lines.join("\r\n");
+}
+function drawPassQR() {
+  const q = $("pass-qr"), url = cardLink($("pass-name").value, $("pass-at").value); q.textContent = "";
+  const text = passOffline ? offlineVcard() : url;
+  q.dataset.url = passOffline ? "" : url; q.dataset.vcard = passOffline ? text : "";
+  if (text && window.QRCode) new QRCode(q, { text, width: passOffline ? 240 : 200, height: passOffline ? 240 : 200, colorDark: "#0A1120", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.L });
+  else q.textContent = url || "The code appears once the card has its own web address.";
+  const who = cleanName($("pass-name").value);
+  $("pass-label").textContent = passOffline ? "Scan to save " + ((P.name || "").split(" ")[0] || "me") : who ? "Scan, " + who : "Scan to get this card";
+  $("pass-domain").textContent = passOffline ? "Saves with no internet" : (url ? new URL(url).host : "");
+  $("pass-offline").textContent = passOffline ? "Show the card code" : "No signal? Contact code";
+  $("pass-offline").setAttribute("aria-pressed", String(passOffline));
+}
+$("pass-btn").addEventListener("click", () => {
+  passOffline = navigator.onLine === false;
+  $("pass-on").hidden = false; $("pass-at").value = currentAt(); drawPassQR(); SFX.whoosh();
+  $("pass-hint").textContent = HOSTED ? "Point a phone camera at the code." : "Preview: the code points to the card's planned address (" + (CARD_URL || "not set") + "), which is not live yet.";
+  const tile = $("pass-tile"), top = () => $("pass-form").getBoundingClientRect().bottom + 12;
+  let px = 40, py = top(), vx = 2.2, vy = 1.7;
+  const step = () => {
+    const mw = innerWidth - tile.offsetWidth, mh = innerHeight - tile.offsetHeight, t = top();
+    if (REDUCED) { tile.style.transform = `translate(${Math.max(0, mw / 2)}px, ${Math.max(t, (t + mh) / 2)}px)`; return; }
+    px += vx; py += vy;
+    if (px <= 0 || px >= mw) { vx = -vx; px = Math.max(0, Math.min(px, mw)); }
+    if (py <= t || py >= mh) { vy = -vy; py = Math.max(t, Math.min(py, mh)); }
+    tile.style.transform = `translate(${px}px, ${py}px)`;
+    passAnim = requestAnimationFrame(step);
+  };
+  if (passAnim) cancelAnimationFrame(passAnim);
+  step();
+});
+$("pass-form").addEventListener("submit", e => { e.preventDefault(); drawPassQR(); $("pass-name").blur(); });
+$("pass-at").addEventListener("change", drawPassQR);
+$("pass-offline").addEventListener("click", () => { passOffline = !passOffline; drawPassQR(); });
+$("pass-send").addEventListener("click", e => shareLink(cardLink($("pass-name").value, $("pass-at").value), e.currentTarget));
+$("pass-close").addEventListener("click", () => { $("pass-on").hidden = true; if (passAnim) cancelAnimationFrame(passAnim); });
+
+// Your view: today's event, home-screen install, the lock-screen code and an NFC sticker
+(function mine() {
+  if (!OWNER) return;
+  $("mine").hidden = false; $("live-status").hidden = false; $("brand-credit").hidden = false;
+  const sel = $("mine-at"); sel.value = savedAt() ? savedAt().id : "";
+  sel.addEventListener("change", () => { try { localStorage.setItem(AT_KEY, sel.value); } catch (e) {} });
+  if (STANDALONE) { $("install-steps").hidden = true; $("install-done").hidden = false; }
+  let deferred = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; $("install-btn").hidden = false; });
+  $("install-btn").addEventListener("click", async () => { if (!deferred) return; deferred.prompt(); await deferred.userChoice; deferred = null; $("install-btn").hidden = true; });
+  addEventListener("appinstalled", () => { $("install-steps").hidden = true; $("install-done").hidden = false; });
+  $("lock-btn").addEventListener("click", lockScreen);
+  if ("NDEFReader" in window) {
+    $("nfc-btn").hidden = false;
+    $("nfc-btn").addEventListener("click", async e => {
+      const s = e.currentTarget.querySelector("small");
+      try { await new NDEFReader().write({ records: [{ recordType: "url", data: cardLink("", currentAt()) || CARD_URL }] }); s.textContent = "Written. Tap the sticker with any phone to test it."; }
+      catch (err) { s.textContent = "Not written: " + (err && err.message ? err.message : "try again"); }
+    });
+  }
+})();
+
+// Lock-screen code: a phone-sized picture (1290 x 2796) with the code low enough to clear the clock
+function lockScreen() {
+  const W = 1290, H = 2796, url = cardLink("", currentAt()) || P.cardUrl || "";
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d");
+  const bg = ((B.appIcons || {}).background) || "#04080E", brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#FFFFFF";
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  const g = x.createRadialGradient(W / 2, H * 0.62, 0, W / 2, H * 0.62, W * 0.9);
+  g.addColorStop(0, brand + "55"); g.addColorStop(1, brand + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const size = 760, qx = (W - size) / 2, qy = 1420;
+  x.fillStyle = "#FFFFFF"; x.beginPath(); x.roundRect(qx - 50, qy - 50, size + 100, size + 100, 48); x.fill();
+  x.lineWidth = 10; x.strokeStyle = brand; x.stroke();
+  const tmp = document.createElement("div");
+  if (url && window.QRCode) new QRCode(tmp, { text: url, width: size, height: size, colorDark: "#0A1120", colorLight: "#FFFFFF", correctLevel: QRCode.CorrectLevel.M });
+  const qc = tmp.querySelector("canvas"); if (qc) x.drawImage(qc, qx, qy, size, size);
+  x.fillStyle = "#FFFFFF"; x.textAlign = "center";
+  x.font = "700 104px " + getComputedStyle(document.documentElement).getPropertyValue("--display");
+  x.fillText(P.name || "", W / 2, qy + size + 200);
+  x.font = "500 52px " + getComputedStyle(document.documentElement).getPropertyValue("--body");
+  x.fillStyle = "rgba(255,255,255,.75)"; x.fillText("Scan for my card", W / 2, qy + size + 290);
+  try { if (url) { x.font = "500 44px " + getComputedStyle(document.documentElement).getPropertyValue("--mono"); x.fillStyle = "rgba(255,255,255,.6)"; x.fillText(new URL(url).host, W / 2, qy + size + 370); } } catch (e) {}
+  const finish = () => c.toBlob(async blob => {
+    const name = (KIT.id || "card") + "-lock-screen.png";
+    const img = $("lock-img"); img.src = URL.createObjectURL(blob); img.hidden = false; img.dataset.height = String(H);
+    const file = new File([blob], name, { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); } catch (e) {} }
+    else { const a = document.createElement("a"); a.href = img.src; a.download = name; document.body.appendChild(a); a.click(); a.remove(); }
+    $("lock-note").hidden = false; SFX.chime();
+  }, "image/png");
+  const logo = B.logo || {}, src = (HOSTED ? logo.hostedUrl : logo.dataUri) || logo.dataUri;
+  if (logo.status === "found" && src) {
+    const im = new Image(); im.onload = () => { x.drawImage(im, (W - 300) / 2, qy - 420, 300, 300); finish(); }; im.onerror = finish; im.src = src;
+  } else finish();
+}
+
+// Offline copy and home-screen app: only on the card's own address
+if (HOSTED && "serviceWorker" in navigator && (location.protocol === "https:" || ["localhost", "127.0.0.1"].includes(location.hostname))) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+
+// "Get your own card": every card carries its own id as the referrer, so we know which card sold which
+// The target comes only from the kit (B.shopUrl), so it can move to the unite-group.in showroom in one edit
+(function ownCard() {
+  const a = $("own-card"), ref = encodeURIComponent(KIT.id || "unknown");
+  if (HOSTED && B.shopUrl) {
+    const link = () => {
+      const ed = ($("hero-video") && $("hero-video").dataset.edition) || "signature";
+      return B.shopUrl + (B.shopUrl.includes("?") ? "&" : "?") + "ref=" + ref + "&edition=" + encodeURIComponent(ed);
+    };
+    a.href = link();
+    a.addEventListener("click", () => { a.href = link(); });   // carries whichever edition is showing now
+    return;
+  }
+  a.removeAttribute("href"); a.setAttribute("aria-disabled", "true"); a.style.opacity = ".6";
+  $("own-card-note").textContent = "Works on the hosted card";
+})();
+
+if (HOSTED) {
+  document.querySelectorAll("#status-list li[data-hosted]").forEach(li => {
+    li.className = "on"; li.querySelector("b").textContent = "Live"; li.lastChild.textContent = li.dataset.hosted;
+  });
+}
+
+// Save: hosted, open the served .vcf (phones import it); in the preview, try a download and always show a copyable fallback
+$("save").addEventListener("click", () => {
+  if (HOSTED && KIT.id) {
+    // Phones finish the save themselves: say the one tap that is left (Android browsers download the file)
+    const android = /Android/i.test(navigator.userAgent);
+    const warm = GREET ? (EVENT ? "Great to meet you at " + EVENT.label + ", " + GREET + ". " : "Great to meet you, " + GREET + ". ") : "";
+    $("save-hint").textContent = warm + (android ? "Now open the downloaded file and tap Save." : "Now tap Create New Contact.");
+    SFX.chime(); confetti("burst");
+    $("save-hint").hidden = false;
+    location.href = KIT.id + ".vcf"; return;
+  }
+  try {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([vcard()], { type: "text/vcard" }));
+    a.download = (KIT.id || "contact") + ".vcf"; document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { /* blocked: the fallback below covers it */ }
+  $("vcard-text").textContent = contactText();
+  $("save-out").hidden = false;
+});
+$("copy-vcard").addEventListener("click", e => copy($("vcard-text").textContent, e.currentTarget));
+$("share").addEventListener("click", e => shareLink(cardLink("", currentAt()) || location.href.split("#")[0], e.currentTarget));
+
+const doors = ["discover", "solve", "connect"];
+doors.forEach(d => $("door-" + d).addEventListener("click", () => {
+  doors.forEach(o => {
+    const open = o === d && $("door-" + o).getAttribute("aria-expanded") !== "true";
+    $("door-" + o).setAttribute("aria-expanded", String(open)); $("p-" + o).hidden = !open;
+  });
+}));
+
+$("needs").addEventListener("click", e => {
+  const b = e.target.closest(".need"); if (!b) return;
+  document.querySelectorAll(".need").forEach(n => n.setAttribute("aria-pressed", String(n === b)));
+  const [, h, p] = P.ideas[b.dataset.need];
+  $("idea-h").textContent = h; $("idea-p").textContent = p; $("idea").hidden = false;
+});
+
+const INBOX = (P.inbox && P.inbox.status !== "missing" && P.inbox.address) || (P.inbox && P.inbox.fallback) || ((P.emails || [])[0] || {}).value || "";
+$("inbox-addr").textContent = INBOX || "no address supplied";
+// An assistant inbox (proposed or found): messages land where the reply desk reads them; the owner still reads every one
+if (P.inbox && P.inbox.address && ["proposed", "found"].includes(P.inbox.status)) {
+  const who = (P.name || "").split(" ")[0] || "the owner";
+  $("inbox-tag").textContent = P.inbox.status === "found" ? "Assistant inbox" : "Proposed";
+  $("inbox-why").textContent = "It lands in " + who + "'s assistant inbox. " + who + " reads every message; nothing is sent back without " + who + ".";
+  const li = $("status-inbox"); li.className = "on"; li.querySelector("b").textContent = P.inbox.status === "found" ? "Live" : "Proposed";
+  li.lastChild.textContent = "Connect sends your message from your own email to " + who + "'s assistant inbox, tagged with where you met.";
+}
+$("enquiry").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = new FormData(e.currentTarget);
+  const name = (f.get("name") || "").trim(), email = (f.get("email") || "").trim(), msg = (f.get("message") || "").trim();
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
+    $("out-text").textContent = "Add your name, a working email and a message, then try again."; $("out").hidden = false; return;
+  }
+  const met = eventById(currentAt());
+  const subject = `[Card${met ? " · " + met.label : ""}] ${f.get("type")}: ${name}`;
+  const body = `${msg}\n\nFrom: ${name} <${email}>\nBusiness: ${f.get("business") || "not given"}\nMet at: ${met ? met.label : "not given"}\nVia: ${P.name || "the"} digital card`;
+  $("out-text").textContent = `To: ${INBOX}\nSubject: ${subject}\n\n${body}`;
+  $("mail-msg").href = `mailto:${INBOX}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  $("out").hidden = false;
+});
+$("copy-msg").addEventListener("click", e => copy($("out-text").textContent, e.currentTarget));
+
+const rabbit = $("rabbit");
+// The white rabbit: tap it and a gift pops open with one practical idea (picked at random), confetti and a chime
+function surprise() {
+  const ideas = Object.values(P.ideas || {}).filter(v => Array.isArray(v) && v.length >= 3);
+  if (!ideas.length) return;
+  let last = Number($("surprise").dataset.idea || -1), i = Math.floor(Math.random() * ideas.length);
+  if (ideas.length > 1 && i === last) i = (i + 1) % ideas.length;
+  $("surprise").dataset.idea = String(i);
+  $("surprise-h").textContent = ideas[i][1]; $("surprise-p").textContent = ideas[i][2];
+  $("surprise").hidden = false; const g = $("gift"); g.style.animation = "none"; void g.offsetWidth; g.style.animation = "";
+  SFX.chime(); confetti();
+}
+function confetti(id = "confetti") {
+  if (REDUCED) return;
+  const c = $(id), x = c.getContext("2d"), d = Math.min(devicePixelRatio || 1, 2);
+  c.width = innerWidth * d; c.height = innerHeight * d;
+  const brand = getComputedStyle(document.documentElement).getPropertyValue("--brand").trim() || "#FFFFFF";
+  const cols = [brand, "#FFFFFF", "#FFD9CC"], bits = Array.from({ length: 90 }, () => ({
+    x: c.width / 2, y: c.height * .42, vx: (Math.random() - .5) * 18 * d, vy: (-6 - Math.random() * 12) * d,
+    r: (3 + Math.random() * 4) * d, c: cols[Math.floor(Math.random() * cols.length)], a: Math.random() * 6 }));
+  const t0 = performance.now();
+  (function frame(now) {
+    const t = now - t0; x.clearRect(0, 0, c.width, c.height);
+    bits.forEach(b => { b.vy += .45 * d; b.x += b.vx; b.y += b.vy; b.a += .2;
+      x.save(); x.translate(b.x, b.y); x.rotate(b.a); x.fillStyle = b.c; x.globalAlpha = Math.max(0, 1 - t / 1800); x.fillRect(-b.r, -b.r / 2, b.r * 2, b.r); x.restore(); });
+    if (t < 1800) requestAnimationFrame(frame); else x.clearRect(0, 0, c.width, c.height);
+  })(t0);
+}
+if (!rabbit.hidden) {
+  setTimeout(() => rabbit.classList.add("in"), 3500);
+  rabbit.addEventListener("click", () => { rabbit.classList.add("found"); surprise(); });
+}
+$("surprise-more").addEventListener("click", surprise);
+$("surprise-close").addEventListener("click", () => { $("surprise").hidden = true; });
+$("surprise").addEventListener("click", e => { if (e.target === $("surprise")) $("surprise").hidden = true; });
+// A business's panel: its demo video (thumbnail and button go to YouTube) and its site
+function openBiz(l) {
+  const v = l.video || {}, yt = "https://youtu.be/" + v.youtubeId;
+  $("biz-h").textContent = l.label;
+  const src = (HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg";
+  $("biz-thumb").src = src; $("biz-thumb").alt = l.label + " demo video";
+  $("biz-watch").href = yt; $("biz-watch-btn").href = yt; $("biz-visit").href = l.url;
+  $("biz-sheet").hidden = false; SFX.whoosh();
+}
+$("biz-close").addEventListener("click", () => { $("biz-sheet").hidden = true; });
+$("biz-sheet").addEventListener("click", e => { if (e.target === $("biz-sheet")) $("biz-sheet").hidden = true; });
+
+// Review: one quiet button opens the review wheel
+$("review-open").addEventListener("click", e => {
+  const open = $("review").hidden; $("review").hidden = !open; e.currentTarget.setAttribute("aria-expanded", String(open));
+  if (open) $("review").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+});
+
+// PLACEHOLDER motion: slow light in the brand's own colour
+(function () {
+  const c = $("water"), x = c.getContext("2d");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const css = getComputedStyle(document.documentElement);
+  const glow = css.getPropertyValue("--glow").trim(), stage = css.getPropertyValue("--stage").trim();
+  let w, h;
+  function size() { const r = c.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); w = c.width = r.width * d; h = c.height = r.height * d; }
+  size(); addEventListener("resize", size);
+  function frame(t) {
+    t = t / 1000;
+    x.fillStyle = stage; x.fillRect(0, 0, w, h);
+    x.globalCompositeOperation = "lighter";
+    for (let i = 0; i < 6; i++) {
+      const cx = w * (0.5 + 0.38 * Math.sin(t * 0.13 + i * 1.7)), cy = h * (0.42 + 0.34 * Math.cos(t * 0.11 + i * 2.3));
+      const r = Math.max(w, h) * (0.22 + 0.06 * Math.sin(t * 0.4 + i));
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, glow + "22"); g.addColorStop(1, glow + "00");
+      x.fillStyle = g; x.fillRect(0, 0, w, h);
+    }
+    x.globalCompositeOperation = "source-over";
+    const fade = x.createLinearGradient(0, h * 0.5, 0, h);
+    fade.addColorStop(0, "rgba(0,0,0,0)"); fade.addColorStop(1, "rgba(0,0,0,0.75)");
+    x.fillStyle = fade; x.fillRect(0, 0, w, h);
+    if (!still) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>

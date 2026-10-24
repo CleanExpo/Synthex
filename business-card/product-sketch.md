@@ -1,0 +1,127 @@
+# Living business cards: product sketch
+
+Status: idea only, 22/10/2026. No pricing page, payments or billing exist or are proposed here. Tags:
+`[VERIFIED]`, `[INFERENCE]`, `[UNCONFIRMED]` as in README.md.
+
+## The offer in one line
+
+A business card people open from a link or a tap: a few seconds of motion made from your own photos,
+your details saved in one tap, and a contact form that an assistant answers for you.
+
+## Who buys it `[INFERENCE: from Phill's audience at trade shows and his businesses]`
+
+- Tradespeople and restoration owners who meet clients on site and at expos.
+- Trainers, speakers and consultants who want a talk to end in a saved contact.
+- Small-business owners who want to look ahead of their competitors.
+
+First test market: people Phill meets at the Brisbane and Melbourne shows who ask "where do I get one?"
+
+## Price point
+
+**Decided by Phill, 23/10/2026** ("pursue these new prices"): two tiers. AUD (including GST) for Australia and
+New Zealand; USD everywhere else (Phill, same day). A VPN must not unlock AUD: see purchase-flow.md, "Currency".
+
+| Tier                  | What's included                                                                                                                                                                    | AU and NZ     | Rest of world |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ------------- |
+| Living Card           | Card page, save to contacts, QR code, three styles to choose from, one film made from the buyer's own website                                                                      | A$249 inc GST | US$249        |
+| Living Card Signature | Everything above, plus an animated opener from a real screenshot and five more one-off styles, each with a 30–45 s film; generative work capped (about 250 credits), more is extra | A$449 inc GST | US$449        |
+
+Why $449, not $279: five generated variants cost more than a $30 step covers once GST and curation time are counted
+(wiki `creative-harness/ch-03-card-package-economics.md`). USD uses the same numbers as AUD: overseas buyers pay
+more, which covers international card fees and currency conversion. The earlier sketch below is kept for history.
+
+### Earlier sketch (superseded 23/10/2026)
+
+Phill's ceiling: **up to AUD $249 per card**. `[VERIFIED: the brief]` Suggested shape, to test rather
+than publish `[INFERENCE]`:
+
+| Tier                | What's included                                                                   | Indicative price (AUD, inc. GST) |
+| ------------------- | --------------------------------------------------------------------------------- | -------------------------------- |
+| Card                | Hosted card page, details, save to contacts, QR code, 3 brand links               | $99                              |
+| Living card         | Card plus one motion loop made from the buyer's own photos                        | $179                             |
+| Living card + inbox | Living card plus contact form, spam filtering and auto-acknowledgement, 12 months | $249                             |
+
+### Recommended ladder (go-to-market research, 22/10/2026)
+
+This supersedes the indicative tiers above. `[INFERENCE from the coordinating session's research; some
+competitor sources were blocked, so competitor figures are partly UNCONFIRMED; Tapt's pricing was
+spot-checked and matched]`
+
+| Offer                | Price (AUD inc GST)                                          | What's in it                                                                                            |
+| -------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| Signature            | A$249                                                        | Bespoke motion opener, multi-business links, open analytics, 12 months of hosting and the enquiry inbox |
+| Live (from month 13) | A$19/mo, or A$29/mo with the review engine                   | Keeps the card live and updated                                                                         |
+| Crew pack            | A$990 for 5 staff cards, then A$9/card/mo; extra cards A$149 | For RestoreAssist firms and other teams                                                                 |
+| Network              | Quoted                                                       | Franchises and the NRPG network                                                                         |
+| NFC card             | A$59; metal A$149                                            | The physical tap card                                                                                   |
+
+No DIY tier at launch: the card is sold as a crafted brand asset, not a template. First 30 days: five
+flagship cards as the showroom, Phill's card in place of his email signature with LinkedIn videos of it
+opening, Crew packs to ten founding RestoreAssist firms, CARSI graduate cards, and a disclosed non-cash
+referral reward (a free Live year).
+
+Optional add-on later: an NFC card that opens the link. Hosting beyond 12 months would need a small
+yearly renewal; that decision is open. `[UNCONFIRMED]`
+
+## What it costs us to make one `[UNCONFIRMED: estimates, not quotes]`
+
+- Motion loop: one or two 5-second generations. At the published Kling 3.0 API rate of US$0.112 per
+  second `[VERIFIED: Higgsfield API blog, 16/09/2026]`, two attempts at 5 seconds is about US$1.12, under
+  AUD $2. Plan prices for the web app were not visible. `[UNCONFIRMED]`
+- Hosting a static page and a small video: low on a static host. `[INFERENCE]`
+- Inbox: AgentMail pricing not checked. `[UNCONFIRMED]`
+- The real cost is people time: intake, approval and fixes. Target under 45 minutes of staff time per
+  card once templated. `[INFERENCE]`
+
+## How each card gets made
+
+1. **Intake form**: name, title, phone(s), emails, website links, brand colours, logo, and 3 to 5
+   photos the buyer owns. The buyer signs a likeness and rights release for AI-generated motion from
+   their photos. `[INFERENCE: Higgsfield's terms put upload rights on the uploader, README §2]`
+2. **Check**: photos are real, sharp and theirs; contact details are spelled right. Reject stock or
+   other people's photos.
+3. **Brand kit**: build the buyer's brand kit (`brand-kits/<id>.json`) from their own sources only:
+   their logo file or website, their brand guide, their colours and fonts. Every value records where it
+   came from; anything not supplied is marked missing and listed on the card, never invented. Fonts are
+   embedded only where the licence allows; otherwise the closest open font is used and named. The kit
+   passes `brand-kits/validate.py` before anything else happens. `[VERIFIED: validator and first kit exist]`
+   Reuse Synthex's existing tools rather than starting fresh: the canonical brand configs and logo
+   files in `packages/brand-config` and `public/logos`, and the website-to-brand-DNA extractor.
+   `[VERIFIED: packages/brand-config/src/brands/unite.ts; app/api/brand-dna/extract/route.ts]`
+4. **Motion**: generate 2 or 3 camera-move variants from the best portrait, pick one, re-encode to a
+   small muted loop with a still poster. Never invent a face or a scene the buyer did not supply.
+5. **Assemble**: `site/build.py card.html brand-kits/<id>.json <out>` renders the card in the buyer's
+   own brand and writes their contact file. Generate the QR code.
+6. **Proof**: send the buyer a private preview link; they approve or ask for one round of changes.
+7. **Go live**: publish at a permanent address, e.g. `cards.<domain>/<name>`. Set up the inbox tier if
+   bought.
+8. **Hand over**: link, QR code as PNG and SVG, a 20-second "how to share it" note.
+9. **Get your own card**: every finished card carries a "Get your own card" button with its own id as
+   the referrer. A viewer who wants one sets it up themselves (website, logo, details, live preview,
+   package) and pays, which starts this flow again at step 1. Payment is switched off until Phill
+   approves the live Stripe account, prices and terms (see purchase-flow.md). `[VERIFIED: built and
+browser-tested locally]`
+
+Turnaround target: 3 business days. `[INFERENCE]`
+
+## Why people ask for one `[INFERENCE]`
+
+- The moment someone saves the contact, the card has done what a paper card rarely does.
+- The motion makes people show it to the person next to them, which is free promotion.
+- The hidden rabbit, or a buyer's own small surprise, gives them a reason to talk about it.
+- "Made by Unite Group" in the footer turns every card into a lead.
+
+## Risks and limits
+
+- AI likeness: buyers must own the photos and consent in writing. No celebrity or third-party faces.
+- Deliverability: an assistant inbox that replies needs a verified sending domain, or replies land in spam.
+- Phone quirks: one-tap contact saving works differently on iPhone and Android and must be tested on
+  both before selling. `[UNCONFIRMED: not tested on devices in this session]`
+- Scope: Synthex is internal and is not the vehicle for selling this. If the group sells cards, it is a
+  separate Unite Group offer. `[VERIFIED: Synthex CLAUDE.md, FD-8]`
+
+## Decisions for Phill
+
+1. Whether to test the offer at the Brisbane show (a sign-up list only, no payment taken).
+2. Which tier to lead with.
+3. Whether the card footer carries "Made by Unite Group".

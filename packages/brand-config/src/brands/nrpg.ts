@@ -1,6 +1,7 @@
 import { BrandConfig, FORBIDDEN_PRONOUNS } from '../types';
 
-// [verified-2026-05-05 · colour.primary] source: lib/remotion/brand-content.ts BRAND_CONTENT['nrpg'].brandColour.
+// [decided-2026-10-23 · colour.primary/secondary] Phill set NRPG's colours to the approved logo's blue and navy
+// (brand-assets/nrpg); BRAND_CONTENT['nrpg'].brandColour in lib/remotion/brand-content.ts matches.
 // Other fields (voice / audience / voiceover / motion) still pending refinement against ceo-foundation.md.
 export const nrpg = {
   slug: 'nrpg',
@@ -13,8 +14,8 @@ export const nrpg = {
     requiredCadence: 'medium',
   },
   colour: {
-    primary: '#059669', // emerald-600 — canonical NRPG brand colour
-    secondary: '#2A3D5F',
+    primary: '#0047FF', // NRPG blue, from the approved logo
+    secondary: '#0F2742', // NRPG navy, from the approved logo
     accent: '#F2B33D',
     neutral: { 50: '#FAF8F2', 100: '#EDE7D6', 500: '#7A7468', 900: '#0F1626' },
     semantic: { success: '#3FA34D', warning: '#E0A800', danger: '#C0392B' },

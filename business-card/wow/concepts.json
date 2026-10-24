@@ -1,0 +1,84 @@
+{
+  "purpose": "Wow concepts for Phill's living card: a still plus a ~3 s clip each, shown on the Card Steering Board for Yes / Maybe / No.",
+  "approval": "Phill, 22/10/2026, relayed by the coordinating session: generate with Higgsfield using existing credits only.",
+  "creditCap": {
+    "shareOfBalance": 0.10,
+    "rule": "Read the Higgsfield balance first. Spend no more than 10% of it on this batch, and never more than 300 credits. Never buy credits or change the plan. One take per concept; a second take only if the first fails and the cap allows.",
+    "estimate": "About 25-60 credits per 3-5 s image-to-video take on DoP or Kling, so 4 ready concepts ≈ 100-240 credits. [INFERENCE from the Higgsfield research: 10-70 credits per take]"
+  },
+  "groundingRule": "Every clip starts from a real input file below: the Unite Group logo from unite-group.in or a screenshot of the real card. No invented face for Phill; concepts that need him wait for his real photos. Generic hands and objects only, no identifiable people.",
+  "stillRule": "The concept still is the clip's first frame, so no separate image generation is needed (saves credits).",
+  "output": "Save each clip as wow/out/<id>.mp4 and its still as wow/out/<id>.jpg, upload both to the board artifact's assets, then set the option's video and image fields to the returned asset URLs.",
+  "concepts": [
+    {
+      "id": "w1",
+      "title": "The logo assembles from light",
+      "status": "ready",
+      "showsPhill": false,
+      "higgsfieldFeature": "Image-to-video with a DoP Effects preset (particle build) on the real logo",
+      "model": "Higgsfield DoP (or Kling 3.0 if DoP is unavailable)",
+      "inputs": ["inputs/unite-logo.png"],
+      "aspect": "9:16",
+      "durationSeconds": 3,
+      "prompt": "Pitch-black background. Hundreds of tiny warm orange (#E55A2B) points of light drift in and lock together into exactly this logo, then a single soft orange pulse runs across it. The logo itself keeps its shape, lettering and original colour exactly as in the source image. No other text, no people.",
+      "whyItWows": "The first second someone opens the card, the brand builds itself in their hand."
+    },
+    {
+      "id": "w2",
+      "title": "One card that isn't like the others",
+      "status": "ready",
+      "showsPhill": false,
+      "higgsfieldFeature": "Image-to-video, Kling 3.0 with an Epic Camera Control crane pull-back",
+      "model": "Kling 3.0",
+      "inputs": ["inputs/card-screen.png"],
+      "aspect": "9:16",
+      "durationSeconds": 3,
+      "prompt": "Start tight on this phone screen showing the glowing living card exactly as in the source image. The camera pulls back and up to reveal the phone lying on a table among dozens of plain, identical white paper business cards. Only the phone is lit, with a warm orange (#E55A2B) glow around it; the paper cards are flat and grey. No faces.",
+      "whyItWows": "Phill's 'one donkey among the horses' idea in a single shot: everyone else hands out paper."
+    },
+    {
+      "id": "w3",
+      "title": "Tap, and the card comes alive",
+      "status": "ready",
+      "showsPhill": false,
+      "higgsfieldFeature": "Image-to-video, DoP Basic Camera Control slow push-in with a tap moment",
+      "model": "Higgsfield DoP",
+      "inputs": ["inputs/card-screen.png"],
+      "aspect": "9:16",
+      "durationSeconds": 3,
+      "prompt": "A hand holds a matte black NFC card against the top of this phone. On contact a ring of warm orange (#E55A2B) light ripples out from the card and the phone screen blooms into the living card shown in the source image. Slow push-in. Only a hand is visible, no face.",
+      "whyItWows": "Shows the trade-show moment: no app, no typing, one tap."
+    },
+    {
+      "id": "w4",
+      "title": "Fly into the card",
+      "status": "ready",
+      "showsPhill": false,
+      "higgsfieldFeature": "Image-to-video, DoP Epic Camera Control FPV push-through",
+      "model": "Higgsfield DoP",
+      "inputs": ["inputs/card-screen.png"],
+      "aspect": "9:16",
+      "durationSeconds": 3,
+      "prompt": "The camera flies forward into the dark motion panel of this card, through the logo, into a deep space of soft warm orange (#E55A2B) light, as if the card opens into a world behind the screen. Keep the logo exactly as in the source. No people.",
+      "whyItWows": "Turns a contact card into a doorway, which is where the game and the businesses live."
+    },
+    {
+      "id": "w5",
+      "title": "Phill looks up and says hello",
+      "status": "blocked",
+      "showsPhill": true,
+      "blockedOn": "A real head-and-shoulders photo of Phill and a 10-second voice memo in his own voice.",
+      "higgsfieldFeature": "DoP push-in on his real portrait, then Lipsync Studio with his own recorded voice",
+      "whyItWows": "The most personal opening a card can have, made from the real Phill."
+    },
+    {
+      "id": "w6",
+      "title": "Flip a ruined room back to new",
+      "status": "blocked",
+      "showsPhill": false,
+      "blockedOn": "Real before-and-after photos from a Disaster Recovery job, with the owner's permission to share.",
+      "higgsfieldFeature": "Kling start-frame/end-frame transition between the real before and after photos",
+      "whyItWows": "Proof of the work in three seconds; nothing sells restoration like a real before-and-after."
+    }
+  ]
+}

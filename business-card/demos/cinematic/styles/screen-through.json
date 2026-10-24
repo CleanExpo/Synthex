@@ -1,0 +1,48 @@
+{
+  "id": "screen-through",
+  "name": "Screen Through",
+  "signals": "Confident product: no cards, no intro, the camera moves through the real screen and holds on the point.",
+  "fits": ["software", "platform"],
+  "palette": {
+    "paper": "#ffffff",
+    "pattern": "none",
+    "patternInk": "ink",
+    "overlay": "none"
+  },
+  "type": {
+    "pixelWord": false,
+    "headlineWeight": 800,
+    "align": "left"
+  },
+  "motion": {
+    "arrival": "slide",
+    "tilt": [0, 0],
+    "stagger": 2,
+    "spring": {
+      "damping": 30,
+      "stiffness": 120,
+      "mass": 1
+    },
+    "quantise": 1,
+    "push": 0.14
+  },
+  "scenes": {
+    "plate": "bleed",
+    "tiles": "rule",
+    "ticker": false,
+    "screen": "bleed",
+    "lockup": "left"
+  },
+  "sound": "Near silence: UI ticks only, music low; one soft hit on each hold.",
+  "refs": ["https://getlago.com/blog/we-killed-our-motion-design-job"],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

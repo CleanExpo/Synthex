@@ -1,0 +1,67 @@
+{
+  "about": "Blind judge scores per film version (rubric: group-film/qa/judge/RUBRIC-AND-CALIBRATION.md). Pass = every dimension at least 7 and within 2 of the benchmark average (Story 9.0, Design 8.75, Appeal 8.25).",
+  "house_best": {
+    "film": "The Relay v3",
+    "story": 7,
+    "design": 6,
+    "appeal": 7
+  },
+  "entries": [
+    {
+      "film": "The Relay v2",
+      "date": "23/10/2026",
+      "story": 6,
+      "design": 6,
+      "appeal": 6,
+      "note": "screen inserts small, timeline breaks"
+    },
+    {
+      "film": "The Relay v3",
+      "date": "23/10/2026",
+      "story": 7,
+      "design": 6,
+      "appeal": 7,
+      "note": "Design capped at 6 by glove outline on tablet"
+    },
+    {
+      "film": "The Relay v4",
+      "date": "23/10/2026",
+      "story": 6,
+      "design": 6,
+      "appeal": 6,
+      "note": "website cards read as a sales page"
+    },
+    {
+      "film": "The Relay v5",
+      "date": "23/10/2026",
+      "story": 7,
+      "design": 6,
+      "appeal": 6,
+      "note": "trade-show cutaway, tablet sales page"
+    },
+    {
+      "film": "The Relay v6",
+      "date": "23/10/2026",
+      "story": 7,
+      "design": 6,
+      "appeal": 7,
+      "note": "Design capped at 6 by glove matte; judge could not hear audio"
+    },
+    {
+      "film": "Disaster Recovery: One Thing v1",
+      "date": "23/10/2026",
+      "story": 7,
+      "design": 6,
+      "appeal": 6,
+      "note": "preview: AI texture on clothing caps Design; ~7 s of near-still footage; three stacked lines at the end; audio not judged"
+    },
+    {
+      "film": "CARSI: Last Night, First Light v1",
+      "date": "23/10/2026",
+      "story": 5,
+      "design": 5,
+      "appeal": 5,
+      "note": "preview: no visible problem in the first 2 s; reuses Relay shots (hallway, handshake, payoff); thumb on the wrong side at 8.5-11 s; garbled grille lettering"
+    }
+  ]
+}

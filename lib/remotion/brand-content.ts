@@ -273,7 +273,7 @@ Whether you're seeking certification or looking to elevate your team's capabilit
     brandName: 'NRPG',
     tagline: "Australia's Restoration Professionals Network",
     industry: 'National Restoration Professional Group',
-    brandColour: '#059669', // emerald-600
+    brandColour: '#0047FF', // NRPG blue, from the approved logo (23/10/2026)
     websiteUrl: 'disasterrecovery.com.au',
     logoUrl: '/logos/nrpg/primary.svg',
     valueProps: [

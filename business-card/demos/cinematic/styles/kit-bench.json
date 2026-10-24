@@ -1,0 +1,51 @@
+{
+  "id": "kit-bench",
+  "name": "Kit Bench",
+  "signals": "Built properly, nothing hidden: the client's own site assembles like a flat-pack kit.",
+  "fits": ["trade", "restoration", "training"],
+  "palette": {
+    "paper": "#f4f1ea",
+    "pattern": "hex",
+    "patternInk": "accent",
+    "overlay": "none"
+  },
+  "type": {
+    "pixelWord": true,
+    "headlineWeight": 700,
+    "align": "center"
+  },
+  "motion": {
+    "arrival": "fly",
+    "tilt": [28, -6],
+    "stagger": 4,
+    "spring": {
+      "damping": 14,
+      "stiffness": 80,
+      "mass": 1
+    },
+    "quantise": 1,
+    "push": 0.05
+  },
+  "scenes": {
+    "plate": "frame",
+    "tiles": "offset",
+    "ticker": true,
+    "screen": "frame",
+    "lockup": "centre"
+  },
+  "sound": "Wooden clack as pieces land, soft latch on the final click, whoosh on the break-apart.",
+  "refs": [
+    "https://getrubric.app",
+    "https://getlago.com/blog/we-killed-our-motion-design-job"
+  ],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "id": "hex-blueprint",
+  "name": "Hex Blueprint",
+  "signals": "Engineered and considered: pieces arrive as blueprint outlines, then fill with the real pixels.",
+  "fits": ["general", "b2b", "software", "openers"],
+  "palette": {
+    "paper": "#eef3fb",
+    "pattern": "blueprint",
+    "patternInk": "accent",
+    "overlay": "none"
+  },
+  "type": {
+    "pixelWord": true,
+    "headlineWeight": 600,
+    "align": "center"
+  },
+  "motion": {
+    "arrival": "outline",
+    "tilt": [18, 0],
+    "stagger": 5,
+    "spring": {
+      "damping": 20,
+      "stiffness": 70,
+      "mass": 1
+    },
+    "quantise": 1,
+    "push": 0.04
+  },
+  "scenes": {
+    "plate": "frame",
+    "tiles": "rule",
+    "ticker": false,
+    "screen": "blueprint",
+    "lockup": "outline"
+  },
+  "sound": "Pencil scratch while outlines draw, ruler tap, soft hit as each piece fills.",
+  "refs": [
+    "https://buck.co/work/nothing-playground",
+    "https://www.remotion.dev/docs/easing"
+  ],
+  "bans": [
+    "stock or AI-invented people and scenes",
+    "a model rendering any words",
+    "slow Ken Burns pan on every still",
+    "generic whoosh on every cut",
+    "purple-to-blue gradients",
+    "centred text over a blurred photo",
+    "glowing particles or lens flares",
+    "more than one pixel word per screen"
+  ]
+}

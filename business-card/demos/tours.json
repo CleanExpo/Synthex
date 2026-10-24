@@ -1,0 +1,353 @@
+{
+  "_about": "One narrated demo per business, made from the live public site. Each segment shows one page (panning between the given fractions of its height) while its narration plays. Narration only repeats what each site says about itself (headings captured 23/10/2026, capture-report.json); no prices are quoted. About 150 words a minute. Built by demos/build.py.",
+  "voice": "MARGOT_ELEVENLABS_VOICE_ID (Margot, Product Ambassador; ElevenLabs library voice Emily - Australian Female)",
+  "businesses": [
+    {
+      "id": "disaster-recovery",
+      "name": "Disaster Recovery",
+      "url": "https://www.disasterrecovery.com.au",
+      "tagline": "24/7 emergency restoration",
+      "segments": [
+        {
+          "path": "/",
+          "from": 0.0,
+          "to": 0.06,
+          "say": "When water, fire, mould or a storm hits your property, the next hour matters. This is Disaster Recovery: twenty-four seven emergency restoration, with one promise on the front page. Policyholder first. Always. If you need help right now, you can lodge a claim online, any time."
+        },
+        {
+          "path": "/",
+          "from": 0.06,
+          "to": 0.2,
+          "say": "The site walks you from disaster to recovery. It starts with an emergency rapid assessment, then moves to the work itself: water and flood extraction, fire and smoke, mould remediation, storm response, biohazard and forensic cleaning, and sewage sanitisation."
+        },
+        {
+          "path": "/how-it-works",
+          "from": 0.0,
+          "to": 0.3,
+          "say": "How it works is set out in six steps. Step one, lodge your claim online. Step two, you are matched with a certified contractor. Step three is the emergency make-safe, so the damage stops spreading."
+        },
+        {
+          "path": "/how-it-works",
+          "from": 0.3,
+          "to": 0.65,
+          "say": "Step four is documentation and a formal contract, so everyone knows what is being done and why. Step five is the full restoration. And step six is insurance claim support, so you are not left to deal with the paperwork on your own."
+        },
+        {
+          "path": "/how-it-works",
+          "from": 0.65,
+          "to": 1.0,
+          "say": "Billing and payment options are explained up front, along with why people choose Disaster Recovery, and the other services you may also need once the emergency is under control."
+        },
+        {
+          "path": "/",
+          "from": 0.2,
+          "to": 0.45,
+          "say": "The full range of disaster recovery services is in one place. Water and flood restoration. Fire and smoke remediation. Mould and air quality. And precision laser cleaning for the jobs that need it. The work is carried out by IICRC-certified contractors."
+        },
+        {
+          "path": "/",
+          "from": 0.45,
+          "to": 0.75,
+          "say": "The site is honest about the bigger picture too. Insurance affordability and availability worry many Australians, and Disaster Recovery is built around the policyholder in the middle of all that, not the claim file."
+        },
+        {
+          "path": "/claim",
+          "from": 0.0,
+          "to": 0.55,
+          "say": "Lodging a claim is a single form. Your contact details, the property, and what has happened to it. The page shows an indicative cost for the emergency make-safe before you commit."
+        },
+        {
+          "path": "/",
+          "from": 0.75,
+          "to": 1.0,
+          "say": "Your privacy is handled under the Australian Privacy Principles, with the collection notice right there on the site. Disaster Recovery. Emergency restoration, policyholder first. Visit disaster recovery dot com dot a u."
+        }
+      ]
+    },
+    {
+      "id": "carsi",
+      "name": "CARSI",
+      "url": "https://carsi.com.au",
+      "tagline": "Restoration training, IICRC CEC provider",
+      "segments": [
+        {
+          "path": "/",
+          "from": 0.0,
+          "to": 0.08,
+          "say": "Become the technician every job site trusts. That is the idea behind CARSI: restoration and cleaning training built for working crews, delivered online, from an IICRC CEC provider. Start tonight, at carsi dot com dot a u."
+        },
+        {
+          "path": "/",
+          "from": 0.08,
+          "to": 0.24,
+          "say": "CARSI exists because restoration is real work. The training is built around real jobs. It is about proof, not participation. And it is one place for a career, from your first course through to the credentials clients ask for."
+        },
+        {
+          "path": "/courses",
+          "from": 0.0,
+          "to": 0.3,
+          "say": "Restoration training you can start tonight. Filter by topic, then open a card. Structural drying core concepts. Water damage restoration essentials. Commercial carpet care. Fire and smoke restoration core principles."
+        },
+        {
+          "path": "/courses",
+          "from": 0.3,
+          "to": 0.7,
+          "say": "It goes deeper as you grow. Advanced structural drying. Dust and particulates in indoor air. Air quality and odour. Moisture, mould and indoor air quality. Recovery of submerged items and contents. Using air scrubbers to improve job site air quality."
+        },
+        {
+          "path": "/courses",
+          "from": 0.7,
+          "to": 1.0,
+          "say": "There is even a guide to how IICRC certification disciplines fit together, and a calculator to work out the continuing education credits you need."
+        },
+        {
+          "path": "/",
+          "from": 0.24,
+          "to": 0.5,
+          "say": "Getting started takes four steps. Browse by need. Learn around your jobs, so training fits the week instead of fighting it. Track your CECs as you go. Then share your credentials, verified on completion."
+        },
+        {
+          "path": "/",
+          "from": 0.5,
+          "to": 0.72,
+          "say": "Credentials that hold up on the job site. CARSI is an IICRC CEC provider, with its own CARSI designations, and completions are verified. Pay for training, not for overheads. Learn online, and grow in person at CARSI events."
+        },
+        {
+          "path": "/pricing",
+          "from": 0.0,
+          "to": 0.6,
+          "say": "The pricing page sets out every pathway. Individuals can pay per course or take a yearly membership. Teams can buy seats per course. Hospital, aged-care and hotel crews have their own pathway, and there is a free library to start with."
+        },
+        {
+          "path": "/",
+          "from": 0.72,
+          "to": 1.0,
+          "say": "And the questions technicians ask before enrolling are answered right on the page: what CARSI is, whether you can learn at your own pace, and how CECs work. CARSI. Training that proves what you can do."
+        }
+      ],
+      "youtubeChannelId": "UC3HpNvGJXivLGoPo4m7Qleg"
+    },
+    {
+      "id": "restoreassist",
+      "name": "RestoreAssist",
+      "url": "https://restoreassist.app",
+      "tagline": "Restoration management software, made in Australia",
+      "segments": [
+        {
+          "path": "/",
+          "from": 0.0,
+          "to": 0.06,
+          "say": "Less paperwork. More time to run your restoration business. RestoreAssist is restoration management software for contractors in Australia and New Zealand: field capture, reports, scopes and invoices in one workspace. Try it free at restore assist dot app."
+        },
+        {
+          "path": "/",
+          "from": 0.06,
+          "to": 0.2,
+          "say": "It is built for the job, not the claim file. Field, office and client stay connected end to end. Capture on site. Finish the report. And the client approves, without the usual back and forth."
+        },
+        {
+          "path": "/",
+          "from": 0.2,
+          "to": 0.38,
+          "say": "You will know the problem. Same job, two systems, too many gaps. Scattered tools and repeated work. RestoreAssist replaces that with one record and one handoff, so nothing falls between the field and the office."
+        },
+        {
+          "path": "/",
+          "from": 0.38,
+          "to": 0.6,
+          "say": "Everything the job needs, without the gaps. Reports that hold up at audit. Capture on site, even offline. Invoices that reconcile cleanly. Fewer chase-ups with homeowners. And compliance inside the workflow."
+        },
+        {
+          "path": "/features",
+          "from": 0.0,
+          "to": 0.35,
+          "say": "The features page tells you exactly what your subscription buys. Reports built on the standard's own structure. Photographs that hold up when someone argues with them. And field capture that survives no signal."
+        },
+        {
+          "path": "/features",
+          "from": 0.35,
+          "to": 0.75,
+          "say": "It is priced for Australia, not converted into it. Scope and cost maths you can show your working on. Your key, your words, your report. And you can try it on a job you have already written up, to see the difference for yourself."
+        },
+        {
+          "path": "/pricing",
+          "from": 0.0,
+          "to": 0.5,
+          "say": "Pricing is laid out plainly. There is a free trial, a monthly plan, and report packs if you need more. The page even separates what RestoreAssist bills from what your own AI provider bills, so the total is never a mystery."
+        },
+        {
+          "path": "/",
+          "from": 0.6,
+          "to": 1.0,
+          "say": "Built for the jobs you actually get called to: water damage, fire and smoke, storm and flood, and mould remediation. Designed in Australia. That is RestoreAssist."
+        }
+      ],
+      "youtubeChannelId": "UCseWy5OySgZzJUIMKZ-kT5Q"
+    },
+    {
+      "id": "synthex",
+      "name": "Synthex",
+      "url": "https://synthex.social",
+      "tagline": "The next marketing move your evidence can support",
+      "segments": [
+        {
+          "path": "/",
+          "from": 0.0,
+          "to": 0.08,
+          "say": "The next marketing move your evidence can actually support. That is where Synthex starts. It turns your website and public evidence into ranked growth directions, with no login and nothing published automatically. Start free at synthex dot social."
+        },
+        {
+          "path": "/",
+          "from": 0.08,
+          "to": 0.22,
+          "say": "Most marketing tools help you produce. Few help you decide. Ideas stay in chat threads. AI drafts arrive without sources. And publishing outruns judgement. Synthex is built to fix that order of operations."
+        },
+        {
+          "path": "/opportunity-map",
+          "from": 0.0,
+          "to": 0.6,
+          "say": "It begins with the Opportunity Map. Paste your website and any useful context. The evidence stays attached to every suggestion. What is unknown stays visible, rather than being guessed. And any action needs your consent."
+        },
+        {
+          "path": "/",
+          "from": 0.22,
+          "to": 0.42,
+          "say": "Every business runs on the same spine, from a different starting point. You get one next move, not a content calendar dump. Approval comes before anything goes public. And each client lane keeps its own context."
+        },
+        {
+          "path": "/",
+          "from": 0.42,
+          "to": 0.6,
+          "say": "One command spine runs from map to measured result. Map. Research. Strategy. Creative. Approval. Publishing. And insights, so every step traces back to the evidence behind it."
+        },
+        {
+          "path": "/",
+          "from": 0.6,
+          "to": 0.82,
+          "say": "After the map is decided, the workspace takes over: campaign planning, SEO intelligence, Google Business Profile management, video generation, approval workflows, multi-brand management and performance reporting."
+        },
+        {
+          "path": "/features",
+          "from": 0.0,
+          "to": 0.7,
+          "say": "Features should feel like cards, not a maze. Capture the idea. Ground the plan. Choose what gets made. Keep control. And improve the next campaign. Production stays controlled, built for a careful launch, then scale."
+        },
+        {
+          "path": "/",
+          "from": 0.82,
+          "to": 1.0,
+          "say": "Marketing that decides before it produces. Start with what your evidence can actually support. Synthex."
+        }
+      ],
+      "youtubeChannelId": "UCds9Km8AJBrO67p2Up8M3dA"
+    },
+    {
+      "id": "nrpg",
+      "name": "NRPG",
+      "url": "https://nrpg.business",
+      "tagline": "Certified restoration contractors, one network",
+      "segments": [
+        {
+          "path": "/",
+          "from": 0.0,
+          "to": 0.08,
+          "say": "Twenty-four seven emergency disaster recovery. Through NRPG, people facing flood, fire, storm or water damage connect with IICRC-certified restoration contractors, with documentation insurers accept. Find it at n r p g dot business."
+        },
+        {
+          "path": "/",
+          "from": 0.08,
+          "to": 0.28,
+          "say": "A quick disaster assessment asks one question: what type of disaster are you experiencing? From there you are pointed to the right service. Water and flood restoration. Fire and smoke remediation. Mould and air quality. Biohazard and forensic cleaning."
+        },
+        {
+          "path": "/how-it-works",
+          "from": 0.0,
+          "to": 0.3,
+          "say": "For contractors, NRPG is a platform that sends work your way. The process is step by step. A client reports a disaster. The lead is qualified. A rotation system dispatches it. You receive a notification. Then you close the job and get paid."
+        },
+        {
+          "path": "/how-it-works",
+          "from": 0.3,
+          "to": 0.65,
+          "say": "You can see what you will receive, with real job examples like a burst pipe or fire and smoke damage. Pricing is simple and transparent, with Basic, Professional and Enterprise tiers, and a calculator to work out your return."
+        },
+        {
+          "path": "/how-it-works",
+          "from": 0.65,
+          "to": 1.0,
+          "say": "The common questions are answered plainly. How leads are distributed. Whether you can choose which leads to accept. How quickly you get paid. And what certifications you need."
+        },
+        {
+          "path": "/",
+          "from": 0.28,
+          "to": 0.62,
+          "say": "Joining the NRPG network brings qualified lead generation, IICRC quality standards, business support and streamlined payment, with clear minimum requirements so every member meets the same bar."
+        },
+        {
+          "path": "/contractors/directory",
+          "from": 0.0,
+          "to": 0.6,
+          "say": "Homeowners can search the directory to find a certified contractor near them. And if you are a contractor yourself, you can apply to join."
+        },
+        {
+          "path": "/resources",
+          "from": 0.0,
+          "to": 0.6,
+          "say": "The resource hub carries guides and checklists, so people know what to do before help arrives. NRPG. Certified contractors, one network."
+        }
+      ],
+      "youtubeChannelOf": "disaster-recovery"
+    },
+    {
+      "id": "tradehall",
+      "name": "NRPG Trade Hall",
+      "url": "https://cleanexpo247-hall.vercel.app",
+      "tagline": "A walk-through trade expo, open 24/7",
+      "segments": [
+        {
+          "path": "/",
+          "from": 0.0,
+          "to": 0.12,
+          "say": "This is the NRPG Trade Hall: a walk-through trade expo for Australian restoration professionals. Visit supplier booths, watch videos in the theatres, and collect a stamp in every zone. It is open twenty-four seven, from any device, and it is in preview now."
+        },
+        {
+          "path": "/",
+          "from": 0.12,
+          "to": 0.3,
+          "say": "You arrive at the plaza outside the hall with a trade visitor day pass. Walk with the keys or drag to look around, talk to the people you meet, or click any zone name to jump straight there."
+        },
+        {
+          "path": "/",
+          "from": 0.3,
+          "to": 0.5,
+          "say": "Suppliers can try their booth before booking. Pick a pod, choose a colour, add your business name, a one-line description and three products, then press preview to walk straight to it."
+        },
+        {
+          "path": "/",
+          "from": 0.5,
+          "to": 0.62,
+          "say": "The exhibitor dashboard shows booth visits, visitors and callback requests, live. A visit counts once per visitor per session, when they walk up to the counter."
+        },
+        {
+          "path": "/",
+          "from": 0.62,
+          "to": 0.76,
+          "say": "There are twelve zones on one walk. The Foyer, with the info desk and the industry calendar. Supplier Boulevard, with six booth pods. The Demo Theatre, the Standards Chamber, the Awards Gallery and a Member Lounge."
+        },
+        {
+          "path": "/",
+          "from": 0.76,
+          "to": 0.88,
+          "say": "The CARSI Theatre shows course introductions on the big screen. Breakout rooms host smaller sessions. The Live Demo Area has drying and cleaning equipment, including a pull-apart dehumidifier that names each part. And yes, there is an after party."
+        },
+        {
+          "path": "/",
+          "from": 0.88,
+          "to": 1.0,
+          "say": "There are free trade tools too, like a drying calculator, with no sign-in. Founding booths open at launch. The NRPG Trade Hall: the trade show that never closes."
+        }
+      ],
+      "youtubeChannelOf": "disaster-recovery"
+    }
+  ]
+}

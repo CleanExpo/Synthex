@@ -1,0 +1,377 @@
+{
+  "_about": "Cinematic film plan per business (approved look: CARSI style test, 23/10/2026). Every segment in tours.json is one scene, narrated by Margot; the default scene assembles that segment's real site screen from its own pieces. 'scenes' overrides a segment (1-based) with steps tiles, an equipment stage or a photo headline. Step and headline words come from the narration or the site; nothing is invented. Fonts and colours were read from each live site on 23/10/2026. Kit images are owned reference-library photos (public/reference-library/water-damage-restoration). Photo slots stay labelled placeholders until Phill supplies an owned photo at <media>/<id>/photos/<slot>.jpg.",
+  "films": {
+    "disaster-recovery": {
+      "brand": {
+        "display": "Inter",
+        "body": "Inter",
+        "accent": "#d93025",
+        "ink": "#111827"
+      },
+      "topics": [
+        "WATER AND FLOOD EXTRACTION",
+        "FIRE AND SMOKE",
+        "MOULD REMEDIATION",
+        "STORM RESPONSE",
+        "BIOHAZARD AND FORENSIC CLEANING",
+        "SEWAGE SANITISATION"
+      ],
+      "ticker": [2, 6],
+      "scenes": {
+        "3": {
+          "type": "steps",
+          "eyebrow": "HOW IT WORKS",
+          "before": "From disaster to recovery in",
+          "pixel": "SIX",
+          "after": "steps.",
+          "items": [
+            ["Lodge your claim online", ""],
+            ["Matched with a certified contractor", ""],
+            ["Emergency make-safe", "So the damage stops spreading."],
+            ["Documentation and a formal contract", ""],
+            ["Full restoration", ""],
+            ["Insurance claim support", "Not left with the paperwork."]
+          ]
+        },
+        "6": {
+          "type": "kit",
+          "kit": ["dehumidifier", "airmover", "scrubber"]
+        },
+        "7": {
+          "type": "photo",
+          "slot": "crew-on-job",
+          "eyebrow": "DISASTER RECOVERY",
+          "before": "Policyholder first.",
+          "pixel": "ALWAYS",
+          "after": ".",
+          "photo": "A Disaster Recovery crew at work on a real water or storm job"
+        }
+      },
+      "seo": {
+        "title": "Disaster Recovery Australia: Emergency Water, Fire and Mould Restoration, Policyholder First",
+        "summary": "How Disaster Recovery helps Australian property owners after water, fire, mould or storm damage: lodge a claim online, get matched with an IICRC-certified contractor, emergency make-safe, documentation, full restoration and insurance claim support.",
+        "tags": [
+          "Disaster Recovery",
+          "emergency restoration Australia",
+          "water damage restoration",
+          "flood restoration",
+          "fire and smoke restoration",
+          "mould remediation",
+          "storm damage",
+          "insurance claim support",
+          "IICRC certified contractors",
+          "make safe"
+        ],
+        "hashtags": ["#DisasterRecovery", "#WaterDamage", "#Australia"],
+        "playlist": "Disaster Recovery: how it works"
+      }
+    },
+    "carsi": {
+      "brand": {
+        "display": "Outfit",
+        "body": "Plus Jakarta Sans",
+        "accent": "#146fc2",
+        "ink": "#0b1b33"
+      },
+      "topics": [
+        "STRUCTURAL DRYING",
+        "WATER DAMAGE RESTORATION",
+        "COMMERCIAL CARPET CARE",
+        "FIRE AND SMOKE",
+        "MOULD",
+        "AIR QUALITY AND ODOUR",
+        "AIR SCRUBBERS"
+      ],
+      "ticker": [3, 4, 5],
+      "scenes": {
+        "2": {
+          "type": "photo",
+          "slot": "trainee-on-site",
+          "eyebrow": "CARSI",
+          "before": "Restoration is",
+          "pixel": "REAL",
+          "after": "work.",
+          "photo": "A CARSI trainee at work on a real job site"
+        },
+        "4": {
+          "type": "kit",
+          "kit": ["dehumidifier", "scrubber", "wand"],
+          "card": {
+            "seg": 1,
+            "text": "CERTIFICATE VERIFIED"
+          }
+        },
+        "6": {
+          "type": "steps",
+          "eyebrow": "HOW IT WORKS",
+          "before": "Getting started takes",
+          "pixel": "FOUR",
+          "after": "steps.",
+          "items": [
+            ["Browse by need", ""],
+            [
+              "Learn around your jobs",
+              "So training fits the week instead of fighting it."
+            ],
+            ["Track your CECs", "As you go."],
+            ["Share your credentials", "Verified on completion."]
+          ]
+        }
+      },
+      "seo": {
+        "title": "CARSI: Online Restoration and Cleaning Training for Australian Technicians (IICRC CEC Provider)",
+        "summary": "CARSI trains Australia's cleaning and restoration professionals online: structural drying, water damage restoration, commercial carpet care, fire and smoke, mould and indoor air quality. Learn around your jobs, track your CECs and share verified credentials.",
+        "tags": [
+          "CARSI",
+          "IICRC CEC courses Australia",
+          "restoration training online",
+          "water damage restoration course",
+          "structural drying course",
+          "carpet cleaning training",
+          "mould remediation training",
+          "fire and smoke restoration training",
+          "continuing education credits",
+          "restoration technician"
+        ],
+        "hashtags": ["#CARSI", "#RestorationTraining", "#IICRC"],
+        "playlist": "CARSI: restoration training"
+      }
+    },
+    "restoreassist": {
+      "brand": {
+        "display": "Outfit",
+        "body": "Geist",
+        "accent": "#1f5fbf",
+        "ink": "#0b1f3a"
+      },
+      "topics": [
+        "WATER DAMAGE",
+        "FIRE AND SMOKE",
+        "STORM AND FLOOD",
+        "MOULD REMEDIATION"
+      ],
+      "ticker": [8],
+      "scenes": {
+        "2": {
+          "type": "steps",
+          "eyebrow": "FIELD, OFFICE AND CLIENT",
+          "before": "Connected",
+          "pixel": "END TO END",
+          "after": ".",
+          "items": [
+            ["Capture on site", ""],
+            ["Finish the report", ""],
+            ["The client approves", "Without the usual back and forth."]
+          ]
+        },
+        "3": {
+          "type": "photo",
+          "slot": "tech-with-app",
+          "eyebrow": "RESTOREASSIST",
+          "before": "Same job, two systems, too many",
+          "pixel": "GAPS",
+          "after": ".",
+          "photo": "A technician on site with RestoreAssist open on a phone or tablet"
+        },
+        "8": {
+          "type": "kit",
+          "kit": ["dehumidifier", "airmover", "wand"]
+        }
+      },
+      "seo": {
+        "title": "RestoreAssist: Restoration Management Software for Contractors in Australia and New Zealand",
+        "summary": "RestoreAssist puts field capture, reports, scopes and invoices for restoration contractors in one workspace, so field, office and client stay connected end to end. Built for water damage, fire and smoke, storm and flood, and mould jobs. Designed in Australia.",
+        "tags": [
+          "RestoreAssist",
+          "restoration software Australia",
+          "restoration management software",
+          "water damage reporting software",
+          "restoration job management",
+          "inspection reports",
+          "scope and invoice software",
+          "restoration contractors",
+          "New Zealand restoration"
+        ],
+        "hashtags": ["#RestoreAssist", "#RestorationSoftware", "#Australia"],
+        "playlist": "RestoreAssist walkthroughs"
+      }
+    },
+    "synthex": {
+      "brand": {
+        "display": "Inter",
+        "body": "Inter",
+        "accent": "#e8650a",
+        "ink": "#0b1220"
+      },
+      "topics": [
+        "CAMPAIGN PLANNING",
+        "SEO INTELLIGENCE",
+        "GOOGLE BUSINESS PROFILE",
+        "VIDEO GENERATION",
+        "APPROVAL WORKFLOWS",
+        "MULTI-BRAND MANAGEMENT",
+        "PERFORMANCE REPORTING"
+      ],
+      "ticker": [6],
+      "scenes": {
+        "2": {
+          "type": "photo",
+          "slot": null,
+          "eyebrow": "SYNTHEX",
+          "before": "Most tools help you produce. Few help you",
+          "pixel": "DECIDE",
+          "after": "."
+        },
+        "5": {
+          "type": "steps",
+          "eyebrow": "ONE COMMAND SPINE",
+          "before": "From map to",
+          "pixel": "MEASURED",
+          "after": "result.",
+          "items": [
+            ["Map", ""],
+            ["Research", ""],
+            ["Strategy", ""],
+            ["Creative", ""],
+            ["Approval", ""],
+            ["Publishing", ""],
+            ["Insights", ""]
+          ]
+        }
+      },
+      "seo": {
+        "title": "Synthex: Marketing That Decides Before It Produces (Opportunity Map Walkthrough)",
+        "summary": "Synthex turns a website and public evidence into ranked growth directions. The Opportunity Map keeps evidence attached to every suggestion, keeps unknowns visible and needs consent before any action, then the workspace runs map, research, strategy, creative, approval, publishing and insights.",
+        "tags": [
+          "Synthex",
+          "marketing strategy",
+          "evidence-led marketing",
+          "opportunity map",
+          "SEO intelligence",
+          "Google Business Profile",
+          "campaign planning",
+          "approval workflows",
+          "performance reporting"
+        ],
+        "hashtags": ["#Synthex", "#MarketingStrategy", "#SEO"],
+        "playlist": "Synthex walkthroughs"
+      }
+    },
+    "nrpg": {
+      "brand": {
+        "display": "Space Grotesk",
+        "body": "Plus Jakarta Sans",
+        "accent": "#dc2626",
+        "ink": "#111827"
+      },
+      "topics": [
+        "WATER AND FLOOD RESTORATION",
+        "FIRE AND SMOKE REMEDIATION",
+        "MOULD AND AIR QUALITY",
+        "BIOHAZARD AND FORENSIC CLEANING"
+      ],
+      "ticker": [2],
+      "scenes": {
+        "3": {
+          "type": "steps",
+          "eyebrow": "FOR CONTRACTORS",
+          "before": "Work sent your way in",
+          "pixel": "FIVE",
+          "after": "steps.",
+          "items": [
+            ["A client reports a disaster", ""],
+            ["The lead is qualified", ""],
+            ["A rotation system dispatches it", ""],
+            ["You receive a notification", ""],
+            ["Close the job and get paid", ""]
+          ]
+        },
+        "6": {
+          "type": "kit",
+          "kit": ["dehumidifier", "airmover", "scrubber"]
+        },
+        "8": {
+          "type": "photo",
+          "slot": "members-at-work",
+          "eyebrow": "NRPG",
+          "before": "Certified contractors,",
+          "pixel": "ONE",
+          "after": "network.",
+          "photo": "NRPG member contractors at work"
+        }
+      },
+      "seo": {
+        "title": "NRPG: Find IICRC-Certified Restoration Contractors in Australia, and Join the Network",
+        "summary": "NRPG connects people facing flood, fire, storm or water damage with IICRC-certified restoration contractors, with documentation insurers accept. For contractors: qualified leads dispatched by rotation, clear membership requirements, a directory and a resource hub.",
+        "tags": [
+          "NRPG",
+          "restoration contractors Australia",
+          "IICRC certified contractors",
+          "water damage restoration",
+          "fire and smoke remediation",
+          "mould and air quality",
+          "restoration leads",
+          "contractor network",
+          "disaster recovery"
+        ],
+        "hashtags": ["#NRPG", "#Restoration", "#Australia"],
+        "playlist": "NRPG: certified contractors"
+      }
+    },
+    "tradehall": {
+      "brand": {
+        "display": "Archivo",
+        "body": "IBM Plex Sans",
+        "accent": "#b7791f",
+        "ink": "#0f1626"
+      },
+      "topics": [
+        "THE FOYER",
+        "SUPPLIER BOULEVARD",
+        "DEMO THEATRE",
+        "STANDARDS CHAMBER",
+        "AWARDS GALLERY",
+        "MEMBER LOUNGE",
+        "CARSI THEATRE",
+        "LIVE DEMO AREA"
+      ],
+      "ticker": [5],
+      "scenes": {
+        "3": {
+          "type": "steps",
+          "eyebrow": "FOR SUPPLIERS",
+          "before": "Try your booth before",
+          "pixel": "BOOKING",
+          "after": ".",
+          "items": [
+            ["Pick a pod", ""],
+            ["Choose a colour", ""],
+            ["Add your business name", "And a one-line description."],
+            ["Add three products", ""],
+            ["Press preview", "Walk straight to it."]
+          ]
+        },
+        "6": {
+          "type": "kit",
+          "kit": ["dehumidifier", "airmover", "scrubber"]
+        }
+      },
+      "seo": {
+        "title": "NRPG Trade Hall: Walk-Through Trade Expo for Australian Restoration Professionals (Preview)",
+        "summary": "A walk-through trade expo for Australian restoration professionals, open from any device: supplier booths, theatres, a Live Demo Area and free trade tools like a drying calculator. Suppliers can try a booth before booking. In preview now.",
+        "tags": [
+          "NRPG Trade Hall",
+          "virtual trade expo",
+          "restoration trade show",
+          "Australian restoration industry",
+          "supplier booths",
+          "drying calculator",
+          "CARSI Theatre",
+          "restoration equipment"
+        ],
+        "hashtags": ["#NRPG", "#TradeHall", "#Restoration"],
+        "playlist": "NRPG Trade Hall"
+      }
+    }
+  }
+}

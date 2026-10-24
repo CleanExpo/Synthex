@@ -1,0 +1,20 @@
+[
+  {
+    "id": "m1",
+    "threadId": "t1",
+    "subject": "[Card · Brisbane] Training: Sam Example",
+    "body": "We heard your talk in Brisbane and want IICRC training for our crew of six.\n\nFrom: Sam Example <sam@example.com.au>\nBusiness: Example Restorations, Ipswich\nMet at: Brisbane\nVia: Phill McGurk digital card"
+  },
+  {
+    "id": "m2",
+    "threadId": "t2",
+    "subject": "[Card] A job or quote: Lee Sample",
+    "body": "Water damage in our office kitchen. Can someone quote?\n\nFrom: Lee Sample <lee@example.org>\nBusiness: not given\nMet at: not given\nVia: Phill McGurk digital card"
+  },
+  {
+    "id": "m3",
+    "threadId": "t3",
+    "subject": "Your iCloud storage is full",
+    "body": "From: iCloud <noreply@example.net>\nUpgrade now."
+  }
+]

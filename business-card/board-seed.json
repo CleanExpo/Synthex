@@ -1,0 +1,1069 @@
+{
+  "note": "Seed options for the Card Steering Board (https://claude.ai/artifact/XuXp2GMawpsNjLJV3wNp37). Written to the board's 'options' collection by Claude. Evidence notes point to research-notes.md.",
+  "items": [
+    {
+      "id": "m1",
+      "lane": "motion",
+      "rank": 10,
+      "recommended": true,
+      "effort": "S",
+      "cost": "≈ US$10-15 (3-5 takes)",
+      "needs": "1 portrait photo",
+      "title": "Slow push-in portrait loop",
+      "detail": "A 5-second camera push-in on Phill's real portrait, looping silently at the top of the card. Made with Higgsfield's image-to-video camera presets, then saved to our own hosting.",
+      "evidence": "Higgsfield DoP makes 3 or 5 s clips from one photo with camera presets [VERIFIED]. Cost per take is an estimate [INFERENCE]."
+    },
+    {
+      "id": "m2",
+      "lane": "motion",
+      "rank": 20,
+      "recommended": true,
+      "effort": "S",
+      "cost": "≈ US$3-5",
+      "needs": "10 s voice memo + portrait",
+      "title": "Greeting in Phill's real voice",
+      "detail": "Phill records one welcome line himself. Higgsfield lip-syncs his real recording to his portrait. No voice cloning, so nothing of his voice is handed over for training.",
+      "evidence": "Lipsync Studio animates a photo from supplied audio; keep under 30 s [VERIFIED]."
+    },
+    {
+      "id": "m3",
+      "lane": "motion",
+      "rank": 30,
+      "recommended": false,
+      "effort": "S",
+      "cost": "≈ US$2 clone + US$1-3 per clip",
+      "needs": "Signed consent + 2 min voice sample",
+      "title": "Talking greeting in a cloned voice",
+      "detail": "Clone Phill's voice once, then make new greetings from typed scripts (one per event or business). Faster to update, but Higgsfield may use uploads for training unless deleted, and lip detail can blur.",
+      "evidence": "Voice clone costs 40 credits (US$2) [VERIFIED]. Training-use clause ToS §4.4 [VERIFIED by research agent]."
+    },
+    {
+      "id": "m4",
+      "lane": "motion",
+      "rank": 40,
+      "recommended": true,
+      "effort": "M",
+      "cost": "Low; mostly editing time",
+      "needs": "Real job photos you may share",
+      "title": "Before-and-after job reel",
+      "detail": "A 15-second reel of real Disaster Recovery jobs: the damage, the work, the result. Proof beats claims, and it fits the 'show proof of your work' advice on the card.",
+      "evidence": "The card proposal's Discover example is showing proof of a real job [VERIFIED: PDF p.4]."
+    },
+    {
+      "id": "m5",
+      "lane": "motion",
+      "rank": 50,
+      "recommended": false,
+      "effort": "M",
+      "cost": "Unknown",
+      "needs": "Photos of a physical card or logo",
+      "title": "Spinning 3D card",
+      "detail": "A 3D model of the physical card or the logo that people can spin with a finger. Higgsfield has image-to-3D jobs. Better for an object than for Phill's face.",
+      "evidence": "image_to_3d and multi_image_to_3d job types in Higgsfield's CLI [VERIFIED]; cost and output format [UNCONFIRMED]."
+    },
+    {
+      "id": "m6",
+      "lane": "motion",
+      "rank": 60,
+      "recommended": false,
+      "effort": "M",
+      "cost": "Unknown",
+      "needs": "Several real photos + consent",
+      "title": "A consistent 'Phill' character for future clips",
+      "detail": "Train Higgsfield's Soul ID on Phill's real photos so every future clip shows the same face. Powerful for marketing at scale, but it creates a reusable likeness: decide later.",
+      "evidence": "Soul ID keeps a consistent face across clips [VERIFIED: Higgsfield help centre]."
+    },
+    {
+      "id": "c1",
+      "lane": "card",
+      "rank": 10,
+      "recommended": true,
+      "effort": "S",
+      "cost": "None",
+      "needs": "Real web hosting",
+      "title": "One-tap save to contacts",
+      "detail": "Already in the prototype. Works in one tap once the card is on a normal web address (the claude.ai preview blocks downloads).",
+      "evidence": "Built and checked at phone width [VERIFIED: prototype]."
+    },
+    {
+      "id": "c2",
+      "lane": "card",
+      "rank": 20,
+      "recommended": true,
+      "effort": "M",
+      "cost": "Apple developer account if not held",
+      "needs": "Wallet pass signing",
+      "title": "Add to Apple Wallet and Google Wallet",
+      "detail": "The card lives in the phone's wallet next to boarding passes, with a QR that opens the living card. People keep it; paper cards get binned.",
+      "evidence": "Blinq, HiHello and Popl all offer wallet cards [VERIFIED: their pricing pages]."
+    },
+    {
+      "id": "c3",
+      "lane": "card",
+      "rank": 30,
+      "recommended": true,
+      "effort": "S",
+      "cost": "A few dollars per card",
+      "needs": "NFC card supplier",
+      "title": "Physical NFC card that taps open the link",
+      "detail": "A real card for the hand-shake moment. Tap it on a phone and the living card opens. No app needed.",
+      "evidence": "The proposal says a physical NFC card can open the same link [VERIFIED: PDF p.4]."
+    },
+    {
+      "id": "c4",
+      "lane": "card",
+      "rank": 40,
+      "recommended": true,
+      "effort": "S",
+      "cost": "None",
+      "needs": "Rana's game on a permanent address",
+      "title": "Link Rana's White Rabbit game",
+      "detail": "The Solve door opens Rana's game for the Brisbane and Melbourne talks. Waiting on her permanent hosting.",
+      "evidence": "Rana's preview exists but is temporary [VERIFIED: her email 22/10]."
+    },
+    {
+      "id": "c5",
+      "lane": "card",
+      "rank": 50,
+      "recommended": false,
+      "effort": "S",
+      "cost": "None",
+      "needs": "Event dates",
+      "title": "Trade-show mode",
+      "detail": "On show days the card leads with the event: your stand, your talk time, the rabbit hunt. After the show it switches back on its own.",
+      "evidence": "Phill's Brisbane and Melbourne shows [VERIFIED: his email 19/10]."
+    },
+    {
+      "id": "c6",
+      "lane": "card",
+      "rank": 60,
+      "recommended": true,
+      "effort": "S",
+      "cost": "None",
+      "needs": "Phill's approval of the advice",
+      "title": "Discover: one practical idea",
+      "detail": "Four needs, each with one thing to do this week. In the prototype as drafts awaiting Phill's approval.",
+      "evidence": "From the proposal's Discover door [VERIFIED: PDF p.4]."
+    },
+    {
+      "id": "r1",
+      "lane": "reviews",
+      "rank": 10,
+      "recommended": true,
+      "compliance": "ok",
+      "effort": "M",
+      "cost": "Build time only",
+      "needs": "Google review links per business",
+      "title": "Spin, tap, review in their own words",
+      "detail": "A fun spin opens the experience and reveals a tip or a thank-you, never a prize for reviewing. The customer taps three or four neutral answers about their real job. If they want, AI words a draft from their own answers, keeping any criticism. They edit it, pick their own stars, and one tap opens Google's own review page where they post it from their own account.",
+      "evidence": "Google allows asking 'without offering incentives ... or attempting to influence the rating or the contents' [VERIFIED: support.google.com/contributionpolicy/answer/7400114]."
+    },
+    {
+      "id": "r2",
+      "lane": "reviews",
+      "rank": 20,
+      "recommended": true,
+      "compliance": "ok",
+      "effort": "S",
+      "cost": "None",
+      "needs": "Each business's Google Place ID",
+      "title": "The right business, every time",
+      "detail": "The card knows which business did the job (Disaster Recovery, CARSI, RestoreAssist) and opens that business's Google review form.",
+      "evidence": "Google's own write-review link format [see research-notes.md]."
+    },
+    {
+      "id": "r3",
+      "lane": "reviews",
+      "rank": 30,
+      "recommended": true,
+      "compliance": "ok",
+      "effort": "S",
+      "cost": "None",
+      "needs": "Owner inbox",
+      "title": "Ask everyone, and offer a private line too",
+      "detail": "Every customer gets the same invitation. Anyone can also send private feedback to the owner, always alongside the public review option, never instead of it.",
+      "evidence": "Review gating (asking only happy customers) breaks Google's rules [see research-notes.md]."
+    },
+    {
+      "id": "r4",
+      "lane": "reviews",
+      "rank": 40,
+      "recommended": false,
+      "compliance": "blocked",
+      "effort": "M",
+      "cost": "High risk",
+      "needs": "—",
+      "title": "Pre-written five-star review, prize spin, posted for them",
+      "detail": "As first described: we write the perfect review, a prize spin rewards it, and it posts through the customer's Gmail. Not being built: incentives, ghost-written reviews and posting for someone break Google's and the ACCC's rules and can get a Business Profile restricted.",
+      "evidence": "See research-notes.md for the exact policy lines."
+    },
+    {
+      "id": "r5",
+      "lane": "reviews",
+      "rank": 50,
+      "recommended": true,
+      "compliance": "ok",
+      "effort": "M",
+      "cost": "Included in top tier",
+      "needs": "Buyer's Google Place ID",
+      "title": "Same review engine for every card buyer",
+      "detail": "Each buyer's card gets the rule-safe review flow pointed at their own business. A headline selling point for the AUD $249 tier.",
+      "evidence": "Product sketch tier 3 [VERIFIED: product-sketch.md]."
+    },
+    {
+      "id": "l1",
+      "lane": "links",
+      "rank": 10,
+      "recommended": true,
+      "title": "Disaster Recovery",
+      "detail": "disasterrecovery.com.au: restoration, Brisbane.",
+      "evidence": "Live domain in the Unite-Group portfolio registry [VERIFIED]."
+    },
+    {
+      "id": "l2",
+      "lane": "links",
+      "rank": 20,
+      "recommended": true,
+      "title": "CARSI",
+      "detail": "carsi.com.au: IICRC CEC training.",
+      "evidence": "Portfolio registry [VERIFIED]."
+    },
+    {
+      "id": "l3",
+      "lane": "links",
+      "rank": 30,
+      "recommended": true,
+      "title": "RestoreAssist",
+      "detail": "restoreassist.app: the restoration job app.",
+      "evidence": "Portfolio registry: restoreassist.app, not .com.au [VERIFIED]."
+    },
+    {
+      "id": "l4",
+      "lane": "links",
+      "rank": 40,
+      "recommended": true,
+      "title": "NRPG",
+      "detail": "nrpg.business: the contractor network.",
+      "evidence": "Portfolio registry [VERIFIED]."
+    },
+    {
+      "id": "l5",
+      "lane": "links",
+      "rank": 50,
+      "recommended": true,
+      "title": "Unite Group",
+      "detail": "unite-group.in: the parent group.",
+      "evidence": "Portfolio registry [VERIFIED]."
+    },
+    {
+      "id": "l6",
+      "lane": "links",
+      "rank": 60,
+      "recommended": false,
+      "title": "Synthex",
+      "detail": "synthex.social: the group's internal marketing agency. Show it only if Phill wants people to see it.",
+      "evidence": "Portfolio registry; internal per FD-8 [VERIFIED]."
+    },
+    {
+      "id": "l7",
+      "lane": "links",
+      "rank": 70,
+      "recommended": false,
+      "title": "CCW (Carpet Cleaners Warehouse)",
+      "detail": "ccwonline.com.au. The registry lists CCW as a client, so show it as a partner only if Toby agrees.",
+      "evidence": "Registry: 'CCW client CRM product' [VERIFIED]."
+    },
+    {
+      "id": "l8",
+      "lane": "links",
+      "rank": 80,
+      "recommended": false,
+      "title": "CleanExpo247 / TradeHall",
+      "detail": "The virtual trade hall. No live public address found yet.",
+      "evidence": "Repos exist; no domain in the registry [VERIFIED]."
+    },
+    {
+      "id": "g1",
+      "lane": "growth",
+      "rank": 10,
+      "recommended": true,
+      "effort": "S",
+      "title": "Own the trades niche",
+      "detail": "Every competitor (Blinq, HiHello, Popl, Linq, Tapt) sells to corporate networkers. Nobody sells job proof, credentials and rule-safe reviews to trades and restorers. Lead with that.",
+      "evidence": "Competitor pricing and feature pages [VERIFIED]; the gap is [INFERENCE]."
+    },
+    {
+      "id": "g2",
+      "lane": "growth",
+      "rank": 20,
+      "recommended": true,
+      "effort": "M",
+      "needs": "Credential lookups",
+      "title": "Verified credentials badge",
+      "detail": "IICRC, licence and insurance badges, each linking to the issuer's public lookup and showing the expiry date. Trust at a glance for insurers and homeowners.",
+      "evidence": "Whether IICRC offers a public lookup [UNCONFIRMED]."
+    },
+    {
+      "id": "g3",
+      "lane": "growth",
+      "rank": 30,
+      "recommended": true,
+      "effort": "S",
+      "title": "Van and site-sign QR codes that report back",
+      "detail": "A different link per van, sign and flyer, so the owner sees which one brings in calls.",
+      "evidence": "[INFERENCE] Standard campaign tracking."
+    },
+    {
+      "id": "g4",
+      "lane": "growth",
+      "rank": 40,
+      "recommended": true,
+      "effort": "S",
+      "title": "Emergency call-now mode",
+      "detail": "For flood and fire work: a big Call now button with the after-hours line first, because a flooded house cannot wait for an email.",
+      "evidence": "[INFERENCE] From the restoration use case."
+    },
+    {
+      "id": "g5",
+      "lane": "growth",
+      "rank": 50,
+      "recommended": true,
+      "effort": "S",
+      "title": "Bundle a card with every CARSI course",
+      "detail": "Each graduate gets a living card with their new credential on it. Built-in distribution, and every card carries 'Made by Unite Group'.",
+      "evidence": "[INFERENCE] CARSI runs IICRC CEC courses [VERIFIED: carsi.com.au in registry]."
+    },
+    {
+      "id": "g6",
+      "lane": "growth",
+      "rank": 60,
+      "recommended": false,
+      "effort": "S",
+      "title": "Insurer and property-manager referral share",
+      "detail": "A 'send to my claims contact' button with tracked attribution. Any referral fee must be disclosed; never pay per review.",
+      "evidence": "[INFERENCE] Disclosure duty per ACCC guidance."
+    },
+    {
+      "id": "g7",
+      "lane": "growth",
+      "rank": 70,
+      "recommended": false,
+      "effort": "M",
+      "needs": "Spam Act consent tick",
+      "title": "Trade-show kiosk mode",
+      "detail": "A tablet on the stand collects contacts with a consent tick, works offline, and tags each lead by event.",
+      "evidence": "Consent and unsubscribe needed for follow-up emails [VERIFIED: acma.gov.au/avoid-sending-spam]."
+    },
+    {
+      "id": "g8",
+      "lane": "growth",
+      "rank": 80,
+      "recommended": false,
+      "effort": "M",
+      "title": "Hand leads to the buyer's CRM",
+      "detail": "Send card enquiries into RestoreAssist, HubSpot, ServiceM8 or Tradify automatically.",
+      "evidence": "Those vendors' APIs not checked [UNCONFIRMED]."
+    },
+    {
+      "id": "g9",
+      "lane": "growth",
+      "rank": 90,
+      "recommended": false,
+      "effort": "S",
+      "title": "Wholesale to restoration franchise networks",
+      "detail": "Sell cards in bulk to franchise groups; every buyer signs a review-policy term so nobody switches on gating or prizes.",
+      "evidence": "ACCC: services that manipulate reviews may be 'knowingly concerned' in a client's breach [VERIFIED: ACCC Dec 2023 sweep report]."
+    },
+    {
+      "id": "s1",
+      "lane": "staff",
+      "rank": 10,
+      "recommended": true,
+      "effort": "M",
+      "needs": "A RestoreAssist build session",
+      "title": "Owner clicks 'Make cards' for the whole crew",
+      "detail": "Each technician gets a branded living card built from the business details RestoreAssist already holds: logo, colours, phone, website, about-us text and Google review link. No retyping.",
+      "evidence": "Organization holds these fields [VERIFIED: RestoreAssist prisma/schema.prisma:985-1010]."
+    },
+    {
+      "id": "s2",
+      "lane": "staff",
+      "rank": 20,
+      "recommended": true,
+      "effort": "M",
+      "needs": "Owner approval of each card",
+      "title": "Business flashcards from the firm's website",
+      "detail": "Swipeable cards about the firm: who we are, what to do in the first hour of a flood, where we work. Built from the website RestoreAssist already scrapes at setup, approved by the owner before going live.",
+      "evidence": "Setup already scrapes the website into aboutCopy [VERIFIED by research agent: app/api/setup/hydrate/route.ts]."
+    },
+    {
+      "id": "s3",
+      "lane": "staff",
+      "rank": 30,
+      "recommended": true,
+      "effort": "S",
+      "needs": "A firm-level service list (missing today)",
+      "title": "Full service menu for repeat work",
+      "detail": "Water, fire, mould, plus carpet, upholstery, tile and grout, odour and rugs, each with 'ask about this'. The flood customer learns the same firm cleans their carpets.",
+      "evidence": "No firm-level service catalogue exists yet [VERIFIED by research agent]."
+    },
+    {
+      "id": "s4",
+      "lane": "staff",
+      "rank": 40,
+      "recommended": true,
+      "compliance": "ok",
+      "effort": "S",
+      "needs": "Firm's Google review link",
+      "title": "Rule-safe reviews tied to each firm's Google profile",
+      "detail": "The same ask-everyone review flow as Phill's card, pointed at the firm's Google review page. RestoreAssist already emails that link to every closed job.",
+      "evidence": "lib/pulse/review-ask.ts sends the review link on job close [VERIFIED]."
+    },
+    {
+      "id": "s5",
+      "lane": "staff",
+      "rank": 50,
+      "recommended": true,
+      "effort": "M",
+      "needs": "Consent tick at job sign-off",
+      "title": "Consented follow-ups at 2 weeks, 6 and 12 months",
+      "detail": "'How is the floor holding up?' then seasonal carpet, upholstery and tile reminders. Only for customers who ticked yes; honours the existing unsubscribe.",
+      "evidence": "Spam Act needs consent, sender ID and unsubscribe [VERIFIED: acma.gov.au]; Client.pulseOptOut exists [VERIFIED by research agent]."
+    },
+    {
+      "id": "s6",
+      "lane": "staff",
+      "rank": 60,
+      "recommended": false,
+      "effort": "M",
+      "title": "Tech tickets on the card",
+      "detail": "Show each technician's IICRC certifications. RestoreAssist stores certifications per firm profile today, not per person, so this needs a small addition.",
+      "evidence": "ContractorCertification sits on ContractorProfile [VERIFIED by research agent: schema.prisma:560]."
+    },
+    {
+      "id": "s7",
+      "lane": "staff",
+      "rank": 70,
+      "recommended": false,
+      "effort": "S",
+      "title": "Fridge magnet or door hanger with the tech's QR",
+      "detail": "Left on site after the job so the card is there next time something goes wrong.",
+      "evidence": "[INFERENCE]"
+    },
+    {
+      "id": "s8",
+      "lane": "staff",
+      "rank": 80,
+      "recommended": false,
+      "effort": "M",
+      "title": "Owner dashboard: saves, enquiries and reviews per tech",
+      "detail": "Which technicians' cards bring back customers and reviews.",
+      "evidence": "[INFERENCE]"
+    },
+    {
+      "id": "s9",
+      "lane": "staff",
+      "rank": 5,
+      "recommended": true,
+      "effort": "M",
+      "needs": "Firm's logo or website",
+      "title": "Every firm's cards in its own brand kit",
+      "detail": "Logo, colours and fonts come from the firm's own logo, website and RestoreAssist record. Anything missing is shown as missing, never filled with RestoreAssist's colours or stand-ins. Fonts only where the licence allows embedding, otherwise the closest open font.",
+      "evidence": "Organization holds logoUrl, primaryColor, accentColor [VERIFIED: schema.prisma:995-997]; extract-colors falls back to RA colours today and must not for cards [VERIFIED by research agent]."
+    },
+    {
+      "id": "e8",
+      "lane": "ecosystem",
+      "rank": 5,
+      "recommended": true,
+      "effort": "S",
+      "title": "One brand kit per business, reused everywhere",
+      "detail": "The same brand kit drives the card, Synthex content and RestoreAssist staff cards. Kits already exist for Unite Group, Disaster Recovery, CARSI, RestoreAssist and NRPG in Synthex's brand config, with real logo files; only some values are confirmed.",
+      "evidence": "packages/brand-config/src/brands/*.ts and public/logos/* [VERIFIED]; Unite marks only its primary colour verified [VERIFIED: unite.ts:3]."
+    },
+    {
+      "id": "e1",
+      "lane": "ecosystem",
+      "rank": 10,
+      "recommended": true,
+      "effort": "S",
+      "title": "Free crew cards with every RestoreAssist trial",
+      "detail": "A visible win in the first hour of a trial, before any report is written. Aimed squarely at trial sign-ups (FD-10).",
+      "evidence": "[INFERENCE]; FD-10 names RestoreAssist trial sign-ups [VERIFIED: Synthex CLAUDE.md]."
+    },
+    {
+      "id": "e2",
+      "lane": "ecosystem",
+      "rank": 20,
+      "recommended": true,
+      "effort": "S",
+      "title": "'Cards by RestoreAssist' on every customer card",
+      "detail": "Every card handed to a homeowner, insurer or property manager quietly advertises RestoreAssist to the next restorer who sees it.",
+      "evidence": "[INFERENCE]"
+    },
+    {
+      "id": "e3",
+      "lane": "ecosystem",
+      "rank": 30,
+      "recommended": true,
+      "effort": "S",
+      "title": "CARSI graduates get a card, employers get a trial invite",
+      "detail": "The new IICRC ticket shows on the graduate's card; their employer is invited to RestoreAssist.",
+      "evidence": "[INFERENCE]"
+    },
+    {
+      "id": "e4",
+      "lane": "ecosystem",
+      "rank": 40,
+      "recommended": false,
+      "effort": "M",
+      "title": "NRPG verified contractor directory",
+      "detail": "Published staff cards list in the NRPG network so insurers and property managers find verified, reviewed contractors.",
+      "evidence": "NRPG is the group's contractor platform [VERIFIED: portfolio registry]."
+    },
+    {
+      "id": "e5",
+      "lane": "ecosystem",
+      "rank": 50,
+      "recommended": false,
+      "effort": "M",
+      "needs": "Client consent",
+      "title": "Homeowner's home record",
+      "detail": "The customer keeps a card-linked history of work done, drying dates and readings from the RestoreAssist report, which prompts maintenance services later.",
+      "evidence": "[INFERENCE]"
+    },
+    {
+      "id": "e6",
+      "lane": "ecosystem",
+      "rank": 60,
+      "recommended": false,
+      "effort": "M",
+      "title": "Overflow referrals from Disaster Recovery",
+      "detail": "Jobs DR cannot take go to a nearby card-holding NRPG member, with any referral fee disclosed.",
+      "evidence": "[INFERENCE]"
+    },
+    {
+      "id": "e7",
+      "lane": "ecosystem",
+      "rank": 70,
+      "recommended": false,
+      "effort": "S",
+      "needs": "CCW's agreement",
+      "title": "Supplier restock offers in the owner dashboard",
+      "detail": "Partners such as CCW offer card holders restock deals, shown to owners, never on customer cards.",
+      "evidence": "CCW is a client in the registry [VERIFIED]."
+    },
+    {
+      "id": "p1",
+      "lane": "growth",
+      "rank": 1,
+      "recommended": true,
+      "effort": "M",
+      "needs": "Your OK on prices, terms and live Stripe",
+      "title": "Every card sells the next one",
+      "detail": "A 'Get your own card' button on every card. Viewers set up their own card from their logo and details, watch it appear in their brand, pick a package and pay. Each sale records which card it came from, ready for a referral reward. Built and tested; payment shows Coming soon until you approve.",
+      "evidence": "Browser-tested locally 22/10/2026 [VERIFIED]; no Stripe test key exists yet, so payment is unproven [VERIFIED: key modes in ~/.hermes/.env]."
+    },
+    {
+      "id": "o1",
+      "lane": "ops",
+      "rank": 10,
+      "recommended": true,
+      "effort": "S",
+      "needs": "Phill connects AgentMail in Composio",
+      "title": "AgentMail inbox behind Connect",
+      "detail": "Enquiries land in an assistant inbox that filters spam, sorts, acknowledges and drafts replies for Phill.",
+      "evidence": "Phill signed in to AgentMail on 08/10; not yet connected [VERIFIED]."
+    },
+    {
+      "id": "o2",
+      "lane": "ops",
+      "rank": 20,
+      "recommended": true,
+      "effort": "S",
+      "title": "Twice-daily digest to Phill",
+      "detail": "8 am and 3 pm, with a draft reply per enquiry, and an instant alert for urgent jobs.",
+      "evidence": "inbox-triage-framework.md"
+    },
+    {
+      "id": "o3",
+      "lane": "ops",
+      "rank": 30,
+      "recommended": true,
+      "effort": "S",
+      "cost": "Low",
+      "title": "Host the card on our own domain",
+      "detail": "A permanent address like card.unite-group.in on the group's own hosting. Higgsfield makes the media; we keep the files.",
+      "evidence": "Higgsfield outputs are kept at least 7 days, so we store our own copies [VERIFIED]."
+    },
+    {
+      "id": "o4",
+      "lane": "ops",
+      "rank": 40,
+      "recommended": false,
+      "effort": "S",
+      "title": "Host the card on a Higgsfield-built site",
+      "detail": "Higgsfield can build and deploy websites. It would sit outside the group's hosting, custom domains are unconfirmed, and its publish button lists sites on a public feed.",
+      "evidence": "Higgsfield CLI website create/deploy [VERIFIED]; custom domain [UNCONFIRMED]."
+    },
+    {
+      "lane": "wow",
+      "recommended": true,
+      "id": "reveal",
+      "rank": 1,
+      "title": "Your card opens with the new logo reveal",
+      "job": "9d9d98d9-dc53-47df-a610-ede9fa7179d8",
+      "video": "/_blob/fc81deb8beba2661ebccd30018c29f28",
+      "image": "/_blob/6b81054e5c93f3b06535363b40b0987a",
+      "feature": "Higgsfield image-to-video logo reveal",
+      "detail": "Beams converge, the star ignites, and Unite-Group Nexus settles. This now opens your card, stopping on the logo. Concept clip made from the logo you chose; AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "lane": "wow",
+      "recommended": false,
+      "id": "h1",
+      "rank": 2,
+      "title": "Concept: one orange card among falling white ones",
+      "job": "b7320018-da7f-4821-8f8f-1ee6e1e15656",
+      "image": "/_blob/e9444205d52ea872afc035e8309e93e8",
+      "feature": "Higgsfield image generation",
+      "detail": "Your 'one donkey among the horses' idea: every other card is plain paper. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "lane": "wow",
+      "recommended": false,
+      "id": "h2",
+      "rank": 3,
+      "title": "Concept: the card rises from the phone in orange fire",
+      "job": "40b6a2b5-455a-46c1-9102-fa43895f0eb6",
+      "image": "/_blob/c1a638654773e6bc410e6d436fa0874e",
+      "feature": "Higgsfield image generation",
+      "detail": "The moment someone opens your link. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "lane": "wow",
+      "recommended": false,
+      "id": "h3",
+      "rank": 4,
+      "title": "Concept: a flooded room restored, on a phone",
+      "job": "1cadcf0d-392f-42f0-b8fe-2bc42d3ff7db",
+      "image": "/_blob/bc195936668cfe451948a9158b1ae1b3",
+      "feature": "Higgsfield image generation",
+      "detail": "Shows the restoration story in one frame. For real marketing, swap in a real Disaster Recovery before-and-after. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "lane": "wow",
+      "recommended": false,
+      "id": "h4",
+      "rank": 5,
+      "title": "Concept: a glass card with a miniature city inside",
+      "job": "e9ba5e6f-403a-4410-8231-f193c19fbb7b",
+      "image": "/_blob/47c23f019899c662f658721c3fb9ce5f",
+      "feature": "Higgsfield image generation",
+      "detail": "The card as a whole world: every business in the group inside one card. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "lane": "wow",
+      "recommended": false,
+      "id": "h5",
+      "rank": 6,
+      "title": "Concept: phone-to-phone tap, light leaps across",
+      "job": "20a2f7a9-ac7d-4f45-96d4-ed5a2a9a3954",
+      "image": "/_blob/9cb90f2929856d04cb69151dfdd37cfa",
+      "feature": "Higgsfield image generation",
+      "detail": "The trade-show swap, with no paper. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "lane": "wow",
+      "recommended": false,
+      "id": "h6",
+      "rank": 7,
+      "title": "Concept: the card assembles from embers",
+      "job": "b1daf0b6-4cc7-43b8-9b6e-0989e0759ef3",
+      "image": "/_blob/f5758255717293f8df930655f701d7d1",
+      "feature": "Higgsfield image generation",
+      "detail": "A fire-to-finished reveal that suits a restoration brand. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v1",
+      "lane": "wow",
+      "rank": 8,
+      "recommended": true,
+      "title": "Clip concept: one orange card among falling white cards",
+      "video": "/_blob/9557ac7da7a093401c58a36c1c9931e8",
+      "image": "/_blob/d3d442d5a0015073914f5addaafd1dab",
+      "feature": "Higgsfield image-to-video zoom-in",
+      "job": "1a3c8d62-a7f1-4d13-a1e8-fc3fb34eeb3d",
+      "detail": "The 'one donkey among the horses' idea, moving. Strong hero for launch videos. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v2",
+      "lane": "wow",
+      "rank": 9,
+      "recommended": true,
+      "title": "Clip concept: flood wipes to the restored room",
+      "video": "/_blob/db3f2fb5190a116880ba8335301d3dfa",
+      "image": "/_blob/1b3831e8a87c4d8908a6997ec34d9675",
+      "feature": "Higgsfield image-to-video transition",
+      "job": "9721bf4b-452d-454d-9882-9ef87d4a6caa",
+      "detail": "For restoration and RestoreAssist staff cards. For real marketing, use real job photos. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v3",
+      "lane": "wow",
+      "rank": 10,
+      "title": "Clip concept: the card rises in orange fire",
+      "video": "/_blob/45ca7cbeec2e5354149374025f0f87cb",
+      "image": "/_blob/a678137a7c7e7b836cadb9e385bc1410",
+      "feature": "Higgsfield image-to-video",
+      "job": "5ed8806e-9578-4c83-b281-23c43936801d",
+      "detail": "Not yet reviewed frame by frame. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "v4",
+      "lane": "wow",
+      "rank": 11,
+      "title": "Clip concept: shattered-U reveal (rejected logo)",
+      "video": "/_blob/97e88a56286c81d54d878b8b05bb8aba",
+      "image": "/_blob/1e93d02c10a4c332c538cbbe425a8fb1",
+      "feature": "Higgsfield image-to-video",
+      "job": "f51278f4-e500-480c-9bde-fc2fe7674e5d",
+      "detail": "Uses a logo you rejected, so shown for the motion style only. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x1",
+      "lane": "wow",
+      "rank": 12,
+      "title": "Concept: AR hologram over a metal NFC card",
+      "image": "/_blob/5b711bc03d62e4eb481c42c6ff50416d",
+      "feature": "Higgsfield image generation",
+      "job": "1ad1f0af-0be7-4d37-afbe-b1f9365da608",
+      "detail": "Where the premium physical card could go. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x2",
+      "lane": "wow",
+      "rank": 13,
+      "title": "Concept: metal NFC card and phone flat-lay",
+      "image": "/_blob/067c97b792e645eae9c68a634a1acd04",
+      "feature": "Higgsfield image generation",
+      "job": "e9e905ff-3896-47c0-b76f-e62d22d3667c",
+      "detail": "Product shot for the A$149 metal card. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x3",
+      "lane": "wow",
+      "rank": 14,
+      "title": "Concept: before-and-after slider on a phone",
+      "image": "/_blob/d443908f786e487c92170886afafaca4",
+      "feature": "Higgsfield image generation",
+      "job": "b3bcbc2b-3c06-4abc-9b22-7fd12759afae",
+      "detail": "A card feature for restorers: drag to compare. Real job photos in the real thing. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x4",
+      "lane": "wow",
+      "rank": 15,
+      "title": "Concept: trade-show crowd with orange phones",
+      "image": "/_blob/45ed53ac7110692c8f597e2ba6795d41",
+      "feature": "Higgsfield image generation",
+      "job": "01189839-01eb-4386-889d-3ed21214d577",
+      "detail": "The Brisbane and Melbourne talk moment. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "x5",
+      "lane": "wow",
+      "rank": 16,
+      "title": "Concept: wallet pass, 'opened 12 times'",
+      "image": "/_blob/b72d519ab5012291ee890038a9c456dd",
+      "feature": "Higgsfield image generation",
+      "job": "1a298c28-6136-4e5a-a43b-a2c15a0a9b5c",
+      "detail": "Shows open analytics: you see when your card is opened. AI-generated concept in Higgsfield, not a real photo."
+    },
+    {
+      "id": "built-crack",
+      "lane": "wow",
+      "rank": 0,
+      "recommended": true,
+      "title": "Built: your card cracks open, then the logo reveal plays",
+      "detail": "The screen appears to crack from an impact point, the shards fall away, and the Unite-Group Nexus reveal plays beneath. Drawn in code, so it starts instantly; skipped for people who turn motion off. Add ?to=Sarah to the link and it greets her by name. 'Pass it on' shows a bouncing QR code so a second person can scan your card off your screen.",
+      "evidence": "Browser-tested on the locally hosted card 22/10/2026 [VERIFIED]; not yet tried on a physical phone [UNCONFIRMED]."
+    },
+    {
+      "id": "built-editions",
+      "lane": "card",
+      "rank": 1,
+      "recommended": true,
+      "title": "Ten editions of your card, one link each",
+      "detail": "The card's opener can be swapped per edition (Blueprint, Forge, Constellation, Ink, Rewind, Skyline, Origami, Portal, Restoration, Magnet) with a link like card.unite-group.ink/?edition=forge. Ready in the card; each edition appears once its clip is delivered.",
+      "evidence": "Edition switching built; edition clips still rendering [UNCONFIRMED]."
+    },
+    {
+      "id": "g-ladder",
+      "lane": "growth",
+      "rank": 2,
+      "recommended": true,
+      "title": "Pricing ladder: Signature A$249 inc GST",
+      "detail": "Signature A$249 inc GST (bespoke motion, multi-business links, analytics, 12 months hosting and inbox). Live A$19/mo from month 13, or A$29 with the review engine. Crew pack A$990 for 5 staff cards, then A$9/card/mo; extra cards A$149. Network tier quoted for franchises and NRPG. NFC card A$59, metal A$149. No DIY tier at launch.",
+      "evidence": "Coordinator research 22/10/2026; competitor prices partly [UNCONFIRMED] (some sources blocked); Tapt pricing spot-checked by the coordinator [VERIFIED]."
+    },
+    {
+      "id": "g-showroom",
+      "lane": "growth",
+      "rank": 3,
+      "recommended": true,
+      "title": "First 30 days: five flagship cards as the showroom",
+      "detail": "Build five standout cards first. Phill sends his card instead of an email signature and posts LinkedIn videos of it opening. Crew packs to ten founding RestoreAssist firms. CARSI graduate credential cards. A disclosed, non-cash referral reward (a free Live year).",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "g-legal",
+      "lane": "growth",
+      "rank": 4,
+      "recommended": true,
+      "title": "Legal must-haves before selling",
+      "detail": "Refund and remake policy under the ACL; GST-inclusive prices; an APP privacy notice; written likeness and voice consent; an IP Australia search and designer rework for the AI-generated logo; Higgsfield's commercial terms.",
+      "evidence": "Coordinator research 22/10/2026; several sources were blocked, so [UNCONFIRMED]."
+    },
+    {
+      "id": "g-moat",
+      "lane": "growth",
+      "rank": 5,
+      "title": "Our edge is the moment, not the contact swap",
+      "detail": "Blinq (2.5M users) and free Apple NameDrop already swap contacts. Competitors sell commodity hardware or A$7-15/mo seats; HiHello's branded video is template-bound. Sell the card as a crafted brand asset with a cinematic opening.",
+      "evidence": "Coordinator research 22/10/2026; 'nobody sells it as a crafted brand asset' is [INFERENCE]."
+    },
+    {
+      "id": "m-name",
+      "lane": "card",
+      "rank": 2,
+      "recommended": true,
+      "title": "Greets the person by name",
+      "detail": "'Great to meet you, Sam' at the top of the opener. Built: add ?to=Sam to the link.",
+      "evidence": "Built and browser-tested [VERIFIED]."
+    },
+    {
+      "id": "m-wallet",
+      "lane": "card",
+      "rank": 3,
+      "recommended": true,
+      "title": "Wallet pass with open alerts",
+      "detail": "The card sits in Apple and Google Wallet and tells you when it is opened.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-slider",
+      "lane": "card",
+      "rank": 4,
+      "recommended": true,
+      "title": "Before-and-after slider",
+      "detail": "Drag across a real job to compare the damage and the finished work.",
+      "evidence": "Coordinator research 22/10/2026; needs real job photos [VERIFIED rule]."
+    },
+    {
+      "id": "m-emergency",
+      "lane": "card",
+      "rank": 5,
+      "title": "Booking or emergency button",
+      "detail": "One tap to book or call the after-hours line.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-glass",
+      "lane": "card",
+      "rank": 6,
+      "title": "'Glass phone': logo floating over the live camera",
+      "detail": "The logo hovers over the camera view and tilts with the phone. Needs camera and motion permission.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-ask",
+      "lane": "card",
+      "rank": 7,
+      "title": "'Ask me anything' voice or agent",
+      "detail": "Ask the card a question and get an answer in the owner's voice, from approved facts only.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "m-stepout",
+      "lane": "card",
+      "rank": 8,
+      "title": "Owner steps out of the screen",
+      "detail": "A real video of the owner steps over the card. Only from real footage, with written consent.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]; real-images rule applies [VERIFIED]."
+    },
+    {
+      "id": "m-proof",
+      "lane": "card",
+      "rank": 9,
+      "title": "Proof wall: every customer asked",
+      "detail": "Real reviews and job photos, with every customer invited and no filtering.",
+      "evidence": "Review gating breaks Google's rules [VERIFIED: research-notes.md]."
+    },
+    {
+      "id": "eco-passport",
+      "lane": "ecosystem",
+      "rank": 6,
+      "recommended": true,
+      "title": "Property passport that stays with the house",
+      "detail": "Every job done on a property (drying records, repairs, warranties) in one link that passes to the next owner. No restoration example found: a white-space bet.",
+      "evidence": "Coordinator research 22/10/2026; 'no hits found' is a search result, not proof [UNCONFIRMED]."
+    },
+    {
+      "id": "eco-quote",
+      "lane": "ecosystem",
+      "rank": 7,
+      "title": "Cinematic restoration quotes with a Q&A agent",
+      "detail": "The quote arrives as a short film of the job with answers on tap.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-claim",
+      "lane": "ecosystem",
+      "rank": 8,
+      "title": "Live insurance-claim job links",
+      "detail": "Policyholder and insurer follow the job live from RestoreAssist.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-cert",
+      "lane": "ecosystem",
+      "rank": 9,
+      "title": "Animated, verifiable CARSI certificates",
+      "detail": "Each certificate is a living card that anyone can verify.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-onboard",
+      "lane": "ecosystem",
+      "rank": 10,
+      "title": "RestoreAssist trial onboarding reveal",
+      "detail": "A new trial firm's own card cracks open as the welcome moment.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-sig",
+      "lane": "ecosystem",
+      "rank": 11,
+      "title": "Live email signature",
+      "detail": "The email signature becomes a tiny living card that opens the full one.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "eco-nfc",
+      "lane": "ecosystem",
+      "rank": 12,
+      "title": "Warranty and NFC packaging",
+      "detail": "Tap the product packaging or warranty card to open the business's card.",
+      "evidence": "Coordinator research 22/10/2026 [INFERENCE]."
+    },
+    {
+      "id": "ed-portal",
+      "lane": "wow",
+      "rank": 2,
+      "recommended": true,
+      "title": "Edition live: Portal",
+      "video": "/_blob/934e7280f1db8ca1b8933618fc22ad9f",
+      "image": "/_blob/eb54e9632982b88526ee4a5680275c67",
+      "feature": "Higgsfield edition clip",
+      "job": "911c388b-fe9e-4c61-ac3e-524b048017bc",
+      "detail": "A burst of orange light opens onto your logo. Live on your hosted card at ?edition=portal. AI-generated concept in Higgsfield, not a real photo.",
+      "evidence": "Wired into the kit and shipped by the build [VERIFIED]."
+    },
+    {
+      "id": "ed-restoration",
+      "lane": "wow",
+      "rank": 3,
+      "recommended": true,
+      "title": "Edition live: Restoration",
+      "video": "/_blob/3ea8155f00454b28ff8f09e6ad67f526",
+      "image": "/_blob/01f041e5d7ab6ec80bcaef257fb9df3a",
+      "feature": "Higgsfield edition clip",
+      "job": "cc159c97-8175-4f21-b5c1-49d68d63b72c",
+      "detail": "A water-stained wall cleans itself down to your logo. Live on your hosted card at ?edition=restoration. AI-generated concept in Higgsfield, not a real photo.",
+      "evidence": "Wired into the kit and shipped by the build [VERIFIED]."
+    },
+    {
+      "id": "review-centre",
+      "lane": "reviews",
+      "rank": 1,
+      "recommended": true,
+      "title": "Live: 'Review my business' is the card's centrepiece",
+      "detail": "A big button opens Google's own review form for the business. Every visitor sees it, no prize, no screening. It says 'Not connected yet' until the owner connects their Google Business Profile in the Nexus portal.",
+      "evidence": "Built into the card [VERIFIED]; the Business Profile connection is designed only.",
+      "compliance": "ok"
+    },
+    {
+      "id": "nexus-connect",
+      "lane": "ops",
+      "rank": 1,
+      "recommended": true,
+      "needs": "Your Google Cloud OAuth app and Google verification; LinkedIn and Meta app review",
+      "title": "Designed: owners connect Google, LinkedIn and Facebook in the Nexus portal",
+      "detail": "Secrets stay in Nexus, encrypted, per customer. The card only gets the public Place ID and links. Nexus today is your private founder CRM, so card customers need a new customer area; Synthex already has working Business Profile code to reuse.",
+      "evidence": "Nexus auth and Synthex GBP code mapped [VERIFIED: pipeline-design.md §1]."
+    },
+    {
+      "id": "pipe-auto",
+      "lane": "ops",
+      "rank": 2,
+      "recommended": true,
+      "title": "Designed: website to published card, fully automatic",
+      "detail": "Website, brand kit pulled, opener generated from an edition with their logo as the end frame, live preview, pay, proof room, published. About A$7 direct cost per A$249 card; a person only sees flagged orders; each order stops and alerts if it passes A$15 in generation cost.",
+      "evidence": "pipeline-design.md §3 [INFERENCE for costs]."
+    },
+    {
+      "id": "proof-room",
+      "lane": "ops",
+      "rank": 3,
+      "recommended": true,
+      "title": "Designed: proof room with 3 rounds included, then A$29",
+      "detail": "A private page per order: approve in one tap, make small edits free, or send back changes. Rounds 1-3 included; from round 4, A$29. Fixes for our errors never count. Approve publishes the card and hands over the share kit.",
+      "evidence": "pipeline-design.md §4."
+    },
+    {
+      "id": "intro-a",
+      "lane": "motion",
+      "rank": 1,
+      "recommended": true,
+      "title": "Designed: 'Record yourself' intro, included",
+      "detail": "A teleprompter shows an AI-written script; the buyer records on their phone; we trim, caption and brand it. Real footage, no extra consent forms.",
+      "evidence": "pipeline-design.md §5."
+    },
+    {
+      "id": "intro-b",
+      "lane": "motion",
+      "rank": 2,
+      "title": "Designed: AI avatar in your own voice, A$49 add-on",
+      "needs": "HeyGen to confirm API access for Digital Twins",
+      "detail": "Our cost is about A$6-7 per client (A$14 with retries), so A$49 rather than A$29. Consent only from the person, through HeyGen's and ElevenLabs' own flows, with an 'AI-generated avatar' label.",
+      "evidence": "HeyGen and ElevenLabs pricing pages [VERIFIED]; price recommendation [INFERENCE]."
+    },
+    {
+      "id": "bio-video",
+      "lane": "motion",
+      "rank": 3,
+      "recommended": true,
+      "needs": "Authorise HeyGen and approve the script",
+      "title": "Your bio video: script ready for your OK",
+      "detail": "'Hi, I'm Phill McGurk...' 18 seconds, using your existing HeyGen avatar and ElevenLabs voice only. Script in phill-bio-script.md.",
+      "evidence": "Consent recorded 22/10/2026 in your brand kit [VERIFIED]; HeyGen not authorised in this session [VERIFIED]."
+    },
+    {
+      "id": "social-drafts",
+      "lane": "growth",
+      "rank": 6,
+      "title": "Designed: post your card to LinkedIn and socials as drafts",
+      "detail": "From Nexus, through your connected accounts. Every post is a draft you approve; nothing goes out on its own.",
+      "evidence": "Nexus already publishes only approved, unchanged posts [VERIFIED: pipeline-design.md §6]."
+    },
+    {
+      "id": "card-analytics",
+      "lane": "ops",
+      "rank": 4,
+      "title": "Designed: opens, review taps and saves per card",
+      "detail": "A small event counter on the card's host, shown per card in Nexus.",
+      "evidence": "pipeline-design.md §6."
+    }
+  ]
+}
