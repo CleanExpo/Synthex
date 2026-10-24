@@ -54,6 +54,11 @@ jest.mock('@/lib/prisma', () => {
       findFirst: jest.fn(),
       update: jest.fn(),
     },
+    // PATCH /api/approvals/[id] reads the post to check the approval's content
+    // binding (lib/approvals/content-fingerprint.ts).
+    post: {
+      findUnique: jest.fn(),
+    },
     userRole: {
       count: jest.fn(),
     },
