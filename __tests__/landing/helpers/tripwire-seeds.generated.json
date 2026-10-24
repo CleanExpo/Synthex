@@ -58,6 +58,11 @@
       "firstSeen": "794daf37"
     },
     {
+      "text": "- Error codes, `docs/api/error-codes.md`: 17 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "5e4e9438"
+    },
+    {
       "text": "- FEATURE_NOT_PROVISIONED: HTTP 503, unresolved - GA4_EDIT_CONSENT_REQUIRED: HTTP 403",
       "file": "public/llms.txt",
       "firstSeen": "dba7235d"
@@ -81,6 +86,11 @@
       "text": "- GA4_PROPERTY_AMBIGUOUS: HTTP 409 - GITHUB_TOKEN_REQUIRED: HTTP 200",
       "file": "public/llms.txt",
       "firstSeen": "b9eaed67"
+    },
+    {
+      "text": "- GA4_PROPERTY_NAME_TAKEN: HTTP 409 - GA4_STREAM_EXISTS: HTTP 409",
+      "file": "public/llms.txt",
+      "firstSeen": "8d1d587c"
     },
     {
       "text": "- GA4_PROPERTY_OWNED_ELSEWHERE: HTTP 409",
@@ -126,6 +136,11 @@
       "text": "- The platform competes most directly with Hootsuite, Buffer, Later, and SocialPilot — comparison pages at /compare/{competitor}.",
       "file": "public/llms.txt",
       "firstSeen": "base"
+    },
+    {
+      "text": "- writeDefault ('write-default'): 30 requests per 60 s; 30 routes",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
     },
     {
       "text": ",</h2> <p>Thanks for signing up for SYNTHEX - your AI-powered marketing platform!</p> <p>Please verify your email address by clicking the button below:</p> <div style=\"text-align: center;\"> <a href=\"",
