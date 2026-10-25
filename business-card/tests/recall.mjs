@@ -233,10 +233,16 @@ assert 'id="met"' in (folder / 'index.html').read_text(encoding='utf-8')
 assert (folder / 'card-template.html').read_bytes() == (root / 'card.html').read_bytes()
 print('PASS Python builder parity and rebuild from a media-free fixture')
 `;
-const result = spawnSync('python', ['-I', '-c', python], {
-  encoding: 'utf8',
-  cwd: process.cwd(),
-});
+// Prefer python3, fall back to python; a missing interpreter is an environment error, not a test failure.
+function runPython(args) {
+  for (const exe of ['python3', 'python']) {
+    const run = spawnSync(exe, args, { encoding: 'utf8', cwd: process.cwd() });
+    if (run.error?.code !== 'ENOENT') return run;
+  }
+  console.error('Python 3 not found: install python3');
+  process.exit(1);
+}
+const result = runPython(['-I', '-c', python]);
 assert.equal(result.status, 0, result.stderr + result.stdout);
 console.info(result.stdout.trim());
 fs.mkdirSync('.test-tmp/recall', { recursive: true });
