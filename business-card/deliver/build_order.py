@@ -484,6 +484,8 @@ def proof(order, kit, sha, built):
           "- [ ] The buyer approved the email" + (" and phone." if phone else "."),
           "- [ ] Every business link was tapped and opened the right site.",
           "- [ ] The buyer approved the logo, and it is their own.",
+          "- [ ] The logo re-exported with `sips -s format png` (macOS) or an equivalent re-encode, so no EXIF, GPS, author, "
+          "comment or thumbnail data from the buyer's file comes along. (build_order.py also drops such blocks it can see.)",
           "- [ ] The film is approved: " + ("Phill has decided about the Unite-Group ending (see Film)." if tier == "ready-made"
                                            else "the custom film is made, added and approved by the buyer."),
           "- [ ] Save contact was tried on a real phone and the contact looked right.",

@@ -10,11 +10,11 @@ checklist. Nothing here sends email, takes money, or puts a card on the internet
 
 ## What each card costs (to check the payment)
 
-| What they bought | Price |
-| --- | --- |
-| Ready-made card (one of the ten ready-made films) | AUD 249 |
+| What they bought                                        | Price   |
+| ------------------------------------------------------- | ------- |
+| Ready-made card (one of the ten ready-made films)       | AUD 249 |
 | Made-for-you card (a custom film, made after the proof) | AUD 449 |
-| Each extra business on the card | AUD 199 |
+| Each extra business on the card                         | AUD 199 |
 
 ## Step 1. Stripe says paid (the builder)
 
@@ -48,23 +48,26 @@ Wait for their answers. **Never guess a missing answer.** If something is missin
    Buyer details never go into the repository.
 2. Copy `business-card/deliver/sample/sample-order.json` into that folder as `order.json`.
 3. Put the buyer's logo in the same folder.
-4. Make the logo small: about 256 pixels wide, and under 120 KB. On a Mac:
-   `sips -Z 256 logo.png --out logo-256.png`
+4. Re-export the logo as a fresh PNG. This makes it small (about 256 pixels wide, under 120 KB) and rebuilds the
+   picture, so no hidden EXIF, GPS, author, comment or thumbnail data from the buyer's file comes along. On a Mac:
+   `sips -s format png -Z 256 logo.jpg --out logo-256.png`
+   On another computer use an equivalent re-encode (open the logo, then Export or Save As a new PNG). The builder
+   also drops the metadata it can see, but the re-export is the step that counts: tick it in PROOF.md.
 5. Change every value in `order.json` to the buyer's answers:
 
-| Field | What goes in it |
-| --- | --- |
-| `order_ref` | Your reference from step 1 |
-| `tier` | `ready-made` or `made-for-you` |
-| `film` | Ready-made: one of the ten film names. Made-for-you: exactly `custom, pending proof` |
-| `buyer_name` | Their name |
-| `role` | The short line under the name |
-| `email` | The card's email |
-| `phone` | `{"display": "0400 555 123", "tel": "+61400555123"}`, or `null` for no phone |
-| `businesses` | A list. Each one has `name`, `url` and (if they gave one) `note` |
-| `extra_businesses` | How many extra businesses they paid for. This must be the number of businesses minus 1 |
-| `logo_file` | The logo's file name, like `logo-256.png` |
-| `brand_colour`, `colour_source` | Optional, and always together. Delete both if they gave no colour |
+| Field                           | What goes in it                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------- |
+| `order_ref`                     | Your reference from step 1                                                             |
+| `tier`                          | `ready-made` or `made-for-you`                                                         |
+| `film`                          | Ready-made: one of the ten film names. Made-for-you: exactly `custom, pending proof`   |
+| `buyer_name`                    | Their name                                                                             |
+| `role`                          | The short line under the name                                                          |
+| `email`                         | The card's email                                                                       |
+| `phone`                         | `{"display": "0400 555 123", "tel": "+61400555123"}`, or `null` for no phone           |
+| `businesses`                    | A list. Each one has `name`, `url` and (if they gave one) `note`                       |
+| `extra_businesses`              | How many extra businesses they paid for. This must be the number of businesses minus 1 |
+| `logo_file`                     | The logo's file name, like `logo-256.png`                                              |
+| `brand_colour`, `colour_source` | Optional, and always together. Delete both if they gave no colour                      |
 
 The full rules are in `order.schema.json`.
 

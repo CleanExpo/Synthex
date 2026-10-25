@@ -605,3 +605,22 @@ def test_unreadable_logo_refuses_by_name_with_nothing_built(tmp_path):
         pytest.skip("this account can read a mode-000 file")
     refused_cleanly(r, out)
     assert "logo_file" in r.stderr
+
+
+# ---- lead ruling 26/10: the pixel re-export is a required, recorded step ----
+REEXPORT = "logo re-exported with `sips -s format png`"
+
+
+def test_proof_checklist_has_an_unticked_logo_reexport_item(tmp_path):
+    for order in (SAMPLE, made_for_you()):
+        r, out = run(tmp_path, order, "out-" + order["tier"])
+        assert r.returncode == 0, r.stderr
+        proof = (out / "PROOF.md").read_text(encoding="utf-8")
+        assert f"- [ ] The {REEXPORT}" in proof
+        assert "equivalent re-encode" in proof and "EXIF, GPS" in proof
+        assert not [l for l in proof.splitlines() if "re-exported" in l and "[x]" in l.lower()]
+
+
+def test_runbook_tells_the_builder_to_reexport_the_logo():
+    text = open(os.path.join(HERE, "RUNBOOK.md"), encoding="utf-8").read()
+    assert "sips -s format png" in text and "equivalent re-encode" in text
