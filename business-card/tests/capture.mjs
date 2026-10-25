@@ -125,7 +125,9 @@ async function visit(reply, delayMs = 0) {
       headers: q.headers(),
       body: q.postData(),
     });
-    if (delayMs) await new Promise(res => setTimeout(res, delayMs));
+    // delayMs is one delay for every call, or a list with one delay per call in the order they arrive
+    const d = Array.isArray(delayMs) ? delayMs[calls.length - 1] || 0 : delayMs;
+    if (d) await new Promise(res => setTimeout(res, d));
     if (reply === 'abort') return r.abort();
     return r.fulfill({ status: reply, body: '' });
   });
@@ -370,6 +372,37 @@ try {
     check(
       (await page.textContent('#saved')).startsWith('Saved'),
       'emoji feedback shows Saved'
+    );
+    await ctx.close();
+  }
+  // 3c. edit and resubmit while an earlier request is still pending: each distinct answer set is saved once, never twice
+  {
+    const { ctx, page, calls } = await visit(201, [300, 2500]);
+    await page.goto(BASE + 'feedback.html');
+    await page.fill('#first', 'Twice');
+    await page.fill('#bugs', 'first answer');
+    await page.click('button[type="submit"]');
+    await page.fill('#bugs', 'second answer');
+    await page.click('button[type="submit"]');
+    // the first request has settled, the second is still pending: pressing again must not send the second again
+    await page.waitForTimeout(900);
+    await page.click('button[type="submit"]');
+    await page.waitForFunction(
+      () => document.getElementById('saved').textContent.startsWith('Saved'),
+      null,
+      { timeout: 15000 }
+    );
+    await page.waitForTimeout(500);
+    // both are saved: going back to the first answer must not send it again
+    await page.fill('#bugs', 'first answer');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(800);
+    const sent = calls.map(c => JSON.parse(c.body).answers.bugs);
+    check(
+      calls.length === 2 &&
+        sent[0] === 'first answer' &&
+        sent[1] === 'second answer',
+      `feedback: edit and resubmit mid-flight saves each answer set once (${calls.length} POSTs: ${sent.join(' | ')})`
     );
     await ctx.close();
   }
