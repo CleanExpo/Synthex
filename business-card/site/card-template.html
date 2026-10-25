@@ -589,6 +589,10 @@ function lum(hex) {
     $("nexus").hidden = false;
   }
   const f = P.features || {};
+  // a buyer's card names its own shelf (brand.shelf); without one it stays the Unite-Group Nexus shelf
+  const sh = B.shelf || {};
+  if (typeof sh.title === "string" && sh.title) $("nexus-h").textContent = sh.title;
+  if (typeof sh.text === "string") document.querySelector("#nexus .nexus-head p").textContent = sh.text;
   if (f.discover && P.ideas) $("door-discover").hidden = false;
   // Margot's films (hosted only): a poster until tapped; the second film opens from "Tap to hear more"
   const FILMS = B.films || {};

@@ -239,3 +239,13 @@ def test_staged_logo_is_removed(tmp_path):
     assert r.returncode == 0, r.stderr
     work = os.path.join(HERE, ".work")
     assert not os.path.exists(work) or not os.listdir(work)
+
+
+# A buyer's card is not the Unite-Group Nexus: its business shelf is named for the buyer, and says what a tap does.
+def test_buyer_card_shelf_is_not_named_unite_group(tmp_path):
+    r, out = run(tmp_path, SAMPLE)
+    assert r.returncode == 0, r.stderr
+    kit = kit_in((out / "card" / "index.html").read_text(encoding="utf-8"))
+    assert kit["brand"]["shelf"] == {"title": "Sam's businesses", "text": "Tap one to visit its website."}
+    template = open(os.path.join(os.path.dirname(HERE), "card.html"), encoding="utf-8").read()
+    assert 'B.shelf' in template, "card.html does not read the kit's shelf heading"

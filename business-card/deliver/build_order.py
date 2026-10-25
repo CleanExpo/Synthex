@@ -192,6 +192,9 @@ def make_kit(order, logo_rel, logo_sha):
                  "source": f"the buyer's own logo, supplied with {src} (sha256 {logo_sha})"},
         "colours": {"primary": primary},
         "about": {"status": "missing", "note": "not part of a card order"},
+        # the template's shelf is the Unite-Group Nexus unless the kit names it
+        "shelf": {"title": order["buyer_name"].strip().split()[0] + "'s business" + ("es" if len(order["businesses"]) > 1 else ""),
+                  "text": "Tap one to visit its website." if len(order["businesses"]) > 1 else "Tap to visit the website."},
     }
     if order["tier"] == "ready-made":
         brand["editions"] = {order["film"]: showroom_film(order["film"])}
@@ -314,6 +317,8 @@ def proof(order, kit, sha, built):
         missing.append("Brand colour: none came with the order, so the card uses the template's default colour. Ask the buyer for it.")
     missing.append("Card web address: not chosen (hosting per buyer is an open decision for Phill). Until there is one, the "
                    "saved contact has no link back to the card and the QR code points nowhere useful.")
+    missing.append("Review button: the card shows \"Worked with us? Leave a review\", which says \"Not connected yet\" until "
+                   "the buyer's Google Business Profile is connected. Ask the buyer whether they want it.")
     L += ["", "## Still needed", ""] + [f"- {m}" for m in missing]
     L += ["", "## What was built", "",
           f"Folder `card/` (the only folder that is ever hosted): {len(built)} files, including:", "",
