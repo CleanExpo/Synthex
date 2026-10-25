@@ -52,14 +52,14 @@ def made_for_you():
 def test_ready_made_order_builds_card_with_film_links_and_contact(tmp_path):
     r, out = run(tmp_path, SAMPLE)
     assert r.returncode == 0, r.stderr
-    page = (out / "index.html").read_text(encoding="utf-8")
+    page = (out / "card" / "index.html").read_text(encoding="utf-8")
     kit = kit_in(page)
     film = kit["brand"]["editions"]["restoration"]
     assert film["status"] == "found" and film["hostedVideo"] == "media/edition-restoration.mp4"
-    assert (out / "media" / "edition-restoration.mp4").stat().st_size > 100_000
+    assert (out / "card" / "media" / "edition-restoration.mp4").stat().st_size > 100_000
     assert kit["brand"]["rotation"] == ["restoration"]
     assert [l["url"] for l in kit["person"]["links"]] == ["https://example.com", "https://hotwater.example.com"]
-    vcf = (out / f"{kit['id']}.vcf").read_text(encoding="utf-8")
+    vcf = (out / "card" / f"{kit['id']}.vcf").read_text(encoding="utf-8")
     for line in ("FN:Sam Sample", "EMAIL;TYPE=WORK:sam@example.com", "TEL;TYPE=CELL:+61400555123",
                  "item1.URL:https://example.com", "item2.URL:https://hotwater.example.com", "PHOTO;ENCODING=b;TYPE=PNG:"):
         assert line in vcf, line
@@ -73,7 +73,7 @@ def test_ready_made_ships_only_the_chosen_film(tmp_path):
     r, out = run(tmp_path, SAMPLE)
     assert r.returncode == 0, r.stderr
     videos = [f for f in files(out) if f.endswith((".mp4", ".webm"))]
-    assert videos == [os.path.join("media", "edition-restoration.mp4")]
+    assert videos == [os.path.join("card", "media", "edition-restoration.mp4")]
 
 
 # A made-for-you order builds a proof that says plainly the film is pending, and ships no film at all.
@@ -83,7 +83,7 @@ def test_made_for_you_builds_proof_with_film_pending_and_no_film(tmp_path):
     proof = (out / "PROOF.md").read_text(encoding="utf-8")
     assert "FILM PENDING" in proof
     assert not [f for f in files(out) if f.endswith((".mp4", ".webm"))]
-    kit = kit_in((out / "index.html").read_text(encoding="utf-8"))
+    kit = kit_in((out / "card" / "index.html").read_text(encoding="utf-8"))
     assert not kit["brand"].get("editions") and not kit["brand"].get("hero") and not kit["brand"].get("films")
 
 
@@ -179,9 +179,9 @@ def test_phone_null_means_no_phone(tmp_path):
     order["phone"] = None
     r, out = run(tmp_path, order)
     assert r.returncode == 0, r.stderr
-    kit = kit_in((out / "index.html").read_text(encoding="utf-8"))
+    kit = kit_in((out / "card" / "index.html").read_text(encoding="utf-8"))
     assert kit["person"]["phones"] == []
-    assert "TEL" not in (out / f"{kit['id']}.vcf").read_text(encoding="utf-8")
+    assert "TEL" not in (out / "card" / f"{kit['id']}.vcf").read_text(encoding="utf-8")
 
 
 # A build never mixes with an earlier one.
@@ -199,11 +199,11 @@ def test_extra_business_order_renders_every_business(tmp_path):
     order["extra_businesses"] = 2
     r, out = run(tmp_path, order)
     assert r.returncode == 0, r.stderr
-    kit = kit_in((out / "index.html").read_text(encoding="utf-8"))
+    kit = kit_in((out / "card" / "index.html").read_text(encoding="utf-8"))
     links = kit["person"]["links"]
     assert [l["label"] for l in links] == ["Sample Plumbing Co", "Sample Hot Water", "Sample Gas Fitting"]
     assert all(l["visitor"] for l in links)
-    vcf = (out / f"{kit['id']}.vcf").read_text(encoding="utf-8")
+    vcf = (out / "card" / f"{kit['id']}.vcf").read_text(encoding="utf-8")
     assert "item3.URL:https://gas.example.com" in vcf and "item3.X-ABLabel:Sample Gas Fitting" in vcf
     proof = (out / "PROOF.md").read_text(encoding="utf-8")
     for b in order["businesses"]:
@@ -219,3 +219,23 @@ def test_schema_and_builder_agree():
         sys.path.pop(0)
     assert list(build_order.REQUIRED) == SCHEMA["required"]
     assert list(build_order.FILMS) == TEN == SCHEMA["properties"]["film"]["enum"][:10]
+
+
+# Only card/ is ever hosted: the proof, the kit and the order stay beside it, and no local path reaches the page.
+def test_working_record_stays_out_of_the_hosted_folder(tmp_path):
+    r, out = run(tmp_path, SAMPLE)
+    assert r.returncode == 0, r.stderr
+    assert sorted(os.listdir(out)) == ["PROOF.md", "brand-kit.json", "card", "order.json"]
+    card = files(out / "card")
+    assert not [f for f in card if f.endswith(("PROOF.md", "brand-kit.json", "order.json"))]
+    page = (out / "card" / "index.html").read_text(encoding="utf-8")
+    # repo-relative media paths ride along in the kit as they do on every card build.py makes; no machine path may
+    assert "file:" not in page and str(tmp_path) not in page and os.path.dirname(os.path.dirname(HERE)) not in page
+
+
+# The buyer's logo is staged inside the repository only while build.py runs.
+def test_staged_logo_is_removed(tmp_path):
+    r, _ = run(tmp_path, SAMPLE)
+    assert r.returncode == 0, r.stderr
+    work = os.path.join(HERE, ".work")
+    assert not os.path.exists(work) or not os.listdir(work)
