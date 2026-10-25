@@ -143,12 +143,16 @@ $("fb").addEventListener("submit", e => {
 // key only, so a visitor can add a row and never read one (UNI-3000)
 const CAPTURE = { url: "https://lksfwktwtmyznckodsau.supabase.co", key: "sb_publishable_9MoYN-p4J5ExROt1MkQDBg_B4uYqYWT", slug: "phill-mcgurk" };
 // every body saved or in flight, not just the latest: an edit and resubmit mid-flight must not send a body twice
-const savedBodies = new Set(), sendingBodies = new Set();
+const savedBodies = new Set(), sendingBodies = new Map();
+let saveSeq = 0;
 // cut by code points, never inside a character: the database counts characters, not UTF-16 units
 const cut = (s, n) => Array.from(String(s)).slice(0, n).join("");
 const bytes = s => new TextEncoder().encode(s).length;
 function save(text, mods) {
-  const say = t => { $("saved").textContent = t; };
+  // every press takes the next token and only the newest may change the visible line; an older answer still
+  // updates the saved-body history, so an earlier answer set is never posted twice
+  const mine = ++saveSeq;
+  const say = t => { if (mine === saveSeq) $("saved").textContent = t; };
   if (!/^https?:$/.test(location.protocol)) { say("Not saved: text it to Phill instead"); return; }
   const answers = {
     save: pick("save"), save_how: cut($("save-how").value.trim(), 300), film: pick("film"), clear: pick("clear"),
@@ -165,12 +169,12 @@ function save(text, mods) {
   }
   const body = JSON.stringify({ card_slug: CAPTURE.slug, first_name: cut($("first").value.trim(), 60), answers, device: cut($("device").value.trim(), 200) || null });
   if (savedBodies.has(body)) { say("Saved. Thank you, Phill has your answers."); return; }
-  if (sendingBodies.has(body)) return;
-  sendingBodies.add(body);
+  const verdict = ok => say(ok ? "Saved. Thank you, Phill has your answers." : "Not saved: text it to Phill instead");
+  if (sendingBodies.has(body)) { say("Sending"); sendingBodies.get(body).then(verdict); return; }
   say("Sending");
   const ctl = typeof AbortController === "function" ? new AbortController() : null;
   const timer = ctl && setTimeout(() => ctl.abort(), 10000);
-  fetch(CAPTURE.url + "/rest/v1/card_feedback", {
+  const p = fetch(CAPTURE.url + "/rest/v1/card_feedback", {
     method: "POST",
     headers: { apikey: CAPTURE.key, "Content-Type": "application/json", Prefer: "return=minimal" },
     body, signal: ctl ? ctl.signal : undefined, credentials: "omit", referrerPolicy: "no-referrer"
@@ -178,8 +182,10 @@ function save(text, mods) {
     if (timer) clearTimeout(timer);
     sendingBodies.delete(body);
     if (ok) savedBodies.add(body);
-    say(ok ? "Saved. Thank you, Phill has your answers." : "Not saved: text it to Phill instead");
+    verdict(ok);
+    return ok;
   });
+  sendingBodies.set(body, p);
 }
 $("out-sms").addEventListener("click", () => { try { navigator.clipboard.writeText($("out-text").textContent).catch(() => {}); } catch (err) {} });
 $("out-copy").addEventListener("click", async e => {

@@ -126,16 +126,29 @@ async function visit(reply, delayMs = 0) {
       body: q.postData(),
     });
     // delayMs is one delay for every call, or a list with one delay per call in the order they arrive
-    const d = Array.isArray(delayMs) ? delayMs[calls.length - 1] || 0 : delayMs;
+    const n = calls.length - 1;
+    const d = Array.isArray(delayMs) ? delayMs[n] || 0 : delayMs;
+    const status = Array.isArray(reply) ? reply[n] : reply;
     if (d) await new Promise(res => setTimeout(res, d));
-    if (reply === 'abort') return r.abort();
-    return r.fulfill({ status: reply, body: '' });
+    if (status === 'abort') return r.abort();
+    return r.fulfill({ status, body: '' });
   });
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));
-  return { ctx, page, calls, errors };
+  const responses = [];
+  page.on('response', r => {
+    if (/supabase\.co/.test(r.url())) responses.push(r.status());
+  });
+  return { ctx, page, calls, errors, responses };
 }
+// wait until the page has received n answers from the database (never a fixed sleep standing in for them)
+const answered = async (responses, n) => {
+  const until = Date.now() + 15000;
+  while (responses.length < n && Date.now() < until)
+    await new Promise(r => setTimeout(r, 25));
+  return responses.length >= n;
+};
 const settle = page =>
   page.waitForFunction(
     id => !/^(Sending|Not sent)$/.test(document.getElementById(id).textContent),
@@ -377,7 +390,7 @@ try {
   }
   // 3c. edit and resubmit while an earlier request is still pending: each distinct answer set is saved once, never twice
   {
-    const { ctx, page, calls } = await visit(201, [300, 2500]);
+    const { ctx, page, calls, responses } = await visit(201, [300, 2500]);
     await page.goto(BASE + 'feedback.html');
     await page.fill('#first', 'Twice');
     await page.fill('#bugs', 'first answer');
@@ -385,24 +398,77 @@ try {
     await page.fill('#bugs', 'second answer');
     await page.click('button[type="submit"]');
     // the first request has settled, the second is still pending: pressing again must not send the second again
-    await page.waitForTimeout(900);
+    const firstBack = await answered(responses, 1);
     await page.click('button[type="submit"]');
+    // wait for the second response itself, then for the page to have handled it, before going back to the first
+    const secondBack = await answered(responses, 2);
     await page.waitForFunction(
       () => document.getElementById('saved').textContent.startsWith('Saved'),
       null,
       { timeout: 15000 }
     );
-    await page.waitForTimeout(500);
+    const beforeBack = calls.length;
     // both are saved: going back to the first answer must not send it again
     await page.fill('#bugs', 'first answer');
     await page.click('button[type="submit"]');
     await page.waitForTimeout(800);
     const sent = calls.map(c => JSON.parse(c.body).answers.bugs);
     check(
-      calls.length === 2 &&
+      firstBack &&
+        secondBack &&
+        beforeBack === 2 &&
+        calls.length === 2 &&
         sent[0] === 'first answer' &&
         sent[1] === 'second answer',
-      `feedback: edit and resubmit mid-flight saves each answer set once (${calls.length} POSTs: ${sent.join(' | ')})`
+      `feedback: edit and resubmit mid-flight saves each answer set once, no third POST (${calls.length} POSTs: ${sent.join(' | ')})`
+    );
+    await ctx.close();
+  }
+  // 3d. a late success for an older answer never turns the label to Saved while the newest answer failed
+  {
+    const { ctx, page, calls, responses } = await visit(
+      [201, 500],
+      [1500, 300]
+    );
+    await page.goto(BASE + 'feedback.html');
+    await page.fill('#first', 'Race');
+    await page.fill('#bugs', 'older answer');
+    await page.click('button[type="submit"]');
+    await page.fill('#bugs', 'newer answer');
+    await page.click('button[type="submit"]');
+    const both = await answered(responses, 2);
+    await page.waitForTimeout(400);
+    const label = await page.textContent('#saved');
+    check(
+      both && label.startsWith('Not saved'),
+      `feedback: the older answer saving late does not mask the newer answer failing (${label})`
+    );
+    // the older answer did save, so asking for it again posts nothing and the label then tells the truth about it
+    await page.fill('#bugs', 'older answer');
+    await page.click('button[type="submit"]');
+    await page.waitForTimeout(500);
+    check(
+      calls.length === 2 &&
+        (await page.textContent('#saved')).startsWith('Saved'),
+      'feedback: the older answer is remembered as saved even though its label was held back'
+    );
+    await ctx.close();
+  }
+  // 3e. the same race on Connect
+  {
+    const { ctx, page, responses } = await visit([201, 500], [1500, 300]);
+    await page.goto(BASE + '?me=1');
+    await page.click('#door-connect');
+    await page.fill('#f-msg', 'older enquiry');
+    await page.click('#enquiry button[type=submit]');
+    await page.fill('#f-msg', 'newer enquiry');
+    await page.click('#enquiry button[type=submit]');
+    const both = await answered(responses, 2);
+    await page.waitForTimeout(400);
+    const label = await page.textContent('#send-state');
+    check(
+      both && label.startsWith('Not saved'),
+      `connect: the older enquiry saving late does not mask the newer enquiry failing (${label})`
     );
     await ctx.close();
   }

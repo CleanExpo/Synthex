@@ -1,5 +1,5 @@
-// Built by build.py; do not edit by hand. Version 0c591bbbc59b
-const CACHE = 'card-0c591bbbc59b';
+// Built by build.py; do not edit by hand. Version 97314dfc771b
+const CACHE = 'card-97314dfc771b';
 const SHELL = [
   './',
   'phill-mcgurk.vcf',
@@ -77,16 +77,14 @@ self.addEventListener('fetch', e => {
         .catch(() =>
           card
             ? caches.match('./')
-            : caches
-                .match(r, { ignoreSearch: true })
-                .then(
-                  hit =>
-                    hit ||
-                    new Response(OFFLINE, {
-                      status: 503,
-                      headers: { 'Content-Type': 'text/html; charset=utf-8' },
-                    })
-                )
+            : caches.match(r, { ignoreSearch: true }).then(
+                hit =>
+                  hit ||
+                  new Response(OFFLINE, {
+                    status: 503,
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                  })
+              )
         )
     );
     return;

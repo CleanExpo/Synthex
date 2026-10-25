@@ -1307,13 +1307,17 @@ const CAPTURE = (() => {
     /^[a-z0-9-]{1,64}$/.test(c.slug) ? c : null;
 })();
 const sent = new Set(), sending = new Map();
+let sendSeq = 0;
 // cut by code points, never inside a character: the database counts characters, not UTF-16 units
 const cut = (s, n) => Array.from(s).slice(0, n).join("");
-// POST one row; the tag says Saved only on 201, and a resend of the same row (even mid-flight) is not saved twice
+// POST one row; the tag says Saved only on 201, and a resend of the same row (even mid-flight) is not saved twice.
+// Every call takes the next token and only the newest call may change the tag, so a late answer for an older
+// enquiry never overwrites what the visitor sees for the current one; the sent set still records every success.
 function sendRow(table, row, tag) {
-  const body = JSON.stringify(row), id = table + body;
-  if (sent.has(id)) { tag.textContent = "Saved"; return Promise.resolve(true); }
-  if (sending.has(id)) return sending.get(id);
+  const body = JSON.stringify(row), id = table + body, mine = ++sendSeq;
+  const show = ok => { if (mine === sendSeq) tag.textContent = ok ? "Saved" : "Not saved: copy it or email it instead"; return ok; };
+  if (sent.has(id)) return Promise.resolve(show(true));
+  if (sending.has(id)) { tag.textContent = "Sending"; return sending.get(id).then(show); }
   tag.textContent = "Sending";
   const ctl = typeof AbortController === "function" ? new AbortController() : null;
   const timer = ctl && setTimeout(() => ctl.abort(), 10000);
@@ -1325,8 +1329,7 @@ function sendRow(table, row, tag) {
     if (timer) clearTimeout(timer);
     sending.delete(id);
     if (ok) sent.add(id);
-    tag.textContent = ok ? "Saved" : "Not saved: copy it or email it instead";
-    return ok;
+    return show(ok);
   });
   sending.set(id, p);
   return p;
