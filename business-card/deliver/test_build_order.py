@@ -448,3 +448,33 @@ def test_long_and_non_ascii_links_build(tmp_path, url):
     assert r.returncode == 0, r.stderr
     page = (out / "card" / "index.html").read_text(encoding="utf-8")
     assert url in [l["url"] for l in kit_in(page)["person"]["links"]]
+
+
+# ---- review round 2 (Codex, head 724a4633): text that cannot be written, and JSON nested too deep to read ----
+@pytest.mark.parametrize("path", ["buyer_name", "role", "email", "colour_source", "businesses.0.name", "businesses.0.note",
+                                  "businesses.0.url"])
+def test_unpaired_surrogate_refuses_by_field_and_leaves_no_partial_output(tmp_path, path):
+    o = made_for_you()
+    o["brand_colour"], o["colour_source"] = "#abcdef", "from the buyer"
+    o["businesses"][0]["note"] = "a note"
+    node = o
+    *head, last = path.split(".")
+    for part in head:
+        node = node[int(part)] if part.isdigit() else node[part]
+    node[last] = {"url": "https://example.com/\ud800", "email": "sam\ud800@example.com"}.get(last, "Sam \ud800 Sample")
+    r, out = run_raw(tmp_path, json.dumps(o))          # json.dumps writes the escape \ud800, as a buyer's JSON would
+    refused_cleanly(r, out)
+    assert "Unicode" in r.stderr
+
+
+def test_json_nested_too_deep_refuses(tmp_path):
+    r, out = run_raw(tmp_path, "[" * 5000 + "]" * 5000)
+    refused_cleanly(r, out)
+
+
+# Deeply nested but still readable JSON is refused by the order checks, not by a stack overflow.
+@pytest.mark.parametrize("depth", [600, 900])
+def test_deeply_nested_readable_json_refuses_cleanly(tmp_path, depth):
+    raw = json.dumps(made_for_you())
+    r, out = run_raw(tmp_path, raw[:-1] + ', "extra": ' + "[" * depth + "]" * depth + "}")
+    refused_cleanly(r, out)

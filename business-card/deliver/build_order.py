@@ -290,6 +290,25 @@ def no_duplicate_keys(pairs):
     return dict(pairs)
 
 
+def unicode_problems(root):
+    """Every text in the order that cannot be written to a file (an unpaired surrogate), by its path.
+    Walks with a stack, not recursion, so a deeply nested order is refused by the checks, not by a crash."""
+    bad, stack = [], [(root, "the order")]
+    while stack:
+        node, where = stack.pop()
+        if isinstance(node, str):
+            try:
+                node.encode("utf-8")
+            except UnicodeEncodeError:
+                bad.append(where)
+        elif isinstance(node, dict):
+            for k, v in node.items():
+                stack += [(k, f"{where} key"), (v, f"{where}.{k}")]
+        elif isinstance(node, list):
+            stack += [(v, f"{where}[{i}]") for i, v in enumerate(node)]
+    return bad
+
+
 def run(cmd):
     r = subprocess.run([sys.executable, "-I"] + cmd, capture_output=True, text=True)
     if r.returncode != 0:
@@ -301,8 +320,12 @@ def build(order_path, out):
     try:
         with open(order_path, encoding="utf-8") as f:
             order = json.load(f, object_pairs_hook=no_duplicate_keys)
-    except (OSError, ValueError) as e:
-        raise Refused(f"cannot read the order {order_path}: {e}")
+    except (OSError, ValueError, RecursionError) as e:
+        raise Refused(f"cannot read the order {order_path}: {e if not isinstance(e, RecursionError) else 'it is nested too deeply'}")
+    bad = unicode_problems(order)
+    if bad:
+        raise Refused("the order has text that is not valid Unicode (an unpaired surrogate); nothing was built:\n"
+                      + "\n".join("  - " + b for b in bad))
     order_dir = os.path.dirname(os.path.abspath(order_path))
     errs = check(order, order_dir)
     if errs:
