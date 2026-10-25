@@ -505,6 +505,101 @@ try {
     );
     await ctx.close();
   }
+  // 3g. every free-text box has a visible limit and a counter, and what is posted is what is on screen
+  {
+    const { ctx, page, calls, responses } = await visit(201);
+    await page.goto(BASE + 'feedback.html');
+    await page.fill('#first', 'Limit');
+    await page.fill('#bugs', 'x'.repeat(300));
+    await page.evaluate(() => document.getElementById('fb').requestSubmit());
+    await answered(responses, 1);
+    await page.waitForFunction(
+      () => document.getElementById('saved').textContent.startsWith('Saved'),
+      null,
+      { timeout: 15000 }
+    );
+    // after a first save, typing past character 300 is refused by the box, and the counter says so
+    await page.focus('#bugs');
+    await page.keyboard.press('End');
+    await page.keyboard.type('ZZ');
+    const full = await page.inputValue('#bugs');
+    const counter = await page.evaluate(() => {
+      const n = document.getElementById('bugs-n');
+      return n ? n.textContent : null;
+    });
+    check(
+      full.length === 300 && counter === '300 / 300',
+      `feedback: a box cannot exceed 300 characters and shows the count (${full.length} characters, counter ${counter})`
+    );
+    // an edit inside the limit is a new answer: it is posted, and the post is exactly the text on screen
+    await page.keyboard.press('Backspace');
+    await page.keyboard.type('BQQ');
+    const shown = await page.inputValue('#bugs');
+    await page.evaluate(() => document.getElementById('fb').requestSubmit());
+    await answered(responses, 2);
+    await page.waitForTimeout(300);
+    const posted = calls[1] ? JSON.parse(calls[1].body).answers.bugs : null;
+    check(
+      calls.length === 2 &&
+        shown.length === 300 &&
+        shown.endsWith('B') &&
+        posted === shown,
+      `feedback: an edit at the limit posts exactly the text on screen (${calls.length} POSTs)`
+    );
+    await ctx.close();
+  }
+  // 3h. a value that gets past the limit anyway (autofill, a script) is cut in the box itself and the page says so
+  {
+    const { ctx, page, calls, responses } = await visit(201);
+    await page.goto(BASE + 'feedback.html');
+    await page.fill('#first', 'Over');
+    await page.evaluate(() => {
+      document.getElementById('bugs').value = 'y'.repeat(350);
+    });
+    await page.evaluate(() => document.getElementById('fb').requestSubmit());
+    await answered(responses, 1);
+    await page.waitForFunction(
+      () => document.getElementById('saved').textContent.startsWith('Saved'),
+      null,
+      { timeout: 15000 }
+    );
+    const shown = await page.inputValue('#bugs');
+    const posted = calls[0] ? JSON.parse(calls[0].body).answers.bugs : null;
+    const said = await page.textContent('#saved');
+    check(
+      shown.length === 300 && posted === shown && /shortened/.test(said),
+      `feedback: an over-long value is shortened on screen, posted as shown, and the label says so (${shown.length} shown, ${posted && posted.length} posted)`
+    );
+    await ctx.close();
+  }
+  // 3i. Connect: the message box has a limit and a counter, and the row carries exactly the text on screen
+  {
+    const { ctx, page, calls, responses } = await visit(201);
+    await page.goto(BASE + '?me=1');
+    await page.click('#door-connect');
+    await page.fill('#f-msg', 'm'.repeat(1700));
+    await page.focus('#f-msg');
+    await page.keyboard.press('End');
+    await page.keyboard.type('ZZ');
+    const full = await page.inputValue('#f-msg');
+    const counter = await page.evaluate(() => {
+      const n = document.getElementById('f-msg-n');
+      return n ? n.textContent : null;
+    });
+    await page.evaluate(() =>
+      document.getElementById('enquiry').requestSubmit()
+    );
+    await answered(responses, 1);
+    const ask = calls[0] ? JSON.parse(calls[0].body).ask : '';
+    check(
+      full.length === 1700 &&
+        counter === '1700 / 1700' &&
+        ask.length <= 2000 &&
+        ask.includes(full),
+      `connect: the message box cannot exceed its limit, shows the count, and the row carries all of it (${full.length} characters, counter ${counter}, ask ${ask.length})`
+    );
+    await ctx.close();
+  }
   // 4. the order page's live preview is not a hosted card: it never saves anything
   {
     const { ctx, page, calls } = await visit(201);

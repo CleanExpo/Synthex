@@ -395,16 +395,16 @@ body:not(.owner) .owner-only { display: none !important; }
       <button class="door" id="door-connect" type="button" aria-expanded="false" aria-controls="p-connect"><span class="k">CONNECT</span><strong>Get in touch</strong><span>Proposals, training, media or a job.</span></button>
       <div class="panel" id="p-connect" hidden>
         <form id="enquiry" novalidate>
-          <label for="f-name">Your name<input id="f-name" name="name" autocomplete="name" required value="Sam Example"></label>
-          <label for="f-email">Your email<input id="f-email" name="email" type="email" autocomplete="email" required value="sam@example.com.au"></label>
-          <label for="f-biz">Business<input id="f-biz" name="business" autocomplete="organization" value="Example Restorations, Ipswich"></label>
+          <label for="f-name">Your name<input id="f-name" name="name" maxlength="60" autocomplete="name" required value="Sam Example"></label>
+          <label for="f-email">Your email<input id="f-email" name="email" type="email" maxlength="254" autocomplete="email" required value="sam@example.com.au"></label>
+          <label for="f-biz">Business<input id="f-biz" name="business" maxlength="120" autocomplete="organization" value="Example Restorations, Ipswich"></label>
           <label for="f-type">It's about
             <select id="f-type" name="type">
               <option>A job or quote</option><option selected>A proposal or partnership</option>
               <option>Training</option><option>Media or speaking</option><option>Something else</option>
             </select>
           </label>
-          <label for="f-msg">Message<textarea id="f-msg" name="message" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea></label>
+          <label for="f-msg">Message<textarea id="f-msg" name="message" maxlength="1700" required>We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea><span class="fine" id="f-msg-n" style="display:block;text-align:right"></span></label>
           <p class="fine" style="margin:0">Example entry shown. Replace it with your own.</p>
           <button class="btn primary" type="submit" id="enquiry-go">Prepare my message</button>
         </form>
@@ -1318,10 +1318,22 @@ function sendRow(table, row, tag, mine) {
   sending.set(id, p);
   return p;
 }
+// the message box shows how much of its limit is used; the browser stops typing at the limit
+const showMsgCount = () => { $("f-msg-n").textContent = $("f-msg").value.length + " / " + $("f-msg").maxLength; };
+$("f-msg").addEventListener("input", showMsgCount); showMsgCount();
 if (CAPTURE) $("enquiry-go").textContent = "Send my message";
 $("enquiry").addEventListener("submit", e => {
   e.preventDefault();
   const mine = ++sendSeq;
+  // a value that got past a box's limit (autofill, a script) is cut in the box itself, so the row is what is on screen
+  for (const el of e.currentTarget.elements) {
+    if (el.maxLength > 0 && el.value.length > el.maxLength) {
+      let v = el.value.slice(0, el.maxLength);
+      if (/[\uD800-\uDBFF]$/.test(v)) v = v.slice(0, -1);
+      el.value = v;
+    }
+  }
+  showMsgCount();
   const f = new FormData(e.currentTarget);
   const name = (f.get("name") || "").trim(), email = (f.get("email") || "").trim(), msg = (f.get("message") || "").trim();
   if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
