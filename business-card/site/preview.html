@@ -1294,10 +1294,11 @@ let sendSeq = 0;
 // cut by code points, never inside a character: the database counts characters, not UTF-16 units
 const cut = (s, n) => Array.from(s).slice(0, n).join("");
 // POST one row; the tag says Saved only on 201, and a resend of the same row (even mid-flight) is not saved twice.
-// Every call takes the next token and only the newest call may change the tag, so a late answer for an older
-// enquiry never overwrites what the visitor sees for the current one; the sent set still records every success.
-function sendRow(table, row, tag) {
-  const body = JSON.stringify(row), id = table + body, mine = ++sendSeq;
+// Every press of Send takes the next token (even one that sends nothing) and only the newest press may change the
+// tag, so a late answer for an older enquiry never overwrites what the visitor sees now; the sent set still
+// records every success.
+function sendRow(table, row, tag, mine) {
+  const body = JSON.stringify(row), id = table + body;
   const show = ok => { if (mine === sendSeq) tag.textContent = ok ? "Saved" : "Not saved: copy it or email it instead"; return ok; };
   if (sent.has(id)) return Promise.resolve(show(true));
   if (sending.has(id)) { tag.textContent = "Sending"; return sending.get(id).then(show); }
@@ -1320,6 +1321,7 @@ function sendRow(table, row, tag) {
 if (CAPTURE) $("enquiry-go").textContent = "Send my message";
 $("enquiry").addEventListener("submit", e => {
   e.preventDefault();
+  const mine = ++sendSeq;
   const f = new FormData(e.currentTarget);
   const name = (f.get("name") || "").trim(), email = (f.get("email") || "").trim(), msg = (f.get("message") || "").trim();
   if (!name || !/^\S+@\S+\.\S+$/.test(email) || !msg) {
@@ -1346,7 +1348,7 @@ $("enquiry").addEventListener("submit", e => {
     reply_email: email.length <= 254 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? email : null,
     source: "card"
   };
-  sendRow("card_enquiries", row, $("send-state"));
+  sendRow("card_enquiries", row, $("send-state"), mine);
 });
 $("copy-msg").addEventListener("click", e => copy($("out-text").textContent, e.currentTarget));
 

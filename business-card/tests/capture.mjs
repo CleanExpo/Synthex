@@ -472,6 +472,39 @@ try {
     );
     await ctx.close();
   }
+  // 3f. a press that sends nothing (incomplete form, or the untouched example) still counts as the newest press:
+  // an older enquiry saving late must not overwrite what the visitor was just told
+  for (const early of ['incomplete', 'untouched']) {
+    const { ctx, page, calls, responses } = await visit(201, [1500]);
+    await page.goto(BASE + '?me=1');
+    await page.click('#door-connect');
+    await page.fill('#f-msg', 'older enquiry');
+    await page.click('#enquiry button[type=submit]');
+    if (early === 'incomplete') {
+      await page.fill('#f-msg', '');
+    } else {
+      await page.evaluate(() => {
+        for (const el of document.getElementById('enquiry').elements) {
+          if (el.tagName === 'SELECT')
+            for (const o of el.options) o.selected = o.defaultSelected;
+          else if ('defaultValue' in el && el.type !== 'submit')
+            el.value = el.defaultValue;
+        }
+      });
+    }
+    await page.click('#enquiry button[type=submit]');
+    const want =
+      early === 'incomplete' ? 'Not sent' : 'Example only, not saved';
+    const before = await page.textContent('#send-state');
+    const got = await answered(responses, 1);
+    await page.waitForTimeout(400);
+    const label = await page.textContent('#send-state');
+    check(
+      before === want && got && calls.length === 1 && label === want,
+      `connect: an older enquiry saving late does not overwrite the ${early} press (${before} then ${label})`
+    );
+    await ctx.close();
+  }
   // 4. the order page's live preview is not a hosted card: it never saves anything
   {
     const { ctx, page, calls } = await visit(201);
