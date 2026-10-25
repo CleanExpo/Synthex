@@ -7,3 +7,8 @@
 # The hosted card serves its logo PNG from site/media.
 !site/media/*.png
 .test-tmp/
+# Paid order -> card: the order builder, its tests and the fake sample logo are part of the card.
+!deliver/*.py
+!deliver/sample/*.png
+# build_order.py stages the buyer's logo here only while build.py runs.
+deliver/.work/
