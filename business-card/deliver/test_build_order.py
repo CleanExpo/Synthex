@@ -478,3 +478,130 @@ def test_deeply_nested_readable_json_refuses_cleanly(tmp_path, depth):
     raw = json.dumps(made_for_you())
     r, out = run_raw(tmp_path, raw[:-1] + ', "extra": ' + "[" * depth + "]" * depth + "}")
     refused_cleanly(r, out)
+
+
+# ---- review round 3 (Codex, head 03ac4bf3): every byte of the logo that is not picture is dropped; unreadable logo refuses ----
+def png_chunks(data):
+    import struct
+    out, pos = [], 8
+    while pos < len(data):
+        n = struct.unpack(">I", data[pos:pos + 4])[0]
+        out.append((data[pos + 4:pos + 8], data[pos + 8:pos + 8 + n]))
+        pos += 12 + n
+    return out
+
+
+def png_from(chunks):
+    import struct
+    import zlib
+    return b"\x89PNG\r\n\x1a\n" + b"".join(
+        struct.pack(">I", len(b)) + k + b + struct.pack(">I", zlib.crc32(k + b) & 0xffffffff) for k, b in chunks)
+
+
+def build_with_logo(tmp_path, logo_bytes, ext="png"):
+    o = made_for_you()
+    o["logo_file"] = f"logo.{ext}"
+    folder = tmp_path / "order"
+    folder.mkdir()
+    (folder / f"logo.{ext}").write_bytes(logo_bytes)
+    (folder / "order.json").write_text(json.dumps(o), encoding="utf-8")
+    out = tmp_path / "out"
+    r = subprocess.run([sys.executable, "-I", SCRIPT, str(folder / "order.json"), str(out)], capture_output=True, text=True)
+    return r, out
+
+
+def png_variants():
+    import zlib
+    chunks = png_chunks(open(LOGO, "rb").read())
+    ihdr = chunks[0][1]
+    idat = b"".join(b for k, b in chunks if k == b"IDAT")
+    return {
+        "bytes-in-IEND": [c for c in chunks if c[0] != b"IEND"] + [(b"IEND", MARK)],
+        "unused-bytes-after-the-zlib-stream": [(b"IHDR", ihdr), (b"IDAT", idat + MARK), (b"IEND", b"")],
+        "hidden-in-a-second-IDAT": [(b"IHDR", ihdr), (b"IDAT", idat), (b"IDAT", MARK), (b"IEND", b"")],
+    }
+
+
+@pytest.mark.parametrize("name", ["bytes-in-IEND", "unused-bytes-after-the-zlib-stream", "hidden-in-a-second-IDAT"])
+def test_png_payload_that_a_decoder_ignores_never_reaches_the_hosted_folder(tmp_path, name):
+    raw = png_from(png_variants()[name])
+    assert MARK in raw
+    r, out = build_with_logo(tmp_path, raw)
+    if r.returncode != 0:                      # refusing it is also a clean answer; shipping it is not
+        refused_cleanly(r, out)
+    else:
+        assert hosted_has(out, MARK) is None
+
+
+def test_png_pictures_still_look_the_same_after_cleaning(tmp_path):
+    import zlib
+    r, out = build_with_logo(tmp_path, open(LOGO, "rb").read())
+    assert r.returncode == 0, r.stderr
+    shipped = (next((out / "card" / "media").glob("*.png"))).read_bytes()
+    pix = lambda d: zlib.decompress(b"".join(b for k, b in png_chunks(d) if k == b"IDAT"))
+    assert pix(shipped) == pix(open(LOGO, "rb").read())
+
+
+def test_interlaced_or_cut_short_png_refuses(tmp_path):
+    chunks = png_chunks(open(LOGO, "rb").read())
+    ihdr = bytearray(chunks[0][1])
+    ihdr[12] = 1                                                   # Adam7 interlacing
+    r, out = build_with_logo(tmp_path, png_from([(b"IHDR", bytes(ihdr))] + chunks[1:]))
+    refused_cleanly(r, out)
+    idat = b"".join(b for k, b in chunks if k == b"IDAT")
+    (tmp_path / "b").mkdir()
+    r, out2 = build_with_logo(tmp_path / "b", png_from([chunks[0], (b"IDAT", idat[:len(idat) // 2]), chunks[-1]]))
+    refused_cleanly(r, out2)
+
+
+def jpeg_scans(extra_between=b"", extra_after_scan=b"", app14=b"", after_eoi=b""):
+    def seg(m, body):
+        return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
+    sos = seg(0xDA, b"\x01\x01\0\0\x3f\0")
+    return (b"\xff\xd8" + seg(0xDB, b"\0" + bytes(64)) + seg(0xC2, b"\x08\0\x08\0\x08\x01\x01\x11\0")
+            + seg(0xC4, b"\0" + bytes(16)) + app14
+            + sos + b"\x12\xff\x00\x34" + extra_after_scan + extra_between + sos + b"\x56\x78"
+            + b"\xff\xd9" + after_eoi)
+
+
+def seg_of(m, body):
+    return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
+
+
+JPEG_CASES = {
+    "COM-after-a-scan": dict(extra_after_scan=seg_of(0xFE, MARK)),
+    "APP-between-scans": dict(extra_between=seg_of(0xE5, MARK)),
+    "long-APP14": dict(app14=seg_of(0xEE, b"Adobe" + bytes(7) + MARK)),
+    "after-the-first-EOI": dict(after_eoi=MARK + b"\xff\xd9"),
+}
+
+
+@pytest.mark.parametrize("name", list(JPEG_CASES))
+def test_jpeg_payload_outside_the_picture_never_reaches_the_hosted_folder(tmp_path, name):
+    raw = jpeg_scans(**JPEG_CASES[name])
+    assert MARK in raw
+    r, out = build_with_logo(tmp_path, raw, "jpg")
+    assert r.returncode == 0, r.stderr
+    assert hosted_has(out, MARK) is None
+    shipped = next((out / "card" / "media").glob("*.jp*g")).read_bytes()
+    assert shipped.count(b"\xff\xda") == 2 and shipped.endswith(b"\xff\xd9")      # both scans are still there
+    assert b"\x12\xff\x00\x34" in shipped and b"\x56\x78" in shipped               # and so is their picture data
+
+
+def test_unreadable_logo_refuses_by_name_with_nothing_built(tmp_path):
+    o = made_for_you()
+    folder = tmp_path / "order"
+    folder.mkdir()
+    logo = folder / "sample-plumbing-co-logo.png"
+    shutil.copy(LOGO, logo)
+    (folder / "order.json").write_text(json.dumps(o), encoding="utf-8")
+    out = tmp_path / "out"
+    os.chmod(logo, 0)
+    try:
+        r = subprocess.run([sys.executable, "-I", SCRIPT, str(folder / "order.json"), str(out)], capture_output=True, text=True)
+    finally:
+        os.chmod(logo, 0o644)
+    if os.access(logo, os.R_OK) and r.returncode == 0:
+        pytest.skip("this account can read a mode-000 file")
+    refused_cleanly(r, out)
+    assert "logo_file" in r.stderr

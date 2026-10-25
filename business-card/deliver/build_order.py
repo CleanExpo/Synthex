@@ -166,63 +166,111 @@ def logo_path(order, order_dir, errs):
     elif not os.path.isfile(path):
         errs.append(f"'logo_file' {rel!r} does not exist (read from {order_dir})")
     else:
-        data = open(path, "rb").read()
+        try:
+            with open(path, "rb") as f:
+                data = f.read(LOGO_MAX + 1)
+        except OSError as e:
+            errs.append(f"'logo_file' {rel!r} cannot be read: {e.strerror or e}")
+            return None
         if not data.startswith(LOGO_TYPES[ext]):
             errs.append(f"'logo_file' {rel!r} is not really a {ext[1:].upper()}")
         elif len(data) > LOGO_MAX:
-            errs.append(f"'logo_file' {rel!r} is {len(data)} bytes; use a copy of about 256 px (at most {LOGO_MAX} bytes)")
+            errs.append(f"'logo_file' {rel!r} is over {LOGO_MAX} bytes; use a copy of about 256 px")
         else:
             return path
     return None
 
 
-PNG_KEEP = (b"IHDR", b"PLTE", b"tRNS", b"IDAT")     # pixels only: no text, EXIF, XMP, profile or other ancillary chunk
+CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}              # PNG colour type -> samples per pixel
 
 
 def clean_png(data):
-    """The same picture rebuilt from its critical chunks, each checksum verified, with nothing after IEND."""
-    out, pos, seen = [data[:8]], 8, []
+    """The same picture rebuilt from its pixels alone: header, palette, transparency, and the picture data
+    decompressed, checked to be exactly the size the header promises, and compressed again as one chunk.
+    Text, EXIF, XMP, profiles, bytes inside IEND and bytes after the compressed picture cannot survive that."""
+    chunks, pos = [], 8
     while pos + 12 <= len(data):
         n = struct.unpack(">I", data[pos:pos + 4])[0]
-        kind, body = data[pos + 4:pos + 8], data[pos + 8:pos + 8 + n]
-        crc = data[pos + 8 + n:pos + 12 + n]
+        kind, body, crc = data[pos + 4:pos + 8], data[pos + 8:pos + 8 + n], data[pos + 8 + n:pos + 12 + n]
         if len(body) != n or len(crc) != 4 or struct.unpack(">I", crc)[0] != zlib.crc32(kind + body) & 0xffffffff:
             raise Refused("the logo is a damaged PNG (a chunk's checksum or length is wrong)")
-        seen.append(kind)
-        if kind in PNG_KEEP or kind == b"IEND":
-            out.append(data[pos:pos + 12 + n])
+        chunks.append((kind, body))
         pos += 12 + n
         if kind == b"IEND":
             break
-    if not seen or seen[0] != b"IHDR" or b"IDAT" not in seen or seen[-1] != b"IEND":
+    kinds = [k for k, _ in chunks]
+    if not chunks or kinds[0] != b"IHDR" or kinds[-1] != b"IEND" or b"IDAT" not in kinds or len(chunks[0][1]) != 13:
         raise Refused("the logo is a damaged PNG (it needs IHDR, picture data and IEND)")
-    return b"".join(out)
+    if chunks[-1][1]:
+        raise Refused("the logo is a PNG with extra bytes inside its end marker; save a fresh copy")
+    width, height, depth, ctype, _, _, interlace = struct.unpack(">IIBBBBB", chunks[0][1])
+    if interlace != 0:
+        raise Refused("the logo is an interlaced PNG; save a copy without interlacing")
+    if ctype not in CHANNELS or depth not in (1, 2, 4, 8, 16) or not (0 < width < 100_000 and 0 < height < 100_000):
+        raise Refused("the logo is a PNG with an unsupported header")
+    row = 1 + (width * CHANNELS[ctype] * depth + 7) // 8
+    d = zlib.decompressobj()
+    try:
+        raw = d.decompress(b"".join(b for k, b in chunks if k == b"IDAT"), row * height + 1)
+    except zlib.error:
+        raise Refused("the logo is a damaged PNG (its picture data cannot be read)")
+    if not d.eof or d.unused_data or d.unconsumed_tail or len(raw) != row * height:
+        raise Refused("the logo is a damaged PNG (its picture data is not exactly the size its header says)")
+    if any(raw[i] > 4 for i in range(0, len(raw), row)):
+        raise Refused("the logo is a damaged PNG (a row has an unknown filter)")
+    keep = [(k, b) for k, b in chunks if k in (b"IHDR", b"PLTE", b"tRNS")]
+    pieces = [data[:8]]
+    for k, b in keep + [(b"IDAT", zlib.compress(raw, 9)), (b"IEND", b"")]:
+        pieces.append(struct.pack(">I", len(b)) + k + b + struct.pack(">I", zlib.crc32(k + b) & 0xffffffff))
+    return b"".join(pieces)
+
+
+JPEG_NO_LENGTH = set(range(0xD0, 0xD8)) | {0x01}
+JPEG_KEEP = {0xDB, 0xC4, 0xCC, 0xDD, 0xDC} | (set(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC})   # tables, frame, restart interval
 
 
 def clean_jpeg(data):
-    """The same picture with every comment and application block (EXIF, XMP, ICC...) left out, and nothing after EOI."""
-    out, pos = [b"\xff\xd8"], 2
+    """The same picture rebuilt from its tables, frame header and scans alone. Every comment and application block
+    (EXIF, XMP, ICC and the rest) is dropped wherever it sits, including between scans, and everything after the
+    first end marker is dropped. Only a plain JFIF header (no thumbnail) and a 12-byte Adobe colour block are kept."""
+    n_data, out, pos, scans = len(data), [b"\xff\xd8"], 2, 0
     while True:
-        if pos + 4 > len(data) or data[pos] != 0xFF:
+        while pos < n_data and data[pos] == 0xFF and pos + 1 < n_data and data[pos + 1] == 0xFF:
+            pos += 1
+        if pos + 2 > n_data or data[pos] != 0xFF:
             raise Refused("the logo is a damaged JPEG (a segment marker is missing)")
         marker = data[pos + 1]
-        if marker == 0xFF:
-            pos += 1
-            continue
+        if marker == 0xD9:
+            if not scans:
+                raise Refused("the logo is a damaged JPEG (it has no picture data)")
+            out.append(b"\xff\xd9")
+            return b"".join(out)
+        if marker in JPEG_NO_LENGTH or marker == 0xD8 or marker == 0x00:
+            raise Refused("the logo is a damaged JPEG (an unexpected marker)")
+        if pos + 4 > n_data:
+            raise Refused("the logo is a damaged JPEG (a segment is cut short)")
         n = struct.unpack(">H", data[pos + 2:pos + 4])[0]
         seg = data[pos:pos + 2 + n]
         if n < 2 or len(seg) != 2 + n:
             raise Refused("the logo is a damaged JPEG (a segment is cut short)")
-        if marker == 0xDA:                                   # start of scan: the picture data runs to EOI
-            end = data.rfind(b"\xff\xd9")
-            if end < pos + 2 + n:
-                raise Refused("the logo is a damaged JPEG (no end marker)")
-            out += [seg, data[pos + 2 + n:end], b"\xff\xd9"]
-            return b"".join(out)
-        plain_jfif = marker == 0xE0 and seg[4:9] == b"JFIF\0" and n == 16 and seg[17:19] == b"\0\0"   # no thumbnail
-        if not (0xE0 <= marker <= 0xEF or marker == 0xFE) or plain_jfif or marker == 0xEE:    # APP14 Adobe: colour handling
-            out.append(seg)
         pos += 2 + n
+        if marker == 0xDA:                                   # a scan: its picture data runs to the next real marker
+            end = pos
+            while end < n_data:
+                if data[end] == 0xFF and end + 1 < n_data and data[end + 1] not in (0x00, 0xFF) and not 0xD0 <= data[end + 1] <= 0xD7:
+                    break
+                end += 2 if data[end] == 0xFF and end + 1 < n_data and data[end + 1] == 0x00 else 1
+            if end >= n_data:
+                raise Refused("the logo is a damaged JPEG (no end marker)")
+            out += [seg, data[pos:end]]
+            pos, scans = end, scans + 1
+        elif marker in JPEG_KEEP:
+            out.append(seg)
+        elif marker == 0xE0 and n == 16 and seg[4:9] == b"JFIF\0" and seg[16:18] == b"\0\0":
+            out.append(seg)
+        elif marker == 0xEE and n == 14 and seg[4:9] == b"Adobe":
+            out.append(seg)
+        # anything else (comments, EXIF, XMP, ICC, unknown blocks) is left out
 
 
 def clean_logo(path, data):
@@ -451,6 +499,8 @@ def main(argv):
         built = build(*argv)
     except Refused as e:
         sys.exit(f"REFUSED: {e}")
+    except OSError as e:
+        sys.exit(f"REFUSED: a file could not be read or written ({e}); out_dir may be part-written, so delete it and start again")
     print(f"Built {len(built)} files into {os.path.join(argv[1], 'card')}. Read {os.path.join(argv[1], 'PROOF.md')} next.")
 
 
