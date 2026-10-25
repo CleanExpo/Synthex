@@ -249,3 +249,202 @@ def test_buyer_card_shelf_is_not_named_unite_group(tmp_path):
     assert kit["brand"]["shelf"] == {"title": "Sam's businesses", "text": "Tap one to visit its website."}
     template = open(os.path.join(os.path.dirname(HERE), "card.html"), encoding="utf-8").read()
     assert 'B.shelf' in template, "card.html does not read the kit's shelf heading"
+
+
+# ---- review round 1 (Codex, head 192448df): loud refusals, one reading of the order, a clean hosted folder ----
+
+def run_raw(tmp_path, order_text, logo_bytes=None, out_name="out"):
+    """Like run(), but the order is given as JSON text and the logo may be any bytes (the buyer's file as it arrives)."""
+    folder = tmp_path / "order"
+    folder.mkdir(exist_ok=True)
+    if logo_bytes is None:
+        shutil.copy(LOGO, folder / "sample-plumbing-co-logo.png")
+    else:
+        (folder / "sample-plumbing-co-logo.png").write_bytes(logo_bytes)
+    path = folder / "order.json"
+    path.write_text(order_text, encoding="utf-8")
+    out = tmp_path / out_name
+    r = subprocess.run([sys.executable, "-I", SCRIPT, str(path), str(out)], capture_output=True, text=True)
+    return r, out
+
+
+def refused_cleanly(r, out):
+    assert r.returncode != 0
+    assert r.stderr.startswith("REFUSED:"), r.stderr[-400:]
+    assert "Traceback" not in r.stderr
+    assert not out.exists() or not os.listdir(out), "a refused order must build nothing"
+
+
+def bad_value(field, value):
+    o = made_for_you()
+    o[field] = value
+    return o
+
+
+WRONG_TYPES = [("tier", []), ("tier", {}), ("order_ref", 123), ("order_ref", True), ("film", []), ("logo_file", ""),
+               ("logo_file", False), ("logo_file", 0), ("logo_file", []), ("logo_file", {}),
+               ("buyer_name", 123), ("role", []), ("email", 5), ("brand_colour", 123)]
+
+
+# Wrong JSON types refuse by field name with the REFUSED prefix, never a Python traceback, and build nothing.
+@pytest.mark.parametrize("field,value", WRONG_TYPES, ids=[f"{f}={v!r}" for f, v in WRONG_TYPES])
+def test_wrong_json_type_refuses_without_traceback(tmp_path, field, value):
+    o = bad_value(field, value)
+    if field == "brand_colour":
+        o["colour_source"] = "x"
+    r, out = run(tmp_path, o)
+    refused_cleanly(r, out)
+
+
+@pytest.mark.parametrize("value", [123, True])
+def test_colour_source_must_be_text(tmp_path, value):
+    o = made_for_you()
+    o["brand_colour"], o["colour_source"] = "#abcdef", value
+    r, out = run(tmp_path, o)
+    refused_cleanly(r, out)
+
+
+# A value with a trailing line break is not the value it looks like: nothing may pass on that.
+@pytest.mark.parametrize("field,value", [("order_ref", "ABC-123\n"), ("email", "sam@example.com\n"), ("tier", "made-for-you\n")])
+def test_trailing_line_break_refuses(tmp_path, field, value):
+    r, out = run(tmp_path, bad_value(field, value))
+    refused_cleanly(r, out)
+
+
+def test_trailing_line_break_in_colour_and_link_refuses(tmp_path):
+    o = made_for_you()
+    o["brand_colour"], o["colour_source"] = "#abcdef\n", "x"
+    r, out = run(tmp_path, o)
+    refused_cleanly(r, out)
+    o = made_for_you()
+    o["businesses"][0]["url"] = "https://example.com\n"
+    r, out = run(tmp_path, o, "out2")
+    refused_cleanly(r, out)
+
+
+def test_order_that_is_not_an_object_refuses(tmp_path):
+    r, out = run_raw(tmp_path, "[]")
+    refused_cleanly(r, out)
+
+
+# A key given twice is two answers to one question. The builder will not pick one for the buyer.
+def test_duplicate_top_level_key_refuses(tmp_path):
+    raw = json.dumps(made_for_you())
+    r, out = run_raw(tmp_path, '{"tier": "ready-made", ' + raw[1:])
+    refused_cleanly(r, out)
+    assert "duplicate" in r.stderr and "tier" in r.stderr
+
+
+def test_duplicate_key_inside_a_business_refuses(tmp_path):
+    raw = json.dumps(made_for_you()).replace('"url": "https://example.com"',
+                                              '"url": "https://a.example.com", "url": "https://example.com"')
+    assert raw.count('"url": "https://a.example.com"') == 1
+    r, out = run_raw(tmp_path, raw)
+    refused_cleanly(r, out)
+    assert "duplicate" in r.stderr and "url" in r.stderr
+
+
+# ---- the buyer's logo reaches the hosted folder with its pixels and nothing else ----
+MARK = b"PLANTED-PRIVATE-METADATA-MARKER"
+
+
+def png_with_extra_chunks():
+    import struct
+    import zlib
+    data = open(LOGO, "rb").read()
+
+    def chunk(kind, body):
+        return struct.pack(">I", len(body)) + kind + body + struct.pack(">I", zlib.crc32(kind + body) & 0xffffffff)
+    extra = (chunk(b"tEXt", b"Comment\0buyer_folder=/private/buyer/files " + MARK)
+             + chunk(b"iTXt", b"XML:com.adobe.xmp\0\0\0\0\0" + MARK)
+             + chunk(b"eXIf", MARK))
+    head = data[:8 + 25]                   # signature + the whole IHDR chunk
+    return head + extra + data[8 + 25:] + b"TRAILING-" + MARK
+
+
+def decoded_views(blob):
+    """The raw bytes, plus every long base64 run inside them decoded: the shapes a logo takes inside the page and contact."""
+    import base64
+    views = [blob]
+    for m in re.finditer(rb"[A-Za-z0-9+/=\r\n ]{120,}", blob):
+        try:
+            views.append(base64.b64decode(re.sub(rb"[\r\n ]", b"", m.group(0))))
+        except ValueError:
+            pass
+    return views
+
+
+def hosted_has(out, needle):
+    for root, _, names in os.walk(out / "card"):
+        for n in names:
+            blob = open(os.path.join(root, n), "rb").read()
+            if any(needle in v for v in decoded_views(blob)):
+                return os.path.join(root, n)
+    return None
+
+
+def test_planted_marker_is_found_when_present():
+    """The search itself can fail: a hosted file that holds the marker, raw or inside base64, is reported."""
+    import base64
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        os.makedirs(os.path.join(d, "card"))
+        with open(os.path.join(d, "card", "a.html"), "wb") as f:
+            f.write(b"<img src=\"data:image/png;base64," + base64.b64encode(b"A" * 100 + MARK + b"B" * 100) + b"\">")
+        from pathlib import Path
+        assert hosted_has(Path(d), MARK) is not None
+
+
+def test_png_metadata_never_reaches_the_hosted_folder(tmp_path):
+    raw = png_with_extra_chunks()
+    assert MARK in raw
+    r, out = run_raw(tmp_path, json.dumps(made_for_you()), raw)
+    assert r.returncode == 0, r.stderr
+    assert hosted_has(out, MARK) is None
+    assert hosted_has(out, b"buyer_folder") is None
+    shipped = list((out / "card" / "media").glob("*.png"))
+    assert shipped
+    for p in shipped:
+        assert p.read_bytes().startswith(b"\x89PNG\r\n\x1a\n") and p.read_bytes().endswith(b"IEND\xaeB`\x82")
+
+
+def test_png_with_a_bad_checksum_refuses(tmp_path):
+    data = bytearray(open(LOGO, "rb").read())
+    data[8 + 8 + 5] ^= 0xFF                # a byte inside IHDR: the checksum no longer matches
+    r, out = run_raw(tmp_path, json.dumps(made_for_you()), bytes(data))
+    refused_cleanly(r, out)
+
+
+def jpeg_with_metadata():
+    def seg(m, body):
+        return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
+    return (b"\xff\xd8" + seg(0xE1, b"Exif\0\0" + MARK) + seg(0xFE, MARK) + seg(0xDB, b"\0" + bytes(64))
+            + seg(0xC0, b"\x08\0\x08\0\x08\x01\x01\x11\0") + seg(0xC4, b"\0" + bytes(16))
+            + seg(0xDA, b"\x01\x01\0\0\x3f\0") + b"\x12\x34\x56" + b"\xff\xd9" + b"TRAILING-" + MARK)
+
+
+def test_jpeg_metadata_never_reaches_the_hosted_folder(tmp_path):
+    o = made_for_you()
+    o["logo_file"] = "sample-plumbing-co-logo.jpg"
+    folder = tmp_path / "order"
+    folder.mkdir()
+    (folder / "sample-plumbing-co-logo.jpg").write_bytes(jpeg_with_metadata())
+    (folder / "order.json").write_text(json.dumps(o), encoding="utf-8")
+    out = tmp_path / "out"
+    r = subprocess.run([sys.executable, "-I", SCRIPT, str(folder / "order.json"), str(out)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    assert hosted_has(out, MARK) is None
+    shipped = list((out / "card" / "media").glob("*.jp*g"))
+    assert shipped and all(p.read_bytes().startswith(b"\xff\xd8\xff") and p.read_bytes().endswith(b"\xff\xd9") for p in shipped)
+
+
+# ---- a valid link is never refused for being long or not plain ASCII ----
+@pytest.mark.parametrize("url", ["https://example.com/service?campaign=" + "x" * 90,
+                                 "https://example.com/café/店"])
+def test_long_and_non_ascii_links_build(tmp_path, url):
+    o = made_for_you()
+    o["businesses"][0]["url"] = url
+    r, out = run(tmp_path, o)
+    assert r.returncode == 0, r.stderr
+    page = (out / "card" / "index.html").read_text(encoding="utf-8")
+    assert url in [l["url"] for l in kit_in(page)["person"]["links"]]

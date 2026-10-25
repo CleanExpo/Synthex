@@ -19,8 +19,10 @@ import json
 import os
 import re
 import shutil
+import struct
 import subprocess
 import sys
+import zlib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CARD_DIR = os.path.dirname(HERE)                      # business-card/
@@ -39,11 +41,12 @@ PENDING = "custom, pending proof"
 TIERS = {"ready-made": 249, "made-for-you": 449}
 EXTRA_PRICE = 199
 
-REF = re.compile(r"^[A-Za-z0-9][A-Za-z0-9-]{2,39}$")
-EMAIL = re.compile(r'^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$')
-TEL = re.compile(r"^\+?[0-9]{6,15}$")
-HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
-SAFE_URL = re.compile(r'^https://[^\s"<>]+$')       # same rule as card.html, build.py and validate.py
+# All matched with fullmatch: "$" also matches before a trailing line break, which would let "x\n" through.
+REF = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{2,39}")
+EMAIL = re.compile(r'[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+')
+TEL = re.compile(r"\+?[0-9]{6,15}")
+HEX = re.compile(r"#[0-9A-Fa-f]{6}")
+SAFE_URL = re.compile(r'https://[^\s"<>]+')         # same rule as card.html, build.py and validate.py
 CTRL = re.compile(r"[\x00-\x1f\x7f  ]")
 LOGO_TYPES = {".png": b"\x89PNG\r\n\x1a\n", ".jpg": b"\xff\xd8\xff", ".jpeg": b"\xff\xd8\xff"}
 LOGO_MAX = 120_000                                     # build.py's limit for the contact picture
@@ -59,10 +62,10 @@ def text(order, key, errs, lo, hi):
     if not isinstance(v, str):
         errs.append(f"'{key}' must be text")
         return None
-    v = v.strip()
+    raw, v = v, v.strip()
     if not v:
         errs.append(f"'{key}' is blank")
-    elif CTRL.search(v):
+    elif CTRL.search(raw):
         errs.append(f"'{key}' must not contain line breaks or control characters")
     elif not lo <= len(v) <= hi:
         errs.append(f"'{key}' must be {lo} to {hi} characters")
@@ -78,12 +81,14 @@ def check(order, order_dir):
     errs = [f"missing required field '{k}'" for k in REQUIRED if k not in order or (order[k] is None and k != "phone")]
     errs += [f"'{k}' is not a field of the order format (payment data never goes in an order)"
              for k in order if k not in REQUIRED + OPTIONAL]
-    if "order_ref" in order and not REF.match(str(order["order_ref"] or "")):
+    if "order_ref" in order and not (isinstance(order["order_ref"], str) and REF.fullmatch(order["order_ref"])):
         errs.append("'order_ref' must be 3 to 40 letters, numbers or dashes")
     tier, film = order.get("tier"), order.get("film")
-    if "tier" in order and tier not in TIERS:
+    if "tier" in order and not (isinstance(tier, str) and tier in TIERS):
         errs.append(f"'tier' must be ready-made or made-for-you, not {tier!r}")
-    if "film" in order:
+    if "film" in order and not isinstance(film, str):
+        errs.append("'film' must be text")
+    elif "film" in order:
         if tier == "ready-made" and film not in FILMS:
             errs.append(f"'film' for a ready-made order must be one of the ten films ({', '.join(FILMS)}), not {film!r}")
         elif tier == "made-for-you" and film != PENDING:
@@ -97,7 +102,7 @@ def check(order, order_dir):
         errs.append("'buyer_name' needs at least one letter or number from A to Z or 0 to 9 for the card's file names")
     if "email" in order and order["email"] is not None:
         e = text(order, "email", errs, 3, 120)
-        if e and not EMAIL.match(e):
+        if e and not EMAIL.fullmatch(e):
             errs.append(f"'email' {e!r} is not an email address")
     if "phone" in order and order["phone"] is not None:
         p = order["phone"]
@@ -106,7 +111,7 @@ def check(order, order_dir):
         else:
             if not isinstance(p["display"], str) or not 6 <= len(p["display"].strip()) <= 30 or CTRL.search(p["display"]):
                 errs.append("'phone'.display must be the number as shown, 6 to 30 characters")
-            if not isinstance(p["tel"], str) or not TEL.match(p["tel"]):
+            if not isinstance(p["tel"], str) or not TEL.fullmatch(p["tel"]):
                 errs.append("'phone'.tel must be the number as dialled, digits with an optional leading +")
     businesses = order.get("businesses")
     if "businesses" in order and businesses is not None:
@@ -123,7 +128,7 @@ def check(order, order_dir):
                 errs += [f"{where} has '{k}', which is not a field of a business" for k in b if k not in ("name", "url", "note")]
                 if b.get("name") and (not isinstance(b["name"], str) or not 2 <= len(b["name"].strip()) <= 60 or CTRL.search(b["name"])):
                     errs.append(f"{where} 'name' must be 2 to 60 characters on one line")
-                if b.get("url") and not SAFE_URL.match(str(b["url"])):
+                if b.get("url") and not (isinstance(b["url"], str) and SAFE_URL.fullmatch(b["url"])):
                     errs.append(f"{where} 'url' must be plain https with no spaces, quotes or angle brackets, not {b['url']!r}")
                 if "note" in b and (not isinstance(b["note"], str) or len(b["note"]) > 60 or CTRL.search(b["note"])):
                     errs.append(f"{where} 'note' must be at most 60 characters on one line")
@@ -134,12 +139,18 @@ def check(order, order_dir):
         elif isinstance(businesses, list) and x != len(businesses) - 1:
             errs.append(f"'extra_businesses' is {x} but the order lists {len(businesses) - 1} business(es) after the main one; "
                         "check what was paid for")
-    if order.get("logo_file"):
-        logo_path(order, order_dir, errs)
+    if "logo_file" in order and order["logo_file"] is not None:
+        if not isinstance(order["logo_file"], str) or not order["logo_file"].strip():
+            errs.append("'logo_file' must be the file name of the buyer's logo (text, not blank)")
+        else:
+            logo_path(order, order_dir, errs)
     if "brand_colour" in order:
-        if not HEX.match(str(order["brand_colour"])):
+        if not (isinstance(order["brand_colour"], str) and HEX.fullmatch(order["brand_colour"])):
             errs.append("'brand_colour' must be #RRGGBB")
-        if not str(order.get("colour_source") or "").strip():
+        cs = order.get("colour_source")
+        if "colour_source" in order and not isinstance(cs, str):
+            errs.append("'colour_source' must be text")
+        elif not (cs or "").strip():
             errs.append("missing required field 'colour_source': say where 'brand_colour' came from")
     elif "colour_source" in order:
         errs.append("'colour_source' is given but 'brand_colour' is not")
@@ -163,6 +174,59 @@ def logo_path(order, order_dir, errs):
         else:
             return path
     return None
+
+
+PNG_KEEP = (b"IHDR", b"PLTE", b"tRNS", b"IDAT")     # pixels only: no text, EXIF, XMP, profile or other ancillary chunk
+
+
+def clean_png(data):
+    """The same picture rebuilt from its critical chunks, each checksum verified, with nothing after IEND."""
+    out, pos, seen = [data[:8]], 8, []
+    while pos + 12 <= len(data):
+        n = struct.unpack(">I", data[pos:pos + 4])[0]
+        kind, body = data[pos + 4:pos + 8], data[pos + 8:pos + 8 + n]
+        crc = data[pos + 8 + n:pos + 12 + n]
+        if len(body) != n or len(crc) != 4 or struct.unpack(">I", crc)[0] != zlib.crc32(kind + body) & 0xffffffff:
+            raise Refused("the logo is a damaged PNG (a chunk's checksum or length is wrong)")
+        seen.append(kind)
+        if kind in PNG_KEEP or kind == b"IEND":
+            out.append(data[pos:pos + 12 + n])
+        pos += 12 + n
+        if kind == b"IEND":
+            break
+    if not seen or seen[0] != b"IHDR" or b"IDAT" not in seen or seen[-1] != b"IEND":
+        raise Refused("the logo is a damaged PNG (it needs IHDR, picture data and IEND)")
+    return b"".join(out)
+
+
+def clean_jpeg(data):
+    """The same picture with every comment and application block (EXIF, XMP, ICC...) left out, and nothing after EOI."""
+    out, pos = [b"\xff\xd8"], 2
+    while True:
+        if pos + 4 > len(data) or data[pos] != 0xFF:
+            raise Refused("the logo is a damaged JPEG (a segment marker is missing)")
+        marker = data[pos + 1]
+        if marker == 0xFF:
+            pos += 1
+            continue
+        n = struct.unpack(">H", data[pos + 2:pos + 4])[0]
+        seg = data[pos:pos + 2 + n]
+        if n < 2 or len(seg) != 2 + n:
+            raise Refused("the logo is a damaged JPEG (a segment is cut short)")
+        if marker == 0xDA:                                   # start of scan: the picture data runs to EOI
+            end = data.rfind(b"\xff\xd9")
+            if end < pos + 2 + n:
+                raise Refused("the logo is a damaged JPEG (no end marker)")
+            out += [seg, data[pos + 2 + n:end], b"\xff\xd9"]
+            return b"".join(out)
+        plain_jfif = marker == 0xE0 and seg[4:9] == b"JFIF\0" and n == 16 and seg[17:19] == b"\0\0"   # no thumbnail
+        if not (0xE0 <= marker <= 0xEF or marker == 0xFE) or plain_jfif or marker == 0xEE:    # APP14 Adobe: colour handling
+            out.append(seg)
+        pos += 2 + n
+
+
+def clean_logo(path, data):
+    return clean_png(data) if path.lower().endswith(".png") else clean_jpeg(data)
 
 
 def slug(name):
@@ -216,6 +280,16 @@ def make_kit(order, logo_rel, logo_sha):
             "brand": brand, "person": person}
 
 
+def no_duplicate_keys(pairs):
+    """json.load hook: a key given twice is two answers to one question, so the order is refused, not guessed."""
+    seen = set()
+    for k, _ in pairs:
+        if k in seen:
+            raise ValueError(f"duplicate key {k!r}: give each field once")
+        seen.add(k)
+    return dict(pairs)
+
+
 def run(cmd):
     r = subprocess.run([sys.executable, "-I"] + cmd, capture_output=True, text=True)
     if r.returncode != 0:
@@ -225,7 +299,8 @@ def run(cmd):
 
 def build(order_path, out):
     try:
-        order = json.load(open(order_path, encoding="utf-8"))
+        with open(order_path, encoding="utf-8") as f:
+            order = json.load(f, object_pairs_hook=no_duplicate_keys)
     except (OSError, ValueError) as e:
         raise Refused(f"cannot read the order {order_path}: {e}")
     order_dir = os.path.dirname(os.path.abspath(order_path))
@@ -236,7 +311,7 @@ def build(order_path, out):
         raise Refused(f"out_dir {out} already has files in it; give an empty or new folder so builds never mix")
 
     logo_src = logo_path(order, order_dir, [])
-    data = open(logo_src, "rb").read()
+    data = clean_logo(logo_src, open(logo_src, "rb").read())   # the pixels only: what ships is what is hashed
     sha = hashlib.sha256(data).hexdigest()
     # build.py reads the logo from inside the repository; a hex folder name never looks like a film or poster
     stage = os.path.join(WORK, hashlib.sha256((order["order_ref"] + sha).encode()).hexdigest()[:12])
@@ -277,9 +352,14 @@ def verify(order, kit, card):
     elif films:
         raise Refused(f"a made-for-you card must ship no film before the custom film is approved, but has {films}")
     page = open(os.path.join(card, "index.html"), encoding="utf-8").read()
-    vcf = open(os.path.join(card, kit["id"] + ".vcf"), encoding="utf-8").read().replace("\r\n ", "")
+    m = re.search(r'<script id="brand-kit">window\.BRAND_KIT = (\{.*?\});</script>', page, re.S)
+    if not m:
+        raise Refused("build.py finished but card/index.html carries no brand kit")
+    page_links = [l.get("url") for l in json.loads(m.group(1)).get("person", {}).get("links", [])]
+    with open(os.path.join(card, kit["id"] + ".vcf"), encoding="utf-8", newline="") as f:
+        vcf = f.read().replace("\r\n ", "")                  # unfold the contact's 75-character lines
     for b in order["businesses"]:
-        if json.dumps(b["url"]) not in page or b["url"] not in vcf:
+        if b["url"] not in page_links or b["url"] not in vcf:
             raise Refused(f"business {b['name']!r} ({b['url']}) is missing from the built card or contact")
     return names
 
