@@ -5,7 +5,18 @@
   "description": "One paid card order, filled in by a person from the Stripe payment and the buyer's answers. Never holds payment data (no card numbers, Stripe IDs or amounts). build_order.py checks every rule here and refuses the order, naming each problem, when anything is missing or wrong. Nothing is filled in by default.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["order_ref", "tier", "film", "buyer_name", "role", "email", "phone", "businesses", "extra_businesses", "logo_file"],
+  "required": [
+    "order_ref",
+    "tier",
+    "film",
+    "buyer_name",
+    "role",
+    "email",
+    "phone",
+    "businesses",
+    "extra_businesses",
+    "logo_file"
+  ],
   "properties": {
     "order_ref": {
       "description": "Our reference for the order, written on the proof and the folder. Letters, numbers and dashes only.",
@@ -18,7 +29,19 @@
     },
     "film": {
       "description": "ready-made: the name of one of the ten ready-made films. made-for-you: exactly \"custom, pending proof\".",
-      "enum": ["portal", "restoration", "blueprint", "forge", "constellation", "ink", "rewind", "skyline", "origami", "magnet", "custom, pending proof"]
+      "enum": [
+        "portal",
+        "restoration",
+        "blueprint",
+        "forge",
+        "constellation",
+        "ink",
+        "rewind",
+        "skyline",
+        "origami",
+        "magnet",
+        "custom, pending proof"
+      ]
     },
     "buyer_name": {
       "description": "The buyer's name exactly as it should show on the card and in the saved contact.",
@@ -43,8 +66,17 @@
       "additionalProperties": false,
       "required": ["display", "tel"],
       "properties": {
-        "display": { "description": "As shown, for example \"0400 555 123\".", "type": "string", "minLength": 6, "maxLength": 30 },
-        "tel": { "description": "As dialled, for example \"+61400555123\".", "type": "string", "pattern": "^\\+?[0-9]{6,15}$" }
+        "display": {
+          "description": "As shown, for example \"0400 555 123\".",
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 30
+        },
+        "tel": {
+          "description": "As dialled, for example \"+61400555123\".",
+          "type": "string",
+          "pattern": "^\\+?[0-9]{6,15}$"
+        }
       }
     },
     "businesses": {
@@ -58,8 +90,16 @@
         "required": ["name", "url"],
         "properties": {
           "name": { "type": "string", "minLength": 2, "maxLength": 60 },
-          "url": { "description": "Plain https, no spaces, quotes or angle brackets.", "type": "string", "pattern": "^https://[^\\s\"<>]+$" },
-          "note": { "description": "Optional short line under the business, for example \"Plumbing, Brisbane\".", "type": "string", "maxLength": 60 }
+          "url": {
+            "description": "Plain https, no spaces, quotes or angle brackets.",
+            "type": "string",
+            "pattern": "^https://[^\\s\"<>]+$"
+          },
+          "note": {
+            "description": "Optional short line under the business, for example \"Plumbing, Brisbane\".",
+            "type": "string",
+            "maxLength": 60
+          }
         }
       }
     },
@@ -70,9 +110,9 @@
       "maximum": 7
     },
     "logo_file": {
-      "description": "Path to the buyer's own logo (PNG or JPEG, at most 120000 bytes, about 256 px). Relative paths are read from the order file's folder. It is the card's logo and the saved contact's picture.",
+      "description": "Path to the buyer's own logo as a PNG (at most 120000 bytes, about 256 px; re-export a JPEG to PNG first). Relative paths are read from the order file's folder. It is the card's logo and the saved contact's picture.",
       "type": "string",
-      "pattern": "\\.(png|jpe?g)$"
+      "pattern": "\\.png$"
     },
     "brand_colour": {
       "description": "Optional. The buyer's own main colour as #RRGGBB, from their logo or website. Left out means the proof lists it as not yet supplied.",

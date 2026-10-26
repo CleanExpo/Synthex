@@ -415,29 +415,6 @@ def test_png_with_a_bad_checksum_refuses(tmp_path):
     refused_cleanly(r, out)
 
 
-def jpeg_with_metadata():
-    def seg(m, body):
-        return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
-    return (b"\xff\xd8" + seg(0xE1, b"Exif\0\0" + MARK) + seg(0xFE, MARK) + seg(0xDB, b"\0" + bytes(64))
-            + seg(0xC0, b"\x08\0\x08\0\x08\x01\x01\x11\0") + seg(0xC4, b"\0" + bytes(16))
-            + seg(0xDA, b"\x01\x01\0\0\x3f\0") + b"\x12\x34\x56" + b"\xff\xd9" + b"TRAILING-" + MARK)
-
-
-def test_jpeg_metadata_never_reaches_the_hosted_folder(tmp_path):
-    o = made_for_you()
-    o["logo_file"] = "sample-plumbing-co-logo.jpg"
-    folder = tmp_path / "order"
-    folder.mkdir()
-    (folder / "sample-plumbing-co-logo.jpg").write_bytes(jpeg_with_metadata())
-    (folder / "order.json").write_text(json.dumps(o), encoding="utf-8")
-    out = tmp_path / "out"
-    r = subprocess.run([sys.executable, "-I", SCRIPT, str(folder / "order.json"), str(out)], capture_output=True, text=True)
-    assert r.returncode == 0, r.stderr
-    assert hosted_has(out, MARK) is None
-    shipped = list((out / "card" / "media").glob("*.jp*g"))
-    assert shipped and all(p.read_bytes().startswith(b"\xff\xd8\xff") and p.read_bytes().endswith(b"\xff\xd9") for p in shipped)
-
-
 # ---- a valid link is never refused for being long or not plain ASCII ----
 @pytest.mark.parametrize("url", ["https://example.com/service?campaign=" + "x" * 90,
                                  "https://example.com/café/店"])
@@ -612,55 +589,24 @@ def test_cleaned_png_writes_palette_before_transparency(tmp_path):
         assert [k for k, _ in png_chunks(shipped)] == [b"IHDR", b"PLTE", b"tRNS", b"IDAT", b"IEND"]
 
 
-def jpeg_scans(extra_between=b"", extra_after_scan=b"", app14=b"", after_eoi=b""):
-    def seg(m, body):
-        return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
-    sos = seg(0xDA, b"\x01\x01\0\0\x3f\0")
-    return (b"\xff\xd8" + seg(0xDB, b"\0" + bytes(64)) + seg(0xC2, b"\x08\0\x08\0\x08\x01\x01\x11\0")
-            + seg(0xC4, b"\0" + bytes(16)) + app14
-            + sos + b"\x12\xff\x00\x34" + extra_after_scan + extra_between + sos + b"\x56\x78"
-            + b"\xff\xd9" + after_eoi)
+def test_jpeg_logo_refuses_and_says_how_to_reexport(tmp_path):
+    """A JPEG cannot be rebuilt from its pixels without an image library, so it is refused, never filtered."""
+    jpeg = b"\xff\xd8\xff\xe1\x00\x30Exif\0\0" + MARK + b"\xff\xd9"
+    r, out = build_with_logo(tmp_path, jpeg, "jpg")
+    refused_cleanly(r, out)
+    assert "must be a PNG" in r.stderr and "sips -s format png" in r.stderr
+    assert not out.exists() or hosted_has(out, MARK) is None
 
 
-def seg_of(m, body):
-    return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
-
-
-JPEG_CASES = {
-    "COM-after-a-scan": dict(extra_after_scan=seg_of(0xFE, MARK)),
-    "APP-between-scans": dict(extra_between=seg_of(0xE5, MARK)),
-    "long-APP14": dict(app14=seg_of(0xEE, b"Adobe" + bytes(7) + MARK)),
-    "after-the-first-EOI": dict(after_eoi=MARK + b"\xff\xd9"),
-}
-
-# segments a decoder needs, padded past their defined size: the builder refuses rather than ship the padding
-JPEG_REFUSE = {
-    "oversized-restart-interval": dict(app14=seg_of(0xDD, b"\0\x10" + MARK)),
-    "oversized-line-count": dict(extra_between=seg_of(0xDC, b"\0\x08" + MARK)),
-    "second-frame-header": dict(app14=seg_of(0xC1, b"\x08\0\x08\0\x08\x01\x01\x11\0" + MARK)),
-    "oversized-quantisation-table": dict(app14=seg_of(0xDB, b"\x01" + bytes(64) + MARK)),
-    "oversized-huffman-table": dict(app14=seg_of(0xC4, b"\x10" + bytes(16) + MARK)),
-}
-
-
-@pytest.mark.parametrize("name", list(JPEG_CASES))
-def test_jpeg_payload_outside_the_picture_never_reaches_the_hosted_folder(tmp_path, name):
-    raw = jpeg_scans(**JPEG_CASES[name])
-    assert MARK in raw
-    r, out = build_with_logo(tmp_path, raw, "jpg")
+def test_full_colour_png_suggested_palette_never_ships(tmp_path):
+    import struct
+    import zlib
+    pad = MARK + b"\0" * (-len(MARK) % 3)                     # a legal-length suggested palette carrying text
+    raw = png_from([(b"IHDR", struct.pack(">IIBBBBB", 2, 2, 8, 2, 0, 0, 0)), (b"PLTE", pad),
+                    (b"IDAT", zlib.compress(b"\0" + bytes(6) + b"\0" + bytes(6))), (b"IEND", b"")])
+    r, out = build_with_logo(tmp_path, raw)
     assert r.returncode == 0, r.stderr
     assert hosted_has(out, MARK) is None
-    shipped = next((out / "card" / "media").glob("*.jp*g")).read_bytes()
-    assert shipped.count(b"\xff\xda") == 2 and shipped.endswith(b"\xff\xd9")      # both scans are still there
-    assert b"\x12\xff\x00\x34" in shipped and b"\x56\x78" in shipped               # and so is their picture data
-
-
-@pytest.mark.parametrize("name", list(JPEG_REFUSE))
-def test_jpeg_kept_segment_carrying_extra_bytes_refuses(tmp_path, name):
-    raw = jpeg_scans(**JPEG_REFUSE[name])
-    assert MARK in raw
-    r, out = build_with_logo(tmp_path, raw, "jpg")
-    refused_cleanly(r, out)
 
 
 def test_png_with_unknown_compression_method_refuses(tmp_path):

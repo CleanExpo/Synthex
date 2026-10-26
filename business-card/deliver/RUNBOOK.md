@@ -35,7 +35,8 @@ Email the buyer from your own email. Ask for:
    contact they save.)
 5. Every business: its name, its website (must start with `https://`), and one short line about it.
    The first business is the main one. Each extra one must have been paid for.
-6. Their logo, as a PNG or JPEG file. It must be their own logo.
+6. Their logo, as a PNG or JPEG file. It must be their own logo. (A JPEG is fine from the buyer; you turn it
+   into a PNG in Step 3, because the builder only takes PNG.)
 7. Optional: their main brand colour (like `#1FA2D6`) and where it came from.
 8. Ready-made only: which of the ten films they want. The ten are portal, restoration, blueprint,
    forge, constellation, ink, rewind, skyline, origami and magnet.
@@ -52,7 +53,8 @@ Wait for their answers. **Never guess a missing answer.** If something is missin
    picture, so no hidden EXIF, GPS, author, comment or thumbnail data from the buyer's file comes along. On a Mac:
    `sips -s format png -Z 256 logo.jpg --out logo-256.png`
    On another computer use an equivalent re-encode (open the logo, then Export or Save As a new PNG). The builder
-   also drops the metadata it can see, but the re-export is the step that counts: tick it in PROOF.md.
+   only takes a PNG, and rebuilds it from its pixels again, but the re-export is the step that counts: tick it in
+   PROOF.md.
 5. Change every value in `order.json` to the buyer's answers:
 
 | Field                           | What goes in it                                                                        |

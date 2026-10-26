@@ -48,7 +48,7 @@ TEL = re.compile(r"\+?[0-9]{6,15}")
 HEX = re.compile(r"#[0-9A-Fa-f]{6}")
 SAFE_URL = re.compile(r'https://[^\s"<>]+')         # same rule as card.html, build.py and validate.py
 CTRL = re.compile(r"[\x00-\x1f\x7f  ]")
-LOGO_TYPES = {".png": b"\x89PNG\r\n\x1a\n", ".jpg": b"\xff\xd8\xff", ".jpeg": b"\xff\xd8\xff"}
+LOGO_TYPES = {".png": b"\x89PNG\r\n\x1a\n"}       # PNG only: it is rebuilt from its pixels (clean_png)
 LOGO_MAX = 120_000                                     # build.py's limit for the contact picture
 
 
@@ -162,7 +162,8 @@ def logo_path(order, order_dir, errs):
     path = os.path.abspath(os.path.join(order_dir, rel))
     ext = os.path.splitext(path)[1].lower()
     if ext not in LOGO_TYPES:
-        errs.append(f"'logo_file' {rel!r} must be a PNG or JPEG")
+        errs.append(f"'logo_file' {rel!r} must be a PNG; re-export it first (RUNBOOK step 3.4, e.g. "
+                    "sips -s format png -Z 256 logo.jpg --out logo-256.png)")
     elif not os.path.isfile(path):
         errs.append(f"'logo_file' {rel!r} does not exist (read from {order_dir})")
     else:
@@ -234,6 +235,8 @@ def clean_png(data):
     if trns and not ({0: len(trns[0]) == 2, 2: len(trns[0]) == 6,
                       3: bool(plte) and 0 < len(trns[0]) <= len(plte[0]) // 3}.get(ctype, False)):
         raise Refused("the logo is a PNG with a transparency block that does not fit its picture")
+    if ctype != 3:
+        plte = []                                       # only a palette picture needs its palette
     keep = [chunks[0]] + [(b"PLTE", b) for b in plte] + [(b"tRNS", b) for b in trns]   # the order the PNG spec requires
     pieces = [data[:8]]
     for k, b in keep + [(b"IDAT", zlib.compress(raw, 9)), (b"IEND", b"")]:
@@ -241,93 +244,8 @@ def clean_png(data):
     return b"".join(pieces)
 
 
-JPEG_NO_LENGTH = set(range(0xD0, 0xD8)) | {0x01}
-JPEG_FRAMES = {0xC0, 0xC1, 0xC2, 0xC3}                 # baseline, extended, progressive, lossless (Huffman coded)
-JPEG_KEEP = {0xDB, 0xC4, 0xDD, 0xDC} | JPEG_FRAMES      # tables, frame, restart interval, line count
-
-
-def jpeg_segment_fits(marker, body):
-    """True only when a kept segment's body is exactly what its marker defines, so no spare bytes ride along."""
-    n, i = len(body), 0
-    if marker in (0xDD, 0xDC):                          # restart interval, number of lines: two bytes
-        return n == 2
-    if marker in JPEG_FRAMES:                           # precision, height, width, components, 3 bytes each
-        return n >= 6 and 1 <= body[5] <= 4 and n == 6 + 3 * body[5]
-    if marker == 0xDB:                                  # quantisation tables: 1 + 64 or 1 + 128 bytes each
-        while i < n:
-            pq, tq = body[i] >> 4, body[i] & 15
-            if pq > 1 or tq > 3:
-                return False
-            i += 1 + 64 * (pq + 1)
-        return n > 0 and i == n
-    if marker == 0xC4:                                  # Huffman tables: 1 + 16 counts + that many values each
-        while i < n:
-            if i + 17 > n or body[i] >> 4 > 1 or body[i] & 15 > 3:
-                return False
-            count = sum(body[i + 1:i + 17])
-            if count > 256:
-                return False
-            i += 17 + count
-        return n > 0 and i == n
-    return False
-
-
-def clean_jpeg(data):
-    """The same picture rebuilt from its tables, frame header and scans alone. Every comment and application block
-    (EXIF, XMP, ICC and the rest) is dropped wherever it sits, including between scans, and everything after the
-    first end marker is dropped. Only a plain JFIF header (no thumbnail) and a 12-byte Adobe colour block are kept."""
-    n_data, out, pos, scans, frames = len(data), [b"\xff\xd8"], 2, 0, 0
-    while True:
-        while pos < n_data and data[pos] == 0xFF and pos + 1 < n_data and data[pos + 1] == 0xFF:
-            pos += 1
-        if pos + 2 > n_data or data[pos] != 0xFF:
-            raise Refused("the logo is a damaged JPEG (a segment marker is missing)")
-        marker = data[pos + 1]
-        if marker == 0xD9:
-            if not scans:
-                raise Refused("the logo is a damaged JPEG (it has no picture data)")
-            out.append(b"\xff\xd9")
-            return b"".join(out)
-        if marker in JPEG_NO_LENGTH or marker == 0xD8 or marker == 0x00:
-            raise Refused("the logo is a damaged JPEG (an unexpected marker)")
-        if pos + 4 > n_data:
-            raise Refused("the logo is a damaged JPEG (a segment is cut short)")
-        n = struct.unpack(">H", data[pos + 2:pos + 4])[0]
-        seg = data[pos:pos + 2 + n]
-        if n < 2 or len(seg) != 2 + n:
-            raise Refused("the logo is a damaged JPEG (a segment is cut short)")
-        pos += 2 + n
-        if marker == 0xDA:                                   # a scan: its picture data runs to the next real marker
-            if not (n >= 3 and 1 <= seg[4] <= 4 and n == 6 + 2 * seg[4]):
-                raise Refused("the logo is a JPEG with a scan header of the wrong size; save a fresh copy")
-            end = pos
-            while end < n_data:
-                if data[end] == 0xFF and end + 1 < n_data and data[end + 1] not in (0x00, 0xFF) and not 0xD0 <= data[end + 1] <= 0xD7:
-                    break
-                end += 2 if data[end] == 0xFF and end + 1 < n_data and data[end + 1] == 0x00 else 1
-            if end >= n_data:
-                raise Refused("the logo is a damaged JPEG (no end marker)")
-            out += [seg, data[pos:end]]
-            pos, scans = end, scans + 1
-        elif marker in JPEG_KEEP:
-            if not jpeg_segment_fits(marker, seg[4:]):
-                raise Refused("the logo is a JPEG with a table or header block of the wrong size; save a fresh copy")
-            if marker in JPEG_FRAMES:
-                frames += 1
-                if frames > 1:
-                    raise Refused("the logo is a JPEG with more than one frame header; save a fresh copy")
-            out.append(seg)
-        elif 0xC5 <= marker <= 0xCF and marker not in (0xC8,):
-            raise Refused("the logo is an arithmetic-coded or hierarchical JPEG; save it as a standard JPEG")
-        elif marker == 0xE0 and n == 16 and seg[4:9] == b"JFIF\0" and seg[16:18] == b"\0\0":
-            out.append(seg)
-        elif marker == 0xEE and n == 14 and seg[4:9] == b"Adobe":
-            out.append(seg)
-        # anything else (comments, EXIF, XMP, ICC, unknown blocks) is left out
-
-
 def clean_logo(path, data):
-    return clean_png(data) if path.lower().endswith(".png") else clean_jpeg(data)
+    return clean_png(data)
 
 
 def slug(name):
