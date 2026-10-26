@@ -219,6 +219,17 @@ def clean_png(data):
     if any(raw[i] > 4 for i in range(0, len(raw), row)):
         raise Refused("the logo is a damaged PNG (a row has an unknown filter)")
     keep = [(k, b) for k, b in chunks if k in (b"IHDR", b"PLTE", b"tRNS")]
+    plte = [b for k, b in keep if k == b"PLTE"]
+    trns = [b for k, b in keep if k == b"tRNS"]
+    if len(plte) > 1 or len(trns) > 1:
+        raise Refused("the logo is a PNG with more than one palette or transparency block; save a fresh copy")
+    if plte and (ctype in (0, 4) or not plte[0] or len(plte[0]) % 3 or len(plte[0]) > 3 * 2 ** min(depth, 8)):
+        raise Refused("the logo is a PNG with a palette that does not fit its header")
+    if ctype == 3 and not plte:
+        raise Refused("the logo is a palette PNG with no palette")
+    if trns and not ({0: len(trns[0]) == 2, 2: len(trns[0]) == 6,
+                      3: bool(plte) and 0 < len(trns[0]) <= len(plte[0]) // 3}.get(ctype, False)):
+        raise Refused("the logo is a PNG with a transparency block that does not fit its picture")
     pieces = [data[:8]]
     for k, b in keep + [(b"IDAT", zlib.compress(raw, 9)), (b"IEND", b"")]:
         pieces.append(struct.pack(">I", len(b)) + k + b + struct.pack(">I", zlib.crc32(k + b) & 0xffffffff))
@@ -383,6 +394,9 @@ def build(order_path, out):
 
     logo_src = logo_path(order, order_dir, [])
     data = clean_logo(logo_src, open(logo_src, "rb").read())   # the pixels only: what ships is what is hashed
+    if len(data) > LOGO_MAX:                                   # recompressing can add bytes; check before writing
+        raise Refused(f"the logo is {len(data)} bytes after cleaning, over the {LOGO_MAX}-byte limit; "
+                      "use a copy of about 256 px")
     sha = hashlib.sha256(data).hexdigest()
     # build.py reads the logo from inside the repository; a hex folder name never looks like a film or poster
     stage = os.path.join(WORK, hashlib.sha256((order["order_ref"] + sha).encode()).hexdigest()[:12])

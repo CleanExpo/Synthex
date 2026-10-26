@@ -554,6 +554,50 @@ def test_interlaced_or_cut_short_png_refuses(tmp_path):
     refused_cleanly(r, out2)
 
 
+def noise_png(width, height, seed=1):
+    """Grey noise stored without compression: recompressing it adds a few bytes of block headers."""
+    import random
+    import struct
+    import zlib
+    rnd = random.Random(seed)
+    raw = b"".join(b"\0" + bytes(rnd.getrandbits(8) for _ in range(width)) for _ in range(height))
+    return png_from([(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 0, 0, 0, 0)),
+                     (b"IDAT", zlib.compress(raw, 0)), (b"IEND", b"")])
+
+
+def test_logo_that_grows_past_the_limit_when_cleaned_refuses_with_nothing_built(tmp_path):
+    raw = noise_png(584, 205)
+    assert len(raw) <= 120_000                 # the buyer's file is under the limit; the cleaned copy is not
+    r, out = build_with_logo(tmp_path, raw)
+    refused_cleanly(r, out)
+    assert "after cleaning" in r.stderr
+
+
+def palette_png(extra):
+    """A 2x2 palette picture with any extra chunks placed between the palette and the picture data."""
+    import struct
+    import zlib
+    return png_from([(b"IHDR", struct.pack(">IIBBBBB", 2, 2, 8, 3, 0, 0, 0)), (b"PLTE", bytes(6))] + extra
+                    + [(b"IDAT", zlib.compress(b"\0\0\1\0\1\0")), (b"IEND", b"")])
+
+
+@pytest.mark.parametrize("extra", [
+    [(b"tRNS", b"\0"), (b"tRNS", MARK)],                        # a second transparency chunk
+    [(b"PLTE", MARK)],                                          # a second palette
+    [(b"tRNS", b"\0" * 3 + MARK)],                              # more transparency entries than colours
+], ids=["second-tRNS", "second-PLTE", "oversized-tRNS"])
+def test_png_palette_or_transparency_carrying_extra_bytes_refuses(tmp_path, extra):
+    raw = palette_png(extra)
+    assert MARK in raw
+    r, out = build_with_logo(tmp_path, raw)
+    refused_cleanly(r, out)
+
+
+def test_png_palette_with_transparency_still_builds(tmp_path):
+    r, out = build_with_logo(tmp_path, palette_png([(b"tRNS", b"\0\xff")]))
+    assert r.returncode == 0, r.stderr
+
+
 def jpeg_scans(extra_between=b"", extra_after_scan=b"", app14=b"", after_eoi=b""):
     def seg(m, body):
         return b"\xff" + bytes([m]) + (len(body) + 2).to_bytes(2, "big") + body
