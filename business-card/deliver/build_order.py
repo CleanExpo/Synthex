@@ -221,6 +221,8 @@ def clean_png(data):
     keep = [(k, b) for k, b in chunks if k in (b"IHDR", b"PLTE", b"tRNS")]
     plte = [b for k, b in keep if k == b"PLTE"]
     trns = [b for k, b in keep if k == b"tRNS"]
+    if kinds.count(b"IHDR") != 1:
+        raise Refused("the logo is a PNG with more than one header; save a fresh copy")
     if len(plte) > 1 or len(trns) > 1:
         raise Refused("the logo is a PNG with more than one palette or transparency block; save a fresh copy")
     if plte and (ctype in (0, 4) or not plte[0] or len(plte[0]) % 3 or len(plte[0]) > 3 * 2 ** min(depth, 8)):
@@ -230,6 +232,7 @@ def clean_png(data):
     if trns and not ({0: len(trns[0]) == 2, 2: len(trns[0]) == 6,
                       3: bool(plte) and 0 < len(trns[0]) <= len(plte[0]) // 3}.get(ctype, False)):
         raise Refused("the logo is a PNG with a transparency block that does not fit its picture")
+    keep = [chunks[0]] + [(b"PLTE", b) for b in plte] + [(b"tRNS", b) for b in trns]   # the order the PNG spec requires
     pieces = [data[:8]]
     for k, b in keep + [(b"IDAT", zlib.compress(raw, 9)), (b"IEND", b"")]:
         pieces.append(struct.pack(">I", len(b)) + k + b + struct.pack(">I", zlib.crc32(k + b) & 0xffffffff))

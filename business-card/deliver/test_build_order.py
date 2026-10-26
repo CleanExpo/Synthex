@@ -585,7 +585,8 @@ def palette_png(extra):
     [(b"tRNS", b"\0"), (b"tRNS", MARK)],                        # a second transparency chunk
     [(b"PLTE", MARK)],                                          # a second palette
     [(b"tRNS", b"\0" * 3 + MARK)],                              # more transparency entries than colours
-], ids=["second-tRNS", "second-PLTE", "oversized-tRNS"])
+    [(b"IHDR", MARK)],                                          # a second header
+], ids=["second-tRNS", "second-PLTE", "oversized-tRNS", "second-IHDR"])
 def test_png_palette_or_transparency_carrying_extra_bytes_refuses(tmp_path, extra):
     raw = palette_png(extra)
     assert MARK in raw
@@ -596,6 +597,19 @@ def test_png_palette_or_transparency_carrying_extra_bytes_refuses(tmp_path, extr
 def test_png_palette_with_transparency_still_builds(tmp_path):
     r, out = build_with_logo(tmp_path, palette_png([(b"tRNS", b"\0\xff")]))
     assert r.returncode == 0, r.stderr
+
+
+def test_cleaned_png_writes_palette_before_transparency(tmp_path):
+    import struct
+    import zlib
+    raw = png_from([(b"IHDR", struct.pack(">IIBBBBB", 2, 2, 8, 3, 0, 0, 0)), (b"tRNS", b"\0\xff"), (b"PLTE", bytes(6)),
+                    (b"IDAT", zlib.compress(b"\0\0\1\0\1\0")), (b"IEND", b"")])
+    r, out = build_with_logo(tmp_path, raw)
+    if r.returncode != 0:
+        refused_cleanly(r, out)
+    else:
+        shipped = next((out / "card" / "media").glob("*.png")).read_bytes()
+        assert [k for k, _ in png_chunks(shipped)] == [b"IHDR", b"PLTE", b"tRNS", b"IDAT", b"IEND"]
 
 
 def jpeg_scans(extra_between=b"", extra_after_scan=b"", app14=b"", after_eoi=b""):
