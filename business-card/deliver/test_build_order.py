@@ -18,7 +18,7 @@ SCRIPT = os.path.join(HERE, "build_order.py")
 SAMPLE = json.load(open(os.path.join(HERE, "sample", "sample-order.json"), encoding="utf-8"))
 LOGO = os.path.join(HERE, "sample", "sample-plumbing-co-logo.png")
 SCHEMA = json.load(open(os.path.join(HERE, "order.schema.json"), encoding="utf-8"))
-TEN = ["portal", "restoration", "blueprint", "forge", "constellation", "ink", "rewind", "skyline", "origami", "magnet"]
+NINE = ["portal", "blueprint", "forge", "constellation", "ink", "rewind", "skyline", "origami", "magnet"]
 
 
 def run(tmp_path, order, out_name="out"):
@@ -54,17 +54,17 @@ def test_ready_made_order_builds_card_with_film_links_and_contact(tmp_path):
     assert r.returncode == 0, r.stderr
     page = (out / "card" / "index.html").read_text(encoding="utf-8")
     kit = kit_in(page)
-    film = kit["brand"]["editions"]["restoration"]
-    assert film["status"] == "found" and film["hostedVideo"] == "media/edition-restoration.mp4"
-    assert (out / "card" / "media" / "edition-restoration.mp4").stat().st_size > 100_000
-    assert kit["brand"]["rotation"] == ["restoration"]
+    film = kit["brand"]["editions"]["portal"]
+    assert film["status"] == "found" and film["hostedVideo"] == "media/edition-portal.mp4"
+    assert (out / "card" / "media" / "edition-portal.mp4").stat().st_size > 100_000
+    assert kit["brand"]["rotation"] == ["portal"]
     assert [l["url"] for l in kit["person"]["links"]] == ["https://example.com", "https://hotwater.example.com"]
     vcf = (out / "card" / f"{kit['id']}.vcf").read_text(encoding="utf-8")
     for line in ("FN:Sam Sample", "EMAIL;TYPE=WORK:sam@example.com", "TEL;TYPE=CELL:+61400555123",
                  "item1.URL:https://example.com", "item2.URL:https://hotwater.example.com", "PHOTO;ENCODING=b;TYPE=PNG:"):
         assert line in vcf, line
     proof = (out / "PROOF.md").read_text(encoding="utf-8")
-    assert "SAMPLE-0001" in proof and "restoration" in proof
+    assert "SAMPLE-0001" in proof and "portal" in proof
     assert "FILM PENDING" not in proof
 
 
@@ -73,7 +73,7 @@ def test_ready_made_ships_only_the_chosen_film(tmp_path):
     r, out = run(tmp_path, SAMPLE)
     assert r.returncode == 0, r.stderr
     videos = [f for f in files(out) if f.endswith((".mp4", ".webm"))]
-    assert videos == [os.path.join("card", "media", "edition-restoration.mp4")]
+    assert videos == [os.path.join("card", "media", "edition-portal.mp4")]
 
 
 # A made-for-you order builds a proof that says plainly the film is pending, and ships no film at all.
@@ -121,7 +121,7 @@ def test_unsafe_link_refuses(tmp_path):
     assert r.returncode != 0 and "businesses[0]" in r.stderr, r.stderr
 
 
-# The tier and the film must agree: no ready-made order without one of the ten films, no fake custom film.
+# The tier and the film must agree: no ready-made order without one of the nine films, no fake custom film.
 def test_ready_made_without_one_of_the_ten_films_refuses(tmp_path):
     order = copy.deepcopy(SAMPLE)
     order["film"] = "custom, pending proof"
@@ -210,7 +210,7 @@ def test_extra_business_order_renders_every_business(tmp_path):
         assert b["name"] in proof and b["url"] in proof
 
 
-# The schema file and the builder agree on the ten films and the required fields.
+# The schema file and the builder agree on the nine films and the required fields.
 def test_schema_and_builder_agree():
     sys.path.insert(0, HERE)
     try:
@@ -218,7 +218,7 @@ def test_schema_and_builder_agree():
     finally:
         sys.path.pop(0)
     assert list(build_order.REQUIRED) == SCHEMA["required"]
-    assert list(build_order.FILMS) == TEN == SCHEMA["properties"]["film"]["enum"][:10]
+    assert list(build_order.FILMS) == NINE == SCHEMA["properties"]["film"]["enum"][:9]
 
 
 # Only card/ is ever hosted: the proof, the kit and the order stay beside it, and no local path reaches the page.
@@ -752,3 +752,58 @@ def test_every_colour_type_decodes_to_the_same_pixels_as_pillow(tmp_path, depth,
     r, out = build_with_logo(tmp_path, src.read_bytes())
     assert r.returncode == 0, r.stderr
     assert rgba_pixels(next((out / "card" / "media").glob("*.png"))) == rgba_pixels(src)
+
+
+# ---- PC-CARD-BUYER-SOURCE-CLEAN: a buyer's card carries none of Phill's own content, not even in its source ----
+# HARD RULE: no restoration, RestoreAssist, CARSI, Disaster Recovery or NRPG content on buyer output. Phill's
+# example enquiry (Sam Example, Example Restorations in Ipswich, a RestoreAssist trial) and the "Rana's build"
+# note were only cleared by the page's script at load, so view-source still showed them in every buyer card.
+ORDERS = os.path.join(HERE, "sample", "orders")
+BANNED = ("restoration", "restoreassist", "ipswich", "rana", "sam@example", "sam example",
+          "carsi", "disaster recovery", "nrpg")
+
+
+def builder():
+    sys.path.insert(0, HERE)
+    try:
+        import build_order
+    finally:
+        sys.path.pop(0)
+    return build_order
+
+
+@pytest.mark.parametrize("name", ["A", "B"])
+def test_buyer_output_has_none_of_phills_own_content(tmp_path, name):
+    folder = tmp_path / "order"
+    folder.mkdir()
+    shutil.copy(os.path.join(ORDERS, f"{name}.json"), folder / "order.json")
+    shutil.copy(os.path.join(ORDERS, "sample-logo-256.png"), folder / "sample-logo-256.png")
+    out = tmp_path / "out"
+    r = subprocess.run([sys.executable, "-I", SCRIPT, str(folder / "order.json"), str(out)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    built = files(out)
+    assert "card/index.html".replace("/", os.sep) in built and "PROOF.md" in built
+    found = []
+    for rel in built:                                 # every file, text or not: index, preview, template, vcf, kit, proof
+        data = (out / rel).read_bytes().lower()
+        found += [f"{rel}: {w!r}" for w in BANNED if w.encode() in data]
+    assert not found, "buyer output carries Phill's own content:\n" + "\n".join(found)
+
+
+def test_restoration_film_is_not_offered_to_buyers(tmp_path):
+    assert "restoration" not in builder().FILMS
+    assert "restoration" not in SCHEMA["properties"]["film"]["enum"]
+    assert "restoration" not in open(os.path.join(HERE, "RUNBOOK.md"), encoding="utf-8").read().lower()
+    order = copy.deepcopy(SAMPLE)
+    order["film"] = "restoration"
+    r, out = run(tmp_path, order)
+    assert r.returncode != 0 and "'film'" in r.stderr, r.stderr
+    assert not out.exists() or not os.listdir(out)
+
+
+def test_owner_card_keeps_phills_own_content(tmp_path):
+    """build.py on card.html as it is (Phill's own card) is untouched: his example enquiry and notes stay."""
+    b = builder()
+    page = open(b.TEMPLATE, encoding="utf-8").read()
+    for old, _ in b.BUYER_TEMPLATE_CUTS:
+        assert page.count(old) == 1, old

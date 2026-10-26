@@ -24,14 +24,13 @@
       "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{2,39}$"
     },
     "tier": {
-      "description": "ready-made (AUD 249): one of the ten ready-made films. made-for-you (AUD 449): a custom film, made after the proof.",
+      "description": "ready-made (AUD 249): one of the nine ready-made films. made-for-you (AUD 449): a custom film, made after the proof.",
       "enum": ["ready-made", "made-for-you"]
     },
     "film": {
-      "description": "ready-made: the name of one of the ten ready-made films. made-for-you: exactly \"custom, pending proof\".",
+      "description": "ready-made: the name of one of the nine ready-made films. made-for-you: exactly \"custom, pending proof\".",
       "enum": [
         "portal",
-        "restoration",
         "blueprint",
         "forge",
         "constellation",

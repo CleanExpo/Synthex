@@ -30,13 +30,14 @@ REPO = os.path.dirname(CARD_DIR)
 BUILD = os.path.join(CARD_DIR, "site", "build.py")
 TEMPLATE = os.path.join(CARD_DIR, "card.html")
 VALIDATE = os.path.join(CARD_DIR, "brand-kits", "validate.py")
-# The ten ready-made films are the editions in the showroom kit; the order borrows the film, nothing else.
+# The nine ready-made films are editions in the showroom kit; the order borrows the film, nothing else. The showroom's
+# restoration edition is Phill's own and is never offered to a buyer (no restoration content on buyer cards).
 SHOWROOM_KIT = os.path.join(CARD_DIR, "brand-kits", "phill-mcgurk.json")
 WORK = os.path.join(HERE, ".work")                     # the buyer's logo sits here only while build.py runs
 
 REQUIRED = ("order_ref", "tier", "film", "buyer_name", "role", "email", "phone", "businesses", "extra_businesses", "logo_file")
 OPTIONAL = ("brand_colour", "colour_source")
-FILMS = ("portal", "restoration", "blueprint", "forge", "constellation", "ink", "rewind", "skyline", "origami", "magnet")
+FILMS = ("portal", "blueprint", "forge", "constellation", "ink", "rewind", "skyline", "origami", "magnet")
 PENDING = "custom, pending proof"
 TIERS = {"ready-made": 249, "made-for-you": 449}
 EXTRA_PRICE = 199
@@ -50,6 +51,23 @@ SAFE_URL = re.compile(r'https://[^\s"<>]+')         # same rule as card.html, bu
 CTRL = re.compile(r"[\x00-\x1f\x7f  ]")
 LOGO_TYPES = {".png": b"\x89PNG\r\n\x1a\n"}       # PNG only: it is rebuilt from its pixels (clean_png)
 LOGO_MAX = 120_000                                     # build.py's limit for the contact picture
+
+
+# card.html is Phill's own card: its enquiry form is filled with his example (Sam Example from Example Restorations,
+# Ipswich, asking about a RestoreAssist trial) and it notes the game is Rana's build. A buyer's card is built from a
+# copy with those taken out, so they are not in its source either (its script still clears them at load, as before).
+# Each must be found exactly once: if card.html changes, the build refuses rather than ship the example.
+BUYER_TEMPLATE_CUTS = (
+    (" The game is Rana's build. Its permanent address", " The game's permanent address"),
+    (' value="Sam Example"', ""),
+    (' value="sam@example.com.au"', ""),
+    (' value="Example Restorations, Ipswich"', ""),
+    (">We heard your talk in Brisbane and would like to discuss a trial of RestoreAssist for our crew of six.</textarea>",
+     "></textarea>"),
+    ("Example entry shown. Replace it with your own.", "Nothing is sent from here: you see your message first."),
+)
+# What the cuts take out, checked again in every page the build wrote
+PHILLS_EXAMPLE = ("Rana's build", "Sam Example", "sam@example.com.au", "Example Restorations", "RestoreAssist")
 
 
 class Refused(Exception):
@@ -90,11 +108,11 @@ def check(order, order_dir):
         errs.append("'film' must be text")
     elif "film" in order:
         if tier == "ready-made" and film not in FILMS:
-            errs.append(f"'film' for a ready-made order must be one of the ten films ({', '.join(FILMS)}), not {film!r}")
+            errs.append(f"'film' for a ready-made order must be one of the nine films ({', '.join(FILMS)}), not {film!r}")
         elif tier == "made-for-you" and film != PENDING:
             errs.append(f"'film' for a made-for-you order must be exactly {PENDING!r}: the film is made after the proof")
         elif film not in FILMS + (PENDING,):
-            errs.append(f"'film' {film!r} is not one of the ten films or {PENDING!r}")
+            errs.append(f"'film' {film!r} is not one of the nine films or {PENDING!r}")
     for key, lo, hi in (("buyer_name", 2, 80), ("role", 2, 100)):
         if key in order and order[key] is not None:
             text(order, key, errs, lo, hi)
@@ -328,6 +346,17 @@ def first_name(buyer_name):
     return next((w for w in words if w.rstrip(".").lower() not in TITLES), words[0])
 
 
+def buyer_template():
+    """card.html without Phill's own example enquiry and notes (BUYER_TEMPLATE_CUTS), or refuse."""
+    page = open(TEMPLATE, encoding="utf-8").read()
+    for old, new in BUYER_TEMPLATE_CUTS:
+        if page.count(old) != 1:
+            raise Refused(f"card.html has changed: Phill's example text {old.strip()[:50]!r} should be there exactly once, "
+                          "so build_order.py can leave it out of the buyer's card. Update BUYER_TEMPLATE_CUTS.")
+        page = page.replace(old, new)
+    return page
+
+
 def make_kit(order, logo_rel, logo_sha):
     ref, main = order["order_ref"], order["businesses"][0]
     src = f"order {ref}"
@@ -440,8 +469,11 @@ def build(order_path, out):
         os.makedirs(stage, exist_ok=True)
         with open(os.path.join(REPO, logo_rel), "wb") as f:
             f.write(data)
+        template = os.path.join(stage, "card.html")
+        with open(template, "w", encoding="utf-8", newline="\n") as f:
+            f.write(buyer_template())
         run([VALIDATE, kit_path])
-        run([BUILD, TEMPLATE, kit_path, card])
+        run([BUILD, template, kit_path, card])
     finally:
         shutil.rmtree(stage, ignore_errors=True)
     built = verify(order, kit, card)
@@ -463,6 +495,12 @@ def verify(order, kit, card):
             raise Refused(f"the card should ship exactly {want}, but has {films or 'no film'}")
     elif films:
         raise Refused(f"a made-for-you card must ship no film before the custom film is approved, but has {films}")
+    for name in names:
+        if name.endswith(".html"):
+            with open(os.path.join(card, name), encoding="utf-8") as f:
+                left = [w for w in PHILLS_EXAMPLE if w.lower() in f.read().lower()]
+            if left:
+                raise Refused(f"card/{name} still carries Phill's own example text {left}; it must not ship on a buyer's card")
     page = open(os.path.join(card, "index.html"), encoding="utf-8").read()
     m = re.search(r'<script id="brand-kit">window\.BRAND_KIT = (\{.*?\});</script>', page, re.S)
     if not m:

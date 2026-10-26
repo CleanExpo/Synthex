@@ -12,7 +12,7 @@ checklist. Nothing here sends email, takes money, or puts a card on the internet
 
 | What they bought                                        | Price   |
 | ------------------------------------------------------- | ------- |
-| Ready-made card (one of the ten ready-made films)       | AUD 249 |
+| Ready-made card (one of the nine ready-made films)      | AUD 249 |
 | Made-for-you card (a custom film, made after the proof) | AUD 449 |
 | Each extra business on the card                         | AUD 199 |
 
@@ -38,8 +38,9 @@ Email the buyer from your own email. Ask for:
 6. Their logo, as a PNG or JPEG file. It must be their own logo. (A JPEG is fine from the buyer; you turn it
    into a PNG in Step 3, because the builder only takes PNG.)
 7. Optional: their main brand colour (like `#1FA2D6`) and where it came from.
-8. Ready-made only: which of the ten films they want. The ten are portal, restoration, blueprint,
-   forge, constellation, ink, rewind, skyline, origami and magnet.
+8. Ready-made only: which of the nine films they want. The nine are portal, blueprint, forge,
+   constellation, ink, rewind, skyline, origami and magnet. (The showroom's tenth edition is Phill's own
+   and is never offered to a buyer.)
 
 Wait for their answers. **Never guess a missing answer.** If something is missing, ask again.
 
@@ -61,7 +62,7 @@ Wait for their answers. **Never guess a missing answer.** If something is missin
 | ------------------------------- | -------------------------------------------------------------------------------------- |
 | `order_ref`                     | Your reference from step 1                                                             |
 | `tier`                          | `ready-made` or `made-for-you`                                                         |
-| `film`                          | Ready-made: one of the ten film names. Made-for-you: exactly `custom, pending proof`   |
+| `film`                          | Ready-made: one of the nine film names. Made-for-you: exactly `custom, pending proof`  |
 | `buyer_name`                    | Their name                                                                             |
 | `role`                          | The short line under the name                                                          |
 | `email`                         | The card's email                                                                       |
