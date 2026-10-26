@@ -633,6 +633,15 @@ JPEG_CASES = {
     "after-the-first-EOI": dict(after_eoi=MARK + b"\xff\xd9"),
 }
 
+# segments a decoder needs, padded past their defined size: the builder refuses rather than ship the padding
+JPEG_REFUSE = {
+    "oversized-restart-interval": dict(app14=seg_of(0xDD, b"\0\x10" + MARK)),
+    "oversized-line-count": dict(extra_between=seg_of(0xDC, b"\0\x08" + MARK)),
+    "second-frame-header": dict(app14=seg_of(0xC1, b"\x08\0\x08\0\x08\x01\x01\x11\0" + MARK)),
+    "oversized-quantisation-table": dict(app14=seg_of(0xDB, b"\x01" + bytes(64) + MARK)),
+    "oversized-huffman-table": dict(app14=seg_of(0xC4, b"\x10" + bytes(16) + MARK)),
+}
+
 
 @pytest.mark.parametrize("name", list(JPEG_CASES))
 def test_jpeg_payload_outside_the_picture_never_reaches_the_hosted_folder(tmp_path, name):
@@ -644,6 +653,22 @@ def test_jpeg_payload_outside_the_picture_never_reaches_the_hosted_folder(tmp_pa
     shipped = next((out / "card" / "media").glob("*.jp*g")).read_bytes()
     assert shipped.count(b"\xff\xda") == 2 and shipped.endswith(b"\xff\xd9")      # both scans are still there
     assert b"\x12\xff\x00\x34" in shipped and b"\x56\x78" in shipped               # and so is their picture data
+
+
+@pytest.mark.parametrize("name", list(JPEG_REFUSE))
+def test_jpeg_kept_segment_carrying_extra_bytes_refuses(tmp_path, name):
+    raw = jpeg_scans(**JPEG_REFUSE[name])
+    assert MARK in raw
+    r, out = build_with_logo(tmp_path, raw, "jpg")
+    refused_cleanly(r, out)
+
+
+def test_png_with_unknown_compression_method_refuses(tmp_path):
+    import struct
+    raw = png_from([(b"IHDR", struct.pack(">IIBBBBB", 2, 2, 8, 0, 1, 0, 0)),
+                    (b"IDAT", __import__("zlib").compress(b"\0\0\0\0\0\0")), (b"IEND", b"")])
+    r, out = build_with_logo(tmp_path, raw)
+    refused_cleanly(r, out)
 
 
 def test_unreadable_logo_refuses_by_name_with_nothing_built(tmp_path):

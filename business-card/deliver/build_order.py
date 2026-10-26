@@ -203,7 +203,9 @@ def clean_png(data):
         raise Refused("the logo is a damaged PNG (it needs IHDR, picture data and IEND)")
     if chunks[-1][1]:
         raise Refused("the logo is a PNG with extra bytes inside its end marker; save a fresh copy")
-    width, height, depth, ctype, _, _, interlace = struct.unpack(">IIBBBBB", chunks[0][1])
+    width, height, depth, ctype, method, filtering, interlace = struct.unpack(">IIBBBBB", chunks[0][1])
+    if method != 0 or filtering != 0:
+        raise Refused("the logo is a PNG with an unknown compression or filter method")
     if interlace != 0:
         raise Refused("the logo is an interlaced PNG; save a copy without interlacing")
     if ctype not in CHANNELS or depth not in (1, 2, 4, 8, 16) or not (0 < width < 100_000 and 0 < height < 100_000):
@@ -240,14 +242,41 @@ def clean_png(data):
 
 
 JPEG_NO_LENGTH = set(range(0xD0, 0xD8)) | {0x01}
-JPEG_KEEP = {0xDB, 0xC4, 0xCC, 0xDD, 0xDC} | (set(range(0xC0, 0xD0)) - {0xC4, 0xC8, 0xCC})   # tables, frame, restart interval
+JPEG_FRAMES = {0xC0, 0xC1, 0xC2, 0xC3}                 # baseline, extended, progressive, lossless (Huffman coded)
+JPEG_KEEP = {0xDB, 0xC4, 0xDD, 0xDC} | JPEG_FRAMES      # tables, frame, restart interval, line count
+
+
+def jpeg_segment_fits(marker, body):
+    """True only when a kept segment's body is exactly what its marker defines, so no spare bytes ride along."""
+    n, i = len(body), 0
+    if marker in (0xDD, 0xDC):                          # restart interval, number of lines: two bytes
+        return n == 2
+    if marker in JPEG_FRAMES:                           # precision, height, width, components, 3 bytes each
+        return n >= 6 and 1 <= body[5] <= 4 and n == 6 + 3 * body[5]
+    if marker == 0xDB:                                  # quantisation tables: 1 + 64 or 1 + 128 bytes each
+        while i < n:
+            pq, tq = body[i] >> 4, body[i] & 15
+            if pq > 1 or tq > 3:
+                return False
+            i += 1 + 64 * (pq + 1)
+        return n > 0 and i == n
+    if marker == 0xC4:                                  # Huffman tables: 1 + 16 counts + that many values each
+        while i < n:
+            if i + 17 > n or body[i] >> 4 > 1 or body[i] & 15 > 3:
+                return False
+            count = sum(body[i + 1:i + 17])
+            if count > 256:
+                return False
+            i += 17 + count
+        return n > 0 and i == n
+    return False
 
 
 def clean_jpeg(data):
     """The same picture rebuilt from its tables, frame header and scans alone. Every comment and application block
     (EXIF, XMP, ICC and the rest) is dropped wherever it sits, including between scans, and everything after the
     first end marker is dropped. Only a plain JFIF header (no thumbnail) and a 12-byte Adobe colour block are kept."""
-    n_data, out, pos, scans = len(data), [b"\xff\xd8"], 2, 0
+    n_data, out, pos, scans, frames = len(data), [b"\xff\xd8"], 2, 0, 0
     while True:
         while pos < n_data and data[pos] == 0xFF and pos + 1 < n_data and data[pos + 1] == 0xFF:
             pos += 1
@@ -269,6 +298,8 @@ def clean_jpeg(data):
             raise Refused("the logo is a damaged JPEG (a segment is cut short)")
         pos += 2 + n
         if marker == 0xDA:                                   # a scan: its picture data runs to the next real marker
+            if not (n >= 3 and 1 <= seg[4] <= 4 and n == 6 + 2 * seg[4]):
+                raise Refused("the logo is a JPEG with a scan header of the wrong size; save a fresh copy")
             end = pos
             while end < n_data:
                 if data[end] == 0xFF and end + 1 < n_data and data[end + 1] not in (0x00, 0xFF) and not 0xD0 <= data[end + 1] <= 0xD7:
@@ -279,7 +310,15 @@ def clean_jpeg(data):
             out += [seg, data[pos:end]]
             pos, scans = end, scans + 1
         elif marker in JPEG_KEEP:
+            if not jpeg_segment_fits(marker, seg[4:]):
+                raise Refused("the logo is a JPEG with a table or header block of the wrong size; save a fresh copy")
+            if marker in JPEG_FRAMES:
+                frames += 1
+                if frames > 1:
+                    raise Refused("the logo is a JPEG with more than one frame header; save a fresh copy")
             out.append(seg)
+        elif 0xC5 <= marker <= 0xCF and marker not in (0xC8,):
+            raise Refused("the logo is an arithmetic-coded or hierarchical JPEG; save it as a standard JPEG")
         elif marker == 0xE0 and n == 16 and seg[4:9] == b"JFIF\0" and seg[16:18] == b"\0\0":
             out.append(seg)
         elif marker == 0xEE and n == 14 and seg[4:9] == b"Adobe":
