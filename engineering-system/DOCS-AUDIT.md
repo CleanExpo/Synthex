@@ -7,9 +7,9 @@
 - **1,359 Git-tracked Markdown/MDc files** (`git ls-files '*.md' '*.mdc'`); biggest sources include `.planning` (554), `docs` (439), `.claude` (265).
 - **705 Markdown/MDc files found under docs/ and .claude/** by filesystem walk; inventory is not equal to tracked count because scopes differ.
 - `docs/STRATEGIC_MARKETING_ARCHITECTURE.md` last Git change **13/08/2025**.
-- `docs/architecture/README.md` last change **11/07/2026** and contains a wrong relative link to `docs/governance/CONSTITUTION.md` (candidate for surgical fix after review).
+- `docs/architecture/README.md` had last been changed **11/07/2026**; the incorrect relative link to `docs/governance/CONSTITUTION.md` was corrected in this worktree on **27/10/2026**. Verify link integrity on the reviewed commit.
 - `CLAUDE.md` has a **19/10/2026** update and may be current despite other older content.
-- `.cursor/rules/agent-stack.mdc` references **May 2026 Composer 2.5 defaults**, while Cursor has October 2026 releases: mark for review, do not guess defaults.
+- `.cursor/rules/agent-stack.mdc` previously specified **May 2026 Composer 2.5 defaults**; on **27/10/2026** this worktree replaced those defaults with runtime discovery. Historical text may remain as dated reference; never infer the installed model from it.
 - `.claude/skills/tdd-jev/SKILL.md` was updated **17/10/2026** and its JEV harness should not be replaced based on file age.
 
 ## Actions by tier

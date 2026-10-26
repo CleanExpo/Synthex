@@ -60,7 +60,7 @@ Read `CONSUMPTION.md`: fetch a known commit; validate directory checksum/manifes
 
 ## Architecture protection
 
-Supabase-only auth; org-scoped data; Zod writes; signed Twilio/ElevenLabs callbacks; approval before external writes; feature flags default off; no live claims without matching commit and runtime test; restore/backout plan for every risky migration.
+Supabase identity verified through the repository's canonical auth helpers (`lib/auth/jwt-utils.ts`), org-scoped data; Zod writes; signed Twilio/ElevenLabs callbacks; approval before external writes; feature flags default off; no live claims without matching commit and runtime test; restore/backout plan for every risky migration.
 
 ## First complete acceptance scenario
 
