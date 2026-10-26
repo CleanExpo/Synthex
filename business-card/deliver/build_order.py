@@ -319,6 +319,15 @@ def showroom_film(name):
             "stopAt": film.get("stopAt"), "source": f"Ready-made {name} edition from the showroom kit"}
 
 
+TITLES = {"dr", "mr", "mrs", "ms", "miss", "prof"}
+
+
+def first_name(buyer_name):
+    """The name the shelf is called by: the first word that is not a title ("Dr Jane Smith" is Jane)."""
+    words = buyer_name.split()
+    return next((w for w in words if w.rstrip(".").lower() not in TITLES), words[0])
+
+
 def make_kit(order, logo_rel, logo_sha):
     ref, main = order["order_ref"], order["businesses"][0]
     src = f"order {ref}"
@@ -333,7 +342,7 @@ def make_kit(order, logo_rel, logo_sha):
         "colours": {"primary": primary},
         "about": {"status": "missing", "note": "not part of a card order"},
         # the template's shelf is the Unite-Group Nexus unless the kit names it
-        "shelf": {"title": order["buyer_name"].strip().split()[0] + "'s business" + ("es" if len(order["businesses"]) > 1 else ""),
+        "shelf": {"title": first_name(order["buyer_name"]) + "'s business" + ("es" if len(order["businesses"]) > 1 else ""),
                   "text": "Tap one to visit its website." if len(order["businesses"]) > 1 else "Tap to visit the website."},
     }
     if order["tier"] == "ready-made":
@@ -352,8 +361,9 @@ def make_kit(order, logo_rel, logo_sha):
         "contactPhoto": {"kind": "logo", "file": logo_rel, "source": f"the buyer's own logo, {src}"},
         "contactSource": src,
     }
+    # buyerCard: the template leaves out what only Phill's own card carries (its example enquiry, its notes)
     return {"id": slug(order["buyer_name"]), "prepared": f"business-card/deliver/build_order.py from {src}",
-            "brand": brand, "person": person}
+            "buyerCard": True, "brand": brand, "person": person}
 
 
 def no_duplicate_keys(pairs):

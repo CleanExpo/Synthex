@@ -251,6 +251,33 @@ def test_buyer_card_shelf_is_not_named_unite_group(tmp_path):
     assert 'B.shelf' in template, "card.html does not read the kit's shelf heading"
 
 
+# The shelf is named for the buyer's first name, never a title: "Dr Jane Smith" gives "Jane's businesses".
+@pytest.mark.parametrize("buyer, first", [("Dr Jane Smith", "Jane"), ("Mr John Citizen", "John"), ("Mrs. Ann Lee", "Ann"),
+                                          ("Ms Kim Ng", "Kim"), ("Miss Ada Roe", "Ada"), ("PROF Ian Hall", "Ian"),
+                                          ("Dr Prof Mia Wu", "Mia"), ("Drew Barry", "Drew"), ("Dr", "Dr")])
+def test_buyer_card_shelf_skips_titles(tmp_path, buyer, first):
+    order = copy.deepcopy(SAMPLE)
+    order["buyer_name"] = buyer
+    r, out = run(tmp_path, order)
+    assert r.returncode == 0, r.stderr
+    kit = kit_in((out / "card" / "index.html").read_text(encoding="utf-8"))
+    assert kit["brand"]["shelf"]["title"] == first + "'s businesses"
+
+
+# A buyer's card is marked as one, and builds no offline copy, so the page is told it has none (the owner panel
+# and the footer must not claim one) and preview.html carries what it needs to be opened on its own.
+def test_buyer_card_is_marked_and_claims_no_offline_copy(tmp_path):
+    r, out = run(tmp_path, SAMPLE)
+    assert r.returncode == 0, r.stderr
+    card = out / "card"
+    assert not (card / "sw.js").exists() and not (card / "manifest.webmanifest").exists()
+    for page in ("index.html", "preview.html"):
+        kit = kit_in((card / page).read_text(encoding="utf-8"))
+        assert kit["buyerCard"] is True and kit["offlineApp"] is False
+    preview = (card / "preview.html").read_text(encoding="utf-8")
+    assert '<meta name="viewport"' in preview and "[hidden]{display:none!important}" in preview
+
+
 # ---- review round 1 (Codex, head 192448df): loud refusals, one reading of the order, a clean hosted folder ----
 
 def run_raw(tmp_path, order_text, logo_bytes=None, out_name="out"):
