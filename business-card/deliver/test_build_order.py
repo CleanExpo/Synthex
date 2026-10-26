@@ -510,13 +510,18 @@ def test_png_payload_that_a_decoder_ignores_never_reaches_the_hosted_folder(tmp_
         assert hosted_has(out, MARK) is None
 
 
+def rgba_pixels(path):
+    """Every pixel as (R, G, B, A), read by Pillow: a decoder the builder does not share."""
+    Image = pytest.importorskip("PIL.Image")
+    with Image.open(path) as im:
+        return list(im.convert("RGBA").getdata())
+
+
 def test_png_pictures_still_look_the_same_after_cleaning(tmp_path):
-    import zlib
     r, out = build_with_logo(tmp_path, open(LOGO, "rb").read())
     assert r.returncode == 0, r.stderr
-    shipped = (next((out / "card" / "media").glob("*.png"))).read_bytes()
-    pix = lambda d: zlib.decompress(b"".join(b for k, b in png_chunks(d) if k == b"IDAT"))
-    assert pix(shipped) == pix(open(LOGO, "rb").read())
+    shipped = next((out / "card" / "media").glob("*.png"))
+    assert rgba_pixels(shipped) == rgba_pixels(LOGO)
 
 
 def test_interlaced_or_cut_short_png_refuses(tmp_path):
@@ -585,8 +590,9 @@ def test_cleaned_png_writes_palette_before_transparency(tmp_path):
     if r.returncode != 0:
         refused_cleanly(r, out)
     else:
-        shipped = next((out / "card" / "media").glob("*.png")).read_bytes()
-        assert [k for k, _ in png_chunks(shipped)] == [b"IHDR", b"PLTE", b"tRNS", b"IDAT", b"IEND"]
+        shipped = next((out / "card" / "media").glob("*.png"))
+        assert [k for k, _ in png_chunks(shipped.read_bytes())] == [b"IHDR", b"IDAT", b"IEND"]
+        assert rgba_pixels(shipped) == [(0, 0, 0, 0), (0, 0, 0, 255), (0, 0, 0, 255), (0, 0, 0, 0)]
 
 
 def test_jpeg_logo_refuses_and_says_how_to_reexport(tmp_path):
@@ -653,3 +659,69 @@ def test_proof_checklist_has_an_unticked_logo_reexport_item(tmp_path):
 def test_runbook_tells_the_builder_to_reexport_the_logo():
     text = open(os.path.join(HERE, "RUNBOOK.md"), encoding="utf-8").read()
     assert "sips -s format png" in text and "equivalent re-encode" in text
+
+
+# ---- review round on e1923ec3 (Cursor): the cleaned logo is redrawn from decoded pixels, so bits a decoder ignores cannot ship ----
+def one_png(width, height, depth, ctype, rows, extra=()):
+    import struct
+    import zlib
+    return png_from([(b"IHDR", struct.pack(">IIBBBBB", width, height, depth, ctype, 0, 0, 0))] + list(extra)
+                    + [(b"IDAT", zlib.compress(b"".join(b"\0" + r for r in rows))), (b"IEND", b"")])
+
+
+def shipped_bytes(out):
+    import zlib
+    raw = next((out / "card" / "media").glob("*.png")).read_bytes()
+    return raw + zlib.decompress(b"".join(b for k, b in png_chunks(raw) if k == b"IDAT"))
+
+
+def test_truecolour_transparency_bits_a_decoder_masks_never_ship(tmp_path):
+    raw = one_png(2, 2, 8, 2, [bytes(6)] * 2, [(b"tRNS", b"S\0E\0C\0")])
+    r, out = build_with_logo(tmp_path, raw)
+    assert r.returncode == 0, r.stderr
+    assert b"S\0E\0C\0" not in shipped_bytes(out)
+    assert rgba_pixels(next((out / "card" / "media").glob("*.png"))) == [(0, 0, 0, 0)] * 4
+
+
+def test_greyscale_transparency_high_byte_never_ships(tmp_path):
+    r, out = build_with_logo(tmp_path, one_png(1, 2, 8, 0, [b"\x10", b"\x20"], [(b"tRNS", b"S\x10")]))
+    assert r.returncode == 0, r.stderr
+    assert b"S\x10" not in shipped_bytes(out)
+    assert rgba_pixels(next((out / "card" / "media").glob("*.png"))) == [(16, 16, 16, 0), (32, 32, 32, 255)]
+
+
+def test_scanline_padding_bits_never_ship(tmp_path):
+    rows = [bytes([c & 0x7f]) for c in b"SECRET!!"]           # 1-bit, 1 px wide: the pixel is 0, the 7 low bits are padding
+    r, out = build_with_logo(tmp_path, one_png(1, 8, 1, 0, rows))
+    assert r.returncode == 0, r.stderr
+    assert b"SECRET" not in shipped_bytes(out) and b"S\0E\0C" not in shipped_bytes(out)
+    assert rgba_pixels(next((out / "card" / "media").glob("*.png"))) == [(0, 0, 0, 255)] * 8
+
+
+@pytest.mark.parametrize("depth,ctype", [(4, 2), (1, 6), (2, 4), (16, 3)])
+def test_colour_type_and_depth_pairs_the_spec_forbids_refuse(tmp_path, depth, ctype):
+    r, out = build_with_logo(tmp_path, one_png(1, 1, depth, ctype, [b"SE"]))
+    refused_cleanly(r, out)
+
+
+def test_palette_index_past_the_palette_refuses(tmp_path):
+    r, out = build_with_logo(tmp_path, one_png(1, 1, 8, 3, [b"\x05"], [(b"PLTE", bytes(6))]))
+    refused_cleanly(r, out)
+
+
+def test_sixteen_bit_grey_keeps_its_high_byte(tmp_path):
+    """Pillow clips 16-bit grey when converting, so it is no oracle here; the spec's 8-bit value of 0x1234 is 0x12."""
+    r, out = build_with_logo(tmp_path, one_png(1, 1, 16, 0, [b"\x12\x34"]))
+    assert r.returncode == 0, r.stderr
+    assert rgba_pixels(next((out / "card" / "media").glob("*.png"))) == [(0x12, 0x12, 0x12, 255)]
+
+
+@pytest.mark.parametrize("depth,ctype,row", [(8, 4, b"\x80\x40"), (16, 6, bytes(range(8))),
+                                             (2, 0, b"\xe4"), (8, 2, b"\x01\x02\x03")])
+def test_every_colour_type_decodes_to_the_same_pixels_as_pillow(tmp_path, depth, ctype, row):
+    width = 4 if depth == 2 else 1
+    src = tmp_path / "src.png"
+    src.write_bytes(one_png(width, 1, depth, ctype, [row]))
+    r, out = build_with_logo(tmp_path, src.read_bytes())
+    assert r.returncode == 0, r.stderr
+    assert rgba_pixels(next((out / "card" / "media").glob("*.png"))) == rgba_pixels(src)

@@ -185,10 +185,47 @@ def logo_path(order, order_dir, errs):
 CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}              # PNG colour type -> samples per pixel
 
 
+DEPTHS = {0: (1, 2, 4, 8, 16), 2: (8, 16), 3: (1, 2, 4, 8), 4: (8, 16), 6: (8, 16)}   # the pairs the PNG spec defines
+LOGO_PIXELS = 1024 * 1024                               # a card logo is about 256 px; anything far bigger is refused
+
+
+def unfilter(raw, row, bpp, height):
+    """Undo the PNG row filters (spec section 7.3) and return the plain scanlines, filter bytes removed."""
+    out, prev = bytearray(), bytearray(row - 1)
+    for y in range(height):
+        f, line = raw[y * row], bytearray(raw[y * row + 1:(y + 1) * row])
+        for i in range(len(line)):
+            left = line[i - bpp] if i >= bpp else 0
+            up, ul = prev[i], (prev[i - bpp] if i >= bpp else 0)
+            if f == 1:
+                line[i] = (line[i] + left) & 255
+            elif f == 2:
+                line[i] = (line[i] + up) & 255
+            elif f == 3:
+                line[i] = (line[i] + ((left + up) >> 1)) & 255
+            elif f == 4:
+                p = left + up - ul
+                pa, pb, pc = abs(p - left), abs(p - up), abs(p - ul)
+                line[i] = (line[i] + (left if pa <= pb and pa <= pc else up if pb <= pc else ul)) & 255
+        out += line
+        prev = line
+    return out
+
+
+def samples(line, count, depth):
+    """The first `count` samples of one scanline at `depth` bits; padding bits past them are never read."""
+    if depth == 8:
+        return list(line[:count])
+    if depth == 16:
+        return [(line[2 * i] << 8) | line[2 * i + 1] for i in range(count)]
+    per, mask = 8 // depth, (1 << depth) - 1
+    return [(line[i // per] >> (8 - depth * (i % per + 1))) & mask for i in range(count)]
+
+
 def clean_png(data):
-    """The same picture rebuilt from its pixels alone: header, palette, transparency, and the picture data
-    decompressed, checked to be exactly the size the header promises, and compressed again as one chunk.
-    Text, EXIF, XMP, profiles, bytes inside IEND and bytes after the compressed picture cannot survive that."""
+    """The same picture redrawn from its decoded pixels as a new 8-bit RGBA PNG. Only the colour and opacity
+    of each pixel reach the output: text, EXIF, profiles, unused palette entries, padding bits, bits a
+    decoder masks off and bytes after the picture data have nowhere to go."""
     chunks, pos = [], 8
     while pos + 12 <= len(data):
         n = struct.unpack(">I", data[pos:pos + 4])[0]
@@ -202,16 +239,28 @@ def clean_png(data):
     kinds = [k for k, _ in chunks]
     if not chunks or kinds[0] != b"IHDR" or kinds[-1] != b"IEND" or b"IDAT" not in kinds or len(chunks[0][1]) != 13:
         raise Refused("the logo is a damaged PNG (it needs IHDR, picture data and IEND)")
-    if chunks[-1][1]:
-        raise Refused("the logo is a PNG with extra bytes inside its end marker; save a fresh copy")
+    if kinds.count(b"IHDR") != 1:
+        raise Refused("the logo is a PNG with more than one header; save a fresh copy")
     width, height, depth, ctype, method, filtering, interlace = struct.unpack(">IIBBBBB", chunks[0][1])
     if method != 0 or filtering != 0:
         raise Refused("the logo is a PNG with an unknown compression or filter method")
     if interlace != 0:
         raise Refused("the logo is an interlaced PNG; save a copy without interlacing")
-    if ctype not in CHANNELS or depth not in (1, 2, 4, 8, 16) or not (0 < width < 100_000 and 0 < height < 100_000):
+    if depth not in DEPTHS.get(ctype, ()) or not (0 < width and 0 < height):
         raise Refused("the logo is a PNG with an unsupported header")
-    row = 1 + (width * CHANNELS[ctype] * depth + 7) // 8
+    if width * height > LOGO_PIXELS:
+        raise Refused(f"the logo is {width} x {height} px; re-export it at about 256 px (RUNBOOK step 3.4)")
+    plte = [b for k, b in chunks if k == b"PLTE"]
+    trns = [b for k, b in chunks if k == b"tRNS"]
+    if len(plte) > 1 or len(trns) > 1:
+        raise Refused("the logo is a PNG with more than one palette or transparency block; save a fresh copy")
+    if ctype == 3 and (not plte or not plte[0] or len(plte[0]) % 3 or len(plte[0]) > 3 * 2 ** depth):
+        raise Refused("the logo is a palette PNG whose palette does not fit its header")
+    if trns and not (len(trns[0]) == 2 if ctype == 0 else len(trns[0]) == 6 if ctype == 2
+                     else 0 < len(trns[0]) <= len(plte[0]) // 3 if ctype == 3 else False):
+        raise Refused("the logo is a PNG with a transparency block that does not fit its picture")
+    spp = CHANNELS[ctype]
+    row = 1 + (width * spp * depth + 7) // 8
     d = zlib.decompressobj()
     try:
         raw = d.decompress(b"".join(b for k, b in chunks if k == b"IDAT"), row * height + 1)
@@ -221,25 +270,33 @@ def clean_png(data):
         raise Refused("the logo is a damaged PNG (its picture data is not exactly the size its header says)")
     if any(raw[i] > 4 for i in range(0, len(raw), row)):
         raise Refused("the logo is a damaged PNG (a row has an unknown filter)")
-    keep = [(k, b) for k, b in chunks if k in (b"IHDR", b"PLTE", b"tRNS")]
-    plte = [b for k, b in keep if k == b"PLTE"]
-    trns = [b for k, b in keep if k == b"tRNS"]
-    if kinds.count(b"IHDR") != 1:
-        raise Refused("the logo is a PNG with more than one header; save a fresh copy")
-    if len(plte) > 1 or len(trns) > 1:
-        raise Refused("the logo is a PNG with more than one palette or transparency block; save a fresh copy")
-    if plte and (ctype in (0, 4) or not plte[0] or len(plte[0]) % 3 or len(plte[0]) > 3 * 2 ** min(depth, 8)):
-        raise Refused("the logo is a PNG with a palette that does not fit its header")
-    if ctype == 3 and not plte:
-        raise Refused("the logo is a palette PNG with no palette")
-    if trns and not ({0: len(trns[0]) == 2, 2: len(trns[0]) == 6,
-                      3: bool(plte) and 0 < len(trns[0]) <= len(plte[0]) // 3}.get(ctype, False)):
-        raise Refused("the logo is a PNG with a transparency block that does not fit its picture")
-    if ctype != 3:
-        plte = []                                       # only a palette picture needs its palette
-    keep = [chunks[0]] + [(b"PLTE", b) for b in plte] + [(b"tRNS", b) for b in trns]   # the order the PNG spec requires
-    pieces = [data[:8]]
-    for k, b in keep + [(b"IDAT", zlib.compress(raw, 9)), (b"IEND", b"")]:
+    lines = unfilter(raw, row, max(1, spp * depth // 8), height)
+    mask = (1 << depth) - 1
+    key = None
+    if trns and ctype in (0, 2):                        # a decoder masks these to the image depth (PNG spec 11.3.2.1)
+        key = tuple((trns[0][i] << 8 | trns[0][i + 1]) & mask for i in range(0, len(trns[0]), 2))
+    pal = [tuple(plte[0][i:i + 3]) for i in range(0, len(plte[0]), 3)] if ctype == 3 else []
+    alpha = list(trns[0]) if trns and ctype == 3 else []
+    to8 = (lambda v: v >> 8) if depth == 16 else (lambda v: v * 255 // mask)
+    out = bytearray()
+    for y in range(height):
+        vals = samples(lines[y * (row - 1):(y + 1) * (row - 1)], width * spp, depth)
+        out.append(0)
+        for x in range(width):
+            px = vals[x * spp:(x + 1) * spp]
+            if ctype == 3:
+                if px[0] >= len(pal):
+                    raise Refused("the logo is a palette PNG that uses a colour its palette does not have")
+                rgba = pal[px[0]] + ((alpha[px[0]] if px[0] < len(alpha) else 255),)
+            else:
+                a = 0 if key is not None and tuple(px[:3] if ctype == 2 else px[:1]) == key else 255
+                c = [to8(v) for v in px]
+                rgba = ((c[0], c[0], c[0], a) if ctype == 0 else (c[0], c[1], c[2], a) if ctype == 2
+                        else (c[0], c[0], c[0], c[1]) if ctype == 4 else tuple(c))
+            out += bytes(rgba)
+    pieces = [b"\x89PNG\r\n\x1a\n"]
+    for k, b in [(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)),
+                 (b"IDAT", zlib.compress(bytes(out), 9)), (b"IEND", b"")]:
         pieces.append(struct.pack(">I", len(b)) + k + b + struct.pack(">I", zlib.crc32(k + b) & 0xffffffff))
     return b"".join(pieces)
 
