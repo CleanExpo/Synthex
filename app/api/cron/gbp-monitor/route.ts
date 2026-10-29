@@ -20,6 +20,7 @@ import {
   starRatingToNumber,
 } from '@/lib/google/business-profile';
 import { findOAuthConnection } from '@/lib/google/google-auth';
+import { recordLocalOutcome } from '@/lib/marketing-agency/outcomes/local-outcome-writer';
 import { markReviewReceived } from '@/lib/reviews/review-request-service';
 import { calculateVisibilityScore } from '@/lib/scoring/visibility-score';
 import { seedAllOrgsWithoutKeywords } from '@/lib/seo/keyword-seeder';
@@ -365,6 +366,26 @@ export async function GET(request: NextRequest) {
             },
           });
           reviewsSynced++;
+
+          // M4: each review becomes one replay-safe local outcome event. A
+          // writer failure is logged and never fails the location or the cron.
+          const reviewTime = new Date(review.createTime);
+          await recordLocalOutcome({
+            organizationId: location.organizationId,
+            locationId: location.id,
+            kind: 'review',
+            dedupeKey: review.name,
+            source: 'gbp-monitor',
+            attribution: { source: 'google', medium: 'gbp' },
+            observedValue: String(starRatingToNumber(review.starRating)),
+            metadata: { gbpReviewId: review.name, reviewTime },
+            recordedAt: reviewTime,
+          }).catch((err: unknown) =>
+            logger.warn('cron:gbp-monitor:review-outcome-error', {
+              locationId: location.id,
+              error: err instanceof Error ? err.message : String(err),
+            })
+          );
         }
 
         // Mark any pending review requests as completed if new reviews arrived
