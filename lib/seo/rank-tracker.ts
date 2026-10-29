@@ -15,6 +15,7 @@
 import prisma from '@/lib/prisma';
 import { getSearchAnalytics } from '@/lib/google/search-console';
 import { logger } from '@/lib/logger';
+import { recordLocalOutcome } from '@/lib/marketing-agency/outcomes/local-outcome-writer';
 
 const MAX_KEYWORDS_PER_ORG = 20;
 
@@ -115,12 +116,33 @@ export async function takeRankSnapshot(orgId: string): Promise<number> {
 
   let snapshotCount = 0;
 
+  // Keyword targets carry no location: attribute rank outcomes to the org's
+  // primary GBP location, else any location. None -> snapshot only.
+  const location =
+    (await prisma.gBPLocation.findFirst({
+      where: { organizationId: orgId, isPrimary: true },
+      select: { id: true },
+    })) ??
+    (await prisma.gBPLocation.findFirst({
+      where: { organizationId: orgId },
+      select: { id: true },
+    }));
+  if (!location) {
+    logger.warn('rank-tracker:no-location-skipping-outcomes', { orgId });
+  }
+
   for (const target of targets) {
     const row = analytics.rows.find(
       r => r.keys[0]?.toLowerCase() === target.keyword.toLowerCase()
     );
 
     try {
+      const previous = await prisma.keywordRankSnapshot.findFirst({
+        where: { keywordTargetId: target.id, snapshotDate: { lt: today } },
+        orderBy: { snapshotDate: 'desc' },
+        select: { position: true, snapshotDate: true },
+      });
+
       await prisma.keywordRankSnapshot.upsert({
         where: {
           keywordTargetId_snapshotDate: {
@@ -145,6 +167,39 @@ export async function takeRankSnapshot(orgId: string): Promise<number> {
         },
       });
       snapshotCount++;
+
+      const position = row?.position;
+      const previousPosition = previous?.position ?? null;
+      if (
+        location &&
+        typeof position === 'number' &&
+        (!previous || position !== previousPosition)
+      ) {
+        try {
+          await recordLocalOutcome({
+            organizationId: orgId,
+            locationId: location.id,
+            kind: 'rank',
+            dedupeKey: `${target.id}:${today.toISOString().slice(0, 10)}`,
+            source: 'rank-snapshot',
+            attribution: { source: 'google', medium: 'organic' },
+            outcomeMetric: 'position',
+            observedValue: String(position),
+            metadata: {
+              keyword: target.keyword,
+              previousPosition,
+              position,
+              impressions: row?.impressions ?? null,
+              clicks: row?.clicks ?? null,
+            },
+          });
+        } catch (err) {
+          logger.error('rank-tracker:outcome-failed', {
+            keywordTargetId: target.id,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      }
     } catch (err) {
       logger.error('rank-tracker:snapshot-failed', {
         keywordTargetId: target.id,
