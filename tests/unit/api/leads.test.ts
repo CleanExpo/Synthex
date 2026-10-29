@@ -66,6 +66,8 @@ const mockLeadFindUnique = jest.fn();
 const mockLeadUpdate = jest.fn();
 const mockUserFindUnique = jest.fn();
 const mockOrgFindUnique = jest.fn();
+const mockGbpFindFirst = jest.fn();
+const mockRecordLocalOutcome = jest.fn();
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -81,7 +83,14 @@ jest.mock('@/lib/prisma', () => ({
     organization: {
       findUnique: (...args: unknown[]) => mockOrgFindUnique(...args),
     },
+    gBPLocation: {
+      findFirst: (...args: unknown[]) => mockGbpFindFirst(...args),
+    },
   },
+}));
+
+jest.mock('@/lib/marketing-agency/outcomes/local-outcome-writer', () => ({
+  recordLocalOutcome: (...args: unknown[]) => mockRecordLocalOutcome(...args),
 }));
 
 // ── Logger mock ───────────────────────────────────────────────────────────────
@@ -135,6 +144,13 @@ describe('POST /api/leads', () => {
       id: 'lead-1',
       stage: 'enquiry',
       occurredAt: new Date(validBody.occurredAt),
+    });
+    mockGbpFindFirst.mockResolvedValue({ id: 'loc-primary' });
+    mockRecordLocalOutcome.mockResolvedValue({
+      status: 'recorded',
+      outcomeId: 'out-1',
+      signalId: 'sig-1',
+      eventType: 'local_call',
     });
   });
 
@@ -255,6 +271,122 @@ describe('POST /api/leads', () => {
     const res = await POST(req as any);
     expect(res.status).toBe(404);
     expect(mockLeadCreate).not.toHaveBeenCalled();
+  });
+
+  describe('local outcomes (SEAM: POST handler -> recordLocalOutcome)', () => {
+    async function deliver(body: unknown) {
+      const { raw, sig } = signBody(body);
+      const { POST } = await import('@/app/api/leads/route');
+      const req = createMockNextRequest({
+        method: 'POST',
+        url: 'http://localhost/api/leads',
+        body: raw,
+        headers: {
+          'content-type': 'application/json',
+          'x-synthex-signature': sig,
+        },
+      });
+      return POST(req as any);
+    }
+
+    const callBody = {
+      ...validBody,
+      contactMethod: 'phone_call',
+      capturedFrom: 'twilio',
+      rawPayload: { externalId: 'call-77', locationId: 'loc-9' },
+    };
+
+    it('records one call outcome for the payload location', async () => {
+      const res = await deliver(callBody);
+      expect(res.status).toBe(200);
+      expect(mockRecordLocalOutcome).toHaveBeenCalledTimes(1);
+      const input = mockRecordLocalOutcome.mock.calls[0][0];
+      expect(input).toMatchObject({
+        organizationId: 'org-1',
+        locationId: 'loc-9',
+        kind: 'call',
+        dedupeKey: 'call-77',
+        source: 'leads:twilio',
+        attribution: { source: 'google', medium: 'cpc', campaign: 'spring' },
+      });
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.outcome).toEqual({
+        status: 'recorded',
+        eventType: 'local_call',
+      });
+    });
+
+    it('replays with the same dedupeKey and reports the duplicate', async () => {
+      mockRecordLocalOutcome.mockResolvedValueOnce({
+        status: 'recorded',
+        outcomeId: 'out-1',
+        signalId: 'sig-1',
+        eventType: 'local_call',
+      });
+      mockRecordLocalOutcome.mockResolvedValueOnce({
+        status: 'duplicate',
+        outcomeId: 'out-1',
+        signalId: 'sig-1',
+        eventType: 'local_call',
+      });
+      await deliver(callBody);
+      const second = await deliver(callBody);
+      const keys = mockRecordLocalOutcome.mock.calls.map(c => c[0].dedupeKey);
+      expect(keys).toEqual(['call-77', 'call-77']);
+      expect((await second.json()).outcome.status).toBe('duplicate');
+    });
+
+    it('falls back to a body hash when there is no externalId', async () => {
+      const body = { ...callBody, rawPayload: { locationId: 'loc-9' } };
+      await deliver(body);
+      await deliver(body);
+      const [a, b] = mockRecordLocalOutcome.mock.calls.map(c => c[0].dedupeKey);
+      expect(a).toMatch(/^[0-9a-f]{64}$/);
+      expect(a).toBe(b);
+    });
+
+    it('uses the primary GBP location when the payload has none', async () => {
+      await deliver({ ...callBody, rawPayload: { externalId: 'c1' } });
+      expect(mockGbpFindFirst).toHaveBeenCalledWith({
+        where: { organizationId: 'org-1', isPrimary: true },
+        select: { id: true },
+      });
+      expect(mockRecordLocalOutcome.mock.calls[0][0].locationId).toBe(
+        'loc-primary'
+      );
+    });
+
+    it('keeps the lead and skips the outcome when no location exists', async () => {
+      mockGbpFindFirst.mockResolvedValue(null);
+      const res = await deliver({ ...callBody, rawPayload: {} });
+      expect(res.status).toBe(200);
+      expect(mockLeadCreate).toHaveBeenCalledTimes(1);
+      expect(mockRecordLocalOutcome).not.toHaveBeenCalled();
+      expect((await res.json()).outcome).toBeNull();
+    });
+
+    it('keeps the lead and returns 200 when the outcome write throws', async () => {
+      mockRecordLocalOutcome.mockRejectedValue(new Error('db down'));
+      const res = await deliver(callBody);
+      expect(res.status).toBe(200);
+      expect((await res.json()).outcome).toBeNull();
+    });
+
+    it('writes no outcome for a form submission', async () => {
+      const res = await deliver(validBody);
+      expect(res.status).toBe(200);
+      expect(mockRecordLocalOutcome).not.toHaveBeenCalled();
+      expect((await res.json()).outcome).toBeNull();
+    });
+
+    it.each([
+      ['direction_request', 'direction'],
+      ['booking', 'booking'],
+    ])('maps %s to kind %s', async (contactMethod, kind) => {
+      await deliver({ ...callBody, contactMethod });
+      expect(mockRecordLocalOutcome.mock.calls[0][0].kind).toBe(kind);
+    });
   });
 });
 

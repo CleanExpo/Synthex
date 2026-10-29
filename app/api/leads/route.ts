@@ -21,11 +21,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createHmac, timingSafeEqual } from 'crypto';
+import { createHash, createHmac, timingSafeEqual } from 'crypto';
 import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { checkRateLimit, extractClientIp } from '@/lib/auth/rate-limit';
+import {
+  recordLocalOutcome,
+  type LocalOutcomeKind,
+} from '@/lib/marketing-agency/outcomes/local-outcome-writer';
 
 // ============================================================================
 // Validation
@@ -49,6 +53,18 @@ const BodySchema = z.object({
   rawPayload: z.record(z.string(), z.unknown()),
   revenueEstimateAud: z.coerce.number().nonnegative().optional(),
 });
+
+const OUTCOME_KIND: Partial<
+  Record<z.infer<typeof ContactMethodEnum>, LocalOutcomeKind>
+> = {
+  phone_call: 'call',
+  booking: 'booking',
+  direction_request: 'direction',
+};
+
+function nonEmptyString(value: unknown): string | null {
+  return typeof value === 'string' && value.length > 0 ? value : null;
+}
 
 // ============================================================================
 // Signature verification
@@ -156,7 +172,57 @@ export async function POST(request: NextRequest) {
       select: { id: true, stage: true, occurredAt: true },
     });
 
-    return NextResponse.json({ ok: true, lead }, { status: 200 });
+    let outcome: { status: string; eventType: string } | null = null;
+    const kind = OUTCOME_KIND[body.contactMethod];
+    if (kind) {
+      try {
+        const locationId =
+          nonEmptyString(body.rawPayload.locationId) ??
+          (
+            await prisma.gBPLocation.findFirst({
+              where: { organizationId: body.organizationId, isPrimary: true },
+              select: { id: true },
+            })
+          )?.id;
+        if (!locationId) {
+          logger.warn('[leads] no location for outcome; lead kept', {
+            organizationId: body.organizationId,
+            leadId: lead.id,
+          });
+        } else {
+          const result = await recordLocalOutcome({
+            organizationId: body.organizationId,
+            locationId,
+            kind,
+            dedupeKey:
+              nonEmptyString(body.rawPayload.externalId) ??
+              createHash('sha256').update(rawBody).digest('hex'),
+            source: `leads:${body.capturedFrom}`,
+            attribution: {
+              source: body.source,
+              medium: body.medium,
+              campaign: body.campaign,
+            },
+            observedValue: body.revenueEstimateAud?.toString(),
+            metadata: {
+              occurredAt: body.occurredAt,
+              capturedFrom: body.capturedFrom,
+              leadId: lead.id,
+            },
+            recordedAt: new Date(body.occurredAt),
+          });
+          outcome = { status: result.status, eventType: result.eventType };
+        }
+      } catch (err) {
+        // The lead is already stored; an outcome failure must not 5xx a signed delivery.
+        logger.warn('[leads] outcome write failed; lead kept', {
+          leadId: lead.id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    return NextResponse.json({ ok: true, lead, outcome }, { status: 200 });
   } catch (err) {
     logger.error('[leads] capture failed', {
       error: err instanceof Error ? err.message : String(err),
