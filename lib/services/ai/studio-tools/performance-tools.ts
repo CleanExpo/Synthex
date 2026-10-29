@@ -45,6 +45,8 @@ const GetOutcomesOutput = z.object({
       observedValue: z.string().nullable(),
       confidence: z.number().nullable(),
       notes: z.string().nullable(),
+      metadata: z.record(z.string(), z.unknown()).nullable(),
+      locationId: z.string().nullable(),
       recordedAt: z.string(),
     })
   ),
@@ -130,14 +132,28 @@ export const PERFORMANCE_TOOLS: StudioTool[] = [
           observedValue: true,
           confidence: true,
           notes: true,
+          metadata: true,
           recordedAt: true,
         },
       });
       return {
-        events: rows.map(r => ({
-          ...r,
-          recordedAt: r.recordedAt.toISOString(),
-        })),
+        events: rows.map(r => {
+          const metadata =
+            r.metadata &&
+            typeof r.metadata === 'object' &&
+            !Array.isArray(r.metadata)
+              ? (r.metadata as Record<string, unknown>)
+              : null;
+          return {
+            ...r,
+            metadata,
+            locationId:
+              typeof metadata?.locationId === 'string'
+                ? metadata.locationId
+                : null,
+            recordedAt: r.recordedAt.toISOString(),
+          };
+        }),
         total: rows.length,
       };
     },

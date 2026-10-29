@@ -346,11 +346,30 @@ describe('per-tool structuredContent validates against the declared outputSchema
         observedValue: '12',
         confidence: 0.7,
         notes: null,
+        metadata: { locationId: 'loc-9', attribution: {} },
         recordedAt: new Date('2026-07-05T00:00:00Z'),
       },
+      {
+        id: 'e2',
+        campaignId: null,
+        signalId: 's2',
+        opportunityId: null,
+        eventType: 'conversion',
+        status: 'observed',
+        outcomeMetric: null,
+        observedValue: null,
+        confidence: null,
+        notes: null,
+        metadata: null,
+        recordedAt: new Date('2026-07-04T00:00:00Z'),
+      },
     ]);
-    const out = await executeAndValidate('performance_get_outcomes', {});
-    expect(out).toMatchObject({ total: 1 });
+    const out = (await executeAndValidate('performance_get_outcomes', {})) as {
+      total: number;
+      events: Array<{ locationId: string | null }>;
+    };
+    expect(out.total).toBe(2);
+    expect(out.events.map(e => e.locationId)).toEqual(['loc-9', null]);
   });
 
   it('performance_get_scores — REAL heuristic scorer, output self-labels method: heuristic', async () => {
