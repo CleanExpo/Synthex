@@ -1,0 +1,94 @@
+{
+  "phase": "P6",
+  "at": "2026-10-29T19:31:19.553Z",
+  "waves": [
+    ["outcome-writer"],
+    [
+      "leads-outcomes",
+      "review-outcomes",
+      "rank-outcomes",
+      "listing-drift-outcomes",
+      "call-tool-script"
+    ],
+    ["retire-j7-gaps"]
+  ],
+  "results": {
+    "outcome-writer": {
+      "done": true,
+      "unit": "outcome-writer",
+      "sha": "214d4e6760ca31b884143b8e0b214dadf3d27ae6",
+      "state": "PASS",
+      "thread": "cr_child_6853bc1d62134b3246acbbdc",
+      "branch": "refs/fleet/units/p6/outcome-writer",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    },
+    "leads-outcomes": {
+      "done": true,
+      "unit": "leads-outcomes",
+      "sha": "b3d46359cc69e945d16f6c65f911e18f7af4a4b7",
+      "state": "PASS",
+      "thread": "cr_child_11951620b938523234fd3e00",
+      "branch": "refs/fleet/units/p6/leads-outcomes",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    },
+    "review-outcomes": {
+      "done": true,
+      "unit": "review-outcomes",
+      "sha": "98c189509f43a78b9686c60fc9637655320366da",
+      "state": "PASS",
+      "thread": "cr_child_848522760d2f9d343d61bf25",
+      "branch": "refs/fleet/units/p6/review-outcomes",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    },
+    "rank-outcomes": {
+      "done": true,
+      "unit": "rank-outcomes",
+      "sha": "86a9b3d2742b05deaf13ea18ba177867d7baaaa5",
+      "state": "PASS",
+      "thread": "cr_child_74e3235884d690e2028a9bc0",
+      "branch": "refs/fleet/units/p6/rank-outcomes",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    },
+    "listing-drift-outcomes": {
+      "done": true,
+      "unit": "listing-drift-outcomes",
+      "sha": "9f6f24f2162488cf24a84eea2bf9a1f342fd1af8",
+      "state": "PASS",
+      "thread": "cr_child_659a0a46f15ac3b5b60011b3",
+      "branch": "refs/fleet/units/p6/listing-drift-outcomes",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    },
+    "call-tool-script": {
+      "done": true,
+      "unit": "call-tool-script",
+      "sha": "142821fcf6a76b91ec549462aaa16d5914434032",
+      "state": "PASS",
+      "thread": "cr_child_6db46a4d757a46d1fdee4da7",
+      "branch": "refs/fleet/units/p6/call-tool-script",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    },
+    "retire-j7-gaps": {
+      "done": true,
+      "unit": "retire-j7-gaps",
+      "sha": "0b4bc1f065b2b24ee301116f2168d0cde587bbb3",
+      "state": "PASS",
+      "thread": "cr_child_69e3e5d4058336ae6df9ef02",
+      "branch": "refs/fleet/units/p6/retire-j7-gaps",
+      "model": "claude-sonnet-5-5",
+      "integrated": true,
+      "note": "spawned by the orchestrator in the foreground into a per-unit git worktree inside the orchestrator sandbox (Cloudroom app closed); every proving command re-run by the orchestrator on the integrated tree"
+    }
+  }
+}
