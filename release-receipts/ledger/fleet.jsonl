@@ -125,3 +125,4 @@
 {"ts":"2026-10-18T15:25:57.104Z","kind":"note","phase":"P2","what":"Founder confirmed in chat (18/10/2026): \"Yes, i merged it\" — PR #1023 (merge c7eac8e7) was merged by the founder. The human-intervention row for P2 stands as a founder merge, not an unknown actor.","pr":1023}
 {"ts":"2026-10-19T00:39:15.239Z","kind":"note","phase":"P3","what":"Review lane fallback per FD-5: Codex quota exhausted (independent_review.py: resets Oct 25th, 2026 8:05 AM), no report at 5ed1e82e. Running the MiniMax lane (owned subscription, shell-capable) on the mini at the same head. Free OpenRouter/Gemini lanes lack shell and cannot discharge mutation-control.","head":"5ed1e82e6a4b0c34195dac55153cfbfb27ad6503"}
 {"ts":"2026-10-19T03:56:26.377Z","kind":"start","phase":"P4","decision":"START","reason":null,"source":"phase-advance"}
+{"ts":"2026-10-29T19:00:59.070Z","kind":"start","phase":"P6","decision":"START","reason":null,"source":"phase-advance"}
