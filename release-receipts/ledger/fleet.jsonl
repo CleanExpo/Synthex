@@ -146,3 +146,6 @@
 {"ts":"2026-10-19T07:17:15.525Z","kind":"gate","phase":"P4","head":"a72d073dcc680db45100a3aae050362329968030","pass":8,"total":8}
 {"ts":"2026-10-19T07:34:25.331Z","kind":"review","phase":"P4","head":"a72d073dcc680db45100a3aae050362329968030","lane":"minimax","verdict":"PASS"}
 {"ts":"2026-10-20T08:14:46.003Z","kind":"gate","phase":"P5","head":"537a199101d2f8c19cfaf4c6b1654c815163fd5e","pass":9,"total":9}
+{"ts":"2026-10-29T19:08:40.141Z","kind":"policy-hash","previous":"c894affc0451a22f584c16424a6998c75c3012348ab269520bcde691d80556f0","sha256":"13543e6e977d01ec4f1aa8b6644d0046b3ab004b60f345d0a67713811cf157ac","source":"check-bootstrap --record"}
+{"ts":"2026-10-29T19:09:01.197Z","kind":"start","phase":"P6","branch":"feature/fleet-p6-outcomes","step":"prepare","contract_locked":false,"policy":"13543e6e977d01ec4f1aa8b6644d0046b3ab004b60f345d0a67713811cf157ac"}
+{"ts":"2026-10-29T19:09:22.613Z","kind":"start","phase":"P6","branch":"feature/fleet-p6-outcomes","step":"prepare","contract_locked":true,"policy":"13543e6e977d01ec4f1aa8b6644d0046b3ab004b60f345d0a67713811cf157ac"}
