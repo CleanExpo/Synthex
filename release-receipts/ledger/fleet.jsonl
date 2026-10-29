@@ -164,3 +164,5 @@
 {"ts":"2026-10-29T19:27:20.706Z","kind":"unit","phase":"P6","unit":"retire-j7-gaps","thread":"cr_child_69e3e5d4058336ae6df9ef02","branch":"refs/fleet/units/p6/retire-j7-gaps","state":"STARTED","detail":"orchestrator foreground spawn; worktree /code/fleet-units/retire-j7-gaps"}
 {"ts":"2026-10-29T19:28:18.488Z","kind":"integrate","phase":"P6","unit":"call-tool-script","files":5,"head":"e41e1ad93b430904445f9c886da34e3fb2693c94"}
 {"ts":"2026-10-29T19:30:36.104Z","kind":"integrate","phase":"P6","unit":"retire-j7-gaps","files":1,"head":"48c28ee8b63ec89bd75b4e50c6f116713bfb09b4"}
+{"ts":"2026-10-29T19:41:36.029Z","kind":"gate","phase":"P6","head":"d16310a0bb16cbe2ead948b2b5318769ff1ac502","pass":7,"total":7}
+{"ts":"2026-10-29T19:42:23.291Z","kind":"review","phase":"P6","head":"d16310a0bb16cbe2ead948b2b5318769ff1ac502","state":"INCONCLUSIVE","detail":"every lane unavailable"}
