@@ -15,6 +15,7 @@
  * UNI-1637
  */
 
+import { createHash } from 'crypto';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   getUserIdFromRequestOrCookies,
@@ -22,6 +23,8 @@ import {
 } from '@/lib/auth/jwt-utils';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { prisma } from '@/lib/prisma';
+import { recordLocalOutcome } from '@/lib/marketing-agency/outcomes/local-outcome-writer';
+import { logger } from '@/lib/logger';
 
 export const runtime = 'nodejs';
 
@@ -90,7 +93,7 @@ export async function GET(request: NextRequest) {
   const [gbpLocation, org, brandDna] = await Promise.all([
     prisma.gBPLocation.findFirst({
       where: { organizationId, isPrimary: true },
-      select: { locationName: true, phone: true, website: true },
+      select: { id: true, locationName: true, phone: true, website: true },
     }),
     prisma.organization.findUnique({
       where: { id: organizationId },
@@ -182,6 +185,39 @@ export async function GET(request: NextRequest) {
       canonical: canonicalWebsite,
       sources: websiteMismatches,
     });
+  }
+
+  if (mismatches.length > 0) {
+    const fingerprint = createHash('sha256')
+      .update(
+        JSON.stringify(
+          [...mismatches]
+            .sort((a, b) => a.field.localeCompare(b.field))
+            .map(m => [
+              m.field,
+              m.canonical,
+              [...m.sources]
+                .sort((a, b) => a.source.localeCompare(b.source))
+                .map(s => [s.source, s.value]),
+            ])
+        )
+      )
+      .digest('hex');
+    try {
+      await recordLocalOutcome({
+        organizationId,
+        locationId: gbpLocation.id,
+        kind: 'listing',
+        dedupeKey: `${gbpLocation.id}:${fingerprint}`,
+        source: 'nap-audit',
+        attribution: { source: 'google', medium: 'gbp' },
+        outcomeMetric: 'nap_mismatch_fields',
+        observedValue: mismatches.map(m => m.field).join(','),
+        metadata: { mismatches },
+      });
+    } catch (err) {
+      logger.error('Failed to record listing drift outcome', { error: err });
+    }
   }
 
   return NextResponse.json({
