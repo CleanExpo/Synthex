@@ -130,3 +130,4 @@
 {"ts":"2026-10-29T19:31:45.277Z","kind":"cost","phase":"P6","usd":0,"source":"orchestrator-estimate","note":"7 Sonnet builder threads + 1 Haiku probe on the Claude Max subscription via Cloudroom; no metered spend observed; API-equivalent estimate roughly 3-6 USD"}
 {"ts":"2026-10-29T20:01:08.041Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-10-29T20:30:59.330Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
+{"ts":"2026-10-29T21:01:43.917Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
