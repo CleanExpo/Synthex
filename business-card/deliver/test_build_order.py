@@ -575,7 +575,7 @@ def noise_png(width, height, seed=1):
 
 
 def test_logo_that_grows_past_the_limit_when_cleaned_refuses_with_nothing_built(tmp_path):
-    raw = noise_png(584, 205)
+    raw = noise_png(583, 205)  # 119,793 bytes on macOS; stays under cap on Linux too
     assert len(raw) <= 120_000                 # the buyer's file is under the limit; the cleaned copy is not
     r, out = build_with_logo(tmp_path, raw)
     refused_cleanly(r, out)
