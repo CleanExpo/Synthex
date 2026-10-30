@@ -1,0 +1,25 @@
+{
+  "order_ref": "SAMPLE-0001",
+  "tier": "ready-made",
+  "film": "portal",
+  "buyer_name": "Sam Sample",
+  "role": "Owner, Sample Plumbing Co",
+  "email": "sam@example.com",
+  "phone": { "display": "0400 555 123", "tel": "+61400555123" },
+  "businesses": [
+    {
+      "name": "Sample Plumbing Co",
+      "url": "https://example.com",
+      "note": "Plumbing, Brisbane"
+    },
+    {
+      "name": "Sample Hot Water",
+      "url": "https://hotwater.example.com",
+      "note": "Hot water systems"
+    }
+  ],
+  "extra_businesses": 1,
+  "logo_file": "sample-plumbing-co-logo.png",
+  "brand_colour": "#1FA2D6",
+  "colour_source": "measured from the sample logo's ring (fake sample data)"
+}

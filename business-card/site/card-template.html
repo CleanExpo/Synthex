@@ -466,7 +466,7 @@ const B = KIT.brand || {}, P = KIT.person || {};
 const $ = id => document.getElementById(id);
 const HOSTED = window.CARD_HOSTED === true;
 // A link from the kit is used only when it is plain https with no space, quote or angle bracket (no javascript:, no line breaks)
-const SAFE_URL = /^https:\/\/[^\s"<>]+$/, safeUrl = u => SAFE_URL.test(u || "");
+const SAFE_URL = /^https:\/\/[^\s/?#"<>]+[^\s"<>]*$/, safeUrl = u => SAFE_URL.test(u || "");
 const QS = new URLSearchParams(location.search);
 const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const isSet = c => c && typeof c.value === "string" && !c.status;
@@ -589,6 +589,10 @@ function lum(hex) {
     $("nexus").hidden = false;
   }
   const f = P.features || {};
+  // a buyer's card names its own shelf (brand.shelf); without one it stays the Unite-Group Nexus shelf
+  const sh = B.shelf || {};
+  if (typeof sh.title === "string" && sh.title) $("nexus-h").textContent = sh.title;
+  if (typeof sh.text === "string") document.querySelector("#nexus .nexus-head p").textContent = sh.text;
   if (f.discover && P.ideas) $("door-discover").hidden = false;
   // Margot's films (hosted only): a poster until tapped; the second film opens from "Tap to hear more"
   const FILMS = B.films || {};

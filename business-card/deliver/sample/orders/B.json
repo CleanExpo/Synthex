@@ -1,0 +1,18 @@
+{
+  "order_ref": "SAMPLE-PC-0002",
+  "tier": "made-for-you",
+  "film": "custom, pending proof",
+  "buyer_name": "Sasha Sampleton (SAMPLE)",
+  "role": "Owner, SAMPLE Wattle Creek Tiling",
+  "email": "sasha.sampleton@sample.example.com",
+  "phone": null,
+  "businesses": [
+    {
+      "name": "SAMPLE Wattle Creek Tiling",
+      "url": "https://tiling.example.com",
+      "note": "SAMPLE: bathroom and kitchen tiling, Toowoomba"
+    }
+  ],
+  "extra_businesses": 0,
+  "logo_file": "sample-logo-256.png"
+}
