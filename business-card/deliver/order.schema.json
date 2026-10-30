@@ -92,7 +92,7 @@
           "url": {
             "description": "Plain https, no spaces, quotes or angle brackets.",
             "type": "string",
-            "pattern": "^https://[^\\s\"<>]+$"
+            "pattern": "^https://[^\\s/?#\"<>]+[^\\s\"<>]*$"
           },
           "note": {
             "description": "Optional short line under the business, for example \"Plumbing, Brisbane\".",

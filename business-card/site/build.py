@@ -110,7 +110,7 @@ MIME = {".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".j
 
 
 # Same rule as SAFE_URL in card.html: plain https, no whitespace, quote or angle bracket (no javascript:, no CRLF injection)
-SAFE_URL = re.compile(r'^https://[^\s"<>]+$')
+SAFE_URL = re.compile(r'^https://[^\s/?#"<>]+[^\s"<>]*$')
 
 
 # Phill 24/10/2026: the contact picture is the owner's logo or a photo of the owner. Never Margot, a film

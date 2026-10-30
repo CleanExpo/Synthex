@@ -48,7 +48,7 @@ REF = re.compile(r"[A-Za-z0-9][A-Za-z0-9-]{2,39}")
 EMAIL = re.compile(r'[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+')
 TEL = re.compile(r"\+?[0-9]{6,15}")
 HEX = re.compile(r"#[0-9A-Fa-f]{6}")
-SAFE_URL = re.compile(r'https://[^\s"<>]+')         # same rule as card.html, build.py and validate.py
+SAFE_URL = re.compile(r'https://[^\s/?#"<>]+[^\s"<>]*')         # same rule as card.html, build.py and validate.py
 CTRL = re.compile(r"[\x00-\x1f\x7f  ]")
 LOGO_TYPES = {".png": b"\x89PNG\r\n\x1a\n"}       # PNG only: it is rebuilt from its pixels (clean_png)
 LOGO_MAX = 120_000                                     # build.py's limit for the contact picture
@@ -503,7 +503,8 @@ def verify(order, kit, card):
     for name in names:
         if name.endswith(".html"):
             with open(os.path.join(card, name), encoding="utf-8") as f:
-                left = [w for w in PHILLS_EXAMPLE if w.lower() in f.read().lower()]
+                page_text = f.read().lower()
+            left = [w for w in PHILLS_EXAMPLE if w.lower() in page_text]
             if left:
                 raise Refused(f"card/{name} still carries Phill's own example text {left}; it must not ship on a buyer's card")
     page = open(os.path.join(card, "index.html"), encoding="utf-8").read()

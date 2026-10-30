@@ -840,3 +840,25 @@ def test_simultaneous_builds_of_same_order_do_not_share_stage(tmp_path):
         assert (out / "PROOF.md").is_file()
         assert (out / "card/index.html").is_file()
     assert results[0][1] != results[1][1]
+
+
+@pytest.mark.parametrize("url", ["https:///no-host", "https://?q=test", "https://#frag", "https://"])
+def test_buyer_link_must_have_nonempty_host(tmp_path, url):
+    order = made_for_you()
+    order["businesses"][0]["url"] = url
+    r, out = run(tmp_path, order)
+    refused_cleanly(r, out)
+    assert "url" in r.stderr.lower()
+
+
+def test_verify_detects_later_forbidden_founder_marker(tmp_path):
+    """Regression: f.read() inside marker comprehension consumed input at first marker."""
+    order = made_for_you()
+    r, out = run(tmp_path, order)
+    assert r.returncode == 0, r.stderr
+    preview = out / "card" / "preview.html"
+    preview.write_text(preview.read_text() + "<!-- RestoreAssist -->", encoding="utf-8")
+    b = builder()
+    with pytest.raises(b.Refused, match="RestoreAssist"):
+        b.verify(json.loads((out / "order.json").read_text()),
+                 json.loads((out / "brand-kit.json").read_text()), str(out / "card"))

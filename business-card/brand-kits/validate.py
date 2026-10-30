@@ -9,7 +9,7 @@ import re
 import sys
 
 HEX = re.compile(r"^#[0-9A-Fa-f]{6}$")
-SAFE_URL = re.compile(r'^https://[^\s"<>]+$')   # same rule as SAFE_URL in card.html and site/build.py
+SAFE_URL = re.compile(r'^https://[^\s/?#"<>]+[^\s"<>]*$')   # same rule as SAFE_URL in card.html and site/build.py
 CTRL = re.compile(r'[\x00-\x1f\x7f]')         # a line break in a contact value would start a new vCard field
 
 
