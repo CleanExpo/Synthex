@@ -19,6 +19,7 @@ import json
 import os
 import re
 import shutil
+import secrets
 import struct
 import subprocess
 import sys
@@ -205,6 +206,7 @@ CHANNELS = {0: 1, 2: 3, 3: 1, 4: 2, 6: 4}              # PNG colour type -> samp
 
 DEPTHS = {0: (1, 2, 4, 8, 16), 2: (8, 16), 3: (1, 2, 4, 8), 4: (8, 16), 6: (8, 16)}   # the pairs the PNG spec defines
 LOGO_PIXELS = 1024 * 1024                               # a card logo is about 256 px; anything far bigger is refused
+LOGO_EDGE_MAX = 4096                                  # no million-pixel single scanline allocations
 
 
 def unfilter(raw, row, bpp, height):
@@ -266,7 +268,7 @@ def clean_png(data):
         raise Refused("the logo is an interlaced PNG; save a copy without interlacing")
     if depth not in DEPTHS.get(ctype, ()) or not (0 < width and 0 < height):
         raise Refused("the logo is a PNG with an unsupported header")
-    if width * height > LOGO_PIXELS:
+    if width > LOGO_EDGE_MAX or height > LOGO_EDGE_MAX or width * height > LOGO_PIXELS:
         raise Refused(f"the logo is {width} x {height} px; re-export it at about 256 px (RUNBOOK step 3.4)")
     plte = [b for k, b in chunks if k == b"PLTE"]
     trns = [b for k, b in chunks if k == b"tRNS"]
@@ -454,8 +456,11 @@ def build(order_path, out):
         raise Refused(f"the logo is {len(data)} bytes after cleaning, over the {LOGO_MAX}-byte limit; "
                       "use a copy of about 256 px")
     sha = hashlib.sha256(data).hexdigest()
-    # build.py reads the logo from inside the repository; a hex folder name never looks like a film or poster
-    stage = os.path.join(WORK, hashlib.sha256((order["order_ref"] + sha).encode()).hexdigest()[:12])
+    # Each invocation MUST have its own isolated staging folder. Deterministic
+    # order_ref+SHA collides if two workers build the same paid order concurrently;
+    # one worker could delete the other's logo/template in the finally block.
+    # Cryptographic randomness isolates concurrent builds without shared locks.
+    stage = os.path.join(WORK, "order-" + secrets.token_hex(12))
     logo_rel = os.path.relpath(os.path.join(stage, "logo" + os.path.splitext(logo_src)[1].lower()), REPO)
     kit = make_kit(order, logo_rel, sha)
     os.makedirs(out, exist_ok=True)

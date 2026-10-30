@@ -807,3 +807,36 @@ def test_owner_card_keeps_phills_own_content(tmp_path):
     page = open(b.TEMPLATE, encoding="utf-8").read()
     for old, _ in b.BUYER_TEMPLATE_CUTS:
         assert page.count(old) == 1, old
+
+
+# Regression for a CodeRabbit finding on PR #1088: a 1m-pixel one-row 16-bit
+# image fits the overall pixel cap but can allocate a huge Python row list.
+def test_single_row_dimension_guard(tmp_path):
+    raw = one_png(4097, 1, 8, 0, [bytes(4097)])
+    r, out = build_with_logo(tmp_path, raw)
+    refused_cleanly(r, out)
+    assert "4097 x 1" in r.stderr
+
+
+# Two jobs for the SAME order used to share a deterministic .work stage path:
+# one process cleaned the stage while another still needed its logo/template.
+def test_simultaneous_builds_of_same_order_do_not_share_stage(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from pathlib import Path
+    folder = tmp_path / "order"
+    folder.mkdir()
+    shutil.copy(os.path.join(ORDERS, "B.json"), folder / "order.json")
+    shutil.copy(os.path.join(ORDERS, "sample-logo-256.png"), folder / "sample-logo-256.png")
+
+    def build_one(number):
+        output = tmp_path / f"built-{number}"
+        return subprocess.run([sys.executable, "-I", SCRIPT, str(folder / "order.json"), str(output)],
+                              capture_output=True, text=True), output
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(build_one, (1, 2)))
+    for result, out in results:
+        assert result.returncode == 0, result.stderr
+        assert (out / "PROOF.md").is_file()
+        assert (out / "card/index.html").is_file()
+    assert results[0][1] != results[1][1]
