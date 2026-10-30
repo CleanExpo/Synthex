@@ -60,6 +60,16 @@ jobs:
         with:
           # The tripwire seed test re-derives its seeds from Git history.
           fetch-depth: 0
+      # The paid-card builder is Python. npm tests alone left Synthex PR #1088
+      # green without running any of business-card/deliver/test_build_order.py.
+      # Keep this in the existing REQUIRED Unit Tests job (not a non-blocking check).
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Paid Living Card builder contract (blocking)
+        run: |
+          python -m pip install pytest==8.4.2
+          python -m pytest -q business-card/deliver/test_build_order.py
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ env.NODE_VERSION }}
