@@ -320,7 +320,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     ],
     brandRules: [
       ...SHARED_RULES,
-      'Unite-Group content never shows or mentions CARSI, Disaster Recovery, NRPG, RestoreAssist or any restoration or training content; use any-niche small businesses (cafe, accountant, clinic, salon, retail) and hold shots 3 to 5 seconds (founder, 26/10/2026).',
+      'Unite-Group content never shows or mentions the group’s own businesses or their industries; use any-niche small businesses (cafe, accountant, clinic, salon, retail) and hold shots 3 to 5 seconds (founder, 26/10/2026).',
       'Never mention COACH8.',
     ],
     liveStatus: {

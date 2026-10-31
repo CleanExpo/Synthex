@@ -41,10 +41,11 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 
 const mockApply = jest.fn();
 const mockUndo = jest.fn();
+const mockVerify = jest.fn();
 jest.mock('@/lib/marketing-calendar/portfolio-seed', () => ({
   applyPortfolioSetup: (...a: unknown[]) => mockApply(...a),
   undoPortfolioSetup: (...a: unknown[]) => mockUndo(...a),
-  verifyPortfolioSetup: jest.fn(),
+  verifyPortfolioSetup: (...a: unknown[]) => mockVerify(...a),
 }));
 
 import { POST as deliver } from '@/app/api/portfolio-calendar/video-delivery/route';
@@ -239,6 +240,10 @@ describe('GET /api/admin/portfolio-calendar', () => {
       { ...businessCard, id: 'org-outsider', parentOrgId: 'outside-parent' },
     ]);
     mockFindFirst.mockResolvedValue([]);
+    mockVerify.mockResolvedValue({
+      ok: true,
+      checks: [{ label: 'c', pass: true }],
+    });
     const res = await adminGet(
       createMockNextRequest({
         method: 'GET',
@@ -248,6 +253,12 @@ describe('GET /api/admin/portfolio-calendar', () => {
     expect(res.status).toBe(200);
     expect(mockFindFirst.mock.calls[0][0].where.organizationId).toEqual({
       in: ['org-ug'],
+    });
+    // The page reads data.verify.checks; a GET without it would blank it.
+    const body = await res.json();
+    expect(body.verify).toEqual({
+      ok: true,
+      checks: [{ label: 'c', pass: true }],
     });
   });
 });

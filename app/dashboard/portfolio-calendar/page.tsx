@@ -121,7 +121,11 @@ export default function PortfolioCalendarPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       });
-      const body = await res.json();
+      // A non-JSON reply (a gateway timeout page) must still report the
+      // status, and says plainly that no records file came back.
+      const body = await res.json().catch(() => ({
+        error: `No records came back (status ${res.status}). Check the calendar below before running again.`,
+      }));
       // Save every run's manifest, even on failure: it lists whatever was
       // written and is the only input undo accepts. A later run never replaces it.
       if (body.manifest?.write) {
@@ -141,16 +145,27 @@ export default function PortfolioCalendarPage() {
     }
   }
 
-  function saveRecords(run: { ranAt?: string }) {
+  function saveRecords(run: { ranAt?: string } | Array<{ ranAt?: string }>) {
     const blob = new Blob([JSON.stringify(run, null, 2)], {
       type: 'application/json',
     });
-    const stamp = (run.ranAt ?? new Date().toISOString()).replace(/[:.]/g, '-');
+    const first = Array.isArray(run) ? run[0] : run;
+    const stamp = (first?.ranAt ?? new Date().toISOString()).replace(
+      /[:.]/g,
+      '-'
+    );
+    const name = Array.isArray(run)
+      ? `synthex-portfolio-calendar-records-all-${run.length}-runs-${stamp}.json`
+      : `synthex-portfolio-calendar-records-${stamp}.json`;
+    // In the document and revoked later: some browsers ignore a click on a
+    // detached link or cancel a download whose URL is revoked in the same tick.
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `synthex-portfolio-calendar-records-${stamp}.json`;
+    link.download = name;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(link.href);
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 60_000);
   }
 
   if (isLoading) {
@@ -266,7 +281,9 @@ export default function PortfolioCalendarPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => records.forEach(saveRecords)}
+                // One file holding every run: browsers block a burst of
+                // automatic downloads after the first.
+                onClick={() => saveRecords(records)}
               >
                 Download records again
               </Button>

@@ -441,7 +441,8 @@ describe('applyPortfolioSetup', () => {
     for (const [arg] of db.brandDNA.create.mock.calls) {
       expect(arg.data).not.toHaveProperty('logoUrl');
     }
-    for (const [arg] of db.organization.update.mock.calls) {
+    expect(db.organization.update).not.toHaveBeenCalled();
+    for (const [arg] of db.organization.updateMany.mock.calls) {
       expect(arg.data).not.toHaveProperty('logo');
     }
   });
