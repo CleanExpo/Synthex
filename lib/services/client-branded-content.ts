@@ -18,7 +18,6 @@ import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
 import { sanitizeSocialPost } from '@/lib/ai/sanitize-social-post';
 import type { VaultActor } from '@/lib/vault/types';
-import { modelFetch, enterPromptOrg } from '@/lib/ai/prompt-scope';
 // =============================================================================
 // Types
 // =============================================================================
@@ -335,7 +334,7 @@ async function callAI(
         ? 'https://openrouter.ai/api/v1/chat/completions' // Route Anthropic through OpenRouter too
         : 'https://openrouter.ai/api/v1/chat/completions';
 
-  const response = await modelFetch(baseUrl, {
+  const response = await fetch(baseUrl, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${credentials.apiKey}`,
@@ -389,7 +388,6 @@ export const ClientBrandedContentService = {
   async generate(
     request: BrandedContentRequest
   ): Promise<BrandedContentResult> {
-    enterPromptOrg(request.orgId);
     const actor: VaultActor = {
       id: request.userId,
       type: 'user',

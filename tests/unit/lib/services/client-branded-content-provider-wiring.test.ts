@@ -52,19 +52,14 @@ jest.mock('@/lib/vault/vault-service', () => ({
 }));
 
 // Mock prisma so brand-profile load doesn't hit a DB.
-const mockOrgSlug = { value: 'test-org' };
-jest.mock('@/lib/prisma', () => {
-  const db = {
-    brandDNA: { findUnique: async () => null },
-    // Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
-    organization: { findUnique: async () => ({ slug: mockOrgSlug.value }) },
-  };
-  return { __esModule: true, default: db, prisma: db };
-});
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    brandDNA: { findUnique: jest.fn().mockResolvedValue(null) },
+  },
+}));
 
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
 import { getAIProvider } from '@/lib/ai/providers';
-import { ForbiddenPromptError } from '@/lib/marketing-calendar/prompt-guard';
 
 // Pull the complete() mock out of the mocked module (created in jest.mock above).
 const completeMock = (
@@ -90,7 +85,6 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
-  mockOrgSlug.value = 'test-org';
   jest.clearAllMocks();
 });
 
@@ -189,21 +183,6 @@ describe('ClientBrandedContentService — client Vault (BYOK) path unchanged', (
     expect(result.credentialSource).toBe('client_vault');
     expect(result.content).toBe('Client-branded copy.');
 
-    fetchSpy.mockRestore();
-  });
-
-  it('refuses a portfolio brand prompt that names a forbidden word before any fetch', async () => {
-    mockOrgSlug.value = 'unite-group';
-    const fetchSpy = jest.spyOn(global, 'fetch');
-    await expect(
-      ClientBrandedContentService.generate({
-        ...baseRequest,
-        orgId: 'org-ug',
-        prompt: 'Promote CARSI courses this week',
-      })
-    ).rejects.toThrow(ForbiddenPromptError);
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(completeMock).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 });

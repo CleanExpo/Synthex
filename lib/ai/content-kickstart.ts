@@ -19,7 +19,6 @@ import { getUserAICredentials } from '@/lib/ai/api-credential-injector';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // TYPES
@@ -129,7 +128,6 @@ const FIRST_WEEK_THEMES = [
 export async function generateKickstartContent(
   input: KickstartInput
 ): Promise<KickstartResult> {
-  enterPromptOrg(input.organizationId);
   const result: KickstartResult = {
     draftsCreated: 0,
     campaignIds: [],

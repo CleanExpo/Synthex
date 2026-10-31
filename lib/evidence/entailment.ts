@@ -43,7 +43,6 @@ import {
   type ScoredSourceEvidence,
   type SourceEvidence,
 } from './types';
-import { assertOrgPromptClean } from '@/lib/ai/prompt-scope';
 
 // ---------------------------------------------------------------------------
 // Contract
@@ -181,13 +180,6 @@ export function createLlmEntailmentScorer(
       const systemPrompt = layered.systemPrompt
         ? `${JUDGE_INSTRUCTIONS}\n\nORGANIZATION CONTEXT (for terminology only):\n${layered.systemPrompt}`
         : JUDGE_INSTRUCTIONS;
-      // The org-derived text sent with every source is checked once, before
-      // any call. Source excerpts are third-party evidence, judged for stance
-      // only, so they are not the brand's words.
-      await assertOrgPromptClean(input.orgId, [
-        layered.systemPrompt,
-        input.claimStatement,
-      ]);
 
       // Cost cap: never score more than maxSources per claim.
       const toScore = input.sources.slice(0, maxSources);

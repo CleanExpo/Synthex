@@ -125,7 +125,6 @@ async function runGate(
   rubric: string,
   input: RunGateInput
 ): Promise<RunGateResult> {
-  enterPromptOrg(input.organizationId);
   const verdict = await callGrader(rubric, input.candidate);
   const { verdictId, persistenceSkipped } = await persistQaReport(
     gate,
@@ -156,4 +155,3 @@ export type {
   RunGateInput,
   RunGateResult,
 } from './types';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';

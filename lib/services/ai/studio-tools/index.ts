@@ -61,7 +61,6 @@ export type {
   RiskClass,
   CostClass,
 } from './types';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 const GenerateVideoArgs = z.object({
   prompt: z.string().min(3).max(1000),
@@ -580,7 +579,6 @@ export const STUDIO_TOOLS: StudioTool[] = [
     schema: DraftCaptionArgs,
     outputSchema: DraftCaptionOutput,
     execute: async (args, ctx) => {
-      enterPromptOrg(ctx.organizationId);
       const a = DraftCaptionArgs.parse(args);
       const job = await prisma.videoGeneration.findFirst({
         where: { id: a.jobId, organizationId: ctx.organizationId },

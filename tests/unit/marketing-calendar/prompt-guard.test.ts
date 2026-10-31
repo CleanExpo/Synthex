@@ -24,6 +24,8 @@ import type { AIProvider } from '@/lib/ai/providers';
 import { getAgencyFoundationContext } from '@/lib/agency/foundation-context';
 import {
   ForbiddenPromptError,
+  assertCalendarPostClean,
+  assertCalendarPostCleanForOrg,
   assertPromptClean,
   promptHits,
 } from '@/lib/marketing-calendar/prompt-guard';
@@ -231,5 +233,59 @@ describe('promptHits', () => {
     );
     expect(() => assertPromptClean('some-client', ['CARSI'])).not.toThrow();
     expect(() => assertPromptClean(undefined, ['CARSI'])).not.toThrow();
+  });
+});
+
+describe('assertCalendarPostClean', () => {
+  const clean = {
+    title: 'Cafe tips',
+    content: 'A week of tips for local cafes',
+    hashtags: ['#smallbusiness'],
+    mentions: [],
+    metadata: { videoDelivery: { captionDraft: 'Tips for cafes' } },
+  };
+
+  it('passes a clean draft, ignoring machine fields in metadata', () => {
+    expect(() => assertCalendarPostClean('unite-group', clean)).not.toThrow();
+    expect(() =>
+      assertCalendarPostClean('unite-group', {
+        ...clean,
+        metadata: { brandRules: ['Never name CARSI'], source: 'portfolio' },
+      })
+    ).not.toThrow();
+  });
+
+  it.each([
+    ['title', { title: 'CARSI week' }],
+    ['content', { content: 'Promote CARSI courses' }],
+    ['hashtag', { hashtags: ['#CARSI'] }],
+    ['mention', { mentions: ['CARSI'] }],
+    [
+      'delivered caption',
+      { metadata: { videoDelivery: { captionDraft: 'Learn with CARSI' } } },
+    ],
+  ])('refuses a forbidden word in the %s', (_, part) => {
+    expect(() =>
+      assertCalendarPostClean('unite-group', { ...clean, ...part })
+    ).toThrow(ForbiddenPromptError);
+  });
+
+  it('leaves orgs outside the portfolio unchecked', () => {
+    expect(() =>
+      assertCalendarPostClean('some-cafe', { content: 'Promote CARSI courses' })
+    ).not.toThrow();
+  });
+
+  it('looks up the org slug by id', async () => {
+    const findUnique = jest.fn(async () => ({ slug: 'unite-group' }));
+    await expect(
+      assertCalendarPostCleanForOrg({ organization: { findUnique } }, 'org-1', {
+        content: 'Promote CARSI courses',
+      })
+    ).rejects.toThrow(ForbiddenPromptError);
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { id: 'org-1' },
+      select: { slug: true },
+    });
   });
 });

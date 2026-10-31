@@ -22,7 +22,6 @@ import {
 } from './research-bridge';
 import type { SupportedPlatform, ResearchResult } from './types';
 import type { ScrapedPost } from './apify/types';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 const QUICK_PLATFORMS: SupportedPlatform[] = ['instagram', 'tiktok', 'twitter'];
 const DEEP_PLATFORMS: SupportedPlatform[] = [
@@ -244,7 +243,6 @@ async function webSearchEnrichment(
   runId: string,
   orgId?: string
 ): Promise<void> {
-  enterPromptOrg(orgId);
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     logger.warn(

@@ -297,6 +297,20 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
+  it('refuses (422) when the stored draft itself names a word the brand never uses', async () => {
+    const slotKey = '2026-11-02-unite-group-video-1';
+    mockFindFirst.mockResolvedValue({
+      ...draftSlot,
+      content: 'Promote CARSI courses',
+      metadata: { slotKey, slotKind: 'shortform_video' },
+    });
+    const res = await deliver(
+      deliveryRequest({ ...validBody, slotKey }, TOKEN)
+    );
+    expect(res.status).toBe(422);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('answers 409 when the slot changes between the read and the write', async () => {
     mockFindFirst.mockResolvedValue(draftSlot);
     mockUpdate.mockResolvedValue({ count: 0 }); // scheduled or filled meanwhile

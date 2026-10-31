@@ -10,7 +10,6 @@
  */
 
 import { logger } from '@/lib/logger';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // TYPES
@@ -152,7 +151,7 @@ export class EmbeddingService {
   }
 
   private async embedWithOpenAI(text: string): Promise<EmbeddingResult> {
-    const response = await modelFetch('https://api.openai.com/v1/embeddings', {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.openaiApiKey}`,
@@ -184,7 +183,7 @@ export class EmbeddingService {
   ): Promise<EmbeddingResult[]> {
     const cleanedTexts = texts.map(t => this.preprocessText(t));
 
-    const response = await modelFetch('https://api.openai.com/v1/embeddings', {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.openaiApiKey}`,

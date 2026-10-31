@@ -26,6 +26,7 @@ import {
   loadWorkspaceOrgs,
   lockWorkspaceMember,
 } from './workspace';
+import { assertCalendarPostClean, ForbiddenPromptError } from './prompt-guard';
 
 export const DELIVERY_TOKEN_ENV = 'SHORTFORM_DELIVERY_TOKEN';
 
@@ -155,6 +156,33 @@ export async function attachVideoToSlot(
       // metadata written is built from that read: a slot scheduled, re-keyed,
       // edited or filled by another delivery since then matches nothing and is
       // reported as a conflict.
+      const deliveredMetadata = {
+        ...metadata,
+        videoDelivery: {
+          status: 'delivered',
+          deliveredAt: new Date().toISOString(),
+          videoUrl: delivery.videoUrl,
+          thumbnailUrl: delivery.thumbnailUrl ?? null,
+          durationSeconds: delivery.durationSeconds ?? null,
+          sdaPassed: true,
+          sdaVerdictId: delivery.sdaVerdictId,
+          captionDraft: delivery.captionDraft ?? null,
+          engineRunId: delivery.engineRunId ?? null,
+        },
+        approvalState: 'pending_approval',
+      };
+      try {
+        assertCalendarPostClean(planned.orgSlug, {
+          ...post,
+          metadata: deliveredMetadata,
+        });
+      } catch (error) {
+        if (!(error instanceof ForbiddenPromptError)) throw error;
+        return {
+          outcome: 'refused',
+          reason: `draft names words this brand never uses: ${error.hits.join(', ')}`,
+        };
+      }
       const { count } = await tx.calendarPost.updateMany({
         where: {
           id: post.id,
@@ -170,21 +198,7 @@ export async function attachVideoToSlot(
         },
         data: {
           mediaUrls: [delivery.videoUrl],
-          metadata: {
-            ...metadata,
-            videoDelivery: {
-              status: 'delivered',
-              deliveredAt: new Date().toISOString(),
-              videoUrl: delivery.videoUrl,
-              thumbnailUrl: delivery.thumbnailUrl ?? null,
-              durationSeconds: delivery.durationSeconds ?? null,
-              sdaPassed: true,
-              sdaVerdictId: delivery.sdaVerdictId,
-              captionDraft: delivery.captionDraft ?? null,
-              engineRunId: delivery.engineRunId ?? null,
-            },
-            approvalState: 'pending_approval',
-          } as Prisma.InputJsonValue,
+          metadata: deliveredMetadata as Prisma.InputJsonValue,
         },
       });
       if (count === 0) {

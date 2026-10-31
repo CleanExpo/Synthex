@@ -27,14 +27,6 @@ jest.mock('@/lib/ai/prompt-layer-builder', () => ({
   buildLayeredPrompt: jest.fn(),
 }));
 
-// The judge checks a portfolio brand's org prompt first; these orgs are not one.
-jest.mock('@/lib/prisma', () => {
-  const client = {
-    organization: { findUnique: async () => ({ slug: 'org-test' }) },
-  };
-  return { __esModule: true, default: client, prisma: client };
-});
-
 jest.mock('@/lib/pipelines/track-cost', () => ({
   trackPipelineCost: jest.fn().mockResolvedValue(undefined),
   calculatePipelineCost: jest.fn().mockReturnValue(0.001),

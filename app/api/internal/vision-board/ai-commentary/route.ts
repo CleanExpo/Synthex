@@ -16,7 +16,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { generateObject, gateway, APICallError } from 'ai';
 import { verifyAdmin } from '@/lib/admin/verify-admin';
-import { guardScopedText } from '@/lib/ai/prompt-scope';
 import { ra } from '@unite-group/brand-config';
 import { NIR_STORYBOARD } from '@/lib/vision-board/nir-storyboard';
 import type { AICommentaryResponse } from '@/lib/vision-board/types';
@@ -251,7 +250,6 @@ export async function POST(req: NextRequest) {
       2
     );
 
-    await guardScopedText(SYSTEM_PROMPT, userPrompt);
     const result = await generateObject({
       model: gateway('google/gemini-3.1-pro'),
       providerOptions: {

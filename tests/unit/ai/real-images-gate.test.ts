@@ -30,13 +30,9 @@ jest.mock('@/lib/prisma', () => ({
   __esModule: true,
   default: {
     trendInsight: { findMany: (...a: unknown[]) => mockTrendFindMany(...a) },
-    // Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
-    organization: { findUnique: async () => ({ slug: 'test-org' }) },
   },
   prisma: {
     trendInsight: { findMany: (...a: unknown[]) => mockTrendFindMany(...a) },
-    // Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
-    organization: { findUnique: async () => ({ slug: 'test-org' }) },
   },
 }));
 

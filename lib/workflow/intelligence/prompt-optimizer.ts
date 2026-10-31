@@ -11,7 +11,6 @@
  */
 
 import { logger } from '@/lib/logger';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 export interface PromptOptimisationResult {
   originalPrompt: string;
@@ -71,28 +70,25 @@ ${highSamples || '(none available)'}
 Suggest an improved prompt template.`;
 
   try {
-    const res = await modelFetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer':
-            process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
-          'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-haiku-4-5',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-          ],
-          max_tokens: 1024,
-          temperature: 0.3,
-        }),
-      }
-    );
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer':
+          process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
+        'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-haiku-4-5',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 1024,
+        temperature: 0.3,
+      }),
+    });
 
     if (!res.ok) {
       throw new Error(`OpenRouter error: ${res.status}`);

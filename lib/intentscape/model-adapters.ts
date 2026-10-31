@@ -15,7 +15,6 @@ import type {
   VisionGenerator,
   VisionGeneratorInput,
 } from './engine';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 const MAX_SIGNAL_EXCERPT_CHARS = 800;
 const MAX_REJECTION_REASON_CHARS = 8_000;
@@ -162,7 +161,6 @@ export function createProductionVisionGenerator(
   const model = options.generatorModel ?? provider.models.premium;
   return {
     async generate(input) {
-      enterPromptOrg(input.contextField.organizationId);
       const response = await provider.complete({
         model,
         temperature: 0.45,
@@ -188,7 +186,6 @@ export function createProductionVisionEvaluator(
   const model = options.evaluatorModel ?? provider.models.balanced;
   return {
     async evaluate(input) {
-      enterPromptOrg(input.contextField.organizationId);
       const response = await provider.complete({
         model,
         temperature: 0,

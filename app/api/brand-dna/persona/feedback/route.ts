@@ -23,7 +23,6 @@ import {
 } from '@/lib/brand-dna/persona-refiner';
 import { QualityScorer } from '@/lib/brand-voice/quality-scorer';
 import type { BrandVoice, BrandPersona } from '@/lib/brand-dna/types';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 export const runtime = 'nodejs';
 
@@ -57,7 +56,6 @@ export const POST = defineRoute(
       }),
   },
   async ({ body }, { clientId }) => {
-    enterPromptOrg(clientId);
     const brandDna = await prisma.brandDNA.findUnique({
       where: { organizationId: clientId },
       select: {

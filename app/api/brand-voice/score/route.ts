@@ -11,7 +11,6 @@ import {
 } from '@/lib/security/api-security-checker';
 import { QualityScorer } from '@/lib/brand-voice/quality-scorer';
 import type { BrandVoiceProfile } from '@/lib/brand-voice/quality-scorer';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 export const runtime = 'nodejs';
 
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest) {
       { error: 'No organisation found' },
       { status: 403 }
     );
-  enterPromptOrg(orgId);
 
   let body: unknown;
   try {

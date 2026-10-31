@@ -19,7 +19,6 @@ import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { routedCall } from '@/lib/ai/model-router';
 import type { DiscoveredSignal } from '@/lib/hermes/discovery/sweep';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 /**
  * Soft cap multiplier for daily candidate generation.
@@ -75,7 +74,6 @@ export async function runGapEngineForOrg(
   orgId: string,
   dailyQuota: number
 ): Promise<GapEngineResult> {
-  enterPromptOrg(orgId);
   const softCap = CANDIDATE_BENCH_MULTIPLIER * dailyQuota;
 
   // 1. Count today's existing candidates — respect the soft cap before we

@@ -1,6 +1,5 @@
 import type { WorkflowStepDefinition, StepContext, StepResult } from '../types';
 import { logger } from '@/lib/logger';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 export async function execute(
   stepDef: WorkflowStepDefinition,
@@ -14,21 +13,18 @@ export async function execute(
     const prompt = `Enrich this content with hashtags, CTAs, and metadata. Return JSON with: enrichedContent (string), additions (object with hashtags array, cta string).\n\nContent:\n${baseContent}`;
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
-    const res = await modelFetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'anthropic/claude-haiku-4-5',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1024,
-        }),
-      }
-    );
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'anthropic/claude-haiku-4-5',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1024,
+      }),
+    });
     if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`);
     const data = await res.json();
     const rawContent = data.choices?.[0]?.message?.content ?? '{}';

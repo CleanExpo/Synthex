@@ -12,7 +12,6 @@
 
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import type { NominationDraft } from './types';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ---------------------------------------------------------------------------
 // Input types
@@ -98,7 +97,7 @@ async function generateWithAI(
 ): Promise<NominationDraft> {
   const userPrompt = buildUserPrompt(input);
 
-  const response = await modelFetch(
+  const response = await fetch(
     'https://openrouter.ai/api/v1/chat/completions',
     {
       method: 'POST',

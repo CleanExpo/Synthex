@@ -6,6 +6,9 @@
  * prompt might read, the check runs on the prompt text itself, at the point
  * it goes to the model: whatever field fed it, a forbidden word in the prompt
  * stops the call. Orgs outside the portfolio are never checked.
+ *
+ * The same rule holds where calendar drafts are stored: every write of a
+ * calendar draft checks the draft's own text (assertCalendarPostClean).
  */
 
 import {
@@ -47,4 +50,68 @@ export function assertPromptClean(
   if (!brand) return;
   const hits = promptHits(parts.filter(Boolean).join('\n'), brand);
   if (hits.length > 0) throw new ForbiddenPromptError(brand.orgSlug, hits);
+}
+
+/**
+ * The parts of a calendar draft a reader sees or a publisher sends: its
+ * copy, and the caption a delivered video carries. Metadata otherwise holds
+ * machine fields (source, plan version, brand rules), not copy.
+ */
+export interface CalendarPostText {
+  title?: string | null;
+  content?: string | null;
+  hashtags?: string[] | null;
+  mentions?: string[] | null;
+  metadata?: unknown;
+}
+
+function deliveredCaption(metadata: unknown): string | null {
+  const delivery = (metadata as { videoDelivery?: { captionDraft?: unknown } })
+    ?.videoDelivery;
+  return typeof delivery?.captionDraft === 'string'
+    ? delivery.captionDraft
+    : null;
+}
+
+function calendarPostText(post: CalendarPostText) {
+  return [
+    post.title,
+    post.content,
+    ...(post.hashtags ?? []),
+    ...(post.mentions ?? []),
+    deliveredCaption(post.metadata),
+  ];
+}
+
+/**
+ * Throws ForbiddenPromptError when a calendar draft for a portfolio brand
+ * names a word that brand never uses. Every write of a calendar draft calls
+ * this (or assertCalendarPostCleanForOrg) first, so no such draft is stored
+ * however its text was produced.
+ */
+export function assertCalendarPostClean(
+  orgSlug: string | null | undefined,
+  post: CalendarPostText
+) {
+  assertPromptClean(orgSlug, calendarPostText(post));
+}
+
+/** assertCalendarPostClean for an organisation id (reads its slug). */
+export async function assertCalendarPostCleanForOrg(
+  db: {
+    organization: {
+      findUnique(args: {
+        where: { id: string };
+        select: { slug: true };
+      }): Promise<{ slug: string } | null>;
+    };
+  },
+  organizationId: string,
+  post: CalendarPostText
+) {
+  const org = await db.organization.findUnique({
+    where: { id: organizationId },
+    select: { slug: true },
+  });
+  assertCalendarPostClean(org?.slug, post);
 }

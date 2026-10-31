@@ -19,7 +19,6 @@ import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
 import type { CalendarPlatform, ContentType } from './types';
 import type { BlendedContentIntelligence } from '@/lib/content-intelligence/types';
-import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -147,7 +146,6 @@ export async function generateCaptions(
   context: CaptionContext,
   organizationId: string
 ): Promise<string[]> {
-  enterPromptOrg(organizationId);
   const runId = uuid();
 
   try {

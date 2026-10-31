@@ -4,13 +4,6 @@
  */
 
 const mockTrackPipelineCost = jest.fn().mockResolvedValue(undefined);
-// Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
-jest.mock('@/lib/prisma', () => {
-  const db = {
-    organization: { findUnique: async () => ({ slug: 'test-org' }) },
-  };
-  return { __esModule: true, default: db, prisma: db };
-});
 jest.mock('@/lib/pipelines/track-cost', () => ({
   __esModule: true,
   trackPipelineCost: (...args: unknown[]) => mockTrackPipelineCost(...args),

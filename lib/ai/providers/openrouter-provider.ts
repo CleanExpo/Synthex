@@ -19,7 +19,6 @@ import type {
   ModelPresets,
 } from './base-provider';
 import { withJsonInstruction, attachParsed } from '../structured-output';
-import { guardScopedRequest } from '@/lib/ai/prompt-scope';
 
 export class OpenRouterProvider implements AIProvider {
   readonly name = 'OpenRouter';
@@ -51,7 +50,6 @@ export class OpenRouterProvider implements AIProvider {
   }
 
   async complete(request: AICompletionRequest): Promise<AICompletionResponse> {
-    await guardScopedRequest(request);
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured');
     }
@@ -132,7 +130,6 @@ export class OpenRouterProvider implements AIProvider {
   async *stream(
     request: AICompletionRequest
   ): AsyncGenerator<string, void, unknown> {
-    await guardScopedRequest(request);
     if (!this.apiKey) {
       throw new Error('OpenRouter API key not configured');
     }

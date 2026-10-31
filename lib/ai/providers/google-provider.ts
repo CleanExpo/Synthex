@@ -14,7 +14,6 @@ import type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
-import { guardScopedRequest } from '@/lib/ai/prompt-scope';
 
 /** Google AI API response types */
 interface GoogleAIErrorResponse {
@@ -71,7 +70,6 @@ export class GoogleProvider implements AIProvider {
   }
 
   async complete(request: AICompletionRequest): Promise<AICompletionResponse> {
-    await guardScopedRequest(request);
     if (!this.apiKey) {
       throw new Error('Google AI API key not configured');
     }
@@ -172,7 +170,6 @@ export class GoogleProvider implements AIProvider {
   async *stream(
     request: AICompletionRequest
   ): AsyncGenerator<string, void, unknown> {
-    await guardScopedRequest(request);
     if (!this.apiKey) {
       throw new Error('Google AI API key not configured');
     }

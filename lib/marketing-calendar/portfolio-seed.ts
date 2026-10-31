@@ -43,6 +43,7 @@ import {
 import { promptHits } from './prompt-guard';
 import { renderPromptLegs } from '@/lib/ai/prompt-layer-builder';
 import { foundationPromptText } from '@/lib/agency/foundation-context';
+import { assertCalendarPostClean, ForbiddenPromptError } from './prompt-guard';
 
 export const PORTFOLIO_SOURCE = 'portfolio-marketing-calendar';
 
@@ -543,6 +544,16 @@ export async function applyPortfolioSetup(opts: {
         const existing = await findSlot(tx);
         if (existing) {
           skip(existing.status);
+          return null;
+        }
+        try {
+          assertCalendarPostClean(slot.orgSlug, data);
+        } catch (error) {
+          if (!(error instanceof ForbiddenPromptError)) throw error;
+          manifest.skippedSlots.push({
+            slotKey: slot.slotKey,
+            reason: 'draft names a forbidden word',
+          });
           return null;
         }
         return tx.calendarPost.create({

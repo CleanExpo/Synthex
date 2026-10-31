@@ -13,7 +13,6 @@
 import { buildPressRelease, generateSlug } from './press-release-builder';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import type { PressReleaseInput } from './types';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -121,7 +120,7 @@ async function generateWithAI(
 ): Promise<PRGenerationResult> {
   const userPrompt = buildUserPrompt(input);
 
-  const response = await modelFetch(
+  const response = await fetch(
     'https://openrouter.ai/api/v1/chat/completions',
     {
       method: 'POST',

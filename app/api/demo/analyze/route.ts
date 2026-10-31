@@ -6,7 +6,6 @@ import {
   assertExternalUrlSafe,
   fetchExternalUrl,
 } from '@/lib/security/validate-url';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 export const runtime = 'nodejs';
 export const maxDuration = 20;
@@ -173,7 +172,7 @@ async function generateCaption(
 
   const geminiController = new AbortController();
   const geminiTimer = setTimeout(() => geminiController.abort(), 12000);
-  const res = await modelFetch(
+  const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${geminiKey}`,
     {
       method: 'POST',

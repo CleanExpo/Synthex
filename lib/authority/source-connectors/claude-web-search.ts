@@ -1,6 +1,5 @@
 import { SourceConnector, SourceResult } from '../types';
 import { logger } from '@/lib/logger';
-import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // Confidence scoring based on domain authority
 function getDomainConfidence(url: string): number {
@@ -78,19 +77,16 @@ export class ClaudeWebSearchConnector implements SourceConnector {
         ],
       };
 
-      const response = await modelFetch(
-        'https://api.anthropic.com/v1/messages',
-        {
-          method: 'POST',
-          headers: {
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-            'anthropic-beta': 'web-search-2025-03-05',
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-beta': 'web-search-2025-03-05',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
 
       if (!response.ok) {
         const errBody = await response.json().catch(() => ({}));

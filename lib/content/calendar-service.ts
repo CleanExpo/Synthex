@@ -20,6 +20,7 @@ import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
 import type { CalendarPost as PrismaCalendarPost } from '@prisma/client';
 import { DEFAULT_TIMEZONE, getZonedParts, zonedTimeToUtc } from './timezone';
+import { assertCalendarPostCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
 
 // ============================================================================
 // TYPES
@@ -488,6 +489,7 @@ export class CalendarService {
   }
 
   private async savePost(post: CalendarPost): Promise<void> {
+    await assertCalendarPostCleanForOrg(prisma, this.organizationId, post);
     try {
       const live = await prisma.post.findFirst({
         where: {

@@ -14,7 +14,6 @@
 
 import axios from 'axios';
 import { logger } from '@/lib/logger';
-import { guardScopedText } from '@/lib/ai/prompt-scope';
 
 export interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
@@ -115,7 +114,6 @@ export class OpenRouterClient {
         ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
       };
 
-      await guardScopedText(JSON.stringify(body));
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         body,
@@ -184,7 +182,6 @@ export class OpenRouterClient {
       ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
     };
 
-    await guardScopedText(JSON.stringify(body));
     const response = await axios.post(
       `${this.baseURL}/chat/completions`,
       body,

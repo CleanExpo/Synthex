@@ -44,7 +44,6 @@ import {
   IMAGE_MODELS,
 } from '@/lib/services/ai/image/registry';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
-import { modelFetch, enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -313,7 +312,7 @@ async function generateWithStability(
     : options.prompt;
 
   try {
-    const response = await modelFetch(
+    const response = await fetch(
       `${STABILITY_API_BASE}/stable-image/generate/sd3`,
       {
         method: 'POST',
@@ -404,7 +403,7 @@ async function generateWithDalle(
     : options.prompt;
 
   try {
-    const response = await modelFetch(`${OPENAI_API_BASE}/images/generations`, {
+    const response = await fetch(`${OPENAI_API_BASE}/images/generations`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -502,7 +501,7 @@ async function generateWithGemini(
   }
 
   try {
-    const response = await modelFetch(
+    const response = await fetch(
       `${GEMINI_API_BASE}/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
@@ -816,7 +815,6 @@ async function generateImageUnmetered(
   spend: SpendContext | null = null
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
-  enterPromptOrg(ctx.organizationId);
 
   const grounding = shouldGround(options);
 
@@ -1493,7 +1491,6 @@ export async function generateImage(
   ctx: GenerationContext
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
-  enterPromptOrg(ctx.organizationId);
 
   // Validate before spending anything — an invalid request must not resolve
   // references or take a hold.
@@ -1582,7 +1579,6 @@ export async function generateVariations(
   count: number = 4
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateVariations');
-  enterPromptOrg(ctx.organizationId);
   const results: ImageGenerationResult[] = [];
 
   // ONE hold for the whole run, before the first provider call. Throws
@@ -1661,7 +1657,6 @@ export async function generateBatch(
   ) => Promise<ImageGenerationResult> = generateImageUnmetered
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateBatch');
-  enterPromptOrg(ctx.organizationId);
 
   const hold = await holdImageSpend(
     ctx.organizationId,

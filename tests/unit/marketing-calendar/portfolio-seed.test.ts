@@ -413,6 +413,54 @@ describe('applyPortfolioSetup', () => {
     expect(lockCalls[0]).toContain('pg_advisory_xact_lock');
   });
 
+  it('writes no slot whose draft names a word its brand never uses', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.findUnique.mockResolvedValue({ id: 'dna' });
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp' });
+    db.calendarPost.findFirst.mockResolvedValue(null);
+    db.calendarPost.create.mockImplementation(
+      async ({ data }: { data: { scheduledFor: Date } }) => ({
+        id: 'p',
+        status: 'draft',
+        scheduledFor: data.scheduledFor,
+        updatedAt: new Date(),
+      })
+    );
+    const plan = jest.requireActual('@/lib/marketing-calendar/portfolio-plan');
+    const real = plan.slotBrief as typeof slotBrief;
+    const spy = jest
+      .spyOn(plan, 'slotBrief')
+      .mockImplementation((...args: unknown[]) => {
+        const [slot, brand] = args as Parameters<typeof slotBrief>;
+        return brand.orgSlug === 'unite-group'
+          ? 'Promote CARSI courses this week'
+          : real(slot, brand);
+      });
+    try {
+      const manifest = await applyPortfolioSetup({
+        write: true,
+        ownerUserId: 'owner-1',
+      });
+      const ugOrg = orgRow('unite-group').id;
+      expect(
+        db.calendarPost.create.mock.calls.filter(
+          ([a]: [{ data: { organizationId: string } }]) =>
+            a.data.organizationId === ugOrg
+        )
+      ).toEqual([]);
+      expect(
+        manifest.skippedSlots.filter(
+          s => s.reason === 'draft names a forbidden word'
+        ).length
+      ).toBeGreaterThan(0);
+      expect(db.calendarPost.create).toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   it('skips a brand whose slug belongs to an org outside the workspace, or a deleted one', async () => {
     db.organization.findUnique.mockImplementation(
       async ({ where }: { where: { slug: string } }) =>
