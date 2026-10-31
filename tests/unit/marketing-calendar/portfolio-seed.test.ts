@@ -79,6 +79,7 @@ import {
 import {
   PORTFOLIO_CALENDAR_TAG,
   buildPortfolioCalendar,
+  slotBrief,
 } from '@/lib/marketing-calendar/portfolio-plan';
 import {
   PORTFOLIO_BRANDS,
@@ -585,15 +586,39 @@ describe('verifyPortfolioSetup', () => {
     slug: b.orgSlug,
     status: 'active',
     parentOrgId: b.orgSlug === 'unite-group' ? null : 'org-unite-group',
+    name: b.name,
+    description: b.description,
+    industry: b.industry,
     calendarMode: 'shadow',
     liveModeT: 0,
-    brandDna: { logoUrl: b.logoUrl, primaryColour: b.colours.primary },
-    // As clientProfileData stores it, so the passing case is the real seed.
+    // As brandDnaData and clientProfileData store them, so the passing case
+    // is what the seed really writes.
+    brandDna: {
+      businessName: b.name,
+      vertical: b.vertical,
+      industry: b.industry,
+      logoUrl: b.logoUrl,
+      primaryColour: b.colours.primary,
+      brandVoice: b.voice,
+      persona: b.audience,
+      offerings: b.offerings,
+      socialProfiles: b.socialProfiles,
+      sourceUrl: b.website,
+    },
     clientProfile: {
-      vocabularyBank: { preferred: b.preferredWords, banned: b.forbiddenWords },
+      intakeStatus: 'complete',
       icp: b.audience,
       offers: b.offerings,
       toneKeywords: b.voice.tone,
+      antiPatterns: b.antiPatterns,
+      vocabularyBank: { preferred: b.preferredWords, banned: b.forbiddenWords },
+      channels: b.socialProfiles.map(p => p.platform),
+      constraints: {
+        brandRules: b.brandRules,
+        liveStatus: b.liveStatus,
+        publicContentHeldReason: b.publicContentHeldReason ?? null,
+        logoNote: b.logoNote,
+      },
     },
   }));
   const rows = (orgOf: (slug: string, i: number) => string) =>
@@ -601,7 +626,12 @@ describe('verifyPortfolioSetup', () => {
       status: 'draft',
       publishedAt: null,
       organizationId: `org-${orgOf(s.orgSlug, i)}`,
+      content: slotBrief(
+        s,
+        PORTFOLIO_BRANDS.find(b => b.orgSlug === s.orgSlug)!
+      ),
       metadata: {
+        theme: s.theme,
         slotKey: s.slotKey,
         weekStart: s.weekStart,
         slotKind: s.kind,
@@ -701,7 +731,76 @@ describe('verifyPortfolioSetup', () => {
       })
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: client profile audience, offers and tone carry no forbidden words',
+      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+    ]);
+  });
+
+  it('fails a kept brand DNA persona that names the group businesses', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o =>
+        o.slug === 'unite-group'
+          ? {
+              ...o,
+              brandDna: {
+                ...o.brandDna,
+                persona: {
+                  description:
+                    'Owners seeking CARSI courses and Trade Hall booths',
+                },
+              },
+            }
+          : o
+      )
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+    ]);
+  });
+
+  it('fails a kept profile whose rules were edited to cover the group businesses', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
+    db.organization.findMany.mockResolvedValue(
+      withUgProfile({
+        constraints: {
+          brandRules: [...ug.brandRules, 'Feature a Trade Hall tour monthly.'],
+        },
+      })
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+    ]);
+  });
+
+  it('fails a kept organisation description that names the group businesses', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o =>
+        o.slug === 'unite-group'
+          ? { ...o, description: 'Home of the Unite Group businesses' }
+          : o
+      )
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+    ]);
+  });
+
+  it('fails a kept Unite-Group draft made from the old unsafe theme', async () => {
+    const victim = plan.findIndex(s => s.orgSlug === 'unite-group');
+    db.calendarPost.findMany.mockResolvedValue(
+      rows(slug => slug).map((r, i) =>
+        i === victim
+          ? {
+              ...r,
+              content: 'Brief: How the Unite Group businesses fit together',
+            }
+          : r
+      )
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: calendar drafts carry no forbidden words',
     ]);
   });
 
@@ -711,8 +810,10 @@ describe('verifyPortfolioSetup', () => {
       orgs.map(o => (o.slug === 'carsi' ? { ...o, clientProfile: null } : o))
     );
     const failed = await failedLabels();
-    expect(failed).toHaveLength(2);
-    expect(failed.every(l => l.startsWith('carsi: client profile'))).toBe(true);
+    expect(failed).toEqual([
+      'carsi: client profile holds all 22 forbidden words',
+      'carsi: organisation, brand DNA and client profile carry no forbidden words',
+    ]);
   });
 
   it('fails when a slot is filed under the wrong brand', async () => {

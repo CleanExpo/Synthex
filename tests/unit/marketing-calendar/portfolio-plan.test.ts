@@ -110,6 +110,7 @@ describe('portfolio marketing calendar plan', () => {
     'Tour Trade Hall and show its supplier booths',
     'Inside Synthex, the agency behind our businesses',
     'CARSI courses for restoration crews',
+    'Portfolio command layer for Unite-Group ventures',
   ])('catches Unite-Group copy about the group itself: %s', copy => {
     const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
     expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);

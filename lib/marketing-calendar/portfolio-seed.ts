@@ -566,6 +566,48 @@ export async function undoPortfolioSetup(
   return lines;
 }
 
+// Columns no prompt is built from: keys, timestamps, colours and URLs.
+const NOT_PROMPTED = new Set([
+  'id',
+  'organizationId',
+  'createdAt',
+  'updatedAt',
+  'extractedAt',
+  'lastRefreshedAt',
+  'intakeCompletedAt',
+  'logoUrl',
+  'sourceUrl',
+  'primaryColour',
+  'secondaryColour',
+  'neutralColour',
+]);
+
+/**
+ * Every prompt-facing field of a stored row as one string. The banned list is
+ * dropped (it names what is banned), and so are the rule and anti-pattern
+ * lists while they are exactly the approved ones, which name banned words
+ * only to forbid them (tested in portfolio-plan.test.ts). An edited list is
+ * kept and scanned like any other field.
+ */
+function promptedText(
+  row: Record<string, unknown> | null | undefined,
+  brand: PortfolioBrandProfile
+) {
+  if (!row) return '';
+  const approved: Record<string, string> = {
+    antiPatterns: JSON.stringify(brand.antiPatterns),
+    brandRules: JSON.stringify(brand.brandRules),
+  };
+  const kept = Object.fromEntries(
+    Object.entries(row).filter(([k]) => !NOT_PROMPTED.has(k))
+  );
+  return JSON.stringify(kept, (k, v) =>
+    k === 'banned' || (k in approved && JSON.stringify(v) === approved[k])
+      ? undefined
+      : v
+  );
+}
+
 export interface PortfolioCheck {
   label: string;
   pass: boolean;
@@ -584,19 +626,16 @@ export async function verifyPortfolioSetup(): Promise<{
     select: {
       id: true,
       slug: true,
+      name: true,
+      description: true,
+      industry: true,
       status: true,
       parentOrgId: true,
       calendarMode: true,
       liveModeT: true,
-      brandDna: { select: { logoUrl: true, primaryColour: true } },
-      clientProfile: {
-        select: {
-          vocabularyBank: true,
-          icp: true,
-          offers: true,
-          toneKeywords: true,
-        },
-      },
+      // Whole rows: a kept row is checked on every field a prompt can read.
+      brandDna: true,
+      clientProfile: true,
     },
   });
   const bySlug = new Map(orgs.map(o => [o.slug, o]));
@@ -628,9 +667,9 @@ export async function verifyPortfolioSetup(): Promise<{
       served !== null && org.brandDna?.logoUrl === served,
       `${brand.orgSlug}: logo ${served ? 'is the approved logo' : `could not be confirmed as served (${brand.logoUrl})`}`
     );
-    // A profile kept from before (seeding never overwrites one) is checked
-    // on content, not on counts: every forbidden word held, and none of them
-    // in the audience, offers, tone or preferred words prompts are built from.
+    // Rows kept from before (seeding never overwrites one) are checked on
+    // content, not on counts: every forbidden word held, and none of them in
+    // any field of the org, brand DNA or client profile a prompt can read.
     const profile = org.clientProfile;
     const vocab = (profile?.vocabularyBank ?? null) as {
       banned?: string[];
@@ -641,15 +680,23 @@ export async function verifyPortfolioSetup(): Promise<{
       !!profile && brand.forbiddenWords.every(w => held.has(w.toLowerCase())),
       `${brand.orgSlug}: client profile holds all ${brand.forbiddenWords.length} forbidden words`
     );
-    const prompted = JSON.stringify([
-      profile?.icp ?? null,
-      profile?.offers ?? null,
-      profile?.toneKeywords ?? null,
-      vocab?.preferred ?? null,
-    ]);
+    const prompted = [
+      promptedText(
+        {
+          name: org.name,
+          description: org.description,
+          industry: org.industry,
+        },
+        brand
+      ),
+      promptedText(org.brandDna, brand),
+      promptedText(profile, brand),
+    ].join(' ');
     check(
-      !!profile && forbiddenHits(prompted, brand.forbiddenWords).length === 0,
-      `${brand.orgSlug}: client profile audience, offers and tone carry no forbidden words`
+      !!profile &&
+        !!org.brandDna &&
+        forbiddenHits(prompted, brand.forbiddenWords).length === 0,
+      `${brand.orgSlug}: organisation, brand DNA and client profile carry no forbidden words`
     );
   }
 
@@ -665,11 +712,28 @@ export async function verifyPortfolioSetup(): Promise<{
     select: {
       status: true,
       organizationId: true,
+      content: true,
       metadata: true,
       publishedAt: true,
     },
   });
   const slugOf = new Map(members.map(o => [o.id, o.slug]));
+  // A kept draft (create-only seeding never rewrites one) carries whatever
+  // brief it was made with, so its words are checked like the brand rows.
+  for (const brand of PORTFOLIO_BRANDS) {
+    const text = posts
+      .filter(p => slugOf.get(p.organizationId) === brand.orgSlug)
+      .map(
+        p =>
+          `${p.content ?? ''} ${(p.metadata as { theme?: string } | null)?.theme ?? ''}`
+      )
+      .join(' ');
+    if (!text.trim()) continue;
+    check(
+      forbiddenHits(text, brand.forbiddenWords).length === 0,
+      `${brand.orgSlug}: calendar drafts carry no forbidden words`
+    );
+  }
   const expected = buildPortfolioCalendar(
     PORTFOLIO_BRANDS,
     PORTFOLIO_WEEK_STARTS

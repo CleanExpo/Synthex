@@ -112,7 +112,8 @@ export const UNITE_GROUP_BANNED = [
   'group’s businesses',
   "group's businesses",
   'our businesses',
-  'portfolio businesses',
+  'portfolio',
+  'ventures',
 ];
 
 /** The forbidden words found in `text`, matched case-insensitively. */
