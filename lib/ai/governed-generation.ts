@@ -27,10 +27,6 @@ import {
 /**
  * The provider a generation is billed to: the user's own key's provider when
  * they have one, else the platform provider getAIProvider() would use.
- *
- * Ollama (local, unmetered) has no Governor provider; it is receipted under
- * 'openai', and because its model id is not in that registry the receipt is
- * priced at 0 with errorClass 'unpriced_model' rather than guessed.
  */
 export function generationProvider(
   credentials?: UserProviderCredentials | null

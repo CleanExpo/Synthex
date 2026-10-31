@@ -99,38 +99,30 @@ async function generatePendingSuggestions(): Promise<void> {
           modelId: model,
         };
       };
-      let suggestion: string;
-      if (!provider) {
-        // Ollama: local, unkeyed, zero-cost, outside the Governor by design.
-        suggestion = (await callProvider(ai, ai.models.fast)).data;
-      } else {
-        // One governed call per organisation-scoped provider call.
-        let providerError: { error: unknown } | null = null;
-        const governed = await governedCall<string>({
-          organizationId: review.organizationId,
-          brandSlug: await resolveOrgBrandSlug(review.organizationId),
-          runner: 'gbp-monitor',
-          provider,
-          model: { kind: 'registered', modelId: ai.models.fast },
-          pipelineName: 'gbp-monitor-auto-suggest',
-          estimate: { inputTokens: estimateTokens(prompt), outputTokens: 350 },
-          mode: GOVERNOR_MODE,
-          execute: async ctx => {
-            try {
-              return await callProvider(
-                ctx.apiKey
-                  ? getAIProvider({ apiKey: ctx.apiKey, provider })
-                  : ai,
-                ctx.model?.id ?? ai.models.fast
-              );
-            } catch (error) {
-              providerError = { error };
-              throw error;
-            }
-          },
-        });
-        suggestion = unwrapGoverned(governed, providerError);
-      }
+      // One governed call per organisation-scoped provider call.
+      let providerError: { error: unknown } | null = null;
+      const governed = await governedCall<string>({
+        organizationId: review.organizationId,
+        brandSlug: await resolveOrgBrandSlug(review.organizationId),
+        runner: 'gbp-monitor',
+        provider,
+        model: { kind: 'registered', modelId: ai.models.fast },
+        pipelineName: 'gbp-monitor-auto-suggest',
+        estimate: { inputTokens: estimateTokens(prompt), outputTokens: 350 },
+        mode: GOVERNOR_MODE,
+        execute: async ctx => {
+          try {
+            return await callProvider(
+              ctx.apiKey ? getAIProvider({ apiKey: ctx.apiKey, provider }) : ai,
+              ctx.model?.id ?? ai.models.fast
+            );
+          } catch (error) {
+            providerError = { error };
+            throw error;
+          }
+        },
+      });
+      const suggestion = unwrapGoverned(governed, providerError);
       await prisma.gBPReview.update({
         where: { id: review.id },
         data: {

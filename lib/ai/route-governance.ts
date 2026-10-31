@@ -26,10 +26,8 @@ export interface GovernorScope {
   brandSlug: string;
 }
 
-/** Map an AIProvider.name ("OpenRouter", "Anthropic"...) to what really runs. Ollama is local and ungoverned. */
-export function governorProviderFor(
-  providerName: string
-): GovernorProvider | null {
+/** Map an AIProvider.name ("OpenRouter", "Anthropic"...) to what really runs. Every provider is governed; an unknown one fails closed. */
+export function governorProviderFor(providerName: string): GovernorProvider {
   switch (providerName.toLowerCase()) {
     case 'openrouter':
       return 'openrouter';
@@ -40,7 +38,9 @@ export function governorProviderFor(
     case 'google':
       return 'google';
     default:
-      return null;
+      throw new Error(
+        `Unknown AI provider "${providerName}": no Governor provider to bill it to`
+      );
   }
 }
 

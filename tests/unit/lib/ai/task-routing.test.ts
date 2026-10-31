@@ -12,20 +12,19 @@ import {
 } from '@/lib/ai/task-routing';
 
 describe('task-routing — default decisions', () => {
-  it('classify-text routes to local Gemma 4 E2B at zero cost', () => {
+  it('classify-text routes to DeepSeek V4 Flash on the cheap-cloud tier', () => {
     const choice = routeIntent('classify-text');
-    expect(choice.provider).toBe('ollama');
-    expect(choice.modelId).toBe('gemma4:e2b');
-    expect(choice.estimatedCostPer1k).toBe(0);
+    expect(choice.provider).toBe('openrouter');
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
+    expect(choice.estimatedCostPer1k).toBeCloseTo(0.00028, 6);
     expect(choice.triangulate).toBe(false);
-    expect(choice.fallback.length).toBeGreaterThan(0);
-    // First fallback is the cheap cloud tier (DeepSeek V4 Flash)
-    expect(choice.fallback[0]?.modelId).toBe('deepseek/deepseek-v4-flash');
+    // First fallback is a second cheap vendor (Gemini 3.1 Flash)
+    expect(choice.fallback[0]?.modelId).toBe('google/gemini-3.1-flash');
   });
 
-  it('format-conversion has no fallback (fail loud on local failure)', () => {
+  it('format-conversion has no fallback (fail loud on cheap-tier failure)', () => {
     const choice = routeIntent('format-conversion');
-    expect(choice.provider).toBe('ollama');
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
     expect(choice.fallback).toEqual([]);
   });
 
@@ -54,7 +53,7 @@ describe('task-routing — default decisions', () => {
     expect(choice.triangulate).toBe(true);
     expect(choice.panel).toHaveLength(3);
     const ids = choice.panel?.map(p => p.modelId) ?? [];
-    expect(ids).toContain('gemma4:e4b');
+    expect(ids).toContain('google/gemini-3.1-flash');
     expect(ids).toContain('deepseek/deepseek-v4-flash');
     expect(ids).toContain('anthropic/claude-sonnet-5');
   });
@@ -69,15 +68,16 @@ describe('task-routing — default decisions', () => {
 });
 
 describe('task-routing — quality overrides', () => {
-  it('quality:"low" forces classify-text local (already local — no-op)', () => {
+  it('quality:"low" leaves classify-text unchanged (already cheapest)', () => {
     const choice = routeIntent('classify-text', { quality: 'low' });
-    expect(choice.provider).toBe('ollama');
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
+    expect(choice.fallback[0]?.modelId).toBe('google/gemini-3.1-flash');
   });
 
-  it('quality:"low" downgrades draft-blog-post to local Gemma', () => {
-    const choice = routeIntent('draft-blog-post', { quality: 'low' });
-    expect(choice.provider).toBe('ollama');
-    expect(choice.estimatedCostPer1k).toBe(0);
+  it('quality:"low" downgrades code-review from Sonnet to DeepSeek V4 Flash', () => {
+    const choice = routeIntent('code-review', { quality: 'low' });
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
+    expect(choice.estimatedCostPer1k).toBeCloseTo(0.00028, 6);
   });
 
   it('quality:"high" upgrades classify-text to Claude Sonnet', () => {
@@ -93,11 +93,10 @@ describe('task-routing — quality overrides', () => {
 });
 
 describe('task-routing — budget ceiling', () => {
-  it('budgetCeiling:0 forces draft-blog-post to local Gemma', () => {
-    const choice = routeIntent('draft-blog-post', { budgetCeiling: 0 });
-    expect(choice.provider).toBe('ollama');
-    expect(choice.estimatedCostPer1k).toBe(0);
-    expect(choice.fallback).toEqual([]);
+  it('budgetCeiling:0 throws: no model is free', () => {
+    expect(() => routeIntent('draft-blog-post', { budgetCeiling: 0 })).toThrow(
+      /No zero-cost model/
+    );
   });
 
   it('budgetCeiling:0.001 drops code-review from Sonnet to DeepSeek Flash', () => {
@@ -111,7 +110,7 @@ describe('task-routing — budget ceiling', () => {
 
   it('budgetCeiling above primary cost is a no-op', () => {
     const choice = routeIntent('classify-text', { budgetCeiling: 999 });
-    expect(choice.provider).toBe('ollama');
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
   });
 });
 
@@ -127,13 +126,21 @@ describe('task-routing — context-length escalation', () => {
     expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
   });
 
-  it('huge context on local intent escalates to DeepSeek V4 Flash', () => {
+  it('huge context on a cheap-tier intent stays on DeepSeek V4 Flash', () => {
     const choice = routeIntent('classify-text', { contextLength: 500_000 });
     expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
   });
 });
 
 describe('task-routing — invariants', () => {
+  it('no intent routes to a provider outside the registry', () => {
+    const known = ['openai', 'anthropic', 'google', 'openrouter'];
+    for (const entry of Object.values(getRoutingMatrix())) {
+      const all = [entry.primary, ...entry.fallback, ...(entry.panel ?? [])];
+      for (const m of all) expect(known).toContain(m.provider);
+    }
+  });
+
   it('every intent has a primary model defined', () => {
     for (const intent of ALL_INTENTS) {
       const choice = routeIntent(intent);

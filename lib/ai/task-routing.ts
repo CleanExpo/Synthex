@@ -3,8 +3,8 @@
  *
  * Skills and code call `routeIntent(intent)` rather than picking a model
  * directly. The matrix below decides which model handles which intent —
- * routine work goes to local Gemma 4 (zero cost), mid-quality work to
- * DeepSeek V4 Flash (very cheap cloud), and senior-level work to Claude.
+ * routine and mid-quality work go to DeepSeek V4 Flash (very cheap cloud),
+ * and senior-level work to Claude.
  *
  * The matrix is the single place to retune the cost/quality balance.
  *
@@ -20,7 +20,7 @@ import type { AIProvider } from './model-registry';
  * Synthex task intents. Skills declare the intent, the matrix picks the
  * model. Naming convention: `<verb>-<noun>` lowercase-kebab.
  *
- * Group A — Routine local (Gemma 4 baseline)
+ * Group A — Routine (DeepSeek V4 Flash, Gemini 3.1 Flash fallback)
  *   classify-text, extract-entities, summarise-batch, format-conversion,
  *   linting-suggest
  * Group B — Mid-quality cloud (DeepSeek V4 Flash baseline)
@@ -34,7 +34,7 @@ import type { AIProvider } from './model-registry';
  *   high-stakes-creative
  */
 export type TaskIntent =
-  // Group A — routine local
+  // Group A — routine
   | 'classify-text'
   | 'extract-entities'
   | 'summarise-batch'
@@ -58,13 +58,13 @@ export type TaskIntent =
 
 /**
  * The result of a routing decision. A caller invokes the primary model
- * first; on `OllamaUnavailableError` or non-recoverable failure it falls
- * back through the chain in order.
+ * first; on a non-recoverable failure it falls back through the chain in
+ * order.
  */
 export interface ModelChoice {
   /** Primary provider to call. */
   provider: AIProvider;
-  /** Provider-specific model identifier (e.g. "gemma4:e2b", "anthropic/claude-sonnet-5"). */
+  /** Provider-specific model identifier (e.g. "anthropic/claude-sonnet-5"). */
   modelId: string;
   /** Estimated cost per 1K output tokens — for ledger / budget guards. */
   estimatedCostPer1k: number;
@@ -83,8 +83,8 @@ export interface ModelChoice {
 /** Optional caller-supplied modifiers. */
 export interface RouteOptions {
   /**
-   * Override the default tier. `quality:'low'` forces local where possible;
-   * `quality:'high'` forces an upgrade to the senior tier.
+   * Override the default tier. `quality:'low'` forces the cheapest cloud tier
+   * (DeepSeek V4 Flash); `quality:'high'` forces an upgrade to the senior tier.
    */
   quality?: 'low' | 'standard' | 'high';
   /**
@@ -95,10 +95,18 @@ export interface RouteOptions {
   contextLength?: number;
   /**
    * Hard ceiling on $/1k output tokens. If the matrix's primary exceeds
-   * this, drop to the next-cheapest fallback. `0` = local-only.
+   * this, drop to the next-cheapest fallback. No model is free, so `0`
+   * throws rather than routing to a model that costs money.
    */
   budgetCeiling?: number;
 }
+
+/** The cheapest cloud tier: DeepSeek V4 Flash, $0.28 / 1M output tokens. */
+const CHEAP_CLOUD = {
+  provider: 'openrouter',
+  modelId: 'deepseek/deepseek-v4-flash',
+  cost: 0.00028,
+} as const satisfies MatrixEntry['primary'];
 
 interface MatrixEntry {
   primary: { provider: AIProvider; modelId: string; cost: number };
@@ -113,37 +121,31 @@ interface MatrixEntry {
  * `lib/ai/model-registry.ts costPer1kTokens.output`).
  */
 const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
-  // ── Group A — routine local (Gemma 4 baseline) ────────────────────
+  // ── Group A — routine (DeepSeek V4 Flash baseline) ────────────────
   'classify-text': {
-    primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
+    primary: CHEAP_CLOUD,
     fallback: [
-      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
+      { provider: 'openrouter', modelId: 'google/gemini-3.1-flash' },
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
   },
   'extract-entities': {
-    primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
-    fallback: [
-      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
-    ],
+    primary: CHEAP_CLOUD,
+    fallback: [{ provider: 'openrouter', modelId: 'google/gemini-3.1-flash' }],
   },
   'summarise-batch': {
-    primary: { provider: 'ollama', modelId: 'gemma4:e4b', cost: 0 },
-    fallback: [
-      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
-    ],
+    primary: CHEAP_CLOUD,
+    fallback: [{ provider: 'openrouter', modelId: 'google/gemini-3.1-flash' }],
   },
   'format-conversion': {
-    primary: { provider: 'ollama', modelId: 'gemma4:e2b', cost: 0 },
-    // Format conversion is mechanical; if the local model can't do it, the
-    // input is malformed. Fail loud rather than spend money on it.
+    primary: CHEAP_CLOUD,
+    // Format conversion is mechanical; if the cheap model can't do it, the
+    // input is malformed. Fail loud rather than spend more money on it.
     fallback: [],
   },
   'linting-suggest': {
-    primary: { provider: 'ollama', modelId: 'gemma4:e4b', cost: 0 },
-    fallback: [
-      { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
-    ],
+    primary: CHEAP_CLOUD,
+    fallback: [{ provider: 'openrouter', modelId: 'google/gemini-3.1-flash' }],
   },
 
   // ── Group B — mid-quality cloud (DeepSeek V4 Flash baseline) ──────
@@ -153,7 +155,9 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
       modelId: 'deepseek/deepseek-v4-flash',
       cost: 0.00028,
     },
-    fallback: [{ provider: 'ollama', modelId: 'gemma4:e4b' }],
+    fallback: [
+      { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
+    ],
   },
   'draft-blog-post': {
     primary: {
@@ -240,7 +244,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
     ],
     triangulate: true,
     panel: [
-      { provider: 'ollama', modelId: 'gemma4:e4b' },
+      { provider: 'openrouter', modelId: 'google/gemini-3.1-flash' },
       { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
       { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-5' },
     ],
@@ -302,16 +306,10 @@ export function routeIntent(
     fallback = [
       { provider: 'openrouter', modelId: 'anthropic/claude-opus-4-8' },
     ];
-  } else if (opts.quality === 'low' && primary.provider !== 'ollama') {
-    // Force-downgrade to local. If the intent has a Gemma fallback,
-    // promote it to primary; otherwise drop to gemma4:e2b.
-    const localFallback = entry.fallback.find(f => f.provider === 'ollama');
-    primary = {
-      provider: 'ollama',
-      modelId: localFallback?.modelId ?? 'gemma4:e2b',
-      cost: 0,
-    };
-    fallback = entry.fallback.filter(f => f.provider !== 'ollama');
+  } else if (opts.quality === 'low' && primary.cost > CHEAP_CLOUD.cost) {
+    // Force-downgrade to the cheapest cloud tier.
+    primary = CHEAP_CLOUD;
+    fallback = entry.fallback.filter(f => f.modelId !== CHEAP_CLOUD.modelId);
   }
 
   // ── Budget ceiling ────────────────────────────────────────────────
@@ -320,9 +318,10 @@ export function routeIntent(
     primary.cost > opts.budgetCeiling
   ) {
     if (opts.budgetCeiling === 0) {
-      // Local-only.
-      primary = { provider: 'ollama', modelId: 'gemma4:e4b', cost: 0 };
-      fallback = [];
+      // Every model costs money; never pretend a paid call fits a $0 budget.
+      throw new Error(
+        `No zero-cost model for task intent: ${intent} (budgetCeiling 0)`
+      );
     } else {
       // Pick the first fallback with provider 'openrouter' that's cheaper.
       // Matrix doesn't carry per-fallback cost; assume DeepSeek Flash
@@ -342,10 +341,7 @@ export function routeIntent(
   // ── Context-length escalation ─────────────────────────────────────
   // If the prompt is huge, prefer DeepSeek V4 (1M ctx) over Sonnet (200K).
   if (opts.contextLength && opts.contextLength > 200_000) {
-    if (
-      primary.modelId.startsWith('anthropic/') ||
-      primary.modelId.startsWith('gemma4:')
-    ) {
+    if (primary.modelId.startsWith('anthropic/')) {
       primary = {
         provider: 'openrouter',
         modelId: 'deepseek/deepseek-v4-flash',

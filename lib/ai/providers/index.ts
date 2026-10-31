@@ -27,7 +27,6 @@ import { OpenAIProvider } from './openai-provider';
 import { OpenRouterProvider } from './openrouter-provider';
 import { AnthropicProvider } from './anthropic-provider';
 import { GoogleProvider } from './google-provider';
-import { OllamaProvider } from './ollama-provider';
 
 export type {
   AIProvider,
@@ -36,9 +35,8 @@ export type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
-export { OllamaUnavailableError } from './ollama-provider';
 
-type ProviderName = 'openai' | 'openrouter' | 'anthropic' | 'google' | 'ollama';
+type ProviderName = 'openai' | 'openrouter' | 'anthropic' | 'google';
 
 /** Default provider used when AI_PROVIDER is unset (OpenAI-only direction). */
 const DEFAULT_PROVIDER: ProviderName = 'openai';
@@ -67,9 +65,6 @@ const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
     openrouter: (key?) => new OpenRouterProvider(key),
     anthropic: (key?) => new AnthropicProvider(key),
     google: (key?) => new GoogleProvider(key),
-    // Ollama is a local-only provider; the apiKey arg is accepted for
-    // factory-signature compatibility but not used.
-    ollama: (key?) => new OllamaProvider(key),
   };
 
 let cachedProvider: AIProvider | null = null;
