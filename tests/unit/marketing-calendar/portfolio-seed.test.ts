@@ -43,6 +43,7 @@ import {
   applyPortfolioSetup,
   undoPortfolioSetup,
   verifyPortfolioSetup,
+  PORTFOLIO_SOURCE,
   type PortfolioManifest,
 } from '@/lib/marketing-calendar/portfolio-seed';
 import {
@@ -161,6 +162,29 @@ describe('applyPortfolioSetup', () => {
     ).toHaveLength(PORTFOLIO_BRANDS.length);
   });
 
+  it('records each created post with the updatedAt undo must match', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    const written = new Date('2026-11-01T01:02:03.000Z');
+    db.brandDNA.upsert.mockResolvedValue({ id: 'dna', updatedAt: written });
+    db.calendarPost.create.mockImplementation(
+      async ({ data }: { data: { scheduledFor: Date } }) => ({
+        id: 'new-post',
+        scheduledFor: data.scheduledFor,
+        updatedAt: written,
+      })
+    );
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    expect(manifest.calendarPosts.length).toBeGreaterThan(0);
+    for (const post of manifest.calendarPosts) {
+      expect(post.appliedUpdatedAt).toBe(written.toISOString());
+    }
+  });
+
   it('keeps a stored logo when the approved logo cannot be confirmed as served', async () => {
     mockResolveLogo.mockResolvedValue(null);
     db.organization.findUnique.mockImplementation(
@@ -252,95 +276,75 @@ describe('undoPortfolioSetup', () => {
         slotKey: 'k',
         kind: 'shortform_video',
         scheduledFor: applied,
+        appliedUpdatedAt: applied,
       },
+      {
+        // An older manifest without the timestamp cannot prove the post is untouched.
+        id: 'p-legacy',
+        orgSlug: 'carsi',
+        slotKey: 'k2',
+        kind: 'shortform_video',
+        scheduledFor: applied,
+      } as PortfolioManifest['calendarPosts'][number],
     ],
     skippedSlots: [],
     log: [],
   };
 
-  it('deletes posts only while still draft, empty and portfolio-tagged', async () => {
+  it('deletes a post only while draft, empty, portfolio-tagged and unchanged since apply', async () => {
     db.calendarPost.deleteMany.mockResolvedValue({ count: 1 });
-    db.clientProfile.count.mockResolvedValue(1);
-    db.clientProfile.deleteMany.mockResolvedValue({ count: 1 });
-    db.brandDNA.count.mockResolvedValue(1);
-    db.brandDNA.updateMany.mockResolvedValue({ count: 1 });
-    db.organization.updateMany.mockResolvedValue({ count: 1 });
-    await undoPortfolioSetup(manifest, true);
+    const lines = await undoPortfolioSetup(manifest, true);
 
+    expect(db.calendarPost.deleteMany).toHaveBeenCalledTimes(1);
     expect(db.calendarPost.deleteMany).toHaveBeenCalledWith({
-      where: expect.objectContaining({
-        id: { in: ['p1'] },
+      where: {
+        id: 'p1',
         status: 'draft',
         mediaUrls: { isEmpty: true },
         tags: { has: PORTFOLIO_CALENDAR_TAG },
-      }),
-    });
-    expect(db.clientProfile.deleteMany).toHaveBeenCalledWith({
-      where: {
-        id: 'cp-carsi',
-        organizationId: 'org-carsi',
+        metadata: { path: ['source'], equals: PORTFOLIO_SOURCE },
         updatedAt: new Date(applied),
       },
     });
-    expect(db.organization.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          id: 'org-nrpg',
-          logo: 'https://l.test/n.svg',
-          primaryColor: '#1F5BFF',
-        }),
-      })
-    );
+    expect(lines[0]).toMatch(/delete 1\/2 portfolio posts/);
   });
 
-  it('leaves rows changed since apply alone and never deletes an organisation', async () => {
+  it('keeps an edited or rescheduled draft (no row matches the applied timestamp)', async () => {
     db.calendarPost.deleteMany.mockResolvedValue({ count: 0 });
-    db.clientProfile.count.mockResolvedValue(0);
-    db.brandDNA.count.mockResolvedValue(0);
-    db.organization.updateMany.mockResolvedValue({ count: 0 });
+    const lines = await undoPortfolioSetup(manifest, true);
+    expect(lines[0]).toMatch(/delete 0\/2 portfolio posts/);
+  });
+
+  it('never deletes or restores brand setup, access or organisations', async () => {
+    db.calendarPost.deleteMany.mockResolvedValue({ count: 1 });
     const lines = await undoPortfolioSetup(manifest, true);
 
-    expect(db.clientProfile.deleteMany).not.toHaveBeenCalled();
-    expect(db.brandDNA.updateMany).not.toHaveBeenCalled();
-    expect(db.teamMember.deleteMany).not.toHaveBeenCalled();
+    expect(writeCalls()).toEqual(['calendarPost.deleteMany']);
     expect(lines).toContain(
-      '= brand DNA carsi changed since apply; left alone'
+      '= brand DNA carsi kept (undo never removes brand setup; edit it in Brand if unwanted)'
     );
+    expect(lines.some(l => l.startsWith('= client profile carsi kept'))).toBe(
+      true
+    );
+    expect(
+      lines.some(l => l.startsWith('= org nrpg logo and colour kept'))
+    ).toBe(true);
+    expect(lines.some(l => l.startsWith('= owner access bo-carsi'))).toBe(true);
     expect(lines.some(l => l.startsWith('= org business-card kept'))).toBe(
       true
     );
-    expect(lines[0]).toMatch(/delete 0\/1 portfolio posts/);
-  });
-
-  it('keeps a brand setup while one of its posts survives, and never removes access', async () => {
-    db.calendarPost.deleteMany.mockResolvedValue({ count: 0 });
-    // The carsi post was scheduled after apply, so it survives the delete.
-    db.calendarPost.findMany.mockResolvedValue([
-      { organizationId: 'org-carsi' },
-    ]);
-    db.clientProfile.count.mockResolvedValue(1);
-    db.brandDNA.count.mockResolvedValue(1);
-    db.organization.updateMany.mockResolvedValue({ count: 1 });
-    const lines = await undoPortfolioSetup(manifest, true);
-
-    expect(db.clientProfile.deleteMany).not.toHaveBeenCalled();
-    expect(db.brandDNA.updateMany).not.toHaveBeenCalled();
-    expect(db.businessOwnership.deleteMany).not.toHaveBeenCalled();
-    expect(db.teamMember.deleteMany).not.toHaveBeenCalled();
-    expect(lines).toContain(
-      '= brand DNA carsi kept: a portfolio post for this brand was kept'
-    );
-    // nrpg kept no post, so its logo and colour are still restored.
-    expect(db.organization.updateMany).toHaveBeenCalledTimes(1);
   });
 
   it('dry run counts and writes nothing', async () => {
     db.calendarPost.count.mockResolvedValue(1);
-    db.clientProfile.count.mockResolvedValue(1);
-    db.brandDNA.count.mockResolvedValue(1);
-    db.organization.count.mockResolvedValue(1);
     await undoPortfolioSetup(manifest, false);
     expect(writeCalls()).toEqual([]);
+    expect(db.calendarPost.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({
+        id: 'p1',
+        updatedAt: new Date(applied),
+      }),
+    });
   });
 });
 

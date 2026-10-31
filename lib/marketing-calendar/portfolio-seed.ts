@@ -82,6 +82,8 @@ export interface PortfolioManifest {
     slotKey: string;
     kind: string;
     scheduledFor: string;
+    /** updatedAt as written; undo deletes the post only while it still matches. */
+    appliedUpdatedAt: string;
   }>;
   skippedSlots: Array<{ slotKey: string; reason: string }>;
   log: string[];
@@ -408,6 +410,7 @@ export async function applyPortfolioSetup(opts: {
         slotKey: slot.slotKey,
         kind: slot.kind,
         scheduledFor: row.scheduledFor.toISOString(),
+        appliedUpdatedAt: row.updatedAt.toISOString(),
       });
     }
   } catch (err) {
@@ -420,26 +423,18 @@ export async function applyPortfolioSetup(opts: {
   return manifest;
 }
 
-function withoutKeys(value: unknown, keys: string[]): Record<string, unknown> {
-  const out: Record<string, unknown> = {
-    ...(value as Record<string, unknown>),
-  };
-  for (const key of keys) delete out[key];
-  return out;
-}
-
 /**
  * Reverse an apply manifest. Dry run unless write is true.
  *
- * Undo only ever deletes or restores what apply wrote and nobody has touched
- * since. Every write carries its guard in the WHERE, so a row that changed
- * after apply (or between this read and write) is left alone, never lost:
- *   - posts: still draft, no media, portfolio tag and source;
- *   - brand DNA / client profile / org logo and colour: untouched since
- *     apply, and only for brands with no portfolio post left (a kept post
- *     keeps its brand setup);
- *   - organisations and owner access are never removed: deleting an org
- *     cascades into anything added since, and access may have been edited.
+ * Undo deletes only the draft posts apply created that nobody has touched
+ * since: each delete carries its guard in the WHERE (still draft, no media,
+ * portfolio tag and source, updatedAt unchanged since apply), so a post that
+ * was edited, rescheduled or given a video, before or during undo, is kept.
+ *
+ * Everything else apply wrote is shared with whoever works on the brand next
+ * (other posts, edits, people), so undo never deletes or restores it: brand
+ * DNA, client profile, org logo and colour, owner access and organisations
+ * are listed for a person to review instead.
  */
 export async function undoPortfolioSetup(
   manifest: PortfolioManifest,
@@ -448,127 +443,41 @@ export async function undoPortfolioSetup(
   const lines: string[] = [];
   const verb = write ? '' : 'would ';
 
-  const postIds = manifest.calendarPosts.map(p => p.id);
-  const postGuard: Prisma.CalendarPostWhereInput = {
-    status: 'draft',
-    mediaUrls: { isEmpty: true },
-    tags: { has: PORTFOLIO_CALENDAR_TAG },
-    metadata: { path: ['source'], equals: PORTFOLIO_SOURCE },
-  };
-  const deleted = write
-    ? (
-        await prisma.calendarPost.deleteMany({
-          where: { id: { in: postIds }, ...postGuard },
-        })
-      ).count
-    : await prisma.calendarPost.count({
-        where: { id: { in: postIds }, ...postGuard },
-      });
+  let deleted = 0;
+  for (const post of manifest.calendarPosts) {
+    // A manifest without the applied timestamp cannot prove the post is untouched.
+    if (!post.appliedUpdatedAt) continue;
+    const where: Prisma.CalendarPostWhereInput = {
+      id: post.id,
+      status: 'draft',
+      mediaUrls: { isEmpty: true },
+      tags: { has: PORTFOLIO_CALENDAR_TAG },
+      metadata: { path: ['source'], equals: PORTFOLIO_SOURCE },
+      updatedAt: new Date(post.appliedUpdatedAt),
+    };
+    deleted += write
+      ? (await prisma.calendarPost.deleteMany({ where })).count
+      : await prisma.calendarPost.count({ where });
+  }
   lines.push(
-    `- ${verb}delete ${deleted}/${postIds.length} portfolio posts (drafts with no video only; the rest are kept)`
+    `- ${verb}delete ${deleted}/${manifest.calendarPosts.length} portfolio posts (untouched drafts with no video only; the rest are kept)`
   );
 
-  // Brands that keep at least one portfolio post keep their brand setup too.
-  const survivors = await prisma.calendarPost.findMany({
-    where: write
-      ? { id: { in: postIds } }
-      : { id: { in: postIds }, NOT: postGuard },
-    select: { organizationId: true },
-  });
-  const keptOrgs = new Set(survivors.map(p => p.organizationId));
-  const keptLine = (what: string, slug: string) =>
-    `= ${what} ${slug} kept: a portfolio post for this brand was kept`;
-
-  const fixed = ['id', 'organizationId', 'createdAt', 'updatedAt'];
   for (const row of manifest.clientProfiles) {
-    if (keptOrgs.has(row.organizationId)) {
-      lines.push(keptLine('client profile', row.orgSlug));
-      continue;
-    }
-    const where = {
-      id: row.id,
-      organizationId: row.organizationId,
-      updatedAt: new Date(row.appliedUpdatedAt),
-    };
-    let n = await prisma.clientProfile.count({ where });
-    if (write && n) {
-      n = row.created
-        ? (await prisma.clientProfile.deleteMany({ where })).count
-        : (
-            await prisma.clientProfile.updateMany({
-              where,
-              data: withoutKeys(
-                row.before,
-                fixed
-              ) as Prisma.ClientProfileUpdateManyMutationInput,
-            })
-          ).count;
-    }
     lines.push(
-      n
-        ? `${row.created ? '-' : '~'} ${verb}${row.created ? 'delete' : 'restore'} client profile ${row.orgSlug}`
-        : `= client profile ${row.orgSlug} changed since apply; left alone`
+      `= client profile ${row.orgSlug} kept (undo never removes brand setup; edit it in Brand if unwanted)`
     );
   }
   for (const row of manifest.brandDna) {
-    if (keptOrgs.has(row.organizationId)) {
-      lines.push(keptLine('brand DNA', row.orgSlug));
-      continue;
-    }
-    const where = {
-      id: row.id,
-      organizationId: row.organizationId,
-      updatedAt: new Date(row.appliedUpdatedAt),
-    };
-    let n = await prisma.brandDNA.count({ where });
-    if (write && n) {
-      n = row.created
-        ? (await prisma.brandDNA.deleteMany({ where })).count
-        : (
-            await prisma.brandDNA.updateMany({
-              where,
-              data: withoutKeys(
-                row.before,
-                fixed
-              ) as Prisma.BrandDNAUpdateManyMutationInput,
-            })
-          ).count;
-    }
     lines.push(
-      n
-        ? `${row.created ? '-' : '~'} ${verb}${row.created ? 'delete' : 'restore'} brand DNA ${row.orgSlug}`
-        : `= brand DNA ${row.orgSlug} changed since apply; left alone`
+      `= brand DNA ${row.orgSlug} kept (undo never removes brand setup; edit it in Brand if unwanted)`
     );
   }
   for (const row of manifest.updatedOrganizations) {
-    if (keptOrgs.has(row.id)) {
-      lines.push(keptLine('org logo and colour for', row.slug));
-      continue;
-    }
-    const where = {
-      id: row.id,
-      slug: row.slug,
-      logo: row.after.logo,
-      primaryColor: row.after.primaryColor,
-    };
-    const n = write
-      ? (
-          await prisma.organization.updateMany({
-            where,
-            data: {
-              logo: row.before.logo,
-              primaryColor: row.before.primaryColor,
-            },
-          })
-        ).count
-      : await prisma.organization.count({ where });
     lines.push(
-      n
-        ? `~ ${verb}restore org ${row.slug} logo and colour`
-        : `= org ${row.slug} changed since apply; left alone`
+      `= org ${row.slug} logo and colour kept (before apply: ${row.before.logo ?? 'none'} / ${row.before.primaryColor ?? 'none'})`
     );
   }
-
   for (const row of [...manifest.businessOwnerships, ...manifest.teamMembers]) {
     lines.push(
       `= owner access ${row.id} on ${row.orgSlug} kept (undo never removes access; remove it in Team if unwanted)`

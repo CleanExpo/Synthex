@@ -80,7 +80,10 @@ export default function PortfolioCalendarPage() {
   const [runLog, setRunLog] = useState<string[] | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   // The record of what a real apply wrote: the only input the undo script takes.
-  const [records, setRecords] = useState<{ write?: boolean } | null>(null);
+  // One records file per write run this visit; each is saved the moment it arrives.
+  const [records, setRecords] = useState<
+    Array<{ write?: boolean; ranAt?: string }>
+  >([]);
 
   const activeWeek = week ?? data?.weeks[0] ?? null;
   const brandBySlug = useMemo(
@@ -119,8 +122,12 @@ export default function PortfolioCalendarPage() {
         body: JSON.stringify({ action }),
       });
       const body = await res.json();
-      // Keep the manifest even on failure: it lists whatever was written.
-      if (body.manifest?.write) setRecords(body.manifest);
+      // Save every run's manifest, even on failure: it lists whatever was
+      // written and is the only input undo accepts. A later run never replaces it.
+      if (body.manifest?.write) {
+        saveRecords(body.manifest);
+        setRecords(prev => [...prev, body.manifest]);
+      }
       if (!res.ok)
         throw new Error(
           body.message ?? body.error ?? `Request failed (${res.status})`
@@ -134,14 +141,14 @@ export default function PortfolioCalendarPage() {
     }
   }
 
-  function downloadRecords() {
-    if (!records) return;
-    const blob = new Blob([JSON.stringify(records, null, 2)], {
+  function saveRecords(run: { ranAt?: string }) {
+    const blob = new Blob([JSON.stringify(run, null, 2)], {
       type: 'application/json',
     });
+    const stamp = (run.ranAt ?? new Date().toISOString()).replace(/[:.]/g, '-');
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `synthex-portfolio-calendar-records-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    link.download = `synthex-portfolio-calendar-records-${stamp}.json`;
     link.click();
     URL.revokeObjectURL(link.href);
   }
@@ -249,14 +256,19 @@ export default function PortfolioCalendarPage() {
               {runLog?.length ? runLog.join('\n') : 'No changes.'}
             </pre>
           )}
-          {records && (
+          {records.length > 0 && (
             <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.06] pt-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-amber-200/80">
-                Save the records file. It lists every change this run made and
-                is the only way to undo it.
+                Each run&apos;s records file downloaded as it finished (
+                {records.length} this visit). Keep them: a records file lists
+                every change its run made and is the only way to undo it.
               </p>
-              <Button variant="outline" size="sm" onClick={downloadRecords}>
-                Download records
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => records.forEach(saveRecords)}
+              >
+                Download records again
               </Button>
             </div>
           )}
