@@ -29,6 +29,7 @@ import type {
   ContentTheme,
 } from './types';
 import { PLATFORM_SPECS, THEME_PROMPTS, DEFAULT_CONTENT_MIX } from './types';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // CONSTANTS
@@ -54,6 +55,7 @@ const VALID_PLATFORMS_FOR_PREDICTOR: Platform[] = [
 export async function runLaunchPipeline(
   input: LaunchPipelineInput
 ): Promise<LaunchPipelineResult> {
+  enterPromptOrg(input.organizationId);
   const startTime = Date.now();
   const generator = new AIContentGenerator();
   const userCredentials = await getUserAICredentials(input.userId);

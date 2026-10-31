@@ -13,6 +13,7 @@
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import platformConfig from '@/config/platform-master-config.json';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // TYPES
@@ -218,6 +219,7 @@ export class PlatformSpecialistAgent {
   async enhance(params: EnhanceParams): Promise<EnhancedPost> {
     const { content, platform, businessName, businessIndustry, tone, orgId } =
       params;
+    enterPromptOrg(orgId);
 
     // Circuit breaker guard
     if (!checkCircuitBreaker(orgId)) {

@@ -19,6 +19,16 @@ interface PromptScope {
 
 const scope = new AsyncLocalStorage<PromptScope>();
 
+/**
+ * Scopes the rest of the calling async function (and everything it awaits)
+ * to orgId, so every model call it makes is checked against that brand.
+ * Call it at an org-carrying entry point before any model call. A missing
+ * orgId leaves the current scope as it is.
+ */
+export function enterPromptOrg(orgId: string | null | undefined) {
+  if (orgId) scope.enterWith({ orgId });
+}
+
 /** Runs fn with every model call inside it checked against orgId's brand. */
 export function withPromptOrg<T>(orgId: string, fn: () => Promise<T>) {
   return scope.run({ orgId }, fn);

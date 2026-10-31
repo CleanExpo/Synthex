@@ -35,7 +35,12 @@ import { OpenRouterProvider } from '@/lib/ai/providers/openrouter-provider';
 import { GoogleProvider } from '@/lib/ai/providers/google-provider';
 import { OllamaProvider } from '@/lib/ai/providers/ollama-provider';
 import type { AIProvider } from '@/lib/ai/providers/base-provider';
-import { withPromptOrg, guardScopedRequest } from '@/lib/ai/prompt-scope';
+import {
+  withPromptOrg,
+  enterPromptOrg,
+  guardScopedRequest,
+} from '@/lib/ai/prompt-scope';
+import { routedCall } from '@/lib/ai/model-router';
 import { ForbiddenPromptError } from '@/lib/marketing-calendar/prompt-guard';
 import { executeStep } from '@/lib/workflow/step-executor';
 import { createLlmEntailmentScorer } from '@/lib/evidence/entailment';
@@ -115,6 +120,35 @@ describe('guardScopedRequest', () => {
         })
       )
     ).rejects.toBeInstanceOf(ForbiddenPromptError);
+  });
+
+  it('routed calls run in their organisation scope and a refusal is not escalated', async () => {
+    const send = jest.fn();
+    await expect(
+      routedCall({
+        task: {
+          taskType: 'caption_generation',
+          inputTokenEstimate: 10,
+          qualityThreshold: 'medium',
+          clientId: 'org-ug',
+        },
+        execute: async () => {
+          await guardScopedRequest(bad);
+          send();
+          return 'ok';
+        },
+      })
+    ).rejects.toBeInstanceOf(ForbiddenPromptError);
+    expect(send).not.toHaveBeenCalled();
+    expect(mockOrgFind).toHaveBeenCalledTimes(1);
+  });
+
+  it('enterPromptOrg scopes the rest of an entry point', async () => {
+    const entry = async () => {
+      enterPromptOrg('org-ug');
+      await guardScopedRequest(bad);
+    };
+    await expect(entry()).rejects.toBeInstanceOf(ForbiddenPromptError);
   });
 
   it('passes a clean portfolio prompt', async () => {

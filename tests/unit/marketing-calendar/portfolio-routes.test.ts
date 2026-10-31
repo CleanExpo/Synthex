@@ -251,6 +251,20 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect((await res.json()).error).toMatch(/left the workspace/);
   });
 
+  it('refuses (409) when the brand is renamed between lookup and write', async () => {
+    mockFindFirst.mockResolvedValue(draftSlot);
+    mockUpdate.mockResolvedValue({ count: 1 });
+    // Found by its slug; renamed by the time its row lock is held.
+    mockLock.mockResolvedValue([
+      root,
+      { ...businessCard, slug: 'renamed-child' },
+    ]);
+    const res = await deliver(deliveryRequest(validBody, TOKEN));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/left the workspace/);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('is idempotent for the same video and refuses to overwrite a different one', async () => {
     mockFindFirst.mockResolvedValue({
       ...draftSlot,

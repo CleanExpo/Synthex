@@ -281,6 +281,12 @@ const tx = {
 
 export const fakePrisma = {
   ...tx,
+  // Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
+  organization: {
+    async findUnique(_args: unknown) {
+      return { slug: 'test-org' };
+    },
+  },
   async $transaction<T>(fn: (t: typeof tx) => Promise<T>): Promise<T> {
     maybeFail('$transaction');
     const snapshot = state().events.length;

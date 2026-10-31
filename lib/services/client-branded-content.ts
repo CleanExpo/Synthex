@@ -18,7 +18,7 @@ import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
 import { sanitizeSocialPost } from '@/lib/ai/sanitize-social-post';
 import type { VaultActor } from '@/lib/vault/types';
-import { modelFetch } from '@/lib/ai/prompt-scope';
+import { modelFetch, enterPromptOrg } from '@/lib/ai/prompt-scope';
 // =============================================================================
 // Types
 // =============================================================================
@@ -389,6 +389,7 @@ export const ClientBrandedContentService = {
   async generate(
     request: BrandedContentRequest
   ): Promise<BrandedContentResult> {
+    enterPromptOrg(request.orgId);
     const actor: VaultActor = {
       id: request.userId,
       type: 'user',

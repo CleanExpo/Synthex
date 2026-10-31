@@ -34,6 +34,7 @@ import { submitGenerativeVideo } from '@/lib/services/ai/video/generation-servic
 import { QuotaExceededError } from '@/lib/services/ai/video/types';
 import { withRateLimit } from '@/lib/rate-limit/rate-limiter';
 import { requireEntitlement } from '@/lib/billing/require-entitlement';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 export const dynamic = 'force-dynamic';
 
@@ -266,6 +267,7 @@ async function _postHandler(request: NextRequest): Promise<NextResponse> {
 
     // Resolve organisation context
     const organizationId = await getEffectiveOrganizationId(userId);
+    enterPromptOrg(organizationId);
 
     // Check if user has a Gemini/AI key configured (use existing AI provider)
     let aiProvider;

@@ -23,6 +23,7 @@ import type {
   HonestGapSection,
   WhatsNextSection,
 } from './types';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 let _ai: AnthropicProvider | null = null;
 function getAI(): AnthropicProvider {
@@ -340,6 +341,7 @@ export async function buildWhatsNext(
     geoScore: number | null;
   }
 ): Promise<WhatsNextSection | null> {
+  enterPromptOrg(organizationId);
   try {
     const client = getAI();
 

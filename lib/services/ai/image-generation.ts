@@ -44,7 +44,7 @@ import {
   IMAGE_MODELS,
 } from '@/lib/services/ai/image/registry';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
-import { modelFetch } from '@/lib/ai/prompt-scope';
+import { modelFetch, enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -816,6 +816,7 @@ async function generateImageUnmetered(
   spend: SpendContext | null = null
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
+  enterPromptOrg(ctx.organizationId);
 
   const grounding = shouldGround(options);
 
@@ -1492,6 +1493,7 @@ export async function generateImage(
   ctx: GenerationContext
 ): Promise<ImageGenerationResult> {
   requireGenerationContext(ctx, 'generateImage');
+  enterPromptOrg(ctx.organizationId);
 
   // Validate before spending anything — an invalid request must not resolve
   // references or take a hold.
@@ -1580,6 +1582,7 @@ export async function generateVariations(
   count: number = 4
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateVariations');
+  enterPromptOrg(ctx.organizationId);
   const results: ImageGenerationResult[] = [];
 
   // ONE hold for the whole run, before the first provider call. Throws
@@ -1658,6 +1661,7 @@ export async function generateBatch(
   ) => Promise<ImageGenerationResult> = generateImageUnmetered
 ): Promise<ImageGenerationResult[]> {
   requireGenerationContext(ctx, 'generateBatch');
+  enterPromptOrg(ctx.organizationId);
 
   const hold = await holdImageSpend(
     ctx.organizationId,

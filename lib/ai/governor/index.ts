@@ -81,6 +81,7 @@ export {
   type BuildCapDetail,
   type BuildSpend,
 } from './build-cap';
+import { withPromptOrg } from '@/lib/ai/prompt-scope';
 export { estimateCostUsd, resolveModel } from './model';
 export { writeReceipt } from './receipts';
 export { GOVERNOR_MODE } from './mode';
@@ -205,16 +206,20 @@ export async function governedCall<T>(
   ): Promise<GovernedCallResult<T>> => {
     let result: ProviderCallResult<T>;
     try {
-      result = await input.execute({
-        mode,
-        model,
-        provider,
-        apiKey,
-        organizationId,
-        brandSlug,
-        runner,
-        runId,
-      });
+      // Every governed provider call is checked against its organisation's
+      // brand before anything is sent (lib/ai/prompt-scope.ts).
+      result = await withPromptOrg(organizationId, () =>
+        input.execute({
+          mode,
+          model,
+          provider,
+          apiKey,
+          organizationId,
+          brandSlug,
+          runner,
+          runId,
+        })
+      );
     } catch (error) {
       const errorClass =
         error instanceof Error ? error.constructor.name : 'UnknownError';

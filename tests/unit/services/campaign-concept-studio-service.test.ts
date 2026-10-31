@@ -4,6 +4,13 @@ const mockSystemGenerationContext = jest
   .fn()
   .mockReturnValue({ context: 'test' });
 
+// Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
+jest.mock('@/lib/prisma', () => {
+  const db = {
+    organization: { findUnique: async () => ({ slug: 'test-org' }) },
+  };
+  return { __esModule: true, default: db, prisma: db };
+});
 jest.mock('openai', () => ({
   __esModule: true,
   default: jest.fn(),

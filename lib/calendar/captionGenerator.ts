@@ -19,6 +19,7 @@ import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
 import type { CalendarPlatform, ContentType } from './types';
 import type { BlendedContentIntelligence } from '@/lib/content-intelligence/types';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -76,7 +77,7 @@ function buildIntelligenceLine(ctx: CaptionContext): string {
 
   const topTopics = intel.topTopics
     .slice(0, 3)
-    .map((t) => t.topic)
+    .map(t => t.topic)
     .join(', ');
   if (!topTopics) return '';
 
@@ -146,6 +147,7 @@ export async function generateCaptions(
   context: CaptionContext,
   organizationId: string
 ): Promise<string[]> {
+  enterPromptOrg(organizationId);
   const runId = uuid();
 
   try {

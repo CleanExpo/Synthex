@@ -52,14 +52,19 @@ jest.mock('@/lib/vault/vault-service', () => ({
 }));
 
 // Mock prisma so brand-profile load doesn't hit a DB.
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
-    brandDNA: { findUnique: jest.fn().mockResolvedValue(null) },
-  },
-}));
+const mockOrgSlug = { value: 'test-org' };
+jest.mock('@/lib/prisma', () => {
+  const db = {
+    brandDNA: { findUnique: async () => null },
+    // Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
+    organization: { findUnique: async () => ({ slug: mockOrgSlug.value }) },
+  };
+  return { __esModule: true, default: db, prisma: db };
+});
 
 import { ClientBrandedContentService } from '@/lib/services/client-branded-content';
 import { getAIProvider } from '@/lib/ai/providers';
+import { ForbiddenPromptError } from '@/lib/marketing-calendar/prompt-guard';
 
 // Pull the complete() mock out of the mocked module (created in jest.mock above).
 const completeMock = (
@@ -85,6 +90,7 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
+  mockOrgSlug.value = 'test-org';
   jest.clearAllMocks();
 });
 
@@ -105,7 +111,12 @@ describe('ClientBrandedContentService — platform fallback (OpenAI-only)', () =
     completeMock.mockResolvedValue({
       id: 'cmpl-1',
       model: 'gpt-4o-mini',
-      choices: [{ message: { role: 'assistant', content: 'Real AI copy.' }, finish_reason: 'stop' }],
+      choices: [
+        {
+          message: { role: 'assistant', content: 'Real AI copy.' },
+          finish_reason: 'stop',
+        },
+      ],
       usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
     });
 
@@ -130,15 +141,17 @@ describe('ClientBrandedContentService — platform fallback (OpenAI-only)', () =
 
   it('throws (not silently degrades) when the provider rejects, so the route fallback fires', async () => {
     completeMock.mockRejectedValue(new Error('upstream 500'));
-    await expect(ClientBrandedContentService.generate(baseRequest)).rejects.toThrow();
+    await expect(
+      ClientBrandedContentService.generate(baseRequest)
+    ).rejects.toThrow();
   });
 
   it('still throws the actionable error when no platform key is configured at all', async () => {
     delete process.env.OPENAI_API_KEY;
     delete process.env.OPENROUTER_API_KEY;
-    await expect(ClientBrandedContentService.generate(baseRequest)).rejects.toThrow(
-      /No AI credentials available/
-    );
+    await expect(
+      ClientBrandedContentService.generate(baseRequest)
+    ).rejects.toThrow(/No AI credentials available/);
     expect(completeMock).not.toHaveBeenCalled();
   });
 });
@@ -176,6 +189,21 @@ describe('ClientBrandedContentService — client Vault (BYOK) path unchanged', (
     expect(result.credentialSource).toBe('client_vault');
     expect(result.content).toBe('Client-branded copy.');
 
+    fetchSpy.mockRestore();
+  });
+
+  it('refuses a portfolio brand prompt that names a forbidden word before any fetch', async () => {
+    mockOrgSlug.value = 'unite-group';
+    const fetchSpy = jest.spyOn(global, 'fetch');
+    await expect(
+      ClientBrandedContentService.generate({
+        ...baseRequest,
+        orgId: 'org-ug',
+        prompt: 'Promote CARSI courses this week',
+      })
+    ).rejects.toThrow(ForbiddenPromptError);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(completeMock).not.toHaveBeenCalled();
     fetchSpy.mockRestore();
   });
 });

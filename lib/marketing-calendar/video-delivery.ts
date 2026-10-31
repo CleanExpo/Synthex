@@ -102,7 +102,12 @@ export async function attachVideoToSlot(
       const found = members.get(planned.orgSlug);
       const root = members.get(PORTFOLIO_PARENT_SLUG);
       if (!found || !root) return { outcome: 'not_found' };
-      const org = await lockWorkspaceMember(tx, found.id, root.id);
+      const org = await lockWorkspaceMember(
+        tx,
+        found.id,
+        root.id,
+        planned.orgSlug
+      );
       const matches = await tx.calendarPost.findMany({
         where: {
           organizationId: org.id,

@@ -19,7 +19,7 @@ import {
   type CampaignStudioRequest,
   type CampaignStudioResponse,
 } from '@/lib/types/campaign-concept-studio';
-import { guardScopedText } from '@/lib/ai/prompt-scope';
+import { guardScopedText, enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 const textModel =
   process.env.CAMPAIGN_CONCEPT_TEXT_MODEL ||
@@ -241,6 +241,7 @@ export async function generateCampaignConceptStudio(
     traceId?: string;
   }
 ): Promise<CampaignStudioResponse> {
+  enterPromptOrg(options?.organizationId);
   const validated = campaignConceptStudioRequestSchema.parse(payload);
 
   const key = process.env.OPENAI_API_KEY;

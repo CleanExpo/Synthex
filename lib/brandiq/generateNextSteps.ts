@@ -18,6 +18,7 @@ import {
 import { getAIProvider } from '@/lib/ai/providers';
 import { logger } from '@/lib/logger';
 import { v4 as uuid } from 'uuid';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -50,6 +51,7 @@ export async function generateNextSteps(
   context: BrandContext,
   organizationId: string
 ): Promise<NextStep[]> {
+  enterPromptOrg(organizationId);
   const runId = uuid();
 
   const winLine =

@@ -34,6 +34,7 @@ import { recommendArtlistAudio } from '@/lib/marketing-agency/artlist/recommend'
 import { detectAssetNeed } from '@/lib/marketing-agency/artlist/need';
 import type { ArtlistAudioRecommendation } from '@/lib/marketing-agency/artlist/types';
 import type { ProviderMode } from '@/lib/marketing-agency/types';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 export type ProposedClaim = {
   statement: string;
@@ -172,6 +173,7 @@ export async function runAgent(input: RunAgentInput): Promise<RunAgentResult> {
     where: { id: input.agentId },
   });
   if (!agent) throw new Error(`Agent ${input.agentId} not found`);
+  enterPromptOrg(agent.organizationId);
   if (agent.status !== 'active') {
     throw new Error(
       `Agent ${input.agentId} is not active (status=${agent.status})`

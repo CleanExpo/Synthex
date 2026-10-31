@@ -52,13 +52,16 @@ export class LeftWorkspaceError extends Error {
  * Inside a transaction: share-lock an org and the workspace root by id, then
  * re-check membership on the locked rows. Until the transaction ends neither
  * row can be deleted, deactivated or re-parented, so a write made after this
- * call is made to a member. Throws LeftWorkspaceError otherwise. Pass the
- * root's id as orgId to check the root alone.
+ * call is made to a member. The locked org must still carry expectedSlug:
+ * a brand renamed after its lookup is not that brand any more. Throws
+ * LeftWorkspaceError otherwise. Pass the root's id and slug to check the
+ * root alone.
  */
 export async function lockWorkspaceMember(
   tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
   orgId: string,
-  rootId: string
+  rootId: string,
+  expectedSlug: string
 ): Promise<WorkspaceOrgFields> {
   const rows = await tx.$queryRaw<WorkspaceOrgFields[]>`
     SELECT id, slug, status, parent_org_id AS "parentOrgId"
@@ -66,7 +69,7 @@ export async function lockWorkspaceMember(
     ORDER BY id FOR SHARE`;
   const org = rows.find(r => r.id === orgId);
   const root = rows.find(r => r.id === rootId);
-  if (!org || !root || !inWorkspace(org, root))
+  if (!org || !root || org.slug !== expectedSlug || !inWorkspace(org, root))
     throw new LeftWorkspaceError(orgId);
   return org;
 }

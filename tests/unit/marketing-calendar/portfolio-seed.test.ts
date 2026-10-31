@@ -296,6 +296,61 @@ describe('applyPortfolioSetup', () => {
     expect(db.calendarPost.create).toHaveBeenCalled();
   });
 
+  it('writes nothing more for a brand renamed after its lookup', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    // Looked up by its slug; renamed by the time the write takes its lock.
+    mockLockRows.mockImplementation(async (_sql: string, vals: unknown[]) =>
+      [...new Set(vals.flat() as string[])].map(id =>
+        id === 'org-business-card'
+          ? { ...rowForId(id), slug: 'renamed-child' }
+          : rowForId(id)
+      )
+    );
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    const wroteFor = (m: Fn) =>
+      m.mock.calls.filter(
+        ([arg]) => arg?.data?.organizationId === 'org-business-card'
+      );
+    expect(wroteFor(db.brandDNA.create)).toEqual([]);
+    expect(wroteFor(db.clientProfile.create)).toEqual([]);
+    expect(wroteFor(db.calendarPost.create)).toEqual([]);
+    expect(manifest.log.join('\n')).toMatch(
+      /business-card: left the workspace/
+    );
+  });
+
+  it('writes no slot for a brand renamed before its slot lock', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    mockLockRows.mockImplementation(async (_sql: string, vals: unknown[]) =>
+      [...new Set(vals.flat() as string[])].map(id =>
+        id === 'org-business-card' && lockCalls.length > 0
+          ? { ...rowForId(id), slug: 'renamed-child' }
+          : rowForId(id)
+      )
+    );
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    const slotsFor = db.calendarPost.create.mock.calls.filter(
+      ([arg]) => arg?.data?.organizationId === 'org-business-card'
+    );
+    expect(slotsFor).toEqual([]);
+    expect(
+      manifest.skippedSlots.some(s => s.reason === 'brand left the workspace')
+    ).toBe(true);
+    expect(db.calendarPost.create).toHaveBeenCalled();
+  });
+
   it('leaves complete brand setup untouched on a repeat apply', async () => {
     db.organization.findUnique.mockImplementation(
       async ({ where }: { where: { slug: string } }) => orgRow(where.slug)

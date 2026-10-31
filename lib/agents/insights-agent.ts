@@ -16,6 +16,7 @@
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/lib/logger';
 import { getAIProvider } from '@/lib/ai/providers';
+import { enterPromptOrg } from '@/lib/ai/prompt-scope';
 
 const AUTO_DRAFT_THRESHOLD = 0.85;
 const CIRCUIT_BREAKER_MIN_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
@@ -55,6 +56,7 @@ export async function runInsightsAgent(
   orgId: string,
   triggeredBy: string = 'cron'
 ): Promise<InsightsResult> {
+  enterPromptOrg(orgId);
   const empty: InsightsResult = {
     opportunities: [],
     generatedDrafts: [],

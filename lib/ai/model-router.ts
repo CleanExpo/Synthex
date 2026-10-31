@@ -14,6 +14,8 @@ import {
   TIER_ESCALATION,
   TIER_MODELS,
 } from './routing-config';
+import { withPromptOrg } from '@/lib/ai/prompt-scope';
+import { ForbiddenPromptError } from '@/lib/marketing-calendar/prompt-guard';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -162,7 +164,11 @@ export async function routedCall<T>(options: RoutedCallOptions<T>): Promise<T> {
     const isEscalation = currentTier !== initial.tier;
 
     try {
-      const result = await execute(config.modelId);
+      // The call is checked against its organisation's brand before anything
+      // is sent (lib/ai/prompt-scope.ts); a brand refusal is never escalated.
+      const result = await (task.clientId
+        ? withPromptOrg(task.clientId, () => execute(config.modelId))
+        : execute(config.modelId));
 
       // Log cost on success
       const inputTok = actualTokens?.input ?? task.inputTokenEstimate;
@@ -208,6 +214,7 @@ export async function routedCall<T>(options: RoutedCallOptions<T>): Promise<T> {
 
       return result;
     } catch (err) {
+      if (err instanceof ForbiddenPromptError) throw err;
       lastError = err;
       console.warn(
         JSON.stringify({

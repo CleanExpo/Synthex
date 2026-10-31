@@ -38,6 +38,13 @@ const mockReserveSpend = jest.fn(async (p: { amountUsd: number }) => ({
   organizationId: 'org-priced',
   initiatedBy: 'studio' as const,
 }));
+// Scoped model calls look up the org's slug (lib/ai/prompt-scope.ts).
+jest.mock('@/lib/prisma', () => {
+  const db = {
+    organization: { findUnique: async () => ({ slug: 'test-org' }) },
+  };
+  return { __esModule: true, default: db, prisma: db };
+});
 jest.mock('@/lib/services/ai/image/spend-log', () => ({
   ...jest.requireActual('@/lib/services/ai/image/spend-log'),
   reserveSpend: (...a: unknown[]) => mockReserveSpend(...(a as [never])),

@@ -254,7 +254,12 @@ export async function applyPortfolioSetup(opts: {
         fn: (tx: Prisma.TransactionClient) => Promise<T>
       ) =>
         prisma.$transaction(async tx => {
-          await lockWorkspaceMember(tx, orgId, parent.id);
+          await lockWorkspaceMember(
+            tx,
+            orgId,
+            parent.id,
+            orgId === parent.id ? PORTFOLIO_PARENT_SLUG : brand.orgSlug
+          );
           return fn(tx);
         });
       try {
@@ -521,7 +526,12 @@ export async function applyPortfolioSetup(opts: {
       const row = await prisma.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${PORTFOLIO_CALENDAR_TAG}:${organizationId}:${slot.slotKey}`}))`;
         try {
-          await lockWorkspaceMember(tx, organizationId, parent.id);
+          await lockWorkspaceMember(
+            tx,
+            organizationId,
+            parent.id,
+            slot.orgSlug
+          );
         } catch (error) {
           if (!(error instanceof LeftWorkspaceError)) throw error;
           manifest.skippedSlots.push({
