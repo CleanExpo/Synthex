@@ -11,7 +11,12 @@ import { timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { PORTFOLIO_CALENDAR_TAG } from './portfolio-plan';
+import {
+  PORTFOLIO_CALENDAR_TAG,
+  buildPortfolioCalendar,
+} from './portfolio-plan';
+import { PORTFOLIO_BRANDS, PORTFOLIO_WEEK_STARTS } from './portfolio-brands';
+import { loadWorkspaceOrgs } from './workspace';
 
 export const DELIVERY_TOKEN_ENV = 'SHORTFORM_DELIVERY_TOKEN';
 
@@ -61,8 +66,18 @@ export type DeliveryResult =
 export async function attachVideoToSlot(
   delivery: VideoDelivery
 ): Promise<DeliveryResult> {
+  // The slot key must be in the plan, and its row must sit under that plan
+  // brand's workspace org: a tagged row in any other org is never touched.
+  const planned = buildPortfolioCalendar(
+    PORTFOLIO_BRANDS,
+    PORTFOLIO_WEEK_STARTS
+  ).find(s => s.slotKey === delivery.slotKey);
+  if (!planned) return { outcome: 'not_found' };
+  const org = (await loadWorkspaceOrgs()).get(planned.orgSlug);
+  if (!org) return { outcome: 'not_found' };
   const matches = await prisma.calendarPost.findMany({
     where: {
+      organizationId: org.id,
       tags: { has: PORTFOLIO_CALENDAR_TAG },
       metadata: { path: ['slotKey'], equals: delivery.slotKey },
     },
@@ -108,6 +123,7 @@ export async function attachVideoToSlot(
   const { count } = await prisma.calendarPost.updateMany({
     where: {
       id: post.id,
+      organizationId: org.id,
       status: 'draft',
       mediaUrls: { isEmpty: true },
       tags: { has: PORTFOLIO_CALENDAR_TAG },

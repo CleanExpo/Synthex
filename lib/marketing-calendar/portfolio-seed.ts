@@ -33,6 +33,7 @@ import {
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 import { resolveLogoUrl } from './resolve-logo';
+import { inWorkspace, isActiveWorkspaceRoot } from './workspace';
 
 export const PORTFOLIO_SOURCE = 'portfolio-marketing-calendar';
 
@@ -166,9 +167,9 @@ export async function applyPortfolioSetup(opts: {
     const parent = await prisma.organization.findUnique({
       where: { slug: PORTFOLIO_PARENT_SLUG },
     });
-    if (!parent || parent.status !== 'active')
+    if (!parent || !isActiveWorkspaceRoot(parent))
       throw new Error(
-        `Parent org ${PORTFOLIO_PARENT_SLUG} not found or not active`
+        `Parent org ${PORTFOLIO_PARENT_SLUG} not found, not active, or not a workspace root`
       );
 
     // Everyone who owns the parent workspace gets the same access to new brands.
@@ -191,14 +192,9 @@ export async function applyPortfolioSetup(opts: {
         where: { slug: brand.orgSlug },
       });
       // Slugs are global: an existing org only counts as this brand if it is
-      // an active child of the Unite Group workspace (or is that workspace).
-      // Anything else is someone else's org, so the brand gets no writes.
-      const ours =
-        !org ||
-        (org.status === 'active' &&
-          (brand.orgSlug === PORTFOLIO_PARENT_SLUG
-            ? org.id === parent.id
-            : org.parentOrgId === parent.id));
+      // in the Unite Group workspace (see workspace.ts). Anything else is
+      // someone else's org, so the brand gets no writes.
+      const ours = !org || inWorkspace(org, parent);
       if (!ours) {
         log(
           `! ${brand.orgSlug}: existing org is not an active child of ${PORTFOLIO_PARENT_SLUG}; brand skipped, nothing written`
@@ -598,12 +594,9 @@ export async function verifyPortfolioSetup(): Promise<{
     const org = bySlug.get(brand.orgSlug);
     check(!!org, `${brand.orgSlug}: organisation exists`);
     if (!org) continue;
-    const parentId = bySlug.get(PORTFOLIO_PARENT_SLUG)?.id;
+    const root = bySlug.get(PORTFOLIO_PARENT_SLUG);
     check(
-      org.status === 'active' &&
-        (brand.orgSlug === PORTFOLIO_PARENT_SLUG
-          ? org.parentOrgId === null
-          : !!parentId && org.parentOrgId === parentId),
+      !!root && inWorkspace(org, root),
       `${brand.orgSlug}: active and in the ${PORTFOLIO_PARENT_SLUG} workspace`
     );
     check(

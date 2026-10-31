@@ -28,6 +28,7 @@ import {
   type PortfolioManifest,
 } from '@/lib/marketing-calendar/portfolio-seed';
 import { PORTFOLIO_CALENDAR_TAG } from '@/lib/marketing-calendar/portfolio-plan';
+import { loadWorkspaceOrgs } from '@/lib/marketing-calendar/workspace';
 import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_WEEK_STARTS,
@@ -72,10 +73,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const auth = await requireOwner(request, DEFAULT_POLICIES.AUTHENTICATED_READ);
   if ('error' in auth) return auth.error;
 
-  const orgs = await prisma.organization.findMany({
-    where: { slug: { in: PORTFOLIO_BRANDS.map(b => b.orgSlug) } },
-    select: { id: true, slug: true },
-  });
+  // Workspace members only: an org that merely shares a brand slug is not read.
+  const orgs = [...(await loadWorkspaceOrgs()).values()];
   const slugOf = new Map(orgs.map(o => [o.id, o.slug]));
   const posts = await prisma.calendarPost.findMany({
     where: {

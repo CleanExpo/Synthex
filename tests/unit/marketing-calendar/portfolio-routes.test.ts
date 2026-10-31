@@ -18,8 +18,10 @@ jest.mock('@/lib/security/api-security-checker', () => ({
 const mockFindFirst = jest.fn();
 const mockUpdate = jest.fn();
 const mockUserFind = jest.fn();
+const mockOrgFind = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    organization: { findMany: (...a: unknown[]) => mockOrgFind(...a) },
     calendarPost: {
       // The delivery lookup reads up to two rows; one mocked row is a unique slot.
       findMany: async (...a: unknown[]) => {
@@ -46,7 +48,10 @@ jest.mock('@/lib/marketing-calendar/portfolio-seed', () => ({
 }));
 
 import { POST as deliver } from '@/app/api/portfolio-calendar/video-delivery/route';
-import { POST as adminPost } from '@/app/api/admin/portfolio-calendar/route';
+import {
+  GET as adminGet,
+  POST as adminPost,
+} from '@/app/api/admin/portfolio-calendar/route';
 
 const TOKEN = 'test-delivery-token-0123456789';
 const validBody = {
@@ -54,6 +59,18 @@ const validBody = {
   videoUrl: 'https://cdn.example.test/v.mp4',
   sdaPassed: true,
   sdaVerdictId: 'sda-1',
+};
+const root = {
+  id: 'org-ug',
+  slug: 'unite-group',
+  status: 'active',
+  parentOrgId: null,
+};
+const businessCard = {
+  id: 'org-bc',
+  slug: 'business-card',
+  status: 'active',
+  parentOrgId: 'org-ug',
 };
 const draftSlot = {
   id: 'post-1',
@@ -75,6 +92,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockCheck.mockResolvedValue({ allowed: true, context: { userId: 'u1' } });
   process.env.SHORTFORM_DELIVERY_TOKEN = TOKEN;
+  mockOrgFind.mockResolvedValue([root, businessCard]);
 });
 
 describe('POST /api/portfolio-calendar/video-delivery', () => {
@@ -133,6 +151,30 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
+  it('never touches a slot under an org outside the Unite Group workspace', async () => {
+    mockOrgFind.mockResolvedValue([
+      root,
+      { ...businessCard, parentOrgId: 'outside-parent' },
+    ]);
+    mockFindFirst.mockResolvedValue(draftSlot);
+    const res = await deliver(deliveryRequest(validBody, TOKEN));
+    expect(res.status).toBe(404);
+    expect(mockFindFirst).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('returns 404 for a slot key that is not in the plan', async () => {
+    mockFindFirst.mockResolvedValue(draftSlot);
+    const res = await deliver(
+      deliveryRequest(
+        { ...validBody, slotKey: '2026-11-02-outsider-video-1' },
+        TOKEN
+      )
+    );
+    expect(res.status).toBe(404);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('returns 404 for an unknown slot', async () => {
     mockFindFirst.mockResolvedValue(null);
     expect((await deliver(deliveryRequest(validBody, TOKEN))).status).toBe(404);
@@ -145,8 +187,12 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(res.status).toBe(200);
     const update = mockUpdate.mock.calls[0][0];
     // The write itself re-checks draft and empty media, so a race cannot slip past.
+    expect(mockFindFirst.mock.calls[0][0].where).toMatchObject({
+      organizationId: 'org-bc',
+    });
     expect(update.where).toMatchObject({
       id: 'post-1',
+      organizationId: 'org-bc',
       status: 'draft',
       mediaUrls: { isEmpty: true },
     });
@@ -181,6 +227,28 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     mockUpdate.mockResolvedValue({ count: 0 }); // scheduled or filled meanwhile
     const res = await deliver(deliveryRequest(validBody, TOKEN));
     expect(res.status).toBe(409);
+  });
+});
+
+describe('GET /api/admin/portfolio-calendar', () => {
+  it('reads posts only from workspace orgs, never one that shares a brand slug', async () => {
+    mockUserFind.mockResolvedValue({ email: 'owner@example.test' });
+    mockIsOwner.mockReturnValue(true);
+    mockOrgFind.mockResolvedValue([
+      root,
+      { ...businessCard, id: 'org-outsider', parentOrgId: 'outside-parent' },
+    ]);
+    mockFindFirst.mockResolvedValue([]);
+    const res = await adminGet(
+      createMockNextRequest({
+        method: 'GET',
+        url: 'http://localhost/api/admin/portfolio-calendar',
+      }) as never
+    );
+    expect(res.status).toBe(200);
+    expect(mockFindFirst.mock.calls[0][0].where.organizationId).toEqual({
+      in: ['org-ug'],
+    });
   });
 });
 

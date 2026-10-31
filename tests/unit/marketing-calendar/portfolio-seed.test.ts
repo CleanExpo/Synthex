@@ -329,6 +329,19 @@ describe('applyPortfolioSetup', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('refuses to run when the unite-group org is not a workspace root', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) =>
+        where.slug === 'unite-group'
+          ? { ...orgRow('unite-group'), parentOrgId: 'outside-root' }
+          : orgRow(where.slug)
+    );
+    await expect(
+      applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' })
+    ).rejects.toThrow(/not a workspace root/);
+    expect(writeCalls()).toEqual([]);
+  });
+
   it('fills a still-empty logo once the approved logo is served, and only an empty one', async () => {
     db.organization.findUnique.mockImplementation(
       async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
