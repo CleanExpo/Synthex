@@ -4,8 +4,10 @@
  * GET  /api/admin/portfolio-calendar — every portfolio brand's draft slots for
  *      the 4 weeks, plus the read-only setup checks.
  * POST /api/admin/portfolio-calendar — { action: 'preview' | 'apply' } runs the
- *      brand setup and draft calendar (preview writes nothing);
- *      { action: 'undo', manifest, confirm: true } reverses an apply.
+ *      brand setup and draft calendar (preview writes nothing). Undo is not
+ *      offered here: it runs only from scripts/seed-portfolio-marketing-calendar.ts
+ *      --undo against the manifest the operator saved, so no request body can
+ *      name rows to delete.
  *
  * OWNER-ONLY via isOwnerEmail(). Writes only draft CalendarPost rows and brand
  * data; never changes calendar mode, live tier or publishing.
@@ -22,7 +24,6 @@ import {
 import { logger } from '@/lib/logger';
 import {
   applyPortfolioSetup,
-  undoPortfolioSetup,
   verifyPortfolioSetup,
   type PortfolioManifest,
 } from '@/lib/marketing-calendar/portfolio-seed';
@@ -62,62 +63,9 @@ async function requireOwner(
   return { userId };
 }
 
-const manifestSchema = z
-  .object({
-    planVersion: z.string(),
-    createdOrganizations: z.array(
-      z.object({ id: z.string(), slug: z.string() })
-    ),
-    updatedOrganizations: z.array(
-      z.object({
-        id: z.string(),
-        slug: z.string(),
-        before: z.record(z.string(), z.unknown()),
-      })
-    ),
-    teamMembers: z.array(
-      z.object({ id: z.string(), orgSlug: z.string(), userId: z.string() })
-    ),
-    businessOwnerships: z.array(
-      z.object({ id: z.string(), orgSlug: z.string(), userId: z.string() })
-    ),
-    brandDna: z.array(
-      z.object({
-        id: z.string(),
-        orgSlug: z.string(),
-        created: z.boolean(),
-        before: z.unknown(),
-      })
-    ),
-    clientProfiles: z.array(
-      z.object({
-        id: z.string(),
-        orgSlug: z.string(),
-        created: z.boolean(),
-        before: z.unknown(),
-      })
-    ),
-    calendarPosts: z.array(
-      z
-        .object({
-          id: z.string(),
-          orgSlug: z.string(),
-          slotKey: z.string(),
-          created: z.boolean(),
-        })
-        .passthrough()
-    ),
-  })
-  .passthrough();
-
 const bodySchema = z.discriminatedUnion('action', [
   z.object({ action: z.literal('preview') }),
   z.object({ action: z.literal('apply') }),
-  z.object({
-    action: z.literal('undo'),
-    manifest: manifestSchema,
-    confirm: z.literal(true),
-  }),
 ]);
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
@@ -203,17 +151,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    if (parsed.data.action === 'undo') {
-      const lines = await undoPortfolioSetup(
-        parsed.data.manifest as unknown as PortfolioManifest,
-        true
-      );
-      logger.info('[portfolio-calendar] undo applied', {
-        userId: auth.userId,
-        steps: lines.length,
-      });
-      return NextResponse.json({ undone: true, log: lines });
-    }
     const write = parsed.data.action === 'apply';
     const manifest = await applyPortfolioSetup({
       write,

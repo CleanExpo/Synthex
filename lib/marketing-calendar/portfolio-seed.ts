@@ -8,10 +8,13 @@
  *   - apply never touches calendarMode, liveModeT or autoPublishPaused. New
  *     orgs get the schema defaults (shadow, tier 0); live mode is Phill's.
  *   - CalendarPost is not read by any publishing cron, and every row is
- *     written as 'draft'. Slots are keyed by metadata.slotKey (idempotent); a
- *     slot moved past draft, edited, or holding media is left alone.
+ *     written as 'draft'. Slots are keyed by metadata.slotKey and only ever
+ *     created: an existing slot, edited or not, is never rewritten.
+ *   - A logo that cannot be confirmed as served never replaces or clears one
+ *     already stored.
  *   - Every write is recorded in the returned manifest (ids plus prior values)
- *     so undo can reverse it.
+ *     so undo can reverse it. Undo is guarded row by row: it only touches rows
+ *     still exactly as apply left them, and never deletes an organisation.
  */
 
 import type { Prisma } from '@prisma/client';
@@ -41,21 +44,37 @@ export interface PortfolioManifest {
   updatedOrganizations: Array<{
     id: string;
     slug: string;
-    before: Record<string, unknown>;
+    before: { logo: string | null; primaryColor: string | null };
+    after: { logo: string | null; primaryColor: string | null };
   }>;
-  teamMembers: Array<{ id: string; orgSlug: string; userId: string }>;
-  businessOwnerships: Array<{ id: string; orgSlug: string; userId: string }>;
+  teamMembers: Array<{
+    id: string;
+    orgSlug: string;
+    organizationId: string;
+    userId: string;
+  }>;
+  businessOwnerships: Array<{
+    id: string;
+    orgSlug: string;
+    organizationId: string;
+    userId: string;
+  }>;
   brandDna: Array<{
     id: string;
     orgSlug: string;
+    organizationId: string;
     created: boolean;
     before: unknown;
+    /** updatedAt as apply left it; undo only acts while it is unchanged. */
+    appliedUpdatedAt: string;
   }>;
   clientProfiles: Array<{
     id: string;
     orgSlug: string;
+    organizationId: string;
     created: boolean;
     before: unknown;
+    appliedUpdatedAt: string;
   }>;
   calendarPosts: Array<{
     id: string;
@@ -63,8 +82,6 @@ export interface PortfolioManifest {
     slotKey: string;
     kind: string;
     scheduledFor: string;
-    created: boolean;
-    before: unknown;
   }>;
   skippedSlots: Array<{ slotKey: string; reason: string }>;
   log: string[];
@@ -79,7 +96,8 @@ function brandDnaData(brand: PortfolioBrandProfile, logoUrl: string | null) {
     businessName: brand.name,
     vertical: brand.vertical,
     industry: brand.industry,
-    logoUrl,
+    // Omitted (not null) when unconfirmed, so an update keeps the stored logo.
+    ...(logoUrl ? { logoUrl } : {}),
     primaryColour: brand.colours.primary,
     secondaryColour: brand.colours.secondary,
     neutralColour: brand.colours.neutral,
@@ -196,7 +214,7 @@ export async function applyPortfolioSetup(opts: {
             `~ update org ${brand.orgSlug}: ${Object.keys(changes).join(', ')}`
           );
           if (write) {
-            await prisma.organization.update({
+            const after = await prisma.organization.update({
               where: { id: org.id },
               data: changes,
             });
@@ -204,6 +222,7 @@ export async function applyPortfolioSetup(opts: {
               id: org.id,
               slug: org.slug,
               before: { logo: org.logo, primaryColor: org.primaryColor },
+              after: { logo: after.logo, primaryColor: after.primaryColor },
             });
           }
         }
@@ -224,6 +243,7 @@ export async function applyPortfolioSetup(opts: {
             manifest.teamMembers.push({
               id: row.id,
               orgSlug: brand.orgSlug,
+              organizationId: org.id,
               userId,
             });
           }
@@ -249,6 +269,7 @@ export async function applyPortfolioSetup(opts: {
             manifest.businessOwnerships.push({
               id: row.id,
               orgSlug: brand.orgSlug,
+              organizationId: org.id,
               userId,
             });
           }
@@ -268,8 +289,10 @@ export async function applyPortfolioSetup(opts: {
         manifest.brandDna.push({
           id: row.id,
           orgSlug: brand.orgSlug,
+          organizationId: org.id,
           created: !dna,
           before: dna,
+          appliedUpdatedAt: row.updatedAt.toISOString(),
         });
       }
 
@@ -288,8 +311,10 @@ export async function applyPortfolioSetup(opts: {
         manifest.clientProfiles.push({
           id: row.id,
           orgSlug: brand.orgSlug,
+          organizationId: org.id,
           created: !profile,
           before: profile,
+          appliedUpdatedAt: row.updatedAt.toISOString(),
         });
       }
     }
@@ -345,58 +370,33 @@ export async function applyPortfolioSetup(opts: {
           metadata: { path: ['slotKey'], equals: slot.slotKey },
         },
       });
-      if (existing && existing.status !== 'draft') {
+      if (existing) {
+        // Create-only: a slot that exists belongs to Phill or the engine now.
         manifest.skippedSlots.push({
           slotKey: slot.slotKey,
-          reason: `status is ${existing.status}`,
+          reason: `exists (status ${existing.status})`,
         });
-        log(`= ${slot.slotKey} left alone (status ${existing.status})`);
         continue;
       }
-      if (existing && existing.mediaUrls.length > 0) {
-        manifest.skippedSlots.push({
-          slotKey: slot.slotKey,
-          reason: 'has media',
-        });
-        log(`= ${slot.slotKey} kept (has media)`);
-        continue;
-      }
-      if (
-        existing &&
-        existing.content === data.content &&
-        existing.scheduledFor.getTime() === slot.scheduledFor.getTime()
-      ) {
-        continue; // already current
-      }
-      log(`${existing ? '~' : '+'} ${slot.slotKey}  ${slot.localTime}`);
+      log(`+ ${slot.slotKey}  ${slot.localTime}`);
       if (!write) continue;
-      const row = existing
-        ? await prisma.calendarPost.update({ where: { id: existing.id }, data })
-        : await prisma.calendarPost.create({
-            data: {
-              ...data,
-              status: 'draft',
-              mediaUrls: [],
-              hashtags: [],
-              mentions: [],
-              organizationId,
-              userId: ownerUserId,
-            },
-          });
+      const row = await prisma.calendarPost.create({
+        data: {
+          ...data,
+          status: 'draft',
+          mediaUrls: [],
+          hashtags: [],
+          mentions: [],
+          organizationId,
+          userId: ownerUserId,
+        },
+      });
       manifest.calendarPosts.push({
         id: row.id,
         orgSlug: slot.orgSlug,
         slotKey: slot.slotKey,
         kind: slot.kind,
         scheduledFor: row.scheduledFor.toISOString(),
-        created: !existing,
-        before: existing
-          ? {
-              title: existing.title,
-              content: existing.content,
-              scheduledFor: existing.scheduledFor,
-            }
-          : null,
       });
     }
   } catch (err) {
@@ -417,72 +417,156 @@ function withoutKeys(value: unknown, keys: string[]): Record<string, unknown> {
   return out;
 }
 
-/** Reverse an apply manifest. Dry run unless write is true. */
+/**
+ * Reverse an apply manifest. Dry run unless write is true.
+ *
+ * Every write carries its own guard in the WHERE clause, so a row that changed
+ * after apply (or between this read and write) is left alone, never lost:
+ *   - posts: still draft, no media, portfolio tag and source;
+ *   - brand DNA / client profile: same organisation, untouched since apply;
+ *   - organisations: logo and colour still the values apply set.
+ * Organisations apply created are never deleted: deleting one cascades into
+ * anything added to it since. They and their owner access are kept and listed.
+ */
 export async function undoPortfolioSetup(
   manifest: PortfolioManifest,
   write: boolean
 ): Promise<string[]> {
   const lines: string[] = [];
-  const createdPosts = manifest.calendarPosts
-    .filter(p => p.created)
-    .map(p => p.id);
-  const stillDraft = await prisma.calendarPost.findMany({
-    where: { id: { in: createdPosts }, status: 'draft' },
-    select: { id: true },
-  });
+  const verb = write ? '' : 'would ';
+
+  const postIds = manifest.calendarPosts.map(p => p.id);
+  const postWhere: Prisma.CalendarPostWhereInput = {
+    id: { in: postIds },
+    status: 'draft',
+    mediaUrls: { isEmpty: true },
+    tags: { has: PORTFOLIO_CALENDAR_TAG },
+    metadata: { path: ['source'], equals: PORTFOLIO_SOURCE },
+  };
+  const deleted = write
+    ? (await prisma.calendarPost.deleteMany({ where: postWhere })).count
+    : await prisma.calendarPost.count({ where: postWhere });
   lines.push(
-    `- delete ${stillDraft.length}/${createdPosts.length} created calendar posts still in draft`
+    `- ${verb}delete ${deleted}/${postIds.length} portfolio posts (drafts with no video only; the rest are kept)`
   );
-  if (write)
-    await prisma.calendarPost.deleteMany({
-      where: { id: { in: stillDraft.map(p => p.id) } },
-    });
 
   const fixed = ['id', 'organizationId', 'createdAt', 'updatedAt'];
   for (const row of manifest.clientProfiles) {
+    const where = {
+      id: row.id,
+      organizationId: row.organizationId,
+      updatedAt: new Date(row.appliedUpdatedAt),
+    };
+    let n = await prisma.clientProfile.count({ where });
+    if (write && n) {
+      n = row.created
+        ? (await prisma.clientProfile.deleteMany({ where })).count
+        : (
+            await prisma.clientProfile.updateMany({
+              where,
+              data: withoutKeys(
+                row.before,
+                fixed
+              ) as Prisma.ClientProfileUpdateManyMutationInput,
+            })
+          ).count;
+    }
     lines.push(
-      `${row.created ? '- delete' : '~ restore'} client profile ${row.orgSlug}`
+      n
+        ? `${row.created ? '-' : '~'} ${verb}${row.created ? 'delete' : 'restore'} client profile ${row.orgSlug}`
+        : `= client profile ${row.orgSlug} changed since apply; left alone`
     );
-    if (!write) continue;
-    if (row.created)
-      await prisma.clientProfile.delete({ where: { id: row.id } });
-    else if (row.before)
-      await prisma.clientProfile.update({
-        where: { id: row.id },
-        data: withoutKeys(row.before, fixed) as Prisma.ClientProfileUpdateInput,
-      });
   }
   for (const row of manifest.brandDna) {
+    const where = {
+      id: row.id,
+      organizationId: row.organizationId,
+      updatedAt: new Date(row.appliedUpdatedAt),
+    };
+    let n = await prisma.brandDNA.count({ where });
+    if (write && n) {
+      n = row.created
+        ? (await prisma.brandDNA.deleteMany({ where })).count
+        : (
+            await prisma.brandDNA.updateMany({
+              where,
+              data: withoutKeys(
+                row.before,
+                fixed
+              ) as Prisma.BrandDNAUpdateManyMutationInput,
+            })
+          ).count;
+    }
     lines.push(
-      `${row.created ? '- delete' : '~ restore'} brand DNA ${row.orgSlug}`
+      n
+        ? `${row.created ? '-' : '~'} ${verb}${row.created ? 'delete' : 'restore'} brand DNA ${row.orgSlug}`
+        : `= brand DNA ${row.orgSlug} changed since apply; left alone`
     );
-    if (!write) continue;
-    if (row.created) await prisma.brandDNA.delete({ where: { id: row.id } });
-    else if (row.before)
-      await prisma.brandDNA.update({
-        where: { id: row.id },
-        data: withoutKeys(row.before, fixed) as Prisma.BrandDNAUpdateInput,
-      });
   }
   for (const row of manifest.updatedOrganizations) {
-    lines.push(`~ restore org ${row.slug}`);
-    if (write)
-      await prisma.organization.update({
-        where: { id: row.id },
-        data: row.before,
-      });
+    const where = {
+      id: row.id,
+      slug: row.slug,
+      logo: row.after.logo,
+      primaryColor: row.after.primaryColor,
+    };
+    const n = write
+      ? (
+          await prisma.organization.updateMany({
+            where,
+            data: {
+              logo: row.before.logo,
+              primaryColor: row.before.primaryColor,
+            },
+          })
+        ).count
+      : await prisma.organization.count({ where });
+    lines.push(
+      n
+        ? `~ ${verb}restore org ${row.slug} logo and colour`
+        : `= org ${row.slug} changed since apply; left alone`
+    );
   }
+
+  // Access rows on organisations that existed before apply are removed;
+  // on organisations apply created they stay with the kept organisation.
+  const keptOrgIds = new Set(manifest.createdOrganizations.map(o => o.id));
   for (const row of manifest.businessOwnerships) {
-    lines.push(`- delete business ownership on ${row.orgSlug}`);
-    if (write) await prisma.businessOwnership.delete({ where: { id: row.id } });
+    if (keptOrgIds.has(row.organizationId)) continue;
+    const where = {
+      id: row.id,
+      organizationId: row.organizationId,
+      ownerId: row.userId,
+    };
+    const n = write
+      ? (await prisma.businessOwnership.deleteMany({ where })).count
+      : await prisma.businessOwnership.count({ where });
+    lines.push(
+      n
+        ? `- ${verb}delete business ownership on ${row.orgSlug}`
+        : `= business ownership on ${row.orgSlug} already gone`
+    );
   }
   for (const row of manifest.teamMembers) {
-    lines.push(`- delete team member on ${row.orgSlug}`);
-    if (write) await prisma.teamMember.delete({ where: { id: row.id } });
+    if (keptOrgIds.has(row.organizationId)) continue;
+    const where = {
+      id: row.id,
+      organizationId: row.organizationId,
+      userId: row.userId,
+    };
+    const n = write
+      ? (await prisma.teamMember.deleteMany({ where })).count
+      : await prisma.teamMember.count({ where });
+    lines.push(
+      n
+        ? `- ${verb}delete team owner on ${row.orgSlug}`
+        : `= team owner on ${row.orgSlug} already gone`
+    );
   }
   for (const row of manifest.createdOrganizations) {
-    lines.push(`- delete org ${row.slug}`);
-    if (write) await prisma.organization.delete({ where: { id: row.id } });
+    lines.push(
+      `= org ${row.slug} kept with its owner access (undo never deletes an organisation; remove it in Businesses if unwanted)`
+    );
   }
   return lines;
 }
@@ -525,10 +609,11 @@ export async function verifyPortfolioSetup(): Promise<{
       org.brandDna?.primaryColour === brand.colours.primary,
       `${brand.orgSlug}: brand DNA with brand colour`
     );
+    // A logo that cannot be confirmed as served fails; it never passes as empty.
     const served = await resolveLogoUrl(brand.logoUrl);
     check(
-      (org.brandDna?.logoUrl ?? null) === served,
-      `${brand.orgSlug}: logo ${served ? 'is the approved logo' : 'empty until the approved logo is served'}`
+      served !== null && org.brandDna?.logoUrl === served,
+      `${brand.orgSlug}: logo ${served ? 'is the approved logo' : `could not be confirmed as served (${brand.logoUrl})`}`
     );
     const banned =
       (org.clientProfile?.vocabularyBank as { banned?: string[] } | null)

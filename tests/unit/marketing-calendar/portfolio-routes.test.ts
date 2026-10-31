@@ -22,7 +22,7 @@ jest.mock('@/lib/prisma', () => ({
   prisma: {
     calendarPost: {
       findFirst: (...a: unknown[]) => mockFindFirst(...a),
-      update: (...a: unknown[]) => mockUpdate(...a),
+      updateMany: (...a: unknown[]) => mockUpdate(...a),
     },
     user: { findUnique: (...a: unknown[]) => mockUserFind(...a) },
   },
@@ -34,9 +34,10 @@ jest.mock('@/lib/auth/jwt-utils', () => ({
 }));
 
 const mockApply = jest.fn();
+const mockUndo = jest.fn();
 jest.mock('@/lib/marketing-calendar/portfolio-seed', () => ({
   applyPortfolioSetup: (...a: unknown[]) => mockApply(...a),
-  undoPortfolioSetup: jest.fn(),
+  undoPortfolioSetup: (...a: unknown[]) => mockUndo(...a),
   verifyPortfolioSetup: jest.fn(),
 }));
 
@@ -86,6 +87,13 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(
       (await deliver(deliveryRequest(validBody, `${TOKEN}x`))).status
     ).toBe(401);
+    // Same length as the real token, so only the constant-time compare can refuse it.
+    const sameLength = `${TOKEN.slice(0, -1)}${TOKEN.endsWith('9') ? '8' : '9'}`;
+    expect(sameLength).toHaveLength(TOKEN.length);
+    expect((await deliver(deliveryRequest(validBody, sameLength))).status).toBe(
+      401
+    );
+    expect(mockFindFirst).not.toHaveBeenCalled();
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
@@ -118,10 +126,16 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
 
   it('attaches the video and keeps the slot a draft pending approval', async () => {
     mockFindFirst.mockResolvedValue(draftSlot);
-    mockUpdate.mockResolvedValue({});
+    mockUpdate.mockResolvedValue({ count: 1 });
     const res = await deliver(deliveryRequest(validBody, TOKEN));
     expect(res.status).toBe(200);
     const update = mockUpdate.mock.calls[0][0];
+    // The write itself re-checks draft and empty media, so a race cannot slip past.
+    expect(update.where).toMatchObject({
+      id: 'post-1',
+      status: 'draft',
+      mediaUrls: { isEmpty: true },
+    });
     expect(update.data.mediaUrls).toEqual([validBody.videoUrl]);
     expect(update.data).not.toHaveProperty('status');
     expect(update.data).not.toHaveProperty('scheduledFor');
@@ -146,6 +160,13 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     });
     expect((await deliver(deliveryRequest(validBody, TOKEN))).status).toBe(409);
     expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('answers 409 when the slot changes between the read and the write', async () => {
+    mockFindFirst.mockResolvedValue(draftSlot);
+    mockUpdate.mockResolvedValue({ count: 0 }); // scheduled or filled meanwhile
+    const res = await deliver(deliveryRequest(validBody, TOKEN));
+    expect(res.status).toBe(409);
   });
 });
 
@@ -174,16 +195,33 @@ describe('POST /api/admin/portfolio-calendar', () => {
     expect(mockApply).not.toHaveBeenCalled();
   });
 
-  it('rejects an unknown action and an undo without confirm with 400', async () => {
+  it('rejects an unknown action, and refuses undo over the API even when confirmed', async () => {
     mockUserFind.mockResolvedValue({ email: 'owner@example.test' });
     mockIsOwner.mockReturnValue(true);
     expect((await adminPost(adminRequest({ action: 'publish' }))).status).toBe(
       400
     );
+    const manifest = {
+      planVersion: 'x',
+      createdOrganizations: [],
+      updatedOrganizations: [],
+      teamMembers: [],
+      businessOwnerships: [],
+      brandDna: [],
+      clientProfiles: [
+        { id: 'victim-profile', orgSlug: 'carsi', created: true, before: null },
+      ],
+      calendarPosts: [],
+    };
     expect(
-      (await adminPost(adminRequest({ action: 'undo', manifest: {} }))).status
+      (
+        await adminPost(
+          adminRequest({ action: 'undo', manifest, confirm: true })
+        )
+      ).status
     ).toBe(400);
     expect(mockApply).not.toHaveBeenCalled();
+    expect(mockUndo).not.toHaveBeenCalled();
   });
 
   it('runs preview as a dry run and apply as a write for an owner', async () => {

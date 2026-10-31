@@ -92,8 +92,17 @@ export async function attachVideoToSlot(
     };
   }
 
-  await prisma.calendarPost.update({
-    where: { id: post.id },
+  // The checks above are repeated in the WHERE so they hold at write time: a
+  // slot scheduled, or filled by another delivery, since the read matches
+  // nothing and is reported as a conflict.
+  const { count } = await prisma.calendarPost.updateMany({
+    where: {
+      id: post.id,
+      status: 'draft',
+      mediaUrls: { isEmpty: true },
+      tags: { has: PORTFOLIO_CALENDAR_TAG },
+      metadata: { path: ['slotKind'], equals: 'shortform_video' },
+    },
     data: {
       mediaUrls: [delivery.videoUrl],
       metadata: {
@@ -113,5 +122,12 @@ export async function attachVideoToSlot(
       } as Prisma.InputJsonValue,
     },
   });
+  if (count === 0) {
+    return {
+      outcome: 'conflict',
+      reason:
+        'slot changed while attaching (scheduled or given another video); re-check it',
+    };
+  }
   return { outcome: 'attached', postId: post.id };
 }

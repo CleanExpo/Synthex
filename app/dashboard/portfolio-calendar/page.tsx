@@ -186,7 +186,7 @@ export default function PortfolioCalendarPage() {
             {busy === 'apply'
               ? 'Setting up...'
               : data.slots.length
-                ? 'Refresh drafts'
+                ? 'Add missing drafts'
                 : 'Set up calendar'}
           </Button>
         </div>
