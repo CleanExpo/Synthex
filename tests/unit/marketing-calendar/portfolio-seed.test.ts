@@ -627,6 +627,8 @@ describe('verifyPortfolioSetup', () => {
       status: 'draft',
       publishedAt: null,
       organizationId: `org-${orgOf(s.orgSlug, i)}`,
+      scheduledFor: new Date(s.scheduledFor),
+      platforms: [...s.platforms],
       title: `Short-form video: ${s.orgSlug}, ${s.theme}`,
       content: slotBrief(
         s,
@@ -693,8 +695,76 @@ describe('verifyPortfolioSetup', () => {
       )
     ).toEqual([]);
     // Its slots no longer count either: they sit under a non-member org.
-    expect(failed.some(l => l.includes('2026-11-02-carsi-video-1'))).toBe(true);
+    expect(failed.some(l => l.includes('missing, misplaced or moved'))).toBe(
+      true
+    );
   });
+
+  it('never puts a slot key in the (public) result', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug).slice(1));
+    const result = await verifyPortfolioSetup();
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(result)).not.toMatch(
+      /\d{4}-\d{2}-\d{2}-[a-z-]+-(video|post)/
+    );
+  });
+
+  it.each([
+    [
+      'moved to another date',
+      { scheduledFor: new Date('2027-01-01T00:00:00Z') },
+    ],
+    ['moved to another channel', { platforms: ['twitter'] }],
+  ])('fails a planned draft %s', async (_, edit) => {
+    db.calendarPost.findMany.mockResolvedValue(
+      rows(slug => slug).map((r, i) => (i === 0 ? { ...r, ...edit } : r))
+    );
+    expect(await failedLabels()).toEqual([
+      `all ${plan.length} planned slots exist once, each under its own brand at its planned time and channels (1 missing, misplaced or moved)`,
+    ]);
+  });
+
+  it.each([
+    [
+      'client profile intake source',
+      (o: (typeof orgs)[number]) => ({
+        ...o,
+        clientProfile: { ...o.clientProfile, intakeSource: 'CARSI' },
+      }),
+    ],
+    [
+      'brand DNA source URL',
+      (o: (typeof orgs)[number]) => ({
+        ...o,
+        brandDna: { ...o.brandDna, sourceUrl: 'https://carsi.example' },
+      }),
+    ],
+    [
+      'organisation AI context',
+      (o: (typeof orgs)[number]) => ({
+        ...o,
+        aiGeneratedData: { brandVoice: 'Feature CARSI courses' },
+      }),
+    ],
+    [
+      'organisation website',
+      (o: (typeof orgs)[number]) => ({
+        ...o,
+        website: 'https://restore-assist.example',
+      }),
+    ],
+  ])(
+    'fails a kept Unite-Group row whose %s names an owned business',
+    async (_, edit) => {
+      db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+      db.organization.findMany.mockResolvedValue(
+        orgs.map(o => (o.slug === 'unite-group' ? edit(o) : o))
+      );
+      expect(await failedLabels()).toEqual([
+        'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+      ]);
+    }
+  );
 
   const withUgProfile = (over: Record<string, unknown>) =>
     orgs.map(o =>

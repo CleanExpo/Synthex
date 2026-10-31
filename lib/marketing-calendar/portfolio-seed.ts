@@ -95,6 +95,19 @@ function json(value: unknown): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
+function orgData(brand: PortfolioBrandProfile, logoUrl: string | null) {
+  return {
+    name: brand.name,
+    slug: brand.orgSlug,
+    description: brand.description,
+    website: brand.website,
+    industry: brand.industry,
+    plan: 'enterprise',
+    logo: logoUrl,
+    primaryColor: brand.colours.primary,
+  };
+}
+
 function brandDnaData(brand: PortfolioBrandProfile, logoUrl: string | null) {
   return {
     businessName: brand.name,
@@ -225,17 +238,7 @@ export async function applyPortfolioSetup(opts: {
         );
         if (write) {
           org = await prisma.organization.create({
-            data: {
-              name: brand.name,
-              slug: brand.orgSlug,
-              description: brand.description,
-              website: brand.website,
-              industry: brand.industry,
-              plan: 'enterprise',
-              parentOrgId: parent.id,
-              logo: logoUrl,
-              primaryColor: brand.colours.primary,
-            },
+            data: { ...orgData(brand, logoUrl), parentOrgId: parent.id },
           });
           manifest.createdOrganizations.push({ id: org.id, slug: org.slug });
         }
@@ -566,45 +569,49 @@ export async function undoPortfolioSetup(
   return lines;
 }
 
-// Columns no prompt is built from: keys, timestamps, colours and URLs.
-const NOT_PROMPTED = new Set([
-  'id',
-  'organizationId',
-  'createdAt',
-  'updatedAt',
-  'extractedAt',
-  'lastRefreshedAt',
-  'intakeCompletedAt',
-  'intakeSource',
-  'intakeStatus',
-  'logoUrl',
-  'sourceUrl',
-  'primaryColour',
-  'secondaryColour',
-  'neutralColour',
-]);
+// Row identity: ids only, never text a prompt reads.
+const ROW_KEYS = new Set(['id', 'organizationId', 'parentOrgId']);
+
+/** JSON with object keys sorted, so a jsonb round trip compares equal. */
+function canonical(value: unknown) {
+  return JSON.stringify(value, (_k, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(
+          Object.entries(v as Record<string, unknown>).sort(([a], [b]) =>
+            a < b ? -1 : a > b ? 1 : 0
+          )
+        )
+      : v
+  );
+}
 
 /**
- * Every prompt-facing field of a stored row as one string. The banned list is
- * dropped (it names what is banned), and so are the rule and anti-pattern
- * lists while they are exactly the approved ones, which name banned words
- * only to forbid them (tested in portfolio-plan.test.ts). An edited list is
- * kept and scanned like any other field.
+ * Every field of a stored row except its ids, as one string: whatever column
+ * a prompt reads is covered without naming it here. A field still exactly as
+ * setup writes it (`seeded`) is skipped, since setup's own values are checked
+ * in portfolio-plan.test.ts; so is the banned list, and the rule and
+ * anti-pattern lists while they are exactly the approved ones (they name
+ * banned words only to forbid them). Anything edited is scanned.
  */
 function promptedText(
   row: Record<string, unknown> | null | undefined,
-  brand: PortfolioBrandProfile
+  brand: PortfolioBrandProfile,
+  seeded: Record<string, unknown> = {}
 ) {
   if (!row) return '';
   const approved: Record<string, string> = {
-    antiPatterns: JSON.stringify(brand.antiPatterns),
-    brandRules: JSON.stringify(brand.brandRules),
+    antiPatterns: canonical(brand.antiPatterns),
+    brandRules: canonical(brand.brandRules),
   };
   const kept = Object.fromEntries(
-    Object.entries(row).filter(([k]) => !NOT_PROMPTED.has(k))
+    Object.entries(row).filter(
+      ([k, v]) =>
+        !ROW_KEYS.has(k) &&
+        !(k in seeded && canonical(v) === canonical(seeded[k]))
+    )
   );
   return JSON.stringify(kept, (k, v) =>
-    k === 'banned' || (k in approved && JSON.stringify(v) === approved[k])
+    k === 'banned' || (k in approved && canonical(v) === approved[k])
       ? undefined
       : v
   );
@@ -625,20 +632,8 @@ export async function verifyPortfolioSetup(): Promise<{
 
   const orgs = await prisma.organization.findMany({
     where: { slug: { in: PORTFOLIO_BRANDS.map(b => b.orgSlug) } },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      industry: true,
-      status: true,
-      parentOrgId: true,
-      calendarMode: true,
-      liveModeT: true,
-      // Whole rows: a kept row is checked on every field a prompt can read.
-      brandDna: true,
-      clientProfile: true,
-    },
+    // Whole rows: a kept row is checked on every field a prompt can read.
+    include: { brandDna: true, clientProfile: true },
   });
   const bySlug = new Map(orgs.map(o => [o.slug, o]));
 
@@ -682,17 +677,11 @@ export async function verifyPortfolioSetup(): Promise<{
       !!profile && brand.forbiddenWords.every(w => held.has(w.toLowerCase())),
       `${brand.orgSlug}: client profile holds all ${brand.forbiddenWords.length} forbidden words`
     );
+    const { brandDna, clientProfile, ...orgRow } = org;
     const prompted = [
-      promptedText(
-        {
-          name: org.name,
-          description: org.description,
-          industry: org.industry,
-        },
-        brand
-      ),
-      promptedText(org.brandDna, brand),
-      promptedText(profile, brand),
+      promptedText(orgRow, brand, orgData(brand, served)),
+      promptedText(brandDna, brand, brandDnaData(brand, served)),
+      promptedText(clientProfile, brand, clientProfileData(brand)),
     ].join(' ');
     check(
       !!profile &&
@@ -718,6 +707,8 @@ export async function verifyPortfolioSetup(): Promise<{
       content: true,
       metadata: true,
       publishedAt: true,
+      scheduledFor: true,
+      platforms: true,
     },
   });
   const slugOf = new Map(members.map(o => [o.id, o.slug]));
@@ -752,24 +743,29 @@ export async function verifyPortfolioSetup(): Promise<{
     PORTFOLIO_BRANDS,
     PORTFOLIO_WEEK_STARTS
   );
-  // slotKey -> every brand it was found under, so a slot filed under the
-  // wrong brand (or duplicated) fails rather than counting as present.
-  const placed = new Map<string, string[]>();
+  // slotKey -> every row found under it, so a slot filed under the wrong
+  // brand, duplicated, or moved to another time or channel fails rather than
+  // counting as present.
+  const placed = new Map<string, typeof posts>();
   for (const p of posts) {
     const key = (p.metadata as { slotKey?: string } | null)?.slotKey;
     if (!key) continue;
-    placed.set(key, [
-      ...(placed.get(key) ?? []),
-      slugOf.get(p.organizationId) ?? '?',
-    ]);
+    placed.set(key, [...(placed.get(key) ?? []), p]);
   }
   const misplaced = expected.filter(s => {
     const at = placed.get(s.slotKey);
-    return !at || at.length !== 1 || at[0] !== s.orgSlug;
+    if (!at || at.length !== 1) return true;
+    const [p] = at;
+    return (
+      slugOf.get(p.organizationId) !== s.orgSlug ||
+      p.scheduledFor?.getTime() !== s.scheduledFor.getTime() ||
+      canonical(p.platforms) !== canonical(s.platforms)
+    );
   });
+  // Counts only: this result is public, so no slot key or other id goes in it.
   check(
     misplaced.length === 0,
-    `all ${expected.length} planned slots exist once, each under its own brand${misplaced.length ? ` (${misplaced.length} missing or misplaced, e.g. ${misplaced[0].slotKey})` : ''}`
+    `all ${expected.length} planned slots exist once, each under its own brand at its planned time and channels${misplaced.length ? ` (${misplaced.length} missing, misplaced or moved)` : ''}`
   );
   check(
     posts.length === expected.length,

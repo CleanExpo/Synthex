@@ -119,6 +119,21 @@ describe('portfolio marketing calendar plan', () => {
   });
 
   it.each([
+    'Book a Restore-Assist demo',
+    'Visit the Trade-Hall',
+    'Disaster\u2013Recovery crews',
+    'Inside Clean Expo',
+    'What Unite Group built this week',
+    'Built this week: a new booking flow',
+    'Two restorations a week',
+    'Restore  Assist',
+    'Tradehall booths',
+  ])('catches a spelling or punctuation variant: %s', copy => {
+    const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
+    expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);
+  });
+
+  it.each([
     'How the Unite Group businesses fit together',
     'Tour Trade Hall and show its supplier booths',
     'Inside Synthex, the agency behind our businesses',

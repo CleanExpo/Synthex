@@ -127,23 +127,50 @@ export const UNITE_GROUP_BANNED = [
   'our other brands',
   'sister brand',
   'sister business',
+  'Unite Group built',
+  'built this week',
 ];
 
+const wordsOf = (s: string) =>
+  s
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+const sameWord = (got: string | undefined, want: string) =>
+  got === want || got === `${want}s` || got === `${want}es`;
+
 /**
- * The forbidden words found in `text`, matched case-insensitively as whole
- * words or phrases ('CEC' is not found inside 'precede'; it is found in
- * 'CEC-approved' or 'a CEC course').
+ * The forbidden words found in `text`, matched as whole words after
+ * lowercasing and treating any run of spaces or punctuation as one break, so
+ * 'Restore-Assist', 'Disaster–Recovery', 'Clean Expo' and 'TradeHall' all
+ * match, a plural matches, and 'CEC' is still not found inside 'Cecilia'.
  */
 export function forbiddenHits(
   text: string,
   words: readonly string[]
 ): string[] {
-  return words.filter(w =>
-    new RegExp(
-      `(^|[^a-z0-9])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z0-9])`,
-      'i'
-    ).test(text)
-  );
+  const got = wordsOf(text);
+  return words.filter(w => {
+    const want = wordsOf(w);
+    if (!want.length) return false;
+    const joined = want.join('');
+    return got.some((_, i) => {
+      // As written, with any spacing or punctuation between the words.
+      if (
+        want.every((x, j) =>
+          j === want.length - 1 ? sameWord(got[i + j], x) : got[i + j] === x
+        )
+      )
+        return true;
+      // Run together or split differently ('Trade Hall' vs 'TradeHall').
+      let run = '';
+      for (let j = i; j < got.length && run.length < joined.length + 2; j++) {
+        run += got[j];
+        if (sameWord(run, joined)) return true;
+      }
+      return false;
+    });
+  });
 }
 
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
