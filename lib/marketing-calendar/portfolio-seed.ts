@@ -30,11 +30,14 @@ import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_PARENT_SLUG,
   PORTFOLIO_WEEK_STARTS,
-  forbiddenHits,
+  brandHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 import { resolveLogoUrl } from './resolve-logo';
 import { inWorkspace, isActiveWorkspaceRoot } from './workspace';
+import { promptHits } from './prompt-guard';
+import { renderPromptLegs } from '@/lib/ai/prompt-layer-builder';
+import { foundationPromptText } from '@/lib/agency/foundation-context';
 
 export const PORTFOLIO_SOURCE = 'portfolio-marketing-calendar';
 
@@ -575,21 +578,6 @@ export async function undoPortfolioSetup(
   return lines;
 }
 
-/**
- * The Organization columns a prompt builder reads (lib/ai/content-generator.ts,
- * lib/ai/prompt-layer-builder.ts, studio context tools), plus the description
- * and website shown beside them. The org row also carries billing and account
- * data no prompt reads, so it is scanned on these columns only; a guard test
- * fails if a prompt builder starts reading an org column not listed here.
- */
-export const ORG_PROMPT_FIELDS = [
-  'name',
-  'description',
-  'industry',
-  'website',
-  'aiGeneratedData',
-] as const;
-
 // Row identity: ids only, never text a prompt reads.
 const ROW_KEYS = new Set(['id', 'organizationId', 'parentOrgId']);
 
@@ -705,20 +693,38 @@ export async function verifyPortfolioSetup(): Promise<{
       `${brand.orgSlug}: client profile holds all ${brand.forbiddenWords.length} forbidden words`
     );
     const { brandDna, clientProfile, brandOperatingSystem } = org;
-    const orgRow = Object.fromEntries(ORG_PROMPT_FIELDS.map(k => [k, org[k]]));
-    const prompted = [
-      promptedText(orgRow, brand, orgData(brand, served)),
+    // The prompt itself, rendered by the same composers the content
+    // generator and workflow foundation use, so whatever field feeds a
+    // prompt is checked as the model would see it.
+    const rendered = [
+      ...renderPromptLegs({
+        bos: brandOperatingSystem,
+        profile: clientProfile,
+        dna: brandDna,
+        org,
+      }),
+      ...foundationPromptText(org.settings),
+    ].join('\n');
+    // Plus the stored rows themselves, whole, for readers outside those
+    // composers (brand profile, onboarding summary, website schema). The org
+    // row holds billing and account data no prompt reads, so only its
+    // description and AI-generated profile are added.
+    const stored = [
+      promptedText(
+        { description: org.description, aiGeneratedData: org.aiGeneratedData },
+        brand,
+        { description: brand.description }
+      ),
       promptedText(brandDna, brand, brandDnaData(brand, served)),
       promptedText(clientProfile, brand, clientProfileData(brand)),
-      // Setup never writes a Brand OS; any row is the org's own and is
-      // placed in the system prompt (prompt-layer-builder.ts), so all of it is scanned.
       promptedText(brandOperatingSystem, brand),
     ].join(' ');
     check(
       !!profile &&
         !!org.brandDna &&
-        forbiddenHits(prompted, brand.forbiddenWords).length === 0,
-      `${brand.orgSlug}: organisation, brand DNA, Brand OS and client profile carry no forbidden words`
+        promptHits(rendered, brand).length === 0 &&
+        brandHits(stored, brand).length === 0,
+      `${brand.orgSlug}: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words`
     );
   }
 
@@ -758,20 +764,28 @@ export async function verifyPortfolioSetup(): Promise<{
     const text = posts
       .filter(p => slugOf.get(p.organizationId) === brand.orgSlug)
       .map(p => {
-        const meta = (p.metadata ?? {}) as Record<string, unknown>;
+        const { videoDelivery, ...meta } = (p.metadata ?? {}) as Record<
+          string,
+          unknown
+        >;
+        // A delivery's link and ids are machine-written; only its caption
+        // is copy, so only the caption is scanned.
+        const caption = (videoDelivery as { captionDraft?: unknown } | null)
+          ?.captionDraft;
         const slot = planBySlot.get(String(meta.slotKey ?? ''));
         return [
           p.title ?? '',
           p.content ?? '',
           ...(p.hashtags ?? []),
           ...(p.mentions ?? []),
+          typeof caption === 'string' ? caption : '',
           promptedText(meta, brand, slot ? slotMetadata(slot, brand) : {}),
         ].join(' ');
       })
       .join(' ');
     if (!text.trim()) continue;
     check(
-      forbiddenHits(text, brand.forbiddenWords).length === 0,
+      brandHits(text, brand).length === 0,
       `${brand.orgSlug}: calendar drafts carry no forbidden words`
     );
   }

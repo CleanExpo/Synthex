@@ -140,6 +140,9 @@ export const UNITE_GROUP_BANNED = [
   'sister business',
   'sister company',
   'our brands',
+  'our brand',
+  'our business',
+  'group business',
   'our own businesses',
   'Unite Group built',
   'built this week',
@@ -188,6 +191,28 @@ export function forbiddenHits(
       return false;
     });
   });
+}
+
+/**
+ * A brand's forbidden words in `text`, leaving out the brand's own name and
+ * its approved anti-pattern lines: 'Unite Group Business Cards' is not a
+ * mention of the group's businesses, and an "Avoid: ..." line names banned
+ * words only to forbid them. Any other occurrence still counts.
+ */
+export function brandHits(
+  text: string,
+  brand: Pick<PortfolioBrandProfile, 'name' | 'forbiddenWords' | 'antiPatterns'>
+): string[] {
+  let rest = text;
+  for (const own of [brand.name, ...brand.antiPatterns]) {
+    const pattern = own
+      .trim()
+      .split(/\s+/)
+      .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('\\s+');
+    if (pattern) rest = rest.replace(new RegExp(pattern, 'gi'), '\n');
+  }
+  return forbiddenHits(rest, brand.forbiddenWords);
 }
 
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [

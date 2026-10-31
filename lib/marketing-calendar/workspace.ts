@@ -41,10 +41,10 @@ export function inWorkspace(
 }
 
 /** Portfolio brand orgs that are workspace members, by slug. Others are absent. */
-export async function loadWorkspaceOrgs(): Promise<
-  Map<string, WorkspaceOrgFields>
-> {
-  const rows = await prisma.organization.findMany({
+export async function loadWorkspaceOrgs(
+  db: Pick<typeof prisma, 'organization'> = prisma
+): Promise<Map<string, WorkspaceOrgFields>> {
+  const rows = await db.organization.findMany({
     where: { slug: { in: PORTFOLIO_BRANDS.map(b => b.orgSlug) } },
     select: { id: true, slug: true, status: true, parentOrgId: true },
   });

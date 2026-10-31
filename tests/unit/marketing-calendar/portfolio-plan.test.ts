@@ -135,6 +135,9 @@ describe('portfolio marketing calendar plan', () => {
     'A carpet cleaning business shares one link',
     'Our sister company',
     'A new venture',
+    'Our business built this app',
+    'Our brand made this video',
+    'One group business launched',
   ])('catches a spelling or punctuation variant: %s', copy => {
     const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
     expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);

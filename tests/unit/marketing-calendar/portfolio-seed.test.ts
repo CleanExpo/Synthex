@@ -70,7 +70,6 @@ jest.mock('@/lib/marketing-calendar/resolve-logo', () => ({
 }));
 
 import {
-  ORG_PROMPT_FIELDS,
   applyPortfolioSetup,
   undoPortfolioSetup,
   verifyPortfolioSetup,
@@ -752,7 +751,7 @@ describe('verifyPortfolioSetup', () => {
       )
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 
@@ -780,16 +779,20 @@ describe('verifyPortfolioSetup', () => {
       })
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 
-  it('ignores org billing data no prompt reads', async () => {
+  it('ignores org billing data and links no prompt reads', async () => {
     db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
     db.organization.findMany.mockResolvedValue(
       orgs.map(o =>
         o.slug === 'unite-group'
-          ? { ...o, billingEmail: 'accounts@carsi.com.au' }
+          ? {
+              ...o,
+              billingEmail: 'accounts@carsi.com.au',
+              website: 'https://restore-assist.example',
+            }
           : o
       )
     );
@@ -797,32 +800,48 @@ describe('verifyPortfolioSetup', () => {
     expect(result.checks.filter(c => !c.pass)).toEqual([]);
   });
 
-  it('scans every organisation column a prompt builder reads', () => {
-    const fs = jest.requireActual<typeof import('fs')>('fs');
-    const readers = [
-      'lib/ai/content-generator.ts',
-      'lib/ai/prompt-layer-builder.ts',
-      'lib/services/ai/studio-tools/context-tools.ts',
-    ].map(f => fs.readFileSync(f, 'utf8'));
-    const read = new Set<string>();
-    for (const src of readers) {
-      for (const m of src.matchAll(
-        /organization\.find\w*\(\s*\{[\s\S]*?select:\s*\{([^}]*)\}/g
-      )) {
-        for (const k of m[1].matchAll(/(\w+):\s*true/g)) read.add(k[1]);
-      }
-      for (const m of src.matchAll(/\borg\.(\w+)/g)) read.add(m[1]);
-    }
-    // Not text: ids and colours.
-    const notText = new Set(['id', 'slug', 'primaryColor', 'logo']);
-    expect(read.size).toBeGreaterThan(0);
-    expect(
-      [...read].filter(
-        k =>
-          !notText.has(k) &&
-          !(ORG_PROMPT_FIELDS as readonly string[]).includes(k)
+  it('fails a kept Unite-Group org whose prompt-facing setting names an owned business', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o =>
+        o.slug === 'unite-group'
+          ? { ...o, settings: { voiceTag: 'Promote CARSI courses' } }
+          : o
       )
-    ).toEqual([]);
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
+    ]);
+  });
+
+  it('passes a clean delivered video whose link happens to contain a banned word', async () => {
+    const victim = plan.findIndex(
+      s => s.orgSlug === 'business-card' && s.kind === 'shortform_video'
+    );
+    db.calendarPost.findMany.mockResolvedValue(
+      rows(slug => slug).map((r, i) =>
+        i === victim
+          ? {
+              ...r,
+              metadata: {
+                ...r.metadata,
+                videoDelivery: {
+                  status: 'delivered',
+                  videoUrl:
+                    'https://cdn.example.test/portfolio/clean-video.mp4',
+                  thumbnailUrl: null,
+                  sdaPassed: true,
+                  sdaVerdictId: 'sda-portfolio-1',
+                  captionDraft: 'Pick an opener.',
+                  engineRunId: 'run-portfolio-1',
+                },
+                approvalState: 'pending_approval',
+              },
+            }
+          : r
+      )
+    );
+    expect(await failedLabels()).toEqual([]);
   });
 
   it.each([
@@ -862,13 +881,6 @@ describe('verifyPortfolioSetup', () => {
         aiGeneratedData: { brandVoice: 'Feature CARSI courses' },
       }),
     ],
-    [
-      'organisation website',
-      (o: (typeof orgs)[number]) => ({
-        ...o,
-        website: 'https://restore-assist.example',
-      }),
-    ],
   ])(
     'fails a kept Unite-Group row whose %s names an owned business',
     async (_, edit) => {
@@ -877,7 +889,7 @@ describe('verifyPortfolioSetup', () => {
         orgs.map(o => (o.slug === 'unite-group' ? edit(o) : o))
       );
       expect(await failedLabels()).toEqual([
-        'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+        'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
       ]);
     }
   );
@@ -921,7 +933,7 @@ describe('verifyPortfolioSetup', () => {
       })
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 
@@ -944,7 +956,7 @@ describe('verifyPortfolioSetup', () => {
       )
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 
@@ -959,7 +971,7 @@ describe('verifyPortfolioSetup', () => {
       })
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 
@@ -973,7 +985,7 @@ describe('verifyPortfolioSetup', () => {
       )
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'unite-group: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 
@@ -1034,7 +1046,7 @@ describe('verifyPortfolioSetup', () => {
     const failed = await failedLabels();
     expect(failed).toEqual([
       'carsi: client profile holds all 22 forbidden words',
-      'carsi: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+      'carsi: the prompt built from the organisation, brand DNA, Brand OS and client profile carries no forbidden words',
     ]);
   });
 

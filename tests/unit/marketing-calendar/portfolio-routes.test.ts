@@ -19,8 +19,10 @@ const mockFindFirst = jest.fn();
 const mockUpdate = jest.fn();
 const mockUserFind = jest.fn();
 const mockOrgFind = jest.fn();
-jest.mock('@/lib/prisma', () => ({
-  prisma: {
+const mockLock = jest.fn();
+const mockTx = jest.fn();
+jest.mock('@/lib/prisma', () => {
+  const client: Record<string, unknown> = {
     organization: { findMany: (...a: unknown[]) => mockOrgFind(...a) },
     calendarPost: {
       // The delivery lookup reads up to two rows; one mocked row is a unique slot.
@@ -31,8 +33,15 @@ jest.mock('@/lib/prisma', () => ({
       updateMany: (...a: unknown[]) => mockUpdate(...a),
     },
     user: { findUnique: (...a: unknown[]) => mockUserFind(...a) },
-  },
-}));
+    $queryRaw: (...a: unknown[]) => mockLock(...a),
+  };
+  // Delivery runs its read, row lock and write in one transaction.
+  client.$transaction = async (fn: (tx: unknown) => Promise<unknown>) => {
+    mockTx();
+    return fn(client);
+  };
+  return { prisma: client };
+});
 
 const mockIsOwner = jest.fn();
 jest.mock('@/lib/auth/jwt-utils', () => ({
@@ -211,6 +220,29 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
       sdaVerdictId: 'sda-1',
     });
     expect(update.data.metadata.approvalState).toBe('pending_approval');
+  });
+
+  it('locks the brand rows inside the delivery transaction before reading them', async () => {
+    mockFindFirst.mockResolvedValue(draftSlot);
+    mockUpdate.mockResolvedValue({ count: 1 });
+    await deliver(deliveryRequest(validBody, TOKEN));
+    expect(mockTx).toHaveBeenCalledTimes(1);
+    expect(mockLock).toHaveBeenCalledTimes(1);
+    expect(String(mockLock.mock.calls[0][0].join('?'))).toMatch(/FOR SHARE/);
+    expect(mockLock.mock.invocationCallOrder[0]).toBeLessThan(
+      mockOrgFind.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('refuses (409) when the brand leaves the workspace between lookup and write', async () => {
+    mockFindFirst.mockResolvedValue(draftSlot);
+    mockUpdate.mockResolvedValue({ count: 1 });
+    mockOrgFind
+      .mockResolvedValueOnce([root, businessCard])
+      .mockResolvedValue([root, { ...businessCard, status: 'deleted' }]);
+    const res = await deliver(deliveryRequest(validBody, TOKEN));
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/left the workspace/);
   });
 
   it('is idempotent for the same video and refuses to overwrite a different one', async () => {

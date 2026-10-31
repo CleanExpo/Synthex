@@ -18,7 +18,7 @@ import {
 import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_WEEK_STARTS,
-  forbiddenHits,
+  brandHits,
 } from './portfolio-brands';
 import { loadWorkspaceOrgs } from './workspace';
 
@@ -80,103 +80,125 @@ export async function attachVideoToSlot(
   if (!planned) return { outcome: 'not_found' };
   // A caption is draft copy for this brand: its forbidden words never go in.
   const brand = PORTFOLIO_BRANDS.find(b => b.orgSlug === planned.orgSlug)!;
-  const banned = forbiddenHits(
-    delivery.captionDraft ?? '',
-    brand.forbiddenWords
-  );
+  const banned = brandHits(delivery.captionDraft ?? '', brand);
   if (banned.length > 0) {
     return {
       outcome: 'refused',
       reason: `caption names words this brand never uses: ${banned.join(', ')}`,
     };
   }
-  const org = (await loadWorkspaceOrgs()).get(planned.orgSlug);
-  if (!org) return { outcome: 'not_found' };
-  const matches = await prisma.calendarPost.findMany({
-    where: {
-      organizationId: org.id,
-      tags: { has: PORTFOLIO_CALENDAR_TAG },
-      metadata: { path: ['slotKey'], equals: delivery.slotKey },
-    },
-    take: 2,
-  });
-  const post = matches[0];
-  if (!post) return { outcome: 'not_found' };
-  // Never pick one of two rows that claim the same slot.
-  if (matches.length > 1) {
-    return {
-      outcome: 'conflict',
-      reason:
-        'more than one draft claims this slot key; resolve the duplicate first',
-    };
-  }
-
-  const metadata = (post.metadata ?? {}) as Record<string, unknown>;
-  if (metadata.slotKind !== 'shortform_video') {
-    return {
-      outcome: 'conflict',
-      reason: 'slot is not a short-form video slot',
-    };
-  }
-  if (post.status !== 'draft') {
-    return {
-      outcome: 'conflict',
-      reason: `slot is ${post.status}; only draft slots take a video`,
-    };
-  }
-  if (post.mediaUrls[0] === delivery.videoUrl) {
-    return { outcome: 'unchanged', postId: post.id };
-  }
-  if (post.mediaUrls.length > 0) {
-    return {
-      outcome: 'conflict',
-      reason: 'slot already holds a different video; detach it first',
-    };
-  }
-
-  // The checks above are repeated in the WHERE so they hold at write time,
-  // and the row must be unchanged since the read (updatedAt), because the
-  // metadata written is built from that read: a slot scheduled, re-keyed,
-  // edited or filled by another delivery since then matches nothing and is
-  // reported as a conflict.
-  const { count } = await prisma.calendarPost.updateMany({
-    where: {
-      id: post.id,
-      organizationId: org.id,
-      status: 'draft',
-      mediaUrls: { isEmpty: true },
-      tags: { has: PORTFOLIO_CALENDAR_TAG },
-      updatedAt: post.updatedAt,
-      AND: [
-        { metadata: { path: ['slotKind'], equals: 'shortform_video' } },
-        { metadata: { path: ['slotKey'], equals: delivery.slotKey } },
-      ],
-    },
-    data: {
-      mediaUrls: [delivery.videoUrl],
-      metadata: {
-        ...metadata,
-        videoDelivery: {
-          status: 'delivered',
-          deliveredAt: new Date().toISOString(),
-          videoUrl: delivery.videoUrl,
-          thumbnailUrl: delivery.thumbnailUrl ?? null,
-          durationSeconds: delivery.durationSeconds ?? null,
-          sdaPassed: true,
-          sdaVerdictId: delivery.sdaVerdictId,
-          captionDraft: delivery.captionDraft ?? null,
-          engineRunId: delivery.engineRunId ?? null,
+  // The membership read, the row lookup and the write run in one transaction
+  // that first share-locks the brand org rows: a brand cannot be deleted,
+  // deactivated or re-parented between the membership check and the write.
+  try {
+    return await prisma.$transaction(async tx => {
+      const slugs = PORTFOLIO_BRANDS.map(b => b.orgSlug);
+      await tx.$queryRaw`SELECT id FROM organizations WHERE slug = ANY(${slugs}) FOR SHARE`;
+      const org = (await loadWorkspaceOrgs(tx)).get(planned.orgSlug);
+      if (!org) return { outcome: 'not_found' };
+      const matches = await tx.calendarPost.findMany({
+        where: {
+          organizationId: org.id,
+          tags: { has: PORTFOLIO_CALENDAR_TAG },
+          metadata: { path: ['slotKey'], equals: delivery.slotKey },
         },
-        approvalState: 'pending_approval',
-      } as Prisma.InputJsonValue,
-    },
-  });
-  if (count === 0) {
-    return {
-      outcome: 'conflict',
-      reason:
-        'slot changed while attaching (scheduled or given another video); re-check it',
-    };
+        take: 2,
+      });
+      const post = matches[0];
+      if (!post) return { outcome: 'not_found' };
+      // Never pick one of two rows that claim the same slot.
+      if (matches.length > 1) {
+        return {
+          outcome: 'conflict',
+          reason:
+            'more than one draft claims this slot key; resolve the duplicate first',
+        };
+      }
+
+      const metadata = (post.metadata ?? {}) as Record<string, unknown>;
+      if (metadata.slotKind !== 'shortform_video') {
+        return {
+          outcome: 'conflict',
+          reason: 'slot is not a short-form video slot',
+        };
+      }
+      if (post.status !== 'draft') {
+        return {
+          outcome: 'conflict',
+          reason: `slot is ${post.status}; only draft slots take a video`,
+        };
+      }
+      if (post.mediaUrls[0] === delivery.videoUrl) {
+        return { outcome: 'unchanged', postId: post.id };
+      }
+      if (post.mediaUrls.length > 0) {
+        return {
+          outcome: 'conflict',
+          reason: 'slot already holds a different video; detach it first',
+        };
+      }
+
+      // The checks above are repeated in the WHERE so they hold at write time,
+      // and the row must be unchanged since the read (updatedAt), because the
+      // metadata written is built from that read: a slot scheduled, re-keyed,
+      // edited or filled by another delivery since then matches nothing and is
+      // reported as a conflict.
+      const { count } = await tx.calendarPost.updateMany({
+        where: {
+          id: post.id,
+          organizationId: org.id,
+          status: 'draft',
+          mediaUrls: { isEmpty: true },
+          tags: { has: PORTFOLIO_CALENDAR_TAG },
+          updatedAt: post.updatedAt,
+          AND: [
+            { metadata: { path: ['slotKind'], equals: 'shortform_video' } },
+            { metadata: { path: ['slotKey'], equals: delivery.slotKey } },
+          ],
+        },
+        data: {
+          mediaUrls: [delivery.videoUrl],
+          metadata: {
+            ...metadata,
+            videoDelivery: {
+              status: 'delivered',
+              deliveredAt: new Date().toISOString(),
+              videoUrl: delivery.videoUrl,
+              thumbnailUrl: delivery.thumbnailUrl ?? null,
+              durationSeconds: delivery.durationSeconds ?? null,
+              sdaPassed: true,
+              sdaVerdictId: delivery.sdaVerdictId,
+              captionDraft: delivery.captionDraft ?? null,
+              engineRunId: delivery.engineRunId ?? null,
+            },
+            approvalState: 'pending_approval',
+          } as Prisma.InputJsonValue,
+        },
+      });
+      if (count === 0) {
+        return {
+          outcome: 'conflict',
+          reason:
+            'slot changed while attaching (scheduled or given another video); re-check it',
+        };
+      }
+      // The brand rows are share-locked, so membership cannot change before
+      // commit; re-checking it here keeps the write honest if that ever fails.
+      if (!(await loadWorkspaceOrgs(tx)).has(planned.orgSlug)) {
+        throw new LeftWorkspace();
+      }
+      return { outcome: 'attached', postId: post.id } as const;
+    });
+  } catch (error) {
+    if (error instanceof LeftWorkspace) {
+      return {
+        outcome: 'conflict',
+        reason: 'brand left the workspace during delivery',
+      };
+    }
+    throw error;
   }
-  return { outcome: 'attached', postId: post.id };
 }
+
+/** Thrown inside the delivery transaction to roll the write back. */
+class LeftWorkspace extends Error {}
