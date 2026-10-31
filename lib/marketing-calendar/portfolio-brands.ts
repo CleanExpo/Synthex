@@ -87,6 +87,22 @@ const SHARED_ANTI = [
   'Website slideshows built from site images',
 ];
 
+/**
+ * Words Unite-Group content must never carry (founder hard rule, 26/10/2026):
+ * Phill's own businesses and restoration or training content.
+ */
+export const UNITE_GROUP_BANNED = [
+  'restoration',
+  'CARSI',
+  'Disaster Recovery',
+  'NRPG',
+  'RestoreAssist',
+  'IICRC',
+  'CEC',
+  'training',
+  'course',
+];
+
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
   {
     orgSlug: 'business-card',
@@ -266,7 +282,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     label: 'Unite-Group Nexus',
     name: 'Unite-Group',
     description:
-      'Unite-Group Nexus: the Australian-owned group behind Business Cards, CARSI, Disaster Recovery, NRPG and Synthex.',
+      'Unite-Group Nexus: Australian-owned, building video business cards and AI marketing for small businesses of any niche.',
     website: 'https://unite-group.in',
     industry: 'technology',
     vertical: 'professional-services',
@@ -284,16 +300,18 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     },
     audience: {
       description:
-        'Australian business owners and partners who want to see how the Unite Group businesses work.',
+        'Australian small-business owners in any niche (cafe, accountant, clinic, salon, retail) who want to be found and remembered.',
       painPoints: [
         'Too many disconnected tools',
         'Marketing that sounds like everyone else',
       ],
       values: ['Evidence on screen', 'Plain answers', 'Australian-owned'],
     },
-    offerings: ['Video business cards', 'The Unite Group portfolio'],
+    offerings: ['Video business cards', 'AI marketing for small businesses'],
     socialProfiles: [],
-    forbiddenWords: [...NEXUS_FORBIDDEN, 'restoration'],
+    // Founder hard rule, 26/10/2026: Unite-Group content never shows or
+    // mentions Phill's own businesses or restoration/training content.
+    forbiddenWords: [...NEXUS_FORBIDDEN, ...UNITE_GROUP_BANNED],
     preferredWords: [],
     antiPatterns: [
       ...SHARED_ANTI,
@@ -302,7 +320,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     ],
     brandRules: [
       ...SHARED_RULES,
-      'Unite-Group content avoids the word "restoration" (founder, 26/10/2026).',
+      'Unite-Group content never shows or mentions CARSI, Disaster Recovery, NRPG, RestoreAssist or any restoration or training content; use any-niche small businesses (cafe, accountant, clinic, salon, retail) and hold shots 3 to 5 seconds (founder, 26/10/2026).',
       'Never mention COACH8.',
     ],
     liveStatus: {
@@ -314,7 +332,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     channelPosts: [{ platform: 'linkedin', perWeek: 1 }],
     themes: [
       'Meet Margot, the Unite Group brand ambassador',
-      'How the Unite Group businesses fit together',
+      'A cafe owner’s video business card, start to finish',
       'From brief to film: how a video business card is made',
       'One week inside Nexus: what got built',
     ],

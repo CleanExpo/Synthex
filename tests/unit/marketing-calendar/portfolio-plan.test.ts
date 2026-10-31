@@ -8,6 +8,7 @@ import {
 import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_WEEK_STARTS,
+  UNITE_GROUP_BANNED,
 } from '@/lib/marketing-calendar/portfolio-brands';
 
 const brand = (
@@ -91,6 +92,21 @@ describe('portfolio marketing calendar plan', () => {
       const text = slotBrief(s, b);
       expect(text).toMatch(/draft, pending approval/);
       expect(text).not.toMatch(/IICRC accredited/i);
+    }
+  });
+
+  it('keeps every Unite-Group profile field clear of the founder banned names', () => {
+    const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
+    // Every field a brief, brand DNA or client profile is built from, minus
+    // the rule text that names what is banned and the list itself.
+    const { brandRules: _rules, forbiddenWords, ...rest } = ug;
+    const text = JSON.stringify(rest).toLowerCase();
+    for (const word of UNITE_GROUP_BANNED) {
+      expect(forbiddenWords).toContain(word);
+      expect({ word, hit: text.includes(word.toLowerCase()) }).toEqual({
+        word,
+        hit: false,
+      });
     }
   });
 
