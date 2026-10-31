@@ -61,13 +61,23 @@ export type DeliveryResult =
 export async function attachVideoToSlot(
   delivery: VideoDelivery
 ): Promise<DeliveryResult> {
-  const post = await prisma.calendarPost.findFirst({
+  const matches = await prisma.calendarPost.findMany({
     where: {
       tags: { has: PORTFOLIO_CALENDAR_TAG },
       metadata: { path: ['slotKey'], equals: delivery.slotKey },
     },
+    take: 2,
   });
+  const post = matches[0];
   if (!post) return { outcome: 'not_found' };
+  // Never pick one of two rows that claim the same slot.
+  if (matches.length > 1) {
+    return {
+      outcome: 'conflict',
+      reason:
+        'more than one draft claims this slot key; resolve the duplicate first',
+    };
+  }
 
   const metadata = (post.metadata ?? {}) as Record<string, unknown>;
   if (metadata.slotKind !== 'shortform_video') {

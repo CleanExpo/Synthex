@@ -21,7 +21,11 @@ const mockUserFind = jest.fn();
 jest.mock('@/lib/prisma', () => ({
   prisma: {
     calendarPost: {
-      findFirst: (...a: unknown[]) => mockFindFirst(...a),
+      // The delivery lookup reads up to two rows; one mocked row is a unique slot.
+      findMany: async (...a: unknown[]) => {
+        const row = await mockFindFirst(...a);
+        return Array.isArray(row) ? row : row ? [row] : [];
+      },
       updateMany: (...a: unknown[]) => mockUpdate(...a),
     },
     user: { findUnique: (...a: unknown[]) => mockUserFind(...a) },
@@ -114,6 +118,16 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
 
   it('refuses a slot that has moved past draft', async () => {
     mockFindFirst.mockResolvedValue({ ...draftSlot, status: 'scheduled' });
+    const res = await deliver(deliveryRequest(validBody, TOKEN));
+    expect(res.status).toBe(409);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuses (409) when two rows claim the same slot key, writing nothing', async () => {
+    mockFindFirst.mockResolvedValue([
+      draftSlot,
+      { ...draftSlot, id: 'post-2' },
+    ]);
     const res = await deliver(deliveryRequest(validBody, TOKEN));
     expect(res.status).toBe(409);
     expect(mockUpdate).not.toHaveBeenCalled();

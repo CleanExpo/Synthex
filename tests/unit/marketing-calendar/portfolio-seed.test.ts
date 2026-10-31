@@ -21,7 +21,14 @@ const db = {
   ),
   teamMember: model('findMany', 'findFirst', 'create', 'deleteMany', 'count'),
   businessOwnership: model('findUnique', 'create', 'deleteMany', 'count'),
-  brandDNA: model('findUnique', 'upsert', 'count', 'deleteMany', 'updateMany'),
+  brandDNA: model(
+    'findUnique',
+    'create',
+    'upsert',
+    'count',
+    'deleteMany',
+    'updateMany'
+  ),
   clientProfile: model(
     'findUnique',
     'create',
@@ -31,8 +38,31 @@ const db = {
     'updateMany'
   ),
   calendarPost: model('findFirst', 'findMany', 'create', 'deleteMany', 'count'),
+  $transaction: jest.fn(),
 };
 jest.mock('@/lib/prisma', () => ({ prisma: db }));
+
+// Models Postgres: $transaction does not serialise anything by itself; the
+// advisory lock taken by $executeRaw does, until its transaction ends.
+let lockChain: Promise<void> = Promise.resolve();
+const lockCalls: string[] = [];
+async function fakeTransaction(fn: (tx: unknown) => Promise<unknown>) {
+  let release: (() => void) | undefined;
+  const tx = {
+    ...db,
+    $executeRaw: async (sql: TemplateStringsArray) => {
+      lockCalls.push(sql.join('?'));
+      const prev = lockChain;
+      lockChain = new Promise(r => (release = r));
+      await prev;
+    },
+  };
+  try {
+    return await fn(tx);
+  } finally {
+    release?.();
+  }
+}
 
 const mockResolveLogo = jest.fn();
 jest.mock('@/lib/marketing-calendar/resolve-logo', () => ({
@@ -90,6 +120,9 @@ beforeEach(() => {
   db.clientProfile.findUnique.mockResolvedValue(null);
   db.calendarPost.findFirst.mockResolvedValue(null);
   db.calendarPost.findMany.mockResolvedValue([]);
+  db.$transaction.mockImplementation(fakeTransaction);
+  lockChain = Promise.resolve();
+  lockCalls.length = 0;
   db.clientProfile.create.mockResolvedValue({
     id: 'cp',
     updatedAt: new Date(),
@@ -123,7 +156,7 @@ describe('applyPortfolioSetup', () => {
     db.organization.update.mockImplementation(
       async ({ data }: { data: object }) => ({ ...orgRow('x'), ...data })
     );
-    db.brandDNA.upsert.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
     db.clientProfile.upsert.mockResolvedValue({
       id: 'cp',
       updatedAt: new Date(),
@@ -143,23 +176,92 @@ describe('applyPortfolioSetup', () => {
     expect(manifest.skippedSlots).toHaveLength(56);
   });
 
-  it('writes brand setup once: a repeat apply leaves an existing profile, DNA and org untouched', async () => {
+  it('creates only the missing piece of brand setup and never overwrites the other', async () => {
     db.organization.findUnique.mockImplementation(
       async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
     );
-    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human-edited' });
     db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
-    const manifest = await applyPortfolioSetup({
-      write: true,
-      ownerUserId: 'owner-1',
-    });
-    expect(db.brandDNA.upsert).not.toHaveBeenCalled();
+    // Profile in place, DNA missing (e.g. profile made in onboarding).
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human' });
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
+    expect(db.brandDNA.create).toHaveBeenCalledTimes(PORTFOLIO_BRANDS.length);
     expect(db.clientProfile.create).not.toHaveBeenCalled();
+
+    jest.clearAllMocks();
+    db.$transaction.mockImplementation(fakeTransaction);
+    // DNA in place (human-edited), profile missing.
+    db.brandDNA.findUnique.mockResolvedValue({ id: 'dna-human' });
+    db.clientProfile.findUnique.mockResolvedValue(null);
+    db.clientProfile.create.mockResolvedValue({
+      id: 'cp',
+      updatedAt: new Date(),
+    });
+    await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
+    expect(db.clientProfile.create).toHaveBeenCalledTimes(
+      PORTFOLIO_BRANDS.length
+    );
+    expect(db.brandDNA.create).not.toHaveBeenCalled();
+
+    // Neither run touched an existing record or the org logo and colour.
+    expect(db.brandDNA.upsert).not.toHaveBeenCalled();
+    expect(db.brandDNA.updateMany).not.toHaveBeenCalled();
     expect(db.clientProfile.upsert).not.toHaveBeenCalled();
     expect(db.organization.update).not.toHaveBeenCalled();
+  });
+
+  it('leaves complete brand setup untouched on a repeat apply', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.findUnique.mockResolvedValue({ id: 'dna-human' });
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human' });
+    db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
+    await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
     expect(
-      manifest.log.filter(l => l.includes('not overwritten'))
-    ).toHaveLength(PORTFOLIO_BRANDS.length);
+      writeCalls().filter(c => /brandDNA|clientProfile|organization/.test(c))
+    ).toEqual([]);
+  });
+
+  it('two applies at once create each slot once (check and create share a lock)', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.findUnique.mockResolvedValue({ id: 'dna' });
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp' });
+    const rows = new Map<string, { id: string; status: string }>();
+    const keyOf = (where: {
+      organizationId: string;
+      metadata: { equals: string };
+    }) => `${where.organizationId}:${where.metadata.equals}`;
+    db.calendarPost.findFirst.mockImplementation(
+      async ({ where }: { where: Parameters<typeof keyOf>[0] }) => {
+        await new Promise(r => setTimeout(r, 0));
+        return rows.get(keyOf(where)) ?? null;
+      }
+    );
+    db.calendarPost.create.mockImplementation(
+      async ({ data }: { data: Record<string, unknown> }) => {
+        await new Promise(r => setTimeout(r, 0));
+        const key = `${data.organizationId}:${(data.metadata as { slotKey: string }).slotKey}`;
+        const row = {
+          id: `p${rows.size}`,
+          status: 'draft',
+          scheduledFor: data.scheduledFor,
+          updatedAt: new Date(),
+        };
+        rows.set(key, row);
+        return row;
+      }
+    );
+    const [a, b] = await Promise.all([
+      applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' }),
+      applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' }),
+    ]);
+    expect(db.calendarPost.create).toHaveBeenCalledTimes(56);
+    expect(a.calendarPosts.length + b.calendarPosts.length).toBe(56);
+    expect(a.skippedSlots.length + b.skippedSlots.length).toBe(56);
+    expect(lockCalls[0]).toContain('pg_advisory_xact_lock');
   });
 
   it('records each created post with the updatedAt undo must match', async () => {
@@ -167,7 +269,7 @@ describe('applyPortfolioSetup', () => {
       async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
     );
     const written = new Date('2026-11-01T01:02:03.000Z');
-    db.brandDNA.upsert.mockResolvedValue({ id: 'dna', updatedAt: written });
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: written });
     db.calendarPost.create.mockImplementation(
       async ({ data }: { data: { scheduledFor: Date } }) => ({
         id: 'new-post',
@@ -185,7 +287,7 @@ describe('applyPortfolioSetup', () => {
     }
   });
 
-  it('keeps a stored logo when the approved logo cannot be confirmed as served', async () => {
+  it('never writes an unconfirmed logo, so a stored logo is kept', async () => {
     mockResolveLogo.mockResolvedValue(null);
     db.organization.findUnique.mockImplementation(
       async ({ where }: { where: { slug: string } }) => ({
@@ -196,21 +298,17 @@ describe('applyPortfolioSetup', () => {
     db.organization.update.mockImplementation(
       async ({ data }: { data: object }) => ({ ...orgRow('x'), ...data })
     );
-    db.brandDNA.findUnique.mockResolvedValue({
-      id: 'dna',
-      logoUrl: 'https://stored.example.test/logo.png',
-    });
-    db.brandDNA.upsert.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
-    db.clientProfile.upsert.mockResolvedValue({
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    db.clientProfile.create.mockResolvedValue({
       id: 'cp',
       updatedAt: new Date(),
     });
     db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
     await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
 
-    expect(db.brandDNA.upsert).toHaveBeenCalled();
-    for (const [arg] of db.brandDNA.upsert.mock.calls) {
-      expect(arg.update).not.toHaveProperty('logoUrl');
+    expect(db.brandDNA.create).toHaveBeenCalled();
+    for (const [arg] of db.brandDNA.create.mock.calls) {
+      expect(arg.data).not.toHaveProperty('logoUrl');
     }
     for (const [arg] of db.organization.update.mock.calls) {
       expect(arg.data).not.toHaveProperty('logo');

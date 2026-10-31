@@ -186,15 +186,23 @@ export async function applyPortfolioSetup(opts: {
       let org = await prisma.organization.findUnique({
         where: { slug: brand.orgSlug },
       });
-      // Brand setup (org logo/colour, brand DNA, client profile) is written
-      // once: an org that already has a client profile keeps whatever it now
-      // says, so a repeat apply never overwrites anyone's edits.
-      const setupDone =
-        !!org &&
-        !!(await prisma.clientProfile.findUnique({
-          where: { organizationId: org.id },
-          select: { id: true },
-        }));
+      // Brand setup is create-only, record by record: brand DNA and client
+      // profile are each created only when missing and never overwritten, and
+      // the org logo and colour are set only on a brand with neither yet, so a
+      // repeat apply never replaces anyone's edits.
+      const dna = org
+        ? await prisma.brandDNA.findUnique({
+            where: { organizationId: org.id },
+            select: { id: true },
+          })
+        : null;
+      const profile = org
+        ? await prisma.clientProfile.findUnique({
+            where: { organizationId: org.id },
+            select: { id: true },
+          })
+        : null;
+      const freshBrand = !dna && !profile;
       if (!org) {
         log(
           `+ create org ${brand.orgSlug} (child of ${PORTFOLIO_PARENT_SLUG})`
@@ -215,7 +223,7 @@ export async function applyPortfolioSetup(opts: {
           });
           manifest.createdOrganizations.push({ id: org.id, slug: org.slug });
         }
-      } else if (!setupDone) {
+      } else if (freshBrand) {
         const changes: { logo?: string; primaryColor?: string } = {};
         if (logoUrl && org.logo !== logoUrl) changes.logo = logoUrl;
         if (org.primaryColor !== brand.colours.primary)
@@ -287,37 +295,35 @@ export async function applyPortfolioSetup(opts: {
         }
       }
 
-      if (setupDone) {
+      // create, not upsert: a row written since the checks above fails the
+      // unique constraint instead of being overwritten.
+      if (dna) {
+        log(`= ${brand.orgSlug}: brand DNA already in place; not overwritten`);
+      } else {
+        log(`+ create brand DNA for ${brand.orgSlug}`);
+        if (write) {
+          const row = await prisma.brandDNA.create({
+            data: { organizationId: org.id, ...brandDnaData(brand, logoUrl) },
+          });
+          manifest.brandDna.push({
+            id: row.id,
+            orgSlug: brand.orgSlug,
+            organizationId: org.id,
+            created: true,
+            before: null,
+            appliedUpdatedAt: row.updatedAt.toISOString(),
+          });
+        }
+      }
+
+      if (profile) {
         log(
-          `= ${brand.orgSlug}: brand setup already in place (client profile exists); not overwritten`
+          `= ${brand.orgSlug}: client profile already in place; not overwritten`
         );
         continue;
       }
-
-      const dna = await prisma.brandDNA.findUnique({
-        where: { organizationId: org.id },
-      });
-      log(`${dna ? '~ update' : '+ create'} brand DNA for ${brand.orgSlug}`);
-      if (write) {
-        const row = await prisma.brandDNA.upsert({
-          where: { organizationId: org.id },
-          create: { organizationId: org.id, ...brandDnaData(brand, logoUrl) },
-          update: brandDnaData(brand, logoUrl),
-        });
-        manifest.brandDna.push({
-          id: row.id,
-          orgSlug: brand.orgSlug,
-          organizationId: org.id,
-          created: !dna,
-          before: dna,
-          appliedUpdatedAt: row.updatedAt.toISOString(),
-        });
-      }
-
       log(`+ create client profile for ${brand.orgSlug}`);
       if (write) {
-        // create, not upsert: a profile written since the check above fails
-        // the unique constraint instead of being overwritten.
         const row = await prisma.clientProfile.create({
           data: { organizationId: org.id, ...clientProfileData(brand) },
         });
@@ -377,33 +383,49 @@ export async function applyPortfolioSetup(opts: {
         log(`+ ${slot.slotKey}  ${slot.localTime}  [org created on apply]`);
         continue;
       }
-      const existing = await prisma.calendarPost.findFirst({
-        where: {
-          organizationId,
-          metadata: { path: ['slotKey'], equals: slot.slotKey },
-        },
-      });
-      if (existing) {
+      const findSlot = (db: Prisma.TransactionClient | typeof prisma) =>
+        db.calendarPost.findFirst({
+          where: {
+            organizationId,
+            metadata: { path: ['slotKey'], equals: slot.slotKey },
+          },
+        });
+      const skip = (status: string) =>
         // Create-only: a slot that exists belongs to Phill or the engine now.
         manifest.skippedSlots.push({
           slotKey: slot.slotKey,
-          reason: `exists (status ${existing.status})`,
+          reason: `exists (status ${status})`,
         });
+      if (!write) {
+        const existing = await findSlot(prisma);
+        if (existing) skip(existing.status);
+        else log(`+ ${slot.slotKey}  ${slot.localTime}`);
         continue;
       }
-      log(`+ ${slot.slotKey}  ${slot.localTime}`);
-      if (!write) continue;
-      const row = await prisma.calendarPost.create({
-        data: {
-          ...data,
-          status: 'draft',
-          mediaUrls: [],
-          hashtags: [],
-          mentions: [],
-          organizationId,
-          userId: ownerUserId,
-        },
+      // Check and create under a transaction-scoped lock on this slot, so two
+      // applies running at once cannot both see the slot missing and create it
+      // twice (CalendarPost has no unique slot key to lean on).
+      const row = await prisma.$transaction(async tx => {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${PORTFOLIO_CALENDAR_TAG}:${organizationId}:${slot.slotKey}`}))`;
+        const existing = await findSlot(tx);
+        if (existing) {
+          skip(existing.status);
+          return null;
+        }
+        return tx.calendarPost.create({
+          data: {
+            ...data,
+            status: 'draft',
+            mediaUrls: [],
+            hashtags: [],
+            mentions: [],
+            organizationId,
+            userId: ownerUserId,
+          },
+        });
       });
+      if (!row) continue;
+      log(`+ ${slot.slotKey}  ${slot.localTime}`);
       manifest.calendarPosts.push({
         id: row.id,
         orgSlug: slot.orgSlug,

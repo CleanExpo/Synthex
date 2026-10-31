@@ -14,6 +14,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { prisma } from '../lib/prisma';
+import { supabaseProjectRef } from '../lib/marketing-calendar/db-ref';
 import {
   applyPortfolioSetup,
   undoPortfolioSetup,
@@ -36,24 +37,6 @@ const MANIFEST_PATH = args.includes('--manifest')
       .toISOString()
       .replace(/[:.]/g, '-')}.json`;
 
-/** Supabase project ref of DATABASE_URL; never prints the URL itself. */
-function dbRef(): string {
-  const raw = process.env.DATABASE_URL;
-  if (!raw) return 'unset';
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    return 'unparseable';
-  }
-  // Supavisor users look like postgres.<ref>; direct hosts are db.<ref>.supabase.co.
-  const user = decodeURIComponent(url.username);
-  const fromUser = user.includes('.') ? user.split('.').pop()! : '';
-  const fromHost =
-    /^db\.([a-z0-9]+)\.supabase\.co$/.exec(url.hostname)?.[1] ?? '';
-  return fromUser || fromHost || `unknown (${url.protocol}//${url.hostname})`;
-}
-
 function saveManifest(manifest: PortfolioManifest) {
   mkdirSync(dirname(MANIFEST_PATH), { recursive: true });
   writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
@@ -61,7 +44,7 @@ function saveManifest(manifest: PortfolioManifest) {
 }
 
 async function main() {
-  const ref = dbRef();
+  const ref = supabaseProjectRef(process.env.DATABASE_URL);
   console.log(`Database project: ${ref}  mode: ${WRITE ? 'WRITE' : 'dry run'}`);
   if (ref !== EXPECTED_DB_REF) {
     throw new Error(
