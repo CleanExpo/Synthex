@@ -79,6 +79,8 @@ export default function PortfolioCalendarPage() {
   const [busy, setBusy] = useState<'preview' | 'apply' | null>(null);
   const [runLog, setRunLog] = useState<string[] | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  // The record of what a real apply wrote: the only input the undo script takes.
+  const [records, setRecords] = useState<{ write?: boolean } | null>(null);
 
   const activeWeek = week ?? data?.weeks[0] ?? null;
   const brandBySlug = useMemo(
@@ -117,6 +119,8 @@ export default function PortfolioCalendarPage() {
         body: JSON.stringify({ action }),
       });
       const body = await res.json();
+      // Keep the manifest even on failure: it lists whatever was written.
+      if (body.manifest?.write) setRecords(body.manifest);
       if (!res.ok)
         throw new Error(
           body.message ?? body.error ?? `Request failed (${res.status})`
@@ -128,6 +132,18 @@ export default function PortfolioCalendarPage() {
     } finally {
       setBusy(null);
     }
+  }
+
+  function downloadRecords() {
+    if (!records) return;
+    const blob = new Blob([JSON.stringify(records, null, 2)], {
+      type: 'application/json',
+    });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `synthex-portfolio-calendar-records-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 
   if (isLoading) {
@@ -232,6 +248,17 @@ export default function PortfolioCalendarPage() {
             <pre className="max-h-48 overflow-auto whitespace-pre-wrap text-xs text-slate-400">
               {runLog?.length ? runLog.join('\n') : 'No changes.'}
             </pre>
+          )}
+          {records && (
+            <div className="mt-3 flex flex-col gap-2 border-t border-white/[0.06] pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs text-amber-200/80">
+                Save the records file. It lists every change this run made and
+                is the only way to undo it.
+              </p>
+              <Button variant="outline" size="sm" onClick={downloadRecords}>
+                Download records
+              </Button>
+            </div>
           )}
         </section>
       )}

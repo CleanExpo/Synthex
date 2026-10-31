@@ -11,18 +11,26 @@ const model = (...methods: string[]) =>
   Object.fromEntries(methods.map(m => [m, jest.fn()])) as Record<string, Fn>;
 
 const db = {
-  organization: model('findUnique', 'create', 'update', 'updateMany', 'count'),
+  organization: model(
+    'findUnique',
+    'findMany',
+    'create',
+    'update',
+    'updateMany',
+    'count'
+  ),
   teamMember: model('findMany', 'findFirst', 'create', 'deleteMany', 'count'),
   businessOwnership: model('findUnique', 'create', 'deleteMany', 'count'),
   brandDNA: model('findUnique', 'upsert', 'count', 'deleteMany', 'updateMany'),
   clientProfile: model(
     'findUnique',
+    'create',
     'upsert',
     'count',
     'deleteMany',
     'updateMany'
   ),
-  calendarPost: model('findFirst', 'create', 'deleteMany', 'count'),
+  calendarPost: model('findFirst', 'findMany', 'create', 'deleteMany', 'count'),
 };
 jest.mock('@/lib/prisma', () => ({ prisma: db }));
 
@@ -34,9 +42,17 @@ jest.mock('@/lib/marketing-calendar/resolve-logo', () => ({
 import {
   applyPortfolioSetup,
   undoPortfolioSetup,
+  verifyPortfolioSetup,
   type PortfolioManifest,
 } from '@/lib/marketing-calendar/portfolio-seed';
-import { PORTFOLIO_CALENDAR_TAG } from '@/lib/marketing-calendar/portfolio-plan';
+import {
+  PORTFOLIO_CALENDAR_TAG,
+  buildPortfolioCalendar,
+} from '@/lib/marketing-calendar/portfolio-plan';
+import {
+  PORTFOLIO_BRANDS,
+  PORTFOLIO_WEEK_STARTS,
+} from '@/lib/marketing-calendar/portfolio-brands';
 
 const WRITE_METHODS = [
   'create',
@@ -72,6 +88,14 @@ beforeEach(() => {
   db.brandDNA.findUnique.mockResolvedValue(null);
   db.clientProfile.findUnique.mockResolvedValue(null);
   db.calendarPost.findFirst.mockResolvedValue(null);
+  db.calendarPost.findMany.mockResolvedValue([]);
+  db.clientProfile.create.mockResolvedValue({
+    id: 'cp',
+    updatedAt: new Date(),
+  });
+  db.organization.update.mockImplementation(
+    async ({ data }: { data: object }) => ({ ...orgRow('x'), ...data })
+  );
 });
 
 describe('applyPortfolioSetup', () => {
@@ -116,6 +140,25 @@ describe('applyPortfolioSetup', () => {
     expect(db.calendarPost.create).not.toHaveBeenCalled();
     expect(writeCalls().filter(c => c.startsWith('calendarPost'))).toEqual([]);
     expect(manifest.skippedSlots).toHaveLength(56);
+  });
+
+  it('writes brand setup once: a repeat apply leaves an existing profile, DNA and org untouched', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human-edited' });
+    db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    expect(db.brandDNA.upsert).not.toHaveBeenCalled();
+    expect(db.clientProfile.create).not.toHaveBeenCalled();
+    expect(db.clientProfile.upsert).not.toHaveBeenCalled();
+    expect(db.organization.update).not.toHaveBeenCalled();
+    expect(
+      manifest.log.filter(l => l.includes('not overwritten'))
+    ).toHaveLength(PORTFOLIO_BRANDS.length);
   });
 
   it('keeps a stored logo when the approved logo cannot be confirmed as served', async () => {
@@ -174,7 +217,14 @@ describe('undoPortfolioSetup', () => {
         userId: 'owner-1',
       },
     ],
-    businessOwnerships: [],
+    businessOwnerships: [
+      {
+        id: 'bo-carsi',
+        orgSlug: 'carsi',
+        organizationId: 'org-carsi',
+        userId: 'owner-1',
+      },
+    ],
     brandDna: [
       {
         id: 'dna-carsi',
@@ -262,6 +312,28 @@ describe('undoPortfolioSetup', () => {
     expect(lines[0]).toMatch(/delete 0\/1 portfolio posts/);
   });
 
+  it('keeps a brand setup while one of its posts survives, and never removes access', async () => {
+    db.calendarPost.deleteMany.mockResolvedValue({ count: 0 });
+    // The carsi post was scheduled after apply, so it survives the delete.
+    db.calendarPost.findMany.mockResolvedValue([
+      { organizationId: 'org-carsi' },
+    ]);
+    db.clientProfile.count.mockResolvedValue(1);
+    db.brandDNA.count.mockResolvedValue(1);
+    db.organization.updateMany.mockResolvedValue({ count: 1 });
+    const lines = await undoPortfolioSetup(manifest, true);
+
+    expect(db.clientProfile.deleteMany).not.toHaveBeenCalled();
+    expect(db.brandDNA.updateMany).not.toHaveBeenCalled();
+    expect(db.businessOwnership.deleteMany).not.toHaveBeenCalled();
+    expect(db.teamMember.deleteMany).not.toHaveBeenCalled();
+    expect(lines).toContain(
+      '= brand DNA carsi kept: a portfolio post for this brand was kept'
+    );
+    // nrpg kept no post, so its logo and colour are still restored.
+    expect(db.organization.updateMany).toHaveBeenCalledTimes(1);
+  });
+
   it('dry run counts and writes nothing', async () => {
     db.calendarPost.count.mockResolvedValue(1);
     db.clientProfile.count.mockResolvedValue(1);
@@ -269,5 +341,51 @@ describe('undoPortfolioSetup', () => {
     db.organization.count.mockResolvedValue(1);
     await undoPortfolioSetup(manifest, false);
     expect(writeCalls()).toEqual([]);
+  });
+});
+
+describe('verifyPortfolioSetup', () => {
+  const plan = buildPortfolioCalendar(PORTFOLIO_BRANDS, PORTFOLIO_WEEK_STARTS);
+  const orgs = PORTFOLIO_BRANDS.map(b => ({
+    id: `org-${b.orgSlug}`,
+    slug: b.orgSlug,
+    calendarMode: 'shadow',
+    liveModeT: 0,
+    brandDna: { logoUrl: b.logoUrl, primaryColour: b.colours.primary },
+    clientProfile: { vocabularyBank: { banned: b.forbiddenWords } },
+  }));
+  const rows = (orgOf: (slug: string, i: number) => string) =>
+    plan.map((s, i) => ({
+      status: 'draft',
+      publishedAt: null,
+      organizationId: `org-${orgOf(s.orgSlug, i)}`,
+      metadata: {
+        slotKey: s.slotKey,
+        weekStart: s.weekStart,
+        slotKind: s.kind,
+      },
+    }));
+
+  beforeEach(() => {
+    db.organization.findMany.mockResolvedValue(orgs);
+  });
+
+  it('passes when every slot sits under its own brand', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    const result = await verifyPortfolioSetup();
+    expect(result.checks.filter(c => !c.pass)).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
+  it('fails when a slot is filed under the wrong brand', async () => {
+    const victim = plan.findIndex(s => s.orgSlug === 'carsi');
+    db.calendarPost.findMany.mockResolvedValue(
+      rows((slug, i) => (i === victim ? 'business-card' : slug))
+    );
+    const result = await verifyPortfolioSetup();
+    expect(result.ok).toBe(false);
+    expect(
+      result.checks.find(c => c.label.startsWith('all 56 planned slots'))?.pass
+    ).toBe(false);
   });
 });

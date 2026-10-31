@@ -118,6 +118,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "- Routes that return 429 without a limiter this scan reads: 23; see docs/api/rate-limits.md",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
+    {
       "text": "- SERVICE_NOT_CONFIGURED: HTTP 501 ## Rate limits",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
@@ -3121,6 +3126,11 @@
       "text": "Generated from the route source of 775 route files under app/api.",
       "file": "public/llms.txt",
       "firstSeen": "537a1991"
+    },
+    {
+      "text": "Generated from the route source of 776 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "dba7235d"
     },
     {
       "text": "Generate strategic brand identities using 50+ psychological principles for maximum market impact",
