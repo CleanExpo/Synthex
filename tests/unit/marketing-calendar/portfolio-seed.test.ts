@@ -351,12 +351,23 @@ describe('applyPortfolioSetup', () => {
     db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
     db.organization.updateMany.mockResolvedValue({ count: 1 });
     db.brandDNA.updateMany.mockResolvedValue({ count: 1 });
-    await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
 
     expect(db.organization.updateMany).toHaveBeenCalled();
+    // Every fill is in the records, so undo lists it for manual review.
+    expect(manifest.updatedOrganizations.length).toBeGreaterThan(0);
+    for (const row of manifest.updatedOrganizations) {
+      expect(row.before).toEqual({ logo: null, primaryColor: null });
+    }
     for (const [arg] of db.organization.updateMany.mock.calls) {
-      expect(arg.where).toMatchObject({ logo: null });
-      expect(Object.keys(arg.data)).toEqual(['logo']);
+      // One field per write, guarded by that same field still being empty.
+      const [field] = Object.keys(arg.data);
+      expect(Object.keys(arg.data)).toHaveLength(1);
+      expect(['logo', 'primaryColor']).toContain(field);
+      expect(arg.where).toMatchObject({ [field]: null });
     }
     expect(db.brandDNA.updateMany).toHaveBeenCalled();
     for (const [arg] of db.brandDNA.updateMany.mock.calls) {
@@ -365,6 +376,23 @@ describe('applyPortfolioSetup', () => {
     }
     expect(db.brandDNA.create).not.toHaveBeenCalled();
     expect(db.organization.update).not.toHaveBeenCalled();
+  });
+
+  it('keeps an existing org logo and colour on a fresh brand (fills only empty fields)', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => ({
+        ...orgRow(where.slug),
+        logo: 'https://someone.example.test/their-logo.png',
+        primaryColor: '#123456',
+      })
+    );
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
+    await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
+
+    expect(db.brandDNA.create).toHaveBeenCalled();
+    expect(db.organization.update).not.toHaveBeenCalled();
+    expect(db.organization.updateMany).not.toHaveBeenCalled();
   });
 
   it('records each created post with the updatedAt undo must match', async () => {
@@ -614,6 +642,15 @@ describe('verifyPortfolioSetup', () => {
     expect(result.ok).toBe(false);
     const failed = result.checks.filter(c => !c.pass).map(c => c.label);
     expect(failed).toContain('carsi: active and in the unite-group workspace');
+    // Nothing else about the outside org reaches the (public) result.
+    expect(
+      result.checks.filter(
+        c =>
+          c.label.startsWith('carsi:') &&
+          !c.label.includes('workspace') &&
+          !c.label.includes('organisation exists')
+      )
+    ).toEqual([]);
     // Its slots no longer count either: they sit under a non-member org.
     expect(failed.some(l => l.includes('2026-11-02-carsi-video-1'))).toBe(true);
   });

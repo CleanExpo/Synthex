@@ -204,8 +204,8 @@ export async function applyPortfolioSetup(opts: {
       }
       // Brand setup is create-only, record by record: brand DNA and client
       // profile are each created only when missing and never overwritten, and
-      // the org logo and colour are set only on a brand with neither yet, so a
-      // repeat apply never replaces anyone's edits.
+      // an existing org's logo and colour are only ever filled when empty, so
+      // no apply replaces anyone's edits.
       const dna = org
         ? await prisma.brandDNA.findUnique({
             where: { organizationId: org.id },
@@ -218,7 +218,6 @@ export async function applyPortfolioSetup(opts: {
             select: { id: true },
           })
         : null;
-      const freshBrand = !dna && !profile;
       if (!org) {
         log(
           `+ create org ${brand.orgSlug} (child of ${PORTFOLIO_PARENT_SLUG})`
@@ -239,41 +238,45 @@ export async function applyPortfolioSetup(opts: {
           });
           manifest.createdOrganizations.push({ id: org.id, slug: org.slug });
         }
-      } else if (freshBrand) {
-        const changes: { logo?: string; primaryColor?: string } = {};
-        if (logoUrl && org.logo !== logoUrl) changes.logo = logoUrl;
-        if (org.primaryColor !== brand.colours.primary)
-          changes.primaryColor = brand.colours.primary;
-        if (Object.keys(changes).length > 0) {
-          log(
-            `~ update org ${brand.orgSlug}: ${Object.keys(changes).join(', ')}`
-          );
-          if (write) {
-            const after = await prisma.organization.update({
-              where: { id: org.id },
-              data: changes,
-            });
-            manifest.updatedOrganizations.push({
-              id: org.id,
-              slug: org.slug,
-              before: { logo: org.logo, primaryColor: org.primaryColor },
-              after: { logo: after.logo, primaryColor: after.primaryColor },
-            });
+      } else {
+        // An existing org keeps any logo and colour it already has: apply only
+        // fills a field that is still empty, guarded in the WHERE so a value
+        // set by anyone since the read is never replaced.
+        const fills: Array<{
+          field: 'logo' | 'primaryColor';
+          value: string | null;
+        }> = [
+          { field: 'logo', value: logoUrl },
+          { field: 'primaryColor', value: brand.colours.primary },
+        ];
+        const after = { logo: org.logo, primaryColor: org.primaryColor };
+        for (const { field, value } of fills) {
+          if (!value || org[field] !== null) continue;
+          const where = { id: org.id, [field]: null };
+          const n = write
+            ? (
+                await prisma.organization.updateMany({
+                  where,
+                  data: { [field]: value },
+                })
+              ).count
+            : await prisma.organization.count({ where });
+          if (n) {
+            log(`~ ${verb}fill empty org ${field} for ${brand.orgSlug}`);
+            if (write) after[field] = value;
           }
         }
-      } else if (logoUrl) {
-        // Setup already ran. The one repair allowed: an approved logo that was
-        // not served then fills a logo that is still empty, never one set since.
-        const where = { id: org.id, logo: null };
-        const n = write
-          ? (
-              await prisma.organization.updateMany({
-                where,
-                data: { logo: logoUrl },
-              })
-            ).count
-          : await prisma.organization.count({ where });
-        if (n) log(`~ ${verb}fill empty org logo for ${brand.orgSlug}`);
+        if (
+          after.logo !== org.logo ||
+          after.primaryColor !== org.primaryColor
+        ) {
+          manifest.updatedOrganizations.push({
+            id: org.id,
+            slug: org.slug,
+            before: { logo: org.logo, primaryColor: org.primaryColor },
+            after,
+          });
+        }
       }
       orgIds.set(brand.orgSlug, org?.id ?? null);
       if (!org) continue;
@@ -595,10 +598,14 @@ export async function verifyPortfolioSetup(): Promise<{
     check(!!org, `${brand.orgSlug}: organisation exists`);
     if (!org) continue;
     const root = bySlug.get(PORTFOLIO_PARENT_SLUG);
+    const member = !!root && inWorkspace(org, root);
     check(
-      !!root && inWorkspace(org, root),
+      member,
       `${brand.orgSlug}: active and in the ${PORTFOLIO_PARENT_SLUG} workspace`
     );
+    // Nothing else about an org outside the workspace is read into the
+    // (public) result: its mode, DNA and profile are not ours to report.
+    if (!member) continue;
     check(
       org.calendarMode === 'shadow' && org.liveModeT === 0,
       `${brand.orgSlug}: shadow mode, live tier 0`
