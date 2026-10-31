@@ -15,6 +15,7 @@
 import type { ContentBrief } from './content-planner';
 import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -105,7 +106,7 @@ export async function evaluateContent(
 
   const userMessage = buildUserMessage(content, brief);
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await modelFetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,

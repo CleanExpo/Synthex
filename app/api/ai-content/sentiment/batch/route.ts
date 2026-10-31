@@ -22,6 +22,7 @@ import {
 import { z } from 'zod';
 import { requireApiKey } from '@/lib/middleware/require-api-key';
 import { logger } from '@/lib/logger';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -97,7 +98,7 @@ async function analyzeBatch(texts: string[]): Promise<SentimentResult[]> {
 
   try {
     // Batch request to AI
-    const response = await fetch(
+    const response = await modelFetch(
       'https://openrouter.ai/api/v1/chat/completions',
       {
         method: 'POST',

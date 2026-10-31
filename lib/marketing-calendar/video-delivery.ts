@@ -17,10 +17,15 @@ import {
 } from './portfolio-plan';
 import {
   PORTFOLIO_BRANDS,
+  PORTFOLIO_PARENT_SLUG,
   PORTFOLIO_WEEK_STARTS,
   brandHits,
 } from './portfolio-brands';
-import { loadWorkspaceOrgs } from './workspace';
+import {
+  LeftWorkspaceError,
+  loadWorkspaceOrgs,
+  lockWorkspaceMember,
+} from './workspace';
 
 export const DELIVERY_TOKEN_ENV = 'SHORTFORM_DELIVERY_TOKEN';
 
@@ -87,15 +92,17 @@ export async function attachVideoToSlot(
       reason: `caption names words this brand never uses: ${banned.join(', ')}`,
     };
   }
-  // The membership read, the row lookup and the write run in one transaction
-  // that first share-locks the brand org rows: a brand cannot be deleted,
-  // deactivated or re-parented between the membership check and the write.
+  // The membership read, the row lookup and the write run in one transaction.
+  // Once the brand is resolved, its row and the workspace root are
+  // share-locked by id and membership is re-checked on the locked rows, so
+  // neither can be deleted, deactivated or re-parented before the write commits.
   try {
     return await prisma.$transaction(async tx => {
-      const slugs = PORTFOLIO_BRANDS.map(b => b.orgSlug);
-      await tx.$queryRaw`SELECT id FROM organizations WHERE slug = ANY(${slugs}) FOR SHARE`;
-      const org = (await loadWorkspaceOrgs(tx)).get(planned.orgSlug);
-      if (!org) return { outcome: 'not_found' };
+      const members = await loadWorkspaceOrgs(tx);
+      const found = members.get(planned.orgSlug);
+      const root = members.get(PORTFOLIO_PARENT_SLUG);
+      if (!found || !root) return { outcome: 'not_found' };
+      const org = await lockWorkspaceMember(tx, found.id, root.id);
       const matches = await tx.calendarPost.findMany({
         where: {
           organizationId: org.id,
@@ -182,15 +189,10 @@ export async function attachVideoToSlot(
             'slot changed while attaching (scheduled or given another video); re-check it',
         };
       }
-      // The brand rows are share-locked, so membership cannot change before
-      // commit; re-checking it here keeps the write honest if that ever fails.
-      if (!(await loadWorkspaceOrgs(tx)).has(planned.orgSlug)) {
-        throw new LeftWorkspace();
-      }
       return { outcome: 'attached', postId: post.id } as const;
     });
   } catch (error) {
-    if (error instanceof LeftWorkspace) {
+    if (error instanceof LeftWorkspaceError) {
       return {
         outcome: 'conflict',
         reason: 'brand left the workspace during delivery',
@@ -199,6 +201,3 @@ export async function attachVideoToSlot(
     throw error;
   }
 }
-
-/** Thrown inside the delivery transaction to roll the write back. */
-class LeftWorkspace extends Error {}

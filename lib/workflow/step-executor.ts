@@ -20,6 +20,7 @@ import { execute as executeAiPlan } from './step-types/ai-plan';
 import { execute as executeAiEvaluate } from './step-types/ai-evaluate';
 import { execute as executeBrandVoiceGate } from './step-types/brand-voice-gate';
 import { execute as executeStrategistGate } from './step-types/strategist-gate';
+import { withPromptOrg } from '@/lib/ai/prompt-scope';
 
 /** Default step execution timeout in milliseconds */
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -49,7 +50,12 @@ export async function executeStep(
     )
   );
 
-  const executionPromise = executeStepByType(stepDef, context);
+  // Every model call a step makes is checked against its org's brand.
+  const executionPromise = context.organizationId
+    ? withPromptOrg(context.organizationId, () =>
+        executeStepByType(stepDef, context)
+      )
+    : executeStepByType(stepDef, context);
 
   try {
     return await Promise.race([executionPromise, timeoutPromise]);

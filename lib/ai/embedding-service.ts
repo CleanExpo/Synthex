@@ -10,6 +10,7 @@
  */
 
 import { logger } from '@/lib/logger';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // TYPES
@@ -69,12 +70,14 @@ export class EmbeddingService {
       try {
         return await this.batchEmbedWithOpenAI(texts);
       } catch (error) {
-        logger.warn('Batch embedding failed, falling back to individual', { error });
+        logger.warn('Batch embedding failed, falling back to individual', {
+          error,
+        });
       }
     }
 
     // Fallback: embed individually
-    return Promise.all(texts.map((text) => this.embed(text)));
+    return Promise.all(texts.map(text => this.embed(text)));
   }
 
   /**
@@ -109,19 +112,25 @@ export class EmbeddingService {
     candidates: Array<{ id: string; embedding: number[]; content?: string }>,
     topK: number = 5
   ): SimilarityResult[] {
-    const similarities = candidates.map((candidate) => ({
+    const similarities = candidates.map(candidate => ({
       contentId: candidate.id,
       similarity: this.cosineSimilarity(queryEmbedding, candidate.embedding),
       content: candidate.content,
     }));
 
-    return similarities.sort((a, b) => b.similarity - a.similarity).slice(0, topK);
+    return similarities
+      .sort((a, b) => b.similarity - a.similarity)
+      .slice(0, topK);
   }
 
   /**
    * Check if an embedding is semantically similar enough
    */
-  isSimilar(embedding1: number[], embedding2: number[], threshold: number = 0.8): boolean {
+  isSimilar(
+    embedding1: number[],
+    embedding2: number[],
+    threshold: number = 0.8
+  ): boolean {
     return this.cosineSimilarity(embedding1, embedding2) >= threshold;
   }
 
@@ -143,7 +152,7 @@ export class EmbeddingService {
   }
 
   private async embedWithOpenAI(text: string): Promise<EmbeddingResult> {
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    const response = await modelFetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.openaiApiKey}`,
@@ -170,10 +179,12 @@ export class EmbeddingService {
     };
   }
 
-  private async batchEmbedWithOpenAI(texts: string[]): Promise<EmbeddingResult[]> {
-    const cleanedTexts = texts.map((t) => this.preprocessText(t));
+  private async batchEmbedWithOpenAI(
+    texts: string[]
+  ): Promise<EmbeddingResult[]> {
+    const cleanedTexts = texts.map(t => this.preprocessText(t));
 
-    const response = await fetch('https://api.openai.com/v1/embeddings', {
+    const response = await modelFetch('https://api.openai.com/v1/embeddings', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.openaiApiKey}`,
@@ -222,7 +233,9 @@ export class EmbeddingService {
     }
 
     // Normalize
-    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
+    const magnitude = Math.sqrt(
+      embedding.reduce((sum, val) => sum + val * val, 0)
+    );
     if (magnitude > 0) {
       for (let i = 0; i < embedding.length; i++) {
         embedding[i] /= magnitude;

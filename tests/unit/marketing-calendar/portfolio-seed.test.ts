@@ -46,6 +46,15 @@ jest.mock('@/lib/prisma', () => ({ prisma: db }));
 // advisory lock taken by $executeRaw does, until its transaction ends.
 let lockChain: Promise<void> = Promise.resolve();
 const lockCalls: string[] = [];
+const rowLocks: string[] = [];
+// Brand rows as the share-lock reads them by id (the org as it is now).
+const mockLockRows = jest.fn();
+const rowForId = (id: string) => ({
+  id,
+  slug: id.replace(/^org-/, ''),
+  status: 'active',
+  parentOrgId: id === 'org-unite-group' ? null : 'org-unite-group',
+});
 async function fakeTransaction(fn: (tx: unknown) => Promise<unknown>) {
   let release: (() => void) | undefined;
   const tx = {
@@ -55,6 +64,10 @@ async function fakeTransaction(fn: (tx: unknown) => Promise<unknown>) {
       const prev = lockChain;
       lockChain = new Promise(r => (release = r));
       await prev;
+    },
+    $queryRaw: async (sql: TemplateStringsArray, ...vals: unknown[]) => {
+      rowLocks.push(sql.join('?'));
+      return mockLockRows(sql.join('?'), vals);
     },
   };
   try {
@@ -124,6 +137,9 @@ beforeEach(() => {
   db.calendarPost.findFirst.mockResolvedValue(null);
   db.calendarPost.findMany.mockResolvedValue([]);
   db.$transaction.mockImplementation(fakeTransaction);
+  mockLockRows.mockImplementation(async (_sql: string, vals: unknown[]) =>
+    [...new Set(vals.flat() as string[])].map(rowForId)
+  );
   db.organization.updateMany.mockResolvedValue({ count: 0 });
   db.brandDNA.updateMany.mockResolvedValue({ count: 0 });
   lockChain = Promise.resolve();
@@ -217,6 +233,67 @@ describe('applyPortfolioSetup', () => {
     }
     expect(db.clientProfile.upsert).not.toHaveBeenCalled();
     expect(db.organization.update).not.toHaveBeenCalled();
+  });
+
+  it('writes nothing more for a brand that leaves the workspace after its lookup', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    // Looked up active; deleted by the time the write takes its lock.
+    mockLockRows.mockImplementation(async (_sql: string, vals: unknown[]) =>
+      [...new Set(vals.flat() as string[])].map(id =>
+        id === 'org-business-card'
+          ? { ...rowForId(id), status: 'deleted' }
+          : rowForId(id)
+      )
+    );
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    const wroteFor = (m: Fn) =>
+      m.mock.calls.filter(
+        ([arg]) => arg?.data?.organizationId === 'org-business-card'
+      );
+    expect(wroteFor(db.brandDNA.create)).toEqual([]);
+    expect(wroteFor(db.clientProfile.create)).toEqual([]);
+    expect(wroteFor(db.calendarPost.create)).toEqual([]);
+    expect(rowLocks.some(s => /FOR SHARE/.test(s))).toBe(true);
+    expect(manifest.log.join('\n')).toMatch(
+      /business-card: left the workspace/
+    );
+    // Other brands are still set up.
+    expect(db.brandDNA.create.mock.calls.length).toBe(
+      PORTFOLIO_BRANDS.length - 1
+    );
+  });
+
+  it('writes no slot for a brand that leaves the workspace before its slot lock', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    // Setup sees it active; it is deleted once slot writing has begun.
+    mockLockRows.mockImplementation(async (_sql: string, vals: unknown[]) =>
+      [...new Set(vals.flat() as string[])].map(id =>
+        id === 'org-business-card' && lockCalls.length > 0
+          ? { ...rowForId(id), status: 'deleted' }
+          : rowForId(id)
+      )
+    );
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    const slotsFor = db.calendarPost.create.mock.calls.filter(
+      ([arg]) => arg?.data?.organizationId === 'org-business-card'
+    );
+    expect(slotsFor).toEqual([]);
+    expect(
+      manifest.skippedSlots.some(s => s.reason === 'brand left the workspace')
+    ).toBe(true);
+    expect(db.calendarPost.create).toHaveBeenCalled();
   });
 
   it('leaves complete brand setup untouched on a repeat apply', async () => {

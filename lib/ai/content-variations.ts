@@ -19,6 +19,7 @@ import { randomUUID } from 'crypto';
 import { ANTI_SLOP_DIRECTIVE } from '@/lib/ai/prompts/anti-slop-directive';
 import { logger } from '@/lib/logger';
 import { getCache } from '@/lib/cache/cache-manager';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ============================================================================
 // TYPES
@@ -390,7 +391,7 @@ Variation:`;
       throw new Error('OpenRouter API key not configured');
     }
 
-    const response = await fetch(`${this.baseUrl}/chat/completions`, {
+    const response = await modelFetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

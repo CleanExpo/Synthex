@@ -44,6 +44,7 @@ import {
   IMAGE_MODELS,
 } from '@/lib/services/ai/image/registry';
 import type { InitiatedBy } from '@/lib/services/ai/video/types';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // Provider types
 export type ImageProvider = 'stability' | 'dalle' | 'gemini';
@@ -312,7 +313,7 @@ async function generateWithStability(
     : options.prompt;
 
   try {
-    const response = await fetch(
+    const response = await modelFetch(
       `${STABILITY_API_BASE}/stable-image/generate/sd3`,
       {
         method: 'POST',
@@ -403,7 +404,7 @@ async function generateWithDalle(
     : options.prompt;
 
   try {
-    const response = await fetch(`${OPENAI_API_BASE}/images/generations`, {
+    const response = await modelFetch(`${OPENAI_API_BASE}/images/generations`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -501,7 +502,7 @@ async function generateWithGemini(
   }
 
   try {
-    const response = await fetch(
+    const response = await modelFetch(
       `${GEMINI_API_BASE}/models/${GEMINI_IMAGE_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',

@@ -104,6 +104,10 @@ beforeEach(() => {
   mockCheck.mockResolvedValue({ allowed: true, context: { userId: 'u1' } });
   process.env.SHORTFORM_DELIVERY_TOKEN = TOKEN;
   mockOrgFind.mockResolvedValue([root, businessCard]);
+  // The share-lock reads the rows by id as they are now.
+  mockLock.mockImplementation(async (_sql: unknown, ...vals: unknown[]) =>
+    [root, businessCard].filter(r => (vals.flat() as string[]).includes(r.id))
+  );
 });
 
 describe('POST /api/portfolio-calendar/video-delivery', () => {
@@ -222,24 +226,26 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(update.data.metadata.approvalState).toBe('pending_approval');
   });
 
-  it('locks the brand rows inside the delivery transaction before reading them', async () => {
+  it('share-locks the resolved brand and its root by id before the write', async () => {
     mockFindFirst.mockResolvedValue(draftSlot);
     mockUpdate.mockResolvedValue({ count: 1 });
     await deliver(deliveryRequest(validBody, TOKEN));
     expect(mockTx).toHaveBeenCalledTimes(1);
-    expect(mockLock).toHaveBeenCalledTimes(1);
-    expect(String(mockLock.mock.calls[0][0].join('?'))).toMatch(/FOR SHARE/);
+    const [sql, ...vals] = mockLock.mock.calls[0];
+    expect(String((sql as string[]).join('?'))).toMatch(/FOR SHARE/);
+    expect(vals.flat()).toEqual(
+      expect.arrayContaining([businessCard.id, root.id])
+    );
     expect(mockLock.mock.invocationCallOrder[0]).toBeLessThan(
-      mockOrgFind.mock.invocationCallOrder[0]
+      mockUpdate.mock.invocationCallOrder[0]
     );
   });
 
   it('refuses (409) when the brand leaves the workspace between lookup and write', async () => {
     mockFindFirst.mockResolvedValue(draftSlot);
     mockUpdate.mockResolvedValue({ count: 1 });
-    mockOrgFind
-      .mockResolvedValueOnce([root, businessCard])
-      .mockResolvedValue([root, { ...businessCard, status: 'deleted' }]);
+    // Membership read saw it active; by the time its row lock is held it is not.
+    mockLock.mockResolvedValue([root, { ...businessCard, status: 'deleted' }]);
     const res = await deliver(deliveryRequest(validBody, TOKEN));
     expect(res.status).toBe(409);
     expect((await res.json()).error).toMatch(/left the workspace/);

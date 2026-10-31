@@ -18,6 +18,7 @@ import type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
+import { guardScopedRequest } from '@/lib/ai/prompt-scope';
 
 /**
  * Newer Claude aliases reject `temperature` / `top_p`
@@ -67,6 +68,7 @@ export class AnthropicProvider implements AIProvider {
   }
 
   async complete(request: AICompletionRequest): Promise<AICompletionResponse> {
+    await guardScopedRequest(request);
     if (!this.client.apiKey) {
       throw new Error('Anthropic API key not configured');
     }
@@ -196,6 +198,7 @@ export class AnthropicProvider implements AIProvider {
   async *stream(
     request: AICompletionRequest
   ): AsyncGenerator<string, void, unknown> {
+    await guardScopedRequest(request);
     if (!this.client.apiKey) {
       throw new Error('Anthropic API key not configured');
     }

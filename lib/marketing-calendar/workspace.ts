@@ -9,6 +9,7 @@
  * outside the workspace.
  */
 
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { PORTFOLIO_BRANDS, PORTFOLIO_PARENT_SLUG } from './portfolio-brands';
 
@@ -38,6 +39,36 @@ export function inWorkspace(
     org.status === 'active' &&
     (org.id === root.id || org.parentOrgId === root.id)
   );
+}
+
+export class LeftWorkspaceError extends Error {
+  constructor(readonly orgId: string) {
+    super(`organisation ${orgId} is no longer in the workspace`);
+    this.name = 'LeftWorkspaceError';
+  }
+}
+
+/**
+ * Inside a transaction: share-lock an org and the workspace root by id, then
+ * re-check membership on the locked rows. Until the transaction ends neither
+ * row can be deleted, deactivated or re-parented, so a write made after this
+ * call is made to a member. Throws LeftWorkspaceError otherwise. Pass the
+ * root's id as orgId to check the root alone.
+ */
+export async function lockWorkspaceMember(
+  tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  orgId: string,
+  rootId: string
+): Promise<WorkspaceOrgFields> {
+  const rows = await tx.$queryRaw<WorkspaceOrgFields[]>`
+    SELECT id, slug, status, parent_org_id AS "parentOrgId"
+    FROM organizations WHERE id IN (${orgId}, ${rootId})
+    ORDER BY id FOR SHARE`;
+  const org = rows.find(r => r.id === orgId);
+  const root = rows.find(r => r.id === rootId);
+  if (!org || !root || !inWorkspace(org, root))
+    throw new LeftWorkspaceError(orgId);
+  return org;
 }
 
 /** Portfolio brand orgs that are workspace members, by slug. Others are absent. */

@@ -148,6 +148,34 @@ describe('foundation context', () => {
     );
   });
 
+  it('refuses a non-string setting that names an owned business', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      slug: 'unite-group',
+      settings: { voiceTag: { message: 'Promote CARSI courses' } },
+    });
+    await expect(getAgencyFoundationContext('org-ug')).rejects.toBeInstanceOf(
+      ForbiddenPromptError
+    );
+  });
+
+  it('hands a portfolio brand no foundation text that names its forbidden words', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      slug: 'unite-group',
+      settings: { voiceTag: 'Plain and warm' },
+    });
+    const ctx = await getAgencyFoundationContext('org-ug');
+    expect(promptHits(JSON.stringify(ctx), ug)).toEqual([]);
+  });
+
+  it('keeps the full foundation for orgs outside the portfolio', async () => {
+    mockPrisma.organization.findUnique.mockResolvedValue({
+      slug: 'some-client',
+      settings: {},
+    });
+    const ctx = await getAgencyFoundationContext('org-x');
+    expect(ctx.verificationGatesExcerpt).not.toMatch(/withheld/);
+  });
+
   it('passes clean settings', async () => {
     mockPrisma.organization.findUnique.mockResolvedValue({
       slug: 'unite-group',
@@ -181,6 +209,14 @@ describe('promptHits', () => {
     expect(promptHits('One group business launched this.', bc)).toEqual([
       'group business',
     ]);
+  });
+
+  it.each([
+    'Unite-Group built a new tool this week',
+    'Unite Group built a new tool this week',
+    'Unite-Group businesses grew',
+  ])('keeps a forbidden phrase that overlaps the brand name: %s', text => {
+    expect(promptHits(text, ug)).not.toEqual([]);
   });
 
   it('catches a forbidden word anywhere in the prompt', () => {

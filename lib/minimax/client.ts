@@ -31,6 +31,7 @@ import {
   type ServiceTier,
 } from './pricing';
 import { creditGuard, MiniMaxCreditExceededError } from './credit-guard';
+import { guardScopedText } from '@/lib/ai/prompt-scope';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -363,6 +364,7 @@ export async function callMiniMax(
         : {}),
     };
 
+    await guardScopedText(JSON.stringify(params));
     const response = await anthropic.messages.create(params);
 
     // Step 4: compute actual cost

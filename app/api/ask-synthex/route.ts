@@ -39,6 +39,7 @@ import {
 } from '@/lib/intelligence/accuracy-ledger';
 import { tableUnavailable } from '@/lib/api/not-provisioned';
 import type { AuthContext } from '@/lib/auth/with-auth';
+import { guardScopedText } from '@/lib/ai/prompt-scope';
 
 // ── Feature flag ──────────────────────────────────────────────────────────────
 
@@ -324,6 +325,7 @@ async function callAI(
     while (tierName !== null) {
       const modelId = TIER_MODELS[tierName].modelId;
       try {
+        await guardScopedText(systemPrompt, question);
         const response = await client.messages.create({
           model: modelId,
           max_tokens: MAX_TOKENS,

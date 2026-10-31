@@ -11,6 +11,7 @@
 
 import type { PromptTestResult } from './types';
 import type { PromptTestingParams } from '@/lib/bayesian/surfaces/prompt-testing';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -76,31 +77,34 @@ export async function testPrompt(
   const temperature = boParams?.temperature ?? 0.7;
 
   // ── Call the OpenRouter API ──
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'HTTP-Referer': siteUrl,
-      'X-Title': siteName,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: PROMPT_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a helpful AI assistant. Answer questions naturally and informatively as you would in an AI search engine. Focus on providing useful, accurate information.',
-        },
-        {
-          role: 'user',
-          content: promptText,
-        },
-      ],
-      max_tokens: maxTokens,
-      temperature: temperature,
-    }),
-  });
+  const res = await modelFetch(
+    'https://openrouter.ai/api/v1/chat/completions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': siteUrl,
+        'X-Title': siteName,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: PROMPT_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a helpful AI assistant. Answer questions naturally and informatively as you would in an AI search engine. Focus on providing useful, accurate information.',
+          },
+          {
+            role: 'user',
+            content: promptText,
+          },
+        ],
+        max_tokens: maxTokens,
+        temperature: temperature,
+      }),
+    }
+  );
 
   if (!res.ok) {
     const err = await res.text();

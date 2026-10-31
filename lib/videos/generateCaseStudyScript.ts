@@ -16,6 +16,7 @@ import {
   trackPipelineCost,
   calculatePipelineCost,
 } from '@/lib/pipelines/track-cost';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 const MODEL = 'claude-haiku-4-5-20251001';
 
@@ -116,7 +117,7 @@ export async function generateCaseStudyScript(
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
 
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const res = await modelFetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'x-api-key': apiKey,

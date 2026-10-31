@@ -6,7 +6,11 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import prisma from '@/lib/prisma';
 import { getAgencyTask, type AgencyTaskId } from './agency-task-catalog';
-import { assertPromptClean } from '@/lib/marketing-calendar/prompt-guard';
+import {
+  assertPromptClean,
+  brandForSlug,
+  promptHits,
+} from '@/lib/marketing-calendar/prompt-guard';
 
 const FOUNDATION_FILES = {
   ceoFoundation: '.claude/memory/ceo-foundation.md',
@@ -41,9 +45,18 @@ async function readFoundationExcerpt(relativePath: string): Promise<string> {
 /** The org-setting text the foundation context hands to workflow prompts. */
 export function foundationPromptText(settings: unknown): string[] {
   const s = (settings ?? {}) as Record<string, unknown>;
-  return [s.voiceTag, s.flywheel].filter(
-    (v): v is string => typeof v === 'string'
-  );
+  // Values are serialised into workflow input whatever their JSON type.
+  return [s.voiceTag, s.flywheel]
+    .filter(v => v !== undefined && v !== null)
+    .map(v => (typeof v === 'string' ? v : JSON.stringify(v)));
+}
+
+/** A foundation excerpt as a brand may receive it: withheld if it names that brand's forbidden words. */
+function excerptFor(slug: string | undefined, excerpt: string): string {
+  const brand = brandForSlug(slug);
+  return brand && promptHits(excerpt, brand).length > 0
+    ? '[foundation excerpt withheld: it names words this brand never uses]'
+    : excerpt;
 }
 
 /**
@@ -74,8 +87,8 @@ export async function getAgencyFoundationContext(
     organizationSlug: org?.slug,
     voiceTag: (settings.voiceTag as string) ?? agencyMeta?.label,
     flywheel: settings.flywheel as string | undefined,
-    ceoFoundationExcerpt,
-    verificationGatesExcerpt,
+    ceoFoundationExcerpt: excerptFor(org?.slug, ceoFoundationExcerpt),
+    verificationGatesExcerpt: excerptFor(org?.slug, verificationGatesExcerpt),
     agencyTaskId:
       opts?.agencyTaskId && getAgencyTask(opts.agencyTaskId)
         ? (opts.agencyTaskId as AgencyTaskId)

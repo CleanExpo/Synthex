@@ -358,6 +358,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "\\s+",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
+    },
+    {
       "text": "&period=",
       "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
@@ -3186,6 +3191,11 @@
       "text": "Get your API key and start building powerful integrations with Synthex.",
       "file": "app/api-reference/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "gi",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
     },
     {
       "text": "Glassmorphism",

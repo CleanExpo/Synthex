@@ -34,7 +34,12 @@ import {
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 import { resolveLogoUrl } from './resolve-logo';
-import { inWorkspace, isActiveWorkspaceRoot } from './workspace';
+import {
+  LeftWorkspaceError,
+  inWorkspace,
+  isActiveWorkspaceRoot,
+  lockWorkspaceMember,
+} from './workspace';
 import { promptHits } from './prompt-guard';
 import { renderPromptLegs } from '@/lib/ai/prompt-layer-builder';
 import { foundationPromptText } from '@/lib/agency/foundation-context';
@@ -241,145 +246,201 @@ export async function applyPortfolioSetup(opts: {
         refused.add(brand.orgSlug);
         continue;
       }
-      // Brand setup is create-only, record by record: brand DNA and client
-      // profile are each created only when missing and never overwritten, and
-      // an existing org's logo and colour are only ever filled when empty, so
-      // no apply replaces anyone's edits.
-      const dna = org
-        ? await prisma.brandDNA.findUnique({
-            where: { organizationId: org.id },
-            select: { id: true },
-          })
-        : null;
-      const profile = org
-        ? await prisma.clientProfile.findUnique({
-            where: { organizationId: org.id },
-            select: { id: true },
-          })
-        : null;
-      if (!org) {
-        log(
-          `+ create org ${brand.orgSlug} (child of ${PORTFOLIO_PARENT_SLUG})`
-        );
-        if (write) {
-          org = await prisma.organization.create({
-            data: { ...orgData(brand, logoUrl), parentOrgId: parent.id },
-          });
-          manifest.createdOrganizations.push({ id: org.id, slug: org.slug });
-        }
-      } else {
-        // An existing org keeps any logo and colour it already has: apply only
-        // fills a field that is still empty, guarded in the WHERE so a value
-        // set by anyone since the read is never replaced.
-        const fills: Array<{
-          field: 'logo' | 'primaryColor';
-          value: string | null;
-        }> = [
-          { field: 'logo', value: logoUrl },
-          { field: 'primaryColor', value: brand.colours.primary },
-        ];
-        const after = { logo: org.logo, primaryColor: org.primaryColor };
-        for (const { field, value } of fills) {
-          if (!value || org[field] !== null) continue;
-          const where = { id: org.id, [field]: null };
-          const n = write
-            ? (
-                await prisma.organization.updateMany({
-                  where,
-                  data: { [field]: value },
-                })
-              ).count
-            : await prisma.organization.count({ where });
-          if (n) {
-            log(`~ ${verb}fill empty org ${field} for ${brand.orgSlug}`);
-            if (write) after[field] = value;
+      // Every write for this brand runs in a transaction that first
+      // share-locks the brand and the parent by id and re-checks membership
+      // (lockWorkspaceMember), so nothing is written after it leaves.
+      const guarded = <T>(
+        orgId: string,
+        fn: (tx: Prisma.TransactionClient) => Promise<T>
+      ) =>
+        prisma.$transaction(async tx => {
+          await lockWorkspaceMember(tx, orgId, parent.id);
+          return fn(tx);
+        });
+      try {
+        // Brand setup is create-only, record by record: brand DNA and client
+        // profile are each created only when missing and never overwritten, and
+        // an existing org's logo and colour are only ever filled when empty, so
+        // no apply replaces anyone's edits.
+        const dna = org
+          ? await prisma.brandDNA.findUnique({
+              where: { organizationId: org.id },
+              select: { id: true },
+            })
+          : null;
+        const profile = org
+          ? await prisma.clientProfile.findUnique({
+              where: { organizationId: org.id },
+              select: { id: true },
+            })
+          : null;
+        if (!org) {
+          log(
+            `+ create org ${brand.orgSlug} (child of ${PORTFOLIO_PARENT_SLUG})`
+          );
+          if (write) {
+            org = await guarded(parent.id, tx =>
+              tx.organization.create({
+                data: { ...orgData(brand, logoUrl), parentOrgId: parent.id },
+              })
+            );
+            manifest.createdOrganizations.push({ id: org.id, slug: org.slug });
+          }
+        } else {
+          // An existing org keeps any logo and colour it already has: apply only
+          // fills a field that is still empty, guarded in the WHERE so a value
+          // set by anyone since the read is never replaced.
+          const fills: Array<{
+            field: 'logo' | 'primaryColor';
+            value: string | null;
+          }> = [
+            { field: 'logo', value: logoUrl },
+            { field: 'primaryColor', value: brand.colours.primary },
+          ];
+          const after = { logo: org.logo, primaryColor: org.primaryColor };
+          for (const { field, value } of fills) {
+            if (!value || org[field] !== null) continue;
+            const where = { id: org.id, [field]: null };
+            const orgId = org.id;
+            const n = write
+              ? (
+                  await guarded(orgId, tx =>
+                    tx.organization.updateMany({
+                      where,
+                      data: { [field]: value },
+                    })
+                  )
+                ).count
+              : await prisma.organization.count({ where });
+            if (n) {
+              log(`~ ${verb}fill empty org ${field} for ${brand.orgSlug}`);
+              if (write) after[field] = value;
+            }
+          }
+          if (
+            after.logo !== org.logo ||
+            after.primaryColor !== org.primaryColor
+          ) {
+            manifest.updatedOrganizations.push({
+              id: org.id,
+              slug: org.slug,
+              before: { logo: org.logo, primaryColor: org.primaryColor },
+              after,
+            });
           }
         }
-        if (
-          after.logo !== org.logo ||
-          after.primaryColor !== org.primaryColor
-        ) {
-          manifest.updatedOrganizations.push({
-            id: org.id,
-            slug: org.slug,
-            before: { logo: org.logo, primaryColor: org.primaryColor },
-            after,
-          });
-        }
-      }
-      orgIds.set(brand.orgSlug, org?.id ?? null);
-      if (!org) continue;
+        orgIds.set(brand.orgSlug, org?.id ?? null);
+        if (!org) continue;
+        const orgId = org.id;
 
-      for (const { userId } of parentOwners) {
-        const member = await prisma.teamMember.findFirst({
-          where: { organizationId: org.id, userId },
-        });
-        if (!member) {
-          log(`+ team owner ${userId} on ${brand.orgSlug}`);
-          if (write) {
-            const row = await prisma.teamMember.create({
-              data: { organizationId: org.id, userId, role: 'owner' },
-            });
-            manifest.teamMembers.push({
-              id: row.id,
-              orgSlug: brand.orgSlug,
-              organizationId: org.id,
-              userId,
-            });
+        for (const { userId } of parentOwners) {
+          const member = await prisma.teamMember.findFirst({
+            where: { organizationId: org.id, userId },
+          });
+          if (!member) {
+            log(`+ team owner ${userId} on ${brand.orgSlug}`);
+            if (write) {
+              const row = await guarded(orgId, tx =>
+                tx.teamMember.create({
+                  data: { organizationId: orgId, userId, role: 'owner' },
+                })
+              );
+              manifest.teamMembers.push({
+                id: row.id,
+                orgSlug: brand.orgSlug,
+                organizationId: org.id,
+                userId,
+              });
+            }
           }
-        }
-        const ownership = await prisma.businessOwnership.findUnique({
-          where: {
-            ownerId_organizationId: { ownerId: userId, organizationId: org.id },
-          },
-        });
-        if (!ownership) {
-          log(`+ business ownership ${userId} on ${brand.orgSlug}`);
-          if (write) {
-            const row = await prisma.businessOwnership.create({
-              data: {
+          const ownership = await prisma.businessOwnership.findUnique({
+            where: {
+              ownerId_organizationId: {
                 ownerId: userId,
                 organizationId: org.id,
-                displayName: brand.name,
-                isActive: true,
-                billingStatus: 'active',
-                monthlyRate: 0, // internal portfolio, no billing
               },
-            });
-            manifest.businessOwnerships.push({
+            },
+          });
+          if (!ownership) {
+            log(`+ business ownership ${userId} on ${brand.orgSlug}`);
+            if (write) {
+              const row = await guarded(orgId, tx =>
+                tx.businessOwnership.create({
+                  data: {
+                    ownerId: userId,
+                    organizationId: orgId,
+                    displayName: brand.name,
+                    isActive: true,
+                    billingStatus: 'active',
+                    monthlyRate: 0, // internal portfolio, no billing
+                  },
+                })
+              );
+              manifest.businessOwnerships.push({
+                id: row.id,
+                orgSlug: brand.orgSlug,
+                organizationId: org.id,
+                userId,
+              });
+            }
+          }
+        }
+
+        // create, not upsert: a row written since the checks above fails the
+        // unique constraint instead of being overwritten.
+        if (dna) {
+          log(
+            `= ${brand.orgSlug}: brand DNA already in place; not overwritten`
+          );
+          if (logoUrl) {
+            // Same null-only logo repair as the org above.
+            const where = { organizationId: org.id, logoUrl: null };
+            const n = write
+              ? (
+                  await guarded(orgId, tx =>
+                    tx.brandDNA.updateMany({ where, data: { logoUrl } })
+                  )
+                ).count
+              : await prisma.brandDNA.count({ where });
+            if (n)
+              log(`~ ${verb}fill empty brand DNA logo for ${brand.orgSlug}`);
+          }
+        } else {
+          log(`+ create brand DNA for ${brand.orgSlug}`);
+          if (write) {
+            const row = await guarded(orgId, tx =>
+              tx.brandDNA.create({
+                data: {
+                  organizationId: orgId,
+                  ...brandDnaData(brand, logoUrl),
+                },
+              })
+            );
+            manifest.brandDna.push({
               id: row.id,
               orgSlug: brand.orgSlug,
               organizationId: org.id,
-              userId,
+              created: true,
+              before: null,
+              appliedUpdatedAt: row.updatedAt.toISOString(),
             });
           }
         }
-      }
 
-      // create, not upsert: a row written since the checks above fails the
-      // unique constraint instead of being overwritten.
-      if (dna) {
-        log(`= ${brand.orgSlug}: brand DNA already in place; not overwritten`);
-        if (logoUrl) {
-          // Same null-only logo repair as the org above.
-          const where = { organizationId: org.id, logoUrl: null };
-          const n = write
-            ? (
-                await prisma.brandDNA.updateMany({
-                  where,
-                  data: { logoUrl },
-                })
-              ).count
-            : await prisma.brandDNA.count({ where });
-          if (n) log(`~ ${verb}fill empty brand DNA logo for ${brand.orgSlug}`);
+        if (profile) {
+          log(
+            `= ${brand.orgSlug}: client profile already in place; not overwritten`
+          );
+          continue;
         }
-      } else {
-        log(`+ create brand DNA for ${brand.orgSlug}`);
+        log(`+ create client profile for ${brand.orgSlug}`);
         if (write) {
-          const row = await prisma.brandDNA.create({
-            data: { organizationId: org.id, ...brandDnaData(brand, logoUrl) },
-          });
-          manifest.brandDna.push({
+          const row = await guarded(orgId, tx =>
+            tx.clientProfile.create({
+              data: { organizationId: orgId, ...clientProfileData(brand) },
+            })
+          );
+          manifest.clientProfiles.push({
             id: row.id,
             orgSlug: brand.orgSlug,
             organizationId: org.id,
@@ -388,27 +449,14 @@ export async function applyPortfolioSetup(opts: {
             appliedUpdatedAt: row.updatedAt.toISOString(),
           });
         }
-      }
-
-      if (profile) {
+      } catch (error) {
+        if (!(error instanceof LeftWorkspaceError)) throw error;
+        // Writes already made stay (they were made to a member); nothing
+        // more is written for this brand, its slots included.
         log(
-          `= ${brand.orgSlug}: client profile already in place; not overwritten`
+          `! ${brand.orgSlug}: left the workspace during apply; nothing more written`
         );
-        continue;
-      }
-      log(`+ create client profile for ${brand.orgSlug}`);
-      if (write) {
-        const row = await prisma.clientProfile.create({
-          data: { organizationId: org.id, ...clientProfileData(brand) },
-        });
-        manifest.clientProfiles.push({
-          id: row.id,
-          orgSlug: brand.orgSlug,
-          organizationId: org.id,
-          created: true,
-          before: null,
-          appliedUpdatedAt: row.updatedAt.toISOString(),
-        });
+        refused.add(brand.orgSlug);
       }
     }
 
@@ -472,6 +520,16 @@ export async function applyPortfolioSetup(opts: {
       // twice (CalendarPost has no unique slot key to lean on).
       const row = await prisma.$transaction(async tx => {
         await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`${PORTFOLIO_CALENDAR_TAG}:${organizationId}:${slot.slotKey}`}))`;
+        try {
+          await lockWorkspaceMember(tx, organizationId, parent.id);
+        } catch (error) {
+          if (!(error instanceof LeftWorkspaceError)) throw error;
+          manifest.skippedSlots.push({
+            slotKey: slot.slotKey,
+            reason: 'brand left the workspace',
+          });
+          return null;
+        }
         const existing = await findSlot(tx);
         if (existing) {
           skip(existing.status);

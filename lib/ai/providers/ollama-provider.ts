@@ -26,6 +26,7 @@ import type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
+import { guardScopedRequest } from '@/lib/ai/prompt-scope';
 
 /**
  * Thrown when the Ollama daemon is not reachable. Callers (router /
@@ -106,6 +107,7 @@ export class OllamaProvider implements AIProvider {
   }
 
   async complete(request: AICompletionRequest): Promise<AICompletionResponse> {
+    await guardScopedRequest(request);
     const body = this.buildRequest(request, /*stream*/ false);
 
     try {
@@ -146,6 +148,7 @@ export class OllamaProvider implements AIProvider {
   async *stream(
     request: AICompletionRequest
   ): AsyncGenerator<string, void, unknown> {
+    await guardScopedRequest(request);
     const body = this.buildRequest(request, /*stream*/ true);
 
     let response;

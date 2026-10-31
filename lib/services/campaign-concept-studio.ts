@@ -19,6 +19,7 @@ import {
   type CampaignStudioRequest,
   type CampaignStudioResponse,
 } from '@/lib/types/campaign-concept-studio';
+import { guardScopedText } from '@/lib/ai/prompt-scope';
 
 const textModel =
   process.env.CAMPAIGN_CONCEPT_TEXT_MODEL ||
@@ -255,7 +256,7 @@ export async function generateCampaignConceptStudio(
     autonomyLevel: 'manual',
   });
 
-  const textResponse = await openai.responses.create({
+  const textRequest = {
     model: textModel,
     input: buildPrompt(validated),
     instructions:
@@ -264,7 +265,9 @@ export async function generateCampaignConceptStudio(
       Number.isFinite(maxOutputTokens) && maxOutputTokens > 0
         ? maxOutputTokens
         : 1400,
-  });
+  };
+  await guardScopedText(JSON.stringify(textRequest));
+  const textResponse = await openai.responses.create(textRequest);
 
   const rawText = extractResponsesText(textResponse);
   if (!rawText) {

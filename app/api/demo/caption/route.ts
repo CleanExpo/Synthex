@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { aiGeneration, withRateLimit } from '@/lib/rate-limit';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 const RequestSchema = z.object({
   businessName: z.string().min(1).max(80),
@@ -43,7 +44,7 @@ async function generateViaGemini(
   apiKey: string
 ): Promise<string | null> {
   try {
-    const res = await fetch(
+    const res = await modelFetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
@@ -89,26 +90,29 @@ async function generateViaOpenRouter(
   apiKey: string
 ): Promise<string | null> {
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://synthex.social',
-        'X-Title': 'Synthex Demo',
-      },
-      body: JSON.stringify({
-        model: 'meta-llama/llama-3.3-70b-instruct:free',
-        messages: [
-          {
-            role: 'user',
-            content: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
-          },
-        ],
-        max_tokens: 200,
-        temperature: 0.8,
-      }),
-    });
+    const res = await modelFetch(
+      'https://openrouter.ai/api/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://synthex.social',
+          'X-Title': 'Synthex Demo',
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.3-70b-instruct:free',
+          messages: [
+            {
+              role: 'user',
+              content: `Write a single Instagram caption (2-3 sentences, 1-2 hashtags) for a business called "${businessName}". Australian voice, no emojis, conversational. Return only the caption text, nothing else.`,
+            },
+          ],
+          max_tokens: 200,
+          temperature: 0.8,
+        }),
+      }
+    );
     if (!res.ok) return null;
     const data = (await res.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
@@ -124,7 +128,7 @@ async function generateViaAnthropic(
   apiKey: string
 ): Promise<string | null> {
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await modelFetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -157,7 +161,7 @@ async function generateViaOpenAI(
   apiKey: string
 ): Promise<string | null> {
   try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
+    const res = await modelFetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,

@@ -167,9 +167,14 @@ const sameWord = (got: string | undefined, want: string) =>
  */
 export function forbiddenHits(
   text: string,
-  words: readonly string[]
+  words: readonly string[],
+  exempt: readonly string[] = []
 ): string[] {
   const got = wordsOf(text);
+  const covered = exemptWords(got, exempt);
+  // A match spanning got[from..to) counts unless all of it is exempt.
+  const counts = (from: number, to: number) =>
+    covered.slice(from, to).some(c => !c);
   return words.filter(w => {
     const want = wordsOf(w);
     if (!want.length) return false;
@@ -179,18 +184,38 @@ export function forbiddenHits(
       if (
         want.every((x, j) =>
           j === want.length - 1 ? sameWord(got[i + j], x) : got[i + j] === x
-        )
+        ) &&
+        counts(i, i + want.length)
       )
         return true;
       // Run together or split differently ('Trade Hall' vs 'TradeHall').
       let run = '';
       for (let j = i; j < got.length && run.length < joined.length + 2; j++) {
         run += got[j];
-        if (sameWord(run, joined)) return true;
+        if (sameWord(run, joined) && counts(i, j + 1)) return true;
       }
       return false;
     });
   });
+}
+
+/** Which words of `got` fall inside an exempt phrase (exact words, any final plural). */
+function exemptWords(got: string[], exempt: readonly string[]): boolean[] {
+  const covered = got.map(() => false);
+  // Singular or plural either way round ('Card' and 'Cards').
+  const near = (a: string | undefined, b: string) =>
+    a !== undefined && (sameWord(a, b) || sameWord(b, a));
+  for (const phrase of exempt) {
+    const want = wordsOf(phrase);
+    if (!want.length) continue;
+    for (let i = 0; i + want.length <= got.length; i++) {
+      const at = want.every((x, j) =>
+        j === want.length - 1 ? near(got[i + j], x) : got[i + j] === x
+      );
+      if (at) for (let j = 0; j < want.length; j++) covered[i + j] = true;
+    }
+  }
+  return covered;
 }
 
 /**
@@ -203,16 +228,10 @@ export function brandHits(
   text: string,
   brand: Pick<PortfolioBrandProfile, 'name' | 'forbiddenWords' | 'antiPatterns'>
 ): string[] {
-  let rest = text;
-  for (const own of [brand.name, ...brand.antiPatterns]) {
-    const pattern = own
-      .trim()
-      .split(/\s+/)
-      .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-      .join('\\s+');
-    if (pattern) rest = rest.replace(new RegExp(pattern, 'gi'), '\n');
-  }
-  return forbiddenHits(rest, brand.forbiddenWords);
+  return forbiddenHits(text, brand.forbiddenWords, [
+    brand.name,
+    ...brand.antiPatterns,
+  ]);
 }
 
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [

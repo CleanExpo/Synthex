@@ -14,6 +14,7 @@
 
 import axios from 'axios';
 import { logger } from '@/lib/logger';
+import { guardScopedText } from '@/lib/ai/prompt-scope';
 
 export interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
@@ -102,14 +103,19 @@ export class OpenRouterClient {
         transforms: ['middle-out'],
         route: 'fallback',
         // Handle thinking parameters
-        ...(request.thinking ? { 
-          thinking: request.thinking,
-          ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-        } : {}),
+        ...(request.thinking
+          ? {
+              thinking: request.thinking,
+              ...(request.thinkingDisplay === 'omitted'
+                ? { thinking_display: 'omitted' }
+                : {}),
+            }
+          : {}),
         // Handle cache parameter
         ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
       };
 
+      await guardScopedText(JSON.stringify(body));
       const response = await axios.post(
         `${this.baseURL}/chat/completions`,
         body,
@@ -166,14 +172,19 @@ export class OpenRouterClient {
       ...request,
       stream: true,
       // Handle thinking parameters for streaming
-      ...(request.thinking ? { 
-        thinking: request.thinking,
-        ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-      } : {}),
+      ...(request.thinking
+        ? {
+            thinking: request.thinking,
+            ...(request.thinkingDisplay === 'omitted'
+              ? { thinking_display: 'omitted' }
+              : {}),
+          }
+        : {}),
       // Handle cache parameter for streaming
       ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
     };
 
+    await guardScopedText(JSON.stringify(body));
     const response = await axios.post(
       `${this.baseURL}/chat/completions`,
       body,

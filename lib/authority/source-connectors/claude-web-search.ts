@@ -1,5 +1,6 @@
 import { SourceConnector, SourceResult } from '../types';
 import { logger } from '@/lib/logger';
+import { modelFetch } from '@/lib/ai/prompt-scope';
 
 // Confidence scoring based on domain authority
 function getDomainConfidence(url: string): number {
@@ -29,13 +30,17 @@ interface TextContentBlock {
   text: string;
 }
 
-type ContentBlock = WebSearchResultBlock | TextContentBlock | { type: string; [key: string]: unknown };
+type ContentBlock =
+  | WebSearchResultBlock
+  | TextContentBlock
+  | { type: string; [key: string]: unknown };
 
 export class ClaudeWebSearchConnector implements SourceConnector {
   readonly id = 'claude-web-search';
   readonly name = 'Claude Web Search';
   readonly type = 'web' as const;
-  readonly description = 'Web search via Claude API with domain filtering for authoritative sources';
+  readonly description =
+    'Web search via Claude API with domain filtering for authoritative sources';
 
   get enabled(): boolean {
     return !!process.env.ANTHROPIC_API_KEY;
@@ -73,16 +78,19 @@ export class ClaudeWebSearchConnector implements SourceConnector {
         ],
       };
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-beta': 'web-search-2025-03-05',
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await modelFetch(
+        'https://api.anthropic.com/v1/messages',
+        {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-beta': 'web-search-2025-03-05',
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       if (!response.ok) {
         const errBody = await response.json().catch(() => ({}));
@@ -125,7 +133,9 @@ export class ClaudeWebSearchConnector implements SourceConnector {
 
         // Also parse tool_use blocks that may contain search results
         if (block.type === 'tool_use') {
-          const input = (block as Record<string, unknown>).input as Record<string, unknown> | undefined;
+          const input = (block as Record<string, unknown>).input as
+            | Record<string, unknown>
+            | undefined;
           if (input?.query) {
             // The tool was invoked — results come in subsequent tool_result blocks
           }
@@ -141,7 +151,7 @@ export class ClaudeWebSearchConnector implements SourceConnector {
             const confidence = getDomainConfidence(url);
             if (confidence >= 0.75) {
               // Only include high-confidence domain URLs from text
-              const alreadyAdded = results.some((r) => r.url === url);
+              const alreadyAdded = results.some(r => r.url === url);
               if (!alreadyAdded) {
                 results.push({
                   title: `Source from ${new URL(url).hostname}`,
