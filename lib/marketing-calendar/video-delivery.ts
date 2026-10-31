@@ -15,7 +15,11 @@ import {
   PORTFOLIO_CALENDAR_TAG,
   buildPortfolioCalendar,
 } from './portfolio-plan';
-import { PORTFOLIO_BRANDS, PORTFOLIO_WEEK_STARTS } from './portfolio-brands';
+import {
+  PORTFOLIO_BRANDS,
+  PORTFOLIO_WEEK_STARTS,
+  forbiddenHits,
+} from './portfolio-brands';
 import { loadWorkspaceOrgs } from './workspace';
 
 export const DELIVERY_TOKEN_ENV = 'SHORTFORM_DELIVERY_TOKEN';
@@ -61,7 +65,8 @@ export function checkDeliveryToken(
 export type DeliveryResult =
   | { outcome: 'attached' | 'unchanged'; postId: string }
   | { outcome: 'not_found' }
-  | { outcome: 'conflict'; reason: string };
+  | { outcome: 'conflict'; reason: string }
+  | { outcome: 'refused'; reason: string };
 
 export async function attachVideoToSlot(
   delivery: VideoDelivery
@@ -73,6 +78,18 @@ export async function attachVideoToSlot(
     PORTFOLIO_WEEK_STARTS
   ).find(s => s.slotKey === delivery.slotKey);
   if (!planned) return { outcome: 'not_found' };
+  // A caption is draft copy for this brand: its forbidden words never go in.
+  const brand = PORTFOLIO_BRANDS.find(b => b.orgSlug === planned.orgSlug)!;
+  const banned = forbiddenHits(
+    delivery.captionDraft ?? '',
+    brand.forbiddenWords
+  );
+  if (banned.length > 0) {
+    return {
+      outcome: 'refused',
+      reason: `caption names words this brand never uses: ${banned.join(', ')}`,
+    };
+  }
   const org = (await loadWorkspaceOrgs()).get(planned.orgSlug);
   if (!org) return { outcome: 'not_found' };
   const matches = await prisma.calendarPost.findMany({
@@ -117,9 +134,11 @@ export async function attachVideoToSlot(
     };
   }
 
-  // The checks above are repeated in the WHERE so they hold at write time: a
-  // slot scheduled, or filled by another delivery, since the read matches
-  // nothing and is reported as a conflict.
+  // The checks above are repeated in the WHERE so they hold at write time,
+  // and the row must be unchanged since the read (updatedAt), because the
+  // metadata written is built from that read: a slot scheduled, re-keyed,
+  // edited or filled by another delivery since then matches nothing and is
+  // reported as a conflict.
   const { count } = await prisma.calendarPost.updateMany({
     where: {
       id: post.id,
@@ -127,7 +146,11 @@ export async function attachVideoToSlot(
       status: 'draft',
       mediaUrls: { isEmpty: true },
       tags: { has: PORTFOLIO_CALENDAR_TAG },
-      metadata: { path: ['slotKind'], equals: 'shortform_video' },
+      updatedAt: post.updatedAt,
+      AND: [
+        { metadata: { path: ['slotKind'], equals: 'shortform_video' } },
+        { metadata: { path: ['slotKey'], equals: delivery.slotKey } },
+      ],
     },
     data: {
       mediaUrls: [delivery.videoUrl],

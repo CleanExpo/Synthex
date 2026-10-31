@@ -108,6 +108,28 @@ function orgData(brand: PortfolioBrandProfile, logoUrl: string | null) {
   };
 }
 
+/** The metadata setup writes on a planned slot's draft. */
+function slotMetadata(
+  slot: ReturnType<typeof buildPortfolioCalendar>[number],
+  brand: PortfolioBrandProfile
+) {
+  return {
+    source: PORTFOLIO_SOURCE,
+    planVersion: PORTFOLIO_PLAN_VERSION,
+    slotKey: slot.slotKey,
+    slotKind: slot.kind,
+    weekStart: slot.weekStart,
+    scheduledLocal: slot.localTime,
+    theme: slot.theme,
+    presenter: slot.kind === 'shortform_video' ? 'Margot (HeyGen)' : null,
+    approvalState: 'pending_approval',
+    externalPublishBlocked: true,
+    videoDelivery:
+      slot.kind === 'shortform_video' ? { status: 'awaiting_video' } : null,
+    brandRules: brand.brandRules,
+  };
+}
+
 function brandDnaData(brand: PortfolioBrandProfile, logoUrl: string | null) {
   return {
     businessName: brand.name,
@@ -409,23 +431,7 @@ export async function applyPortfolioSetup(opts: {
           slot.orgSlug,
           'calendar-draft',
         ],
-        metadata: json({
-          source: PORTFOLIO_SOURCE,
-          planVersion: PORTFOLIO_PLAN_VERSION,
-          slotKey: slot.slotKey,
-          slotKind: slot.kind,
-          weekStart: slot.weekStart,
-          scheduledLocal: slot.localTime,
-          theme: slot.theme,
-          presenter: slot.kind === 'shortform_video' ? 'Margot (HeyGen)' : null,
-          approvalState: 'pending_approval',
-          externalPublishBlocked: true,
-          videoDelivery:
-            slot.kind === 'shortform_video'
-              ? { status: 'awaiting_video' }
-              : null,
-          brandRules: brand.brandRules,
-        }),
+        metadata: json(slotMetadata(slot, brand)),
       };
 
       if (refused.has(slot.orgSlug)) {
@@ -569,6 +575,21 @@ export async function undoPortfolioSetup(
   return lines;
 }
 
+/**
+ * The Organization columns a prompt builder reads (lib/ai/content-generator.ts,
+ * lib/ai/prompt-layer-builder.ts, studio context tools), plus the description
+ * and website shown beside them. The org row also carries billing and account
+ * data no prompt reads, so it is scanned on these columns only; a guard test
+ * fails if a prompt builder starts reading an org column not listed here.
+ */
+export const ORG_PROMPT_FIELDS = [
+  'name',
+  'description',
+  'industry',
+  'website',
+  'aiGeneratedData',
+] as const;
+
 // Row identity: ids only, never text a prompt reads.
 const ROW_KEYS = new Set(['id', 'organizationId', 'parentOrgId']);
 
@@ -600,6 +621,7 @@ function promptedText(
 ) {
   if (!row) return '';
   const approved: Record<string, string> = {
+    banned: canonical(brand.forbiddenWords),
     antiPatterns: canonical(brand.antiPatterns),
     brandRules: canonical(brand.brandRules),
   };
@@ -611,7 +633,8 @@ function promptedText(
     )
   );
   return JSON.stringify(kept, (k, v) =>
-    k === 'banned' || (k in approved && canonical(v) === approved[k])
+    (k === 'banned' && canonical(v) === approved.banned) ||
+    (k in approved && k !== 'banned' && canonical(v) === approved[k])
       ? undefined
       : v
   );
@@ -633,7 +656,11 @@ export async function verifyPortfolioSetup(): Promise<{
   const orgs = await prisma.organization.findMany({
     where: { slug: { in: PORTFOLIO_BRANDS.map(b => b.orgSlug) } },
     // Whole rows: a kept row is checked on every field a prompt can read.
-    include: { brandDna: true, clientProfile: true },
+    include: {
+      brandDna: true,
+      clientProfile: true,
+      brandOperatingSystem: true,
+    },
   });
   const bySlug = new Map(orgs.map(o => [o.slug, o]));
 
@@ -677,17 +704,21 @@ export async function verifyPortfolioSetup(): Promise<{
       !!profile && brand.forbiddenWords.every(w => held.has(w.toLowerCase())),
       `${brand.orgSlug}: client profile holds all ${brand.forbiddenWords.length} forbidden words`
     );
-    const { brandDna, clientProfile, ...orgRow } = org;
+    const { brandDna, clientProfile, brandOperatingSystem } = org;
+    const orgRow = Object.fromEntries(ORG_PROMPT_FIELDS.map(k => [k, org[k]]));
     const prompted = [
       promptedText(orgRow, brand, orgData(brand, served)),
       promptedText(brandDna, brand, brandDnaData(brand, served)),
       promptedText(clientProfile, brand, clientProfileData(brand)),
+      // Setup never writes a Brand OS; any row is the org's own and is
+      // placed in the system prompt (prompt-layer-builder.ts), so all of it is scanned.
+      promptedText(brandOperatingSystem, brand),
     ].join(' ');
     check(
       !!profile &&
         !!org.brandDna &&
         forbiddenHits(prompted, brand.forbiddenWords).length === 0,
-      `${brand.orgSlug}: organisation, brand DNA and client profile carry no forbidden words`
+      `${brand.orgSlug}: organisation, brand DNA, Brand OS and client profile carry no forbidden words`
     );
   }
 
@@ -707,29 +738,34 @@ export async function verifyPortfolioSetup(): Promise<{
       content: true,
       metadata: true,
       publishedAt: true,
+      hashtags: true,
+      mentions: true,
       scheduledFor: true,
       platforms: true,
     },
   });
   const slugOf = new Map(members.map(o => [o.id, o.slug]));
+  const expected = buildPortfolioCalendar(
+    PORTFOLIO_BRANDS,
+    PORTFOLIO_WEEK_STARTS
+  );
+  const planBySlot = new Map(expected.map(s => [s.slotKey, s]));
   // A kept draft (create-only seeding never rewrites one) carries whatever
-  // title, brief and rules it was made with, so its words are checked like
-  // the brand rows; its rules only while they differ from the approved ones.
+  // title, brief and metadata it was made with or was given since (a
+  // delivered caption, edited rules), so it is scanned like the brand rows:
+  // every metadata field still exactly as setup wrote it is skipped.
   for (const brand of PORTFOLIO_BRANDS) {
-    const approvedRules = JSON.stringify(brand.brandRules);
     const text = posts
       .filter(p => slugOf.get(p.organizationId) === brand.orgSlug)
       .map(p => {
-        const m = (p.metadata ?? {}) as {
-          theme?: string;
-          brandRules?: unknown;
-        };
-        const rules = JSON.stringify(m.brandRules ?? null);
+        const meta = (p.metadata ?? {}) as Record<string, unknown>;
+        const slot = planBySlot.get(String(meta.slotKey ?? ''));
         return [
           p.title ?? '',
           p.content ?? '',
-          m.theme ?? '',
-          rules === approvedRules ? '' : rules,
+          ...(p.hashtags ?? []),
+          ...(p.mentions ?? []),
+          promptedText(meta, brand, slot ? slotMetadata(slot, brand) : {}),
         ].join(' ');
       })
       .join(' ');
@@ -739,10 +775,6 @@ export async function verifyPortfolioSetup(): Promise<{
       `${brand.orgSlug}: calendar drafts carry no forbidden words`
     );
   }
-  const expected = buildPortfolioCalendar(
-    PORTFOLIO_BRANDS,
-    PORTFOLIO_WEEK_STARTS
-  );
   // slotKey -> every row found under it, so a slot filed under the wrong
   // brand, duplicated, or moved to another time or channel fails rather than
   // counting as present.

@@ -73,6 +73,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         );
       case 'conflict':
         return NextResponse.json({ error: result.reason }, { status: 409 });
+      case 'refused':
+        return NextResponse.json({ error: result.reason }, { status: 422 });
       default:
         logger.info('[video-delivery] video attached', {
           slotKey: parsed.data.slotKey,

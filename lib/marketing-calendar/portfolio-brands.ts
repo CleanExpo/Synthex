@@ -94,6 +94,17 @@ const SHARED_ANTI = [
  */
 export const UNITE_GROUP_BANNED = [
   'restoration',
+  'restorer',
+  'remediation',
+  'water damage',
+  'flood damage',
+  'flood',
+  'mould',
+  'mold',
+  'fire damage',
+  'smoke damage',
+  'carpet cleaning',
+  'insurance claim',
   'CARSI',
   'Disaster Recovery',
   'NRPG',
@@ -119,7 +130,7 @@ export const UNITE_GROUP_BANNED = [
   "group's businesses",
   'our businesses',
   'portfolio',
-  'ventures',
+  'venture',
   'inside Nexus',
   'what got built',
   'behind the scenes',
@@ -127,6 +138,9 @@ export const UNITE_GROUP_BANNED = [
   'our other brands',
   'sister brand',
   'sister business',
+  'sister company',
+  'our brands',
+  'our own businesses',
   'Unite Group built',
   'built this week',
 ];
@@ -137,7 +151,10 @@ const wordsOf = (s: string) =>
     .split(/[^a-z0-9]+/)
     .filter(Boolean);
 const sameWord = (got: string | undefined, want: string) =>
-  got === want || got === `${want}s` || got === `${want}es`;
+  got === want ||
+  got === `${want}s` ||
+  got === `${want}es` ||
+  (want.endsWith('y') && got === `${want.slice(0, -1)}ies`);
 
 /**
  * The forbidden words found in `text`, matched as whole words after
@@ -215,7 +232,13 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
       'Made-for-you card ($449, GST included)',
     ],
     socialProfiles: [],
-    forbiddenWords: [...NEXUS_FORBIDDEN, 'guaranteed', 'NFC'],
+    // Unite Group-branded, so the Unite-Group content rule applies too.
+    forbiddenWords: [
+      ...NEXUS_FORBIDDEN,
+      ...UNITE_GROUP_BANNED,
+      'guaranteed',
+      'NFC',
+    ],
     preferredWords: ['video business card', 'digital business card'],
     antiPatterns: [
       ...SHARED_ANTI,
@@ -243,7 +266,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
       'Ready-made or made for you: what each card includes',
       'One link or QR: handing your card over at a job, event or counter',
       'What happens after you order: proof, approval, delivery',
-      'Your businesses in one place: linking every site from one card',
+      'Every business you run in one place: linking every site from one card',
     ],
   },
   {

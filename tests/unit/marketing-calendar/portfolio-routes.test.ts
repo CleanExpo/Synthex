@@ -76,6 +76,7 @@ const businessCard = {
 const draftSlot = {
   id: 'post-1',
   status: 'draft',
+  updatedAt: new Date('2026-11-01T00:00:00Z'),
   mediaUrls: [] as string[],
   metadata: { slotKey: validBody.slotKey, slotKind: 'shortform_video' },
 };
@@ -196,6 +197,11 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
       organizationId: 'org-bc',
       status: 'draft',
       mediaUrls: { isEmpty: true },
+      // Unchanged since the read, and still the same slot.
+      updatedAt: draftSlot.updatedAt,
+      AND: expect.arrayContaining([
+        { metadata: { path: ['slotKey'], equals: validBody.slotKey } },
+      ]),
     });
     expect(update.data.mediaUrls).toEqual([validBody.videoUrl]);
     expect(update.data).not.toHaveProperty('status');
@@ -220,6 +226,22 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
       mediaUrls: ['https://cdn.example.test/other.mp4'],
     });
     expect((await deliver(deliveryRequest(validBody, TOKEN))).status).toBe(409);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('refuses (422) a caption that names a word the brand never uses, writing nothing', async () => {
+    mockFindFirst.mockResolvedValue(draftSlot);
+    const res = await deliver(
+      deliveryRequest(
+        {
+          ...validBody,
+          slotKey: '2026-11-02-unite-group-video-1',
+          captionDraft: 'Promote CARSI courses',
+        },
+        TOKEN
+      )
+    );
+    expect(res.status).toBe(422);
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 

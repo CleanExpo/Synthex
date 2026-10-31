@@ -128,6 +128,13 @@ describe('portfolio marketing calendar plan', () => {
     'Two restorations a week',
     'Restore  Assist',
     'Tradehall booths',
+    'Two Disaster Recoveries this month',
+    'What to do after water damage',
+    'Mould after a leak',
+    'An insurance claim, start to finish',
+    'A carpet cleaning business shares one link',
+    'Our sister company',
+    'A new venture',
   ])('catches a spelling or punctuation variant: %s', copy => {
     const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
     expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);
@@ -146,6 +153,13 @@ describe('portfolio marketing calendar plan', () => {
   ])('catches Unite-Group copy about the group itself: %s', copy => {
     const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
     expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);
+  });
+
+  it('holds Business Card, a Unite Group-branded card, to the Unite-Group ban too', () => {
+    const card = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'business-card')!;
+    expect(
+      forbiddenHits('Tap a CARSI course card', card.forbiddenWords).length
+    ).toBeGreaterThan(0);
   });
 
   it("keeps every brief and title clear of that brand's forbidden words", () => {

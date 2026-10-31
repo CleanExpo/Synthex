@@ -70,6 +70,7 @@ jest.mock('@/lib/marketing-calendar/resolve-logo', () => ({
 }));
 
 import {
+  ORG_PROMPT_FIELDS,
   applyPortfolioSetup,
   undoPortfolioSetup,
   verifyPortfolioSetup,
@@ -591,6 +592,7 @@ describe('verifyPortfolioSetup', () => {
     industry: b.industry,
     calendarMode: 'shadow',
     liveModeT: 0,
+    brandOperatingSystem: null as null | Record<string, unknown>,
     // As brandDnaData and clientProfileData store them, so the passing case
     // is what the seed really writes.
     brandDna: {
@@ -635,6 +637,7 @@ describe('verifyPortfolioSetup', () => {
         PORTFOLIO_BRANDS.find(b => b.orgSlug === s.orgSlug)!
       ),
       metadata: {
+        source: PORTFOLIO_SOURCE,
         theme: s.theme,
         brandRules: PORTFOLIO_BRANDS.find(b => b.orgSlug === s.orgSlug)!
           .brandRules,
@@ -709,6 +712,119 @@ describe('verifyPortfolioSetup', () => {
     );
   });
 
+  it('fails a kept Unite-Group draft whose delivered caption names an owned business', async () => {
+    const victim = plan.findIndex(s => s.orgSlug === 'unite-group');
+    db.calendarPost.findMany.mockResolvedValue(
+      rows(slug => slug).map((r, i) =>
+        i === victim
+          ? {
+              ...r,
+              metadata: {
+                ...r.metadata,
+                videoDelivery: {
+                  status: 'delivered',
+                  captionDraft: 'Promote CARSI courses',
+                },
+              },
+            }
+          : r
+      )
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: calendar drafts carry no forbidden words',
+    ]);
+  });
+
+  it('fails a Unite-Group Brand OS whose prompt override names an owned business', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o =>
+        o.slug === 'unite-group'
+          ? {
+              ...o,
+              brandOperatingSystem: {
+                id: 'bos-1',
+                organizationId: o.id,
+                systemPromptOverride: 'Promote CARSI courses',
+              },
+            }
+          : o
+      )
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+    ]);
+  });
+
+  it.each([
+    ['hashtag', { hashtags: ['#CARSI'] }],
+    ['mention', { mentions: ['@Disaster_Recovery'] }],
+  ])(
+    'fails a kept Unite-Group draft whose %s names an owned business',
+    async (_, edit) => {
+      const victim = plan.findIndex(s => s.orgSlug === 'unite-group');
+      db.calendarPost.findMany.mockResolvedValue(
+        rows(slug => slug).map((r, i) => (i === victim ? { ...r, ...edit } : r))
+      );
+      expect(await failedLabels()).toEqual([
+        'unite-group: calendar drafts carry no forbidden words',
+      ]);
+    }
+  );
+
+  it('scans a field named banned anywhere but the approved banned list', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      withUgProfile({
+        constraints: { banned: 'Feature a CARSI course monthly' },
+      })
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
+    ]);
+  });
+
+  it('ignores org billing data no prompt reads', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o =>
+        o.slug === 'unite-group'
+          ? { ...o, billingEmail: 'accounts@carsi.com.au' }
+          : o
+      )
+    );
+    const result = await verifyPortfolioSetup();
+    expect(result.checks.filter(c => !c.pass)).toEqual([]);
+  });
+
+  it('scans every organisation column a prompt builder reads', () => {
+    const fs = jest.requireActual<typeof import('fs')>('fs');
+    const readers = [
+      'lib/ai/content-generator.ts',
+      'lib/ai/prompt-layer-builder.ts',
+      'lib/services/ai/studio-tools/context-tools.ts',
+    ].map(f => fs.readFileSync(f, 'utf8'));
+    const read = new Set<string>();
+    for (const src of readers) {
+      for (const m of src.matchAll(
+        /organization\.find\w*\(\s*\{[\s\S]*?select:\s*\{([^}]*)\}/g
+      )) {
+        for (const k of m[1].matchAll(/(\w+):\s*true/g)) read.add(k[1]);
+      }
+      for (const m of src.matchAll(/\borg\.(\w+)/g)) read.add(m[1]);
+    }
+    // Not text: ids and colours.
+    const notText = new Set(['id', 'slug', 'primaryColor', 'logo']);
+    expect(read.size).toBeGreaterThan(0);
+    expect(
+      [...read].filter(
+        k =>
+          !notText.has(k) &&
+          !(ORG_PROMPT_FIELDS as readonly string[]).includes(k)
+      )
+    ).toEqual([]);
+  });
+
   it.each([
     [
       'moved to another date',
@@ -761,7 +877,7 @@ describe('verifyPortfolioSetup', () => {
         orgs.map(o => (o.slug === 'unite-group' ? edit(o) : o))
       );
       expect(await failedLabels()).toEqual([
-        'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+        'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
       ]);
     }
   );
@@ -805,7 +921,7 @@ describe('verifyPortfolioSetup', () => {
       })
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
     ]);
   });
 
@@ -828,7 +944,7 @@ describe('verifyPortfolioSetup', () => {
       )
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
     ]);
   });
 
@@ -843,7 +959,7 @@ describe('verifyPortfolioSetup', () => {
       })
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
     ]);
   });
 
@@ -857,7 +973,7 @@ describe('verifyPortfolioSetup', () => {
       )
     );
     expect(await failedLabels()).toEqual([
-      'unite-group: organisation, brand DNA and client profile carry no forbidden words',
+      'unite-group: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
     ]);
   });
 
@@ -918,7 +1034,7 @@ describe('verifyPortfolioSetup', () => {
     const failed = await failedLabels();
     expect(failed).toEqual([
       'carsi: client profile holds all 22 forbidden words',
-      'carsi: organisation, brand DNA and client profile carry no forbidden words',
+      'carsi: organisation, brand DNA, Brand OS and client profile carry no forbidden words',
     ]);
   });
 
