@@ -622,8 +622,15 @@ export async function verifyPortfolioSetup(): Promise<{
     );
   }
 
+  // Only workspace members' rows count: a tagged row in any other org is
+  // neither read nor reported, so it cannot fail (or pass) this check.
+  const root = bySlug.get(PORTFOLIO_PARENT_SLUG);
+  const members = root ? orgs.filter(o => inWorkspace(o, root)) : [];
   const posts = await prisma.calendarPost.findMany({
-    where: { tags: { has: PORTFOLIO_CALENDAR_TAG } },
+    where: {
+      tags: { has: PORTFOLIO_CALENDAR_TAG },
+      organizationId: { in: members.map(o => o.id) },
+    },
     select: {
       status: true,
       organizationId: true,
@@ -631,7 +638,7 @@ export async function verifyPortfolioSetup(): Promise<{
       publishedAt: true,
     },
   });
-  const slugOf = new Map(orgs.map(o => [o.id, o.slug]));
+  const slugOf = new Map(members.map(o => [o.id, o.slug]));
   const expected = buildPortfolioCalendar(
     PORTFOLIO_BRANDS,
     PORTFOLIO_WEEK_STARTS

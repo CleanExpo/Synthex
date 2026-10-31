@@ -584,6 +584,25 @@ describe('verifyPortfolioSetup', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('ignores a portfolio-tagged row planted in an org outside the workspace', async () => {
+    const foreign = {
+      ...rows(slug => slug)[0],
+      organizationId: 'org-outsider',
+    };
+    // Honours the WHERE like Postgres would: only listed orgs come back.
+    db.calendarPost.findMany.mockImplementation(
+      async ({ where }: { where: { organizationId?: { in: string[] } } }) =>
+        [...rows(slug => slug), foreign].filter(
+          r =>
+            !where.organizationId ||
+            where.organizationId.in.includes(r.organizationId)
+        )
+    );
+    const result = await verifyPortfolioSetup();
+    expect(result.checks.filter(c => !c.pass)).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
   it('fails when a brand org has left the workspace', async () => {
     db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
     db.organization.findMany.mockResolvedValue(
@@ -593,9 +612,10 @@ describe('verifyPortfolioSetup', () => {
     );
     const result = await verifyPortfolioSetup();
     expect(result.ok).toBe(false);
-    expect(result.checks.filter(c => !c.pass).map(c => c.label)).toEqual([
-      'carsi: active and in the unite-group workspace',
-    ]);
+    const failed = result.checks.filter(c => !c.pass).map(c => c.label);
+    expect(failed).toContain('carsi: active and in the unite-group workspace');
+    // Its slots no longer count either: they sit under a non-member org.
+    expect(failed.some(l => l.includes('2026-11-02-carsi-video-1'))).toBe(true);
   });
 
   it('fails when a slot is filed under the wrong brand', async () => {
