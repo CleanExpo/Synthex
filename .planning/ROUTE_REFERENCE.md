@@ -40,6 +40,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `DELETE,GET,POST /api/admin/platform-credentials` — admin — _platformOAuthCredential,user_
 - `GET,PATCH,POST /api/admin/users` — admin — _user_
 - `GET,PATCH /api/admin/org-brand-profile` — admin — _organization,user_
+- `GET,POST /api/admin/portfolio-calendar` — admin — _organization,brandDNA,clientProfile,calendarPost,teamMember,businessOwnership_
 - `GET,POST /api/admin/invites` — admin — _inviteCode_
 - `GET,POST /api/admin/jobs` — admin
 - `GET,POST /api/admin/remotion` — admin
@@ -453,6 +454,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/health/scaling` — public
 - `GET /api/health/ai` — public
 - `GET /api/health/auth` — public
+- `GET /api/health/portfolio-calendar` — public — _organization,brandDNA,clientProfile,calendarPost_
 - `GET /api/health/composite` — user — _user_
 - `GET /api/health/db` — public
 - `GET /api/health/email` — public
@@ -620,6 +622,10 @@ Both routes use the existing `APISecurityChecker` authenticated read/write polic
 
 - `GET /api/platforms/[platform]/metrics` — user — _platformConnection,post_
 - `GET /api/platforms/metrics` — user — _platformConnection,post_
+
+### portfolio-calendar
+
+- `POST /api/portfolio-calendar/video-delivery` — auth — X-Delivery-Token = SHORTFORM*DELIVERY_TOKEN (503 when unset); attaches an SDA-passed video to a draft slot, never publishes — \_calendarPost*
 
 ### pr
 
@@ -1005,6 +1011,7 @@ Both routes use the existing `APISecurityChecker` authenticated read/write polic
 | Patterns                        | /dashboard/patterns                      | `/api/patterns/analyze` (partial)                                                                                                                                                                                                                         |
 | Personas                        | /dashboard/personas                      | (partial)                                                                                                                                                                                                                                                 |
 | Platforms                       | /dashboard/platforms                     | `/api/auth/connections` (partial)                                                                                                                                                                                                                         |
+| Portfolio Calendar              | /dashboard/portfolio-calendar            | `/api/admin/portfolio-calendar` (owner only)                                                                                                                                                                                                              |
 | PR                              | /dashboard/pr                            | `/api/pr/press-releases` (partial)                                                                                                                                                                                                                        |
 | Predictions                     | /dashboard/predictions                   | (partial)                                                                                                                                                                                                                                                 |
 | Prompts                         | /dashboard/prompts                       | `/api/prompts/trackers`, `/api/prompts/test`, `/api/prompts/gaps` (partial)                                                                                                                                                                               |
