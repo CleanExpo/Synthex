@@ -106,6 +106,8 @@ function writeCalls(): string[] {
 const orgRow = (slug: string) => ({
   id: `org-${slug}`,
   slug,
+  status: 'active',
+  parentOrgId: slug === 'unite-group' ? null : 'org-unite-group',
   logo: null,
   primaryColor: null,
 });
@@ -121,6 +123,8 @@ beforeEach(() => {
   db.calendarPost.findFirst.mockResolvedValue(null);
   db.calendarPost.findMany.mockResolvedValue([]);
   db.$transaction.mockImplementation(fakeTransaction);
+  db.organization.updateMany.mockResolvedValue({ count: 0 });
+  db.brandDNA.updateMany.mockResolvedValue({ count: 0 });
   lockChain = Promise.resolve();
   lockCalls.length = 0;
   db.clientProfile.create.mockResolvedValue({
@@ -205,7 +209,11 @@ describe('applyPortfolioSetup', () => {
 
     // Neither run touched an existing record or the org logo and colour.
     expect(db.brandDNA.upsert).not.toHaveBeenCalled();
-    expect(db.brandDNA.updateMany).not.toHaveBeenCalled();
+    // Only the null-only logo repair may touch existing DNA.
+    for (const [arg] of db.brandDNA.updateMany.mock.calls) {
+      expect(arg.where).toMatchObject({ logoUrl: null });
+      expect(Object.keys(arg.data)).toEqual(['logoUrl']);
+    }
     expect(db.clientProfile.upsert).not.toHaveBeenCalled();
     expect(db.organization.update).not.toHaveBeenCalled();
   });
@@ -218,9 +226,17 @@ describe('applyPortfolioSetup', () => {
     db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human' });
     db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
     await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
+    // Only the null-only logo repair may run (it matches nothing here: the
+    // mocked updateMany returns no count), never a create or full update.
     expect(
-      writeCalls().filter(c => /brandDNA|clientProfile|organization/.test(c))
+      writeCalls().filter(
+        c =>
+          /brandDNA|clientProfile|organization/.test(c) && !/updateMany/.test(c)
+      )
     ).toEqual([]);
+    for (const [arg] of db.brandDNA.updateMany.mock.calls) {
+      expect(arg.where).toMatchObject({ logoUrl: null });
+    }
   });
 
   it('two applies at once create each slot once (check and create share a lock)', async () => {
@@ -262,6 +278,80 @@ describe('applyPortfolioSetup', () => {
     expect(a.calendarPosts.length + b.calendarPosts.length).toBe(56);
     expect(a.skippedSlots.length + b.skippedSlots.length).toBe(56);
     expect(lockCalls[0]).toContain('pg_advisory_xact_lock');
+  });
+
+  it('skips a brand whose slug belongs to an org outside the workspace, or a deleted one', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) =>
+        where.slug === 'carsi'
+          ? { ...orgRow('carsi'), parentOrgId: 'outside-parent' }
+          : where.slug === 'nrpg'
+            ? { ...orgRow('nrpg'), status: 'deleted' }
+            : orgRow(where.slug)
+    );
+    db.brandDNA.create.mockResolvedValue({ id: 'dna', updatedAt: new Date() });
+    db.clientProfile.create.mockResolvedValue({
+      id: 'cp',
+      updatedAt: new Date(),
+    });
+    db.teamMember.findFirst.mockResolvedValue(null);
+    db.businessOwnership.findUnique.mockResolvedValue(null);
+    db.teamMember.create.mockResolvedValue({ id: 'tm' });
+    db.businessOwnership.create.mockResolvedValue({ id: 'bo' });
+    db.calendarPost.create.mockImplementation(
+      async ({ data }: { data: { scheduledFor: Date } }) => ({
+        id: 'p',
+        scheduledFor: data.scheduledFor,
+        updatedAt: new Date(),
+      })
+    );
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    const touched = (m: jest.Mock) =>
+      m.mock.calls.map(([a]) => JSON.stringify(a));
+    for (const fn of [
+      db.brandDNA.create,
+      db.clientProfile.create,
+      db.teamMember.create,
+      db.businessOwnership.create,
+      db.organization.update,
+      db.calendarPost.create,
+    ]) {
+      expect(touched(fn).filter(s => /org-carsi|org-nrpg/.test(s))).toEqual([]);
+    }
+    expect(manifest.log.filter(l => l.includes('brand skipped'))).toHaveLength(
+      2
+    );
+    expect(
+      manifest.skippedSlots.filter(s => /-(carsi|nrpg)-/.test(s.slotKey)).length
+    ).toBeGreaterThan(0);
+  });
+
+  it('fills a still-empty logo once the approved logo is served, and only an empty one', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.brandDNA.findUnique.mockResolvedValue({ id: 'dna' });
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp' });
+    db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
+    db.organization.updateMany.mockResolvedValue({ count: 1 });
+    db.brandDNA.updateMany.mockResolvedValue({ count: 1 });
+    await applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' });
+
+    expect(db.organization.updateMany).toHaveBeenCalled();
+    for (const [arg] of db.organization.updateMany.mock.calls) {
+      expect(arg.where).toMatchObject({ logo: null });
+      expect(Object.keys(arg.data)).toEqual(['logo']);
+    }
+    expect(db.brandDNA.updateMany).toHaveBeenCalled();
+    for (const [arg] of db.brandDNA.updateMany.mock.calls) {
+      expect(arg.where).toMatchObject({ logoUrl: null });
+      expect(Object.keys(arg.data)).toEqual(['logoUrl']);
+    }
+    expect(db.brandDNA.create).not.toHaveBeenCalled();
+    expect(db.organization.update).not.toHaveBeenCalled();
   });
 
   it('records each created post with the updatedAt undo must match', async () => {
@@ -451,6 +541,8 @@ describe('verifyPortfolioSetup', () => {
   const orgs = PORTFOLIO_BRANDS.map(b => ({
     id: `org-${b.orgSlug}`,
     slug: b.orgSlug,
+    status: 'active',
+    parentOrgId: b.orgSlug === 'unite-group' ? null : 'org-unite-group',
     calendarMode: 'shadow',
     liveModeT: 0,
     brandDna: { logoUrl: b.logoUrl, primaryColour: b.colours.primary },
@@ -477,6 +569,20 @@ describe('verifyPortfolioSetup', () => {
     const result = await verifyPortfolioSetup();
     expect(result.checks.filter(c => !c.pass)).toEqual([]);
     expect(result.ok).toBe(true);
+  });
+
+  it('fails when a brand org has left the workspace', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o =>
+        o.slug === 'carsi' ? { ...o, parentOrgId: 'outside-parent' } : o
+      )
+    );
+    const result = await verifyPortfolioSetup();
+    expect(result.ok).toBe(false);
+    expect(result.checks.filter(c => !c.pass).map(c => c.label)).toEqual([
+      'carsi: active and in the unite-group workspace',
+    ]);
   });
 
   it('fails when a slot is filed under the wrong brand', async () => {

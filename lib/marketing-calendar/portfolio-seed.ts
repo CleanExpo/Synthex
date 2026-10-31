@@ -160,13 +160,16 @@ export async function applyPortfolioSetup(opts: {
   const { write, ownerUserId } = opts;
   const manifest = emptyManifest(write);
   const log = (line: string) => manifest.log.push(line);
+  const verb = write ? '' : 'would ';
 
   try {
     const parent = await prisma.organization.findUnique({
       where: { slug: PORTFOLIO_PARENT_SLUG },
     });
-    if (!parent)
-      throw new Error(`Parent org ${PORTFOLIO_PARENT_SLUG} not found`);
+    if (!parent || parent.status !== 'active')
+      throw new Error(
+        `Parent org ${PORTFOLIO_PARENT_SLUG} not found or not active`
+      );
 
     // Everyone who owns the parent workspace gets the same access to new brands.
     const parentOwners = await prisma.teamMember.findMany({
@@ -174,6 +177,7 @@ export async function applyPortfolioSetup(opts: {
       select: { userId: true },
     });
     const orgIds = new Map<string, string | null>();
+    const refused = new Set<string>();
 
     for (const brand of PORTFOLIO_BRANDS) {
       const logoUrl = await resolveLogoUrl(brand.logoUrl);
@@ -186,6 +190,22 @@ export async function applyPortfolioSetup(opts: {
       let org = await prisma.organization.findUnique({
         where: { slug: brand.orgSlug },
       });
+      // Slugs are global: an existing org only counts as this brand if it is
+      // an active child of the Unite Group workspace (or is that workspace).
+      // Anything else is someone else's org, so the brand gets no writes.
+      const ours =
+        !org ||
+        (org.status === 'active' &&
+          (brand.orgSlug === PORTFOLIO_PARENT_SLUG
+            ? org.id === parent.id
+            : org.parentOrgId === parent.id));
+      if (!ours) {
+        log(
+          `! ${brand.orgSlug}: existing org is not an active child of ${PORTFOLIO_PARENT_SLUG}; brand skipped, nothing written`
+        );
+        refused.add(brand.orgSlug);
+        continue;
+      }
       // Brand setup is create-only, record by record: brand DNA and client
       // profile are each created only when missing and never overwritten, and
       // the org logo and colour are set only on a brand with neither yet, so a
@@ -245,6 +265,19 @@ export async function applyPortfolioSetup(opts: {
             });
           }
         }
+      } else if (logoUrl) {
+        // Setup already ran. The one repair allowed: an approved logo that was
+        // not served then fills a logo that is still empty, never one set since.
+        const where = { id: org.id, logo: null };
+        const n = write
+          ? (
+              await prisma.organization.updateMany({
+                where,
+                data: { logo: logoUrl },
+              })
+            ).count
+          : await prisma.organization.count({ where });
+        if (n) log(`~ ${verb}fill empty org logo for ${brand.orgSlug}`);
       }
       orgIds.set(brand.orgSlug, org?.id ?? null);
       if (!org) continue;
@@ -299,6 +332,19 @@ export async function applyPortfolioSetup(opts: {
       // unique constraint instead of being overwritten.
       if (dna) {
         log(`= ${brand.orgSlug}: brand DNA already in place; not overwritten`);
+        if (logoUrl) {
+          // Same null-only logo repair as the org above.
+          const where = { organizationId: org.id, logoUrl: null };
+          const n = write
+            ? (
+                await prisma.brandDNA.updateMany({
+                  where,
+                  data: { logoUrl },
+                })
+              ).count
+            : await prisma.brandDNA.count({ where });
+          if (n) log(`~ ${verb}fill empty brand DNA logo for ${brand.orgSlug}`);
+        }
       } else {
         log(`+ create brand DNA for ${brand.orgSlug}`);
         if (write) {
@@ -379,6 +425,13 @@ export async function applyPortfolioSetup(opts: {
         }),
       };
 
+      if (refused.has(slot.orgSlug)) {
+        manifest.skippedSlots.push({
+          slotKey: slot.slotKey,
+          reason: 'brand skipped: org is not ours',
+        });
+        continue;
+      }
       if (!organizationId) {
         log(`+ ${slot.slotKey}  ${slot.localTime}  [org created on apply]`);
         continue;
@@ -531,6 +584,8 @@ export async function verifyPortfolioSetup(): Promise<{
     select: {
       id: true,
       slug: true,
+      status: true,
+      parentOrgId: true,
       calendarMode: true,
       liveModeT: true,
       brandDna: { select: { logoUrl: true, primaryColour: true } },
@@ -543,6 +598,14 @@ export async function verifyPortfolioSetup(): Promise<{
     const org = bySlug.get(brand.orgSlug);
     check(!!org, `${brand.orgSlug}: organisation exists`);
     if (!org) continue;
+    const parentId = bySlug.get(PORTFOLIO_PARENT_SLUG)?.id;
+    check(
+      org.status === 'active' &&
+        (brand.orgSlug === PORTFOLIO_PARENT_SLUG
+          ? org.parentOrgId === null
+          : !!parentId && org.parentOrgId === parentId),
+      `${brand.orgSlug}: active and in the ${PORTFOLIO_PARENT_SLUG} workspace`
+    );
     check(
       org.calendarMode === 'shadow' && org.liveModeT === 0,
       `${brand.orgSlug}: shadow mode, live tier 0`
