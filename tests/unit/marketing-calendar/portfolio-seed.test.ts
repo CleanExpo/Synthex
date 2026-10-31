@@ -607,6 +607,7 @@ describe('verifyPortfolioSetup', () => {
     },
     clientProfile: {
       intakeStatus: 'complete',
+      intakeSource: PORTFOLIO_SOURCE,
       icp: b.audience,
       offers: b.offerings,
       toneKeywords: b.voice.tone,
@@ -626,12 +627,15 @@ describe('verifyPortfolioSetup', () => {
       status: 'draft',
       publishedAt: null,
       organizationId: `org-${orgOf(s.orgSlug, i)}`,
+      title: `Short-form video: ${s.orgSlug}, ${s.theme}`,
       content: slotBrief(
         s,
         PORTFOLIO_BRANDS.find(b => b.orgSlug === s.orgSlug)!
       ),
       metadata: {
         theme: s.theme,
+        brandRules: PORTFOLIO_BRANDS.find(b => b.orgSlug === s.orgSlug)!
+          .brandRules,
         slotKey: s.slotKey,
         weekStart: s.weekStart,
         slotKind: s.kind,
@@ -786,6 +790,38 @@ describe('verifyPortfolioSetup', () => {
       'unite-group: organisation, brand DNA and client profile carry no forbidden words',
     ]);
   });
+
+  it.each([
+    [
+      'title',
+      {
+        title:
+          'Short-form video: Unite-Group, CARSI courses for restoration crews',
+      },
+    ],
+    ['rules', { brandRulesExtra: 'Feature a Trade Hall tour monthly.' }],
+  ])(
+    'fails a kept Unite-Group draft whose %s was edited to a banned word',
+    async (_, edit) => {
+      const victim = plan.findIndex(s => s.orgSlug === 'unite-group');
+      db.calendarPost.findMany.mockResolvedValue(
+        rows(slug => slug).map((r, i) => {
+          if (i !== victim) return r;
+          if ('title' in edit) return { ...r, title: edit.title };
+          return {
+            ...r,
+            metadata: {
+              ...r.metadata,
+              brandRules: [...r.metadata.brandRules, edit.brandRulesExtra],
+            },
+          };
+        })
+      );
+      expect(await failedLabels()).toEqual([
+        'unite-group: calendar drafts carry no forbidden words',
+      ]);
+    }
+  );
 
   it('fails a kept Unite-Group draft made from the old unsafe theme', async () => {
     const victim = plan.findIndex(s => s.orgSlug === 'unite-group');

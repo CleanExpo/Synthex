@@ -575,6 +575,8 @@ const NOT_PROMPTED = new Set([
   'extractedAt',
   'lastRefreshedAt',
   'intakeCompletedAt',
+  'intakeSource',
+  'intakeStatus',
   'logoUrl',
   'sourceUrl',
   'primaryColour',
@@ -712,6 +714,7 @@ export async function verifyPortfolioSetup(): Promise<{
     select: {
       status: true,
       organizationId: true,
+      title: true,
       content: true,
       metadata: true,
       publishedAt: true,
@@ -719,14 +722,25 @@ export async function verifyPortfolioSetup(): Promise<{
   });
   const slugOf = new Map(members.map(o => [o.id, o.slug]));
   // A kept draft (create-only seeding never rewrites one) carries whatever
-  // brief it was made with, so its words are checked like the brand rows.
+  // title, brief and rules it was made with, so its words are checked like
+  // the brand rows; its rules only while they differ from the approved ones.
   for (const brand of PORTFOLIO_BRANDS) {
+    const approvedRules = JSON.stringify(brand.brandRules);
     const text = posts
       .filter(p => slugOf.get(p.organizationId) === brand.orgSlug)
-      .map(
-        p =>
-          `${p.content ?? ''} ${(p.metadata as { theme?: string } | null)?.theme ?? ''}`
-      )
+      .map(p => {
+        const m = (p.metadata ?? {}) as {
+          theme?: string;
+          brandRules?: unknown;
+        };
+        const rules = JSON.stringify(m.brandRules ?? null);
+        return [
+          p.title ?? '',
+          p.content ?? '',
+          m.theme ?? '',
+          rules === approvedRules ? '' : rules,
+        ].join(' ');
+      })
       .join(' ');
     if (!text.trim()) continue;
     check(

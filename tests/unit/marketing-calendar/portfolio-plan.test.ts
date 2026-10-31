@@ -105,12 +105,29 @@ describe('portfolio marketing calendar plan', () => {
     expect(forbiddenHits(JSON.stringify(rest), forbiddenWords)).toEqual([]);
   });
 
+  it('matches whole words only, so a short code is not found inside a word', () => {
+    const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
+    expect(
+      forbiddenHits(
+        'Cecilia plans weekend adventures for her cafe crew',
+        ug.forbiddenWords
+      )
+    ).toEqual([]);
+    expect(forbiddenHits('Earn CEC points', ug.forbiddenWords)).toEqual([
+      'CEC',
+    ]);
+  });
+
   it.each([
     'How the Unite Group businesses fit together',
     'Tour Trade Hall and show its supplier booths',
     'Inside Synthex, the agency behind our businesses',
     'CARSI courses for restoration crews',
     'Portfolio command layer for Unite-Group ventures',
+    'One week inside Nexus: what got built',
+    'A day inside Nexus',
+    'A tour of the CleanExpo247 hall',
+    'How Restore Assist and Disaster-Recovery share jobs',
   ])('catches Unite-Group copy about the group itself: %s', copy => {
     const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
     expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);

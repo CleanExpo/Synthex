@@ -98,6 +98,9 @@ export const UNITE_GROUP_BANNED = [
   'Disaster Recovery',
   'NRPG',
   'RestoreAssist',
+  'Restore Assist',
+  'Disaster-Recovery',
+  'disasterrecovery',
   'IICRC',
   'CEC',
   'training',
@@ -108,21 +111,39 @@ export const UNITE_GROUP_BANNED = [
   'CCW',
   'Carpet Cleaners Warehouse',
   'Unite CRM',
+  'Unite-CRM',
+  'CleanExpo',
+  'CleanExpo247',
   'group businesses',
   'group’s businesses',
   "group's businesses",
   'our businesses',
   'portfolio',
   'ventures',
+  'inside Nexus',
+  'what got built',
+  'behind the scenes',
+  'in-house',
+  'our other brands',
+  'sister brand',
+  'sister business',
 ];
 
-/** The forbidden words found in `text`, matched case-insensitively. */
+/**
+ * The forbidden words found in `text`, matched case-insensitively as whole
+ * words or phrases ('CEC' is not found inside 'precede'; it is found in
+ * 'CEC-approved' or 'a CEC course').
+ */
 export function forbiddenHits(
   text: string,
   words: readonly string[]
 ): string[] {
-  const lower = text.toLowerCase();
-  return words.filter(w => lower.includes(w.toLowerCase()));
+  return words.filter(w =>
+    new RegExp(
+      `(^|[^a-z0-9])${w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z0-9])`,
+      'i'
+    ).test(text)
+  );
 }
 
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
@@ -353,10 +374,10 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     videoPlatforms: ['youtube', 'linkedin'],
     channelPosts: [{ platform: 'linkedin', perWeek: 1 }],
     themes: [
-      'Meet Margot, the Unite Group brand ambassador',
       'A cafe owner’s video business card, start to finish',
-      'From brief to film: how a video business card is made',
-      'One week inside Nexus: what got built',
+      'An accountant’s video business card in 60 seconds',
+      'From brief to film: a clinic’s video business card',
+      'A salon owner shares one link instead of five',
     ],
   },
   {
