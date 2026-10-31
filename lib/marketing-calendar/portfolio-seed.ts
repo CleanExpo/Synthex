@@ -30,6 +30,7 @@ import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_PARENT_SLUG,
   PORTFOLIO_WEEK_STARTS,
+  forbiddenHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 import { resolveLogoUrl } from './resolve-logo';
@@ -588,7 +589,14 @@ export async function verifyPortfolioSetup(): Promise<{
       calendarMode: true,
       liveModeT: true,
       brandDna: { select: { logoUrl: true, primaryColour: true } },
-      clientProfile: { select: { vocabularyBank: true } },
+      clientProfile: {
+        select: {
+          vocabularyBank: true,
+          icp: true,
+          offers: true,
+          toneKeywords: true,
+        },
+      },
     },
   });
   const bySlug = new Map(orgs.map(o => [o.slug, o]));
@@ -620,12 +628,28 @@ export async function verifyPortfolioSetup(): Promise<{
       served !== null && org.brandDna?.logoUrl === served,
       `${brand.orgSlug}: logo ${served ? 'is the approved logo' : `could not be confirmed as served (${brand.logoUrl})`}`
     );
-    const banned =
-      (org.clientProfile?.vocabularyBank as { banned?: string[] } | null)
-        ?.banned ?? [];
+    // A profile kept from before (seeding never overwrites one) is checked
+    // on content, not on counts: every forbidden word held, and none of them
+    // in the audience, offers, tone or preferred words prompts are built from.
+    const profile = org.clientProfile;
+    const vocab = (profile?.vocabularyBank ?? null) as {
+      banned?: string[];
+      preferred?: string[];
+    } | null;
+    const held = new Set((vocab?.banned ?? []).map(w => w.toLowerCase()));
     check(
-      banned.length === brand.forbiddenWords.length,
-      `${brand.orgSlug}: client profile holds ${brand.forbiddenWords.length} forbidden words`
+      !!profile && brand.forbiddenWords.every(w => held.has(w.toLowerCase())),
+      `${brand.orgSlug}: client profile holds all ${brand.forbiddenWords.length} forbidden words`
+    );
+    const prompted = JSON.stringify([
+      profile?.icp ?? null,
+      profile?.offers ?? null,
+      profile?.toneKeywords ?? null,
+      vocab?.preferred ?? null,
+    ]);
+    check(
+      !!profile && forbiddenHits(prompted, brand.forbiddenWords).length === 0,
+      `${brand.orgSlug}: client profile audience, offers and tone carry no forbidden words`
     );
   }
 

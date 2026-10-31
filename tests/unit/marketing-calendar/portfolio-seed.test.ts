@@ -588,7 +588,13 @@ describe('verifyPortfolioSetup', () => {
     calendarMode: 'shadow',
     liveModeT: 0,
     brandDna: { logoUrl: b.logoUrl, primaryColour: b.colours.primary },
-    clientProfile: { vocabularyBank: { banned: b.forbiddenWords } },
+    // As clientProfileData stores it, so the passing case is the real seed.
+    clientProfile: {
+      vocabularyBank: { preferred: b.preferredWords, banned: b.forbiddenWords },
+      icp: b.audience,
+      offers: b.offerings,
+      toneKeywords: b.voice.tone,
+    },
   }));
   const rows = (orgOf: (slug: string, i: number) => string) =>
     plan.map((s, i) => ({
@@ -654,6 +660,59 @@ describe('verifyPortfolioSetup', () => {
     ).toEqual([]);
     // Its slots no longer count either: they sit under a non-member org.
     expect(failed.some(l => l.includes('2026-11-02-carsi-video-1'))).toBe(true);
+  });
+
+  const withUgProfile = (over: Record<string, unknown>) =>
+    orgs.map(o =>
+      o.slug === 'unite-group'
+        ? { ...o, clientProfile: { ...o.clientProfile, ...over } }
+        : o
+    );
+  const failedLabels = async () =>
+    (await verifyPortfolioSetup()).checks
+      .filter(c => !c.pass)
+      .map(c => c.label);
+
+  it('fails a kept profile whose banned list has the right count but wrong words', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
+    db.organization.findMany.mockResolvedValue(
+      withUgProfile({
+        vocabularyBank: {
+          preferred: [],
+          banned: ug.forbiddenWords.map((_, i) => `word-${i}`),
+        },
+      })
+    );
+    expect(await failedLabels()).toEqual([
+      `unite-group: client profile holds all ${ug.forbiddenWords.length} forbidden words`,
+    ]);
+  });
+
+  it('fails a kept profile whose audience or offers name the group businesses', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      withUgProfile({
+        icp: {
+          description:
+            'Owners curious how the Unite Group businesses fit together',
+        },
+        offers: ['CARSI courses', 'Trade Hall booths'],
+      })
+    );
+    expect(await failedLabels()).toEqual([
+      'unite-group: client profile audience, offers and tone carry no forbidden words',
+    ]);
+  });
+
+  it('fails a brand with no client profile at all', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.organization.findMany.mockResolvedValue(
+      orgs.map(o => (o.slug === 'carsi' ? { ...o, clientProfile: null } : o))
+    );
+    const failed = await failedLabels();
+    expect(failed).toHaveLength(2);
+    expect(failed.every(l => l.startsWith('carsi: client profile'))).toBe(true);
   });
 
   it('fails when a slot is filed under the wrong brand', async () => {

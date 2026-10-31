@@ -89,7 +89,8 @@ const SHARED_ANTI = [
 
 /**
  * Words Unite-Group content must never carry (founder hard rule, 26/10/2026):
- * Phill's own businesses and restoration or training content.
+ * Phill's own businesses by name, the group's businesses as a subject, and
+ * restoration or training content.
  */
 export const UNITE_GROUP_BANNED = [
   'restoration',
@@ -101,7 +102,27 @@ export const UNITE_GROUP_BANNED = [
   'CEC',
   'training',
   'course',
+  'Trade Hall',
+  'TradeHall',
+  'Synthex',
+  'CCW',
+  'Carpet Cleaners Warehouse',
+  'Unite CRM',
+  'group businesses',
+  'group’s businesses',
+  "group's businesses",
+  'our businesses',
+  'portfolio businesses',
 ];
+
+/** The forbidden words found in `text`, matched case-insensitively. */
+export function forbiddenHits(
+  text: string,
+  words: readonly string[]
+): string[] {
+  const lower = text.toLowerCase();
+  return words.filter(w => lower.includes(w.toLowerCase()));
+}
 
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
   {
@@ -320,7 +341,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     ],
     brandRules: [
       ...SHARED_RULES,
-      'Unite-Group content never shows or mentions the group’s own businesses or their industries; use any-niche small businesses (cafe, accountant, clinic, salon, retail) and hold shots 3 to 5 seconds (founder, 26/10/2026).',
+      'Unite-Group content features only outside small businesses of any niche (cafe, accountant, clinic, salon, retail), never a business the group owns or its industry, and holds shots 3 to 5 seconds (founder, 26/10/2026).',
       'Never mention COACH8.',
     ],
     liveStatus: {
@@ -588,7 +609,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     voice: {
       formality: 'professional',
       boldness: 'measured',
-      tone: ['concrete', 'honest about what is ready', 'online journeys'],
+      tone: ['concrete', 'honest about what is ready', 'online walkthroughs'],
       samplePhrases: ['Walk a 3D trade expo from any device, any time.'],
     },
     audience: {

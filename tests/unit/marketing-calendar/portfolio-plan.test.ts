@@ -9,6 +9,7 @@ import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_WEEK_STARTS,
   UNITE_GROUP_BANNED,
+  forbiddenHits,
 } from '@/lib/marketing-calendar/portfolio-brands';
 
 const brand = (
@@ -100,14 +101,18 @@ describe('portfolio marketing calendar plan', () => {
     // Every field a brief, brand DNA or client profile is built from (its
     // rules included, since prompts read them), minus the list itself.
     const { forbiddenWords, ...rest } = ug;
-    const text = JSON.stringify(rest).toLowerCase();
-    for (const word of UNITE_GROUP_BANNED) {
-      expect(forbiddenWords).toContain(word);
-      expect({ word, hit: text.includes(word.toLowerCase()) }).toEqual({
-        word,
-        hit: false,
-      });
-    }
+    expect(forbiddenWords).toEqual(expect.arrayContaining(UNITE_GROUP_BANNED));
+    expect(forbiddenHits(JSON.stringify(rest), forbiddenWords)).toEqual([]);
+  });
+
+  it.each([
+    'How the Unite Group businesses fit together',
+    'Tour Trade Hall and show its supplier booths',
+    'Inside Synthex, the agency behind our businesses',
+    'CARSI courses for restoration crews',
+  ])('catches Unite-Group copy about the group itself: %s', copy => {
+    const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
+    expect(forbiddenHits(copy, ug.forbiddenWords).length).toBeGreaterThan(0);
   });
 
   it("keeps every brief and title clear of that brand's forbidden words", () => {
