@@ -6,6 +6,12 @@ import { readFile } from 'fs/promises';
 import path from 'path';
 import prisma from '@/lib/prisma';
 import { getAgencyTask, type AgencyTaskId } from './agency-task-catalog';
+import {
+  assertPromptClean,
+  portfolioBrandForOrg,
+  promptHits,
+} from '@/lib/marketing-calendar/prompt-guard';
+import type { PortfolioBrandProfile } from '@/lib/marketing-calendar/portfolio-brands';
 
 const FOUNDATION_FILES = {
   ceoFoundation: '.claude/memory/ceo-foundation.md',
@@ -37,6 +43,25 @@ async function readFoundationExcerpt(relativePath: string): Promise<string> {
   }
 }
 
+/** The org-setting text the foundation context hands to workflow prompts. */
+export function foundationPromptText(settings: unknown): string[] {
+  const s = (settings ?? {}) as Record<string, unknown>;
+  // Values are serialised into workflow input whatever their JSON type.
+  return [s.voiceTag, s.flywheel]
+    .filter(v => v !== undefined && v !== null)
+    .map(v => (typeof v === 'string' ? v : JSON.stringify(v)));
+}
+
+/** A foundation excerpt as a brand may receive it: withheld if it names that brand's forbidden words. */
+function excerptFor(
+  brand: PortfolioBrandProfile | undefined,
+  excerpt: string
+): string {
+  return brand && promptHits(excerpt, brand).length > 0
+    ? '[foundation excerpt withheld: it names words this brand never uses]'
+    : excerpt;
+}
+
 /**
  * Build foundation context for an org (and optional AT-* task).
  */
@@ -44,7 +69,7 @@ export async function getAgencyFoundationContext(
   organizationId: string,
   opts?: { agencyTaskId?: string }
 ): Promise<AgencyFoundationContext> {
-  const [ceoFoundationExcerpt, verificationGatesExcerpt, org] =
+  const [ceoFoundationExcerpt, verificationGatesExcerpt, org, brand] =
     await Promise.all([
       readFoundationExcerpt(FOUNDATION_FILES.ceoFoundation),
       readFoundationExcerpt(FOUNDATION_FILES.verificationGates),
@@ -52,9 +77,12 @@ export async function getAgencyFoundationContext(
         where: { id: organizationId },
         select: { slug: true, settings: true },
       }),
+      // A brand only inside the workspace: a slug alone proves nothing.
+      portfolioBrandForOrg(prisma, organizationId),
     ]);
 
   const settings = (org?.settings ?? {}) as Record<string, unknown>;
+  if (brand) assertPromptClean(brand.orgSlug, foundationPromptText(settings));
   const agencyMeta = opts?.agencyTaskId
     ? getAgencyTask(opts.agencyTaskId)
     : undefined;
@@ -64,8 +92,8 @@ export async function getAgencyFoundationContext(
     organizationSlug: org?.slug,
     voiceTag: (settings.voiceTag as string) ?? agencyMeta?.label,
     flywheel: settings.flywheel as string | undefined,
-    ceoFoundationExcerpt,
-    verificationGatesExcerpt,
+    ceoFoundationExcerpt: excerptFor(brand, ceoFoundationExcerpt),
+    verificationGatesExcerpt: excerptFor(brand, verificationGatesExcerpt),
     agencyTaskId:
       opts?.agencyTaskId && getAgencyTask(opts.agencyTaskId)
         ? (opts.agencyTaskId as AgencyTaskId)

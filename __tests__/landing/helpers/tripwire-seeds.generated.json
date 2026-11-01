@@ -118,6 +118,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "- Routes that return 429 without a limiter this scan reads: 23; see docs/api/rate-limits.md",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
+    {
+      "text": "- Routes that return 429 without a limiter this scan reads: 25; see docs/api/rate-limits.md",
+      "file": "public/llms.txt",
+      "firstSeen": "771c20a3"
+    },
+    {
       "text": "- SERVICE_NOT_CONFIGURED: HTTP 501 ## Rate limits",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
@@ -351,6 +361,11 @@
       "text": "/media?fields=like_count,comments_count&limit=50 Service not configured",
       "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "\\s+",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
     },
     {
       "text": "&period=",
@@ -3123,6 +3138,16 @@
       "firstSeen": "537a1991"
     },
     {
+      "text": "Generated from the route source of 776 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "dba7235d"
+    },
+    {
+      "text": "Generated from the route source of 779 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "771c20a3"
+    },
+    {
       "text": "Generate strategic brand identities using 50+ psychological principles for maximum market impact",
       "file": "app/brand-generator/page.tsx",
       "firstSeen": "base"
@@ -3176,6 +3201,11 @@
       "text": "Get your API key and start building powerful integrations with Synthex.",
       "file": "app/api-reference/page.tsx",
       "firstSeen": "base"
+    },
+    {
+      "text": "gi",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
     },
     {
       "text": "Glassmorphism",
@@ -3921,6 +3951,11 @@
       "text": "multimodal gemini-1-5-pro",
       "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "Never mention COACH8.",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
     },
     {
       "text": "NEW Explore Demo",

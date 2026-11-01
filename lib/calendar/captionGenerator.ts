@@ -76,7 +76,7 @@ function buildIntelligenceLine(ctx: CaptionContext): string {
 
   const topTopics = intel.topTopics
     .slice(0, 3)
-    .map((t) => t.topic)
+    .map(t => t.topic)
     .join(', ');
   if (!topTopics) return '';
 

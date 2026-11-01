@@ -303,6 +303,13 @@ export const ADVANCED_NAV_SECTIONS: AdvancedNavSectionDef[] = [
         description: 'Switch and manage client brands',
       },
       {
+        iconKey: 'Calendar',
+        label: 'Portfolio Calendar',
+        href: '/dashboard/portfolio-calendar',
+        description:
+          'Every brand’s draft slots for the next four weeks (owner only)',
+      },
+      {
         iconKey: 'Globe',
         label: 'Web Projects',
         href: '/dashboard/web-projects',

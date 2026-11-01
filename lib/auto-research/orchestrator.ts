@@ -16,7 +16,10 @@ import { ACTOR_REGISTRY } from './apify/actors';
 import { analyseScrapedPosts } from './trend-analyzer';
 import { optimisePrompts } from './prompt-optimizer';
 import { updateClientInsights } from '@/lib/obsidian/business-dna-vault';
-import { runResearchBridge, type ResearchBridgeReceipt } from './research-bridge';
+import {
+  runResearchBridge,
+  type ResearchBridgeReceipt,
+} from './research-bridge';
 import type { SupportedPlatform, ResearchResult } from './types';
 import type { ScrapedPost } from './apify/types';
 
