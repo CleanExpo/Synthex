@@ -277,6 +277,16 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
 };
 
 /**
+ * Known per-1k cost of every model the matrix can return as a fallback.
+ * A model missing here has no known price, so a budget ceiling drops it.
+ */
+const KNOWN_COST_PER_1K: Record<string, number> = {
+  'deepseek/deepseek-v4-flash': 0.00028,
+  'anthropic/claude-sonnet-5': 0.015,
+  'anthropic/claude-opus-4-8': 0.075,
+};
+
+/**
  * Resolve the model choice for a given task intent.
  *
  * The defaults in `ROUTING_MATRIX` are the standard answer; `opts` lets
@@ -337,6 +347,17 @@ export function routeIntent(
         { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-pro' },
       ];
     }
+  }
+
+  // ── Budget ceiling on the fallback chain ──────────────────────────
+  // The ceiling is a hard cap on everything returned, not just the primary:
+  // keep only fallbacks with a known price inside it (unknown price fails closed).
+  if (typeof opts.budgetCeiling === 'number') {
+    const ceiling = opts.budgetCeiling;
+    fallback = fallback.filter(f => {
+      const cost = KNOWN_COST_PER_1K[f.modelId];
+      return typeof cost === 'number' && cost <= ceiling;
+    });
   }
 
   return {

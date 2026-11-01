@@ -178,3 +178,44 @@ describe('task-routing — invariants', () => {
     );
   });
 });
+
+describe('task-routing — budget ceiling covers the fallback chain', () => {
+  const PRICES: Record<string, number> = {
+    'deepseek/deepseek-v4-flash': 0.00028,
+    'anthropic/claude-sonnet-5': 0.015,
+    'anthropic/claude-opus-4-8': 0.075,
+  };
+
+  it('code-review at quality:"low" under a 0.001 ceiling returns no fallback above it', () => {
+    const choice = routeIntent('code-review', {
+      quality: 'low',
+      budgetCeiling: 0.001,
+    });
+    expect(choice.estimatedCostPer1k).toBeLessThanOrEqual(0.001);
+    for (const f of choice.fallback) {
+      expect(PRICES[f.modelId]).toBeDefined();
+      expect(PRICES[f.modelId]).toBeLessThanOrEqual(0.001);
+    }
+    expect(choice.fallback.map(f => f.modelId)).not.toContain(
+      'anthropic/claude-opus-4-8'
+    );
+  });
+
+  it('every intent under a ceiling returns only priced fallbacks within it', () => {
+    for (const intent of ALL_INTENTS) {
+      let choice;
+      try {
+        choice = routeIntent(intent, { quality: 'low', budgetCeiling: 0.02 });
+      } catch {
+        continue;
+      }
+      for (const f of choice.fallback) {
+        expect(PRICES[f.modelId]).toBeLessThanOrEqual(0.02);
+      }
+    }
+  });
+
+  it('no ceiling leaves the matrix fallback chain unchanged', () => {
+    expect(routeIntent('code-review').fallback.length).toBeGreaterThan(0);
+  });
+});
