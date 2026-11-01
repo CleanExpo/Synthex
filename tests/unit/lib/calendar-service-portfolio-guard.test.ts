@@ -17,10 +17,14 @@ const mockFindUnique = jest.fn();
 const mockOrder: string[] = [];
 const mockTx = {
   $queryRaw: async (sql: TemplateStringsArray, id: string, slug: string) => {
-    if (sql.join('?').includes('calendar_posts')) {
+    const text = sql.join('?');
+    if (text.includes('calendar_posts')) {
+      // Only a read locked for update counts as the row lock.
+      if (!/FOR UPDATE/.test(text)) throw new Error('stored row not locked');
       mockOrder.splice(mockOrder.length, 0, 'lock-row');
+      // The stored row answers only for its own id.
       const row = await mockStored(id);
-      return row ? [row] : [];
+      return row && row.id === id ? [row] : [];
     }
     mockOrder.splice(mockOrder.length, 0, 'lock');
     const rows = [
@@ -154,7 +158,7 @@ describe('CalendarService portfolio draft guard', () => {
   it('refuses to reschedule a stored draft whose delivered caption is forbidden', async () => {
     const metadata = { videoDelivery: { captionDraft: 'CARSI courses' } };
     mockFindUnique.mockResolvedValue(storedDraft(metadata));
-    mockStored.mockResolvedValue({ metadata });
+    mockStored.mockResolvedValue({ id: 'post-1', metadata });
     await expect(reschedule()).rejects.toThrow(ForbiddenPromptError);
     expect(mockUpsert).not.toHaveBeenCalled();
     expect(mockCacheSet).not.toHaveBeenCalled();
@@ -163,7 +167,7 @@ describe('CalendarService portfolio draft guard', () => {
   it('reschedules a stored draft whose delivered caption is clean', async () => {
     const metadata = { videoDelivery: { captionDraft: 'Tips for cafes' } };
     mockFindUnique.mockResolvedValue(storedDraft(metadata));
-    mockStored.mockResolvedValue({ metadata });
+    mockStored.mockResolvedValue({ id: 'post-1', metadata });
     await reschedule();
     expect(mockUpsert).toHaveBeenCalledTimes(1);
   });

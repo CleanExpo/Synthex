@@ -25,7 +25,7 @@ import { getAgencyFoundationContext } from '@/lib/agency/foundation-context';
 import {
   ForbiddenPromptError,
   assertCalendarPostClean,
-  assertCalendarPostCleanForOrg,
+  assertStoredCalendarPostCleanForOrg,
   assertPromptClean,
   promptHits,
 } from '@/lib/marketing-calendar/prompt-guard';
@@ -459,18 +459,34 @@ describe('assertCalendarPostClean', () => {
       status: 'active',
       parentOrgId: null as string | null,
     };
-    // The locked read: one share-locked query for the org and the root.
-    const lookup = (orgs: Array<typeof root>) =>
+    // The locked reads: one share-locked query for the org and the root,
+    // then the stored draft row, which must be locked for update.
+    const lookup = (
+      orgs: Array<typeof root>,
+      stored: Record<string, unknown>[] = []
+    ) =>
       ({
         $queryRaw: jest.fn(
           async (sql: TemplateStringsArray, id: string, rootSlug: string) => {
-            void sql;
+            const text = sql.join('?');
+            if (text.includes('calendar_posts')) {
+              if (!/FOR UPDATE/.test(text))
+                throw new Error('stored row read without FOR UPDATE');
+              return stored.filter(r => r.id === id);
+            }
             return orgs.filter(o => o.id === id || o.slug === rootSlug);
           }
         ),
-      }) as unknown as Parameters<typeof assertCalendarPostCleanForOrg>[0] & {
+      }) as unknown as Parameters<
+        typeof assertStoredCalendarPostCleanForOrg
+      >[0] & {
         $queryRaw: jest.Mock;
       };
+    const check = (
+      db: ReturnType<typeof lookup>,
+      orgId: string,
+      change: Record<string, unknown>
+    ) => assertStoredCalendarPostCleanForOrg(db, orgId, 'post-1', change);
     const draft = { content: 'IICRC courses for technicians' };
     const carsi = {
       ...root,
@@ -481,7 +497,7 @@ describe('assertCalendarPostClean', () => {
 
     it('checks the workspace root itself', async () => {
       await expect(
-        assertCalendarPostCleanForOrg(lookup([root]), 'org-ug', {
+        check(lookup([root]), 'org-ug', {
           content: 'Promote CARSI courses',
         })
       ).rejects.toThrow(ForbiddenPromptError);
@@ -490,13 +506,43 @@ describe('assertCalendarPostClean', () => {
     it('checks an active child of the workspace', async () => {
       const db = lookup([root, carsi]);
       await expect(
-        assertCalendarPostCleanForOrg(db, 'org-carsi', {
+        check(db, 'org-carsi', {
           content: 'IICRC courses for technicians',
         })
       ).rejects.toThrow(ForbiddenPromptError);
       const [sql, id, rootSlug] = db.$queryRaw.mock.calls[0];
       expect(sql.join('?')).toMatch(/FOR SHARE/);
       expect([id, rootSlug]).toEqual(['org-carsi', 'unite-group']);
+      // The org and root first, then the stored row: one order everywhere.
+      const [rowSql, rowId] = db.$queryRaw.mock.calls[1];
+      expect(rowSql.join('?')).toMatch(/FROM calendar_posts[\s\S]*FOR UPDATE/);
+      expect(rowId).toBe('post-1');
+    });
+
+    it('refuses a one-field write to a stored draft whose other copy is forbidden', async () => {
+      const stored = [
+        { id: 'post-1', title: 'CARSI courses', content: 'Tips' },
+      ];
+      await expect(
+        check(lookup([root], stored), 'org-ug', {
+          metadata: { videoDelivery: { captionDraft: 'Tips for cafes' } },
+        })
+      ).rejects.toThrow(ForbiddenPromptError);
+    });
+
+    it('lets a write replace the forbidden stored field it sets', async () => {
+      const stored = [
+        { id: 'post-1', title: 'CARSI courses', content: 'Tips' },
+      ];
+      await expect(
+        check(lookup([root], stored), 'org-ug', { title: 'Tips for cafes' })
+      ).resolves.toBeUndefined();
+    });
+
+    it('checks only the change for a new draft with no stored row', async () => {
+      await expect(
+        check(lookup([root]), 'org-ug', { content: 'Tips for cafes' })
+      ).resolves.toBeUndefined();
     });
 
     it.each([
@@ -513,7 +559,7 @@ describe('assertCalendarPostClean', () => {
       ['with no workspace root at all', [carsi]],
     ])('leaves an org with a brand slug %s unchecked', async (_, orgs) => {
       await expect(
-        assertCalendarPostCleanForOrg(lookup(orgs), 'org-carsi', {
+        check(lookup(orgs), 'org-carsi', {
           content: 'IICRC courses for technicians',
         })
       ).resolves.toBeUndefined();
@@ -521,7 +567,7 @@ describe('assertCalendarPostClean', () => {
 
     it('leaves the outside-workspace slug collision the review found unchecked', async () => {
       await expect(
-        assertCalendarPostCleanForOrg(
+        check(
           lookup([root, { ...carsi, parentOrgId: 'other-root' }]),
           'org-carsi',
           draft

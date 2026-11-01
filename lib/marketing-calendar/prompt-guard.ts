@@ -106,7 +106,7 @@ export function calendarPostHits(
 /**
  * Throws ForbiddenPromptError when a calendar draft for a portfolio brand
  * names a word that brand never uses. Every write of a calendar draft calls
- * this (or assertCalendarPostCleanForOrg) first, so no such draft is stored
+ * this (or assertStoredCalendarPostCleanForOrg) first, so no such draft is stored
  * however its text was produced.
  */
 export function assertCalendarPostClean(
@@ -194,15 +194,23 @@ export async function lockedPortfolioBrandForOrg(
 }
 
 /**
- * assertCalendarPostClean for an organisation id, decided on locked rows
- * (lockedPortfolioBrandForOrg). Call it inside the transaction that writes
- * the draft, so membership cannot change between the check and the write.
+ * The rule for a write to a calendar draft, decided on the row as the write
+ * will leave it. Call it inside the transaction that writes. It locks the org
+ * and the workspace root (share), then the draft's stored row (update), in
+ * that order for every writer, so neither membership nor the row can change
+ * before the write commits. Fields `change` does not set keep their stored
+ * text, so a write to one field never leaves a forbidden word in another.
+ * A new draft has no stored row: only `change` is checked.
  */
-export async function assertCalendarPostCleanForOrg(
+export async function assertStoredCalendarPostCleanForOrg(
   tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
   organizationId: string,
-  post: CalendarPostText
+  postId: string,
+  change: CalendarPostText
 ) {
   const brand = await lockedPortfolioBrandForOrg(tx, organizationId);
-  if (brand) assertCalendarPostClean(brand.orgSlug, post);
+  const [stored] = await tx.$queryRaw<CalendarPostText[]>`
+    SELECT title, content, hashtags, mentions, metadata
+    FROM calendar_posts WHERE id = ${postId} FOR UPDATE`;
+  if (brand) assertCalendarPostClean(brand.orgSlug, { ...stored, ...change });
 }

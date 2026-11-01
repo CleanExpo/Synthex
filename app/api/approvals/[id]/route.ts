@@ -32,7 +32,7 @@ import {
   type ContentBinding,
   type FingerprintablePost,
 } from '@/lib/approvals/content-fingerprint';
-import { assertCalendarPostCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
+import { assertStoredCalendarPostCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
 
 // =============================================================================
 // Types
@@ -418,9 +418,14 @@ async function stampAuthorityApprovalOnContent(
         requestedAction: 'approval_calendar_post_metadata',
       })
     );
-    await assertCalendarPostCleanForOrg(tx, calendarPost.organizationId, {
-      metadata,
-    });
+    // Checked as the row this update leaves: the new metadata with the
+    // stored title, content, hashtags and mentions.
+    await assertStoredCalendarPostCleanForOrg(
+      tx,
+      calendarPost.organizationId,
+      approval.contentId,
+      { metadata }
+    );
     await tx.calendarPost.update({
       where: { id: approval.contentId },
       data: { metadata },
