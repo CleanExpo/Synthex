@@ -271,3 +271,4 @@
 {"ts":"2026-11-01T16:03:33.775Z","kind":"start","source":"weekly","soak":1,"ledgers":1,"waterline":0,"drill":0,"jev_judged":"DISABLED","jev_judged_reason":"no metered key (DECISIONS.md A-2); no jev:judged script in package.json","ledgers_note":"LedgerUnreadableError: tests/eval/jev/ledger.jsonl absent on refs/fleet/ledger and origin/main","soak_note":"3 days missing scheduler start row (10-26..10-28); 7 receipts lack merge row"}
 {"ts":"2026-11-01T16:30:46.233Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-11-01T17:01:06.935Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
+{"ts":"2026-11-01T17:30:47.900Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
