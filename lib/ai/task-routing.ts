@@ -322,18 +322,6 @@ export function routeIntent(
     fallback = entry.fallback.filter(f => f.modelId !== CHEAP_CLOUD.modelId);
   }
 
-  // ── Budget ceiling ────────────────────────────────────────────────
-  if (
-    typeof opts.budgetCeiling === 'number' &&
-    primary.cost > opts.budgetCeiling
-  ) {
-    // Every model costs money: never return one the ceiling cannot pay for.
-    // Callers that want the cheapest tier pass quality:'low' first.
-    throw new Error(
-      `No model within budgetCeiling ${opts.budgetCeiling} for task intent: ${intent}`
-    );
-  }
-
   // ── Context-length escalation ─────────────────────────────────────
   // If the prompt is huge, prefer DeepSeek V4 (1M ctx) over Sonnet (200K).
   if (opts.contextLength && opts.contextLength > 200_000) {
@@ -346,6 +334,33 @@ export function routeIntent(
       fallback = [
         { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-pro' },
       ];
+    }
+  }
+
+  // ── Budget ceiling (after quality and context routing) ────────────────────────────────────────────────
+  if (
+    typeof opts.budgetCeiling === 'number' &&
+    primary.cost > opts.budgetCeiling
+  ) {
+    // Every model costs money: never return one the ceiling cannot pay for.
+    // Callers that want the cheapest tier pass quality:'low' first.
+    throw new Error(
+      `No model within budgetCeiling ${opts.budgetCeiling} for task intent: ${intent}`
+    );
+  }
+
+  // A triangulating route invokes every panellist; refuse it if any one
+  // has no known price or costs more than the ceiling.
+  if (typeof opts.budgetCeiling === 'number' && entry.triangulate) {
+    const ceiling = opts.budgetCeiling;
+    const overCap = (entry.panel ?? []).filter(m => {
+      const cost = KNOWN_COST_PER_1K[m.modelId];
+      return typeof cost !== 'number' || cost > ceiling;
+    });
+    if (overCap.length > 0) {
+      throw new Error(
+        `Triangulation panel exceeds budgetCeiling ${ceiling} for task intent: ${intent}`
+      );
     }
   }
 

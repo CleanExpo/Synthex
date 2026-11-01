@@ -219,3 +219,27 @@ describe('task-routing — budget ceiling covers the fallback chain', () => {
     expect(routeIntent('code-review').fallback.length).toBeGreaterThan(0);
   });
 });
+
+describe('task-routing — ceiling ordering and triangulation panel', () => {
+  it('long context under a ceiling picks the cheap long-context model instead of throwing', () => {
+    const choice = routeIntent('code-review', {
+      contextLength: 500_000,
+      budgetCeiling: 0.001,
+    });
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
+    expect(choice.estimatedCostPer1k).toBeLessThanOrEqual(0.001);
+  });
+
+  it.each(['boardroom-decision', 'architecture-decision'] as const)(
+    '%s under a ceiling below its panel is refused, not returned',
+    intent => {
+      expect(() =>
+        routeIntent(intent, { quality: 'low', budgetCeiling: 0.001 })
+      ).toThrow(/budgetCeiling/);
+    }
+  );
+
+  it('boardroom-decision without a ceiling still returns its full panel', () => {
+    expect(routeIntent('boardroom-decision').panel?.length).toBe(3);
+  });
+});
