@@ -9,7 +9,13 @@
  * that run needs.
  */
 
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname } from 'node:path';
 
 export interface PortfolioArgs {
@@ -51,29 +57,44 @@ export function parsePortfolioArgs(args: readonly string[]): PortfolioArgs {
   return parsed;
 }
 
-/** Refuses a manifest path that already holds a file, before any write. */
-export function assertManifestPathFree(path: string) {
-  if (existsSync(path))
-    throw new PortfolioArgsError(
-      `manifest ${path} already exists: an earlier run's undo record is never replaced, choose a new path`
-    );
-}
+/** A reserved manifest's content: this run has written no rows yet. */
+export const RESERVED_MANIFEST =
+  '{"reserved": true, "note": "portfolio setup in progress; no rows written yet"}\n';
 
 /**
- * Writes a manifest without replacing any file: if the path was taken since
- * it was checked, the next free sibling (name.1.json, name.2.json, ...) is
- * used. Returns the path written.
+ * Reserves the manifest path before any database write by creating the file
+ * exclusively. A path that already holds a file, or that cannot hold one
+ * (no permission, a parent that is not a directory), fails here, so a run
+ * never writes rows it has nowhere to record.
  */
-export function saveManifestFile(path: string, json: string): string {
-  mkdirSync(dirname(path), { recursive: true });
-  for (let n = 0; n < 1000; n++) {
-    const target = n === 0 ? path : path.replace(/(\.json)?$/, `.${n}$1`);
-    try {
-      writeFileSync(target, json, { flag: 'wx' });
-      return target;
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
-    }
+export function reserveManifestFile(path: string): void {
+  // Only the exclusive create below can mean "already exists": mkdir also
+  // reports EEXIST when a parent is a file, which is "cannot be written".
+  try {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, RESERVED_MANIFEST, { flag: 'wx' });
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException).code;
+    throw new PortfolioArgsError(
+      code === 'EEXIST' && existsSync(path)
+        ? `manifest ${path} already exists: an earlier run's undo record is never replaced, choose a new path`
+        : `manifest ${path} cannot be written (${code ?? String(err)}): choose a writable path`
+    );
   }
-  throw new Error(`no free manifest path next to ${path}`);
+}
+
+/** Replaces this run's own reservation with the manifest, never another file. */
+export function writeReservedManifest(path: string, json: string): void {
+  if (readFileSync(path, 'utf8') !== RESERVED_MANIFEST)
+    throw new Error(`manifest ${path} is no longer this run's reservation`);
+  writeFileSync(path, json);
+}
+
+/** Removes this run's reservation when the run recorded nothing in it. */
+export function releaseManifestReservation(path: string): void {
+  try {
+    if (readFileSync(path, 'utf8') === RESERVED_MANIFEST) unlinkSync(path);
+  } catch {
+    // Already gone, or never created.
+  }
 }

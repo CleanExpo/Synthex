@@ -15,9 +15,10 @@ import { homedir } from 'node:os';
 import { prisma } from '../lib/prisma';
 import { supabaseProjectRef } from '../lib/marketing-calendar/db-ref';
 import {
-  assertManifestPathFree,
   parsePortfolioArgs,
-  saveManifestFile,
+  releaseManifestReservation,
+  reserveManifestFile,
+  writeReservedManifest,
 } from '../lib/marketing-calendar/portfolio-args';
 import {
   applyPortfolioSetup,
@@ -40,15 +41,23 @@ const MANIFEST_PATH =
   `${homedir()}/session-handoffs/synthex-portfolio-calendar-records-${new Date()
     .toISOString()
     .replace(/[:.]/g, '-')}.json`;
-// Before the database is touched: a write run never targets an existing file.
-if (WRITE && !UNDO_PATH) assertManifestPathFree(MANIFEST_PATH);
+// Before the database is touched, a write run creates its own manifest
+// file: a path that is taken or cannot be written stops the run here.
+const RESERVED = WRITE && !UNDO_PATH;
+if (RESERVED) reserveManifestFile(MANIFEST_PATH);
 
 function saveManifest(manifest: PortfolioManifest) {
-  const written = saveManifestFile(
-    MANIFEST_PATH,
-    JSON.stringify(manifest, null, 2)
-  );
-  console.log(`Manifest: ${written}`);
+  const json = JSON.stringify(manifest, null, 2);
+  try {
+    writeReservedManifest(MANIFEST_PATH, json);
+  } catch (err) {
+    // The rows are written: their ids are never lost, even if the file is.
+    console.error(
+      `Manifest could not be saved to ${MANIFEST_PATH}. Undo record:\n${json}`
+    );
+    throw err;
+  }
+  console.log(`Manifest: ${MANIFEST_PATH}`);
 }
 
 async function main() {
@@ -92,6 +101,8 @@ async function main() {
 
 main()
   .catch(err => {
+    // A run that recorded nothing leaves no reservation behind.
+    if (RESERVED) releaseManifestReservation(MANIFEST_PATH);
     console.error('FATAL:', err instanceof Error ? err.message : err);
     process.exitCode = 1;
   })

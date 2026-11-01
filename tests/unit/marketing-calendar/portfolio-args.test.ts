@@ -16,14 +16,16 @@ jest.mock('../../../lib/marketing-calendar/portfolio-seed', () => ({
   undoPortfolioSetup: (...a: unknown[]) => mockUndo(...a),
 }));
 
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   PortfolioArgsError,
-  assertManifestPathFree,
+  RESERVED_MANIFEST,
   parsePortfolioArgs,
-  saveManifestFile,
+  releaseManifestReservation,
+  reserveManifestFile,
+  writeReservedManifest,
 } from '@/lib/marketing-calendar/portfolio-args';
 
 const tempDir = () => mkdtempSync(join(tmpdir(), 'portfolio-args-'));
@@ -58,21 +60,42 @@ describe('parsePortfolioArgs', () => {
 });
 
 describe('manifest file', () => {
-  it('never replaces an earlier manifest at the same path', () => {
-    const path = join(tempDir(), 'records.json');
-    const first = saveManifestFile(path, '{"run":1}');
-    const second = saveManifestFile(path, '{"run":2}');
-    expect(first).toBe(path);
-    expect(second).toBe(path.replace(/\.json$/, '.1.json'));
-    expect(readFileSync(path, 'utf8')).toBe('{"run":1}');
-    expect(readFileSync(second, 'utf8')).toBe('{"run":2}');
+  it('reserves a new path, then refuses it to a second run', () => {
+    const path = join(tempDir(), 'nested', 'records.json');
+    reserveManifestFile(path);
+    expect(readFileSync(path, 'utf8')).toBe(RESERVED_MANIFEST);
+    expect(() => reserveManifestFile(path)).toThrow(/already exists/);
   });
 
-  it('refuses a path that already holds a file', () => {
+  it('refuses a path that cannot hold a file, before any write', () => {
+    const file = join(tempDir(), 'a-file');
+    writeFileSync(file, 'x');
+    expect(() => reserveManifestFile(join(file, 'records.json'))).toThrow(
+      /cannot be written/
+    );
+  });
+
+  it('replaces only its own reservation', () => {
     const path = join(tempDir(), 'records.json');
-    expect(() => assertManifestPathFree(path)).not.toThrow();
-    writeFileSync(path, '{}');
-    expect(() => assertManifestPathFree(path)).toThrow(/already exists/);
+    reserveManifestFile(path);
+    writeReservedManifest(path, '{"run":1}');
+    expect(readFileSync(path, 'utf8')).toBe('{"run":1}');
+    expect(() => writeReservedManifest(path, '{"run":2}')).toThrow(
+      /no longer this run's reservation/
+    );
+    expect(readFileSync(path, 'utf8')).toBe('{"run":1}');
+  });
+
+  it('releases an unused reservation and keeps a written manifest', () => {
+    const unused = join(tempDir(), 'unused.json');
+    reserveManifestFile(unused);
+    releaseManifestReservation(unused);
+    expect(existsSync(unused)).toBe(false);
+    const used = join(tempDir(), 'used.json');
+    reserveManifestFile(used);
+    writeReservedManifest(used, '{"run":1}');
+    releaseManifestReservation(used);
+    expect(readFileSync(used, 'utf8')).toBe('{"run":1}');
   });
 });
 
@@ -108,5 +131,56 @@ describe('seed CLI', () => {
     expect(mockUserFind).not.toHaveBeenCalled();
     expect(mockApply).not.toHaveBeenCalled();
     expect(readFileSync(path, 'utf8')).toBe('{"posts":["p1"]}');
+  });
+
+  it('stops a write run whose manifest path cannot be written before any database call', () => {
+    const file = join(tempDir(), 'a-file');
+    writeFileSync(file, 'x');
+    expect(() =>
+      run(['--write', '--manifest', join(file, 'records.json')])
+    ).toThrow(/cannot be written/);
+    expect(mockUserFind).not.toHaveBeenCalled();
+    expect(mockApply).not.toHaveBeenCalled();
+  });
+
+  describe('a reserved write run', () => {
+    const settle = () => new Promise(r => setTimeout(r, 50));
+    const env = process.env.DATABASE_URL;
+    let exitCode: typeof process.exitCode;
+    beforeEach(() => {
+      exitCode = process.exitCode;
+      jest.spyOn(console, 'log').mockImplementation(() => undefined);
+      jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    });
+    afterEach(() => {
+      process.env.DATABASE_URL = env;
+      process.exitCode = exitCode;
+      jest.restoreAllMocks();
+    });
+
+    it('records the applied rows in its reserved file', async () => {
+      process.env.DATABASE_URL =
+        'postgresql://postgres:placeholder@db.znyjoyjsvjotlzjppzal.supabase.co:5432/postgres';
+      mockUserFind.mockResolvedValue({ id: 'owner-1' });
+      mockApply.mockResolvedValue({ log: [], createdPostIds: ['p1'] });
+      const path = join(tempDir(), 'records.json');
+      run(['--write', '--manifest', path]);
+      await settle();
+      expect(mockApply).toHaveBeenCalledTimes(1);
+      expect(JSON.parse(readFileSync(path, 'utf8'))).toEqual({
+        log: [],
+        createdPostIds: ['p1'],
+      });
+    });
+
+    it('leaves no reservation behind when it stops before writing', async () => {
+      process.env.DATABASE_URL = 'postgresql://postgres:x@127.0.0.1:5432/other';
+      const path = join(tempDir(), 'records.json');
+      run(['--write', '--manifest', path]);
+      await settle();
+      expect(mockApply).not.toHaveBeenCalled();
+      expect(existsSync(path)).toBe(false);
+      expect(process.exitCode).toBe(1);
+    });
   });
 });
