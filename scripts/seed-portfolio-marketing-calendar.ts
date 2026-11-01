@@ -10,12 +10,15 @@
  *   npx tsx --env-file=<env> scripts/seed-portfolio-marketing-calendar.ts --undo <manifest.json> [--write]
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { prisma } from '../lib/prisma';
 import { supabaseProjectRef } from '../lib/marketing-calendar/db-ref';
-import { parsePortfolioArgs } from '../lib/marketing-calendar/portfolio-args';
+import {
+  assertManifestPathFree,
+  parsePortfolioArgs,
+  saveManifestFile,
+} from '../lib/marketing-calendar/portfolio-args';
 import {
   applyPortfolioSetup,
   undoPortfolioSetup,
@@ -37,11 +40,15 @@ const MANIFEST_PATH =
   `${homedir()}/session-handoffs/synthex-portfolio-calendar-records-${new Date()
     .toISOString()
     .replace(/[:.]/g, '-')}.json`;
+// Before the database is touched: a write run never targets an existing file.
+if (WRITE && !UNDO_PATH) assertManifestPathFree(MANIFEST_PATH);
 
 function saveManifest(manifest: PortfolioManifest) {
-  mkdirSync(dirname(MANIFEST_PATH), { recursive: true });
-  writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2));
-  console.log(`Manifest: ${MANIFEST_PATH}`);
+  const written = saveManifestFile(
+    MANIFEST_PATH,
+    JSON.stringify(manifest, null, 2)
+  );
+  console.log(`Manifest: ${written}`);
 }
 
 async function main() {

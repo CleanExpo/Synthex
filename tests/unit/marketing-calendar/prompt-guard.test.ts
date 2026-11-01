@@ -459,16 +459,18 @@ describe('assertCalendarPostClean', () => {
       status: 'active',
       parentOrgId: null as string | null,
     };
-    const lookup = (orgs: Array<typeof root>) => ({
-      organization: {
-        findUnique: jest.fn(
-          async ({ where }: { where: { id?: string; slug?: string } }) =>
-            orgs.find(o =>
-              where.id !== undefined ? o.id === where.id : o.slug === where.slug
-            ) ?? null
+    // The locked read: one share-locked query for the org and the root.
+    const lookup = (orgs: Array<typeof root>) =>
+      ({
+        $queryRaw: jest.fn(
+          async (sql: TemplateStringsArray, id: string, rootSlug: string) => {
+            void sql;
+            return orgs.filter(o => o.id === id || o.slug === rootSlug);
+          }
         ),
-      },
-    });
+      }) as unknown as Parameters<typeof assertCalendarPostCleanForOrg>[0] & {
+        $queryRaw: jest.Mock;
+      };
     const draft = { content: 'IICRC courses for technicians' };
     const carsi = {
       ...root,
@@ -492,10 +494,9 @@ describe('assertCalendarPostClean', () => {
           content: 'IICRC courses for technicians',
         })
       ).rejects.toThrow(ForbiddenPromptError);
-      expect(db.organization.findUnique).toHaveBeenCalledWith({
-        where: { slug: 'unite-group' },
-        select: { id: true, slug: true, status: true, parentOrgId: true },
-      });
+      const [sql, id, rootSlug] = db.$queryRaw.mock.calls[0];
+      expect(sql.join('?')).toMatch(/FOR SHARE/);
+      expect([id, rootSlug]).toEqual(['org-carsi', 'unite-group']);
     });
 
     it.each([

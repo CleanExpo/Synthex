@@ -20,7 +20,10 @@ import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
 import type { CalendarPost as PrismaCalendarPost } from '@prisma/client';
 import { DEFAULT_TIMEZONE, getZonedParts, zonedTimeToUtc } from './timezone';
-import { assertCalendarPostCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
+import {
+  ForbiddenPromptError,
+  assertCalendarPostCleanForOrg,
+} from '@/lib/marketing-calendar/prompt-guard';
 
 // ============================================================================
 // TYPES
@@ -489,58 +492,68 @@ export class CalendarService {
   }
 
   private async savePost(post: CalendarPost): Promise<void> {
-    await assertCalendarPostCleanForOrg(prisma, this.organizationId, post);
+    // Set once the portfolio rule has passed: before that, no failure may
+    // fall through to the cache-only save below.
+    let checked = false;
     try {
-      const live = await prisma.post.findFirst({
-        where: {
-          id: post.id,
-          campaign: { organizationId: this.organizationId },
-        },
-        select: { id: true },
-      });
+      // One transaction: the rule is decided on share-locked org and root
+      // rows, so membership cannot change before the write commits.
+      const wroteCalendarPost = await prisma.$transaction(async tx => {
+        await assertCalendarPostCleanForOrg(tx, this.organizationId, post);
+        checked = true;
+        const live = await tx.post.findFirst({
+          where: {
+            id: post.id,
+            campaign: { organizationId: this.organizationId },
+          },
+          select: { id: true },
+        });
 
-      if (live) {
-        await prisma.post.update({
+        if (live) {
+          await tx.post.update({
+            where: { id: post.id },
+            data: {
+              content: post.content,
+              status: post.status,
+              scheduledAt: post.scheduledFor,
+            },
+          });
+          return false;
+        }
+
+        const data = {
+          title: post.title,
+          content: post.content,
+          platforms: post.platforms,
+          status: post.status,
+          scheduledFor: post.scheduledFor,
+          mediaUrls: post.mediaUrls || [],
+          tags: post.tags || [],
+          hashtags: [],
+          mentions: [],
+          recurrenceType: post.recurrence?.type || null,
+          recurrenceInterval: post.recurrence?.interval || null,
+          recurrenceEndDate: post.recurrence?.endDate || null,
+          recurrenceOccurrences: post.recurrence?.occurrences || null,
+          recurrenceDaysOfWeek: post.recurrence?.daysOfWeek || [],
+          recurrenceDayOfMonth: post.recurrence?.dayOfMonth || null,
+          campaignId: post.campaignId || null,
+          organizationId: this.organizationId,
+          userId: post.createdBy,
+          updatedAt: new Date(),
+        };
+
+        await tx.calendarPost.upsert({
           where: { id: post.id },
-          data: {
-            content: post.content,
-            status: post.status,
-            scheduledAt: post.scheduledFor,
+          update: data,
+          create: {
+            id: post.id,
+            ...data,
           },
         });
-        return;
-      }
-
-      const data = {
-        title: post.title,
-        content: post.content,
-        platforms: post.platforms,
-        status: post.status,
-        scheduledFor: post.scheduledFor,
-        mediaUrls: post.mediaUrls || [],
-        tags: post.tags || [],
-        hashtags: [],
-        mentions: [],
-        recurrenceType: post.recurrence?.type || null,
-        recurrenceInterval: post.recurrence?.interval || null,
-        recurrenceEndDate: post.recurrence?.endDate || null,
-        recurrenceOccurrences: post.recurrence?.occurrences || null,
-        recurrenceDaysOfWeek: post.recurrence?.daysOfWeek || [],
-        recurrenceDayOfMonth: post.recurrence?.dayOfMonth || null,
-        campaignId: post.campaignId || null,
-        organizationId: post.organizationId,
-        userId: post.createdBy,
-        updatedAt: new Date(),
-      };
-
-      await prisma.calendarPost.upsert({
-        where: { id: post.id },
-        update: data,
-        create: {
-          id: post.id,
-          ...data,
-        },
+        return true;
       });
+      if (!wroteCalendarPost) return;
 
       // Also update cache for fast reads
       const cache = getCache();
@@ -556,6 +569,7 @@ export class CalendarService {
         ttl: 86400 * 30,
       });
     } catch (error) {
+      if (!checked || error instanceof ForbiddenPromptError) throw error;
       logger.error('Failed to save post to database, saving to cache only', {
         error,
       });

@@ -18,6 +18,7 @@ import {
   copyHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
+import type { Prisma } from '@prisma/client';
 import { inWorkspace, type WorkspaceOrgFields } from './workspace';
 
 export class ForbiddenPromptError extends Error {
@@ -171,12 +172,37 @@ export async function assertPromptCleanForOrg(
   if (brand) assertPromptClean(brand.orgSlug, parts);
 }
 
-/** assertCalendarPostClean for an organisation id (see portfolioBrandForOrg). */
+/**
+ * portfolioBrandForOrg inside a transaction, on locked rows: the org and the
+ * workspace root are share-locked until the transaction ends, so neither can
+ * join, leave, be renamed or change status before the caller's write
+ * commits. The brand returned holds for that write.
+ */
+export async function lockedPortfolioBrandForOrg(
+  tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
+  organizationId: string
+): Promise<PortfolioBrandProfile | undefined> {
+  const rows = await tx.$queryRaw<WorkspaceOrgFields[]>`
+    SELECT id, slug, status, parent_org_id AS "parentOrgId"
+    FROM organizations
+    WHERE id = ${organizationId} OR slug = ${PORTFOLIO_PARENT_SLUG}
+    ORDER BY id FOR SHARE`;
+  const org = rows.find(r => r.id === organizationId);
+  const root = rows.find(r => r.slug === PORTFOLIO_PARENT_SLUG);
+  const brand = brandForSlug(org?.slug);
+  return org && brand && root && inWorkspace(org, root) ? brand : undefined;
+}
+
+/**
+ * assertCalendarPostClean for an organisation id, decided on locked rows
+ * (lockedPortfolioBrandForOrg). Call it inside the transaction that writes
+ * the draft, so membership cannot change between the check and the write.
+ */
 export async function assertCalendarPostCleanForOrg(
-  db: OrgLookup,
+  tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
   organizationId: string,
   post: CalendarPostText
 ) {
-  const brand = await portfolioBrandForOrg(db, organizationId);
+  const brand = await lockedPortfolioBrandForOrg(tx, organizationId);
   if (brand) assertCalendarPostClean(brand.orgSlug, post);
 }

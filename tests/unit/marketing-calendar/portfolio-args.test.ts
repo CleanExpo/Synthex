@@ -16,10 +16,17 @@ jest.mock('../../../lib/marketing-calendar/portfolio-seed', () => ({
   undoPortfolioSetup: (...a: unknown[]) => mockUndo(...a),
 }));
 
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   PortfolioArgsError,
+  assertManifestPathFree,
   parsePortfolioArgs,
+  saveManifestFile,
 } from '@/lib/marketing-calendar/portfolio-args';
+
+const tempDir = () => mkdtempSync(join(tmpdir(), 'portfolio-args-'));
 
 describe('parsePortfolioArgs', () => {
   it('reads write, undo and manifest', () => {
@@ -44,8 +51,28 @@ describe('parsePortfolioArgs', () => {
     [['--undo', 'a.json', '--undo', 'b.json']],
     [['--undo=m.json']],
     [['--wrte']],
+    [['--write', '--write']],
   ])('refuses %j', args => {
     expect(() => parsePortfolioArgs(args)).toThrow(PortfolioArgsError);
+  });
+});
+
+describe('manifest file', () => {
+  it('never replaces an earlier manifest at the same path', () => {
+    const path = join(tempDir(), 'records.json');
+    const first = saveManifestFile(path, '{"run":1}');
+    const second = saveManifestFile(path, '{"run":2}');
+    expect(first).toBe(path);
+    expect(second).toBe(path.replace(/\.json$/, '.1.json'));
+    expect(readFileSync(path, 'utf8')).toBe('{"run":1}');
+    expect(readFileSync(second, 'utf8')).toBe('{"run":2}');
+  });
+
+  it('refuses a path that already holds a file', () => {
+    const path = join(tempDir(), 'records.json');
+    expect(() => assertManifestPathFree(path)).not.toThrow();
+    writeFileSync(path, '{}');
+    expect(() => assertManifestPathFree(path)).toThrow(/already exists/);
   });
 });
 
@@ -71,4 +98,15 @@ describe('seed CLI', () => {
       expect(mockUndo).not.toHaveBeenCalled();
     }
   );
+
+  it('stops a write run aimed at an existing manifest before any database call', () => {
+    const path = join(tempDir(), 'records.json');
+    writeFileSync(path, '{"posts":["p1"]}');
+    expect(() => run(['--write', '--manifest', path])).toThrow(
+      /already exists/
+    );
+    expect(mockUserFind).not.toHaveBeenCalled();
+    expect(mockApply).not.toHaveBeenCalled();
+    expect(readFileSync(path, 'utf8')).toBe('{"posts":["p1"]}');
+  });
 });
