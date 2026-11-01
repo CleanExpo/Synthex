@@ -43,8 +43,17 @@ const DEFAULT_PROVIDER: ProviderName = 'openai';
 
 /** The platform provider getAIProvider() would build, without building it. */
 export function resolvePlatformProviderName(): ProviderName {
-  const configured = process.env.AI_PROVIDER as ProviderName | undefined;
+  const raw = process.env.AI_PROVIDER?.trim();
+  const configured = raw as ProviderName | undefined;
   if (configured && providerFactories[configured]) return configured;
+  if (raw) {
+    // An explicit but unsupported value (e.g. the removed "ollama") must not be
+    // substituted silently. Warn loudly, then fall back to a configured cloud key.
+    logger.warn('Unsupported AI_PROVIDER value ignored; falling back', {
+      configured: raw,
+      supported: Object.keys(providerFactories),
+    });
+  }
   if (process.env.OPENAI_API_KEY?.trim()) return 'openai';
   if (process.env.OPENROUTER_API_KEY?.trim()) return 'openrouter';
   if (process.env.ANTHROPIC_API_KEY?.trim()) return 'anthropic';
