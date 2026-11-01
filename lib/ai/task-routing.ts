@@ -282,6 +282,7 @@ const ROUTING_MATRIX: Record<TaskIntent, MatrixEntry> = {
  */
 const KNOWN_COST_PER_1K: Record<string, number> = {
   'deepseek/deepseek-v4-flash': 0.00028,
+  'google/gemini-3.1-flash': 0.0003, // output price, lib/ai/model-registry.ts
   'anthropic/claude-sonnet-5': 0.015,
   'anthropic/claude-opus-4-8': 0.075,
 };

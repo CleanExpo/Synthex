@@ -181,6 +181,7 @@ describe('task-routing — invariants', () => {
 
 describe('task-routing — budget ceiling covers the fallback chain', () => {
   const PRICES: Record<string, number> = {
+    'google/gemini-3.1-flash': 0.0003,
     'deepseek/deepseek-v4-flash': 0.00028,
     'anthropic/claude-sonnet-5': 0.015,
     'anthropic/claude-opus-4-8': 0.075,
@@ -242,4 +243,17 @@ describe('task-routing — ceiling ordering and triangulation panel', () => {
   it('boardroom-decision without a ceiling still returns its full panel', () => {
     expect(routeIntent('boardroom-decision').panel?.length).toBe(3);
   });
+});
+
+describe('task-routing — triangulation under a ceiling every panellist fits', () => {
+  it.each(['boardroom-decision', 'architecture-decision'] as const)(
+    '%s keeps its full panel when the ceiling covers every panellist',
+    intent => {
+      const uncapped = routeIntent(intent);
+      const capped = routeIntent(intent, { budgetCeiling: 999 });
+      expect(capped.triangulate).toBe(true);
+      expect(capped.panel).toEqual(uncapped.panel);
+      expect(capped.panel?.length).toBeGreaterThan(0);
+    }
+  );
 });
