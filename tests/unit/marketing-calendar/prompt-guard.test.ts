@@ -536,7 +536,7 @@ describe('assertCalendarPostClean', () => {
       ];
       await expect(
         check(lookup([root], stored), 'org-ug', { title: 'Tips for cafes' })
-      ).resolves.toBeUndefined();
+      ).resolves.toEqual(stored[0]);
     });
 
     it('checks only the change for a new draft with no stored row', async () => {

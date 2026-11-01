@@ -1,7 +1,9 @@
 /**
  * The general calendar never stores a portfolio brand's draft that names a
  * word the brand never uses (lib/marketing-calendar/prompt-guard.ts), and
- * the refusal is not swallowed by the cache fallback.
+ * the refusal is not swallowed. An edit made from an older read of a
+ * stored draft is refused (CalendarConflictError), and a failed database
+ * write is never reported as saved.
  */
 
 const mockOrgFind = jest.fn();
@@ -77,7 +79,10 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-import { CalendarService } from '@/lib/content/calendar-service';
+import {
+  CalendarConflictError,
+  CalendarService,
+} from '@/lib/content/calendar-service';
 import { ForbiddenPromptError } from '@/lib/marketing-calendar/prompt-guard';
 
 const schedule = (content: string, orgId = 'org-ug') =>
@@ -126,6 +131,9 @@ const storedDraft = (metadata: unknown) => ({
   updatedAt: new Date('2026-11-01T00:00:00Z'),
 });
 
+// The version the service read; the locked row matches it unless changed.
+const READ_AT = new Date('2026-11-01T00:00:00Z');
+
 const reschedule = () =>
   new CalendarService('org-ug').reschedulePost({
     postId: 'post-1',
@@ -158,7 +166,11 @@ describe('CalendarService portfolio draft guard', () => {
   it('refuses to reschedule a stored draft whose delivered caption is forbidden', async () => {
     const metadata = { videoDelivery: { captionDraft: 'CARSI courses' } };
     mockFindUnique.mockResolvedValue(storedDraft(metadata));
-    mockStored.mockResolvedValue({ id: 'post-1', metadata });
+    mockStored.mockResolvedValue({
+      id: 'post-1',
+      metadata,
+      updatedAt: READ_AT,
+    });
     await expect(reschedule()).rejects.toThrow(ForbiddenPromptError);
     expect(mockUpsert).not.toHaveBeenCalled();
     expect(mockCacheSet).not.toHaveBeenCalled();
@@ -167,9 +179,53 @@ describe('CalendarService portfolio draft guard', () => {
   it('reschedules a stored draft whose delivered caption is clean', async () => {
     const metadata = { videoDelivery: { captionDraft: 'Tips for cafes' } };
     mockFindUnique.mockResolvedValue(storedDraft(metadata));
-    mockStored.mockResolvedValue({ id: 'post-1', metadata });
+    mockStored.mockResolvedValue({
+      id: 'post-1',
+      metadata,
+      updatedAt: READ_AT,
+    });
     await reschedule();
     expect(mockUpsert).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses a reschedule when a video was attached after the read', async () => {
+    // The service read the draft before the video landed; the locked row is
+    // newer, so writing the old mediaUrls back would erase the video.
+    mockFindUnique.mockResolvedValue(storedDraft({}));
+    mockStored.mockResolvedValue({
+      id: 'post-1',
+      metadata: { videoDelivery: { captionDraft: 'Tips for cafes' } },
+      updatedAt: new Date('2026-11-01T00:05:00Z'),
+    });
+    await expect(reschedule()).rejects.toThrow(CalendarConflictError);
+    await expect(reschedule()).rejects.toThrow(/conflict/);
+    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockCacheSet).not.toHaveBeenCalled();
+  });
+
+  it('refuses a cancel when the draft changed after the read', async () => {
+    mockFindUnique.mockResolvedValue(storedDraft({}));
+    mockStored.mockResolvedValue({
+      id: 'post-1',
+      metadata: {},
+      updatedAt: new Date('2026-11-01T00:05:00Z'),
+    });
+    await expect(
+      new CalendarService('org-ug').cancelPost('post-1')
+    ).rejects.toThrow(CalendarConflictError);
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it('reports a failed database write as a failure, never a cache-only save', async () => {
+    mockFindUnique.mockResolvedValue(storedDraft({}));
+    mockStored.mockResolvedValue({
+      id: 'post-1',
+      metadata: {},
+      updatedAt: READ_AT,
+    });
+    mockUpsert.mockRejectedValue(new Error('upsert failed'));
+    await expect(reschedule()).rejects.toThrow('upsert failed');
+    expect(mockCacheSet).not.toHaveBeenCalled();
   });
 
   it('never falls back to the cache when the check itself cannot run', async () => {

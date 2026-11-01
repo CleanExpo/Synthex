@@ -200,8 +200,14 @@ export async function lockedPortfolioBrandForOrg(
  * that order for every writer, so neither membership nor the row can change
  * before the write commits. Fields `change` does not set keep their stored
  * text, so a write to one field never leaves a forbidden word in another.
- * A new draft has no stored row: only `change` is checked.
+ * A new draft has no stored row: only `change` is checked. Returns the
+ * locked stored row (undefined for a new draft), so the caller can refuse a
+ * write made from an older read of it.
  */
+export interface StoredCalendarPost extends CalendarPostText {
+  updatedAt: Date;
+}
+
 export async function assertStoredCalendarPostCleanForOrg(
   tx: Pick<Prisma.TransactionClient, '$queryRaw'>,
   organizationId: string,
@@ -209,8 +215,10 @@ export async function assertStoredCalendarPostCleanForOrg(
   change: CalendarPostText
 ) {
   const brand = await lockedPortfolioBrandForOrg(tx, organizationId);
-  const [stored] = await tx.$queryRaw<CalendarPostText[]>`
-    SELECT title, content, hashtags, mentions, metadata
+  const [stored] = await tx.$queryRaw<StoredCalendarPost[]>`
+    SELECT title, content, hashtags, mentions, metadata,
+      updated_at AS "updatedAt"
     FROM calendar_posts WHERE id = ${postId} FOR UPDATE`;
   if (brand) assertCalendarPostClean(brand.orgSlug, { ...stored, ...change });
+  return stored;
 }

@@ -20,10 +20,7 @@ import { getCache } from '@/lib/cache/cache-manager';
 import { logger } from '@/lib/logger';
 import type { CalendarPost as PrismaCalendarPost } from '@prisma/client';
 import { DEFAULT_TIMEZONE, getZonedParts, zonedTimeToUtc } from './timezone';
-import {
-  ForbiddenPromptError,
-  assertStoredCalendarPostCleanForOrg,
-} from '@/lib/marketing-calendar/prompt-guard';
+import { assertStoredCalendarPostCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
 
 // ============================================================================
 // TYPES
@@ -148,6 +145,18 @@ const OPTIMAL_TIMES: Record<string, number[]> = {
 // ============================================================================
 // CALENDAR SERVICE
 // ============================================================================
+
+/**
+ * A stored post changed after the caller read it (a video attached, another
+ * edit). The edit is refused rather than overwrite that change; the calendar
+ * route answers 409 for any error whose message names a conflict.
+ */
+export class CalendarConflictError extends Error {
+  constructor(readonly postId: string) {
+    super(`Edit conflict: post ${postId} changed since it was read`);
+    this.name = 'CalendarConflictError';
+  }
+}
 
 export class CalendarService {
   private organizationId: string;
@@ -301,7 +310,7 @@ export class CalendarService {
       updatedAt: new Date(),
     };
 
-    await this.savePost(updated);
+    await this.savePost(updated, existing.updatedAt);
     await this.invalidateCache();
 
     logger.info('Post rescheduled', {
@@ -327,10 +336,11 @@ export class CalendarService {
       throw new Error('Access denied');
     }
 
+    const readVersion = existing.updatedAt;
     existing.status = 'cancelled';
     existing.updatedAt = new Date();
 
-    await this.savePost(existing);
+    await this.savePost(existing, readVersion);
     await this.invalidateCache();
 
     logger.info('Post cancelled', { postId });
@@ -491,82 +501,95 @@ export class CalendarService {
     }
   }
 
-  private async savePost(post: CalendarPost): Promise<void> {
-    // Set once the portfolio rule has passed: before that, no failure may
-    // fall through to the cache-only save below.
-    let checked = false;
-    try {
-      // One transaction: the rule is decided on the locked org, root and
-      // stored row, as the upsert below leaves the row (it sets these fields
-      // and keeps the stored metadata, the delivered caption included).
-      const wroteCalendarPost = await prisma.$transaction(async tx => {
-        await assertStoredCalendarPostCleanForOrg(
-          tx,
-          this.organizationId,
-          post.id,
-          {
-            title: post.title,
-            content: post.content,
-            hashtags: [],
-            mentions: [],
-          }
-        );
-        checked = true;
-        const live = await tx.post.findFirst({
-          where: {
-            id: post.id,
-            campaign: { organizationId: this.organizationId },
-          },
-          select: { id: true },
-        });
-
-        if (live) {
-          await tx.post.update({
-            where: { id: post.id },
-            data: {
-              content: post.content,
-              status: post.status,
-              scheduledAt: post.scheduledFor,
-            },
-          });
-          return false;
-        }
-
-        const data = {
+  /**
+   * Writes a post. `readVersion` is the stored row's updatedAt as the caller
+   * read it: an edit of a stored draft applies only to that version, so a
+   * video attached or a field changed since the read is never overwritten
+   * (CalendarConflictError). Every failure propagates: a save the database
+   * did not commit is never reported as saved.
+   */
+  private async savePost(
+    post: CalendarPost,
+    readVersion?: Date
+  ): Promise<void> {
+    // One transaction: the rule is decided on the locked org, root and
+    // stored row, as the upsert below leaves the row (it sets these fields
+    // and keeps the stored metadata, the delivered caption included).
+    const wroteCalendarPost = await prisma.$transaction(async tx => {
+      const stored = await assertStoredCalendarPostCleanForOrg(
+        tx,
+        this.organizationId,
+        post.id,
+        {
           title: post.title,
           content: post.content,
-          platforms: post.platforms,
-          status: post.status,
-          scheduledFor: post.scheduledFor,
-          mediaUrls: post.mediaUrls || [],
-          tags: post.tags || [],
           hashtags: [],
           mentions: [],
-          recurrenceType: post.recurrence?.type || null,
-          recurrenceInterval: post.recurrence?.interval || null,
-          recurrenceEndDate: post.recurrence?.endDate || null,
-          recurrenceOccurrences: post.recurrence?.occurrences || null,
-          recurrenceDaysOfWeek: post.recurrence?.daysOfWeek || [],
-          recurrenceDayOfMonth: post.recurrence?.dayOfMonth || null,
-          campaignId: post.campaignId || null,
-          organizationId: this.organizationId,
-          userId: post.createdBy,
-          updatedAt: new Date(),
-        };
+        }
+      );
+      if (
+        stored &&
+        readVersion &&
+        new Date(stored.updatedAt).getTime() !== new Date(readVersion).getTime()
+      ) {
+        throw new CalendarConflictError(post.id);
+      }
+      const live = await tx.post.findFirst({
+        where: {
+          id: post.id,
+          campaign: { organizationId: this.organizationId },
+        },
+        select: { id: true },
+      });
 
-        await tx.calendarPost.upsert({
+      if (live) {
+        await tx.post.update({
           where: { id: post.id },
-          update: data,
-          create: {
-            id: post.id,
-            ...data,
+          data: {
+            content: post.content,
+            status: post.status,
+            scheduledAt: post.scheduledFor,
           },
         });
-        return true;
-      });
-      if (!wroteCalendarPost) return;
+        return false;
+      }
 
-      // Also update cache for fast reads
+      const data = {
+        title: post.title,
+        content: post.content,
+        platforms: post.platforms,
+        status: post.status,
+        scheduledFor: post.scheduledFor,
+        mediaUrls: post.mediaUrls || [],
+        tags: post.tags || [],
+        hashtags: [],
+        mentions: [],
+        recurrenceType: post.recurrence?.type || null,
+        recurrenceInterval: post.recurrence?.interval || null,
+        recurrenceEndDate: post.recurrence?.endDate || null,
+        recurrenceOccurrences: post.recurrence?.occurrences || null,
+        recurrenceDaysOfWeek: post.recurrence?.daysOfWeek || [],
+        recurrenceDayOfMonth: post.recurrence?.dayOfMonth || null,
+        campaignId: post.campaignId || null,
+        organizationId: this.organizationId,
+        userId: post.createdBy,
+        updatedAt: new Date(),
+      };
+
+      await tx.calendarPost.upsert({
+        where: { id: post.id },
+        update: data,
+        create: {
+          id: post.id,
+          ...data,
+        },
+      });
+      return true;
+    });
+    if (!wroteCalendarPost) return;
+
+    // The database holds the post; the cache only speeds up reads.
+    try {
       const cache = getCache();
       const allPosts =
         (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
@@ -580,22 +603,8 @@ export class CalendarService {
         ttl: 86400 * 30,
       });
     } catch (error) {
-      if (!checked || error instanceof ForbiddenPromptError) throw error;
-      logger.error('Failed to save post to database, saving to cache only', {
+      logger.error('Saved post, but the calendar cache update failed', {
         error,
-      });
-      // Fallback to cache-only on DB failure
-      const cache = getCache();
-      const allPosts =
-        (await cache.get<CalendarPost[]>(`${this.cachePrefix}:posts`)) || [];
-      const index = allPosts.findIndex(p => p.id === post.id);
-      if (index >= 0) {
-        allPosts[index] = post;
-      } else {
-        allPosts.push(post);
-      }
-      await cache.set(`${this.cachePrefix}:posts`, allPosts, {
-        ttl: 86400 * 30,
       });
     }
   }
