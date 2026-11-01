@@ -6,24 +6,94 @@
 import { z } from 'zod';
 
 const nonEmpty = z.string().trim().min(1);
+const evidenceKinds = [
+  'owned_analytics',
+  'crm',
+  'card',
+  'phone',
+  'search_console',
+  'competitor_estimate',
+  'owner_answer',
+  'research',
+] as const;
+const dataClasses = [
+  'public',
+  'owned',
+  'client_approved',
+  'estimated',
+] as const;
+type EvidenceKind = (typeof evidenceKinds)[number];
+type DataClass = (typeof dataClasses)[number];
+
+/**
+ * Provenance: which data classes each evidence kind may honestly carry. A
+ * competitor estimate is always an estimate and research is never the
+ * tenant's own data, so a label cannot promote either past the estimate gate.
+ */
+export const ALLOWED_DATA_CLASSES: Readonly<
+  Record<EvidenceKind, readonly DataClass[]>
+> = {
+  owned_analytics: ['owned'],
+  crm: ['owned', 'client_approved'],
+  card: ['owned'],
+  phone: ['owned', 'client_approved'],
+  search_console: ['owned'],
+  competitor_estimate: ['estimated'],
+  owner_answer: ['client_approved', 'owned'],
+  research: ['public', 'estimated'],
+};
+const PRIVATE_DATA_CLASSES: readonly DataClass[] = ['owned', 'client_approved'];
+
 const sourceRef = z
   .object({
     id: nonEmpty,
-    kind: z.enum([
-      'owned_analytics',
-      'crm',
-      'card',
-      'phone',
-      'search_console',
-      'competitor_estimate',
-      'owner_answer',
-      'research',
-    ]),
+    kind: z.enum(evidenceKinds),
     capturedAt: z.string().datetime({ offset: true }),
-    dataClass: z.enum(['public', 'owned', 'client_approved', 'estimated']),
+    dataClass: z.enum(dataClasses),
+    /** Required for private (owned / client_approved) evidence; tenant-scoped. */
+    organizationId: nonEmpty.optional(),
     sourceUrl: z.string().url().optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((v, ctx) => {
+    if (!ALLOWED_DATA_CLASSES[v.kind].includes(v.dataClass)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['dataClass'],
+        message: `Evidence kind ${v.kind} cannot carry data class ${v.dataClass} (provenance mismatch)`,
+      });
+    }
+    if (PRIVATE_DATA_CLASSES.includes(v.dataClass) && !v.organizationId) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['organizationId'],
+        message:
+          'Private evidence (owned or client_approved) must name its organisation',
+      });
+    }
+  });
+type SourceRef = z.infer<typeof sourceRef>;
+
+/** Every evidence reference that names an organisation must name this one. */
+function refuseForeignEvidence(
+  organizationId: string,
+  refs: { ref: SourceRef; path: (string | number)[] }[],
+  ctx: z.RefinementCtx
+): void {
+  for (const { ref, path } of refs) {
+    if (
+      ref.organizationId !== undefined &&
+      ref.organizationId !== organizationId
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [...path, 'organizationId'],
+        message:
+          'Evidence belongs to another tenant; cross-tenant references are refused',
+      });
+    }
+  }
+}
 
 export const businessIntentSchema = z
   .object({
@@ -66,7 +136,14 @@ export const opportunitySignalSchema = z
     outcomeMetric: nonEmpty,
     observedAt: z.string().datetime({ offset: true }),
   })
-  .strict();
+  .strict()
+  .superRefine((v, ctx) =>
+    refuseForeignEvidence(
+      v.organizationId,
+      v.evidence.map((ref, i) => ({ ref, path: ['evidence', i] })),
+      ctx
+    )
+  );
 export type OpportunitySignal = z.infer<typeof opportunitySignalSchema>;
 
 export const fulfilmentRequestSchema = z
@@ -119,6 +196,11 @@ export const customerInteractionSchema = z
   })
   .strict()
   .superRefine((v, ctx) => {
+    refuseForeignEvidence(
+      v.organizationId,
+      [{ ref: v.source, path: ['source'] }],
+      ctx
+    );
     if (v.eventType !== 'service_interest' && !v.crmContactId) {
       ctx.addIssue({
         code: 'custom',

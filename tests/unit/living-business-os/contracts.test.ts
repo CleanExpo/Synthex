@@ -3,6 +3,7 @@ import {
   fulfilmentRequestSchema,
   customerInteractionSchema,
   businessIntentSchema,
+  opportunitySignalSchema,
   type BusinessIntent,
 } from '@/lib/living-business-os/contracts';
 import { rankImprovements } from '@/lib/living-business-os/decision-engine';
@@ -29,7 +30,15 @@ const signal: OpportunitySignal = {
   organizationId: 'tenant-a',
   serviceId: 'upholstery',
   title: 'Interest in upholstery cleaning',
-  evidence: [{ id: 'crm-1', kind: 'crm', capturedAt: now, dataClass: 'owned' }],
+  evidence: [
+    {
+      id: 'crm-1',
+      kind: 'crm',
+      capturedAt: now,
+      dataClass: 'owned',
+      organizationId: 'tenant-a',
+    },
+  ],
   confidence: 0.8,
   risk: 0.2,
   expectedGrossProfitAud: 300,
@@ -78,6 +87,7 @@ describe('Living Business OS contracts and first bounded engine', () => {
         kind: 'card',
         capturedAt: now,
         dataClass: 'owned',
+        organizationId: 'tenant-a',
       },
     };
     expect(customerInteractionSchema.safeParse(event).success).toBe(true);
@@ -101,12 +111,19 @@ describe('Living Business OS contracts and first bounded engine', () => {
     expect(result[0].priorityIndex).toBeGreaterThan(0);
   });
   it('halts a cross-tenant signal even if it looks profitable', () => {
-    expect(() =>
-      rankImprovements(intent, [{ ...signal, organizationId: 'tenant-b' }])
-    ).toThrow('TENANT_MISMATCH');
-    expect(() =>
-      selectWeeklyQuestions(intent, [{ ...signal, organizationId: 'tenant-b' }])
-    ).toThrow('TENANT_MISMATCH');
+    // A self-consistent tenant-b signal (its evidence is tenant-b too), so the
+    // engine's own tenant check is what refuses it.
+    const tenantB = {
+      ...signal,
+      organizationId: 'tenant-b',
+      evidence: [{ ...signal.evidence[0], organizationId: 'tenant-b' }],
+    };
+    expect(() => rankImprovements(intent, [tenantB])).toThrow(
+      'TENANT_MISMATCH'
+    );
+    expect(() => selectWeeklyQuestions(intent, [tenantB])).toThrow(
+      'TENANT_MISMATCH'
+    );
   });
   it('does not boost demand beyond capacity', () => {
     const result = rankImprovements(
@@ -202,6 +219,7 @@ describe('Cursor-review regressions: consent, evidence and service boundaries', 
         kind: 'card',
         capturedAt: now,
         dataClass: 'owned',
+        organizationId: 'tenant-a',
       },
     };
     expect(customerInteractionSchema.safeParse(event).success).toBe(false);
@@ -271,5 +289,155 @@ describe('Cursor-review regressions: consent, evidence and service boundaries', 
     expect(rankImprovements(zero, [signal])[0].decision).toBe(
       'defer_for_capacity'
     );
+  });
+});
+
+describe('Codex exact-SHA review regressions (RA-8145): provenance and tenant scope of evidence', () => {
+  // Each case asserts the specific rule's message, so a parse failure for an
+  // unrelated reason (for example an unknown key under .strict()) cannot pass it.
+  const messages = (r: {
+    success: boolean;
+    error?: { issues: { message: string }[] };
+  }) =>
+    r.success ? '' : (r.error?.issues ?? []).map(i => i.message).join(' | ');
+  const tenantEvidence = {
+    id: 'crm-1',
+    kind: 'crm' as const,
+    capturedAt: now,
+    dataClass: 'owned' as const,
+    organizationId: 'tenant-a',
+  };
+  const scoped = { ...signal, evidence: [tenantEvidence] };
+
+  it('rejects a competitor estimate labelled as owned data (review repro)', () => {
+    const laundered = {
+      ...signal,
+      evidence: [
+        {
+          id: 'competitor-1',
+          kind: 'competitor_estimate',
+          capturedAt: now,
+          dataClass: 'owned',
+        },
+      ],
+    } as unknown as OpportunitySignal;
+    expect(messages(opportunitySignalSchema.safeParse(laundered))).toContain(
+      'provenance mismatch'
+    );
+    expect(() => rankImprovements(intent, [laundered])).toThrow(
+      /provenance mismatch/
+    );
+    expect(() => selectWeeklyQuestions(intent, [laundered])).toThrow(
+      /provenance mismatch/
+    );
+  });
+
+  it('rejects research evidence claiming to be owned or client-approved', () => {
+    for (const dataClass of ['owned', 'client_approved']) {
+      const bad = {
+        ...signal,
+        evidence: [
+          { id: 'research-1', kind: 'research', capturedAt: now, dataClass },
+        ],
+      };
+      expect(messages(opportunitySignalSchema.safeParse(bad))).toContain(
+        'provenance mismatch'
+      );
+    }
+  });
+
+  it('requires private evidence to name its organisation', () => {
+    const unscoped = {
+      ...signal,
+      evidence: [
+        { id: 'crm-1', kind: 'crm', capturedAt: now, dataClass: 'owned' },
+      ],
+    };
+    expect(messages(opportunitySignalSchema.safeParse(unscoped))).toContain(
+      'must name its organisation'
+    );
+    expect(
+      messages(
+        customerInteractionSchema.safeParse({
+          organizationId: 'tenant-a',
+          interactionId: 'evt-u',
+          channel: 'living_card',
+          eventType: 'service_interest',
+          serviceId: 'upholstery',
+          happenedAt: now,
+          source: {
+            id: 'card-1',
+            kind: 'card',
+            capturedAt: now,
+            dataClass: 'owned',
+          },
+        })
+      )
+    ).toContain('must name its organisation');
+  });
+
+  it('refuses evidence that belongs to another tenant (review repro)', () => {
+    const crossTenant = {
+      ...scoped,
+      evidence: [
+        {
+          ...tenantEvidence,
+          id: 'tenant-b/crm-contact-1',
+          organizationId: 'tenant-b',
+        },
+      ],
+    };
+    expect(messages(opportunitySignalSchema.safeParse(crossTenant))).toContain(
+      'another tenant'
+    );
+    expect(() => rankImprovements(intent, [crossTenant])).toThrow(
+      /another tenant/
+    );
+    expect(() => selectWeeklyQuestions(intent, [crossTenant])).toThrow(
+      /another tenant/
+    );
+  });
+
+  it('refuses a customer interaction whose source belongs to another tenant', () => {
+    const event = {
+      organizationId: 'tenant-a',
+      interactionId: 'evt-x',
+      channel: 'living_card',
+      eventType: 'service_interest',
+      serviceId: 'upholstery',
+      happenedAt: now,
+      source: {
+        ...tenantEvidence,
+        kind: 'card' as const,
+        id: 'card-1',
+        organizationId: 'tenant-b',
+      },
+    };
+    expect(messages(customerInteractionSchema.safeParse(event))).toContain(
+      'another tenant'
+    );
+    expect(
+      customerInteractionSchema.safeParse({
+        ...event,
+        source: { ...event.source, organizationId: 'tenant-a' },
+      }).success
+    ).toBe(true);
+  });
+
+  it('still accepts correctly scoped owned evidence and public research', () => {
+    const ok = {
+      ...scoped,
+      evidence: [
+        tenantEvidence,
+        {
+          id: 'r-1',
+          kind: 'research' as const,
+          capturedAt: now,
+          dataClass: 'public' as const,
+        },
+      ],
+    };
+    expect(opportunitySignalSchema.safeParse(ok).success).toBe(true);
+    expect(rankImprovements(intent, [ok])[0].decision).toBe('draft_for_review');
   });
 });
