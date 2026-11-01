@@ -31,6 +31,7 @@ import {
   PORTFOLIO_PARENT_SLUG,
   PORTFOLIO_WEEK_STARTS,
   brandHits,
+  copyHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 import { resolveLogoUrl } from './resolve-logo';
@@ -43,7 +44,11 @@ import {
 import { promptHits } from './prompt-guard';
 import { renderPromptLegs } from '@/lib/ai/prompt-layer-builder';
 import { foundationPromptText } from '@/lib/agency/foundation-context';
-import { assertCalendarPostClean, ForbiddenPromptError } from './prompt-guard';
+import {
+  assertCalendarPostClean,
+  calendarPostText,
+  ForbiddenPromptError,
+} from './prompt-guard';
 
 export const PORTFOLIO_SOURCE = 'portfolio-marketing-calendar';
 
@@ -70,6 +75,12 @@ export interface PortfolioManifest {
     organizationId: string;
     userId: string;
   }>;
+  /**
+   * Existing access rows that do not give a workspace owner access (a
+   * non-owner membership, an inactive ownership). Never overwritten here:
+   * listed for a person to fix, and verify fails until they are.
+   */
+  accessGaps: Array<{ orgSlug: string; userId: string; reason: string }>;
   brandDna: Array<{
     id: string;
     orgSlug: string;
@@ -190,6 +201,7 @@ function emptyManifest(write: boolean): PortfolioManifest {
     updatedOrganizations: [],
     teamMembers: [],
     businessOwnerships: [],
+    accessGaps: [],
     brandDna: [],
     clientProfiles: [],
     calendarPosts: [],
@@ -349,6 +361,15 @@ export async function applyPortfolioSetup(opts: {
           const member = await prisma.teamMember.findFirst({
             where: { organizationId: org.id, userId },
           });
+          if (member && member.role !== 'owner') {
+            const reason = `team member with role ${member.role}, not owner`;
+            log(`! ${brand.orgSlug}: ${userId} is a ${reason}; not changed`);
+            manifest.accessGaps.push({
+              orgSlug: brand.orgSlug,
+              userId,
+              reason,
+            });
+          }
           if (!member) {
             log(`+ team owner ${userId} on ${brand.orgSlug}`);
             if (write) {
@@ -373,6 +394,15 @@ export async function applyPortfolioSetup(opts: {
               },
             },
           });
+          if (ownership && !ownership.isActive) {
+            const reason = 'business ownership is inactive';
+            log(`! ${brand.orgSlug}: ${userId} ${reason}; not changed`);
+            manifest.accessGaps.push({
+              orgSlug: brand.orgSlug,
+              userId,
+              reason,
+            });
+          }
           if (!ownership) {
             log(`+ business ownership ${userId} on ${brand.orgSlug}`);
             if (write) {
@@ -736,6 +766,43 @@ export async function verifyPortfolioSetup(): Promise<{
     },
   });
   const bySlug = new Map(orgs.map(o => [o.slug, o]));
+  // Every owner of the workspace must be able to open every brand: an owner
+  // membership and an active business ownership (what the org switcher needs).
+  const workspaceRoot = bySlug.get(PORTFOLIO_PARENT_SLUG);
+  const ownerIds = workspaceRoot
+    ? (
+        await prisma.teamMember.findMany({
+          where: { organizationId: workspaceRoot.id, role: 'owner' },
+          select: { userId: true },
+        })
+      ).map(o => o.userId)
+    : [];
+  const brandOrgIds = orgs.map(o => o.id);
+  const access = (orgId: string, userId: string) => `${orgId} ${userId}`;
+  const owning = new Set(
+    (
+      await prisma.teamMember.findMany({
+        where: {
+          organizationId: { in: brandOrgIds },
+          userId: { in: ownerIds },
+          role: 'owner',
+        },
+        select: { organizationId: true, userId: true },
+      })
+    ).map(m => access(m.organizationId, m.userId))
+  );
+  const activeOwnership = new Set(
+    (
+      await prisma.businessOwnership.findMany({
+        where: {
+          organizationId: { in: brandOrgIds },
+          ownerId: { in: ownerIds },
+          isActive: true,
+        },
+        select: { organizationId: true, ownerId: true },
+      })
+    ).map(b => access(b.organizationId, b.ownerId))
+  );
 
   for (const brand of PORTFOLIO_BRANDS) {
     const org = bySlug.get(brand.orgSlug);
@@ -750,6 +817,15 @@ export async function verifyPortfolioSetup(): Promise<{
     // Nothing else about an org outside the workspace is read into the
     // (public) result: its mode, DNA and profile are not ours to report.
     if (!member) continue;
+    check(
+      ownerIds.length > 0 &&
+        ownerIds.every(
+          u =>
+            owning.has(access(org.id, u)) &&
+            activeOwnership.has(access(org.id, u))
+        ),
+      `${brand.orgSlug}: every workspace owner has owner access`
+    );
     check(
       org.calendarMode === 'shadow' && org.liveModeT === 0,
       `${brand.orgSlug}: shadow mode, live tier 0`
@@ -846,31 +922,29 @@ export async function verifyPortfolioSetup(): Promise<{
   // delivered caption, edited rules), so it is scanned like the brand rows:
   // every metadata field still exactly as setup wrote it is skipped.
   for (const brand of PORTFOLIO_BRANDS) {
-    const text = posts
+    const hits = posts
       .filter(p => slugOf.get(p.organizationId) === brand.orgSlug)
       .map(p => {
         const { videoDelivery, ...meta } = (p.metadata ?? {}) as Record<
           string,
           unknown
         >;
-        // A delivery's link and ids are machine-written; only its caption
-        // is copy, so only the caption is scanned.
-        const caption = (videoDelivery as { captionDraft?: unknown } | null)
-          ?.captionDraft;
         const slot = planBySlot.get(String(meta.slotKey ?? ''));
+        // Copy is held to the same rule as every write of it
+        // (assertCalendarPostClean); the rest of the metadata is checked
+        // like prompt text, since brand rules name banned words to ban them.
+        void videoDelivery;
         return [
-          p.title ?? '',
-          p.content ?? '',
-          ...(p.hashtags ?? []),
-          ...(p.mentions ?? []),
-          typeof caption === 'string' ? caption : '',
-          promptedText(meta, brand, slot ? slotMetadata(slot, brand) : {}),
-        ].join(' ');
-      })
-      .join(' ');
-    if (!text.trim()) continue;
+          ...copyHits(calendarPostText(p).filter(Boolean).join('\n'), brand),
+          ...brandHits(
+            promptedText(meta, brand, slot ? slotMetadata(slot, brand) : {}),
+            brand
+          ),
+        ];
+      });
+    if (hits.length === 0) continue;
     check(
-      brandHits(text, brand).length === 0,
+      hits.every(h => h.length === 0),
       `${brand.orgSlug}: calendar drafts carry no forbidden words`
     );
   }

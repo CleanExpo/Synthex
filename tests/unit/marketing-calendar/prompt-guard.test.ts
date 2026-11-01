@@ -31,6 +31,7 @@ import {
 } from '@/lib/marketing-calendar/prompt-guard';
 import {
   PORTFOLIO_BRANDS,
+  copyHits,
   forbiddenHits,
 } from '@/lib/marketing-calendar/portfolio-brands';
 
@@ -224,14 +225,33 @@ describe('promptHits', () => {
     expect(promptHits(text, ug)).not.toEqual([]);
   });
 
-  it("reads a phrase that runs into the brand's own product as the product", () => {
+  it("allows only the brand's listed approved phrases", () => {
     expect(
       promptHits('Our business cards make sharing easier for cafes.', ug)
     ).toEqual([]);
     expect(promptHits('Our business built this app.', ug)).toEqual([
       'our business',
     ]);
+    // Nothing is inferred from offerings: NRPG's offering does not admit it.
+    const nrpg = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'nrpg')!;
+    expect(promptHits('Partner contractor network membership', nrpg)).toEqual([
+      'Partner contractor',
+    ]);
   });
+
+  it.each(PORTFOLIO_BRANDS.map(b => [b.orgSlug, b] as const))(
+    '%s: a forbidden phrase running into an offering still counts',
+    (_, b) => {
+      const allowed = [b.name, ...(b.approvedPhrases ?? [])];
+      for (const word of b.forbiddenWords) {
+        // A word the brand's own name or approved phrases cover never counts.
+        if (forbiddenHits(word, [word], allowed).length === 0) continue;
+        for (const offering of b.offerings) {
+          expect(copyHits(`${word} ${offering}`, b)).toContain(word);
+        }
+      }
+    }
+  );
 
   it('catches a forbidden word anywhere in the prompt', () => {
     expect(promptHits('Avoid: nothing. Feature CARSI weekly.', ug)).toEqual([
@@ -301,6 +321,24 @@ describe('assertCalendarPostClean', () => {
         content: 'Claiming save-to-contacts or NFC before it is shown working',
       })
     ).toThrow(ForbiddenPromptError);
+  });
+
+  it.each([
+    ['content', { content: 'Partner contractor network membership' }],
+    [
+      'delivered caption',
+      {
+        metadata: {
+          videoDelivery: {
+            captionDraft: 'Partner contractor network membership',
+          },
+        },
+      },
+    ],
+  ])('refuses the NRPG offering overlap in the %s', (_, part) => {
+    expect(() => assertCalendarPostClean('nrpg', part)).toThrow(
+      ForbiddenPromptError
+    );
   });
 
   it('passes a Unite Group draft about its own video business cards', () => {

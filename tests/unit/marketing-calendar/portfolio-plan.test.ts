@@ -102,7 +102,10 @@ describe('portfolio marketing calendar plan', () => {
     // rules included, since prompts read them), minus the list itself.
     const { forbiddenWords, ...rest } = ug;
     expect(forbiddenWords).toEqual(expect.arrayContaining(UNITE_GROUP_BANNED));
-    expect(forbiddenHits(JSON.stringify(rest), forbiddenWords)).toEqual([]);
+    // Approved phrases are read the way the guard reads them.
+    expect(
+      forbiddenHits(JSON.stringify(rest), forbiddenWords, ug.approvedPhrases)
+    ).toEqual([]);
   });
 
   it('matches whole words only, so a short code is not found inside a word', () => {

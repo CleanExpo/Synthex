@@ -55,6 +55,12 @@ export interface PortfolioBrandProfile extends PortfolioBrandSchedule {
   forbiddenWords: string[];
   preferredWords: string[];
   antiPatterns: string[];
+  /**
+   * Exact phrases this brand may use although they contain a forbidden
+   * phrase ('our business card' contains 'our business'). Reviewed one by
+   * one: nothing is inferred from offerings or other fields.
+   */
+  approvedPhrases?: string[];
   brandRules: string[];
   liveStatus: { live: boolean; evidence: string };
 }
@@ -164,24 +170,17 @@ const sameWord = (got: string | undefined, want: string) =>
  * lowercasing and treating any run of spaces or punctuation as one break, so
  * 'Restore-Assist', 'Disaster–Recovery', 'Clean Expo' and 'TradeHall' all
  * match, a plural matches, and 'CEC' is still not found inside 'Cecilia'.
- *
- * `products` are the brand's own product names. A match whose last word
- * opens one of them is that product, not the phrase: 'our business' in
- * 'Our business cards' is the product 'business cards'.
  */
 export function forbiddenHits(
   text: string,
   words: readonly string[],
-  exempt: readonly string[] = [],
-  products: readonly string[] = []
+  exempt: readonly string[] = []
 ): string[] {
   const got = wordsOf(text);
   const covered = exemptWords(got, exempt);
-  const opensProduct = productStarts(got, products);
-  // A match spanning got[from..to) counts unless all of it is exempt or it
-  // runs into a product name.
+  // A match spanning got[from..to) counts unless all of it is exempt.
   const counts = (from: number, to: number) =>
-    covered.slice(from, to).some(c => !c) && !opensProduct[to - 1];
+    covered.slice(from, to).some(c => !c);
   return words.filter(w => {
     const want = wordsOf(w);
     if (!want.length) return false;
@@ -226,27 +225,6 @@ function exemptWords(got: string[], exempt: readonly string[]): boolean[] {
 }
 
 /**
- * Which words of `got` open a multi-word tail of a product name and are
- * followed by the rest of it ('business' before 'cards', for the product
- * 'Video business cards').
- */
-function productStarts(got: string[], products: readonly string[]): boolean[] {
-  const opens = got.map(() => false);
-  const near = (a: string | undefined, b: string) =>
-    a !== undefined && (sameWord(a, b) || sameWord(b, a));
-  for (const product of products) {
-    const words = wordsOf(product);
-    for (let s = 0; s + 1 < words.length; s++) {
-      const tail = words.slice(s);
-      for (let i = 0; i + tail.length <= got.length; i++) {
-        if (tail.every((x, j) => near(got[i + j], x))) opens[i] = true;
-      }
-    }
-  }
-  return opens;
-}
-
-/**
  * A brand's forbidden words in `text`, leaving out the brand's own name and
  * its approved anti-pattern lines: 'Unite Group Business Cards' is not a
  * mention of the group's businesses, and an "Avoid: ..." line names banned
@@ -256,32 +234,32 @@ export function brandHits(
   text: string,
   brand: Pick<
     PortfolioBrandProfile,
-    'name' | 'forbiddenWords' | 'antiPatterns' | 'offerings'
+    'name' | 'forbiddenWords' | 'antiPatterns' | 'approvedPhrases'
   >
 ): string[] {
-  return forbiddenHits(
-    text,
-    brand.forbiddenWords,
-    [brand.name, ...brand.antiPatterns],
-    brand.offerings
-  );
+  return forbiddenHits(text, brand.forbiddenWords, [
+    brand.name,
+    ...brand.antiPatterns,
+    ...(brand.approvedPhrases ?? []),
+  ]);
 }
 
 /**
  * A brand's forbidden words in copy a reader sees. Only the brand's own name
- * is exempt: copy has no "Avoid: ..." line, so an anti-pattern phrase written
- * into a draft is still a mention.
+ * and its approved phrases are exempt: copy has no "Avoid: ..." line, so an
+ * anti-pattern phrase written into a draft is still a mention.
  */
 export function copyHits(
   text: string,
-  brand: Pick<PortfolioBrandProfile, 'name' | 'forbiddenWords' | 'offerings'>
+  brand: Pick<
+    PortfolioBrandProfile,
+    'name' | 'forbiddenWords' | 'approvedPhrases'
+  >
 ): string[] {
-  return forbiddenHits(
-    text,
-    brand.forbiddenWords,
-    [brand.name],
-    brand.offerings
-  );
+  return forbiddenHits(text, brand.forbiddenWords, [
+    brand.name,
+    ...(brand.approvedPhrases ?? []),
+  ]);
 }
 
 export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
@@ -495,6 +473,8 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
       values: ['Evidence on screen', 'Plain answers', 'Australian-owned'],
     },
     offerings: ['Video business cards', 'AI marketing for small businesses'],
+    // The product itself, said in the first person.
+    approvedPhrases: ['our business card'],
     socialProfiles: [],
     // Founder hard rule, 26/10/2026: Unite-Group content never shows or
     // mentions Phill's own businesses or restoration/training content.

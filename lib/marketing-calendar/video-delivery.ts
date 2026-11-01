@@ -19,7 +19,7 @@ import {
   PORTFOLIO_BRANDS,
   PORTFOLIO_PARENT_SLUG,
   PORTFOLIO_WEEK_STARTS,
-  brandHits,
+  copyHits,
 } from './portfolio-brands';
 import {
   LeftWorkspaceError,
@@ -86,7 +86,7 @@ export async function attachVideoToSlot(
   if (!planned) return { outcome: 'not_found' };
   // A caption is draft copy for this brand: its forbidden words never go in.
   const brand = PORTFOLIO_BRANDS.find(b => b.orgSlug === planned.orgSlug)!;
-  const banned = brandHits(delivery.captionDraft ?? '', brand);
+  const banned = copyHits(delivery.captionDraft ?? '', brand);
   if (banned.length > 0) {
     return {
       outcome: 'refused',

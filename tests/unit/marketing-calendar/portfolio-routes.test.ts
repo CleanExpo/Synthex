@@ -297,6 +297,22 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
+  it('refuses (422) an anti-pattern line as a caption before any lookup', async () => {
+    const res = await deliver(
+      deliveryRequest(
+        {
+          ...validBody,
+          captionDraft:
+            'Claiming save-to-contacts or NFC before it is shown working',
+        },
+        TOKEN
+      )
+    );
+    expect(res.status).toBe(422);
+    expect(mockTx).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('refuses (422) when the stored draft itself names a word the brand never uses', async () => {
     const slotKey = '2026-11-02-unite-group-video-1';
     mockFindFirst.mockResolvedValue({

@@ -74,7 +74,7 @@ function deliveredCaption(metadata: unknown): string | null {
     : null;
 }
 
-function calendarPostText(post: CalendarPostText) {
+export function calendarPostText(post: CalendarPostText) {
   return [
     post.title,
     post.content,

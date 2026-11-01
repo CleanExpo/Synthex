@@ -20,7 +20,13 @@ const db = {
     'count'
   ),
   teamMember: model('findMany', 'findFirst', 'create', 'deleteMany', 'count'),
-  businessOwnership: model('findUnique', 'create', 'deleteMany', 'count'),
+  businessOwnership: model(
+    'findUnique',
+    'findMany',
+    'create',
+    'deleteMany',
+    'count'
+  ),
   brandDNA: model(
     'findUnique',
     'create',
@@ -130,8 +136,11 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockResolveLogo.mockImplementation(async (url: string | null) => url);
   db.teamMember.findMany.mockResolvedValue([{ userId: 'owner-1' }]);
-  db.teamMember.findFirst.mockResolvedValue({ id: 'tm' });
-  db.businessOwnership.findUnique.mockResolvedValue({ id: 'bo' });
+  db.teamMember.findFirst.mockResolvedValue({ id: 'tm', role: 'owner' });
+  db.businessOwnership.findUnique.mockResolvedValue({
+    id: 'bo',
+    isActive: true,
+  });
   db.brandDNA.findUnique.mockResolvedValue(null);
   db.clientProfile.findUnique.mockResolvedValue(null);
   db.calendarPost.findFirst.mockResolvedValue(null);
@@ -168,6 +177,64 @@ describe('applyPortfolioSetup', () => {
       '+ create org business-card (child of unite-group)'
     );
     expect(manifest.calendarPosts).toEqual([]);
+  });
+
+  it.each([
+    [
+      'an inactive business ownership',
+      () =>
+        db.businessOwnership.findUnique.mockResolvedValue({
+          id: 'bo',
+          isActive: false,
+        }),
+      'business ownership is inactive',
+    ],
+    [
+      'a non-owner team membership',
+      () =>
+        db.teamMember.findFirst.mockResolvedValue({ id: 'tm', role: 'viewer' }),
+      'team member with role viewer, not owner',
+    ],
+  ])(
+    'records %s as an access gap and leaves it unchanged',
+    async (_, arrange, reason) => {
+      db.organization.findUnique.mockImplementation(
+        async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+      );
+      db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
+      db.brandDNA.findUnique.mockResolvedValue({ id: 'dna-human' });
+      db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human' });
+      arrange();
+      const manifest = await applyPortfolioSetup({
+        write: true,
+        ownerUserId: 'owner-1',
+      });
+      expect(manifest.accessGaps).toHaveLength(PORTFOLIO_BRANDS.length);
+      expect(manifest.accessGaps[0]).toEqual({
+        orgSlug: PORTFOLIO_BRANDS[0].orgSlug,
+        userId: 'owner-1',
+        reason,
+      });
+      expect(
+        writeCalls().filter(
+          c => c.startsWith('teamMember') || c.startsWith('businessOwnership')
+        )
+      ).toEqual([]);
+    }
+  );
+
+  it('records no access gap when the owner already has owner access', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.calendarPost.findFirst.mockResolvedValue({ id: 'existing' });
+    db.brandDNA.findUnique.mockResolvedValue({ id: 'dna-human' });
+    db.clientProfile.findUnique.mockResolvedValue({ id: 'cp-human' });
+    const manifest = await applyPortfolioSetup({
+      write: true,
+      ownerUserId: 'owner-1',
+    });
+    expect(manifest.accessGaps).toEqual([]);
   });
 
   it('never rewrites a slot that already exists, edited or not', async () => {
@@ -837,8 +904,68 @@ describe('verifyPortfolioSetup', () => {
       },
     }));
 
+  // Access rows as the database would hold them: owner-1 owns the workspace
+  // and has owner access to every brand, except what a test removes.
+  let noAccess: Array<{ org: string; table: 'member' | 'ownership' }> = [];
+  const blocked = (org: string, table: 'member' | 'ownership') =>
+    noAccess.some(n => `org-${n.org}` === org && n.table === table);
   beforeEach(() => {
+    noAccess = [];
     db.organization.findMany.mockResolvedValue(orgs);
+    db.teamMember.findMany.mockImplementation(
+      async ({
+        where,
+      }: {
+        where: { organizationId: string | { in: string[] }; role?: string };
+      }) =>
+        typeof where.organizationId === 'string'
+          ? where.organizationId === 'org-unite-group'
+            ? [{ userId: 'owner-1' }]
+            : []
+          : where.organizationId.in
+              .filter(id => !blocked(id, 'member'))
+              .map(id => ({ organizationId: id, userId: 'owner-1' }))
+    );
+    db.businessOwnership.findMany.mockImplementation(
+      async ({
+        where,
+      }: {
+        where: { organizationId: { in: string[] }; isActive?: boolean };
+      }) =>
+        where.isActive !== true
+          ? []
+          : where.organizationId.in
+              .filter(id => !blocked(id, 'ownership'))
+              .map(id => ({ organizationId: id, ownerId: 'owner-1' }))
+    );
+  });
+
+  it.each([
+    ['an inactive or missing ownership', 'ownership'],
+    ['a missing or non-owner membership', 'member'],
+  ] as const)(
+    'fails a brand where a workspace owner has %s',
+    async (_, table) => {
+      db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+      noAccess = [{ org: 'carsi', table }];
+      const failed = (await verifyPortfolioSetup()).checks
+        .filter(c => !c.pass)
+        .map(c => c.label);
+      expect(failed).toEqual(['carsi: every workspace owner has owner access']);
+    }
+  );
+
+  it('fails every brand when the workspace has no owner at all', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    db.teamMember.findMany.mockResolvedValue([]);
+    const failed = (await verifyPortfolioSetup()).checks
+      .filter(c => !c.pass)
+      .map(c => c.label);
+    expect(failed).toEqual(
+      PORTFOLIO_BRANDS.map(
+        b => `${b.orgSlug}: every workspace owner has owner access`
+      )
+    );
   });
 
   it('passes when every slot sits under its own brand', async () => {
@@ -922,6 +1049,24 @@ describe('verifyPortfolioSetup', () => {
     );
     expect(await failedLabels()).toEqual([
       'unite-group: calendar drafts carry no forbidden words',
+    ]);
+  });
+
+  it('fails a kept Business Card draft that carries one of its anti-pattern lines', async () => {
+    const victim = plan.findIndex(s => s.orgSlug === 'business-card');
+    db.calendarPost.findMany.mockResolvedValue(
+      rows(slug => slug).map((r, i) =>
+        i === victim
+          ? {
+              ...r,
+              content:
+                'Claiming save-to-contacts or NFC before it is shown working',
+            }
+          : r
+      )
+    );
+    expect(await failedLabels()).toEqual([
+      'business-card: calendar drafts carry no forbidden words',
     ]);
   });
 
