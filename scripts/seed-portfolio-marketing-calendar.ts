@@ -15,6 +15,7 @@ import { dirname } from 'node:path';
 import { homedir } from 'node:os';
 import { prisma } from '../lib/prisma';
 import { supabaseProjectRef } from '../lib/marketing-calendar/db-ref';
+import { parsePortfolioArgs } from '../lib/marketing-calendar/portfolio-args';
 import {
   applyPortfolioSetup,
   undoPortfolioSetup,
@@ -25,17 +26,17 @@ const EXPECTED_DB_REF = 'znyjoyjsvjotlzjppzal'; // Synthex Supabase project
 const OWNER_EMAIL =
   process.env.PORTFOLIO_OWNER_EMAIL ?? 'contact@unite-group.in';
 
-const args = process.argv.slice(2);
-const WRITE = args.includes('--write');
-const UNDO_PATH = args.includes('--undo')
-  ? args[args.indexOf('--undo') + 1]
-  : undefined;
+const {
+  write: WRITE,
+  undoPath: UNDO_PATH,
+  manifestPath,
+} = parsePortfolioArgs(process.argv.slice(2));
 // One manifest per run, so a re-run never overwrites the ids an undo needs.
-const MANIFEST_PATH = args.includes('--manifest')
-  ? args[args.indexOf('--manifest') + 1]
-  : `${homedir()}/session-handoffs/synthex-portfolio-calendar-records-${new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')}.json`;
+const MANIFEST_PATH =
+  manifestPath ??
+  `${homedir()}/session-handoffs/synthex-portfolio-calendar-records-${new Date()
+    .toISOString()
+    .replace(/[:.]/g, '-')}.json`;
 
 function saveManifest(manifest: PortfolioManifest) {
   mkdirSync(dirname(MANIFEST_PATH), { recursive: true });

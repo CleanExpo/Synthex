@@ -125,29 +125,32 @@ const WORKSPACE_FIELDS = {
   parentOrgId: true,
 } as const;
 
+export interface OrgLookup {
+  organization: {
+    findUnique(args: {
+      where: { id: string } | { slug: string };
+      select: typeof WORKSPACE_FIELDS;
+    }): Promise<WorkspaceOrgFields | null>;
+  };
+}
+
 /**
- * assertCalendarPostClean for an organisation id. A slug alone proves
- * nothing: the brand's rule applies only when the org is in the Unite Group
- * workspace (workspace.ts), so an outside org that shares a brand's slug is
- * left unchecked like any other org.
+ * The portfolio brand an organisation id is, if any. A slug alone proves
+ * nothing: an org is a brand only when it is in the Unite Group workspace
+ * (workspace.ts), so an outside org that shares a brand's slug gets no brand
+ * and is left unchecked like any other org. Every brand rule applied by
+ * organisation id decides it here.
  */
-export async function assertCalendarPostCleanForOrg(
-  db: {
-    organization: {
-      findUnique(args: {
-        where: { id: string } | { slug: string };
-        select: typeof WORKSPACE_FIELDS;
-      }): Promise<WorkspaceOrgFields | null>;
-    };
-  },
-  organizationId: string,
-  post: CalendarPostText
-) {
+export async function portfolioBrandForOrg(
+  db: OrgLookup,
+  organizationId: string
+): Promise<PortfolioBrandProfile | undefined> {
   const org = await db.organization.findUnique({
     where: { id: organizationId },
     select: WORKSPACE_FIELDS,
   });
-  if (!org || !brandForSlug(org.slug)) return;
+  const brand = brandForSlug(org?.slug);
+  if (!org || !brand) return undefined;
   const root =
     org.slug === PORTFOLIO_PARENT_SLUG
       ? org
@@ -155,6 +158,25 @@ export async function assertCalendarPostCleanForOrg(
           where: { slug: PORTFOLIO_PARENT_SLUG },
           select: WORKSPACE_FIELDS,
         });
-  if (!root || !inWorkspace(org, root)) return;
-  assertCalendarPostClean(org.slug, post);
+  return root && inWorkspace(org, root) ? brand : undefined;
+}
+
+/** assertPromptClean for an organisation id (see portfolioBrandForOrg). */
+export async function assertPromptCleanForOrg(
+  db: OrgLookup,
+  organizationId: string,
+  parts: Array<string | null | undefined>
+) {
+  const brand = await portfolioBrandForOrg(db, organizationId);
+  if (brand) assertPromptClean(brand.orgSlug, parts);
+}
+
+/** assertCalendarPostClean for an organisation id (see portfolioBrandForOrg). */
+export async function assertCalendarPostCleanForOrg(
+  db: OrgLookup,
+  organizationId: string,
+  post: CalendarPostText
+) {
+  const brand = await portfolioBrandForOrg(db, organizationId);
+  if (brand) assertCalendarPostClean(brand.orgSlug, post);
 }

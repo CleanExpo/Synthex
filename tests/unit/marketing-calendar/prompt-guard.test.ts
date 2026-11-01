@@ -57,7 +57,10 @@ beforeEach(() => {
   mockPrisma.clientProfile.findUnique.mockResolvedValue(null);
   mockPrisma.brandDNA.findUnique.mockResolvedValue(null);
   mockPrisma.organization.findUnique.mockResolvedValue({
+    id: 'org-ug',
     slug: 'unite-group',
+    status: 'active',
+    parentOrgId: null,
     name: 'Unite Group',
     industry: 'Business services',
     aiGeneratedData: null,
@@ -147,7 +150,10 @@ describe('content generator', () => {
 describe('foundation context', () => {
   it('refuses a Unite-Group setting that names an owned business', async () => {
     mockPrisma.organization.findUnique.mockResolvedValue({
+      id: 'org-ug',
       slug: 'unite-group',
+      status: 'active',
+      parentOrgId: null,
       settings: { voiceTag: 'Promote CARSI courses' },
     });
     await expect(getAgencyFoundationContext('org-ug')).rejects.toBeInstanceOf(
@@ -157,7 +163,10 @@ describe('foundation context', () => {
 
   it('refuses a non-string setting that names an owned business', async () => {
     mockPrisma.organization.findUnique.mockResolvedValue({
+      id: 'org-ug',
       slug: 'unite-group',
+      status: 'active',
+      parentOrgId: null,
       settings: { voiceTag: { message: 'Promote CARSI courses' } },
     });
     await expect(getAgencyFoundationContext('org-ug')).rejects.toBeInstanceOf(
@@ -167,7 +176,10 @@ describe('foundation context', () => {
 
   it('hands a portfolio brand no foundation text that names its forbidden words', async () => {
     mockPrisma.organization.findUnique.mockResolvedValue({
+      id: 'org-ug',
       slug: 'unite-group',
+      status: 'active',
+      parentOrgId: null,
       settings: { voiceTag: 'Plain and warm' },
     });
     const ctx = await getAgencyFoundationContext('org-ug');
@@ -185,7 +197,10 @@ describe('foundation context', () => {
 
   it('passes clean settings', async () => {
     mockPrisma.organization.findUnique.mockResolvedValue({
+      id: 'org-ug',
       slug: 'unite-group',
+      status: 'active',
+      parentOrgId: null,
       settings: { voiceTag: 'Plain and warm' },
     });
     await expect(getAgencyFoundationContext('org-ug')).resolves.toMatchObject({

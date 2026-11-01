@@ -8,9 +8,10 @@ import prisma from '@/lib/prisma';
 import { getAgencyTask, type AgencyTaskId } from './agency-task-catalog';
 import {
   assertPromptClean,
-  brandForSlug,
+  portfolioBrandForOrg,
   promptHits,
 } from '@/lib/marketing-calendar/prompt-guard';
+import type { PortfolioBrandProfile } from '@/lib/marketing-calendar/portfolio-brands';
 
 const FOUNDATION_FILES = {
   ceoFoundation: '.claude/memory/ceo-foundation.md',
@@ -52,8 +53,10 @@ export function foundationPromptText(settings: unknown): string[] {
 }
 
 /** A foundation excerpt as a brand may receive it: withheld if it names that brand's forbidden words. */
-function excerptFor(slug: string | undefined, excerpt: string): string {
-  const brand = brandForSlug(slug);
+function excerptFor(
+  brand: PortfolioBrandProfile | undefined,
+  excerpt: string
+): string {
   return brand && promptHits(excerpt, brand).length > 0
     ? '[foundation excerpt withheld: it names words this brand never uses]'
     : excerpt;
@@ -66,7 +69,7 @@ export async function getAgencyFoundationContext(
   organizationId: string,
   opts?: { agencyTaskId?: string }
 ): Promise<AgencyFoundationContext> {
-  const [ceoFoundationExcerpt, verificationGatesExcerpt, org] =
+  const [ceoFoundationExcerpt, verificationGatesExcerpt, org, brand] =
     await Promise.all([
       readFoundationExcerpt(FOUNDATION_FILES.ceoFoundation),
       readFoundationExcerpt(FOUNDATION_FILES.verificationGates),
@@ -74,10 +77,12 @@ export async function getAgencyFoundationContext(
         where: { id: organizationId },
         select: { slug: true, settings: true },
       }),
+      // A brand only inside the workspace: a slug alone proves nothing.
+      portfolioBrandForOrg(prisma, organizationId),
     ]);
 
   const settings = (org?.settings ?? {}) as Record<string, unknown>;
-  assertPromptClean(org?.slug, foundationPromptText(settings));
+  if (brand) assertPromptClean(brand.orgSlug, foundationPromptText(settings));
   const agencyMeta = opts?.agencyTaskId
     ? getAgencyTask(opts.agencyTaskId)
     : undefined;
@@ -87,8 +92,8 @@ export async function getAgencyFoundationContext(
     organizationSlug: org?.slug,
     voiceTag: (settings.voiceTag as string) ?? agencyMeta?.label,
     flywheel: settings.flywheel as string | undefined,
-    ceoFoundationExcerpt: excerptFor(org?.slug, ceoFoundationExcerpt),
-    verificationGatesExcerpt: excerptFor(org?.slug, verificationGatesExcerpt),
+    ceoFoundationExcerpt: excerptFor(brand, ceoFoundationExcerpt),
+    verificationGatesExcerpt: excerptFor(brand, verificationGatesExcerpt),
     agencyTaskId:
       opts?.agencyTaskId && getAgencyTask(opts.agencyTaskId)
         ? (opts.agencyTaskId as AgencyTaskId)
