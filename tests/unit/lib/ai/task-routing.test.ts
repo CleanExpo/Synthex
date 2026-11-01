@@ -257,3 +257,45 @@ describe('task-routing — triangulation under a ceiling every panellist fits', 
     }
   );
 });
+
+describe('task-routing — every returnable model has a known price', () => {
+  // A model the router can return but the price list does not know is dropped
+  // by any budget ceiling, however generous. A ceiling every price fits under
+  // must therefore leave every route exactly as it is without a ceiling.
+  const qualities = [undefined, 'low', 'high'] as const;
+  const contexts = [undefined, 500_000] as const;
+
+  it.each(ALL_INTENTS)(
+    '%s keeps its fallbacks and panel under a generous ceiling',
+    intent => {
+      for (const quality of qualities) {
+        for (const contextLength of contexts) {
+          const uncapped = routeIntent(intent, { quality, contextLength });
+          const capped = routeIntent(intent, {
+            quality,
+            contextLength,
+            budgetCeiling: 999,
+          });
+          expect({ quality, contextLength, fallback: capped.fallback }).toEqual(
+            {
+              quality,
+              contextLength,
+              fallback: uncapped.fallback,
+            }
+          );
+          expect(capped.panel).toEqual(uncapped.panel);
+        }
+      }
+    }
+  );
+
+  it('long context under a 0.001 ceiling keeps the DeepSeek V4 Pro fallback (0.00087)', () => {
+    const choice = routeIntent('code-review', {
+      contextLength: 500_000,
+      budgetCeiling: 0.001,
+    });
+    expect(choice.fallback.map(f => f.modelId)).toContain(
+      'deepseek/deepseek-v4-pro'
+    );
+  });
+});
