@@ -159,6 +159,22 @@ const wordsOf = (s: string) =>
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean);
+/** Punctuation that ends a sentence or line: an exempt phrase never spans it. */
+export const SENTENCE_BREAK = /[.!?;\n]/;
+/** The words of `s`, and for each whether a sentence break comes before it. */
+function tokensOf(s: string): { words: string[]; breakBefore: boolean[] } {
+  const words: string[] = [];
+  const breakBefore: boolean[] = [];
+  let pending = false;
+  for (const [t] of s.toLowerCase().matchAll(/[a-z0-9]+|[^a-z0-9]+/g)) {
+    if (/[a-z0-9]/.test(t)) {
+      words.push(t);
+      breakBefore.push(pending);
+      pending = false;
+    } else if (SENTENCE_BREAK.test(t)) pending = true;
+  }
+  return { words, breakBefore };
+}
 const sameWord = (got: string | undefined, want: string) =>
   got === want ||
   got === `${want}s` ||
@@ -170,14 +186,16 @@ const sameWord = (got: string | undefined, want: string) =>
  * lowercasing and treating any run of spaces or punctuation as one break, so
  * 'Restore-Assist', 'Disaster–Recovery', 'Clean Expo' and 'TradeHall' all
  * match, a plural matches, and 'CEC' is still not found inside 'Cecilia'.
+ * An exempt phrase only covers words in one sentence: 'Our business. Card
+ * payments' is not the phrase 'our business card'.
  */
 export function forbiddenHits(
   text: string,
   words: readonly string[],
   exempt: readonly string[] = []
 ): string[] {
-  const got = wordsOf(text);
-  const covered = exemptWords(got, exempt);
+  const { words: got, breakBefore } = tokensOf(text);
+  const covered = exemptWords(got, breakBefore, exempt);
   // A match spanning got[from..to) counts unless all of it is exempt.
   const counts = (from: number, to: number) =>
     covered.slice(from, to).some(c => !c);
@@ -205,8 +223,15 @@ export function forbiddenHits(
   });
 }
 
-/** Which words of `got` fall inside an exempt phrase (exact words, any final plural). */
-function exemptWords(got: string[], exempt: readonly string[]): boolean[] {
+/**
+ * Which words of `got` fall inside an exempt phrase (exact words, any final
+ * plural, no sentence break between them).
+ */
+function exemptWords(
+  got: string[],
+  breakBefore: boolean[],
+  exempt: readonly string[]
+): boolean[] {
   const covered = got.map(() => false);
   // Singular or plural either way round ('Card' and 'Cards').
   const near = (a: string | undefined, b: string) =>
@@ -215,8 +240,10 @@ function exemptWords(got: string[], exempt: readonly string[]): boolean[] {
     const want = wordsOf(phrase);
     if (!want.length) continue;
     for (let i = 0; i + want.length <= got.length; i++) {
-      const at = want.every((x, j) =>
-        j === want.length - 1 ? near(got[i + j], x) : got[i + j] === x
+      const at = want.every(
+        (x, j) =>
+          (j === 0 || !breakBefore[i + j]) &&
+          (j === want.length - 1 ? near(got[i + j], x) : got[i + j] === x)
       );
       if (at) for (let j = 0; j < want.length; j++) covered[i + j] = true;
     }

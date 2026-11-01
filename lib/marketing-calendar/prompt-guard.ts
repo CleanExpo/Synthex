@@ -74,7 +74,7 @@ function deliveredCaption(metadata: unknown): string | null {
     : null;
 }
 
-export function calendarPostText(post: CalendarPostText) {
+function calendarPostText(post: CalendarPostText) {
   return [
     post.title,
     post.content,
@@ -82,6 +82,22 @@ export function calendarPostText(post: CalendarPostText) {
     ...(post.mentions ?? []),
     deliveredCaption(post.metadata),
   ];
+}
+
+/**
+ * The brand's forbidden words in a draft's copy. Each field (title, content,
+ * each hashtag and mention, the delivered caption) is read on its own, so no
+ * phrase, forbidden or approved, is made from the end of one and the start
+ * of the next.
+ */
+export function calendarPostHits(
+  post: CalendarPostText,
+  brand: Parameters<typeof copyHits>[1]
+): string[] {
+  const hits = calendarPostText(post).flatMap(field =>
+    field ? copyHits(field, brand) : []
+  );
+  return [...new Set(hits)];
 }
 
 /**
@@ -96,10 +112,7 @@ export function assertCalendarPostClean(
 ) {
   const brand = brandForSlug(orgSlug);
   if (!brand) return;
-  const hits = copyHits(
-    calendarPostText(post).filter(Boolean).join('\n'),
-    brand
-  );
+  const hits = calendarPostHits(post, brand);
   if (hits.length > 0) throw new ForbiddenPromptError(brand.orgSlug, hits);
 }
 

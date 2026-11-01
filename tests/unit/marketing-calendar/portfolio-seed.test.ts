@@ -883,6 +883,7 @@ describe('verifyPortfolioSetup', () => {
   }));
   const rows = (orgOf: (slug: string, i: number) => string) =>
     plan.map((s, i) => ({
+      tags: [PORTFOLIO_CALENDAR_TAG],
       status: 'draft',
       publishedAt: null,
       organizationId: `org-${orgOf(s.orgSlug, i)}`,
@@ -1050,6 +1051,50 @@ describe('verifyPortfolioSetup', () => {
     expect(await failedLabels()).toEqual([
       'unite-group: calendar drafts carry no forbidden words',
     ]);
+  });
+
+  // A post in a brand's org that portfolio setup did not make (no tag).
+  const untagged = (edit: object) => ({
+    tags: [] as string[],
+    status: 'draft',
+    publishedAt: null,
+    organizationId: 'org-unite-group',
+    scheduledFor: new Date('2026-12-01T00:00:00Z'),
+    platforms: ['instagram'],
+    title: 'Cafe tips',
+    content: 'A week of tips for local cafes',
+    hashtags: [] as string[],
+    mentions: [] as string[],
+    metadata: { source: 'calendar', notes: 'Never name CARSI' },
+    ...edit,
+  });
+
+  it('fails an untagged draft in a brand org whose copy names a forbidden word', async () => {
+    db.calendarPost.findMany.mockResolvedValue([
+      ...rows(slug => slug),
+      untagged({ content: 'Promote CARSI courses' }),
+    ]);
+    expect(await failedLabels()).toEqual([
+      'unite-group: calendar drafts carry no forbidden words',
+    ]);
+  });
+
+  it('passes a clean untagged draft, reading only its copy', async () => {
+    db.calendarPost.findMany.mockResolvedValue([
+      ...rows(slug => slug),
+      untagged({}),
+    ]);
+    expect(await failedLabels()).toEqual([]);
+  });
+
+  it('reads every stored post in the member orgs, not only tagged ones', async () => {
+    db.calendarPost.findMany.mockResolvedValue(rows(slug => slug));
+    await verifyPortfolioSetup();
+    const [{ where }] = db.calendarPost.findMany.mock.calls[0] as [
+      { where: Record<string, unknown> },
+    ];
+    expect(where).not.toHaveProperty('tags');
+    expect(where).toHaveProperty('organizationId');
   });
 
   it('fails a kept Business Card draft that carries one of its anti-pattern lines', async () => {

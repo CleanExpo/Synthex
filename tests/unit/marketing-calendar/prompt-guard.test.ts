@@ -31,6 +31,7 @@ import {
 } from '@/lib/marketing-calendar/prompt-guard';
 import {
   PORTFOLIO_BRANDS,
+  SENTENCE_BREAK,
   copyHits,
   forbiddenHits,
 } from '@/lib/marketing-calendar/portfolio-brands';
@@ -339,6 +340,49 @@ describe('assertCalendarPostClean', () => {
     expect(() => assertCalendarPostClean('nrpg', part)).toThrow(
       ForbiddenPromptError
     );
+  });
+
+  it.each([
+    [
+      'across a sentence break',
+      { content: 'Our business. Card payments are easier for cafes' },
+    ],
+    [
+      'across title and content',
+      { title: 'Our business', content: 'Card payments are easier for cafes' },
+    ],
+    [
+      'across title and caption',
+      {
+        title: 'Our business',
+        metadata: { videoDelivery: { captionDraft: 'Card tips' } },
+      },
+    ],
+    [
+      'across title and hashtag',
+      { title: 'Our business', hashtags: ['#card'] },
+    ],
+    ['across title and mention', { title: 'Our business', mentions: ['card'] }],
+  ])('never builds an approved phrase %s', (_, post) => {
+    expect(() => assertCalendarPostClean('unite-group', post)).toThrow(
+      ForbiddenPromptError
+    );
+  });
+
+  it('never builds a forbidden phrase from two fields', () => {
+    expect(() =>
+      assertCalendarPostClean('unite-group', {
+        title: 'Our',
+        content: 'Business tips for cafes',
+      })
+    ).not.toThrow();
+  });
+
+  it('keeps every exempt phrase inside one sentence', () => {
+    for (const b of PORTFOLIO_BRANDS) {
+      for (const p of [b.name, ...b.antiPatterns, ...(b.approvedPhrases ?? [])])
+        expect(p).not.toMatch(SENTENCE_BREAK);
+    }
   });
 
   it('passes a Unite Group draft about its own video business cards', () => {

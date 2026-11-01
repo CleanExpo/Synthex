@@ -31,7 +31,6 @@ import {
   PORTFOLIO_PARENT_SLUG,
   PORTFOLIO_WEEK_STARTS,
   brandHits,
-  copyHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 import { resolveLogoUrl } from './resolve-logo';
@@ -46,7 +45,7 @@ import { renderPromptLegs } from '@/lib/ai/prompt-layer-builder';
 import { foundationPromptText } from '@/lib/agency/foundation-context';
 import {
   assertCalendarPostClean,
-  calendarPostText,
+  calendarPostHits,
   ForbiddenPromptError,
 } from './prompt-guard';
 
@@ -893,12 +892,12 @@ export async function verifyPortfolioSetup(): Promise<{
   // neither read nor reported, so it cannot fail (or pass) this check.
   const root = bySlug.get(PORTFOLIO_PARENT_SLUG);
   const members = root ? orgs.filter(o => inWorkspace(o, root)) : [];
-  const posts = await prisma.calendarPost.findMany({
-    where: {
-      tags: { has: PORTFOLIO_CALENDAR_TAG },
-      organizationId: { in: members.map(o => o.id) },
-    },
+  // Every stored post in a member org, tagged or not: the copy rule holds for
+  // all of them. Placement and counts use the tagged subset.
+  const stored = await prisma.calendarPost.findMany({
+    where: { organizationId: { in: members.map(o => o.id) } },
     select: {
+      tags: true,
       status: true,
       organizationId: true,
       title: true,
@@ -911,6 +910,7 @@ export async function verifyPortfolioSetup(): Promise<{
       platforms: true,
     },
   });
+  const posts = stored.filter(p => p.tags.includes(PORTFOLIO_CALENDAR_TAG));
   const slugOf = new Map(members.map(o => [o.id, o.slug]));
   const expected = buildPortfolioCalendar(
     PORTFOLIO_BRANDS,
@@ -922,20 +922,23 @@ export async function verifyPortfolioSetup(): Promise<{
   // delivered caption, edited rules), so it is scanned like the brand rows:
   // every metadata field still exactly as setup wrote it is skipped.
   for (const brand of PORTFOLIO_BRANDS) {
-    const hits = posts
+    const hits = stored
       .filter(p => slugOf.get(p.organizationId) === brand.orgSlug)
       .map(p => {
+        // Copy is held to the same rule as every write of it
+        // (assertCalendarPostClean).
+        const copy = calendarPostHits(p, brand);
+        if (!p.tags.includes(PORTFOLIO_CALENDAR_TAG)) return copy;
+        // A portfolio draft's other metadata is checked like prompt text,
+        // since brand rules name banned words to ban them.
         const { videoDelivery, ...meta } = (p.metadata ?? {}) as Record<
           string,
           unknown
         >;
-        const slot = planBySlot.get(String(meta.slotKey ?? ''));
-        // Copy is held to the same rule as every write of it
-        // (assertCalendarPostClean); the rest of the metadata is checked
-        // like prompt text, since brand rules name banned words to ban them.
         void videoDelivery;
+        const slot = planBySlot.get(String(meta.slotKey ?? ''));
         return [
-          ...copyHits(calendarPostText(p).filter(Boolean).join('\n'), brand),
+          ...copy,
           ...brandHits(
             promptedText(meta, brand, slot ? slotMetadata(slot, brand) : {}),
             brand
