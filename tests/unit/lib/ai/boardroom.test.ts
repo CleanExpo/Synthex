@@ -16,7 +16,6 @@ import {
   type BoardroomPanellist,
 } from '@/lib/ai/boardroom';
 import * as providers from '@/lib/ai/providers';
-import { OllamaUnavailableError } from '@/lib/ai/providers';
 
 const { tokenise, jaccard } = __testing;
 
@@ -135,7 +134,7 @@ describe('boardroom — computeMinPairwiseJaccard', () => {
 // ── Boardroom query end-to-end ──────────────────────────────────────
 
 const PANEL: BoardroomPanellist[] = [
-  { provider: 'ollama', modelId: 'gemma4:e4b' },
+  { provider: 'openrouter', modelId: 'google/gemini-3.1-flash' },
   { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
   { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
 ];
@@ -152,7 +151,10 @@ const ESC: BoardroomPanellist = {
 
 describe('boardroomQuery — agreement path', () => {
   it('returns synthesiser answer when panel agrees', async () => {
-    setPanellistResponse('gemma4:e4b', 'Ship the campaign on Monday morning');
+    setPanellistResponse(
+      'google/gemini-3.1-flash',
+      'Ship the campaign on Monday morning'
+    );
     setPanellistResponse(
       'deepseek/deepseek-v4-flash',
       'Ship the campaign on Monday morning'
@@ -180,7 +182,10 @@ describe('boardroomQuery — agreement path', () => {
 
 describe('boardroomQuery — divergence path', () => {
   it('escalates to higher-tier synthesiser when panel disagrees', async () => {
-    setPanellistResponse('gemma4:e4b', 'Ship Monday morning at nine sharp');
+    setPanellistResponse(
+      'google/gemini-3.1-flash',
+      'Ship Monday morning at nine sharp'
+    );
     setPanellistResponse(
       'deepseek/deepseek-v4-flash',
       'Cancel everything pivot to TikTok now'
@@ -209,10 +214,10 @@ describe('boardroomQuery — divergence path', () => {
 });
 
 describe('boardroomQuery — partial failure path', () => {
-  it('continues when one panellist throws OllamaUnavailableError', async () => {
+  it('continues when one panellist throws', async () => {
     setPanellistFailure(
-      'gemma4:e4b',
-      new OllamaUnavailableError('daemon offline')
+      'google/gemini-3.1-flash',
+      new TypeError('upstream 503')
     );
     setPanellistResponse('deepseek/deepseek-v4-flash', 'Yes proceed');
     setPanellistResponse('anthropic/claude-sonnet-4-6', 'Yes proceed cleanly');
@@ -227,12 +232,12 @@ describe('boardroomQuery — partial failure path', () => {
 
     expect(result.successfulPanellists).toBe(2);
     expect(result.panel[0]?.response).toBeNull();
-    expect(result.panel[0]?.error?.name).toBe('OllamaUnavailableError');
+    expect(result.panel[0]?.error?.name).toBe('TypeError');
     expect(result.escalated).toBe(false); // 2 surviving + agreement
   });
 
   it('throws when ALL panellists fail', async () => {
-    setPanellistFailure('gemma4:e4b', new Error('a'));
+    setPanellistFailure('google/gemini-3.1-flash', new Error('a'));
     setPanellistFailure('deepseek/deepseek-v4-flash', new Error('b'));
     setPanellistFailure('anthropic/claude-sonnet-4-6', new Error('c'));
 
@@ -251,13 +256,13 @@ describe('boardroomQuery — input validation', () => {
     await expect(
       boardroomQuery({
         prompt: 'q',
-        panel: [{ provider: 'ollama', modelId: 'gemma4:e2b' }],
+        panel: [{ provider: 'openrouter', modelId: 'google/gemini-3.1-flash' }],
       })
     ).rejects.toThrow(/at least two panellists/);
   });
 
   it('passes systemPrompt through to every panellist', async () => {
-    setPanellistResponse('gemma4:e4b', 'A');
+    setPanellistResponse('google/gemini-3.1-flash', 'A');
     setPanellistResponse('deepseek/deepseek-v4-flash', 'A');
     setPanellistResponse('anthropic/claude-sonnet-4-6', 'A');
 
@@ -268,9 +273,10 @@ describe('boardroomQuery — input validation', () => {
       synthesiser: SYNTH,
     });
 
-    const gemmaCall = mockProviders.get('gemma4:e4b')?.mock.calls[0]?.[0];
-    expect(gemmaCall.messages[0].role).toBe('system');
-    expect(gemmaCall.messages[0].content).toContain('senior strategist');
-    expect(gemmaCall.messages[1].role).toBe('user');
+    const geminiCall = mockProviders.get('google/gemini-3.1-flash')?.mock
+      .calls[0]?.[0];
+    expect(geminiCall.messages[0].role).toBe('system');
+    expect(geminiCall.messages[0].content).toContain('senior strategist');
+    expect(geminiCall.messages[1].role).toBe('user');
   });
 });

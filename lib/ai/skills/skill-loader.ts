@@ -12,7 +12,7 @@
  * `lib/ai/skills-bedrock-adapter/README.md` spec gated the build on two
  * unverified gates (VG-159, VG-160), two new AWS accounts, and a dependency
  * install. None of that is needed to invoke a skill: the existing provider
- * factory already talks to Anthropic, OpenAI, Google, OpenRouter and Ollama,
+ * factory already talks to Anthropic, OpenAI, Google and OpenRouter,
  * and `gray-matter` is already a dependency. Bedrock remains the right answer
  * for AU data residency specifically, and can be added later as one more
  * provider behind the same factory without touching this file.

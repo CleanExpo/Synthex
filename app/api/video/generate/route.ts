@@ -414,12 +414,15 @@ const SCRIPT_SYSTEM_PROMPT =
   'You are a professional video scriptwriter for marketing content. Output valid JSON only, no markdown or explanation.';
 const SCRIPT_MAX_TOKENS = 2000;
 
-/** The Governor's provider id for an AIProvider, or null for an ungoverned local one (Ollama). */
-function governorProviderOf(ai: AIProvider): GovernorProvider | null {
+/** The Governor's provider id for an AIProvider. An unknown provider fails closed. */
+function governorProviderOf(ai: AIProvider): GovernorProvider {
   const id = ai.name.toLowerCase();
-  return (GOVERNOR_PROVIDERS as readonly string[]).includes(id)
-    ? (id as GovernorProvider)
-    : null;
+  if (!(GOVERNOR_PROVIDERS as readonly string[]).includes(id)) {
+    throw new Error(
+      `Unknown AI provider "${ai.name}": no Governor provider to bill it to`
+    );
+  }
+  return id as GovernorProvider;
 }
 
 /**
@@ -446,14 +449,12 @@ async function completeScript(
     });
 
   const provider = governorProviderOf(aiProvider);
-  if (!provider || !organizationId) {
-    // A local provider spends nothing. A user with no organisation cannot be
-    // receipted; logged so the gap is visible until enforcing mode refuses it.
-    if (provider) {
-      logger.warn('video script: no organisation, call not governed', {
-        provider,
-      });
-    }
+  if (!organizationId) {
+    // A user with no organisation cannot be receipted; logged so the gap is
+    // visible until enforcing mode refuses it.
+    logger.warn('video script: no organisation, call not governed', {
+      provider,
+    });
     return call(aiProvider, aiProvider.models.balanced);
   }
 
