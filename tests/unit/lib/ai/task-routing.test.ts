@@ -95,17 +95,30 @@ describe('task-routing — quality overrides', () => {
 describe('task-routing — budget ceiling', () => {
   it('budgetCeiling:0 throws: no model is free', () => {
     expect(() => routeIntent('draft-blog-post', { budgetCeiling: 0 })).toThrow(
-      /No zero-cost model/
+      /No model within budgetCeiling 0/
     );
   });
 
-  it('budgetCeiling:0.001 drops code-review from Sonnet to DeepSeek Flash', () => {
-    // Sonnet costs $0.015 / 1k > 0.001 ceiling. Falls back through chain.
-    const choice = routeIntent('code-review', { budgetCeiling: 0.001 });
-    // code-review's fallback chain doesn't include DeepSeek directly,
-    // so it stays on Sonnet (chain unchanged) — exercising the
-    // "no cheap-cloud fallback found" branch.
-    expect(choice.modelId).toBe('anthropic/claude-sonnet-5');
+  it('budgetCeiling below the cheapest tier throws rather than overspend', () => {
+    // DeepSeek Flash costs $0.00028 / 1k > the 0.0001 ceiling.
+    expect(() =>
+      routeIntent('classify-text', { budgetCeiling: 0.0001 })
+    ).toThrow(/No model within budgetCeiling/);
+  });
+
+  it('budgetCeiling:0.001 refuses code-review on Sonnet', () => {
+    // Sonnet costs $0.015 / 1k > 0.001 ceiling; never return it anyway.
+    expect(() => routeIntent('code-review', { budgetCeiling: 0.001 })).toThrow(
+      /No model within budgetCeiling/
+    );
+  });
+
+  it('quality:"low" plus a ceiling the cheap tier fits routes code-review to DeepSeek Flash', () => {
+    const choice = routeIntent('code-review', {
+      quality: 'low',
+      budgetCeiling: 0.001,
+    });
+    expect(choice.modelId).toBe('deepseek/deepseek-v4-flash');
   });
 
   it('budgetCeiling above primary cost is a no-op', () => {

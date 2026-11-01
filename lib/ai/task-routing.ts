@@ -95,8 +95,8 @@ export interface RouteOptions {
   contextLength?: number;
   /**
    * Hard ceiling on $/1k output tokens. If the matrix's primary exceeds
-   * this, drop to the next-cheapest fallback. No model is free, so `0`
-   * throws rather than routing to a model that costs money.
+   * this, routeIntent throws rather than return a model the ceiling cannot
+   * pay for. No model is free, so `0` always throws.
    */
   budgetCeiling?: number;
 }
@@ -317,25 +317,11 @@ export function routeIntent(
     typeof opts.budgetCeiling === 'number' &&
     primary.cost > opts.budgetCeiling
   ) {
-    if (opts.budgetCeiling === 0) {
-      // Every model costs money; never pretend a paid call fits a $0 budget.
-      throw new Error(
-        `No zero-cost model for task intent: ${intent} (budgetCeiling 0)`
-      );
-    } else {
-      // Pick the first fallback with provider 'openrouter' that's cheaper.
-      // Matrix doesn't carry per-fallback cost; assume DeepSeek Flash
-      // is the cheap cloud option. Conservative: just keep the chain.
-      const cheapCloud = entry.fallback.find(
-        f => f.modelId === 'deepseek/deepseek-v4-flash'
-      );
-      if (cheapCloud) {
-        primary = { ...cheapCloud, cost: 0.00028 };
-        fallback = entry.fallback.filter(
-          f => f.modelId !== 'deepseek/deepseek-v4-flash'
-        );
-      }
-    }
+    // Every model costs money: never return one the ceiling cannot pay for.
+    // Callers that want the cheapest tier pass quality:'low' first.
+    throw new Error(
+      `No model within budgetCeiling ${opts.budgetCeiling} for task intent: ${intent}`
+    );
   }
 
   // ── Context-length escalation ─────────────────────────────────────
