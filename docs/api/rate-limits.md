@@ -341,7 +341,6 @@ These route files contain a 429 status but call none of the limiters above. The 
 - `/api/competitors/track/[id]/snapshot` (app/api/competitors/track/[id]/snapshot/route.ts)
 - `/api/content/calendar/optimal-times` (app/api/content/calendar/optimal-times/route.ts)
 - `/api/features` (app/api/features/route.ts)
-- `/api/health/portfolio-calendar` (app/api/health/portfolio-calendar/route.ts)
 - `/api/library/content/[contentId]` (app/api/library/content/[contentId]/route.ts)
 - `/api/library/content` (app/api/library/content/route.ts)
 - `/api/mobile/config` (app/api/mobile/config/route.ts)

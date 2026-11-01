@@ -75,7 +75,7 @@ agentic-capability status at /docs/agent-capabilities.
 
 ## Machine contract
 
-Generated from the route source of 779 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
+Generated from the route source of 778 route files under app/api. These files live in the Synthex repository and are not published on the site (internal agency, FD-8), so they are given as repository paths, not links.
 
 - OpenAPI document, `docs/api/openapi.generated.json`: the generated OpenAPI contract for the routes under /api/.
 - Error codes, `docs/api/error-codes.md`: 18 structured error codes, with HTTP status and meaning.
@@ -116,4 +116,4 @@ Generated from the route source of 779 route files under app/api. These files li
 - withRateLimit (tier default): free 100, pro 500, growth 2000, scale 10000, professional 500, business 2000, custom 10000 requests per 60 s; 34 routes
 - checkRateLimit org/IP buckets: 12 configurations; see docs/api/rate-limits.md
 - Route-specific RateLimiter instances: 18; see docs/api/rate-limits.md
-- Routes that return 429 without a limiter this scan reads: 25; see docs/api/rate-limits.md
+- Routes that return 429 without a limiter this scan reads: 24; see docs/api/rate-limits.md

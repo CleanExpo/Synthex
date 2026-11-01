@@ -454,7 +454,6 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET,POST /api/health/scaling` — public
 - `GET /api/health/ai` — public
 - `GET /api/health/auth` — public
-- `GET /api/health/portfolio-calendar` — public — _organization,brandDNA,clientProfile,calendarPost_
 - `GET /api/health/composite` — user — _user_
 - `GET /api/health/db` — public
 - `GET /api/health/email` — public
@@ -625,7 +624,7 @@ Both routes use the existing `APISecurityChecker` authenticated read/write polic
 
 ### portfolio-calendar
 
-- `POST /api/portfolio-calendar/video-delivery` — auth — X-Delivery-Token = SHORTFORM*DELIVERY_TOKEN (503 when unset); attaches an SDA-passed video to a draft slot, never publishes — \_calendarPost*
+- `POST /api/portfolio-calendar/video-delivery` — auth — `X-Delivery-Token` header must equal the `SHORTFORM_DELIVERY_TOKEN` secret (503 when unset); attaches an SDA-passed video to a draft slot, never publishes — _calendarPost_
 
 ### pr
 

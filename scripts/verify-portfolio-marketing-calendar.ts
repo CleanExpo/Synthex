@@ -1,8 +1,8 @@
 #!/usr/bin/env tsx
 /**
  * Read-only check of the portfolio marketing calendar. Exit code 0 only when
- * every check holds. Production can also be checked without credentials at
- * GET https://synthex.social/api/health/portfolio-calendar.
+ * every check holds. In production the owner sees the same checks at
+ * GET /api/admin/portfolio-calendar (owner only; no public route serves them).
  *
  *   npx tsx --env-file=<env> scripts/verify-portfolio-marketing-calendar.ts
  */
