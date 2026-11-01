@@ -222,6 +222,12 @@ export async function applyPortfolioSetup(opts: {
       where: { organizationId: parent.id, role: 'owner' },
       select: { userId: true },
     });
+    // The person running setup must own the workspace, or the brands would
+    // be built with no access for them.
+    if (!parentOwners.some(o => o.userId === ownerUserId))
+      throw new Error(
+        `User ${ownerUserId} is not an owner of the ${PORTFOLIO_PARENT_SLUG} workspace`
+      );
     const orgIds = new Map<string, string | null>();
     const refused = new Set<string>();
 

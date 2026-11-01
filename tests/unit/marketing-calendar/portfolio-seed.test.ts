@@ -413,6 +413,17 @@ describe('applyPortfolioSetup', () => {
     expect(lockCalls[0]).toContain('pg_advisory_xact_lock');
   });
 
+  it('refuses to run for someone who does not own the workspace, writing nothing', async () => {
+    db.organization.findUnique.mockImplementation(
+      async ({ where }: { where: { slug: string } }) => orgRow(where.slug)
+    );
+    db.teamMember.findMany.mockResolvedValue([{ userId: 'someone-else' }]);
+    await expect(
+      applyPortfolioSetup({ write: true, ownerUserId: 'owner-1' })
+    ).rejects.toThrow(/not an owner/);
+    expect(writeCalls()).toEqual([]);
+  });
+
   it('writes no slot whose draft names a word its brand never uses', async () => {
     db.organization.findUnique.mockImplementation(
       async ({ where }: { where: { slug: string } }) => orgRow(where.slug)

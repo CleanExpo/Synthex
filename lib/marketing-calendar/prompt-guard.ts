@@ -14,6 +14,7 @@
 import {
   PORTFOLIO_BRANDS,
   brandHits,
+  copyHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
 
@@ -93,7 +94,13 @@ export function assertCalendarPostClean(
   orgSlug: string | null | undefined,
   post: CalendarPostText
 ) {
-  assertPromptClean(orgSlug, calendarPostText(post));
+  const brand = brandForSlug(orgSlug);
+  if (!brand) return;
+  const hits = copyHits(
+    calendarPostText(post).filter(Boolean).join('\n'),
+    brand
+  );
+  if (hits.length > 0) throw new ForbiddenPromptError(brand.orgSlug, hits);
 }
 
 /** assertCalendarPostClean for an organisation id (reads its slug). */

@@ -29,7 +29,10 @@ import {
   assertPromptClean,
   promptHits,
 } from '@/lib/marketing-calendar/prompt-guard';
-import { PORTFOLIO_BRANDS } from '@/lib/marketing-calendar/portfolio-brands';
+import {
+  PORTFOLIO_BRANDS,
+  forbiddenHits,
+} from '@/lib/marketing-calendar/portfolio-brands';
 
 const ug = PORTFOLIO_BRANDS.find(b => b.orgSlug === 'unite-group')!;
 
@@ -221,6 +224,15 @@ describe('promptHits', () => {
     expect(promptHits(text, ug)).not.toEqual([]);
   });
 
+  it("reads a phrase that runs into the brand's own product as the product", () => {
+    expect(
+      promptHits('Our business cards make sharing easier for cafes.', ug)
+    ).toEqual([]);
+    expect(promptHits('Our business built this app.', ug)).toEqual([
+      'our business',
+    ]);
+  });
+
   it('catches a forbidden word anywhere in the prompt', () => {
     expect(promptHits('Avoid: nothing. Feature CARSI weekly.', ug)).toEqual([
       'CARSI',
@@ -268,6 +280,36 @@ describe('assertCalendarPostClean', () => {
     expect(() =>
       assertCalendarPostClean('unite-group', { ...clean, ...part })
     ).toThrow(ForbiddenPromptError);
+  });
+
+  it.each(PORTFOLIO_BRANDS.map(b => [b.orgSlug, b] as const))(
+    '%s: an anti-pattern line written into a draft is still a mention',
+    (_, b) => {
+      for (const line of b.antiPatterns) {
+        const hits = forbiddenHits(line, b.forbiddenWords, [b.name]);
+        if (hits.length === 0) continue;
+        expect(() =>
+          assertCalendarPostClean(b.orgSlug, { content: line })
+        ).toThrow(ForbiddenPromptError);
+      }
+    }
+  );
+
+  it('refuses the anti-pattern exemption case the review found', () => {
+    expect(() =>
+      assertCalendarPostClean('business-card', {
+        content: 'Claiming save-to-contacts or NFC before it is shown working',
+      })
+    ).toThrow(ForbiddenPromptError);
+  });
+
+  it('passes a Unite Group draft about its own video business cards', () => {
+    expect(() =>
+      assertCalendarPostClean('unite-group', {
+        title: 'Video business cards',
+        content: 'Our business cards make sharing easier for cafes.',
+      })
+    ).not.toThrow();
   });
 
   it('leaves orgs outside the portfolio unchecked', () => {
