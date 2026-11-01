@@ -45,7 +45,7 @@ const DEFAULT_PROVIDER: ProviderName = 'openai';
 export function resolvePlatformProviderName(): ProviderName {
   const raw = process.env.AI_PROVIDER?.trim();
   const configured = raw as ProviderName | undefined;
-  if (configured && providerFactories[configured]) return configured;
+  if (configured && isSupportedProvider(configured)) return configured;
   if (raw) {
     // An explicit but unsupported value (e.g. the removed "ollama") must not be
     // substituted silently. Warn loudly, then fall back to a configured cloud key.
@@ -76,6 +76,13 @@ const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
     google: (key?) => new GoogleProvider(key),
   };
 
+/** Own-property check: inherited names such as "toString" are not providers. */
+function isSupportedProvider(name: string | undefined): name is ProviderName {
+  return (
+    !!name && Object.prototype.hasOwnProperty.call(providerFactories, name)
+  );
+}
+
 let cachedProvider: AIProvider | null = null;
 let cachedProviderName: string | null = null;
 
@@ -90,7 +97,9 @@ export function getAIProvider(options?: UserKeyOptions): AIProvider {
   if (options?.apiKey) {
     const name = (options.provider ||
       resolvePlatformProviderName()) as ProviderName;
-    const factory = providerFactories[name];
+    const factory = isSupportedProvider(name)
+      ? providerFactories[name]
+      : undefined;
     if (!factory) {
       logger.warn('Unknown provider for user key, falling back to openai', {
         provider: name,
