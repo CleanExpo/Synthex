@@ -8,12 +8,20 @@ const mockOrgFind = jest.fn();
 const mockUpsert = jest.fn();
 const mockPostUpdate = jest.fn();
 const mockCacheSet = jest.fn();
+const mockStored = jest.fn();
+const mockFindUnique = jest.fn();
 
 // The transaction client: the guard's locked read answers from mockOrgFind
-// (by id, then the root by slug), and every step is logged in order.
+// (by id, then the root by slug), the stored-row lock from mockStored, and
+// every step is logged in order.
 const mockOrder: string[] = [];
 const mockTx = {
-  $queryRaw: async (_sql: TemplateStringsArray, id: string, slug: string) => {
+  $queryRaw: async (sql: TemplateStringsArray, id: string, slug: string) => {
+    if (sql.join('?').includes('calendar_posts')) {
+      mockOrder.splice(mockOrder.length, 0, 'lock-row');
+      const row = await mockStored(id);
+      return row ? [row] : [];
+    }
     mockOrder.splice(mockOrder.length, 0, 'lock');
     const rows = [
       await mockOrgFind({ where: { id } }),
@@ -41,7 +49,10 @@ jest.mock('@/lib/prisma', () => ({
       mockOrder.splice(mockOrder.length, 0, 'commit');
       return result;
     },
-    calendarPost: { findMany: async () => [] },
+    calendarPost: {
+      findMany: async () => [],
+      findUnique: (...a: unknown[]) => mockFindUnique(...a),
+    },
   },
 }));
 
@@ -82,7 +93,40 @@ beforeEach(() => {
     parentOrgId: null,
   });
   mockUpsert.mockResolvedValue({});
+  mockStored.mockResolvedValue(undefined);
 });
+
+// A stored Unite Group draft, as the calendar_posts row reads back.
+const storedDraft = (metadata: unknown) => ({
+  id: 'post-1',
+  title: 'Week 1',
+  content: 'A week of tips for local cafes',
+  platforms: ['linkedin'],
+  scheduledFor: new Date('2026-11-10T00:00:00Z'),
+  status: 'draft',
+  mediaUrls: [],
+  tags: [],
+  hashtags: [],
+  mentions: [],
+  metadata,
+  campaignId: null,
+  recurrenceType: null,
+  recurrenceInterval: null,
+  recurrenceEndDate: null,
+  recurrenceOccurrences: null,
+  recurrenceDaysOfWeek: [],
+  recurrenceDayOfMonth: null,
+  organizationId: 'org-ug',
+  userId: 'user-1',
+  createdAt: new Date('2026-11-01T00:00:00Z'),
+  updatedAt: new Date('2026-11-01T00:00:00Z'),
+});
+
+const reschedule = () =>
+  new CalendarService('org-ug').reschedulePost({
+    postId: 'post-1',
+    newTime: new Date('2026-11-12T00:00:00Z'),
+  });
 
 describe('CalendarService portfolio draft guard', () => {
   it('refuses a draft naming a forbidden word, writing nothing', async () => {
@@ -98,7 +142,30 @@ describe('CalendarService portfolio draft guard', () => {
     mockOrder.length = 0;
     await schedule('A week of tips for local cafes');
     expect(mockUpsert).toHaveBeenCalledTimes(1);
-    expect(mockOrder).toEqual(['begin', 'lock', 'upsert', 'commit']);
+    expect(mockOrder).toEqual([
+      'begin',
+      'lock',
+      'lock-row',
+      'upsert',
+      'commit',
+    ]);
+  });
+
+  it('refuses to reschedule a stored draft whose delivered caption is forbidden', async () => {
+    const metadata = { videoDelivery: { captionDraft: 'CARSI courses' } };
+    mockFindUnique.mockResolvedValue(storedDraft(metadata));
+    mockStored.mockResolvedValue({ metadata });
+    await expect(reschedule()).rejects.toThrow(ForbiddenPromptError);
+    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockCacheSet).not.toHaveBeenCalled();
+  });
+
+  it('reschedules a stored draft whose delivered caption is clean', async () => {
+    const metadata = { videoDelivery: { captionDraft: 'Tips for cafes' } };
+    mockFindUnique.mockResolvedValue(storedDraft(metadata));
+    mockStored.mockResolvedValue({ metadata });
+    await reschedule();
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
   });
 
   it('never falls back to the cache when the check itself cannot run', async () => {

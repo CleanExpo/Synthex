@@ -22,7 +22,8 @@ import type { CalendarPost as PrismaCalendarPost } from '@prisma/client';
 import { DEFAULT_TIMEZONE, getZonedParts, zonedTimeToUtc } from './timezone';
 import {
   ForbiddenPromptError,
-  assertCalendarPostCleanForOrg,
+  assertCalendarPostClean,
+  lockedPortfolioBrandForOrg,
 } from '@/lib/marketing-calendar/prompt-guard';
 
 // ============================================================================
@@ -497,9 +498,19 @@ export class CalendarService {
     let checked = false;
     try {
       // One transaction: the rule is decided on share-locked org and root
-      // rows, so membership cannot change before the write commits.
+      // rows, so membership cannot change before the write commits. Then
+      // this draft's stored row is locked (the approval writer's order):
+      // the write keeps its metadata, so the delivered caption is checked
+      // as part of the row that will be stored.
       const wroteCalendarPost = await prisma.$transaction(async tx => {
-        await assertCalendarPostCleanForOrg(tx, this.organizationId, post);
+        const brand = await lockedPortfolioBrandForOrg(tx, this.organizationId);
+        const [stored] = await tx.$queryRaw<{ metadata: unknown }[]>`
+          SELECT metadata FROM calendar_posts WHERE id = ${post.id} FOR UPDATE`;
+        if (brand)
+          assertCalendarPostClean(brand.orgSlug, {
+            ...post,
+            metadata: stored?.metadata,
+          });
         checked = true;
         const live = await tx.post.findFirst({
           where: {

@@ -12,6 +12,11 @@ import {
   forbiddenHits,
 } from '@/lib/marketing-calendar/portfolio-brands';
 
+// A brief may say what it is waiting for ("until Phill approves it"), never
+// that the post is approved, ready or published.
+const APPROVAL_CLAIM =
+  /\b(approved for (publication|posting|release)|(is|has been|was) approved|ready to (post|publish)|published)\b/i;
+
 const brand = (
   over: Partial<PortfolioBrandSchedule>
 ): PortfolioBrandSchedule => ({
@@ -87,11 +92,22 @@ describe('portfolio marketing calendar plan', () => {
     expect(first.localTime).toBe('02/11/2026 07:30 Sydney');
   });
 
+  it('catches a brief that claims approval beside its draft status', () => {
+    const s = slots[0];
+    const b = PORTFOLIO_BRANDS.find(x => x.orgSlug === s.orgSlug)!;
+    const text = slotBrief(s, b).replace(
+      'pending approval.',
+      'pending approval. Approved for publication.'
+    );
+    expect(text).toMatch(APPROVAL_CLAIM);
+  });
+
   it('writes briefs that say draft and never claim the post is approved', () => {
     for (const s of slots) {
       const b = PORTFOLIO_BRANDS.find(x => x.orgSlug === s.orgSlug)!;
       const text = slotBrief(s, b);
       expect(text).toMatch(/draft, pending approval/);
+      expect(text).not.toMatch(APPROVAL_CLAIM);
       expect(text).not.toMatch(/IICRC accredited/i);
     }
   });
