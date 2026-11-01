@@ -53,4 +53,10 @@ describe('supabaseProjectRef', () => {
     expect(supabaseProjectRef(undefined)).toBe('unset');
     expect(supabaseProjectRef('not a url')).toBe('unparseable');
   });
+
+  it('refuses a username with a malformed escape instead of throwing', () => {
+    expect(
+      supabaseProjectRef(url('postgres%ZZ', `db.${REF}.supabase.co`))
+    ).toBe('unparseable');
+  });
 });

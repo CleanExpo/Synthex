@@ -20,7 +20,7 @@ function walk(dir: string): string[] {
 }
 
 const readers = walk(join(ROOT, 'app/api'))
-  .filter(f => /\bverifyPortfolioSetup\b/.test(readFileSync(f, 'utf8')))
+  .filter(f => /\bverifyPortfolioSetup\s*\(/.test(readFileSync(f, 'utf8')))
   .map(f => relative(ROOT, f));
 
 describe('routes that serve the portfolio setup checks', () => {

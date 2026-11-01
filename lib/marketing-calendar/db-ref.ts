@@ -11,12 +11,13 @@
 export function supabaseProjectRef(raw: string | undefined): string {
   if (!raw) return 'unset';
   let url: URL;
+  let user: string;
   try {
     url = new URL(raw);
+    user = decodeURIComponent(url.username);
   } catch {
     return 'unparseable';
   }
-  const user = decodeURIComponent(url.username);
   const host = url.hostname.toLowerCase();
   const unknown = `unknown (${url.protocol}//${host})`;
   if (url.protocol !== 'postgresql:' && url.protocol !== 'postgres:')

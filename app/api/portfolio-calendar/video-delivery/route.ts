@@ -33,7 +33,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     DEFAULT_POLICIES.SERVICE_WRITE
   );
   if (!security.allowed) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    return security.error === 'Rate limit exceeded'
+      ? NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+      : NextResponse.json(
+          { error: security.error ?? 'Request refused' },
+          { status: 400 }
+        );
   }
 
   const token = checkDeliveryToken(

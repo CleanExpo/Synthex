@@ -3953,6 +3953,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Never mention COACH8.",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
+    },
+    {
       "text": "NEW Explore Demo",
       "file": "app/demo/DemoClient.tsx",
       "firstSeen": "base"

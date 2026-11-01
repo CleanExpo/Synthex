@@ -119,6 +119,19 @@ describe('POST /api/portfolio-calendar/video-delivery', () => {
     expect(mockUpdate).not.toHaveBeenCalled();
   });
 
+  it('answers 429 only for a rate-limit denial, 400 for other refusals', async () => {
+    mockCheck.mockResolvedValue({
+      allowed: false,
+      error: 'Rate limit exceeded',
+    });
+    expect((await deliver(deliveryRequest(validBody, TOKEN))).status).toBe(429);
+    mockCheck.mockResolvedValue({ allowed: false, error: 'HTTPS required' });
+    const res = await deliver(deliveryRequest(validBody, TOKEN));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('HTTPS required');
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
   it('rejects a missing or wrong token with 401', async () => {
     expect((await deliver(deliveryRequest(validBody))).status).toBe(401);
     expect(

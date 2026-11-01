@@ -515,7 +515,7 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     socialProfiles: [],
     // Founder hard rule, 26/10/2026: Unite-Group content never shows or
     // mentions Phill's own businesses or restoration/training content.
-    forbiddenWords: [...NEXUS_FORBIDDEN, ...UNITE_GROUP_BANNED],
+    forbiddenWords: [...NEXUS_FORBIDDEN, ...UNITE_GROUP_BANNED, 'COACH8'],
     preferredWords: [],
     antiPatterns: [
       ...SHARED_ANTI,
@@ -525,7 +525,6 @@ export const PORTFOLIO_BRANDS: PortfolioBrandProfile[] = [
     brandRules: [
       ...SHARED_RULES,
       'Unite-Group content features only outside small businesses of any niche (cafe, accountant, clinic, salon, retail), never a business the group owns or its industry, and holds shots 3 to 5 seconds (founder, 26/10/2026).',
-      'Never mention COACH8.',
     ],
     liveStatus: {
       live: true,

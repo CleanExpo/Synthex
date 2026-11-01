@@ -13,6 +13,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  renameSync,
   unlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -87,7 +88,10 @@ export function reserveManifestFile(path: string): void {
 export function writeReservedManifest(path: string, json: string): void {
   if (readFileSync(path, 'utf8') !== RESERVED_MANIFEST)
     throw new Error(`manifest ${path} is no longer this run's reservation`);
-  writeFileSync(path, json);
+  // A kill mid-write leaves the reservation or the whole manifest, never half.
+  const tmp = `${path}.${process.pid}.tmp`;
+  writeFileSync(tmp, json, { flag: 'wx' });
+  renameSync(tmp, path);
 }
 
 /** Removes this run's reservation when the run recorded nothing in it. */

@@ -137,10 +137,11 @@ export default function PortfolioCalendarPage() {
           body.message ?? body.error ?? `Request failed (${res.status})`
         );
       setRunLog(body.manifest?.log ?? []);
-      await mutate();
     } catch (err) {
       setRunError(err instanceof Error ? err.message : 'Request failed');
     } finally {
+      // A failed apply may still have written posts: show what is there now.
+      await mutate();
       setBusy(null);
     }
   }

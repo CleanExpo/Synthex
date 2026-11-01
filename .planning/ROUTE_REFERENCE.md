@@ -624,7 +624,7 @@ Both routes use the existing `APISecurityChecker` authenticated read/write polic
 
 ### portfolio-calendar
 
-- `POST /api/portfolio-calendar/video-delivery` — auth — `X-Delivery-Token` header must equal the `SHORTFORM_DELIVERY_TOKEN` secret (503 when unset); attaches an SDA-passed video to a draft slot, never publishes — _calendarPost_
+- `POST /api/portfolio-calendar/video-delivery` — auth — `X-Delivery-Token` header must equal the `SHORTFORM_DELIVERY_TOKEN` secret (503 when unset); attaches a video the engine reports as SDA-passed (the route records the engine's verdict id, it does not re-check the verdict) to a draft slot, never publishes — _calendarPost_
 
 ### pr
 

@@ -269,6 +269,12 @@ describe('promptHits', () => {
     }
   );
 
+  it('Unite-Group copy and prompts never name COACH8', () => {
+    expect(copyHits('Partnered with COACH8 this week', ug)).toEqual(['COACH8']);
+    expect(promptHits('Feature COACH8 weekly.', ug)).toEqual(['COACH8']);
+    expect(promptHits(ug.brandRules.join(' '), ug)).toEqual([]);
+  });
+
   it('catches a forbidden word anywhere in the prompt', () => {
     expect(promptHits('Avoid: nothing. Feature CARSI weekly.', ug)).toEqual([
       'CARSI',
