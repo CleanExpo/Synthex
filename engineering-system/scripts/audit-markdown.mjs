@@ -96,12 +96,12 @@ function main() {
     mkdirSync(path.dirname(filepath), { recursive: true });
     writeFileSync(filepath, JSON.stringify(report, null, 2) + '\n');
   }
-  console.log(
+  process.stdout.write(
     JSON.stringify(
       { counts: report.counts, output: output ? path.resolve(output) : null },
       null,
       2
-    )
+    ) + '\n'
   );
 }
 if (
