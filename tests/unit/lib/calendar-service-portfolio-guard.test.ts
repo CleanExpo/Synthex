@@ -54,7 +54,12 @@ const schedule = (content: string) =>
   });
 
 beforeEach(() => {
-  mockOrgFind.mockResolvedValue({ slug: 'unite-group' });
+  mockOrgFind.mockResolvedValue({
+    id: 'org-ug',
+    slug: 'unite-group',
+    status: 'active',
+    parentOrgId: null,
+  });
   mockUpsert.mockResolvedValue({});
 });
 
@@ -73,8 +78,34 @@ describe('CalendarService portfolio draft guard', () => {
     expect(mockUpsert).toHaveBeenCalledTimes(1);
   });
 
+  it('leaves an outside org that shares a brand slug unchecked', async () => {
+    mockOrgFind.mockImplementation(
+      async ({ where }: { where: { id?: string; slug?: string } }) =>
+        where.slug === 'unite-group'
+          ? {
+              id: 'org-ug',
+              slug: 'unite-group',
+              status: 'active',
+              parentOrgId: null,
+            }
+          : {
+              id: 'org-x',
+              slug: 'carsi',
+              status: 'active',
+              parentOrgId: 'other-root',
+            }
+    );
+    await schedule('IICRC courses for technicians');
+    expect(mockUpsert).toHaveBeenCalledTimes(1);
+  });
+
   it('leaves orgs outside the portfolio unchecked', async () => {
-    mockOrgFind.mockResolvedValue({ slug: 'some-cafe' });
+    mockOrgFind.mockResolvedValue({
+      id: 'org-cafe',
+      slug: 'some-cafe',
+      status: 'active',
+      parentOrgId: null,
+    });
     await schedule('Promote CARSI courses this week');
     expect(mockUpsert).toHaveBeenCalledTimes(1);
   });

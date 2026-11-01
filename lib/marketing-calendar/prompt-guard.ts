@@ -13,10 +13,12 @@
 
 import {
   PORTFOLIO_BRANDS,
+  PORTFOLIO_PARENT_SLUG,
   brandHits,
   copyHits,
   type PortfolioBrandProfile,
 } from './portfolio-brands';
+import { inWorkspace, type WorkspaceOrgFields } from './workspace';
 
 export class ForbiddenPromptError extends Error {
   readonly code = 'FORBIDDEN_PROMPT';
@@ -116,14 +118,26 @@ export function assertCalendarPostClean(
   if (hits.length > 0) throw new ForbiddenPromptError(brand.orgSlug, hits);
 }
 
-/** assertCalendarPostClean for an organisation id (reads its slug). */
+const WORKSPACE_FIELDS = {
+  id: true,
+  slug: true,
+  status: true,
+  parentOrgId: true,
+} as const;
+
+/**
+ * assertCalendarPostClean for an organisation id. A slug alone proves
+ * nothing: the brand's rule applies only when the org is in the Unite Group
+ * workspace (workspace.ts), so an outside org that shares a brand's slug is
+ * left unchecked like any other org.
+ */
 export async function assertCalendarPostCleanForOrg(
   db: {
     organization: {
       findUnique(args: {
-        where: { id: string };
-        select: { slug: true };
-      }): Promise<{ slug: string } | null>;
+        where: { id: string } | { slug: string };
+        select: typeof WORKSPACE_FIELDS;
+      }): Promise<WorkspaceOrgFields | null>;
     };
   },
   organizationId: string,
@@ -131,7 +145,16 @@ export async function assertCalendarPostCleanForOrg(
 ) {
   const org = await db.organization.findUnique({
     where: { id: organizationId },
-    select: { slug: true },
+    select: WORKSPACE_FIELDS,
   });
-  assertCalendarPostClean(org?.slug, post);
+  if (!org || !brandForSlug(org.slug)) return;
+  const root =
+    org.slug === PORTFOLIO_PARENT_SLUG
+      ? org
+      : await db.organization.findUnique({
+          where: { slug: PORTFOLIO_PARENT_SLUG },
+          select: WORKSPACE_FIELDS,
+        });
+  if (!root || !inWorkspace(org, root)) return;
+  assertCalendarPostClean(org.slug, post);
 }

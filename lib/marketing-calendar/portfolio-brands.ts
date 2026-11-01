@@ -159,22 +159,31 @@ const wordsOf = (s: string) =>
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean);
-/** Punctuation that ends a sentence or line: an exempt phrase never spans it. */
-export const SENTENCE_BREAK = /[.!?;\n]/;
-/** The words of `s`, and for each whether a sentence break comes before it. */
-function tokensOf(s: string): { words: string[]; breakBefore: boolean[] } {
+/** The words of `s`, and the exact text between each word and the one before. */
+function tokensOf(s: string): { words: string[]; gaps: string[] } {
   const words: string[] = [];
-  const breakBefore: boolean[] = [];
-  let pending = false;
+  const gaps: string[] = [];
+  let gap = '';
   for (const [t] of s.toLowerCase().matchAll(/[a-z0-9]+|[^a-z0-9]+/g)) {
     if (/[a-z0-9]/.test(t)) {
       words.push(t);
-      breakBefore.push(pending);
-      pending = false;
-    } else if (SENTENCE_BREAK.test(t)) pending = true;
+      gaps.push(gap);
+      gap = '';
+    } else gap = t;
   }
-  return { words, breakBefore };
+  return { words, gaps };
 }
+/** A gap that only joins words: a run of spaces, or one bare hyphen. */
+const SOFT_GAP = /^(?:[ \t\u00a0]+|[-\u2010\u2011])$/;
+const spaced = (gap: string) => gap.replace(/[ \t\u00a0]+/g, ' ');
+/**
+ * Whether a gap in the text stands for the gap in an exempt phrase as
+ * written: either both only join words ('save-to-contacts' and 'save to
+ * contacts'), or they are the same text ('NRPG (National'). Any other gap,
+ * whatever character it is, ends the phrase.
+ */
+export const sameGap = (got: string, want: string) =>
+  (SOFT_GAP.test(got) && SOFT_GAP.test(want)) || spaced(got) === spaced(want);
 const sameWord = (got: string | undefined, want: string) =>
   got === want ||
   got === `${want}s` ||
@@ -186,16 +195,17 @@ const sameWord = (got: string | undefined, want: string) =>
  * lowercasing and treating any run of spaces or punctuation as one break, so
  * 'Restore-Assist', 'Disaster–Recovery', 'Clean Expo' and 'TradeHall' all
  * match, a plural matches, and 'CEC' is still not found inside 'Cecilia'.
- * An exempt phrase only covers words in one sentence: 'Our business. Card
- * payments' is not the phrase 'our business card'.
+ * An exempt phrase only covers words joined the way it is written: 'Our
+ * business. Card payments' (or any other break between the words) is not the
+ * phrase 'our business card'.
  */
 export function forbiddenHits(
   text: string,
   words: readonly string[],
   exempt: readonly string[] = []
 ): string[] {
-  const { words: got, breakBefore } = tokensOf(text);
-  const covered = exemptWords(got, breakBefore, exempt);
+  const { words: got, gaps } = tokensOf(text);
+  const covered = exemptWords(got, gaps, exempt);
   // A match spanning got[from..to) counts unless all of it is exempt.
   const counts = (from: number, to: number) =>
     covered.slice(from, to).some(c => !c);
@@ -225,11 +235,11 @@ export function forbiddenHits(
 
 /**
  * Which words of `got` fall inside an exempt phrase (exact words, any final
- * plural, no sentence break between them).
+ * plural, each gap between them the phrase's own gap).
  */
 function exemptWords(
   got: string[],
-  breakBefore: boolean[],
+  gaps: string[],
   exempt: readonly string[]
 ): boolean[] {
   const covered = got.map(() => false);
@@ -237,12 +247,12 @@ function exemptWords(
   const near = (a: string | undefined, b: string) =>
     a !== undefined && (sameWord(a, b) || sameWord(b, a));
   for (const phrase of exempt) {
-    const want = wordsOf(phrase);
+    const { words: want, gaps: wantGaps } = tokensOf(phrase);
     if (!want.length) continue;
     for (let i = 0; i + want.length <= got.length; i++) {
       const at = want.every(
         (x, j) =>
-          (j === 0 || !breakBefore[i + j]) &&
+          (j === 0 || sameGap(gaps[i + j], wantGaps[j])) &&
           (j === want.length - 1 ? near(got[i + j], x) : got[i + j] === x)
       );
       if (at) for (let j = 0; j < want.length; j++) covered[i + j] = true;

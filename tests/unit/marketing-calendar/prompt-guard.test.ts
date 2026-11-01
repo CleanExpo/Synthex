@@ -31,8 +31,8 @@ import {
 } from '@/lib/marketing-calendar/prompt-guard';
 import {
   PORTFOLIO_BRANDS,
-  SENTENCE_BREAK,
   copyHits,
+  sameGap,
   forbiddenHits,
 } from '@/lib/marketing-calendar/portfolio-brands';
 
@@ -378,11 +378,48 @@ describe('assertCalendarPostClean', () => {
     ).not.toThrow();
   });
 
-  it('keeps every exempt phrase inside one sentence', () => {
-    for (const b of PORTFOLIO_BRANDS) {
-      for (const p of [b.name, ...b.antiPatterns, ...(b.approvedPhrases ?? [])])
-        expect(p).not.toMatch(SENTENCE_BREAK);
+  it.each([
+    ['a carriage return', 'Our business\rCard payments are easier for cafes'],
+    [
+      'a line separator',
+      'Our business\u2028Card payments are easier for cafes',
+    ],
+    [
+      'a paragraph separator',
+      'Our business\u2029Card payments are easier for cafes',
+    ],
+    ['a comma', 'Our business, card payments are easier for cafes'],
+    ['a colon', 'Our business: card payments are easier for cafes'],
+    ['a spaced dash', 'Our business - card payments are easier for cafes'],
+    ['an em dash', 'Our business\u2014card payments are easier for cafes'],
+    ['two hyphens', 'Our business--card payments are easier for cafes'],
+  ])('never builds an approved phrase across %s', (_, content) => {
+    expect(() => assertCalendarPostClean('unite-group', { content })).toThrow(
+      ForbiddenPromptError
+    );
+  });
+
+  it.each([
+    'Our business cards make sharing easier for cafes.',
+    'Our business  card, made for cafes.',
+    'Our business\tcard for cafes.',
+    'Our business-card for cafes.',
+    'Our\u00a0business card for cafes.',
+  ])(
+    'passes the approved phrase joined only by spaces or a hyphen: %s',
+    content => {
+      expect(() =>
+        assertCalendarPostClean('unite-group', { content })
+      ).not.toThrow();
     }
+  );
+
+  it('reads gaps the way exempt phrases are written', () => {
+    expect(sameGap(' ', '-')).toBe(true);
+    expect(sameGap(' (', ' (')).toBe(true);
+    expect(sameGap('\r', ' ')).toBe(false);
+    expect(sameGap(', ', ' ')).toBe(false);
+    expect(sameGap('\r(', ' (')).toBe(false);
   });
 
   it('passes a Unite Group draft about its own video business cards', () => {
@@ -400,16 +437,80 @@ describe('assertCalendarPostClean', () => {
     ).not.toThrow();
   });
 
-  it('looks up the org slug by id', async () => {
-    const findUnique = jest.fn(async () => ({ slug: 'unite-group' }));
-    await expect(
-      assertCalendarPostCleanForOrg({ organization: { findUnique } }, 'org-1', {
-        content: 'Promote CARSI courses',
-      })
-    ).rejects.toThrow(ForbiddenPromptError);
-    expect(findUnique).toHaveBeenCalledWith({
-      where: { id: 'org-1' },
-      select: { slug: true },
+  describe('by organisation id', () => {
+    const root = {
+      id: 'org-ug',
+      slug: 'unite-group',
+      status: 'active',
+      parentOrgId: null as string | null,
+    };
+    const lookup = (orgs: Array<typeof root>) => ({
+      organization: {
+        findUnique: jest.fn(
+          async ({ where }: { where: { id?: string; slug?: string } }) =>
+            orgs.find(o =>
+              where.id !== undefined ? o.id === where.id : o.slug === where.slug
+            ) ?? null
+        ),
+      },
+    });
+    const draft = { content: 'IICRC courses for technicians' };
+    const carsi = {
+      ...root,
+      id: 'org-carsi',
+      slug: 'carsi',
+      parentOrgId: 'org-ug',
+    };
+
+    it('checks the workspace root itself', async () => {
+      await expect(
+        assertCalendarPostCleanForOrg(lookup([root]), 'org-ug', {
+          content: 'Promote CARSI courses',
+        })
+      ).rejects.toThrow(ForbiddenPromptError);
+    });
+
+    it('checks an active child of the workspace', async () => {
+      const db = lookup([root, carsi]);
+      await expect(
+        assertCalendarPostCleanForOrg(db, 'org-carsi', {
+          content: 'IICRC courses for technicians',
+        })
+      ).rejects.toThrow(ForbiddenPromptError);
+      expect(db.organization.findUnique).toHaveBeenCalledWith({
+        where: { slug: 'unite-group' },
+        select: { id: true, slug: true, status: true, parentOrgId: true },
+      });
+    });
+
+    it.each([
+      [
+        'outside the workspace',
+        [root, { ...carsi, parentOrgId: 'other-root' }],
+      ],
+      ['an inactive child', [root, { ...carsi, status: 'deleted' }]],
+      ['under an inactive root', [{ ...root, status: 'deleted' }, carsi]],
+      [
+        'under a root that has a parent',
+        [{ ...root, parentOrgId: 'x' }, carsi],
+      ],
+      ['with no workspace root at all', [carsi]],
+    ])('leaves an org with a brand slug %s unchecked', async (_, orgs) => {
+      await expect(
+        assertCalendarPostCleanForOrg(lookup(orgs), 'org-carsi', {
+          content: 'IICRC courses for technicians',
+        })
+      ).resolves.toBeUndefined();
+    });
+
+    it('leaves the outside-workspace slug collision the review found unchecked', async () => {
+      await expect(
+        assertCalendarPostCleanForOrg(
+          lookup([root, { ...carsi, parentOrgId: 'other-root' }]),
+          'org-carsi',
+          draft
+        )
+      ).resolves.toBeUndefined();
     });
   });
 });
