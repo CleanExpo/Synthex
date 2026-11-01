@@ -148,36 +148,29 @@ async function _postHandler(
           modelId: model,
         };
       };
-      if (!provider) {
-        // Ollama: local, unkeyed, zero-cost, outside the Governor by design.
-        suggestion = (await callProvider(ai, ai.models.fast)).data;
-      } else {
-        let providerError: { error: unknown } | null = null;
-        const result = await governedCall<string>({
-          organizationId,
-          brandSlug: org?.slug ?? organizationId,
-          runner: 'gbp-auto-reply',
-          provider,
-          model: { kind: 'registered', modelId: ai.models.fast },
-          pipelineName: 'gbp-auto-reply',
-          estimate: { inputTokens: estimateTokens(prompt), outputTokens: 350 },
-          mode: GOVERNOR_MODE,
-          execute: async ctx => {
-            try {
-              return await callProvider(
-                ctx.apiKey
-                  ? getAIProvider({ apiKey: ctx.apiKey, provider })
-                  : ai,
-                ctx.model?.id ?? ai.models.fast
-              );
-            } catch (error) {
-              providerError = { error };
-              throw error;
-            }
-          },
-        });
-        suggestion = unwrapGoverned(result, providerError);
-      }
+      let providerError: { error: unknown } | null = null;
+      const result = await governedCall<string>({
+        organizationId,
+        brandSlug: org?.slug ?? organizationId,
+        runner: 'gbp-auto-reply',
+        provider,
+        model: { kind: 'registered', modelId: ai.models.fast },
+        pipelineName: 'gbp-auto-reply',
+        estimate: { inputTokens: estimateTokens(prompt), outputTokens: 350 },
+        mode: GOVERNOR_MODE,
+        execute: async ctx => {
+          try {
+            return await callProvider(
+              ctx.apiKey ? getAIProvider({ apiKey: ctx.apiKey, provider }) : ai,
+              ctx.model?.id ?? ai.models.fast
+            );
+          } catch (error) {
+            providerError = { error };
+            throw error;
+          }
+        },
+      });
+      suggestion = unwrapGoverned(result, providerError);
     } catch (aiErr) {
       if (aiErr instanceof GovernorRefusedError) {
         return governorRefusalResponse(aiErr);

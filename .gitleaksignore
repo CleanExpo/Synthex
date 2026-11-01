@@ -30,3 +30,17 @@ c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts
 # P2 unit u04 test fixture (2026-10-18): a synthetic token-signing key in the
 # noop-retirement route test; not a real credential.
 81daffaa516bd0e9a2f60d582a2399056f3123a8:tests/unit/api/p2-u04-noop-retired-routes.test.ts:generic-api-key:41
+# UNI-3000 living card (24/10/2026): the Supabase PUBLISHABLE key for project lksfwktwtmyznckodsau,
+# public by design (anon role, insert-only RLS on card_enquiries/card_feedback). Never a service key.
+# Pinned to commit 13c557a2, so any other key, or this one anywhere new, is still reported.
+13c557a28d1c118174bf22c3c52597fc814a1213:business-card/brand-kits/phill-mcgurk.json:generic-api-key:572
+13c557a28d1c118174bf22c3c52597fc814a1213:business-card/site/feedback.html:generic-api-key:142
+13c557a28d1c118174bf22c3c52597fc814a1213:business-card/site/index.html:generic-api-key:260
+13c557a28d1c118174bf22c3c52597fc814a1213:business-card/site/preview.html:generic-api-key:243
+# Remove-Ollama PR #1096 (01/11/2026): commit 310648c9 committed a stray BSD sed temp copy of the
+# example env file; commit f0d39029 deleted it. Its three flagged lines (52, 56, 589) are
+# byte-identical to lines 52, 56 and 601 of the example env file on main at 488b2f77: existing
+# placeholders, no new value. Pinned to that commit and file, so nothing else is hidden.
+310648c92d65f5ac9fc017f26558aca5ddf16413:.!74019!.env.example:generic-api-key:52
+310648c92d65f5ac9fc017f26558aca5ddf16413:.!74019!.env.example:generic-api-key:56
+310648c92d65f5ac9fc017f26558aca5ddf16413:.!74019!.env.example:stripe-access-token:589

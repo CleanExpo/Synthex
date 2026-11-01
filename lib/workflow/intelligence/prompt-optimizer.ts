@@ -10,14 +10,14 @@
  * - Provides concrete improvement rationale alongside the suggested prompt
  */
 
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/logger';
 
 export interface PromptOptimisationResult {
-  originalPrompt: string
-  suggestedPrompt: string
-  rationale: string
-  expectedImprovements: string[]
-  confidenceInSuggestion: number // 0–1 — how confident the optimizer is in its suggestion
+  originalPrompt: string;
+  suggestedPrompt: string;
+  rationale: string;
+  expectedImprovements: string[];
+  confidenceInSuggestion: number; // 0–1 — how confident the optimizer is in its suggestion
 }
 
 /**
@@ -33,9 +33,9 @@ export async function optimizePrompt(
   lowConfidenceSamples: string[],
   highConfidenceSamples: string[]
 ): Promise<PromptOptimisationResult> {
-  const apiKey = process.env.OPENROUTER_API_KEY
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not configured')
+    throw new Error('OPENROUTER_API_KEY is not configured');
   }
 
   const systemPrompt = `You are a prompt engineering specialist for AI marketing automation.
@@ -53,10 +53,10 @@ Response schema:
   "rationale": "<1-2 sentence explanation of why this improves the original>",
   "expectedImprovements": ["<improvement 1>", "<improvement 2>"],
   "confidenceInSuggestion": <0.0 to 1.0>
-}`
+}`;
 
-  const lowSamples = lowConfidenceSamples.slice(0, 3).join('\n---\n')
-  const highSamples = highConfidenceSamples.slice(0, 3).join('\n---\n')
+  const lowSamples = lowConfidenceSamples.slice(0, 3).join('\n---\n');
+  const highSamples = highConfidenceSamples.slice(0, 3).join('\n---\n');
 
   const userPrompt = `Original prompt template:
 ${original || '(no template — default generation)'}
@@ -67,15 +67,16 @@ ${lowSamples || '(none available)'}
 High-confidence outputs (scored ≥ 85%):
 ${highSamples || '(none available)'}
 
-Suggest an improved prompt template.`
+Suggest an improved prompt template.`;
 
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
+        'HTTP-Referer':
+          process.env.OPENROUTER_SITE_URL ?? 'https://synthex.social',
         'X-Title': process.env.OPENROUTER_SITE_NAME ?? 'Synthex',
       },
       body: JSON.stringify({
@@ -87,34 +88,39 @@ Suggest an improved prompt template.`
         max_tokens: 1024,
         temperature: 0.3,
       }),
-    })
+    });
 
     if (!res.ok) {
-      throw new Error(`OpenRouter error: ${res.status}`)
+      throw new Error(`OpenRouter error: ${res.status}`);
     }
 
-    const data = await res.json()
-    const raw = data.choices?.[0]?.message?.content ?? ''
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content ?? '';
 
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in optimizer response')
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('No JSON in optimizer response');
 
     const parsed = JSON.parse(jsonMatch[0]) as {
-      suggestedPrompt?: string
-      rationale?: string
-      expectedImprovements?: string[]
-      confidenceInSuggestion?: number
-    }
+      suggestedPrompt?: string;
+      rationale?: string;
+      expectedImprovements?: string[];
+      confidenceInSuggestion?: number;
+    };
 
     return {
       originalPrompt: original,
       suggestedPrompt: parsed.suggestedPrompt ?? original,
       rationale: parsed.rationale ?? 'No rationale provided',
-      expectedImprovements: Array.isArray(parsed.expectedImprovements) ? parsed.expectedImprovements : [],
-      confidenceInSuggestion: Math.max(0, Math.min(1, parsed.confidenceInSuggestion ?? 0.7)),
-    }
+      expectedImprovements: Array.isArray(parsed.expectedImprovements)
+        ? parsed.expectedImprovements
+        : [],
+      confidenceInSuggestion: Math.max(
+        0,
+        Math.min(1, parsed.confidenceInSuggestion ?? 0.7)
+      ),
+    };
   } catch (err) {
-    logger.error('prompt-optimizer: optimisation failed', { error: err })
-    throw err
+    logger.error('prompt-optimizer: optimisation failed', { error: err });
+    throw err;
   }
 }

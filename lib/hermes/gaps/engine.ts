@@ -298,9 +298,8 @@ Identify the gaps.`;
       runId: `hermes-gaps-${Date.now()}`,
     },
     execute: async (modelId: string) => {
-      const { AnthropicProvider } = await import(
-        '@/lib/ai/providers/anthropic-provider'
-      );
+      const { AnthropicProvider } =
+        await import('@/lib/ai/providers/anthropic-provider');
       const provider = new AnthropicProvider();
       const response = await provider.complete({
         model: modelId,

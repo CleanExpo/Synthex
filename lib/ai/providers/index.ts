@@ -27,7 +27,6 @@ import { OpenAIProvider } from './openai-provider';
 import { OpenRouterProvider } from './openrouter-provider';
 import { AnthropicProvider } from './anthropic-provider';
 import { GoogleProvider } from './google-provider';
-import { OllamaProvider } from './ollama-provider';
 
 export type {
   AIProvider,
@@ -36,17 +35,25 @@ export type {
   AICompletionResponse,
   ModelPresets,
 } from './base-provider';
-export { OllamaUnavailableError } from './ollama-provider';
 
-type ProviderName = 'openai' | 'openrouter' | 'anthropic' | 'google' | 'ollama';
+type ProviderName = 'openai' | 'openrouter' | 'anthropic' | 'google';
 
 /** Default provider used when AI_PROVIDER is unset (OpenAI-only direction). */
 const DEFAULT_PROVIDER: ProviderName = 'openai';
 
 /** The platform provider getAIProvider() would build, without building it. */
 export function resolvePlatformProviderName(): ProviderName {
-  const configured = process.env.AI_PROVIDER as ProviderName | undefined;
-  if (configured && providerFactories[configured]) return configured;
+  const raw = process.env.AI_PROVIDER?.trim();
+  const configured = raw as ProviderName | undefined;
+  if (configured && isSupportedProvider(configured)) return configured;
+  if (raw) {
+    // An explicit but unsupported value (e.g. the removed "ollama") must not be
+    // substituted silently. Warn loudly, then fall back to a configured cloud key.
+    logger.warn('Unsupported AI_PROVIDER value ignored; falling back', {
+      configured: raw,
+      supported: Object.keys(providerFactories),
+    });
+  }
   if (process.env.OPENAI_API_KEY?.trim()) return 'openai';
   if (process.env.OPENROUTER_API_KEY?.trim()) return 'openrouter';
   if (process.env.ANTHROPIC_API_KEY?.trim()) return 'anthropic';
@@ -67,10 +74,14 @@ const providerFactories: Record<ProviderName, (apiKey?: string) => AIProvider> =
     openrouter: (key?) => new OpenRouterProvider(key),
     anthropic: (key?) => new AnthropicProvider(key),
     google: (key?) => new GoogleProvider(key),
-    // Ollama is a local-only provider; the apiKey arg is accepted for
-    // factory-signature compatibility but not used.
-    ollama: (key?) => new OllamaProvider(key),
   };
+
+/** Own-property check: inherited names such as "toString" are not providers. */
+function isSupportedProvider(name: string | undefined): name is ProviderName {
+  return (
+    !!name && Object.prototype.hasOwnProperty.call(providerFactories, name)
+  );
+}
 
 let cachedProvider: AIProvider | null = null;
 let cachedProviderName: string | null = null;
@@ -86,7 +97,9 @@ export function getAIProvider(options?: UserKeyOptions): AIProvider {
   if (options?.apiKey) {
     const name = (options.provider ||
       resolvePlatformProviderName()) as ProviderName;
-    const factory = providerFactories[name];
+    const factory = isSupportedProvider(name)
+      ? providerFactories[name]
+      : undefined;
     if (!factory) {
       logger.warn('Unknown provider for user key, falling back to openai', {
         provider: name,

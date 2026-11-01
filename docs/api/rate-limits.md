@@ -348,6 +348,7 @@ These route files contain a 429 status but call none of the limiters above. The 
 - `/api/notifications/settings` (app/api/notifications/settings/route.ts)
 - `/api/onboarding/pipeline` (app/api/onboarding/pipeline/route.ts)
 - `/api/organizations` (app/api/organizations/route.ts)
+- `/api/portfolio-calendar/video-delivery` (app/api/portfolio-calendar/video-delivery/route.ts)
 - `/api/prompts/test` (app/api/prompts/test/route.ts)
 - `/api/research/capabilities` (app/api/research/capabilities/route.ts)
 - `/api/research/implementation-plan` (app/api/research/implementation-plan/route.ts)
