@@ -166,3 +166,15 @@
 {"ts":"2026-10-29T19:30:36.104Z","kind":"integrate","phase":"P6","unit":"retire-j7-gaps","files":1,"head":"48c28ee8b63ec89bd75b4e50c6f116713bfb09b4"}
 {"ts":"2026-10-29T19:41:36.029Z","kind":"gate","phase":"P6","head":"d16310a0bb16cbe2ead948b2b5318769ff1ac502","pass":7,"total":7}
 {"ts":"2026-10-29T19:42:23.291Z","kind":"review","phase":"P6","head":"d16310a0bb16cbe2ead948b2b5318769ff1ac502","state":"INCONCLUSIVE","detail":"every lane unavailable"}
+{"ts":"2026-11-02T16:02:03.307Z","kind":"receipt-retired","phase":"P6","head":"7c87a64f527cf8aaacca27a01b42ce4e7aa60c9e","reviewed":"d16310a0bb16cbe2ead948b2b5318769ff1ac502","files":["release-receipts/manifests/P6-gate.json"]}
+{"ts":"2026-11-02T16:12:52.042Z","kind":"gate","phase":"P6","head":"e9d9afe293efd917188c75fa062f4aedde32d005","pass":7,"total":7}
+{"ts":"2026-11-02T16:15:08.489Z","kind":"review","phase":"P6","head":"e9d9afe293efd917188c75fa062f4aedde32d005","lane":"codex","model":"codex-chatgpt-plan","paid_ok_env":false,"verdict":"FAIL"}
+{"ts":"2026-11-02T16:17:32.000Z","kind":"unit","phase":"P6","unit":"review-fixes-r1","thread":"cr_child_733a6b75780bb3bf5003528d","branch":"refs/fleet/units/p6/review-fixes-r1","state":"STARTED","detail":"review round 1 fix-forward; worktree /code/fleet-units/review-fixes-r1"}
+{"ts":"2026-11-02T16:23:26.710Z","kind":"integrate","phase":"P6","unit":"review-fixes-r1","files":5,"head":"d3ab31f752b9d757a8cc0c395090b0e69f151a6a"}
+{"ts":"2026-11-02T16:34:13.164Z","kind":"gate","phase":"P6","head":"d3ab31f752b9d757a8cc0c395090b0e69f151a6a","pass":6,"total":7}
+{"ts":"2026-11-02T16:45:14.483Z","kind":"unit","phase":"P6","unit":"claims-seeds-refresh","thread":"cr_child_25c861377b9e3afece1ab353","branch":"refs/fleet/units/p6/claims-seeds-refresh","state":"STARTED","detail":"gate repair (claims seeds); worktree /code/fleet-units/claims-seeds-refresh"}
+{"ts":"2026-11-02T17:03:35.683Z","kind":"integrate","phase":"P6","unit":"claims-seeds-refresh","files":1,"head":"91b7052ecfcfab46c8067bf10d8411d4ae2ba8c7"}
+{"ts":"2026-11-02T17:13:59.332Z","kind":"gate","phase":"P6","head":"91b7052ecfcfab46c8067bf10d8411d4ae2ba8c7","pass":7,"total":7}
+{"ts":"2026-11-02T17:17:21.659Z","kind":"review","phase":"P6","head":"91b7052ecfcfab46c8067bf10d8411d4ae2ba8c7","lane":"codex","model":"codex-chatgpt-plan","paid_ok_env":false,"verdict":"FAIL"}
+{"ts":"2026-11-02T17:19:44.594Z","kind":"unit","phase":"P6","unit":"review-fixes-r2","thread":"cr_child_addf71bd31d86301ce85e306","branch":"refs/fleet/units/p6/review-fixes-r2","state":"STARTED","detail":"review round 2 fix-forward (fixable findings only); worktree /code/fleet-units/review-fixes-r2"}
+{"ts":"2026-11-02T17:22:43.011Z","kind":"integrate","phase":"P6","unit":"review-fixes-r2","files":9,"head":"45273c2a48d01f62da0a5bf9db688357bbffec59"}
