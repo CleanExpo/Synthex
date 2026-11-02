@@ -118,6 +118,16 @@
       "firstSeen": "base"
     },
     {
+      "text": "- Routes that return 429 without a limiter this scan reads: 23; see docs/api/rate-limits.md",
+      "file": "public/llms.txt",
+      "firstSeen": "3fb450d8"
+    },
+    {
+      "text": "- Routes that return 429 without a limiter this scan reads: 25; see docs/api/rate-limits.md",
+      "file": "public/llms.txt",
+      "firstSeen": "771c20a3"
+    },
+    {
       "text": "- SERVICE_NOT_CONFIGURED: HTTP 501 ## Rate limits",
       "file": "public/llms.txt",
       "firstSeen": "3fb450d8"
@@ -268,6 +278,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "/api/chat",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "/dashboard\" class=\"button\">Get Started</a> </div> <h3>Quick Start Guide:</h3> <ol> <li>Complete your profile setup</li> <li>Connect your social media accounts</li> <li>Generate your first AI content</li> <li>Schedule or post immediately</li> <li>Track performance in analytics</li> </ol> <p>Need help?",
       "file": "lib/email/email-service.ts",
       "firstSeen": "base"
@@ -351,6 +366,11 @@
       "text": "/media?fields=like_count,comments_count&limit=50 Service not configured",
       "file": "lib/social/instagram-service.ts",
       "firstSeen": "base"
+    },
+    {
+      "text": "\\s+",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
     },
     {
       "text": "&period=",
@@ -830,6 +850,21 @@
     {
       "text": "20–30% of claims re-inspected",
       "file": "app/(landing)/restoreassist/insurers/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2026-04-02",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2026-04-02 latest",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "2026-04-02 production",
+      "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
     },
     {
@@ -1825,6 +1860,11 @@
     {
       "text": "App-store review by Anthropic and OpenAI typically adds 2–4 weeks.",
       "file": "app/add-ons/mcp-app-development/page.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "application/json Ollama API error",
+      "file": "lib/ai/providers/ollama-provider.ts",
       "firstSeen": "base"
     },
     {
@@ -3098,6 +3138,46 @@
       "firstSeen": "base"
     },
     {
+      "text": "gemma4:e2b",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e2b /api/chat",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e2b gemma4:e4b",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e2b ollama",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e4b",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e4b gemma4:e2b",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e4b gemma4:e4b",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "gemma4:e4b ollama",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "General Data Protection Regulation",
       "file": "app/security/page.tsx",
       "firstSeen": "base"
@@ -3121,6 +3201,16 @@
       "text": "Generated from the route source of 775 route files under app/api.",
       "file": "public/llms.txt",
       "firstSeen": "537a1991"
+    },
+    {
+      "text": "Generated from the route source of 776 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "dba7235d"
+    },
+    {
+      "text": "Generated from the route source of 779 route files under app/api.",
+      "file": "public/llms.txt",
+      "firstSeen": "771c20a3"
     },
     {
       "text": "Generate strategic brand identities using 50+ psychological principles for maximum market impact",
@@ -3178,6 +3268,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "gi",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
+    },
+    {
       "text": "Glassmorphism",
       "file": "app/demo/DemoClient.tsx",
       "firstSeen": "base"
@@ -3185,6 +3280,26 @@
     {
       "text": "Good Reach",
       "file": "app/analytics/AnalyticsClient.tsx",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Google Gemma 4 E2B (local)",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Google Gemma 4 E2B (local) 2026-04-02",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Google Gemma 4 E4B (local)",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Google Gemma 4 E4B (local) 2026-04-02",
+      "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
     },
     {
@@ -3923,6 +4038,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "Never mention COACH8.",
+      "file": "lib/marketing-calendar/portfolio-brands.ts",
+      "firstSeen": "b7bc0386"
+    },
+    {
       "text": "NEW Explore Demo",
       "file": "app/demo/DemoClient.tsx",
       "firstSeen": "base"
@@ -4025,6 +4145,31 @@
     {
       "text": "ok",
       "file": "lib/platform/noop-client.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ollama",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "ollama-",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ollama API error",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "Ollama gemma4:e2b",
+      "file": "lib/ai/providers/ollama-provider.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "OllamaUnavailableError",
+      "file": "lib/ai/providers/ollama-provider.ts",
       "firstSeen": "base"
     },
     {
@@ -5158,6 +5303,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "streaming gemma4:e2b",
+      "file": "lib/ai/model-registry.ts",
+      "firstSeen": "base"
+    },
+    {
       "text": "streaming google/gemini-3.1-flash",
       "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
@@ -5750,6 +5900,11 @@
     {
       "text": "Things only you can do · most under 30 minutes",
       "file": "lib/quick-access/items.ts",
+      "firstSeen": "base"
+    },
+    {
+      "text": "thinking gemma4:e4b",
+      "file": "lib/ai/model-registry.ts",
       "firstSeen": "base"
     },
     {

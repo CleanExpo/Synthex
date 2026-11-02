@@ -1,0 +1,32 @@
+{
+  "order_ref": "SAMPLE-PC-0001",
+  "tier": "ready-made",
+  "film": "skyline",
+  "buyer_name": "Sasha Sampleton (SAMPLE)",
+  "role": "Director, SAMPLE Wattle Creek Tiling & Waterproofing Pty Ltd",
+  "email": "sasha.sampleton@sample.example.com",
+  "phone": {
+    "display": "0400 000 111",
+    "tel": "+61400000111"
+  },
+  "businesses": [
+    {
+      "name": "SAMPLE Wattle Creek Tiling",
+      "url": "https://tiling.example.com",
+      "note": "SAMPLE: bathroom and kitchen tiling, Toowoomba"
+    },
+    {
+      "name": "SAMPLE Wattle Creek Waterproofing & Leak Detection Services ",
+      "url": "https://waterproofing.example.com/services/leak-detection?ref=sample-card",
+      "note": "SAMPLE: membranes, shower re-seals, balcony leak detection Q"
+    },
+    {
+      "name": "SAMPLE Grout Doctor",
+      "url": "https://grout.example.com"
+    }
+  ],
+  "extra_businesses": 2,
+  "logo_file": "sample-logo-256.png",
+  "brand_colour": "#0F766E",
+  "colour_source": "SAMPLE: the teal ring of the invented sample logo"
+}

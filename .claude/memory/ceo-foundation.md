@@ -32,7 +32,7 @@ _(asked by Senior CMO + Senior Marketing Operations Director)_
 - Marketing is a primary lever for the year. Output volume can scale up; quality bar stays high.
 - Cadence: daily 30–60 min review + active campaign participation.
 
-**Boardroom rationale:** the hands-on tier with 3× Claude Max plans + local Gemma 4 + DeepSeek V4 is the highest-leverage configuration. Routine work fans out via local/cheap-cloud tier (delegate.mjs), while the CEO's own attention spends on strategic surface where Claude is the right instrument. Every skill from this point forward MUST honour this: do not pre-digest decisions the CEO would prefer to make himself.
+**Boardroom rationale:** the hands-on tier with 3× Claude Max plans + DeepSeek V4 is the highest-leverage configuration. Routine work fans out via the cheap-cloud tier (delegate.mjs), while the CEO's own attention spends on strategic surface where Claude is the right instrument. Every skill from this point forward MUST honour this: do not pre-digest decisions the CEO would prefer to make himself.
 
 ### 1.2 Risk tolerance on tactic selection
 
@@ -90,7 +90,7 @@ _(asked by Senior Marketing Operations Director + Senior CMO)_
 
 **What this means for every Synthex skill:**
 
-- **Auto on input** — skills call Gemma 4 / DeepSeek V4 / Claude / OpenRouter as needed without asking. Routing decisions, model selection, fallback, retries, internal reasoning all autonomous.
+- **Auto on input** — skills call DeepSeek V4 / Claude / OpenRouter as needed without asking. Routing decisions, model selection, fallback, retries, internal reasoning all autonomous.
 - **Human-in-loop on output** — every client-facing artefact (post, email, campaign brief, GBP update, blog draft, paid-ads creative) lands in a review queue. Nothing publishes without CEO approval.
 - **Batched review pattern.** Skills shouldn't DM the CEO once per output; they accumulate ready-to-ship pieces in a queue (file, dashboard, or Slack thread) for batch review. Target: 20–40 pieces / week reviewable in two sessions.
 - **Internal artefacts** (research notes, classification logs, model-output diffs, cost-ledger entries) are auto-publish — they're internal context, not client-facing.
@@ -110,7 +110,7 @@ This is the operator profile every senior-level Synthex skill must read at invoc
 
 ## Phase 2 — Business Portfolio
 
-> **Captured 2026-04-26.** Source: CEO direct input. Site data to be enriched via Chrome MCP crawl + local Gemma 4 summarisation (delegate.mjs `--intent summarise-batch`).
+> **Captured 2026-04-26.** Source: CEO direct input. Site data to be enriched via Chrome MCP crawl + cheap-tier summarisation (delegate.mjs `--intent summarise-batch`).
 
 ### Portfolio map
 
@@ -141,11 +141,11 @@ This is the operator profile every senior-level Synthex skill must read at invoc
 
 **What this means for the discovery:** every senior-skill recommendation for these businesses MUST be grounded in real site data (crawled positioning, services, tone, CTAs, audience signals) — not memory or assumption. The 2026 tactical layer (Google Maps revamp, AI Overviews, AEO/GEO citation windows) is non-negotiable context.
 
-**Crawl plan:** Chrome MCP fetches the 4 public URLs in parallel → page text + key sections piped to `scripts/ai/delegate.mjs --intent summarise-batch` → local Gemma 4 produces structured per-business briefs at $0 cost. Findings appended below.
+**Crawl plan:** Chrome MCP fetches the 4 public URLs in parallel → page text + key sections piped to `scripts/ai/delegate.mjs --intent summarise-batch` → the cheap-cloud tier produces structured per-business briefs. Findings appended below.
 
 ### Per-business site briefs
 
-> Sourced 2026-04-26 via Chrome MCP live crawl (homepage extraction). Full text saved to `.claude/scratchpad/site-crawls/01..04-*.txt` for downstream delegate.mjs / Gemma 4 enrichment. Briefs below distil positioning, audience, voice, and conversion architecture for each public-facing business.
+> Sourced 2026-04-26 via Chrome MCP live crawl (homepage extraction). Full text saved to `.claude/scratchpad/site-crawls/01..04-*.txt` for downstream delegate.mjs enrichment. Briefs below distil positioning, audience, voice, and conversion architecture for each public-facing business.
 
 #### 🚨 Ecosystem revelation — captured from disasterrecovery.com.au
 

@@ -102,12 +102,15 @@ self.addEventListener("fetch", e => {{
 }});
 """
 TAIL = "\n</body>\n</html>\n"
+# preview.html is opened on its own too (a file on a phone): it needs the viewport and the [hidden] rule HEAD gives index.html
+PREVIEW_HEAD = ('<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'
+                '<style>[hidden]{display:none!important}</style>\n')
 MIME = {".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
         ".mp4": "video/mp4", ".webm": "video/webm"}
 
 
 # Same rule as SAFE_URL in card.html: plain https, no whitespace, quote or angle bracket (no javascript:, no CRLF injection)
-SAFE_URL = re.compile(r'^https://[^\s"<>]+$')
+SAFE_URL = re.compile(r'^https://[^\s/?#"<>]+[^\s"<>]*$')
 
 
 # Phill 24/10/2026: the contact picture is the owner's logo or a photo of the owner. Never Margot, a film
@@ -307,6 +310,10 @@ def main(card_path, kit_path, out):
     # Home-screen app: only when the kit names its own app icons
     icons = (kit.get("brand") or {}).get("appIcons") or {}
     app = ""
+    if not (icons.get("status") == "found" and icons.get("files")):
+        # no sw.js or manifest is built, so the card must not claim an offline copy or a home-screen app
+        for k in (hosted, preview):
+            k["offlineApp"] = False
     if icons.get("status") == "found" and icons.get("files"):
         shipped = {size: media(path)[0] for size, path in icons["files"].items()}
         theme = ((kit.get("brand") or {}).get("colours") or {}).get("primary", {}).get("value", "#000000")
@@ -340,7 +347,7 @@ def main(card_path, kit_path, out):
     with open(os.path.join(out, "index.html"), "w", encoding="utf-8", newline="\n") as f:
         f.write(page_html)
     with open(os.path.join(out, "preview.html"), "w", encoding="utf-8", newline="\n") as f:
-        f.write(render(preview))
+        f.write(PREVIEW_HEAD + render(preview))
     with open(os.path.join(out, kit["id"] + ".vcf"), "w", encoding="utf-8", newline="") as f:
         f.write(vcard(kit["person"]))
     # Edition catalogue for the order page (and the unite-group.in showroom): portable plain data

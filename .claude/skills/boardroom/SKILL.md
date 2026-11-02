@@ -1,6 +1,6 @@
 ---
 name: boardroom
-description: Multi-model triangulation. Runs the same prompt through 2–4 LLMs in parallel (typically Gemma 4 local + DeepSeek V4 + Claude Sonnet) and synthesises a single answer that captures consensus, surfaces disagreement, and resolves divergence with senior reasoning. Auto-escalates to Claude Opus when panel divergence is high. Invoke for high-stakes decisions where one model's voice is not enough — brand strategy, architecture choices, sensitive client communications, copy with measurable conversion stakes. Skip for routine tasks (use standard intent routing instead).
+description: Multi-model triangulation. Runs the same prompt through 2–4 LLMs in parallel (typically Gemini 3.1 Flash + DeepSeek V4 + Claude Sonnet) and synthesises a single answer that captures consensus, surfaces disagreement, and resolves divergence with senior reasoning. Auto-escalates to Claude Opus when panel divergence is high. Invoke for high-stakes decisions where one model's voice is not enough — brand strategy, architecture choices, sensitive client communications, copy with measurable conversion stakes. Skip for routine tasks (use standard intent routing instead).
 operates_in: [L7, L8]
 consumes_from: ceo-foundation.md, verification-gates.md
 foundation_authority: ceo-foundation.md + verification-gates.md
@@ -34,7 +34,7 @@ Invoke for **high-stakes outputs** where the cost of a wrong call exceeds the co
 
 ```ts
 [
-  { provider: 'ollama', modelId: 'gemma4:e4b' }, // local, $0
+  { provider: 'openrouter', modelId: 'google/gemini-3.1-flash' }, // cheap, second vendor
   { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' }, // cheap, fast
   { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' }, // senior
 ];
@@ -42,7 +42,7 @@ Invoke for **high-stakes outputs** where the cost of a wrong call exceeds the co
 
 Synthesiser default: `anthropic/claude-sonnet-4-6`. Escalation default: `anthropic/claude-opus-4-7` when Jaccard agreement < 0.35.
 
-Typical cost: **< AU$0.04 per decision** (one local call free, one DeepSeek call ~$0.0003, one Sonnet call ~$0.015, one Sonnet synthesis ~$0.020).
+Typical cost: **< AU$0.04 per decision** (one Gemini Flash call ~$0.0003, one DeepSeek call ~$0.0003, one Sonnet call ~$0.015, one Sonnet synthesis ~$0.020).
 
 ## Programmatic invocation
 
@@ -54,7 +54,7 @@ const result = await boardroomQuery({
   systemPrompt:
     'You are a senior local-services performance marketer. Australian English. Numbers must be sourced or marked as estimate.',
   panel: [
-    { provider: 'ollama', modelId: 'gemma4:e4b' },
+    { provider: 'openrouter', modelId: 'google/gemini-3.1-flash' },
     { provider: 'openrouter', modelId: 'deepseek/deepseek-v4-flash' },
     { provider: 'openrouter', modelId: 'anthropic/claude-sonnet-4-6' },
   ],

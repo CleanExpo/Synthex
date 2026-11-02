@@ -138,8 +138,8 @@ Return ONLY valid JSON, no other text.`,
 
     const provider = governorProviderFor(ai.name);
     let content: string;
-    if (!scope || !provider) {
-      // No organisation (or a local Ollama provider): nothing to govern or bill.
+    if (!scope) {
+      // No organisation: nothing to govern or bill.
       content = (await callProvider(ai, ai.models.balanced)).data;
     } else {
       let providerError: { error: unknown } | null = null;

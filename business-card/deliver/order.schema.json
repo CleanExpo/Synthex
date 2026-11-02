@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "business-card/deliver/order.schema.json",
+  "title": "Living Business Card order",
+  "description": "One paid card order, filled in by a person from the Stripe payment and the buyer's answers. Never holds payment data (no card numbers, Stripe IDs or amounts). build_order.py checks every rule here and refuses the order, naming each problem, when anything is missing or wrong. Nothing is filled in by default.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order_ref",
+    "tier",
+    "film",
+    "buyer_name",
+    "role",
+    "email",
+    "phone",
+    "businesses",
+    "extra_businesses",
+    "logo_file"
+  ],
+  "properties": {
+    "order_ref": {
+      "description": "Our reference for the order, written on the proof and the folder. Letters, numbers and dashes only.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{2,39}$"
+    },
+    "tier": {
+      "description": "ready-made (AUD 249): one of the nine ready-made films. made-for-you (AUD 449): a custom film, made after the proof.",
+      "enum": ["ready-made", "made-for-you"]
+    },
+    "film": {
+      "description": "ready-made: the name of one of the nine ready-made films. made-for-you: exactly \"custom, pending proof\".",
+      "enum": [
+        "portal",
+        "blueprint",
+        "forge",
+        "constellation",
+        "ink",
+        "rewind",
+        "skyline",
+        "origami",
+        "magnet",
+        "custom, pending proof"
+      ]
+    },
+    "buyer_name": {
+      "description": "The buyer's name exactly as it should show on the card and in the saved contact.",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 80
+    },
+    "role": {
+      "description": "One short line under the name, for example \"Owner, Sample Plumbing Co\".",
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 100
+    },
+    "email": {
+      "description": "The email the card shows and the saved contact carries.",
+      "type": "string",
+      "pattern": "^[^\\s@<>\"]+@[^\\s@<>\"]+\\.[^\\s@<>\"]+$"
+    },
+    "phone": {
+      "description": "The phone the card shows, or null when the buyer asked for no phone on the card. The key must be there either way.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["display", "tel"],
+      "properties": {
+        "display": {
+          "description": "As shown, for example \"0400 555 123\".",
+          "type": "string",
+          "minLength": 6,
+          "maxLength": 30
+        },
+        "tel": {
+          "description": "As dialled, for example \"+61400555123\".",
+          "type": "string",
+          "pattern": "^\\+?[0-9]{6,15}$"
+        }
+      }
+    },
+    "businesses": {
+      "description": "Every business on the card. The first is the main business; each one after it is an extra business (AUD 199 each).",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "url"],
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "maxLength": 60 },
+          "url": {
+            "description": "Plain https, no spaces, quotes or angle brackets.",
+            "type": "string",
+            "pattern": "^https://[^\\s/?#\"<>]+[^\\s\"<>]*$"
+          },
+          "note": {
+            "description": "Optional short line under the business, for example \"Plumbing, Brisbane\".",
+            "type": "string",
+            "maxLength": 60
+          }
+        }
+      }
+    },
+    "extra_businesses": {
+      "description": "How many extra businesses were paid for. Must equal the number of businesses after the first.",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 7
+    },
+    "logo_file": {
+      "description": "Path to the buyer's own logo as a PNG (at most 120000 bytes, about 256 px; re-export a JPEG to PNG first). Relative paths are read from the order file's folder. It is the card's logo and the saved contact's picture.",
+      "type": "string",
+      "pattern": "\\.png$"
+    },
+    "brand_colour": {
+      "description": "Optional. The buyer's own main colour as #RRGGBB, from their logo or website. Left out means the proof lists it as not yet supplied.",
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "colour_source": {
+      "description": "Required with brand_colour: where the colour came from, for example \"measured from the buyer's logo\".",
+      "type": "string",
+      "minLength": 3
+    }
+  },
+  "dependentRequired": { "brand_colour": ["colour_source"] }
+}

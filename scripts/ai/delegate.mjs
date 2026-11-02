@@ -23,8 +23,7 @@
  * INTENT VOCABULARY: see lib/ai/task-routing.ts (TaskIntent union).
  *
  * ENV VARS read:
- *   OLLAMA_BASE_URL  (defaults to http://localhost:11434)
- *   OPENROUTER_API_KEY (required for cloud fallback)
+ *   OPENROUTER_API_KEY (required)
  *
  * This script is intentionally a flat .mjs file (no TypeScript compile
  * step required) so it can run from any worktree without going through
@@ -38,39 +37,41 @@ import { existsSync } from 'node:fs';
 // ──────────────────────────────────────────────────────────────────────
 // Routing matrix — kept in sync with lib/ai/task-routing.ts.
 // Each entry lists the primary model + ordered fallbacks. The script
-// tries the primary first; on OllamaUnavailable / network failure it
-// walks the fallback chain.
+// tries the primary first; on a network / 5xx failure it walks the
+// fallback chain.
 // ──────────────────────────────────────────────────────────────────────
 
 const ROUTING = {
-  // Group A — routine local
+  // Group A — routine
   'classify-text': {
-    primary: { provider: 'ollama', model: 'gemma4:e2b' },
+    primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
     fallback: [
-      { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
+      { provider: 'openrouter', model: 'google/gemini-3.1-flash' },
       { provider: 'openrouter', model: 'anthropic/claude-sonnet-4-6' },
     ],
   },
   'extract-entities': {
-    primary: { provider: 'ollama', model: 'gemma4:e2b' },
-    fallback: [{ provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' }],
+    primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
+    fallback: [{ provider: 'openrouter', model: 'google/gemini-3.1-flash' }],
   },
   'summarise-batch': {
-    primary: { provider: 'ollama', model: 'gemma4:e4b' },
-    fallback: [{ provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' }],
+    primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
+    fallback: [{ provider: 'openrouter', model: 'google/gemini-3.1-flash' }],
   },
   'format-conversion': {
-    primary: { provider: 'ollama', model: 'gemma4:e2b' },
+    primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
     fallback: [],
   },
   'linting-suggest': {
-    primary: { provider: 'ollama', model: 'gemma4:e4b' },
-    fallback: [{ provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' }],
+    primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
+    fallback: [{ provider: 'openrouter', model: 'google/gemini-3.1-flash' }],
   },
   // Group B — mid-quality cloud
   'boilerplate-generate': {
     primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
-    fallback: [{ provider: 'ollama', model: 'gemma4:e4b' }],
+    fallback: [
+      { provider: 'openrouter', model: 'anthropic/claude-sonnet-4-6' },
+    ],
   },
   'draft-blog-post': {
     primary: { provider: 'openrouter', model: 'deepseek/deepseek-v4-flash' },
@@ -185,33 +186,6 @@ function resolveInput(rawInput) {
 
 // ── Provider invokers ─────────────────────────────────────────────────
 
-async function callOllama({ model, prompt, system, maxTokens, temperature }) {
-  const baseURL = (
-    process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
-  ).replace(/\/$/, '');
-  const messages = [];
-  if (system) messages.push({ role: 'system', content: system });
-  messages.push({ role: 'user', content: prompt });
-  const body = {
-    model,
-    messages,
-    stream: false,
-    think: false,
-    options: { temperature, num_predict: maxTokens },
-  };
-  const res = await fetch(`${baseURL}/api/chat`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(120_000),
-  });
-  if (!res.ok) {
-    throw new Error(`Ollama HTTP ${res.status}: ${await res.text()}`);
-  }
-  const data = await res.json();
-  return data.message?.content ?? '';
-}
-
 async function callOpenRouter({
   model,
   prompt,
@@ -252,7 +226,6 @@ async function callOpenRouter({
 }
 
 const PROVIDER_INVOKERS = {
-  ollama: callOllama,
   openrouter: callOpenRouter,
 };
 
@@ -267,7 +240,7 @@ function isRetryableNetworkError(error) {
     msg.includes('ETIMEDOUT') ||
     msg.includes('fetch failed') ||
     msg.includes('aborted') ||
-    msg.includes('Ollama HTTP 5')
+    msg.includes('OpenRouter HTTP 5')
   );
 }
 

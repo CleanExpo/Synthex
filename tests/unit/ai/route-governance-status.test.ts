@@ -17,7 +17,10 @@ jest.mock('@/lib/multi-business/business-scope', () => ({
 }));
 
 import { GovernorRefusedError, type GovernorRefusal } from '@/lib/ai/governor';
-import { governorRefusalResponse as routeGovernanceResponse } from '@/lib/ai/route-governance';
+import {
+  governorProviderFor,
+  governorRefusalResponse as routeGovernanceResponse,
+} from '@/lib/ai/route-governance';
 import { governorRefusalResponse as routeSupportResponse } from '@/lib/ai/governor-route-support';
 
 const BUDGET_AND_CAP: GovernorRefusal[] = [
@@ -51,6 +54,23 @@ const ALL_REFUSALS = [
 type Missing = Exclude<GovernorRefusal, (typeof ALL_REFUSALS)[number]>;
 const _complete: [Missing] extends [never] ? true : never = true;
 void _complete;
+
+describe('governorProviderFor', () => {
+  it.each([
+    ['OpenRouter', 'openrouter'],
+    ['Anthropic', 'anthropic'],
+    ['OpenAI', 'openai'],
+    ['Google', 'google'],
+  ])('maps %s to %s', (name, expected) => {
+    expect(governorProviderFor(name)).toBe(expected);
+  });
+
+  // No provider runs outside the Governor: an unknown name must not become an
+  // ungoverned, unbilled call.
+  it('throws for an unknown provider instead of returning an ungoverned null', () => {
+    expect(() => governorProviderFor('Local')).toThrow(/Unknown AI provider/);
+  });
+});
 
 describe('Governor refusal status', () => {
   it.each(BUDGET_AND_CAP)(

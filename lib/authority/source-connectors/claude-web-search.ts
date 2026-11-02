@@ -29,13 +29,17 @@ interface TextContentBlock {
   text: string;
 }
 
-type ContentBlock = WebSearchResultBlock | TextContentBlock | { type: string; [key: string]: unknown };
+type ContentBlock =
+  | WebSearchResultBlock
+  | TextContentBlock
+  | { type: string; [key: string]: unknown };
 
 export class ClaudeWebSearchConnector implements SourceConnector {
   readonly id = 'claude-web-search';
   readonly name = 'Claude Web Search';
   readonly type = 'web' as const;
-  readonly description = 'Web search via Claude API with domain filtering for authoritative sources';
+  readonly description =
+    'Web search via Claude API with domain filtering for authoritative sources';
 
   get enabled(): boolean {
     return !!process.env.ANTHROPIC_API_KEY;
@@ -125,7 +129,9 @@ export class ClaudeWebSearchConnector implements SourceConnector {
 
         // Also parse tool_use blocks that may contain search results
         if (block.type === 'tool_use') {
-          const input = (block as Record<string, unknown>).input as Record<string, unknown> | undefined;
+          const input = (block as Record<string, unknown>).input as
+            | Record<string, unknown>
+            | undefined;
           if (input?.query) {
             // The tool was invoked — results come in subsequent tool_result blocks
           }
@@ -141,7 +147,7 @@ export class ClaudeWebSearchConnector implements SourceConnector {
             const confidence = getDomainConfidence(url);
             if (confidence >= 0.75) {
               // Only include high-confidence domain URLs from text
-              const alreadyAdded = results.some((r) => r.url === url);
+              const alreadyAdded = results.some(r => r.url === url);
               if (!alreadyAdded) {
                 results.push({
                   title: `Source from ${new URL(url).hostname}`,

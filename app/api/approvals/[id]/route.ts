@@ -32,6 +32,7 @@ import {
   type ContentBinding,
   type FingerprintablePost,
 } from '@/lib/approvals/content-fingerprint';
+import { assertStoredCalendarPostCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
 
 // =============================================================================
 // Types
@@ -398,7 +399,7 @@ async function stampAuthorityApprovalOnContent(
   if (approval.contentType === 'calendar_post' && txRecord.calendarPost) {
     const calendarPost = await tx.calendarPost.findUnique({
       where: { id: approval.contentId },
-      select: { metadata: true, platforms: true },
+      select: { metadata: true, platforms: true, organizationId: true },
     });
     if (
       !calendarPost ||
@@ -407,20 +408,27 @@ async function stampAuthorityApprovalOnContent(
       return;
     }
 
+    const metadata = toPrismaJson(
+      approveCampaignAuthorityMetadata(calendarPost.metadata, {
+        ...input,
+        platforms:
+          metadataPlatforms.length > 0
+            ? metadataPlatforms
+            : calendarPost.platforms,
+        requestedAction: 'approval_calendar_post_metadata',
+      })
+    );
+    // Checked as the row this update leaves: the new metadata with the
+    // stored title, content, hashtags and mentions.
+    await assertStoredCalendarPostCleanForOrg(
+      tx,
+      calendarPost.organizationId,
+      approval.contentId,
+      { metadata }
+    );
     await tx.calendarPost.update({
       where: { id: approval.contentId },
-      data: {
-        metadata: toPrismaJson(
-          approveCampaignAuthorityMetadata(calendarPost.metadata, {
-            ...input,
-            platforms:
-              metadataPlatforms.length > 0
-                ? metadataPlatforms
-                : calendarPost.platforms,
-            requestedAction: 'approval_calendar_post_metadata',
-          })
-        ),
-      },
+      data: { metadata },
     });
     return;
   }

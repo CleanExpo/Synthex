@@ -8,12 +8,7 @@
  * Critical: This file must be updated whenever new models become available
  */
 
-export type AIProvider =
-  | 'openai'
-  | 'anthropic'
-  | 'google'
-  | 'openrouter'
-  | 'ollama';
+export type AIProvider = 'openai' | 'anthropic' | 'google' | 'openrouter';
 export type ModelTier = 'latest' | 'production' | 'legacy';
 
 export interface ModelConfig {
@@ -558,42 +553,6 @@ const LATEST_MODELS: Record<AIProvider, ModelConfig[]> = {
       isDeprecated: false,
     },
   ],
-
-  // SYN-807 — Local Ollama-hosted models. Zero per-token cost; sole limit
-  // is laptop CPU/RAM. Used for high-volume batch research, classification,
-  // and draft scaffolding. Production deployments do NOT route here —
-  // Vercel does not run Ollama. Only the local development environment
-  // honours this provider.
-  ollama: [
-    {
-      id: 'gemma4:e2b',
-      provider: 'ollama',
-      name: 'Google Gemma 4 E2B (local)',
-      releaseDate: new Date('2026-04-02'),
-      tier: 'production',
-      capabilities: ['text', 'streaming', 'thinking'],
-      contextWindow: 128000,
-      costPer1kTokens: { input: 0, output: 0 },
-      supportsVision: false,
-      supportsTools: false,
-      supportsStreaming: true,
-      isDeprecated: false,
-    },
-    {
-      id: 'gemma4:e4b',
-      provider: 'ollama',
-      name: 'Google Gemma 4 E4B (local)',
-      releaseDate: new Date('2026-04-02'),
-      tier: 'latest',
-      capabilities: ['text', 'streaming', 'thinking'],
-      contextWindow: 128000,
-      costPer1kTokens: { input: 0, output: 0 },
-      supportsVision: false,
-      supportsTools: false,
-      supportsStreaming: true,
-      isDeprecated: false,
-    },
-  ],
 };
 
 /**
@@ -716,6 +675,5 @@ export function getAllLatestModels(): Record<AIProvider, ModelConfig> {
     anthropic: getLatestModel('anthropic'),
     google: getLatestModel('google'),
     openrouter: getLatestModel('openrouter'),
-    ollama: getLatestModel('ollama'),
   };
 }

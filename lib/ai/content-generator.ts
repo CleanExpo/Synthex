@@ -10,6 +10,7 @@ import { withAntiSlop } from '@/lib/ai/prompts/anti-slop-directive';
 import { withSocialPostVoice } from '@/lib/ai/prompts/social-post-voice';
 import { sanitizeSocialPost } from '@/lib/ai/sanitize-social-post';
 import { buildLayeredPrompt } from '@/lib/ai/prompt-layer-builder';
+import { assertPromptCleanForOrg } from '@/lib/marketing-calendar/prompt-guard';
 import {
   requireGenerationContext,
   recordGenerationCost,
@@ -727,6 +728,12 @@ Generate content that will maximize engagement and shares.
         ? withSocialPostVoice(rawSystemPrompt)
         : rawSystemPrompt
     );
+
+    // A portfolio brand's prompt never names words that brand never uses,
+    // whichever stored field fed it. Outside the try so the refusal is not
+    // rewrapped as a provider outage.
+    if (orgId)
+      await assertPromptCleanForOrg(prisma, orgId, [rawSystemPrompt, prompt]);
 
     try {
       const response = await client.complete({

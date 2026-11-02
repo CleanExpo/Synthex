@@ -102,10 +102,14 @@ export class OpenRouterClient {
         transforms: ['middle-out'],
         route: 'fallback',
         // Handle thinking parameters
-        ...(request.thinking ? { 
-          thinking: request.thinking,
-          ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-        } : {}),
+        ...(request.thinking
+          ? {
+              thinking: request.thinking,
+              ...(request.thinkingDisplay === 'omitted'
+                ? { thinking_display: 'omitted' }
+                : {}),
+            }
+          : {}),
         // Handle cache parameter
         ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
       };
@@ -166,10 +170,14 @@ export class OpenRouterClient {
       ...request,
       stream: true,
       // Handle thinking parameters for streaming
-      ...(request.thinking ? { 
-        thinking: request.thinking,
-        ...(request.thinkingDisplay === 'omitted' ? { thinking_display: 'omitted' } : {}),
-      } : {}),
+      ...(request.thinking
+        ? {
+            thinking: request.thinking,
+            ...(request.thinkingDisplay === 'omitted'
+              ? { thinking_display: 'omitted' }
+              : {}),
+          }
+        : {}),
       // Handle cache parameter for streaming
       ...(request.cache ? { cache_control: { type: 'ephemeral' } } : {}),
     };

@@ -78,7 +78,6 @@ describe('model registry — getLatestModel ordering is deterministic', () => {
     'anthropic',
     'google',
     'openrouter',
-    'ollama',
   ];
 
   /** The documented total order, recomputed independently of the module. */
@@ -160,7 +159,6 @@ describe('model registry — byPreference is a total order', () => {
     'anthropic',
     'google',
     'openrouter',
-    'ollama',
   ];
 
   it.each(providers)('never returns 0 for two distinct %s models', provider => {

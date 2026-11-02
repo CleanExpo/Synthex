@@ -24,11 +24,9 @@ import type { BuildCapDetail, GovernedBuild } from './build-cap';
 export type { GovernorMode } from './mode';
 
 /**
- * Providers the Governor mediates. Deliberately NOT the registry's own
- * `AIProvider` union: that includes 'ollama', which is a local, unkeyed,
- * zero-cost provider. BYOK fail-closed and per-brand budgets are meaningless
- * for it, so it is excluded at the type level rather than special-cased at
- * runtime.
+ * Providers the Governor mediates: every provider the registry knows. Kept as
+ * its own union so a provider added to the registry is not governed until it
+ * is added here on purpose.
  */
 export type GovernorProvider = 'anthropic' | 'openai' | 'google' | 'openrouter';
 

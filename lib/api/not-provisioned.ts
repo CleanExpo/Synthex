@@ -1,5 +1,5 @@
 /**
- * Honest status for features whose backing table is not in prisma/schema.prisma.
+ * Honest status for features that cannot run on this deployment: a backing table not in prisma/schema.prisma, or a required secret that is not set.
  *
  * Routes that need a missing table answer 503 (NOT_PROVISIONED_STATUS) with
  * notProvisionedBody() or notProvisionedResponse(), or attach tableUnavailable() to an otherwise-real

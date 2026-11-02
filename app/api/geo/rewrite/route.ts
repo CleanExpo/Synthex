@@ -138,8 +138,8 @@ export async function POST(request: NextRequest) {
   // 6. Stream response via AI provider, through the Governor
   const aiProvider = getAIProvider();
   const provider = governorProviderFor(aiProvider.name);
-  const scope = provider ? await resolveGovernorScope(userId) : null;
-  if (provider && !scope && GOVERNOR_MODE !== 'shadow') {
+  const scope = await resolveGovernorScope(userId);
+  if (!scope && GOVERNOR_MODE !== 'shadow') {
     return governorRefusalResponse(
       new GovernorRefusedError('refused_flag_missing', 'no organisation')
     );
@@ -181,8 +181,8 @@ export async function POST(request: NextRequest) {
           };
         };
 
-        if (!provider || !scope) {
-          // Ollama (local, ungoverned) or no organisation in shadow mode.
+        if (!scope) {
+          // No organisation, shadow mode only: enforcing mode refused above.
           await callProvider(aiProvider, aiProvider.models.balanced);
         } else {
           let providerError: { error: unknown } | null = null;

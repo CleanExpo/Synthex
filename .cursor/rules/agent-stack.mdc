@@ -1,19 +1,23 @@
 ---
-description: Agent stack defaults — Composer 2.5, hooks, Karpathy/Indy/gstack discipline (May 2026)
+description: Agent stack and hooks — historical May 2026 guidance with 27 October 2026 runtime-model update
 alwaysApply: true
 ---
 
-# Agent stack (Synthex — May 2026)
+# Agent stack — historical May 2026 baseline (reviewed 27/10/2026)
 
-## Models (Cursor)
+> **Important:** Previous model defaults reflected a May 2026 snapshot and have been replaced by a runtime-verified routing rule, **not** a claim about the current Cursor picker. Use the current runtime model/entitlement and [27 October engineering model register](../../engineering-system/MODEL-ROUTING.md). The repository's fleet policy currently excludes Cursor as a reviewer; founder proposal to add Cursor requires an explicit policy change, not a silent bypass.
 
-| Context | Model | Notes |
-|---------|--------|--------|
-| Interactive Agent / Composer | **Composer 2.5 Fast** | Default in picker after Cursor update (May 2026+) |
-| Background agents, ship-loop, batch | **Composer 2.5 Standard** | Same intelligence, lower cost |
-| Architecture / high-stakes | Opus or GPT per task | Not replaced by Composer 2.5 |
+> Cursor official 2026 updates: [Changelog](https://cursor.com/changelog), [Agent SDK announcement (20 October)](https://prod.cursor.com/en-US/changelog).
 
-Changelog: https://cursor.com/changelog/composer-2-5
+## Model routing (runtime-verified; replaces historical May defaults)
+
+| Context | Required behaviour |
+|---------|--------------------|
+| Interactive coding or review | Record installed/approved actual model; pick tier through the documented [routing policy](../../engineering-system/MODEL-ROUTING.md) and local task results |
+| Background tasks | Run only authorised scoped agents with cost, file ownership, retry cap and JEV evidence |
+| High-risk architecture | Strong builder plus independent Codex review under existing policy; no unapproved Cursor review lane |
+
+Historical evidence only: https://cursor.com/changelog/composer-2-5
 
 ## Hooks (Indy Dev Dan contract)
 

@@ -55,7 +55,7 @@ for reference but should be considered superseded by the above.
 > The "Current Position" and "Phase" sections below describe the v11.0 Tech Foundation / Autonomous Ranking Engine sprints (SYN-472 → SYN-486) that shipped in March 2026. Since then the project has shipped:
 >
 > - **SYN-806** _[EPIC] Senior-level AI Marketing Agency uplift_ — only In Progress on Linear (started 2026-04-26)
-> - **SYN-807** Multi-model orchestration tier (Ollama + DeepSeek hybrid + boardroom synthesis layer)
+> - **SYN-807** Multi-model orchestration tier (DeepSeek routing + boardroom synthesis layer; local tier removed 01/11/2026)
 > - **CEO Foundation v1.0** (PR #104), **Review Skills mandate** (RA-1744, PR #105)
 > - SYN-793/794/795/799/800/801 — leads, attribution, GA4Property, rate-limit wrapper, HeyGen removal, /benchmark CTA
 >

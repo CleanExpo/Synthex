@@ -223,7 +223,7 @@
     "mcp-handler": "^2.2.0",
     "next": "^16.4.2",
     "next-themes": "^0.2.1",
-    "nodemailer": "^10.0.10",
+    "nodemailer": "^10.1.4",
     "number-flow": "^0.6.0",
     "openai": "^6.0.0",
     "pg": "^8.18.0",

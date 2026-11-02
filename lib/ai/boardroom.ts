@@ -6,7 +6,7 @@
  * a single answer that carries each panellist's perspective.
  *
  * Use it for:
- *   - Brand voice and creative critique (Claude says X; Gemma says Y; what
+ *   - Brand voice and creative critique (Claude says X; Gemini says Y; what
  *     do we ship?)
  *   - Architecture decisions where we want junior + mid + senior takes
  *   - High-stakes recommendations where divergence between models is itself
@@ -14,7 +14,7 @@
  *
  * Cost discipline: panel calls run in parallel via `Promise.allSettled`.
  * One slow / failed panellist does not block the synthesis. Default panel
- * carries one local Gemma 4 ($0), one DeepSeek V4 Flash (~$0.0003/call),
+ * carries one Gemini 3.1 Flash (~$0.0003/call), one DeepSeek V4 Flash (~$0.0003/call),
  * and one Claude Sonnet (~$0.015/call) — total typical cost <$0.02 per
  * decision.
  *
@@ -31,7 +31,7 @@ import type {
   AICompletionRequest,
   AIProvider,
 } from './providers/base-provider';
-import { getAIProvider, OllamaUnavailableError } from './providers';
+import { getAIProvider } from './providers';
 import { logger } from '@/lib/logger';
 
 /**
@@ -219,14 +219,7 @@ async function callPanellist(
       latencyMs: Date.now() - startedAt,
     };
   } catch (error) {
-    const isOllamaDown = error instanceof OllamaUnavailableError;
-    if (isOllamaDown) {
-      logger.info('Boardroom panellist skipped — Ollama unavailable', {
-        panellist,
-      });
-    } else {
-      logger.warn('Boardroom panellist failed', { panellist, error });
-    }
+    logger.warn('Boardroom panellist failed', { panellist, error });
     return {
       panellist,
       response: null,

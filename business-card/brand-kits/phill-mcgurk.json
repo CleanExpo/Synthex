@@ -566,5 +566,11 @@
       "file": "business-card/brand-kits/media/app-icon-192.png",
       "source": "Phill 24/10/2026 (via the MacBook lead): the contact picture is the owner's logo or a photo of the owner, never Margot. The Unite-Group U app icon; the 192 px copy, because the 512 px one is 311 KB, too large for a contact file."
     }
+  },
+  "capture": {
+    "url": "https://lksfwktwtmyznckodsau.supabase.co",
+    "key": "sb_publishable_9MoYN-p4J5ExROt1MkQDBg_B4uYqYWT",
+    "slug": "phill-mcgurk",
+    "source": "Phill 24/10/2026 (via the MacBook lead): the card saves enquiries and feedback to Unite-Group Supabase with the publishable key only, never the service role. Tables from Unite-Group PR #1223 (UNI-3000); anon may only insert."
   }
 }

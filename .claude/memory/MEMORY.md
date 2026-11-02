@@ -138,12 +138,12 @@ Synthex is an internal Unite-Group SaaS. No external billing required. Prior Str
 
 ## Current State (2026-04-28) — second-PC onboarding
 
-This PC was synced after working on another machine. Local `main` was 241 commits behind `origin/main` and has been fast-forwarded to `eef77b59` (last shipped: SYN-806 ollama-provider test fix, 2026-04-27). `npm install` clean (2387 packages); `prisma validate` passes.
+This PC was synced after working on another machine. Local `main` was 241 commits behind `origin/main` and has been fast-forwarded to `eef77b59` (last shipped: SYN-806 provider test fix, 2026-04-27). `npm install` clean (2387 packages); `prisma validate` passes.
 
 **Active themes since 2026-04-24:**
 
 - **SYN-806** — _[EPIC] Senior-level AI Marketing Agency uplift_ (only In Progress on Linear, started 2026-04-26). CEO directive: design specialised skills + agents at 15+yr expert calibration. Includes CEO Foundation v1.0 ship in PR #104.
-- **SYN-807** — Multi-model orchestration tier. Ollama local (Gemma) + DeepSeek V4 Flash/Pro via OpenRouter for cost-optimised hybrid. Phase 2 added the **boardroom** synthesis layer + `delegate.mjs` CLI (PR #103). Phase 1 added the Ollama provider + task-intent routing matrix (PR #102).
+- **SYN-807** — Multi-model orchestration tier. DeepSeek V4 Flash/Pro via OpenRouter for cost-optimised routing (the local Gemma tier was removed 01/11/2026). Phase 2 added the **boardroom** synthesis layer + `delegate.mjs` CLI (PR #103). Phase 1 added the task-intent routing matrix (PR #102).
 - **RA-1744** — Review Skills mandate added to CLAUDE.md (PR #105). Four-skill discipline: `design-pressure-test` · `parallel-delegate` · `opus-adversary` · `codex-adversarial`. `opus-adversary` is the pre-push gate. Skills live at `~/.claude/skills/` (user-level).
 - **SYN-794 / SYN-795 / SYN-799 / SYN-779 / SYN-801** — ground-truth Lead model + capture/verify endpoints, real multi-touch attribution engine, per-IP + per-org rate-limit wrapper, public `/benchmark` page, `/benchmark` CTA → `/api/leads` signing shim.
 - **SYN-793** — GA4Property model + property management API.

@@ -50,7 +50,9 @@ export interface LayeredPrompt {
 /** Coerce a Json field into a string[] of non-empty strings. */
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((v): v is string => typeof v === 'string' && v.length > 0);
+  return value.filter(
+    (v): v is string => typeof v === 'string' && v.length > 0
+  );
 }
 
 /** Core layer — from BrandOperatingSystem. Returns null when none exists. */
@@ -130,6 +132,45 @@ function composeClientFromOrgContext(ctx: {
   }`;
 }
 
+/** The OrgContext fields a prompt reads from an Organization row. */
+export function orgContextFromOrg(org: {
+  name: string;
+  industry: string | null;
+  aiGeneratedData: unknown;
+}) {
+  const aiData = org.aiGeneratedData as Record<string, unknown> | null;
+  return {
+    businessName: org.name,
+    industry: org.industry,
+    location:
+      (aiData?.suburb as string) ??
+      (aiData?.city as string) ??
+      (aiData?.location as string) ??
+      null,
+    brandVoice:
+      (aiData?.brandVoice as string) ?? (aiData?.tone as string) ?? null,
+  };
+}
+
+/**
+ * Every system-prompt text an org's stored rows can produce: the Core layer
+ * and each Client-layer leg, whichever one a call ends up using. Pure, so a
+ * health check renders exactly what buildLayeredPrompt and callAI would send.
+ */
+export function renderPromptLegs(rows: {
+  bos: Parameters<typeof composeCore>[0];
+  profile: Parameters<typeof composeClientFromProfile>[0] | null;
+  dna: Parameters<typeof composeClientFromBrandDna>[0] | null;
+  org: Parameters<typeof orgContextFromOrg>[0] | null;
+}): string[] {
+  return [
+    composeCore(rows.bos),
+    rows.profile ? composeClientFromProfile(rows.profile) : null,
+    rows.dna ? composeClientFromBrandDna(rows.dna) : null,
+    rows.org ? composeClientFromOrgContext(orgContextFromOrg(rows.org)) : null,
+  ].filter((s): s is string => !!s);
+}
+
 /**
  * Resolve the Client layer: ClientProfile → BrandDNA → OrgContext → null.
  * Each leg degrades gracefully (missing row → try the next source).
@@ -143,7 +184,10 @@ async function resolveClientLayer(
     select: { icp: true, offers: true, toneKeywords: true, antiPatterns: true },
   });
   if (profile) {
-    return { text: composeClientFromProfile(profile), source: 'client-profile' };
+    return {
+      text: composeClientFromProfile(profile),
+      source: 'client-profile',
+    };
   }
 
   // 2. BrandDNA
@@ -161,21 +205,8 @@ async function resolveClientLayer(
     select: { name: true, industry: true, aiGeneratedData: true },
   });
   if (org) {
-    const aiData = org.aiGeneratedData as Record<string, unknown> | null;
-    const location =
-      (aiData?.suburb as string) ??
-      (aiData?.city as string) ??
-      (aiData?.location as string) ??
-      null;
-    const brandVoice =
-      (aiData?.brandVoice as string) ?? (aiData?.tone as string) ?? null;
     return {
-      text: composeClientFromOrgContext({
-        businessName: org.name,
-        industry: org.industry,
-        location,
-        brandVoice,
-      }),
+      text: composeClientFromOrgContext(orgContextFromOrg(org)),
       source: 'org-context',
     };
   }

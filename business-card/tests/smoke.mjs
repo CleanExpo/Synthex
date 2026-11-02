@@ -103,6 +103,10 @@ async function phone(opts = {}) {
     serviceWorkers: 'allow',
     ...opts,
   });
+  // the card saves enquiries and feedback to Supabase: a test never reaches a real project (tests/capture.mjs checks the requests)
+  await ctx.route(/\.supabase\.co\//, r =>
+    r.fulfill({ status: 201, body: '' })
+  );
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(String(e)));

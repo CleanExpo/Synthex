@@ -58,6 +58,11 @@
         "name": "x-admin-key",
         "type": "apiKey"
       },
+      "xDeliveryTokenHeader": {
+        "in": "header",
+        "name": "x-delivery-token",
+        "type": "apiKey"
+      },
       "xIngestTokenHeader": {
         "in": "header",
         "name": "x-ingest-token",
@@ -3065,6 +3070,164 @@
         "x-synthex-schema": "none"
       },
       "x-synthex-route-file": "app/api/admin/platform-stats/route.ts"
+    },
+    "/api/admin/portfolio-calendar": {
+      "get": {
+        "operationId": "get_admin_portfolio_calendar",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "x-synthex-auth": [
+          "@/lib/auth/",
+          "@/lib/security/api-security-checker",
+          "lib/auth/"
+        ],
+        "x-synthex-schema": "none"
+      },
+      "post": {
+        "operationId": "post_admin_portfolio_calendar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "action": {
+                        "const": "preview",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "properties": {
+                      "action": {
+                        "const": "apply",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "action"
+                    ],
+                    "type": "object"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ],
+        "x-synthex-auth": [
+          "@/lib/auth/",
+          "@/lib/security/api-security-checker",
+          "lib/auth/"
+        ],
+        "x-synthex-schema": "resolved"
+      },
+      "x-synthex-route-file": "app/api/admin/portfolio-calendar/route.ts"
     },
     "/api/admin/private-refs": {
       "post": {
@@ -65526,6 +65689,170 @@
         "x-synthex-schema": "none"
       },
       "x-synthex-route-file": "app/api/platforms/[platform]/metrics/route.ts"
+    },
+    "/api/portfolio-calendar/video-delivery": {
+      "post": {
+        "operationId": "post_portfolio_calendar_video_delivery",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "captionDraft": {
+                    "maxLength": 2200,
+                    "type": "string"
+                  },
+                  "durationSeconds": {
+                    "exclusiveMinimum": 0,
+                    "maximum": 180,
+                    "type": "number"
+                  },
+                  "engineRunId": {
+                    "maxLength": 200,
+                    "type": "string"
+                  },
+                  "sdaPassed": {
+                    "const": true,
+                    "type": "boolean"
+                  },
+                  "sdaVerdictId": {
+                    "maxLength": 200,
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "slotKey": {
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}-[a-z0-9-]+-video-\\d+$",
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "format": "uri",
+                    "maxLength": 2000,
+                    "type": "string"
+                  },
+                  "videoUrl": {
+                    "format": "uri",
+                    "maxLength": 2000,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "slotKey",
+                  "videoUrl",
+                  "sdaPassed",
+                  "sdaVerdictId"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invalid request"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Authentication required"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Unprocessable entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Rate limited"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Internal server error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Service unavailable"
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "xDeliveryTokenHeader": []
+          }
+        ],
+        "tags": [
+          "portfolio-calendar"
+        ],
+        "x-synthex-auth": [
+          "@/lib/security/api-security-checker",
+          "header:x-delivery-token"
+        ],
+        "x-synthex-schema": "resolved"
+      },
+      "x-synthex-route-file": "app/api/portfolio-calendar/video-delivery/route.ts"
     },
     "/api/posts/quick-create": {
       "post": {

@@ -1,10 +1,11 @@
 # Synthex Architecture
 
 > Canonical reference for folder layout, layer rules, and engineering conventions.
-> Last updated: 11/07/2026
+> Architecture layout last substantively reviewed: 11/07/2026. Navigation cross-checked: 27/10/2026; this is not a claim every rule below was revalidated.
 
 For route-level auth and API inventory, see [`.planning/ROUTE_REFERENCE.md`](../../.planning/ROUTE_REFERENCE.md).
-For immutable project rules, see [`docs/governance/CONSTITUTION.md`](../docs/governance/CONSTITUTION.md).
+For immutable project rules, see [`docs/governance/CONSTITUTION.md`](../governance/CONSTITUTION.md).
+For the **draft**, evidence-dated portfolio engineering framework, see [`engineering-system/README.md`](../../engineering-system/README.md). This does not override existing repo governance.
 
 ---
 

@@ -42,13 +42,7 @@ import {
 import { Sink, SWEEP, disarmed } from './lib/sink';
 
 const ROOT = path.join(__dirname, '../../../..');
-const PROVIDERS: AIProvider[] = [
-  'openai',
-  'anthropic',
-  'google',
-  'openrouter',
-  'ollama',
-];
+const PROVIDERS: AIProvider[] = ['openai', 'anthropic', 'google', 'openrouter'];
 const EXCLUDE = new Set([
   'lib/ai/model-registry.ts',
   'lib/services/ai/image/registry.ts',

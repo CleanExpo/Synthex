@@ -105,7 +105,12 @@ describe('ClientBrandedContentService — platform fallback (OpenAI-only)', () =
     completeMock.mockResolvedValue({
       id: 'cmpl-1',
       model: 'gpt-4o-mini',
-      choices: [{ message: { role: 'assistant', content: 'Real AI copy.' }, finish_reason: 'stop' }],
+      choices: [
+        {
+          message: { role: 'assistant', content: 'Real AI copy.' },
+          finish_reason: 'stop',
+        },
+      ],
       usage: { prompt_tokens: 10, completion_tokens: 5, total_tokens: 15 },
     });
 
@@ -130,15 +135,17 @@ describe('ClientBrandedContentService — platform fallback (OpenAI-only)', () =
 
   it('throws (not silently degrades) when the provider rejects, so the route fallback fires', async () => {
     completeMock.mockRejectedValue(new Error('upstream 500'));
-    await expect(ClientBrandedContentService.generate(baseRequest)).rejects.toThrow();
+    await expect(
+      ClientBrandedContentService.generate(baseRequest)
+    ).rejects.toThrow();
   });
 
   it('still throws the actionable error when no platform key is configured at all', async () => {
     delete process.env.OPENAI_API_KEY;
     delete process.env.OPENROUTER_API_KEY;
-    await expect(ClientBrandedContentService.generate(baseRequest)).rejects.toThrow(
-      /No AI credentials available/
-    );
+    await expect(
+      ClientBrandedContentService.generate(baseRequest)
+    ).rejects.toThrow(/No AI credentials available/);
     expect(completeMock).not.toHaveBeenCalled();
   });
 });

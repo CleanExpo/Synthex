@@ -52,13 +52,7 @@ export interface TrackCostParams {
   error_code?: string;
 }
 
-const PROVIDERS: AIProvider[] = [
-  'anthropic',
-  'openai',
-  'google',
-  'openrouter',
-  'ollama',
-];
+const PROVIDERS: AIProvider[] = ['anthropic', 'openai', 'google', 'openrouter'];
 
 /** A trailing date stamp: -YYYYMMDD or -YYYY-MM-DD. */
 const DATED_SUFFIX = /-(?:\d{8}|\d{4}-\d{2}-\d{2})$/;

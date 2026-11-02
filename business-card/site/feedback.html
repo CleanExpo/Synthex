@@ -33,6 +33,7 @@ textarea { min-height: 84px; resize: vertical; }
 .btn { display: block; width: 100%; min-height: 48px; font: 600 17px var(--font); border-radius: 14px; border: 0; background: var(--brand); color: var(--brand-ink); padding: 14px; cursor: pointer; text-align: center; text-decoration: none; }
 .btn.ghost { background: none; color: var(--fg); border: 1px solid var(--line); }
 .fine { font-size: 13.5px; color: var(--muted); margin: 0; }
+.count { display: block; text-align: right; }
 pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(in srgb, var(--fg) 5%, var(--bg)); border-radius: 12px; padding: 12px; margin: 0; }
 :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
 </style>
@@ -52,7 +53,8 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
 
       <fieldset><legend>Did saving the contact to your phone work?</legend>
         <div class="opts" data-q="Saving the contact"><label><input type="radio" name="save" value="Yes">Yes</label><label><input type="radio" name="save" value="Partly">Partly</label><label><input type="radio" name="save" value="No">No</label><label><input type="radio" name="save" value="Did not try">Did not try</label></div>
-        <textarea id="save-how" aria-label="What happened when you saved it" placeholder="What happened? (optional)"></textarea>
+        <textarea id="save-how" maxlength="300" data-count aria-label="What happened when you saved it" placeholder="What happened? (optional)"></textarea>
+        <span class="fine count" id="save-how-n"></span>
       </fieldset>
 
       <fieldset><legend>Was the film worth watching?</legend>
@@ -61,11 +63,13 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
 
       <fieldset><legend>Was it clear what the card is and what to do with it?</legend>
         <div class="opts"><label><input type="radio" name="clear" value="Very clear">Very clear</label><label><input type="radio" name="clear" value="Mostly">Mostly</label><label><input type="radio" name="clear" value="Confusing">Confusing</label></div>
-        <textarea id="clear-why" aria-label="What was unclear" placeholder="What was unclear? (optional)"></textarea>
+        <textarea id="clear-why" maxlength="300" data-count aria-label="What was unclear" placeholder="What was unclear? (optional)"></textarea>
+        <span class="fine count" id="clear-why-n"></span>
       </fieldset>
 
       <fieldset><legend>Anything broken, slow or odd?</legend>
-        <textarea id="bugs" aria-label="Anything broken, slow or odd" placeholder="What you tapped and what happened"></textarea>
+        <textarea id="bugs" maxlength="300" data-count aria-label="Anything broken, slow or odd" placeholder="What you tapped and what happened"></textarea>
+        <span class="fine count" id="bugs-n"></span>
       </fieldset>
 
       <fieldset><legend>What would you want on a card for your own business?</legend>
@@ -79,7 +83,8 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
           <label><input type="checkbox" value="Booking">Book a time <span class="soon">coming soon</span></label>
           <label><input type="checkbox" value="Quote request">Request a quote <span class="soon">coming soon</span></label>
         </div>
-        <input type="text" id="mods-other" aria-label="Something else you would want" placeholder="Something else? (optional)">
+        <input type="text" id="mods-other" maxlength="200" data-count aria-label="Something else you would want" placeholder="Something else? (optional)">
+        <span class="fine count" id="mods-other-n"></span>
       </fieldset>
 
       <fieldset><legend>Would you use a card like this?</legend>
@@ -95,12 +100,13 @@ pre { white-space: pre-wrap; font: 14px/1.5 var(--font); background: color-mix(i
         <p class="fine">Filled in from your browser so problems can be reproduced. Change it if it is wrong.</p>
       </fieldset>
 
-      <button class="btn" type="submit">Prepare my feedback</button>
-      <p class="fine">Your answers go into a text message for you to send to Phill. Nothing is sent until you press Send. Want to show a problem? Add a screenshot to that message.</p>
+      <button class="btn" type="submit">Send my feedback</button>
+      <p class="fine">Pressing Send saves your answers for Phill. A text message with the same answers is prepared too, in case saving does not work. Want to show a problem? Add a screenshot to that text.</p>
     </div>
   </form>
 
   <section id="out" hidden style="display:grid;gap:10px">
+    <p class="fine" id="saved" role="status" style="font-weight:600">Sending</p>
     <pre id="out-text"></pre>
     <a class="btn" id="out-sms" href="#">Text it to Phill</a>
     <p class="fine">Your messages app opens with your answers ready (they are copied too). Pick Phill as the recipient, then press Send.</p>
@@ -114,8 +120,25 @@ const ua = navigator.userAgent;
 const browser = /CriOS|Chrome\//.test(ua) && !/Edg\//.test(ua) ? "Chrome" : /Edg\//.test(ua) ? "Edge" : /Firefox|FxiOS/.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
 const device = /iPhone/.test(ua) ? "iPhone" : /iPad/.test(ua) ? "iPad" : /Android/.test(ua) ? "Android phone" : /Mac/.test(ua) ? "Mac" : /Windows/.test(ua) ? "Windows PC" : "Device";
 $("device").value = device + ", " + browser;
+// every free-text box shows how much of its limit is used, and the browser stops typing at the limit, so the
+// text that is sent is the text on screen
+const counters = [...document.querySelectorAll("[data-count]")];
+const showCount = el => { $(el.id + "-n").textContent = el.value.length + " / " + el.maxLength; };
+counters.forEach(el => { el.addEventListener("input", () => showCount(el)); showCount(el); });
+// a value that got past the limit anyway (autofill, a script) is cut to the limit in the box itself, never only in the row
+function fit(el) {
+  if (el.value.length <= el.maxLength) return false;
+  let v = el.value.slice(0, el.maxLength);
+  if (/[\uD800-\uDBFF]$/.test(v)) v = v.slice(0, -1);
+  el.value = v; showCount(el);
+  return true;
+}
+let shortened = false;
 $("fb").addEventListener("submit", e => {
   e.preventDefault();
+  shortened = counters.map(fit).some(Boolean);
+  // a name of only spaces is no name: clear it so the browser asks again
+  if (!$("first").value.trim()) { $("first").value = ""; $("fb").reportValidity(); return; }
   const mods = [...document.querySelectorAll("#mods input:checked")].map(i => i.value);
   if ($("mods-other").value.trim()) mods.push($("mods-other").value.trim());
   const text = [
@@ -134,7 +157,63 @@ $("fb").addEventListener("submit", e => {
   $("out-sms").href = "sms:?&body=" + encodeURIComponent(text);
   $("out").hidden = false;
   $("out").scrollIntoView({ block: "start" });
+  save(text, mods);
 });
+// Same values as "capture" in brand-kits/phill-mcgurk.json (tests/capture.mjs keeps them equal): the publishable
+// key only, so a visitor can add a row and never read one (UNI-3000)
+const CAPTURE = { url: "https://lksfwktwtmyznckodsau.supabase.co", key: "sb_publishable_9MoYN-p4J5ExROt1MkQDBg_B4uYqYWT", slug: "phill-mcgurk" };
+// every body saved or in flight, not just the latest: an edit and resubmit mid-flight must not send a body twice
+const savedBodies = new Set(), sendingBodies = new Map();
+let saveSeq = 0;
+// cut by code points, never inside a character: the database counts characters, not UTF-16 units
+const cut = (s, n) => Array.from(String(s)).slice(0, n).join("");
+const bytes = s => new TextEncoder().encode(s).length;
+function save(text, mods) {
+  // every press takes the next token and only the newest may change the visible line; an older answer still
+  // updates the saved-body history, so an earlier answer set is never posted twice
+  const mine = ++saveSeq;
+  const say = t => { if (mine === saveSeq) $("saved").textContent = t; };
+  const SAVED = "Saved. Thank you, Phill has your answers.";
+  if (!/^https?:$/.test(location.protocol)) { say("Not saved: text it to Phill instead"); return; }
+  const answers = {
+    save: pick("save"), save_how: cut($("save-how").value.trim(), 300), film: pick("film"), clear: pick("clear"),
+    clear_why: cut($("clear-why").value.trim(), 300), bugs: cut($("bugs").value.trim(), 300), want: cut(mods.join(", "), 300),
+    use: pick("use"), pay: pick("pay")
+  };
+  // the table caps answers at 4000 bytes as stored text (which adds a space after every : and ,): stay under 3600
+  // by shortening the longest free-text answer until it fits; the text message keeps every word
+  const free = ["save_how", "clear_why", "bugs", "want"];
+  while (bytes(JSON.stringify(answers)) > 3600) {
+    const k = free.reduce((a, b) => (bytes(answers[b]) > bytes(answers[a]) ? b : a));
+    const chars = Array.from(answers[k]);
+    answers[k] = chars.slice(0, Math.floor(chars.length * 0.9)).join("");
+    shortened = true;
+  }
+  // what is sent is what is on screen: a box that was shortened to fit the table shows the shortened text
+  if (shortened) {
+    [["save_how", "save-how"], ["clear_why", "clear-why"], ["bugs", "bugs"]].forEach(([k, id]) => { $(id).value = answers[k]; showCount($(id)); });
+  }
+  const note = shortened ? " Long answers were shortened to fit; the text message has every word." : "";
+  const body = JSON.stringify({ card_slug: CAPTURE.slug, first_name: cut($("first").value.trim(), 60), answers, device: cut($("device").value.trim(), 200) || null });
+  if (savedBodies.has(body)) { say(SAVED + note); return; }
+  const verdict = ok => say(ok ? SAVED + note : "Not saved: text it to Phill instead");
+  if (sendingBodies.has(body)) { say("Sending"); sendingBodies.get(body).then(verdict); return; }
+  say("Sending");
+  const ctl = typeof AbortController === "function" ? new AbortController() : null;
+  const timer = ctl && setTimeout(() => ctl.abort(), 10000);
+  const p = fetch(CAPTURE.url + "/rest/v1/card_feedback", {
+    method: "POST",
+    headers: { apikey: CAPTURE.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body, signal: ctl ? ctl.signal : undefined, credentials: "omit", referrerPolicy: "no-referrer"
+  }).then(r => r.status === 201, () => false).then(ok => {
+    if (timer) clearTimeout(timer);
+    sendingBodies.delete(body);
+    if (ok) savedBodies.add(body);
+    verdict(ok);
+    return ok;
+  });
+  sendingBodies.set(body, p);
+}
 $("out-sms").addEventListener("click", () => { try { navigator.clipboard.writeText($("out-text").textContent).catch(() => {}); } catch (err) {} });
 $("out-copy").addEventListener("click", async e => {
   try { await navigator.clipboard.writeText($("out-text").textContent); e.target.textContent = "Copied"; }
