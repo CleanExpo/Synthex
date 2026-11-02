@@ -150,4 +150,87 @@ describe('recordLocalOutcome', () => {
     });
     expect(outcomes.map(o => o.organizationId)).toEqual(['org-A', 'org-B']);
   });
+  it('keeps the same dedupeKey from two sources as two signals and two events', async () => {
+    const { client, outcomes } = createClient();
+    await recordLocalOutcome({
+      ...input({ source: 'callrail' }),
+      client: client as any,
+    });
+    await recordLocalOutcome({
+      ...input({ source: 'twilio' }),
+      client: client as any,
+    });
+    expect(outcomes).toHaveLength(2);
+    expect(new Set(outcomes.map(o => o.signalId)).size).toBe(2);
+  });
+
+  it('keeps the same dedupeKey from two locations as two signals and two events', async () => {
+    const { client, outcomes } = createClient();
+    await recordLocalOutcome({
+      ...input({ locationId: 'loc-1' }),
+      client: client as any,
+    });
+    await recordLocalOutcome({
+      ...input({ locationId: 'loc-2' }),
+      client: client as any,
+    });
+    expect(outcomes).toHaveLength(2);
+    expect(new Set(outcomes.map(o => o.signalId)).size).toBe(2);
+  });
+
+  it('namespaces the signal externalId by kind, source and location', async () => {
+    const { client } = createClient();
+    await recordLocalOutcome({ ...input(), client: client as any });
+    expect(
+      client.marketingAgencySignal.upsert.mock.calls[0][0].create.externalId
+    ).toBe('local-outcome:call:callrail:loc-1:call-123');
+  });
+
+  it('locks the signal row with FOR UPDATE inside the transaction before checking for a prior event', async () => {
+    const { client } = createClient();
+    const order: string[] = [];
+    let inTx = false;
+    client.$transaction.mockImplementation(async (cb: any) => {
+      inTx = true;
+      try {
+        return await cb(client);
+      } finally {
+        inTx = false;
+      }
+    });
+    (client as any).$queryRaw = jest.fn(
+      async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        order.push(
+          `lock:${inTx}:${strings.join('?').replace(/\s+/g, ' ')}:${values[0]}`
+        );
+        return [];
+      }
+    );
+    client.marketingAgencyOutcomeEvent.findMany.mockImplementationOnce(
+      async () => {
+        order.push('check');
+        return [];
+      }
+    );
+    await recordLocalOutcome({ ...input(), client: client as any });
+    expect(order).toEqual([
+      'lock:true:SELECT id FROM marketing_agency_signals WHERE id = ? FOR UPDATE:sig-local-outcome:call:callrail:loc-1:call-123',
+      'check',
+    ]);
+  });
+
+  it('works on an interactive-transaction client that has no $transaction', async () => {
+    const { client, outcomes } = createClient();
+    const { $transaction: _t, ...txClient } = client;
+    const first = await recordLocalOutcome({
+      ...input(),
+      client: txClient as any,
+    });
+    const second = await recordLocalOutcome({
+      ...input(),
+      client: txClient as any,
+    });
+    expect([first.status, second.status]).toEqual(['recorded', 'duplicate']);
+    expect(outcomes).toHaveLength(1);
+  });
 });

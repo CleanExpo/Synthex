@@ -4,8 +4,11 @@
  * location travels in outcome metadata (no schema change).
  *
  * organizationId is the caller's verified org — never derived from payload here.
- * Dedupe: one signal per captured event (externalId from the provider's own
- * event id), at most one outcome per (org, signal, eventType).
+ * Dedupe: one signal per captured event, namespaced by kind, source and
+ * location so provider event ids cannot collide; at most one outcome per
+ * (org, signal, eventType). The check and the create run in one transaction
+ * with the signal row locked, so concurrent replays serialise. (A unique index
+ * on the outcome table is a founder-gated schema follow-up.)
  */
 import { prisma } from '@/lib/prisma';
 import { recordMarketingAgencyOutcome } from '@/lib/marketing-agency/intelligence/signal-persistence';
@@ -35,6 +38,12 @@ type LocalOutcomeClient = Omit<
   PersistenceClient,
   'marketingAgencyOutcomeEvent'
 > & {
+  /** Absent on a Prisma interactive-transaction client. */
+  $transaction?: PersistenceClient['$transaction'];
+  $queryRaw?: (
+    strings: TemplateStringsArray,
+    ...values: unknown[]
+  ) => Promise<unknown>;
   marketingAgencyOutcomeEvent: PersistenceClient['marketingAgencyOutcomeEvent'] & {
     findMany: (args: unknown) => Promise<unknown[]>;
   };
@@ -65,10 +74,24 @@ export interface RecordLocalOutcomeResult {
 export async function recordLocalOutcome(
   input: RecordLocalOutcomeInput
 ): Promise<RecordLocalOutcomeResult> {
-  const client = input.client ?? (prisma as unknown as LocalOutcomeClient);
+  const base = input.client ?? (prisma as unknown as LocalOutcomeClient);
+  if (typeof base.$transaction !== 'function') return writeOutcome(base, input);
+  return base.$transaction(tx =>
+    writeOutcome(tx as unknown as LocalOutcomeClient, input)
+  );
+}
+
+async function writeOutcome(
+  tx: LocalOutcomeClient,
+  input: RecordLocalOutcomeInput
+): Promise<RecordLocalOutcomeResult> {
+  // recordMarketingAgencyOutcome opens its own transaction; fold it into ours.
+  const client = Object.assign(Object.create(tx), {
+    $transaction: <T>(fn: (c: unknown) => Promise<T>) => fn(tx),
+  }) as LocalOutcomeClient & PersistenceClient;
   const { client: _client, ...raw } = input;
   const eventType = LOCAL_OUTCOME_EVENT_TYPE[input.kind];
-  const externalId = `local-outcome:${input.kind}:${input.dedupeKey}`;
+  const externalId = `local-outcome:${input.kind}:${input.source}:${input.locationId}:${input.dedupeKey}`;
   const capturedAt = input.recordedAt ?? new Date();
   const uniqueKey = {
     organizationId_externalId: {
@@ -120,6 +143,11 @@ export async function recordLocalOutcome(
   })) as { id: string } | null | undefined;
   if (!signal) {
     throw new Error(`Local outcome signal ${externalId} missing after upsert.`);
+  }
+
+  // Serialise concurrent replays of this event on the signal row.
+  if (tx.$queryRaw) {
+    await tx.$queryRaw`SELECT id FROM marketing_agency_signals WHERE id = ${signal.id} FOR UPDATE`;
   }
 
   const existing = await client.marketingAgencyOutcomeEvent.findMany({
