@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const lead = await prisma.lead.create({
+    const leadArgs = {
       data: {
         organizationId: body.organizationId,
         contactMethod: body.contactMethod,
@@ -170,29 +170,51 @@ export async function POST(request: NextRequest) {
         revenueEstimateAud: body.revenueEstimateAud,
       },
       select: { id: true, stage: true, occurredAt: true },
-    });
+    };
 
-    let outcome: { status: string; eventType: string } | null = null;
+    type Outcome =
+      | { status: string; eventType: string }
+      | { status: 'skipped'; reason: string }
+      | null;
+    let outcome: Outcome = null;
+    let lead: Awaited<ReturnType<typeof prisma.lead.create<typeof leadArgs>>>;
+
     const kind = OUTCOME_KIND[body.contactMethod];
+    // A supplied locationId is only trusted when it belongs to this organisation.
+    let locationId: string | null = null;
     if (kind) {
+      const supplied = nonEmptyString(body.rawPayload.locationId);
+      const owned = await prisma.gBPLocation.findFirst({
+        where: supplied
+          ? { id: supplied, organizationId: body.organizationId }
+          : { organizationId: body.organizationId, isPrimary: true },
+        select: { id: true },
+      });
+      locationId = owned?.id ?? null;
+      if (!locationId) {
+        outcome = {
+          status: 'skipped',
+          reason: supplied
+            ? 'location_not_in_organisation'
+            : 'location_unresolved',
+        };
+        logger.warn('[leads] no usable location for outcome; lead kept', {
+          organizationId: body.organizationId,
+          reason: outcome.reason,
+        });
+      }
+    }
+
+    if (kind && locationId) {
+      const resolvedLocationId = locationId;
       try {
-        const locationId =
-          nonEmptyString(body.rawPayload.locationId) ??
-          (
-            await prisma.gBPLocation.findFirst({
-              where: { organizationId: body.organizationId, isPrimary: true },
-              select: { id: true },
-            })
-          )?.id;
-        if (!locationId) {
-          logger.warn('[leads] no location for outcome; lead kept', {
-            organizationId: body.organizationId,
-            leadId: lead.id,
-          });
-        } else {
+        // Lead and outcome commit together: a failed outcome rolls the lead back
+        // so the provider's retry is the only copy and the replay dedupes.
+        const written = await prisma.$transaction(async tx => {
+          const created = await tx.lead.create(leadArgs);
           const result = await recordLocalOutcome({
             organizationId: body.organizationId,
-            locationId,
+            locationId: resolvedLocationId,
             kind,
             dedupeKey:
               nonEmptyString(body.rawPayload.externalId) ??
@@ -207,19 +229,31 @@ export async function POST(request: NextRequest) {
             metadata: {
               occurredAt: body.occurredAt,
               capturedFrom: body.capturedFrom,
-              leadId: lead.id,
+              leadId: created.id,
             },
             recordedAt: new Date(body.occurredAt),
+            client: tx as unknown as NonNullable<
+              Parameters<typeof recordLocalOutcome>[0]['client']
+            >,
           });
-          outcome = { status: result.status, eventType: result.eventType };
-        }
+          return { created, result };
+        });
+        lead = written.created;
+        outcome = {
+          status: written.result.status,
+          eventType: written.result.eventType,
+        };
       } catch (err) {
-        // The lead is already stored; an outcome failure must not 5xx a signed delivery.
-        logger.warn('[leads] outcome write failed; lead kept', {
-          leadId: lead.id,
+        logger.error('[leads] outcome write failed; lead rolled back', {
           error: err instanceof Error ? err.message : String(err),
         });
+        return NextResponse.json(
+          { error: 'Outcome not recorded, retry', retryable: true },
+          { status: 503, headers: { 'Retry-After': '30' } }
+        );
       }
+    } else {
+      lead = await prisma.lead.create(leadArgs);
     }
 
     return NextResponse.json({ ok: true, lead, outcome }, { status: 200 });

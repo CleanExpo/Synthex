@@ -68,6 +68,15 @@ const mockUserFindUnique = jest.fn();
 const mockOrgFindUnique = jest.fn();
 const mockGbpFindFirst = jest.fn();
 const mockRecordLocalOutcome = jest.fn();
+let txState = { leadCreatedInTx: false, rolledBack: false };
+const mockTx = {
+  lead: {
+    create: (...args: unknown[]) => {
+      txState.leadCreatedInTx = true;
+      return mockLeadCreate(...args);
+    },
+  },
+};
 
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,
@@ -85,6 +94,14 @@ jest.mock('@/lib/prisma', () => ({
     },
     gBPLocation: {
       findFirst: (...args: unknown[]) => mockGbpFindFirst(...args),
+    },
+    $transaction: async (fn: (tx: unknown) => Promise<unknown>) => {
+      try {
+        return await fn(mockTx);
+      } catch (err) {
+        txState.rolledBack = true;
+        throw err;
+      }
     },
   },
 }));
@@ -137,6 +154,7 @@ describe('POST /api/leads', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    txState = { leadCreatedInTx: false, rolledBack: false };
     process.env.LEAD_CAPTURE_HMAC_SECRET = SECRET;
     mockOrgFindUnique.mockResolvedValue({ id: 'org-1' });
     mockCheckRateLimit.mockResolvedValue({ ok: true });
@@ -145,7 +163,10 @@ describe('POST /api/leads', () => {
       stage: 'enquiry',
       occurredAt: new Date(validBody.occurredAt),
     });
-    mockGbpFindFirst.mockResolvedValue({ id: 'loc-primary' });
+    mockGbpFindFirst.mockImplementation(
+      async ({ where }: { where: { id?: string; isPrimary?: boolean } }) =>
+        where.id ? { id: where.id } : { id: 'loc-primary' }
+    );
     mockRecordLocalOutcome.mockResolvedValue({
       status: 'recorded',
       outcomeId: 'out-1',
@@ -357,20 +378,61 @@ describe('POST /api/leads', () => {
       );
     });
 
-    it('keeps the lead and skips the outcome when no location exists', async () => {
+    it('skips explicitly and keeps the lead when no location can be resolved', async () => {
       mockGbpFindFirst.mockResolvedValue(null);
       const res = await deliver({ ...callBody, rawPayload: {} });
       expect(res.status).toBe(200);
       expect(mockLeadCreate).toHaveBeenCalledTimes(1);
       expect(mockRecordLocalOutcome).not.toHaveBeenCalled();
-      expect((await res.json()).outcome).toBeNull();
+      expect((await res.json()).outcome).toEqual({
+        status: 'skipped',
+        reason: 'location_unresolved',
+      });
     });
 
-    it('keeps the lead and returns 200 when the outcome write throws', async () => {
+    it("never writes an outcome for another organisation's location id", async () => {
+      mockGbpFindFirst.mockImplementation(
+        async ({
+          where,
+        }: {
+          where: { id?: string; organizationId: string };
+        }) =>
+          where.id === 'loc-of-org-B' && where.organizationId === 'org-1'
+            ? null
+            : { id: 'loc-primary' }
+      );
+      const res = await deliver({
+        ...callBody,
+        rawPayload: { externalId: 'c9', locationId: 'loc-of-org-B' },
+      });
+      expect(mockGbpFindFirst).toHaveBeenCalledWith({
+        where: { id: 'loc-of-org-B', organizationId: 'org-1' },
+        select: { id: true },
+      });
+      expect(mockRecordLocalOutcome).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect((await res.json()).outcome).toEqual({
+        status: 'skipped',
+        reason: 'location_not_in_organisation',
+      });
+    });
+
+    it('answers 503 retryable and rolls the lead back when the outcome write throws', async () => {
       mockRecordLocalOutcome.mockRejectedValue(new Error('db down'));
       const res = await deliver(callBody);
-      expect(res.status).toBe(200);
-      expect((await res.json()).outcome).toBeNull();
+      expect(res.status).toBe(503);
+      expect(res.headers.get('Retry-After')).toBe('30');
+      expect(await res.json()).toEqual({
+        error: 'Outcome not recorded, retry',
+        retryable: true,
+      });
+      expect(txState).toEqual({ leadCreatedInTx: true, rolledBack: true });
+    });
+
+    it('creates the lead and the outcome in one transaction and hands the writer the tx', async () => {
+      await deliver(callBody);
+      expect(txState).toEqual({ leadCreatedInTx: true, rolledBack: false });
+      expect(mockRecordLocalOutcome.mock.calls[0][0].client).toBe(mockTx);
     });
 
     it('writes no outcome for a form submission', async () => {

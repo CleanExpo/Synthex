@@ -130,7 +130,7 @@ async function seedSynthetic() {
     // Bypass the writer's dedupe: same signal, same eventType, recorded a second time.
     await persistence.recordMarketingAgencyOutcome({
       organizationId: org,
-      signalExternalId: 'local-outcome:call:call-1',
+      signalExternalId: `local-outcome:call:call-tool-seed:${LOCATION}:call-1`,
       eventType: 'local_call',
       metadata: { locationId: LOCATION },
     });
