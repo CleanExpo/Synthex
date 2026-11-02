@@ -49,6 +49,10 @@ export interface NAPAuditResult {
   locationName: string | null;
   mismatches: NAPMismatch[];
   allMatch: boolean;
+  /** Present only when drift was found: whether the outcome write landed. */
+  outcomeRecorded?: boolean;
+  /** Message-free reason code when outcomeRecorded is false. */
+  outcomeError?: 'outcome_write_failed';
 }
 
 // ---------------------------------------------------------------------------
@@ -187,6 +191,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  let outcomeRecorded: boolean | undefined;
   if (mismatches.length > 0) {
     const fingerprint = createHash('sha256')
       .update(
@@ -215,14 +220,34 @@ export async function GET(request: NextRequest) {
         observedValue: mismatches.map(m => m.field).join(','),
         metadata: { mismatches },
       });
+      outcomeRecorded = true;
     } catch (err) {
+      outcomeRecorded = false;
       logger.error('Failed to record listing drift outcome', { error: err });
     }
   }
 
-  return NextResponse.json({
+  const result = {
     locationName: canonicalName,
     mismatches,
     allMatch: mismatches.length === 0,
-  } satisfies NAPAuditResult);
+    ...(outcomeRecorded === undefined
+      ? {}
+      : outcomeRecorded
+        ? { outcomeRecorded }
+        : {
+            outcomeRecorded,
+            outcomeError: 'outcome_write_failed' as const,
+          }),
+  } satisfies NAPAuditResult;
+
+  // The audit is re-runnable and the writer dedupes, so a failed outcome write
+  // is a retryable 503 rather than a silent 200.
+  if (outcomeRecorded === false) {
+    return NextResponse.json(result, {
+      status: 503,
+      headers: { 'Retry-After': '30' },
+    });
+  }
+  return NextResponse.json(result);
 }

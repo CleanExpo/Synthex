@@ -442,6 +442,69 @@ describe('POST /api/leads', () => {
       expect((await res.json()).outcome).toBeNull();
     });
 
+    describe('K11: call and booking intake stores event metadata only', () => {
+      it.each([
+        'transcript',
+        'recordingUrl',
+        'audio',
+        'Transcription',
+        'RECORDING',
+      ])(
+        'rejects 400 and writes nothing when the payload carries %s',
+        async key => {
+          const res = await deliver({
+            ...callBody,
+            rawPayload: { externalId: 'c1', [key]: 'secret words' },
+          });
+          expect(res.status).toBe(400);
+          expect(await res.json()).toEqual({
+            error: 'Call audio and transcripts are not accepted',
+          });
+          expect(mockLeadCreate).not.toHaveBeenCalled();
+          expect(mockRecordLocalOutcome).not.toHaveBeenCalled();
+        }
+      );
+
+      it('rejects a transcript nested one level down', async () => {
+        const res = await deliver({
+          ...callBody,
+          contactMethod: 'booking',
+          rawPayload: { externalId: 'c1', call: { transcript: 'hi' } },
+        });
+        expect(res.status).toBe(400);
+        expect(mockLeadCreate).not.toHaveBeenCalled();
+      });
+
+      it('stores only allowlisted keys for a call', async () => {
+        const res = await deliver({
+          ...callBody,
+          rawPayload: {
+            externalId: 'call-77',
+            locationId: 'loc-9',
+            gbpLocation: 'locations/1',
+            durationSeconds: 42,
+            callerName: 'Alice Smith',
+            callerNumber: '+61400000000',
+            notes: { free: 'text' },
+          },
+        });
+        expect(res.status).toBe(200);
+        expect(mockLeadCreate.mock.calls[0][0].data.rawPayload).toEqual({
+          externalId: 'call-77',
+          locationId: 'loc-9',
+          gbpLocation: 'locations/1',
+          durationSeconds: 42,
+        });
+      });
+
+      it('leaves form submissions untouched', async () => {
+        await deliver(validBody);
+        expect(mockLeadCreate.mock.calls[0][0].data.rawPayload).toEqual(
+          validBody.rawPayload
+        );
+      });
+    });
+
     it.each([
       ['direction_request', 'direction'],
       ['booking', 'booking'],
