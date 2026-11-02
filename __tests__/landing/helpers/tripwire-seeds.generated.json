@@ -2678,6 +2678,11 @@
       "firstSeen": "base"
     },
     {
+      "text": "direction sha256",
+      "file": "app/api/leads/route.ts",
+      "firstSeen": "b3d46359"
+    },
+    {
       "text": "discount",
       "file": "lib/remotion/educational-content.ts",
       "firstSeen": "base"
