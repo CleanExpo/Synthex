@@ -305,3 +305,5 @@
 {"ts":"2026-11-02T09:01:40.993Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-11-02T09:30:56.317Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-11-02T10:01:37.149Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
+{"ts":"2026-11-02T18:07:30.919Z","kind":"hold","phase":"P6","cause":"review non-convergent (r1 4 P1, r2 7 P1); 3 findings founder-gated: per-org signing credentials (K2), Lead unique key migration, reject location-less signed leads; branch feature/fleet-p6-outcomes gated 7/7, awaiting founder","source":"orchestrator"}
+{"ts":"2026-11-02T18:07:30.920Z","kind":"cost","phase":"P6","usd":0,"source":"orchestrator-estimate","note":"resume run: 4 Sonnet builder threads + 2 Codex review rounds on subscriptions; no metered spend"}
