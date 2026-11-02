@@ -1,0 +1,157 @@
+{
+  "schema": 2,
+  "implementation_agent": "claude",
+  "reviewer_agent": "codex",
+  "reviewer_session_id": "codex-P6-91b7052-20261103",
+  "base_sha": "7af8c0bef9b7a9877070d04b74d18f1b40c02629",
+  "head_sha": "91b7052ecfcfab46c8067bf10d8411d4ae2ba8c7",
+  "verdict": "FAIL",
+  "blocking_findings": [
+    {
+      "severity": "P1",
+      "title": "Signed sender can choose another tenant for new outcome",
+      "file": "app/api/leads/route.ts",
+      "line": 216,
+      "quoted_line": "            organizationId: body.organizationId,",
+      "reproduction": "The route verifies one global LEAD_CAPTURE_HMAC_SECRET, then accepts organizationId from the signed body. The new outcome writer is passed that body value and only checks that the supplied location belongs to that same chosen org. A holder of the shared signing secret can submit a valid call for any existing org and create its lead and outcome there, contrary to K2.",
+      "suggested_fix": "Bind each signing credential to one organization on the server and derive the outcome and lead organization from that credential; reject a conflicting body organization."
+    },
+    {
+      "severity": "P1",
+      "title": "Replay creates another Lead for the same call",
+      "file": "app/api/leads/route.ts",
+      "line": 214,
+      "quoted_line": "          const created = await tx.lead.create(leadArgs);",
+      "reproduction": "On every delivery this transaction creates a new Lead before recordLocalOutcome reports duplicate. Replaying one signed externalId therefore leaves two Lead rows while only the outcome is deduplicated; the J7 known-gap note explicitly included the duplicate Lead case.",
+      "suggested_fix": "Add a unique org/provider/event key to Lead or an ingestion ledger and return the existing lead on replay within the transaction."
+    },
+    {
+      "severity": "P1",
+      "title": "Call and booking accepted without an outcome",
+      "file": "app/api/leads/route.ts",
+      "line": 256,
+      "quoted_line": "      lead = await prisma.lead.create(leadArgs);",
+      "reproduction": "For phone_call, booking, or direction_request with no primary GBP location, or a supplied location from another org, kind is set but locationId is null. This branch persists the lead and line 259 returns 200 ok with outcome.status skipped, so the sender will not retry and M4/M5 loses the event.",
+      "suggested_fix": "Reject with an explicit non-2xx status until a verified location can be resolved, or persist a recoverable pending outcome and report that state honestly."
+    },
+    {
+      "severity": "P1",
+      "title": "Signed call payload can store audio or transcripts",
+      "file": "app/api/leads/route.ts",
+      "line": 160,
+      "quoted_line": "    const leadArgs = {",
+      "reproduction": "The P6 intake still accepts rawPayload as an unrestricted record and leadArgs stores body.rawPayload verbatim in Lead.rawPayload. A signed call/booking body containing audio, recording URL, or transcript fields is persisted despite K11 requiring event metadata only and no call audio or transcripts. New P6 outcome handling does not sanitize this existing storage path.",
+      "suggested_fix": "Allowlist metadata fields for call and booking intake before the Lead write; reject or strip audio, recording, and transcript content and add a negative persistence test."
+    },
+    {
+      "severity": "P1",
+      "title": "Review outcome failure is reported as successful sync",
+      "file": "app/api/cron/gbp-monitor/route.ts",
+      "line": 375,
+      "quoted_line": "          }).catch((err: unknown) =>",
+      "reproduction": "A failed recordLocalOutcome is reduced to a warning after GBPReview.upsert and reviewsSynced increments. The cron then returns success:true and failed:0, so a lost review outcome is invisible to its caller and will not be retried as a failed job.",
+      "suggested_fix": "Track outcome failures in the cron result and return a failing or explicitly partial status that triggers a retry or durable recovery."
+    },
+    {
+      "severity": "P1",
+      "title": "Listing drift outcome failure is hidden behind 200",
+      "file": "app/api/google-business/nap-audit/route.ts",
+      "line": 218,
+      "quoted_line": "    } catch (err) {",
+      "reproduction": "When drift is detected but recordLocalOutcome throws, this catch only logs. The route still returns a normal 200 NAPAuditResult with mismatches, and its new unit test asserts this behavior, so the P6 outcome write can be silently lost.",
+      "suggested_fix": "Surface outcomeRecorded:false with an unavailable/partial contract and non-2xx status where needed, or queue a durable retry; test the failure response."
+    },
+    {
+      "severity": "P1",
+      "title": "Rank outcome failure is hidden behind snapshot success",
+      "file": "lib/seo/rank-tracker.ts",
+      "line": 196,
+      "quoted_line": "        } catch (err) {",
+      "reproduction": "The new outcome write runs after keywordRankSnapshot.upsert and snapshotCount++. This catch logs and continues, so takeRankSnapshot returns a successful count even when no rank outcome was recorded; the cron cannot detect or retry the missing event.",
+      "suggested_fix": "Return an explicit partial/failure result or durable retry record and include outcome success in the cron status."
+    }
+  ],
+  "checklist": [
+    {
+      "id": "coverage-ledger",
+      "verdict": "PASS",
+      "evidence": "git diff --name-only lists 24 changed paths; 23 reviewed and the JSONL ledger is excluded once with its reason."
+    },
+    {
+      "id": "plan-conformance",
+      "verdict": "N/A",
+      "evidence": "Compared P6 M4/M5, J7 and K2/K11 against the design and AM-1..AM-7; J7 passes but the findings leave P6 fidelity unproved.",
+      "reason": "Blocking tenant, replay, privacy, and missing-outcome paths remain."
+    },
+    {
+      "id": "weakened-checks",
+      "verdict": "N/A",
+      "evidence": "J7 known-gaps becomes empty and the deterministic family reports 160 PASS, 0 KNOWN_GAP; the detector does not assert Lead dedupe or call-payload filtering.",
+      "reason": "Retired coverage does not detect the blocking paths above."
+    },
+    {
+      "id": "mutation-control",
+      "verdict": "N/A",
+      "evidence": "No source mutant was planted; J7 built-in controls caught wrong org, missing location and double-counted outcomes (3/3).",
+      "reason": "No separate mutation was run on this review checkout."
+    },
+    {
+      "id": "guard-falsification",
+      "verdict": "PASS",
+      "evidence": "npm run jev:det -- --family J7 exited 0: 160/160 PASS, controls 3/3; git diff --check exited 0."
+    },
+    {
+      "id": "clean-environment-suite",
+      "verdict": "N/A",
+      "evidence": "After npm ci --offline --ignore-scripts, J7 exited 0. call-tool exited 2 because generated Prisma client lacked Prisma export; prisma generate hit sandbox EPERM at ~/.cache/prisma.",
+      "reason": "The second required definition-of-done command did not reach its assertion."
+    },
+    {
+      "id": "blast-radius",
+      "verdict": "N/A",
+      "evidence": "Reviewed lead, GBP cron, NAP audit, rank snapshot, outcome writer, MCP reader, harness and manifest changes; identified seven P1 effects.",
+      "reason": "Blocking paths prevent a clean blast-radius discharge."
+    },
+    {
+      "id": "outbound-actions",
+      "verdict": "PASS",
+      "evidence": "Review ran local offline commands only; no push, deploy, client message, live provider call, or production write was made."
+    }
+  ],
+  "coverage": {
+    "reviewed": [
+      "BACKLOG.md",
+      "DECISIONS.md",
+      "__tests__/landing/helpers/tripwire-seeds.generated.json",
+      "app/api/cron/gbp-monitor/route.ts",
+      "app/api/google-business/nap-audit/route.ts",
+      "app/api/leads/route.ts",
+      "eslint.config.js",
+      "lib/marketing-agency/outcomes/local-outcome-writer.ts",
+      "lib/seo/rank-tracker.ts",
+      "lib/services/ai/studio-tools/performance-tools.ts",
+      "release-receipts/manifests/P6-units.json",
+      "release-receipts/manifests/policy-hash.json",
+      "scripts/mcp/call-tool.mjs",
+      "scripts/mcp/prisma-memory-hook.mjs",
+      "scripts/mcp/prisma-memory.mjs",
+      "tests/eval/jev/known-gaps/J7.json",
+      "tests/unit/api/cron-gbp-monitor-outcomes.test.ts",
+      "tests/unit/api/leads.test.ts",
+      "tests/unit/api/nap-audit-outcomes.test.ts",
+      "tests/unit/marketing-agency/local-outcome-writer.test.ts",
+      "tests/unit/mcp/structured-content.test.ts",
+      "tests/unit/scripts/call-tool.test.ts",
+      "tests/unit/seo/rank-tracker-outcomes.test.ts"
+    ],
+    "not_reviewed": [
+      {
+        "path": "release-receipts/ledger/fleet.jsonl",
+        "reason": "Review diff coverage excludes *.jsonl files; release-receipts/ledger/fleet.jsonl was not exposed for content review."
+      }
+    ]
+  },
+  "reviewed_at": "2026-11-02T17:16:56.516979+00:00",
+  "head": "91b7052ecfcfab46c8067bf10d8411d4ae2ba8c7",
+  "lane": "codex"
+}
