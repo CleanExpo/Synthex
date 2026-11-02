@@ -108,13 +108,24 @@ describe('nap-audit → listing drift outcomes', () => {
     expect(mockRecord).not.toHaveBeenCalled();
   });
 
-  it('keeps the audit response and status when the writer fails', async () => {
+  it('answers 503 with Retry-After and outcomeRecorded:false when the writer fails', async () => {
     seed('Acme Plumbing Pty Ltd');
     mockRecord.mockRejectedValueOnce(new Error('db down'));
     const res = await call();
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
+    expect(res.headers.get('Retry-After')).toBe('30');
     const body = await res.json();
     expect(body.allMatch).toBe(false);
     expect(body.mismatches).toHaveLength(1);
+    expect(body.outcomeRecorded).toBe(false);
+    expect(body.outcomeError).toBe('outcome_write_failed');
+    expect(JSON.stringify(body)).not.toContain('db down');
+  });
+
+  it('reports outcomeRecorded:true on a recorded drift and omits it when nothing drifted', async () => {
+    seed('Acme Plumbing Pty Ltd');
+    expect((await (await call()).json()).outcomeRecorded).toBe(true);
+    seed('Acme Plumbing');
+    expect((await (await call()).json()).outcomeRecorded).toBeUndefined();
   });
 });

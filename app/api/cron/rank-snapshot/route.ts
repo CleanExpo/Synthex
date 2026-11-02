@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
   let processed = 0;
   let totalSnapshots = 0;
   let errors = 0;
+  let outcomeFailures = 0;
 
   try {
     // Find all orgs that have active keyword targets
@@ -40,8 +41,12 @@ export async function GET(request: NextRequest) {
 
     for (const { organizationId } of orgs) {
       try {
-        const snapshotCount = await takeRankSnapshot(organizationId);
-        totalSnapshots += snapshotCount;
+        const result = await takeRankSnapshot(organizationId);
+        totalSnapshots += result.snapshotCount;
+        if (result.outcomeFailures > 0) {
+          errors += result.outcomeFailures;
+          outcomeFailures += result.outcomeFailures;
+        }
         processed++;
         // Wire rank snapshots into ContentTopicSuggestion (positions 6–20, ≥50 impressions)
         upsertRankOpportunities(organizationId).catch(() => {});
@@ -60,13 +65,15 @@ export async function GET(request: NextRequest) {
       processed,
       totalSnapshots,
       errors,
+      outcomeFailures,
     });
 
     return NextResponse.json({
-      success: true,
+      success: errors === 0,
       processed,
       totalSnapshots,
       errors,
+      outcomeFailures,
     });
   } catch (error) {
     logger.error('rank-snapshot:fatal', {

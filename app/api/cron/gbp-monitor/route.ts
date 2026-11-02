@@ -217,6 +217,8 @@ export async function GET(request: NextRequest) {
   let snapshotted = 0;
   let reviewsSynced = 0;
   let failed = 0;
+  let outcomeFailures = 0;
+  const outcomeFailureLocationIds = new Set<string>();
 
   for (const location of locations) {
     try {
@@ -357,27 +359,32 @@ export async function GET(request: NextRequest) {
                 : null,
             },
           });
-          reviewsSynced++;
 
           // M4: each review becomes one replay-safe local outcome event. A
-          // writer failure is logged and never fails the location or the cron.
+          // writer failure is counted and reported (success:false) so the cron
+          // caller can retry; that review is not counted as synced.
           const reviewTime = new Date(review.createTime);
-          await recordLocalOutcome({
-            organizationId: location.organizationId,
-            locationId: location.id,
-            kind: 'review',
-            dedupeKey: review.name,
-            source: 'gbp-monitor',
-            attribution: { source: 'google', medium: 'gbp' },
-            observedValue: String(starRatingToNumber(review.starRating)),
-            metadata: { gbpReviewId: review.name, reviewTime },
-            recordedAt: reviewTime,
-          }).catch((err: unknown) =>
+          try {
+            await recordLocalOutcome({
+              organizationId: location.organizationId,
+              locationId: location.id,
+              kind: 'review',
+              dedupeKey: review.name,
+              source: 'gbp-monitor',
+              attribution: { source: 'google', medium: 'gbp' },
+              observedValue: String(starRatingToNumber(review.starRating)),
+              metadata: { gbpReviewId: review.name, reviewTime },
+              recordedAt: reviewTime,
+            });
+            reviewsSynced++;
+          } catch (err: unknown) {
+            outcomeFailures++;
+            outcomeFailureLocationIds.add(location.id);
             logger.warn('cron:gbp-monitor:review-outcome-error', {
               locationId: location.id,
               error: err instanceof Error ? err.message : String(err),
-            })
-          );
+            });
+          }
         }
 
         // Mark any pending review requests as completed if new reviews arrived
@@ -446,14 +453,17 @@ export async function GET(request: NextRequest) {
     snapshotted,
     reviewsSynced,
     failed,
+    outcomeFailures,
   });
 
   return NextResponse.json({
-    success: true,
+    success: outcomeFailures === 0,
     duration,
     totalLocations: locations.length,
     snapshotted,
     reviewsSynced,
     failed,
+    outcomeFailures,
+    outcomeFailureLocationIds: [...outcomeFailureLocationIds],
   });
 }

@@ -135,12 +135,22 @@ describe('GET /api/cron/gbp-monitor review outcomes', () => {
     expect(state.outcomes).toHaveLength(1);
   });
 
-  it('does not fail the location or the cron when the outcome writer throws', async () => {
+  it('reports a failed outcome write instead of counting the review as synced', async () => {
     state.failWriter = true;
     const res = await run();
     const body = await res.json();
-    expect(body.success).toBe(true);
+    expect(body.success).toBe(false);
+    expect(body.outcomeFailures).toBe(1);
+    expect(body.outcomeFailureLocationIds).toEqual(['loc-row-1']);
+    expect(body.reviewsSynced).toBe(0);
     expect(body.failed).toBe(0);
+    expect(state.outcomes).toHaveLength(0);
+  });
+
+  it('reports clean totals when every outcome is recorded', async () => {
+    const body = await (await run()).json();
+    expect(body.success).toBe(true);
+    expect(body.outcomeFailures).toBe(0);
     expect(body.reviewsSynced).toBe(1);
   });
 });

@@ -62,6 +62,45 @@ const OUTCOME_KIND: Partial<
   direction_request: 'direction',
 };
 
+// K11: call/booking intake persists event metadata only, never media or text.
+const MEDIA_KEY = /audio|recording|transcript|voicemail/i;
+const METADATA_KEYS = new Set([
+  'externalId',
+  'locationId',
+  'gbpLocation',
+  'callerNumberHash',
+  'callerHash',
+  'durationSeconds',
+  'outcome',
+  'status',
+  'statusCode',
+  'providerEventId',
+  'eventId',
+  'timestamp',
+  'startedAt',
+  'endedAt',
+]);
+
+function carriesMedia(payload: Record<string, unknown>): boolean {
+  return Object.entries(payload).some(
+    ([key, value]) =>
+      MEDIA_KEY.test(key) ||
+      (value !== null &&
+        typeof value === 'object' &&
+        !Array.isArray(value) &&
+        Object.keys(value).some(k => MEDIA_KEY.test(k)))
+  );
+}
+
+function metadataOnly(payload: Record<string, unknown>): object {
+  return Object.fromEntries(
+    Object.entries(payload).filter(
+      ([key, value]) =>
+        METADATA_KEYS.has(key) && (value === null || typeof value !== 'object')
+    )
+  );
+}
+
 function nonEmptyString(value: unknown): string | null {
   return typeof value === 'string' && value.length > 0 ? value : null;
 }
@@ -157,6 +196,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const kind = OUTCOME_KIND[body.contactMethod];
+    if (kind && carriesMedia(body.rawPayload)) {
+      return NextResponse.json(
+        { error: 'Call audio and transcripts are not accepted' },
+        { status: 400 }
+      );
+    }
+
     const leadArgs = {
       data: {
         organizationId: body.organizationId,
@@ -166,7 +213,9 @@ export async function POST(request: NextRequest) {
         campaign: body.campaign,
         occurredAt: new Date(body.occurredAt),
         capturedFrom: body.capturedFrom,
-        rawPayload: body.rawPayload as object,
+        rawPayload: kind
+          ? metadataOnly(body.rawPayload)
+          : (body.rawPayload as object),
         revenueEstimateAud: body.revenueEstimateAud,
       },
       select: { id: true, stage: true, occurredAt: true },
@@ -179,7 +228,6 @@ export async function POST(request: NextRequest) {
     let outcome: Outcome = null;
     let lead: Awaited<ReturnType<typeof prisma.lead.create<typeof leadArgs>>>;
 
-    const kind = OUTCOME_KIND[body.contactMethod];
     // A supplied locationId is only trusted when it belongs to this organisation.
     let locationId: string | null = null;
     if (kind) {

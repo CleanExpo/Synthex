@@ -83,17 +83,19 @@ export async function removeKeywordTarget(
  *
  * Uses the primary GSCProperty's siteUrl. No-op if no primary property exists.
  */
-export async function takeRankSnapshot(orgId: string): Promise<number> {
+export async function takeRankSnapshot(
+  orgId: string
+): Promise<{ snapshotCount: number; outcomeFailures: number }> {
   const property = await prisma.gSCProperty.findFirst({
     where: { organizationId: orgId, isPrimary: true },
     select: { siteUrl: true },
   });
-  if (!property) return 0;
+  if (!property) return { snapshotCount: 0, outcomeFailures: 0 };
 
   const targets = await prisma.keywordTarget.findMany({
     where: { organizationId: orgId, isActive: true },
   });
-  if (targets.length === 0) return 0;
+  if (targets.length === 0) return { snapshotCount: 0, outcomeFailures: 0 };
 
   let analytics;
   try {
@@ -108,13 +110,14 @@ export async function takeRankSnapshot(orgId: string): Promise<number> {
       orgId,
       error: err instanceof Error ? err.message : String(err),
     });
-    return 0;
+    return { snapshotCount: 0, outcomeFailures: 0 };
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   let snapshotCount = 0;
+  let outcomeFailures = 0;
 
   // Keyword targets carry no location: attribute rank outcomes to the org's
   // primary GBP location, else any location. None -> snapshot only.
@@ -194,6 +197,7 @@ export async function takeRankSnapshot(orgId: string): Promise<number> {
             },
           });
         } catch (err) {
+          outcomeFailures++;
           logger.error('rank-tracker:outcome-failed', {
             keywordTargetId: target.id,
             error: err instanceof Error ? err.message : String(err),
@@ -208,8 +212,12 @@ export async function takeRankSnapshot(orgId: string): Promise<number> {
     }
   }
 
-  logger.info('rank-tracker:snapshot-complete', { orgId, snapshotCount });
-  return snapshotCount;
+  logger.info('rank-tracker:snapshot-complete', {
+    orgId,
+    snapshotCount,
+    outcomeFailures,
+  });
+  return { snapshotCount, outcomeFailures };
 }
 
 // ============================================================================

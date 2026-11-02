@@ -25,6 +25,7 @@ jest.mock('@/lib/prisma', () => {
       findFirst: async () => ({ siteUrl: 'https://x.example/' }),
     },
     keywordTarget: {
+      groupBy: async () => [{ organizationId: 'org-1' }],
       findMany: async () => [
         { id: 'kt-1', organizationId: 'org-1', keyword: 'emergency plumber' },
       ],
@@ -92,6 +93,13 @@ jest.mock('@/lib/marketing-agency/outcomes/local-outcome-writer', () => ({
     if (!dup) store.recorded.set(input.dedupeKey, input);
     return { status: dup ? 'duplicate' : 'recorded' };
   },
+}));
+
+jest.mock('@/lib/auth/cron-auth', () => ({
+  verifyCronRequest: () => ({ ok: true }),
+}));
+jest.mock('@/lib/scoring/visibility-score', () => ({
+  calculateVisibilityScore: async () => undefined,
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -166,14 +174,43 @@ describe('takeRankSnapshot rank outcomes', () => {
 
   it('still snapshots, without an outcome, when the org has no location', async () => {
     store.locations = [];
-    const count = await takeRankSnapshot('org-1');
-    expect(count).toBe(1);
+    const result = await takeRankSnapshot('org-1');
+    expect(result).toEqual({ snapshotCount: 1, outcomeFailures: 0 });
     expect(store.calls).toEqual([]);
   });
 
-  it('does not fail the snapshot when the writer throws', async () => {
+  it('keeps the snapshot but reports the failure when the writer throws', async () => {
     store.writerFails = true;
-    const count = await takeRankSnapshot('org-1');
-    expect(count).toBe(1);
+    const result = await takeRankSnapshot('org-1');
+    expect(result).toEqual({ snapshotCount: 1, outcomeFailures: 1 });
+  });
+});
+
+describe('GET /api/cron/rank-snapshot outcome failures', () => {
+  const run = async () => {
+    const { GET } = await import('@/app/api/cron/rank-snapshot/route');
+    const res = await GET({} as never);
+    return res.json();
+  };
+
+  it('reports success with zero outcome failures when the writer works', async () => {
+    const body = await run();
+    expect(body).toMatchObject({
+      success: true,
+      totalSnapshots: 1,
+      errors: 0,
+      outcomeFailures: 0,
+    });
+  });
+
+  it('answers success:false and counts the error when the writer throws', async () => {
+    store.writerFails = true;
+    const body = await run();
+    expect(body).toMatchObject({
+      success: false,
+      totalSnapshots: 1,
+      errors: 1,
+      outcomeFailures: 1,
+    });
   });
 });
