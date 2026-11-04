@@ -52,7 +52,7 @@ const VALID_REQUEST = {
   brandScope: 'RestoreAssist',
   objective:
     'Produce a Remotion visual brief for the IICRC S500 explainer companion page.',
-  companionPageUrl: 'https://restoreassist.com.au/hub/iicrc-s500-explainer',
+  companionPageUrl: 'https://restoreassist.app/hub/iicrc-s500-explainer',
   title: 'RA S500 explainer reel',
 };
 

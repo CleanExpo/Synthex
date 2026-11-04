@@ -90,7 +90,7 @@ const RA_ORG = {
   id: 'org-ra',
   name: 'RestoreAssist',
   slug: 'restoreassist',
-  website: 'https://restoreassist.com.au',
+  website: 'https://restoreassist.app',
   settings: null,
 };
 
@@ -332,7 +332,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
           platform: 'linkedin',
           postId: 'post-1',
           scheduledAt: '2026-09-02T14:00:00.000Z',
-          linkUrl: 'https://restoreassist.com.au/?utm_source=linkedin',
+          linkUrl: 'https://restoreassist.app/?utm_source=linkedin',
         },
       ],
       skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
@@ -349,7 +349,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
           platform: 'linkedin',
           postId: 'post-1',
           scheduledAt: '2026-09-02T14:00:00.000Z',
-          linkUrl: 'https://restoreassist.com.au/?utm_source=linkedin',
+          linkUrl: 'https://restoreassist.app/?utm_source=linkedin',
         },
       ],
       skipped: [{ platform: 'blog', reason: 'platform_not_schedulable' }],
@@ -365,7 +365,7 @@ describe('POST /api/marketing-agency/studio/[client] (approve → schedule)', ()
       approvedBy: 'user-1',
       client: expect.objectContaining({
         clientSlug: 'restoreassist',
-        funnelUrl: 'https://restoreassist.com.au',
+        funnelUrl: 'https://restoreassist.app',
       }),
       scheduledAt: undefined,
       clearances: undefined,

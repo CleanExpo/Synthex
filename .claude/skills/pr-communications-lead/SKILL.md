@@ -166,7 +166,7 @@ interface PrCommunicationsOutput {
 >
 > **Quote (Phill McGurk, Founder, RestoreAssist):** "Australian restorers deserve documentation tools built for the way insurance work actually happens here. Off-the-shelf US software wasn't designed for this market — RestoreAssist is."
 >
-> **CTA:** Visit restoreassist.com.au to register for launch notification.
+> **CTA:** Visit restoreassist.app to register for launch notification.
 >
 > **Embargo:** None on early-access copy · App Store availability claim embargoed until VG-40 verified.
 

@@ -1809,13 +1809,13 @@ describe('engineering bench, round 1 — bounds the reviewers asked for', () => 
 describe('buildStudioFunnelLink', () => {
   it('tags the funnel with source / medium / campaign / content and preserves an existing query', () => {
     expect(
-      buildStudioFunnelLink('https://restoreassist.com.au/pricing?ref=li', {
+      buildStudioFunnelLink('https://restoreassist.app/pricing?ref=li', {
         platform: 'linkedin',
         clientSlug: 'restoreassist',
         draftId: 'd9',
       })
     ).toBe(
-      'https://restoreassist.com.au/pricing?ref=li&utm_source=synthex&utm_medium=linkedin&utm_campaign=studio-restoreassist&utm_content=d9'
+      'https://restoreassist.app/pricing?ref=li&utm_source=synthex&utm_medium=linkedin&utm_campaign=studio-restoreassist&utm_content=d9'
     );
   });
 
