@@ -309,3 +309,4 @@
 {"ts":"2026-11-02T18:07:30.920Z","kind":"cost","phase":"P6","usd":0,"source":"orchestrator-estimate","note":"resume run: 4 Sonnet builder threads + 2 Codex review rounds on subscriptions; no metered spend"}
 {"ts":"2026-11-04T00:02:35.526Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-11-04T00:04:44.996Z","kind":"start","source":"nightly","selftest":1,"ledgers":1,"jev_det":0}
+{"ts":"2026-11-04T00:30:45.400Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
