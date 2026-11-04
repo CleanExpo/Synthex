@@ -26,7 +26,7 @@ We help local trades, service businesses, and SMBs generate consistent, high-qua
 
 **Try Synthex free:** https://synthex.social
 **The Unite-Group ecosystem:**
-→ RestoreAssist — SaaS for restoration & remediation contractors: https://restoreassist.com.au
+→ RestoreAssist — SaaS for restoration & remediation contractors: https://restoreassist.app
 → NRPG — Vetted referral network for professionals: https://nrpg.com.au
 → CARSI — Industry intelligence & compliance: https://carsi.com.au
 → CCW — E-commerce growth & attribution: https://ccw.com.au
@@ -74,7 +74,7 @@ Try it free → https://synthex.social
 ---
 
 🌐 UNITE-GROUP ECOSYSTEM
-→ RestoreAssist — https://restoreassist.com.au
+→ RestoreAssist — https://restoreassist.app
 → NRPG — https://nrpg.com.au
 → CARSI — https://carsi.com.au
 → CCW — https://ccw.com.au

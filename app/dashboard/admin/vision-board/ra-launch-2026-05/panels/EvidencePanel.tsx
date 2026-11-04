@@ -917,15 +917,15 @@ const PUBLIC_PAGE_JSONLD_REFERENCE = {
     {
       '@type': 'Article',
       '@id':
-        'https://restoreassist.com.au/research/restoration-system-data-gaps#article',
+        'https://restoreassist.app/research/restoration-system-data-gaps#article',
       headline:
         'Australian restoration system data gaps — what the industry does not measure',
       datePublished: '2026-05-08',
       dateModified: '2026-05-08',
       author: {
-        '@id': 'https://restoreassist.com.au/authors/phill-mcgurk#author',
+        '@id': 'https://restoreassist.app/authors/phill-mcgurk#author',
       },
-      publisher: { '@id': 'https://restoreassist.com.au#organization' },
+      publisher: { '@id': 'https://restoreassist.app#organization' },
       citation: [
         {
           '@type': 'CreativeWork',
@@ -946,7 +946,7 @@ const PUBLIC_PAGE_JSONLD_REFERENCE = {
     },
     {
       '@type': 'Person',
-      '@id': 'https://restoreassist.com.au/authors/phill-mcgurk#author',
+      '@id': 'https://restoreassist.app/authors/phill-mcgurk#author',
       name: AUTHOR_ENTITY.name,
       jobTitle: AUTHOR_ENTITY.jobTitle,
       description: AUTHOR_ENTITY.description,
@@ -954,16 +954,16 @@ const PUBLIC_PAGE_JSONLD_REFERENCE = {
     },
     {
       '@type': 'Organization',
-      '@id': 'https://restoreassist.com.au#organization',
+      '@id': 'https://restoreassist.app#organization',
       name: 'RestoreAssist Pty Ltd',
-      url: 'https://restoreassist.com.au',
+      url: 'https://restoreassist.app',
     },
     {
       '@type': 'Dataset',
       name: 'Australian and New Zealand restoration claim cycle data (compiled)',
       description:
         'Compiled secondary data on insurance claim cycle times across major AU/NZ catastrophes 2010–2024',
-      creator: { '@id': 'https://restoreassist.com.au#organization' },
+      creator: { '@id': 'https://restoreassist.app#organization' },
       isBasedOn: [
         {
           '@type': 'CreativeWork',

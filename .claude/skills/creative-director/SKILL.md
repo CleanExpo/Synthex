@@ -36,7 +36,7 @@ The visual evidence layer. Senior-copywriter sets the claim; this skill turns th
 
 ### M-1 Specific-evidence-source discipline
 
-Every visual claim names the source citation (publication / manufacturer spec / standards body), the year + section ID, the verification-gate state of that source, the EXIF/permission state of any included asset, and the companion-page schema link in the same sentence as the visual specification. _"Use a thermal-imaging photo for the explainer"_ fails. _"Thermal-imaging frame at 00:14 cites IICRC S500-2021 §10.5.2 `[verified-VG-04 · CARSI licensed copy]`, photo asset `restoration-assist/exhibits/thermal-001.heic` EXIF-stripped + homeowner permission `[verified · 2026-03-12 release form ID HR-887]`, companion-page `https://restoreassist.com.au/hub/iicrc-s500-explainer` carries `VideoObject` + `LearningResource` schema with the same citation"_ passes.
+Every visual claim names the source citation (publication / manufacturer spec / standards body), the year + section ID, the verification-gate state of that source, the EXIF/permission state of any included asset, and the companion-page schema link in the same sentence as the visual specification. _"Use a thermal-imaging photo for the explainer"_ fails. _"Thermal-imaging frame at 00:14 cites IICRC S500-2021 §10.5.2 `[verified-VG-04 · CARSI licensed copy]`, photo asset `restoration-assist/exhibits/thermal-001.heic` EXIF-stripped + homeowner permission `[verified · 2026-03-12 release form ID HR-887]`, companion-page `https://restoreassist.app/hub/iicrc-s500-explainer` carries `VideoObject` + `LearningResource` schema with the same citation"_ passes.
 
 ### M-2 Attribution-hypothesis discipline
 
@@ -156,7 +156,7 @@ interface CreativeDirectorOutput {
 
 ## Worked example (RestoreAssist · IICRC S500 explainer Remotion video · 2026-04-28)
 
-**Brief context.** Channel: `remotion-video`. Brand: RestoreAssist. Companion-page: `https://restoreassist.com.au/hub/iicrc-s500-explainer`. Senior-copywriter input: `SeniorCopywriterOutput` referencing post #06 "S520 Specialist · Mould Doesn't Argue" (drafted in `.claude/scratchpad/posts-05-08-drafts.md`, passes brand-voice-enforce 2026-04-27). Foundation refs: Phase 4 REM-1/2/3 · Q2.5.4 L5 design layer · Q3.2.5 P10 EXIF · Q3.1.3 Amendment 4 companion-page binding.
+**Brief context.** Channel: `remotion-video`. Brand: RestoreAssist. Companion-page: `https://restoreassist.app/hub/iicrc-s500-explainer`. Senior-copywriter input: `SeniorCopywriterOutput` referencing post #06 "S520 Specialist · Mould Doesn't Argue" (drafted in `.claude/scratchpad/posts-05-08-drafts.md`, passes brand-voice-enforce 2026-04-27). Foundation refs: Phase 4 REM-1/2/3 · Q2.5.4 L5 design layer · Q3.2.5 P10 EXIF · Q3.1.3 Amendment 4 companion-page binding.
 
 **Evidence-source map.**
 

@@ -315,7 +315,7 @@ describe('PATCH /api/organizations/[orgId] — settings.studio is validated wher
 
     const res = await PATCH(
       patchRequest({
-        settings: { studio: { ...STUDIO, funnelUrl: 'restoreassist.com.au' } },
+        settings: { studio: { ...STUDIO, funnelUrl: 'restoreassist.app' } },
       }),
       paramsArg
     );
