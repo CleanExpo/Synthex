@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+# Husky v8 bootstrap (skip gracefully if not installed, e.g. in CI)
+if [ -f "$(dirname "$0")/_/husky.sh" ]; then
+  . "$(dirname "$0")/_/husky.sh"
+fi
+
+# PRE-PUSH: hand the push to the machine's global pre-push hook.
+# `prepare: husky install` points core.hooksPath at .husky, which hides the
+# global hooks directory, so without this file a push from this repo skips the
+# machine-level release gate entirely. Machines without a global hook (CI,
+# fresh clones) are unaffected.
+
+global_dir="$(git config --global --get core.hooksPath 2>/dev/null || true)"
+case "$global_dir" in
+  "~"/*) global_dir="$HOME/${global_dir#"~/"}" ;;
+esac
+global_hook="$global_dir/pre-push"
+self_dir="$(cd "$(dirname "$0")" && pwd -P)"
+
+if [ -n "$global_dir" ] && [ -x "$global_hook" ] && [ "$(cd "$global_dir" 2>/dev/null && pwd -P)" != "$self_dir" ]; then
+  exec "$global_hook" "$@"
+fi
+
+exit 0
