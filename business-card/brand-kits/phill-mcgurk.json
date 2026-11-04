@@ -444,14 +444,14 @@
       },
       {
         "label": "Unite-Group Nexus",
-        "url": "https://maps.google.com/?cid=16425003964954420216",
+        "url": "https://unite-group.in",
         "note": "The group behind them all",
-        "urlNote": "unite-group.in sends visitors to a login page, so the card links the group's public Google listing (Unite-Group Nexus) until the site is public.",
+        "urlNote": "Phill 05/11/2026 (approved 1:50 AM AEST): link unite-group.in instead of the Google Maps listing.",
         "visitor": true,
         "video": {
-          "youtubeId": "vQ5XkygiJlo",
-          "thumb": "business-card/demos/thumbs/unite-group.jpg",
-          "source": "YouTube listing given by Phill 23/10/2026: \"The Relay | Every recovery, connected | Unite-Group Nexus\" on @RestoreAssistApp; thumbnail is the one YouTube shows (i.ytimg.com maxresdefault, 640x360)"
+          "file": "business-card/brand-kits/media/unite-group-card-film-v1.mp4",
+          "poster": "business-card/brand-kits/media/unite-group-card-film-v1-poster.jpg",
+          "videoNote": "Unite-Group website video v17 (approved by Phill 26/10/2026), 720x1280 re-encode, hosted on the card. Replaces YouTube vQ5XkygiJlo (The Relay), restoration-framed and on the RestoreAssist channel. Phill approved 05/11/2026."
         }
       }
     ],
