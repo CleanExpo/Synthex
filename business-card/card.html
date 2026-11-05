@@ -435,6 +435,7 @@ body:not(.owner) .owner-only { display: none !important; }
     <div class="gift">
       <h2 id="biz-h"></h2>
       <a class="bizthumb" id="biz-watch" target="_blank" rel="noopener"><img id="biz-thumb" alt=""><span class="play" aria-hidden="true"></span></a>
+      <video class="bizthumb" id="biz-film" controls playsinline preload="none" hidden></video>
       <div class="row"><a class="btn primary" id="biz-watch-btn" target="_blank" rel="noopener">Watch the demo</a><a class="btn" id="biz-visit" target="_blank" rel="noopener">Visit site</a><button class="btn" type="button" id="biz-close">Close</button></div>
     </div>
   </div>
@@ -567,12 +568,12 @@ function lum(hex) {
   const shelf = links.filter(l => (l.visitor && safeUrl(l.url)) || (!l.url && l.pendingUrl));
   if (shelf.length) {
     shelf.forEach(l => {
-      const v = l.video || {}, film = /^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || ""), live = safeUrl(l.url);
+      const v = l.video || {}, own = HOSTED && !!v.hostedVideo, film = own || /^[A-Za-z0-9_-]{11}$/.test(v.youtubeId || ""), live = safeUrl(l.url);
       const t = document.createElement(live ? "a" : "div");
       t.className = "tile" + (/nexus/i.test(l.label) ? " wide" : "") + (live ? "" : " soon wide slim");
       if (live) { t.href = l.url; t.target = "_blank"; t.rel = "noopener"; }
       const shot = document.createElement("span"); shot.className = "tshot";
-      const src = film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : "";
+      const src = own ? (v.hostedPoster || "") : film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : "";
       if (src) {
         const img = document.createElement("img"); img.src = src; img.alt = ""; img.loading = "lazy"; shot.append(img);
         const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play);
@@ -1425,15 +1426,21 @@ $("surprise-close").addEventListener("click", () => { $("surprise").hidden = tru
 $("surprise").addEventListener("click", e => { if (e.target === $("surprise")) $("surprise").hidden = true; });
 // A business's panel: its demo video (thumbnail and button go to YouTube) and its site
 function openBiz(l) {
-  const v = l.video || {}, yt = "https://youtu.be/" + v.youtubeId;
+  const v = l.video || {}, yt = "https://youtu.be/" + v.youtubeId, own = HOSTED && !!v.hostedVideo;
   $("biz-h").textContent = l.label;
+  // A film hosted on the card plays in place in a native player; YouTube films keep the thumbnail and link
+  const fv = $("biz-film"); fv.pause(); fv.hidden = !own; $("biz-watch").hidden = own; $("biz-watch-btn").hidden = own;
+  if (own) {
+    if (fv.getAttribute("src") !== v.hostedVideo) { fv.src = v.hostedVideo; if (v.hostedPoster) fv.poster = v.hostedPoster; }
+    fv.setAttribute("aria-label", l.label + " film"); $("biz-visit").href = l.url; $("biz-sheet").hidden = false; SFX.whoosh(); return;
+  }
   const src = (HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg";
   $("biz-thumb").src = src; $("biz-thumb").alt = l.label + " demo video";
   $("biz-watch").href = yt; $("biz-watch-btn").href = yt; $("biz-visit").href = l.url;
   $("biz-sheet").hidden = false; SFX.whoosh();
 }
-$("biz-close").addEventListener("click", () => { $("biz-sheet").hidden = true; });
-$("biz-sheet").addEventListener("click", e => { if (e.target === $("biz-sheet")) $("biz-sheet").hidden = true; });
+$("biz-close").addEventListener("click", () => { $("biz-sheet").hidden = true; $("biz-film").pause(); });
+$("biz-sheet").addEventListener("click", e => { if (e.target === $("biz-sheet")) { $("biz-sheet").hidden = true; $("biz-film").pause(); } });
 
 // Review: one quiet button opens the review wheel
 $("review-open").addEventListener("click", e => {

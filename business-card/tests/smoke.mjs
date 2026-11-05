@@ -720,10 +720,49 @@ try {
     const withVideo = kit.person.links.filter(
       l => l.visitor && l.url && l.video && l.video.youtubeId
     );
-    check(
-      withVideo.length >= 6,
-      'businesses with a demo video: ' + withVideo.length
+    // Films hosted on the card itself play in place instead of linking to YouTube
+    const hosted = kit.person.links.filter(
+      l => l.visitor && l.url && l.video && l.video.hostedVideo
     );
+    check(
+      withVideo.length + hosted.length >= 6,
+      'businesses with a demo video: ' +
+        withVideo.length +
+        ' on YouTube, ' +
+        hosted.length +
+        ' on the card'
+    );
+    for (const l of hosted) {
+      await page.click(`#nexus .tile:has(.tname:text-is("${l.label}"))`);
+      await page.waitForTimeout(400);
+      const got = await page.evaluate(async () => {
+        const f = document.getElementById('biz-film');
+        f.muted = true;
+        let played = false;
+        try {
+          await f.play();
+          await new Promise(r => setTimeout(r, 1500));
+          played = f.currentTime > 0.5;
+        } catch (e) {}
+        f.pause();
+        return {
+          open: !document.getElementById('biz-sheet').hidden,
+          film: !f.hidden,
+          watchHidden: document.getElementById('biz-watch').hidden,
+          played,
+          visit: document.getElementById('biz-visit').href,
+        };
+      });
+      check(
+        got.open &&
+          got.film &&
+          got.watchHidden &&
+          got.played &&
+          got.visit.startsWith(l.url),
+        `${l.label} hosted film plays: ${JSON.stringify(got)}`
+      );
+      await page.click('#biz-close');
+    }
     for (const l of withVideo) {
       await page.click(`#nexus .tile:has(.tname:text-is("${l.label}"))`);
       await page.waitForTimeout(400);

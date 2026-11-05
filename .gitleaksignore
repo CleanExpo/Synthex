@@ -44,3 +44,9 @@ c496b3fec26e2c9e05215138a4708631cbaa0e42:tests/eval/jev/families/j11.jev.test.ts
 310648c92d65f5ac9fc017f26558aca5ddf16413:.!74019!.env.example:generic-api-key:52
 310648c92d65f5ac9fc017f26558aca5ddf16413:.!74019!.env.example:generic-api-key:56
 310648c92d65f5ac9fc017f26558aca5ddf16413:.!74019!.env.example:stripe-access-token:589
+# Synthex #1101: public Supabase publishable key (sb_publishable_, client-safe by design) in the brand kit inlined into the card HTML.
+# Commit-pinned lines cover the PR commit; the path-only lines cover the squash commit on main.
+c652ed4e9de445457f037d1af0eb60a7ccb5c3d0:business-card/site/index.html:generic-api-key:261
+c652ed4e9de445457f037d1af0eb60a7ccb5c3d0:business-card/site/preview.html:generic-api-key:246
+business-card/site/index.html:generic-api-key:261
+business-card/site/preview.html:generic-api-key:246

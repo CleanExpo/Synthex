@@ -262,6 +262,11 @@ def main(card_path, kit_path, out):
         v = lh.get("video") or {}
         if v.get("youtubeId") and v.get("thumb"):
             lh["video"]["hostedThumb"], lp["video"]["thumbDataUri"] = media(v["thumb"])
+        # A film hosted on the card itself (no YouTube id): hosted page only, so the preview stays small
+        if v.get("file") and not v.get("youtubeId"):
+            lh["video"]["hostedVideo"] = media(v["file"])[0]
+            if v.get("poster"):
+                lh["video"]["hostedPoster"], lp["video"]["thumbDataUri"] = media(v["poster"])
 
     def clip(src, dst_h, dst_p, inline):
         """Ship one opener: files for the hosted page; data URIs in the preview only when inline is set."""
