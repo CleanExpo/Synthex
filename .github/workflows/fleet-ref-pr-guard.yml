@@ -5,17 +5,26 @@ name: Fleet hand-off PR guard
 # repo opens a PR for freshly pushed branches through GitHub's "Compare & pull request" banner
 # (DECISIONS.md OPEN-2). New hand-offs use refs/fleet/* (refs cannot be PR heads); this closes
 # any PR still opened from the old branch names, within seconds. No checkout, no PR code runs.
+#
+# Trigger (SYN-1390): GitHub blocks the pull-request-target trigger by default in public repositories from
+# 2 December 2026 (changelog 2026-11-02). The close job now runs on pull_request; fleet branches are
+# pushed to this repository, so its token can still close the PR. pull_request does not run when a
+# PR has a merge conflict, and a PR from a fork gets a read-only token, so the sweep job (schedule
+# and manual dispatch, always run from main) closes any such PR the close job could not.
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened]
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
 
 jobs:
   close:
-    if: startsWith(github.head_ref, 'fleet-unit/') || github.head_ref == 'fleet-ledger'
+    if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'fleet-unit/') || github.head_ref == 'fleet-ledger')
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -25,3 +34,20 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           gh pr close "$PR" --repo "$REPO" --comment "Closed automatically: fleet hand-off branches are not released by pull request. The work ships in its phase PR through scripts/fleet/merge-phase.mjs (DECISIONS.md FD-3, OPEN-2)."
+
+  sweep:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh pr list --repo "$REPO" --state open --limit 1000 --json number,headRefName \
+            --jq '.[] | select((.headRefName | startswith("fleet-unit/")) or .headRefName == "fleet-ledger") | .number' > prs.txt
+          echo "open fleet hand-off PRs: $(wc -l < prs.txt)"
+          while read -r PR; do
+            gh pr close "$PR" --repo "$REPO" --comment "Closed automatically: fleet hand-off branches are not released by pull request. The work ships in its phase PR through scripts/fleet/merge-phase.mjs (DECISIONS.md FD-3, OPEN-2)."
+          done < prs.txt
