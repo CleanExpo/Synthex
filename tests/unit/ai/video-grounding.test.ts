@@ -156,6 +156,33 @@ describe('video grounding — grounded by default (Real Images Only)', () => {
     expect(jobs[0].grounded).toBe(true);
   });
 
+  it('sends premium image-to-video to Kling I2V as start_image_url', async () => {
+    await submitGenerativeVideo(
+      baseReq({
+        modelTier: 'premium',
+        imageUrl: 'https://x/seed.png',
+        useReferences: false,
+      })
+    );
+    expect(submitToFal).toHaveBeenCalledWith(
+      'fal-ai/kling-video/v3/pro/image-to-video',
+      expect.objectContaining({ start_image_url: 'https://x/seed.png' })
+    );
+    expect(lastFalInput().image_url).toBeUndefined();
+  });
+
+  it('sends premium text-to-video to the Kling text endpoint with no image field', async () => {
+    await submitGenerativeVideo(
+      baseReq({ modelTier: 'premium', useReferences: false })
+    );
+    expect(submitToFal).toHaveBeenCalledWith(
+      'fal-ai/kling-video/v3/pro/text-to-video',
+      expect.anything()
+    );
+    expect(lastFalInput().image_url).toBeUndefined();
+    expect(lastFalInput().start_image_url).toBeUndefined();
+  });
+
   it('treats useReferences:false as a hard opt-out even with a referenceSet (escape hatch)', async () => {
     const jobs = await submitGenerativeVideo(
       baseReq({ referenceSet: 'carpet-cleaning', useReferences: false })

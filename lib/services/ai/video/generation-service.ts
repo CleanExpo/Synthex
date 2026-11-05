@@ -261,7 +261,9 @@ export async function submitGenerativeVideo(
           ...(composed.negativePrompt
             ? { negative_prompt: composed.negativePrompt }
             : {}),
-          ...(seedImageUrl ? { image_url: seedImageUrl } : {}),
+          ...(seedImageUrl
+            ? { [model.imageInputField ?? 'image_url']: seedImageUrl }
+            : {}),
           aspect_ratio: aspectRatio,
           duration: durationSeconds,
           seed,

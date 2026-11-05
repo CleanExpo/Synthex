@@ -16,6 +16,16 @@ export interface VideoModelSpec {
   maxDurationSeconds: number;
   aspectRatios: AspectRatio[];
   supportsImageInput: boolean;
+  /**
+   * Dedicated image-to-video endpoint. Eligible only when the request has a
+   * seed image — a text request must not land here just because it is cheaper.
+   */
+  imageOnly?: boolean;
+  /**
+   * fal body key for the seed still. Seedance image-to-video uses `image_url`.
+   * Kling v3 Pro image-to-video requires `start_image_url`.
+   */
+  imageInputField?: 'image_url' | 'start_image_url';
   supportsAudio: boolean;
   strengths: string[];
   weaknesses: string[];

@@ -50,7 +50,20 @@ describe('video model registry', () => {
       durationSeconds: 6,
       requiresImage: true,
     });
+    expect(m.id).toBe('bytedance/seedance-2.0/fast/image-to-video');
     expect(m.supportsImageInput).toBe(true);
+    expect(m.imageInputField ?? 'image_url').toBe('image_url');
+  });
+
+  it('keeps text requests off image-only endpoints', () => {
+    for (const tier of ['draft', 'standard', 'premium'] as const) {
+      const m = resolveModel(tier, {
+        aspectRatio: '9:16',
+        durationSeconds: 6,
+      });
+      expect(m.imageOnly).not.toBe(true);
+      expect(m.id).not.toMatch(/image-to-video$/);
+    }
   });
 
   it('throws a clear error when duration exceeds the tier maximum', () => {
@@ -75,7 +88,7 @@ describe('video model registry', () => {
   });
 
   it.each(['9:16', '16:9', '1:1'] as const)(
-    'routes premium %s + audio + image to Kling 3 Pro',
+    'routes premium %s + audio + image to Kling 3 Pro image-to-video',
     aspectRatio => {
       const m = resolveModel('premium', {
         aspectRatio,
@@ -83,16 +96,19 @@ describe('video model registry', () => {
         audio: true,
         requiresImage: true,
       });
-      expect(m.name).toBe('Kling 3 Pro');
+      expect(m.id).toBe('fal-ai/kling-video/v3/pro/image-to-video');
+      expect(m.imageInputField).toBe('start_image_url');
+      expect(m.supportsImageInput).toBe(true);
     }
   );
 
-  it('routes premium 1:1 + audio to Kling', () => {
+  it('routes premium text-to-video to Kling text-to-video, which takes no image', () => {
     const m = resolveModel('premium', {
       aspectRatio: '1:1',
       durationSeconds: 6,
       audio: true,
     });
-    expect(m.name).toBe('Kling 3 Pro');
+    expect(m.id).toBe('fal-ai/kling-video/v3/pro/text-to-video');
+    expect(m.supportsImageInput).toBe(false);
   });
 });

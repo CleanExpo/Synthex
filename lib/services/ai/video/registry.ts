@@ -8,6 +8,10 @@
  * deprecates the endpoint on 2026-11-17 and Google shut its Veo 3.1 previews
  * on 2026-10-22. It never won routing — Kling 3 Pro is cheaper at premium with
  * a superset of capabilities.
+ * Kling v3 Pro image-to-video verified 2026-11-05 against the live fal schema:
+ * seed is `start_image_url` on `fal-ai/kling-video/v3/pro/image-to-video`
+ * ($0.168/s audio on, $0.112/s audio off; the catalogue holds the audio-on
+ * rate). The text-to-video endpoint accepts no image field.
  */
 import { AspectRatio, ModelTier, VideoModelSpec } from './types';
 
@@ -37,6 +41,7 @@ export const VIDEO_MODELS: VideoModelSpec[] = [
     maxDurationSeconds: 15,
     aspectRatios: ['9:16', '1:1', '16:9'],
     supportsImageInput: true,
+    imageOnly: true,
     supportsAudio: true,
     strengths: ['cheapest live image-to-video', 'native audio included'],
     weaknesses: [
@@ -72,7 +77,7 @@ export const VIDEO_MODELS: VideoModelSpec[] = [
     costPerSecondUsd: 0.168,
     maxDurationSeconds: 10,
     aspectRatios: ['9:16', '1:1', '16:9'],
-    supportsImageInput: true,
+    supportsImageInput: false,
     supportsAudio: true,
     strengths: [
       'native audio + lip-sync',
@@ -81,6 +86,31 @@ export const VIDEO_MODELS: VideoModelSpec[] = [
     ],
     weaknesses: ['queue can be slow at peak'],
     bestFor: 'finished product with dialogue/SFX at the lower premium price',
+  },
+  {
+    id: 'fal-ai/kling-video/v3/pro/image-to-video',
+    name: 'Kling 3 Pro I2V',
+    provider: 'fal',
+    tier: 'premium',
+    // Audio-on rate (audio-off is $0.112/s). The hold uses the higher rate so
+    // a clip with native audio cannot under-reserve. Verified 2026-11-05.
+    costPerSecondUsd: 0.168,
+    maxDurationSeconds: 10,
+    aspectRatios: ['9:16', '1:1', '16:9'],
+    supportsImageInput: true,
+    imageOnly: true,
+    imageInputField: 'start_image_url',
+    supportsAudio: true,
+    strengths: [
+      'native audio + lip-sync',
+      'strong realism',
+      'price-leader at premium',
+    ],
+    weaknesses: [
+      'queue can be slow at peak',
+      'aspect ratio follows the start image',
+    ],
+    bestFor: 'animating a real still at the lower premium price',
   },
 ];
 
@@ -100,7 +130,10 @@ export function resolveModel(
       m.tier === tier &&
       m.aspectRatios.includes(opts.aspectRatio) &&
       (!opts.audio || m.supportsAudio) &&
-      (!opts.requiresImage || m.supportsImageInput)
+      (!opts.requiresImage || m.supportsImageInput) &&
+      // Image-only endpoints (Kling / Seedance I2V) require a seed. Without
+      // this they win text requests whenever they are the cheapest in tier.
+      (opts.requiresImage || !m.imageOnly)
   );
   if (candidates.length === 0) {
     throw new Error(
