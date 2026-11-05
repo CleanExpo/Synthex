@@ -763,6 +763,33 @@ try {
       );
       await page.click('#biz-close');
     }
+    // A later hosted film with no poster must not keep the previous film's still (SYN-1395).
+    const stale = await page.evaluate(() => {
+      const links = (window.BRAND_KIT.person.links || []).filter(
+        l => l.video && l.video.hostedVideo && l.video.hostedPoster
+      );
+      if (!links.length)
+        return { ok: false, why: 'no hosted film with a poster' };
+      openBiz(links[0]);
+      const film = document.getElementById('biz-film');
+      const before = film.getAttribute('poster');
+      openBiz({
+        label: 'Posterless film',
+        url: links[0].url,
+        video: { hostedVideo: 'media/posterless-film.mp4' },
+      });
+      return {
+        ok: !!before && !film.getAttribute('poster'),
+        before: before || '',
+        after: film.getAttribute('poster'),
+      };
+    });
+    check(
+      stale.ok,
+      'next hosted film with no poster clears the previous poster: ' +
+        JSON.stringify(stale)
+    );
+    await page.click('#biz-close');
     for (const l of withVideo) {
       await page.click(`#nexus .tile:has(.tname:text-is("${l.label}"))`);
       await page.waitForTimeout(400);
@@ -800,6 +827,42 @@ try {
       'no page errors' + (errors.length ? ': ' + errors.join(' | ') : '')
     );
     await ctx.close();
+    // The preview copy has the poster and neither a hosted video nor a YouTube id (SYN-1395).
+    const preview = await phone();
+    await preview.page.goto(BASE + 'preview.html');
+    await preview.page.waitForSelector('#nexus .tile .tname');
+    const unite = await preview.page.evaluate(async () => {
+      const tile = [...document.querySelectorAll('#nexus .tile')].find(
+        el => el.querySelector('.tname')?.textContent === 'Unite-Group Nexus'
+      );
+      if (!tile) return { found: false };
+      const img = tile.querySelector('.tshot img');
+      const mark = tile.querySelector('.tshot .mark');
+      if (img) {
+        try {
+          await img.decode();
+        } catch (e) {}
+      }
+      return {
+        found: true,
+        src: img ? img.getAttribute('src').slice(0, 20) : '',
+        mark: mark ? mark.textContent : '',
+        width: img ? img.naturalWidth : 0,
+      };
+    });
+    check(
+      unite.found &&
+        unite.src.startsWith('data:image/') &&
+        !unite.mark &&
+        unite.width > 0,
+      'Unite-Group preview tile shows its poster: ' + JSON.stringify(unite)
+    );
+    check(
+      preview.errors.length === 0,
+      'no preview page errors' +
+        (preview.errors.length ? ': ' + preview.errors.join(' | ') : '')
+    );
+    await preview.ctx.close();
   } else if (MODE === 'oneclick') {
     // Someone the card is shared with: one obvious action, and it saves the contact
     const { ctx, page, errors } = await phone();
