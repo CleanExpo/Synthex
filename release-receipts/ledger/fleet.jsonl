@@ -388,3 +388,4 @@
 {"ts":"2026-11-05T14:01:39.457Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-11-05T14:30:39.812Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
 {"ts":"2026-11-05T15:01:14.264Z","kind":"start","phase":"P6","decision":"HOLD","reason":"run lock: remote branch refs/heads/feature/fleet-p6-outcomes","source":"phase-advance"}
+{"ts":"2026-11-05T15:04:12.499Z","kind":"start","source":"nightly","selftest":1,"ledgers":1,"jev_det":0}
