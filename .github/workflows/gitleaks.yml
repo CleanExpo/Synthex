@@ -13,7 +13,3 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # The action runs `gitleaks detect` with no --config. Point it at the
-          # repo config so the living-card allowlist is the one that runs, and
-          # the default rules stay on (useDefault = true in that file).
-          GITLEAKS_CONFIG: .gitleaks.toml
