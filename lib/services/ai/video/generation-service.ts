@@ -264,6 +264,11 @@ export async function submitGenerativeVideo(
           ...(seedImageUrl
             ? { [model.imageInputField ?? 'image_url']: seedImageUrl }
             : {}),
+          // Stored `audioEnabled` is Boolean(req.audio); send the same value so
+          // the clip matches the row (the provider default is audio ON).
+          ...(model.audioField
+            ? { [model.audioField]: Boolean(req.audio) }
+            : {}),
           aspect_ratio: aspectRatio,
           duration: durationSeconds,
           seed,

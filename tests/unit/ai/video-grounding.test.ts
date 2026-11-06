@@ -171,6 +171,20 @@ describe('video grounding — grounded by default (Real Images Only)', () => {
     expect(lastFalInput().image_url).toBeUndefined();
   });
 
+  it('sends generate_audio from req.audio on Kling I2V (provider default is ON)', async () => {
+    const seeded = {
+      modelTier: 'premium' as const,
+      imageUrl: 'https://x/seed.png',
+      useReferences: false,
+    };
+    await submitGenerativeVideo(baseReq({ ...seeded, audio: false }));
+    expect(lastFalInput().generate_audio).toBe(false);
+    await submitGenerativeVideo(baseReq({ ...seeded, audio: true }));
+    expect(lastFalInput().generate_audio).toBe(true);
+    await submitGenerativeVideo(baseReq(seeded));
+    expect(lastFalInput().generate_audio).toBe(false);
+  });
+
   it('sends premium text-to-video to the Kling text endpoint with no image field', async () => {
     await submitGenerativeVideo(
       baseReq({ modelTier: 'premium', useReferences: false })

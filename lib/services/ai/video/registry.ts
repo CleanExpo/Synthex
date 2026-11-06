@@ -100,6 +100,7 @@ export const VIDEO_MODELS: VideoModelSpec[] = [
     supportsImageInput: true,
     imageOnly: true,
     imageInputField: 'start_image_url',
+    audioField: 'generate_audio',
     supportsAudio: true,
     strengths: [
       'native audio + lip-sync',
