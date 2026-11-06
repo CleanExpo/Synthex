@@ -579,7 +579,7 @@ function lum(hex) {
       const src = own ? (v.hostedPoster || "") : film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : ((HOSTED ? v.hostedPoster : v.thumbDataUri) || "");
       if (src) {
         const img = document.createElement("img"); img.src = src; img.alt = ""; img.loading = "lazy"; shot.append(img);
-        const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play);
+        if (film) { const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play); }
       } else {
         const mark = document.createElement("span"); mark.className = "mark"; mark.textContent = l.label;
         if (l.label.length > 30) mark.classList.add("long"); shot.append(mark);

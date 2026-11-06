@@ -39,10 +39,16 @@ assert.doesNotMatch(config, /^\[allowlist\]/m);
 const publishable = 'sb_publishable_k7Qm9Vx2Lp8Rn4Tw6Ys1Za3Bc5';
 const other = 'a91f3c0e7b24d65890ab12cd34ef56';
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'card-gitleaks-'));
-const report = path.join(os.tmpdir(), 'card-gitleaks-report.json');
+const reportDir = fs.mkdtempSync(
+  path.join(os.tmpdir(), 'card-gitleaks-report-')
+);
+const report = path.join(reportDir, 'report.json');
 try {
   fs.mkdirSync(path.join(dir, 'business-card/site'), { recursive: true });
   fs.mkdirSync(path.join(dir, 'other'), { recursive: true });
+  fs.mkdirSync(path.join(dir, 'fixtures/business-card/site'), {
+    recursive: true,
+  });
   fs.writeFileSync(
     path.join(dir, 'business-card/site/index.html'),
     `<script>window.BRAND_KIT={"key":"${publishable}"}</script>\n`
@@ -50,6 +56,10 @@ try {
   fs.writeFileSync(
     path.join(dir, 'business-card/site/preview.html'),
     `<script>window.BRAND_KIT={"key":"${publishable}","token":"${other}"}</script>\n`
+  );
+  fs.writeFileSync(
+    path.join(dir, 'fixtures/business-card/site/index.html'),
+    `<script>window.BRAND_KIT={"key":"${publishable}"}</script>\n`
   );
   fs.writeFileSync(
     path.join(dir, 'other/app.js'),
@@ -60,11 +70,11 @@ try {
     bin,
     [
       'dir',
-      dir,
+      '.',
       '--config',
       path.join(root, '.gitleaks.toml'),
       '--gitleaks-ignore-path',
-      dir,
+      '.',
       '--no-banner',
       '--report-format',
       'json',
@@ -73,7 +83,7 @@ try {
       '--exit-code',
       '0',
     ],
-    { encoding: 'utf8' }
+    { encoding: 'utf8', cwd: dir }
   );
   assert.equal(
     scan.status,
@@ -81,8 +91,10 @@ try {
     `gitleaks failed to scan (${bin}): ${scan.stderr || scan.error || ''}`
   );
   const findings = JSON.parse(fs.readFileSync(report, 'utf8'));
+  // Paths are relative to the scanned root, like the repo-relative paths CI sees,
+  // so the root-anchored allowlist is exercised exactly.
   const hit = (file, secret) =>
-    findings.some(f => f.File.endsWith(file) && f.Secret === secret);
+    findings.some(f => f.File === file && f.Secret === secret);
   assert.equal(
     hit('business-card/site/index.html', publishable),
     false,
@@ -99,6 +111,11 @@ try {
     'another secret on the preview line must still be reported'
   );
   assert.equal(
+    hit('fixtures/business-card/site/index.html', publishable),
+    true,
+    'a nested copy of the card page is not the root page and must still be reported'
+  );
+  assert.equal(
     hit('other/app.js', publishable),
     true,
     'the publishable key outside the card pages must still be reported'
@@ -108,5 +125,5 @@ try {
   );
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
-  fs.rmSync(report, { force: true });
+  fs.rmSync(reportDir, { recursive: true, force: true });
 }

@@ -848,14 +848,17 @@ try {
         src: img ? img.getAttribute('src').slice(0, 20) : '',
         mark: mark ? mark.textContent : '',
         width: img ? img.naturalWidth : 0,
+        play: Boolean(tile.querySelector('.tshot .play')),
       };
     });
     check(
       unite.found &&
         unite.src.startsWith('data:image/') &&
         !unite.mark &&
-        unite.width > 0,
-      'Unite-Group preview tile shows its poster: ' + JSON.stringify(unite)
+        unite.width > 0 &&
+        !unite.play,
+      'Unite-Group preview tile shows its poster and no play overlay (it has no film): ' +
+        JSON.stringify(unite)
     );
     check(
       preview.errors.length === 0,
