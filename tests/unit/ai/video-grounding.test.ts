@@ -156,6 +156,47 @@ describe('video grounding — grounded by default (Real Images Only)', () => {
     expect(jobs[0].grounded).toBe(true);
   });
 
+  it('sends premium image-to-video to Kling I2V as start_image_url', async () => {
+    await submitGenerativeVideo(
+      baseReq({
+        modelTier: 'premium',
+        imageUrl: 'https://x/seed.png',
+        useReferences: false,
+      })
+    );
+    expect(submitToFal).toHaveBeenCalledWith(
+      'fal-ai/kling-video/v3/pro/image-to-video',
+      expect.objectContaining({ start_image_url: 'https://x/seed.png' })
+    );
+    expect(lastFalInput().image_url).toBeUndefined();
+  });
+
+  it('sends generate_audio from req.audio on Kling I2V (provider default is ON)', async () => {
+    const seeded = {
+      modelTier: 'premium' as const,
+      imageUrl: 'https://x/seed.png',
+      useReferences: false,
+    };
+    await submitGenerativeVideo(baseReq({ ...seeded, audio: false }));
+    expect(lastFalInput().generate_audio).toBe(false);
+    await submitGenerativeVideo(baseReq({ ...seeded, audio: true }));
+    expect(lastFalInput().generate_audio).toBe(true);
+    await submitGenerativeVideo(baseReq(seeded));
+    expect(lastFalInput().generate_audio).toBe(false);
+  });
+
+  it('sends premium text-to-video to the Kling text endpoint with no image field', async () => {
+    await submitGenerativeVideo(
+      baseReq({ modelTier: 'premium', useReferences: false })
+    );
+    expect(submitToFal).toHaveBeenCalledWith(
+      'fal-ai/kling-video/v3/pro/text-to-video',
+      expect.anything()
+    );
+    expect(lastFalInput().image_url).toBeUndefined();
+    expect(lastFalInput().start_image_url).toBeUndefined();
+  });
+
   it('treats useReferences:false as a hard opt-out even with a referenceSet (escape hatch)', async () => {
     const jobs = await submitGenerativeVideo(
       baseReq({ referenceSet: 'carpet-cleaning', useReferences: false })

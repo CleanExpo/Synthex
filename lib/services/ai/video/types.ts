@@ -16,6 +16,22 @@ export interface VideoModelSpec {
   maxDurationSeconds: number;
   aspectRatios: AspectRatio[];
   supportsImageInput: boolean;
+  /**
+   * Dedicated image-to-video endpoint. Eligible only when the request has a
+   * seed image — a text request must not land here just because it is cheaper.
+   */
+  imageOnly?: boolean;
+  /**
+   * fal body key for the seed still. Seedance image-to-video uses `image_url`.
+   * Kling v3 Pro image-to-video requires `start_image_url`.
+   */
+  imageInputField?: 'image_url' | 'start_image_url';
+  /**
+   * fal body key for the native-audio switch. The Kling v3 image-to-video
+   * schema defaults `generate_audio` to true, so it must be sent explicitly
+   * or an audio:false request returns a clip with sound.
+   */
+  audioField?: 'generate_audio';
   supportsAudio: boolean;
   strengths: string[];
   weaknesses: string[];
