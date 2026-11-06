@@ -5,17 +5,35 @@ name: Fleet hand-off PR guard
 # repo opens a PR for freshly pushed branches through GitHub's "Compare & pull request" banner
 # (DECISIONS.md OPEN-2). New hand-offs use refs/fleet/* (refs cannot be PR heads); this closes
 # any PR still opened from the old branch names, within seconds. No checkout, no PR code runs.
+#
+# Trigger (SYN-1390): GitHub blocks the pull-request-target trigger by default in public repositories from
+# 2 December 2026 (changelog 2026-11-02). The close job now runs on pull_request; fleet branches are
+# pushed to this repository, so its token can still close the PR. pull_request does not run when a
+# PR has a merge conflict, and a PR from a fork gets a read-only token, so the sweep job (schedule
+# and manual dispatch, always run from main) closes any such PR the close job could not.
+#
+# Trusted revision: pull_request runs this file from the PR merge commit, so a fleet-unit PR that
+# edits this workflow can skip the close job. Immediate close from a trusted revision needs
+# pull_request_target, which this change is leaving. The hourly sweep always runs the copy on
+# main, which is the trusted path; that is the continuation if close is skipped or the sweep
+# hits timeout-minutes.
+#
+# Manual dispatch: select the main branch so the run uses this sweep. Dispatching another
+# revision that lacks the sweep is a no-op; the hourly job remains the fallback.
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened]
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
 
 jobs:
   close:
-    if: startsWith(github.head_ref, 'fleet-unit/') || github.head_ref == 'fleet-ledger'
+    if: github.event_name == 'pull_request' && (startsWith(github.head_ref, 'fleet-unit/') || github.head_ref == 'fleet-ledger')
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
@@ -25,3 +43,28 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           gh pr close "$PR" --repo "$REPO" --comment "Closed automatically: fleet hand-off branches are not released by pull request. The work ships in its phase PR through scripts/fleet/merge-phase.mjs (DECISIONS.md FD-3, OPEN-2)."
+
+  sweep:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh api --paginate \
+            "/repos/${REPO}/pulls?state=open&per_page=100" \
+            --jq '.[] | select((.head.ref | startswith("fleet-unit/")) or .head.ref == "fleet-ledger") | .number' \
+            > prs.txt
+          echo "open fleet hand-off PRs: $(wc -l < prs.txt)"
+          failed=0
+          while IFS= read -r PR || [ -n "${PR:-}" ]; do
+            [ -z "$PR" ] && continue
+            if ! gh pr close "$PR" --repo "$REPO" --comment "Closed automatically: fleet hand-off branches are not released by pull request. The work ships in its phase PR through scripts/fleet/merge-phase.mjs (DECISIONS.md FD-3, OPEN-2)."; then
+              echo "failed to close $PR" >&2
+              failed=1
+            fi
+          done < prs.txt
+          exit "$failed"
