@@ -1,0 +1,19 @@
+# Living card (SYN-1395). The brand kit inlined into the hosted page and the
+# preview carries the Supabase publishable key. That key is public by design
+# (anon role). Allow that value only, and only on those two pages.
+# Any other secret on the same line is still reported. Every default rule stays on.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+
+[[rules.allowlists]]
+description = "Supabase publishable key on the living card pages"
+condition = "AND"
+regexTarget = "secret"
+regexes = ['''^sb_publishable_[A-Za-z0-9_-]+$''']
+paths = [
+  '''^business-card/site/index\.html$''',
+  '''^business-card/site/preview\.html$''',
+]

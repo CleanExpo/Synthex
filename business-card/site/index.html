@@ -582,6 +582,7 @@ function lum(hex) {
   }
   // Unite-Group Nexus: a tile per business in the kit's order. A film opens its panel (thumbnail, watch, visit);
   // a site without a film links out; a business whose page is not live yet shows as coming soon.
+  // The preview does not carry the video file, so a hosted film that only has a poster still shows that poster.
   const shelf = links.filter(l => (l.visitor && safeUrl(l.url)) || (!l.url && l.pendingUrl));
   if (shelf.length) {
     shelf.forEach(l => {
@@ -590,10 +591,10 @@ function lum(hex) {
       t.className = "tile" + (/nexus/i.test(l.label) ? " wide" : "") + (live ? "" : " soon wide slim");
       if (live) { t.href = l.url; t.target = "_blank"; t.rel = "noopener"; }
       const shot = document.createElement("span"); shot.className = "tshot";
-      const src = own ? (v.hostedPoster || "") : film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : "";
+      const src = own ? (v.hostedPoster || "") : film ? ((HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg") : ((HOSTED ? v.hostedPoster : v.thumbDataUri) || "");
       if (src) {
         const img = document.createElement("img"); img.src = src; img.alt = ""; img.loading = "lazy"; shot.append(img);
-        const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play);
+        if (film) { const play = document.createElement("span"); play.className = "play"; play.setAttribute("aria-hidden", "true"); shot.append(play); }
       } else {
         const mark = document.createElement("span"); mark.className = "mark"; mark.textContent = l.label;
         if (l.label.length > 30) mark.classList.add("long"); shot.append(mark);
@@ -1448,7 +1449,10 @@ function openBiz(l) {
   // A film hosted on the card plays in place in a native player; YouTube films keep the thumbnail and link
   const fv = $("biz-film"); fv.pause(); fv.hidden = !own; $("biz-watch").hidden = own; $("biz-watch-btn").hidden = own;
   if (own) {
-    if (fv.getAttribute("src") !== v.hostedVideo) { fv.src = v.hostedVideo; if (v.hostedPoster) fv.poster = v.hostedPoster; }
+    // Keep the current film loaded when it is opened again. The poster is always this film's still,
+    // or none: the next hosted film with no poster must not keep the previous film's poster.
+    if (fv.getAttribute("src") !== v.hostedVideo) fv.src = v.hostedVideo;
+    fv.poster = v.hostedPoster || "";
     fv.setAttribute("aria-label", l.label + " film"); $("biz-visit").href = l.url; $("biz-sheet").hidden = false; SFX.whoosh(); return;
   }
   const src = (HOSTED ? v.hostedThumb : v.thumbDataUri) || v.thumbDataUri || "https://i.ytimg.com/vi/" + v.youtubeId + "/hqdefault.jpg";
