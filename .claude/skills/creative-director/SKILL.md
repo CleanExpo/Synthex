@@ -36,7 +36,7 @@ The visual evidence layer. Senior-copywriter sets the claim; this skill turns th
 
 ### M-1 Specific-evidence-source discipline
 
-Every visual claim names the source citation (publication / manufacturer spec / standards body), the year + section ID, the verification-gate state of that source, the EXIF/permission state of any included asset, and the companion-page schema link in the same sentence as the visual specification. _"Use a thermal-imaging photo for the explainer"_ fails. _"Thermal-imaging frame at 00:14 cites IICRC S500-2021 §10.5.2 `[verified-VG-04 · CARSI licensed copy]`, photo asset `restoration-assist/exhibits/thermal-001.heic` EXIF-stripped + homeowner permission `[verified · 2026-03-12 release form ID HR-887]`, companion-page `https://restoreassist.app/hub/<published-article-slug>` carries `VideoObject` + `LearningResource` schema with the same citation `[verified · live page fetched, both types read]`"_ passes. A companion page that has not been fetched live, or does not resolve, makes REM-3 unverified, never pass.
+Every visual claim names the source citation (publication / manufacturer spec / standards body), the year + section ID, the verification-gate state of that source, the EXIF/permission state of any included asset, and the companion-page schema link in the same sentence as the visual specification. _"Use a thermal-imaging photo for the explainer"_ fails. _"Thermal-imaging frame at 00:14 cites IICRC S500-2021 §10.5.2 `[verified-VG-04 · CARSI licensed copy]`, photo asset `restoration-assist/exhibits/thermal-001.heic` EXIF-stripped + homeowner permission `[verified · 2026-03-12 release form ID HR-887]`, companion-page `https://restoreassist.app/hub/<published-article-slug>` meets the REM-3 pass rule `[verified · fetched live on the check date · VideoObject + LearningResource (explainer) present · schema cites IICRC S500-2021 §10.5.2, same as the frame]`"_ passes. The REM-3 state always comes from the REM-3 pass rule in the NEVER list.
 
 ### M-2 Attribution-hypothesis discipline
 
@@ -62,7 +62,7 @@ Output is structured (see Output contract). Other skills (senior-strategist, sen
 - **NEVER** show damage photos / before-after photos without explicit homeowner permission — Q3.2.5 P3 hard rule · permission gate state required in evidence-source map.
 - **NEVER** vary the DR brand-mark — "DR" callsign · "Disaster Recovery" formal · no third name · no portmanteaus · no decorative variants.
 - **NEVER** let visual citations diverge from copy citations — same section / same year / same standards body as the senior-copywriter draft references.
-- **NEVER** ship a video without a companion-page URL that carries `VideoObject` + relevant schema (LearningResource / HowTo / FAQPage per content type) — Q3.1.3 Amendment 4 binding.
+- **NEVER** ship a video without a companion-page URL that carries `VideoObject` + relevant schema (LearningResource / HowTo / FAQPage per content type) — Q3.1.3 Amendment 4 binding. **REM-3 pass rule** (the only definition of a REM-3 pass; every other line of this skill points here): fetch the companion page live on the check date. REM-3 is `pass` only when (a) the page resolves, (b) it carries `VideoObject` plus the schema for its content type (`LearningResource` for an explainer, `HowTo` for a procedure, `FAQPage` for questions and answers), and (c) the citation in that schema names the same standards body, section and year as the visual and copy citations. If the page does not resolve, or (b) or (c) could not be read, REM-3 is `unverified`. If the page resolves and (b) or (c) is read and not met, REM-3 is `fail`.
 - **NEVER** project earnings, ROI, or specific outcome claims in visuals — REM-2 binding · directional language only · all numeric claims gate on verification-gates.md state.
 - **NEVER** use stock imagery at all — REAL IMAGES ONLY mandate (founder). All generated imagery routes through `generateImage()`/`generateBatch()` (`lib/services/ai/image-generation.ts`) or the `generate_image` MCP tool, grounded-by-default on the owned reference library (`public/reference-library/manifest.json` + private bucket `reference-library-private`, ingest via `POST /api/admin/private-refs`). No owned references for the subject ⇒ generation is `blocked: true` — commission/ingest real photos first; `useReferences: false` is the sole audited escape hatch (output stamped `UNGROUNDED` and must never ship as evidence).
 - **NEVER** bypass the `brand-voice-enforce` gate — every visual carries copy (alt text · captions · citation overlays · CTAs) and that copy must pass the same mechanical gate as the senior-copywriter article it accompanies.
@@ -113,11 +113,11 @@ interface CreativeDirectorOutput {
   protocol_compliance: {
     rem_1_direct_sourcing: 'pass' | 'fail';
     rem_2_no_projected_earnings: 'pass' | 'fail';
-    rem_3_companion_page_schema: 'pass' | 'fail';
+    rem_3_companion_page_schema: 'pass' | 'fail' | 'unverified'; // set only by the REM-3 pass rule (NEVER list)
     exif_strip_check: 'pass' | 'fail' | 'not-applicable';
     permission_check: 'pass' | 'fail' | 'not-applicable';
     companion_page_schema_types_present: string[]; // e.g., ['VideoObject', 'LearningResource']
-    overall: 'pass' | 'rework'; // any 'fail' → rework
+    overall: 'pass' | 'rework'; // any 'fail' or 'unverified' → rework
   };
   attribution_hypothesis: {
     metric: string; // e.g., 'companion-page time-on-page'
@@ -169,7 +169,7 @@ interface CreativeDirectorOutput {
 
 **Visual specification.** 90-second Remotion explainer · `dr-design-tokens` palette (RA-primary-teal · RA-charcoal-50) · DR brand-mark omitted (RA branding only) · citation strip lower-third with 4s minimum dwell per citation · alt text per frame ≥ 8 words describing the cited content (not the visual) · WCAG contrast ratio 7.2 (AAA) on overlay text · captions required (auto-generated then human QA · permission gate already verified for technician credential frame). Remotion script path: `board-cron/video-assets/scripts/ra-iicrc-s500-explainer-v1.tsx`.
 
-**Protocol-compliance check.** REM-1 Direct Sourcing: **fail** (frame-00:32 cites VG-05 in `placeholder` state — IICRC S520 source not yet licensed per Pending Human Action SYN-816). REM-2 No Projected Earnings: pass (no ROI / outcome claims). REM-3 Companion-Page Schema: **unverified** (companion-page `https://restoreassist.app/hub/iicrc-s500-explainer` returned 404 on 07/11/2026, so `VideoObject` + `LearningResource` cannot be confirmed; REM-3 passes only after the live page is fetched and both types are read from it). EXIF strip: pass (all assets stripped). Permission check: pass (HR-887 + HR-892 + employment contract verified). Companion-page schema types present: none confirmed (page not live). **Overall: rework** — frame-00:32 must wait for SYN-816 (IICRC S520 licensed copy), and REM-3 must pass against the live companion page, before publish.
+**Protocol-compliance check.** REM-1 Direct Sourcing: **fail** (frame-00:32 cites VG-05 in `placeholder` state — IICRC S520 source not yet licensed per Pending Human Action SYN-816). REM-2 No Projected Earnings: pass (no ROI / outcome claims). REM-3 Companion-Page Schema: **unverified** (companion-page `https://restoreassist.app/hub/iicrc-s500-explainer` returned 404 on 07/11/2026, so the REM-3 pass rule cannot be checked). EXIF strip: pass (all assets stripped). Permission check: pass (HR-887 + HR-892 + employment contract verified). Companion-page schema types present: none confirmed (page not live). **Overall: rework** — frame-00:32 must wait for SYN-816 (IICRC S520 licensed copy), and REM-3 must reach `pass` under the REM-3 pass rule, before publish.
 
 **Attribution hypothesis.** Metric: companion-page time-on-page · Target: ≥ 95s · Baseline: text-only 62s · Measurement window: 2026-05-04 → 2026-05-25 · Sample size: 400 sessions · Kill threshold: scroll-depth ≤ 62 % at 14-day mid-read OR comprehension-quiz pass-rate ≤ 48 % · Revert action: pull video from companion-page, revert to text-only, route protocol-failure analysis to senior-strategist.
 
