@@ -1,0 +1,1128 @@
+{
+  "campaign": "ccw-video-2026-11",
+  "client": "CCW (Carpet Cleaners Warehouse)",
+  "linear": "SYN-1404",
+  "timezone": "AEST (UTC+10, Brisbane time)",
+  "dateFormat": "DD/MM/YYYY",
+  "utm": {
+    "source": "primary channel",
+    "medium": "organic_social",
+    "campaign": "ccw-video-2026-11",
+    "content": "video id"
+  },
+  "approval": "Nothing is rendered for release, posted or sent to Toby until Phill approves the batch.",
+  "videos": [
+    {
+      "id": "ccw-w1-d1-am",
+      "slotKey": "2026-11-16-ccw-video-1",
+      "date": "16/11/2026",
+      "weekday": "Monday",
+      "slotAest": "07:00",
+      "week": 1,
+      "funnelStage": "awareness",
+      "theme": "Storm season",
+      "title": "Cyclone season is open",
+      "hook": "Cyclone season opened on 1 November. Your drying kit has until the first call to be ready.",
+      "message": "The 2026/27 season runs 1 November to 30 April. Check air movers, dehumidifiers and scrubbers now, while there is time to fix or replace them.",
+      "products": [
+        "XPOWER X-800 Air Mover",
+        "Dri-Eaz LGR 7000XLi Dehumidifier",
+        "Razorback MaxxGuard 550 Air Scrubber"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/carpet-cleaning-result",
+        "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp",
+        "water-damage-restoration/ccw-dri-eaz-dehumidifier-lgr-7000xl-230volt",
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber"
+      ],
+      "cta": "See the drying range",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d1-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d1-pm",
+      "slotKey": "2026-11-16-ccw-video-2",
+      "date": "16/11/2026",
+      "weekday": "Monday",
+      "slotAest": "17:30",
+      "week": 1,
+      "funnelStage": "awareness",
+      "theme": "Storm season",
+      "title": "A quiet forecast is not a dry season",
+      "hook": "Forecasters expect five to eight named cyclones this season. The phones still ring after every storm.",
+      "message": "ECMWF modelling points to 5 to 8 named storms against a long-term average of 11. Storms, flash flooding and burst pipes still bring water jobs. Be ready for the work, not the forecast.",
+      "products": [
+        "Water Claw Large Flood Extraction Tool",
+        "Dri-Eaz Stryker Extraction Wand"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-waterclaw-large-deluxe",
+        "water-damage-restoration/ccw-dri-eaz-extraction-wand-stryker",
+        "water-damage-restoration/ccw-xpower-low-profile-airmover"
+      ],
+      "cta": "See the drying range",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d1-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d2-am",
+      "slotKey": "2026-11-17-ccw-video-1",
+      "date": "17/11/2026",
+      "weekday": "Tuesday",
+      "slotAest": "07:00",
+      "week": 1,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "Four placed beat two powerful",
+      "hook": "Four air movers in the right places will beat two big ones aimed at the middle of the room.",
+      "message": "Evaporation is a surface-area problem. Spread the airflow across the wet area. That is why the number of units on the job often matters more than any one unit's rating.",
+      "products": [
+        "XPOWER P-230AT Mini Air Mover",
+        "XPOWER X-400 Air Mover",
+        "Dri-Eaz Velo Low Profile Airmover"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-airmover-mini-p-230at-1-4hp",
+        "water-damage-restoration/ccw-xpower-airmover-x400-1-2hp",
+        "water-damage-restoration/ccw-dri-eaz-velo-low-profile-air-mover"
+      ],
+      "cta": "Read the buying guide on the air movers page",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d2-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d2-pm",
+      "slotKey": "2026-11-17-ccw-video-2",
+      "date": "17/11/2026",
+      "weekday": "Tuesday",
+      "slotAest": "17:30",
+      "week": 1,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "Low profile goes where standard cannot",
+      "hook": "Most of the wet area in a furnished home is under something.",
+      "message": "Under a bed, against a skirting, beneath a vanity. A low-profile air mover reaches the places a standard unit cannot.",
+      "products": [
+        "Dri-Eaz Velo Low Profile Airmover",
+        "XPOWER PL700A Low Profile Air Mover"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-dri-eaz-velo-low-profile-air-mover",
+        "water-damage-restoration/ccw-xpower-low-profile-airmover"
+      ],
+      "cta": "See the low-profile units",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d2-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d3-am",
+      "slotKey": "2026-11-18-ccw-video-1",
+      "date": "18/11/2026",
+      "weekday": "Wednesday",
+      "slotAest": "07:00",
+      "week": 1,
+      "funnelStage": "awareness",
+      "theme": "What you may not know",
+      "title": "Check the plug and the frequency",
+      "hook": "Two machines can look the same and still not be the same machine.",
+      "message": "Equipment built for Australia is specified at 50 Hz with an AU plug. An imported 60 Hz unit is not the same machine. Check the plate before you buy.",
+      "products": [
+        "Dry Air Max Force Ventilator 50 Hz AU plug",
+        "Dri-Eaz LGR BD2500 Dehumidifier 230 V"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-dry-air-maxforce-ventilator-50hz-220v-au-plug",
+        "water-damage-restoration/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt"
+      ],
+      "cta": "Check the specs on the product page",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d3-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d3-pm",
+      "slotKey": "2026-11-18-ccw-video-2",
+      "date": "18/11/2026",
+      "weekday": "Wednesday",
+      "slotAest": "17:30",
+      "week": 1,
+      "funnelStage": "awareness",
+      "theme": "Storm season",
+      "title": "The first 24 to 48 hours",
+      "hook": "On a water job, the clock starts when the water stops.",
+      "message": "Australian workplace guidance says clean up wet areas within 24 to 48 hours, and the water damage standard says start mitigation as soon as it is safe. Have the extraction and drying gear ready to load.",
+      "products": [
+        "Water Claw Medium Deluxe with Injection",
+        "SOS Pro Sub Surface Extraction Tool",
+        "XPOWER X-800 Air Mover"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-waterclaw-med-dlx-with-injection",
+        "water-damage-restoration/ccw-sos-pro-sub-surface-extraction-tool",
+        "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp"
+      ],
+      "cta": "See the drying range",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d3-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d4-am",
+      "slotKey": "2026-11-19-ccw-video-1",
+      "date": "19/11/2026",
+      "weekday": "Thursday",
+      "slotAest": "07:00",
+      "week": 1,
+      "funnelStage": "awareness",
+      "theme": "Did you know",
+      "title": "Not all water is the same",
+      "hook": "Clean water, grey water and sewage are three different jobs.",
+      "message": "The water damage standard sorts water into Category 1, 2 and 3. Time and temperature can move it to a worse category. The category decides the method and the protection.",
+      "products": [
+        "Hydro Shark Moisture Sensor",
+        "Razorback MaxxGuard 550 Air Scrubber"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-hydro-shark-moisture-probe",
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber"
+      ],
+      "cta": "Read CCW's guides",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/blogs/news",
+      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d4-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d4-pm",
+      "slotKey": "2026-11-19-ccw-video-2",
+      "date": "19/11/2026",
+      "weekday": "Thursday",
+      "slotAest": "17:30",
+      "week": 1,
+      "funnelStage": "retention",
+      "theme": "Service your equipment",
+      "title": "The pre-filter protects the HEPA",
+      "hook": "The cheapest filter in an air scrubber protects the most expensive one.",
+      "message": "Air scrubber filters are staged. The pre-filter protects the HEPA. Running without it, or past its life, turns a cheap filter change into an expensive one.",
+      "products": [
+        "Razorback MaxxGuard 550 Air Scrubber",
+        "Dri-Eaz Velo HEPA Pre-Filter"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber",
+        "water-damage-restoration/ccw-dri-eaz-pre-filter-velo-hepa-20-pack",
+        "water-damage-restoration/ccw-dri-eaz-velo-hepa-primary-filter-replacement"
+      ],
+      "cta": "See Razorback filters and spares",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/razorback",
+      "landingUrl": "https://ccwonline.com.au/collections/razorback?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d4-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d5-am",
+      "slotKey": "2026-11-20-ccw-video-1",
+      "date": "20/11/2026",
+      "weekday": "Friday",
+      "slotAest": "07:00",
+      "week": 1,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "Count units per vehicle",
+      "hook": "The air mover that fits in the van is the one that dries the house.",
+      "message": "Stackability and footprint decide how many jobs a crew covers in a day. Count units per vehicle, not horsepower.",
+      "products": [
+        "XPOWER X-600AC Air Mover with clamp",
+        "XPOWER X-800 Multi Drying Kit"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-xpower-airmover-x600ac-3-4hp-inc-clamp",
+        "water-damage-restoration/ccw-xpower-air-mover-800-multi-drying-kit-x-800-mdk"
+      ],
+      "cta": "See the air movers",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d5-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w1-d5-pm",
+      "slotKey": "2026-11-20-ccw-video-2",
+      "date": "20/11/2026",
+      "weekday": "Friday",
+      "slotAest": "17:30",
+      "week": 1,
+      "funnelStage": "conversion",
+      "theme": "Storm-ready check",
+      "title": "Book a storm-ready check",
+      "hook": "Find the fault now, not on the first wet morning.",
+      "message": "Call CCW and describe how your kit is running. CCW's technicians diagnose most problems over the phone, and stocked parts go out the same day.",
+      "products": [
+        "Razorback MaxxGuard 550UV Air Scrubber",
+        "XPOWER X-800 Air Mover",
+        "Dri-Eaz LGR BD2500 Dehumidifier"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber-with-uv-c-light-sterilization-technology",
+        "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp",
+        "water-damage-restoration/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt"
+      ],
+      "cta": "Call CCW on 1800 686 869",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d5-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d1-am",
+      "slotKey": "2026-11-23-ccw-video-1",
+      "date": "23/11/2026",
+      "weekday": "Monday",
+      "slotAest": "07:00",
+      "week": 2,
+      "funnelStage": "consideration",
+      "theme": "What you may not know",
+      "title": "Encapsulation or extraction",
+      "hook": "Selling encapsulation as a restorative clean is where commercial contracts go wrong.",
+      "message": "Encapsulation suits interim commercial maintenance where downtime is short. Extraction with a prespray and rinse is the restorative clean. Pick by the maintenance cycle.",
+      "products": [
+        "Polystar 15 inch Orbital Encapsulation Scrubber",
+        "Razorback CRB-15 Counter-Rotating Brush Machine"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-cleanstar-ploystar-15inch-orbital-encapsulation-scrubber-floor-polisher",
+        "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new",
+        "carpet-cleaning/carpet-cleaning-extraction"
+      ],
+      "cta": "See the Razorback range",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/razorback",
+      "landingUrl": "https://ccwonline.com.au/collections/razorback?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d1-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d1-pm",
+      "slotKey": "2026-11-23-ccw-video-2",
+      "date": "23/11/2026",
+      "weekday": "Monday",
+      "slotAest": "17:30",
+      "week": 2,
+      "funnelStage": "consideration",
+      "theme": "CCW's own range",
+      "title": "Razorback is made here",
+      "hook": "Spares for this machine are not waiting in an overseas parts queue.",
+      "message": "Razorback is CCW's own range. The portables are made in house, and the machines, chemistry and spares are backed by CCW in Australia.",
+      "products": [
+        "Razorback CRB-15",
+        "Razorback MaxxGuard 550UV Air Scrubber"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new",
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber-with-uv-c-light-sterilization-technology"
+      ],
+      "cta": "See the Razorback range",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/razorback",
+      "landingUrl": "https://ccwonline.com.au/collections/razorback?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d1-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d2-am",
+      "slotKey": "2026-11-24-ccw-video-1",
+      "date": "24/11/2026",
+      "weekday": "Tuesday",
+      "slotAest": "07:00",
+      "week": 2,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "Match prespray to soil, then fibre",
+      "hook": "The prespray choice starts with the soil, not the bottle you used last time.",
+      "message": "Match prespray to the soil type first, then to the fibre. Enzyme prespray suits protein and organic soil. Every prespray needs the right rinse behind it.",
+      "products": [
+        "Razorback prespray range",
+        "High Volume Portable Foamer 39 L"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/carpet-cleaning-solution",
+        "carpet-cleaning/ccw-high-volume-portable-foamer-39ltr"
+      ],
+      "cta": "See Razorback chemistry",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/razorback",
+      "landingUrl": "https://ccwonline.com.au/collections/razorback?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d2-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d2-pm",
+      "slotKey": "2026-11-24-ccw-video-2",
+      "date": "24/11/2026",
+      "weekday": "Tuesday",
+      "slotAest": "17:30",
+      "week": 2,
+      "funnelStage": "retention",
+      "theme": "What you may not know",
+      "title": "UV light and pet urine",
+      "hook": "A blacklight shows more than urine, and that can mislead a quote.",
+      "message": "Other things fluoresce under UV too, and 365 nm and 395 nm lights behave differently. Toby's guide on the CCW blog explains how to inspect a room before you quote.",
+      "products": ["LED UV Flashlight 51 LEDs", "SOS UV Black Light Kit"],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-led-uv-flash-light-51-leds",
+        "water-damage-restoration/ccw-sos-uv-black-light-kit"
+      ],
+      "cta": "Read Toby's UV guide",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/blogs/news",
+      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d2-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d3-am",
+      "slotKey": "2026-11-25-ccw-video-1",
+      "date": "25/11/2026",
+      "weekday": "Wednesday",
+      "slotAest": "07:00",
+      "week": 2,
+      "funnelStage": "awareness",
+      "theme": "What you may not know",
+      "title": "Viscose rugs need low moisture",
+      "hook": "Viscose is one of the easiest rugs to damage for good.",
+      "message": "Browning, water marks, pile distortion and dye migration all come from the wrong method. Low-moisture cleaning and the right chemistry protect the rug. The full method is in Toby's guide.",
+      "products": [
+        "Professional upholstery hand tool",
+        "Sapphire Scientific Clear-View Upholstery Pro AW59"
+      ],
+      "referenceSubjects": [
+        "upholstery-cleaning/upholstery-hand-tool",
+        "upholstery-cleaning/ccw-sapphire-scientific-upholstery-pro-clear"
+      ],
+      "cta": "Read Toby's viscose rug guide",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/blogs/news",
+      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d3-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d3-pm",
+      "slotKey": "2026-11-25-ccw-video-2",
+      "date": "25/11/2026",
+      "weekday": "Wednesday",
+      "slotAest": "17:30",
+      "week": 2,
+      "funnelStage": "consideration",
+      "theme": "Product explainer",
+      "title": "The clear-view upholstery tool",
+      "hook": "Seeing the water you pull out is how you stop over-wetting a lounge.",
+      "message": "The Sapphire Clear-View Upholstery Pro has a clear head, so you can watch the extraction as you work. Its flow control lets you set the solution for the fabric.",
+      "products": ["Sapphire Scientific Clear-View Upholstery Pro AW59"],
+      "referenceSubjects": [
+        "upholstery-cleaning/ccw-sapphire-scientific-upholstery-pro-clear",
+        "upholstery-cleaning/upholstery-hand-tool"
+      ],
+      "cta": "See the Upholstery Pro",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/sapphire-scientific-1",
+      "landingUrl": "https://ccwonline.com.au/collections/sapphire-scientific-1?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d3-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d4-am",
+      "slotKey": "2026-11-26-ccw-video-1",
+      "date": "26/11/2026",
+      "weekday": "Thursday",
+      "slotAest": "07:00",
+      "week": 2,
+      "funnelStage": "retention",
+      "theme": "Service your equipment",
+      "title": "The glide is a part, not the wand",
+      "hook": "When the wand starts to drag, the glide is usually the part to look at.",
+      "message": "Sapphire titanium wands take replaceable glides in 12 and 14 inch. Check the glide and swap it when it is worn, rather than living with a wand that drags.",
+      "products": [
+        "Sapphire 12 inch Titanium Wand",
+        "Sapphire Glide 12 inch Internal Fit"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-sapphire-12-titanium-carpet-cleaning-wand",
+        "carpet-cleaning/ccw-sapphire-glide-12-internal-fit-ptfe-single-piece-aw5ggss12ti-ss-67-082-ss-67-098-ss-67-098a-128271-add"
+      ],
+      "cta": "See Sapphire wands and glides",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/sapphire-scientific-1",
+      "landingUrl": "https://ccwonline.com.au/collections/sapphire-scientific-1?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d4-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d4-pm",
+      "slotKey": "2026-11-26-ccw-video-2",
+      "date": "26/11/2026",
+      "weekday": "Thursday",
+      "slotAest": "17:30",
+      "week": 2,
+      "funnelStage": "retention",
+      "theme": "Did you know",
+      "title": "What 1:32 actually means",
+      "hook": "One to thirty-two is about 31 mL of concentrate for every litre of water.",
+      "message": "Getting dilution wrong costs chemistry or results. CCW's free calculator turns any ratio into millilitres for a sprayer or a bucket.",
+      "products": [
+        "Double pump-up sprayer holder",
+        "Hydro-Force sprayer wall mount"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-holder-double-pump-up-sprayer",
+        "carpet-cleaning/ccw-hf-holder-wall-mount"
+      ],
+      "cta": "Use the dilution calculator",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/blogs/news",
+      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d4-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d5-am",
+      "slotKey": "2026-11-27-ccw-video-1",
+      "date": "27/11/2026",
+      "weekday": "Friday",
+      "slotAest": "07:00",
+      "week": 2,
+      "funnelStage": "consideration",
+      "theme": "Product explainer",
+      "title": "Rotary extraction, explained",
+      "hook": "A rotary extractor scrubs and extracts in one pass.",
+      "message": "Rotary extraction tools such as the HydraMaster RX20 and the cordless Hydro-Force CX-15 agitate while they extract. Ask CCW which suits your jobs and your machine.",
+      "products": [
+        "HydraMaster RX20 NEXTGEN Rotary Extractor",
+        "Hydro-Force CX-15 Cordless Rotary Extraction Tool"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-hydramaster-rx20-nxg-220v50hg-with-orig-style-head",
+        "carpet-cleaning/ccw-hydroforce-cx-15-cordless-rotary-extraction-tool"
+      ],
+      "cta": "Ask CCW which suits you",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d5-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w2-d5-pm",
+      "slotKey": "2026-11-27-ccw-video-2",
+      "date": "27/11/2026",
+      "weekday": "Friday",
+      "slotAest": "17:30",
+      "week": 2,
+      "funnelStage": "conversion",
+      "theme": "Finance",
+      "title": "Finance through one call",
+      "hook": "One finance broker. More than 20 lenders.",
+      "message": "CCW works with Equipped Commercial Finance, accredited with over 20 financiers, for rental, lease or chattel mortgage on equipment.",
+      "products": ["Truckmount and wand", "Razorback CRB-15"],
+      "referenceSubjects": [
+        "carpet-cleaning/carpet-cleaning-truckmount",
+        "carpet-cleaning/ccw-razorback-crb-15-counter-rotating-brush-machine-15-inch-230v-50hz-new"
+      ],
+      "cta": "See finance options",
+      "channels": ["linkedin", "facebook", "instagram", "youtube"],
+      "landingBase": "https://ccwonline.com.au/pages/finance-options",
+      "landingUrl": "https://ccwonline.com.au/pages/finance-options?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w2-d5-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d1-am",
+      "slotKey": "2026-11-30-ccw-video-1",
+      "date": "30/11/2026",
+      "weekday": "Monday",
+      "slotAest": "07:00",
+      "week": 3,
+      "funnelStage": "awareness",
+      "theme": "Service your equipment",
+      "title": "A broken tool is a liability",
+      "hook": "A machine that will not start costs you the job, not just the repair.",
+      "message": "Malfunctioning equipment is a liability, not an asset. Downtime means lost jobs. Fix it before the busy weeks, not during them.",
+      "products": ["Truckmount and hose run", "Sapphire CDV Filter Box"],
+      "referenceSubjects": [
+        "carpet-cleaning/carpet-cleaning-truckmount",
+        "carpet-cleaning/ccw-sapphire-cdv-filter-box"
+      ],
+      "cta": "Call CCW about a fault",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d1-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d1-pm",
+      "slotKey": "2026-11-30-ccw-video-2",
+      "date": "30/11/2026",
+      "weekday": "Monday",
+      "slotAest": "17:30",
+      "week": 3,
+      "funnelStage": "conversion",
+      "theme": "Service your equipment",
+      "title": "Diagnosed over the phone",
+      "hook": "Describe the fault. Most can be found without the machine leaving your van.",
+      "message": "CCW's technicians diagnose most problems over the phone, for most brands, and send the stocked part the same day.",
+      "products": ["Sapphire CDV Filter Box", "Aluminium Reducing Connector"],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-sapphire-cdv-filter-box",
+        "carpet-cleaning/ccw-aluminium-reducing-connector-2-5-to-2"
+      ],
+      "cta": "Call CCW on 1800 686 869",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d1-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d2-am",
+      "slotKey": "2026-12-01-ccw-video-1",
+      "date": "01/12/2026",
+      "weekday": "Tuesday",
+      "slotAest": "07:00",
+      "week": 3,
+      "funnelStage": "retention",
+      "theme": "Service your equipment",
+      "title": "Check your glides",
+      "hook": "A worn glide is a small part that shows up on every carpet you clean.",
+      "message": "Make a glide check part of your weekly van check. Replacement glides are stocked for Sapphire and Greenglides fittings.",
+      "products": [
+        "Sapphire Glide 14 inch Internal Fit",
+        "GreenGlides AW29 12 inch Glide"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-sapphire-glide-14-internal-fit-ptfe-single-piece-aw5ggss14ti-ss-67-099-ss-67-099a-128272-add",
+        "carpet-cleaning/ccw-greenglides-glide-aw29-12inch-slot-lip-width-over-17mm-new-add"
+      ],
+      "cta": "See glides and spares",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/sapphire-scientific-1",
+      "landingUrl": "https://ccwonline.com.au/collections/sapphire-scientific-1?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d2-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d2-pm",
+      "slotKey": "2026-12-01-ccw-video-2",
+      "date": "01/12/2026",
+      "weekday": "Tuesday",
+      "slotAest": "17:30",
+      "week": 3,
+      "funnelStage": "retention",
+      "theme": "Service your equipment",
+      "title": "Hoses live longer on a reel",
+      "hook": "Kinked hose is lost pressure you pay for on every job.",
+      "message": "Inspect solution and vacuum hose before the busy season and store them on a reel. Space Saver reels hold 60 m and mount in the van.",
+      "products": [
+        "Space Saver Solution Reel 60 m",
+        "Space Saver Triple Solution Reel",
+        "Pressure Washing Hose 30 m"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-space-saver-solution-reel-powder-coated-pf9044",
+        "carpet-cleaning/ccw-space-saver-triple-reel",
+        "carpet-cleaning/ccw-pressure-wash-hose-30mtr-x-3-8"
+      ],
+      "cta": "See reels and hose",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/",
+      "landingUrl": "https://ccwonline.com.au/?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d2-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d3-am",
+      "slotKey": "2026-12-02-ccw-video-1",
+      "date": "02/12/2026",
+      "weekday": "Wednesday",
+      "slotAest": "07:00",
+      "week": 3,
+      "funnelStage": "retention",
+      "theme": "Service your equipment",
+      "title": "Dehumidifier pre-season check",
+      "hook": "A dehumidifier that sat dry all winter needs a look before it goes to a wet house.",
+      "message": "Before the season, check the filter, the hoses and the drain on every dehumidifier, following the maker's manual. A drip pan protects the floor while it runs.",
+      "products": [
+        "Dri-Eaz LGR 7000XLi",
+        "XPOWER XD-85LH Dehumidifier",
+        "Injectidry Protect-It Drip Pan"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-dri-eaz-dehumidifier-lgr-7000xl-230volt",
+        "water-damage-restoration/ccw-xpower-dehumidifier-xd-85lh",
+        "water-damage-restoration/ccw-injectidry-protect-it-dehumidifier-drip-pan-25inch-x-25inch-each"
+      ],
+      "cta": "Call CCW for parts",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d3-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d3-pm",
+      "slotKey": "2026-12-02-ccw-video-2",
+      "date": "02/12/2026",
+      "weekday": "Wednesday",
+      "slotAest": "17:30",
+      "week": 3,
+      "funnelStage": "retention",
+      "theme": "Service your equipment",
+      "title": "Air mover check in two minutes",
+      "hook": "Cord, guard, clamp, switch. Four checks before each air mover goes on the truck.",
+      "message": "Look over every cord, guard and clamp before the season. A damaged unit stays in the workshop.",
+      "products": [
+        "XPOWER X-800 Air Mover with clamp",
+        "XPOWER X-47ATR Professional Axial Fan"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp",
+        "water-damage-restoration/ccw-xpower-airmover-turbo-pr-1-3hp-axial"
+      ],
+      "cta": "See the air movers",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d3-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d4-am",
+      "slotKey": "2026-12-03-ccw-video-1",
+      "date": "03/12/2026",
+      "weekday": "Thursday",
+      "slotAest": "07:00",
+      "week": 3,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "A water softener in the van",
+      "hook": "Hard water leaves its mark inside your machine.",
+      "message": "A self-contained automatic water softener treats the water before it reaches the machine. Ask CCW whether your area and your machine need one.",
+      "products": ["Self-contained Automatic Water Softener"],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-self-contained-automatic-water-softener",
+        "carpet-cleaning/carpet-cleaning-truckmount"
+      ],
+      "cta": "Ask CCW about water softeners",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d4-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d4-pm",
+      "slotKey": "2026-12-03-ccw-video-2",
+      "date": "03/12/2026",
+      "weekday": "Thursday",
+      "slotAest": "17:30",
+      "week": 3,
+      "funnelStage": "consideration",
+      "theme": "Product explainer",
+      "title": "Automatic wastewater pump-out",
+      "hook": "A full recovery tank stops a job halfway through a room.",
+      "message": "An automatic wastewater disposal kit pumps the recovery tank out as you work, so you keep cleaning. Always dispose of wastewater the way your local council requires.",
+      "products": ["Automatic Wastewater Disposal System (AWDS) Kit"],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-kit-awds-universal-auto-pump-out-ac12e-ss68-158s-comet",
+        "carpet-cleaning/carpet-cleaning-truckmount"
+      ],
+      "cta": "Ask CCW about AWDS",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d4-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d5-am",
+      "slotKey": "2026-12-04-ccw-video-1",
+      "date": "04/12/2026",
+      "weekday": "Friday",
+      "slotAest": "07:00",
+      "week": 3,
+      "funnelStage": "awareness",
+      "theme": "Parts",
+      "title": "Parts for more than one brand",
+      "hook": "CCW does not only stock parts for its own brands.",
+      "message": "CCW holds a wide range of spare parts across the brands carpet cleaners and restorers use, from filters to fittings.",
+      "products": [
+        "Sapphire CDV Filter Box",
+        "Dri-Eaz Velo HEPA Primary Filter",
+        "Injectidry Interceptor Replacement HEPA Filter"
+      ],
+      "referenceSubjects": [
+        "carpet-cleaning/ccw-sapphire-cdv-filter-box",
+        "water-damage-restoration/ccw-dri-eaz-velo-hepa-primary-filter-replacement",
+        "water-damage-restoration/ccw-injectidry-interceptor-replacement-hepa-filter"
+      ],
+      "cta": "Call CCW for the part",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/about-us",
+      "landingUrl": "https://ccwonline.com.au/pages/about-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d5-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w3-d5-pm",
+      "slotKey": "2026-12-04-ccw-video-2",
+      "date": "04/12/2026",
+      "weekday": "Friday",
+      "slotAest": "17:30",
+      "week": 3,
+      "funnelStage": "conversion",
+      "theme": "Storm-ready check",
+      "title": "Last call before the wet",
+      "hook": "The best time to find a fault is before the first storm call.",
+      "message": "Ring CCW, run through your drying kit, and get any stocked part on its way the same day.",
+      "products": [
+        "Razorback MaxxGuard 550 Air Scrubber",
+        "XPOWER X-400 Air Mover"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber",
+        "water-damage-restoration/ccw-xpower-airmover-x400-1-2hp",
+        "carpet-cleaning/carpet-cleaning-result"
+      ],
+      "cta": "Call CCW on 1800 686 869",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d5-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d1-am",
+      "slotKey": "2026-12-07-ccw-video-1",
+      "date": "07/12/2026",
+      "weekday": "Monday",
+      "slotAest": "07:00",
+      "week": 4,
+      "funnelStage": "consideration",
+      "theme": "Product explainer",
+      "title": "Drying inside the cavity",
+      "hook": "Some of the water is behind the wall and under the floor.",
+      "message": "Injectidry systems move air into wall cavities and under floor coverings through hoses and panels. Ask CCW which pack suits floor, wall or ceiling work.",
+      "products": [
+        "Injectidry Adaptidry 5 Port",
+        "Injectidry HP-PLUS Floor Drying Package"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-adaptidry-ad5-injection-drying-system",
+        "water-damage-restoration/ccw-injectidry-hp-plus-floor-drying-pack",
+        "water-damage-restoration/ccw-injectidry-vac-it-8-point-panel-36inch-x-30inch-each"
+      ],
+      "cta": "Ask CCW which pack suits you",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d1-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d1-pm",
+      "slotKey": "2026-12-07-ccw-video-2",
+      "date": "07/12/2026",
+      "weekday": "Monday",
+      "slotAest": "17:30",
+      "week": 4,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "Axial for volume, ventilator for pressure",
+      "hook": "Open room or wall cavity: they need different fans.",
+      "message": "An axial fan moves a lot of air across an open space. Where air has to be pushed into a cavity or along a duct, a ventilator with layflat ducting is the right tool.",
+      "products": [
+        "Dry Air VAF 12-E Ventilator",
+        "Dry Air Gale Force Axial Air Mover"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-dry-air-vaf-12-e-ventilator-50hz-230v-au",
+        "water-damage-restoration/ccw-dry-air-gale-force-axial-airmover"
+      ],
+      "cta": "See the air movers and ventilators",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/collections/airmovers",
+      "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d1-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d2-am",
+      "slotKey": "2026-12-08-ccw-video-1",
+      "date": "08/12/2026",
+      "weekday": "Tuesday",
+      "slotAest": "07:00",
+      "week": 4,
+      "funnelStage": "consideration",
+      "theme": "Did you know",
+      "title": "Dry is a reading",
+      "hook": "Dry is a number on a meter, not a feeling on your hand.",
+      "message": "Take moisture readings at the start and on every visit, and record them. The readings show when the job is finished and back up your report.",
+      "products": ["Hydro Shark Moisture Sensor"],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-hydro-shark-moisture-probe",
+        "water-damage-restoration/ccw-xpower-low-profile-airmover"
+      ],
+      "cta": "Ask CCW about moisture detection",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d2-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d2-pm",
+      "slotKey": "2026-12-08-ccw-video-2",
+      "date": "08/12/2026",
+      "weekday": "Tuesday",
+      "slotAest": "17:30",
+      "week": 4,
+      "funnelStage": "consideration",
+      "theme": "Storm season",
+      "title": "Extract before you dry",
+      "hook": "Every litre you extract is a litre your air movers do not have to evaporate.",
+      "message": "Pull standing water out of carpet and underlay with extraction tools first, then set up drying.",
+      "products": [
+        "Water Claw Large Flood Extraction Tool",
+        "SOS Pro Floor Tool with Flush Kit"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-waterclaw-large-deluxe",
+        "water-damage-restoration/ccw-sos-pro-floor-tool-with-flush-kit",
+        "water-damage-restoration/ccw-dri-eaz-extraction-wand-stryker"
+      ],
+      "cta": "See extraction tools",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/",
+      "landingUrl": "https://ccwonline.com.au/?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d2-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d3-am",
+      "slotKey": "2026-12-09-ccw-video-1",
+      "date": "09/12/2026",
+      "weekday": "Wednesday",
+      "slotAest": "07:00",
+      "week": 4,
+      "funnelStage": "awareness",
+      "theme": "What you may not know",
+      "title": "Mould: removal comes first",
+      "hook": "Killing mould is not the same as removing it.",
+      "message": "The mould standard and CCW's Actichem guide say the same thing: source removal comes first. Products support the job; they do not replace removal.",
+      "products": [
+        "Razorback MaxxGuard 550UV Air Scrubber",
+        "Poly-Hanger wall clips"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber-with-uv-c-light-sterilization-technology",
+        "water-damage-restoration/ccw-poly-hanger-1-wall"
+      ],
+      "cta": "Read the Actichem mould guide",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/blogs/news",
+      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d3-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d3-pm",
+      "slotKey": "2026-12-09-ccw-video-2",
+      "date": "09/12/2026",
+      "weekday": "Wednesday",
+      "slotAest": "17:30",
+      "week": 4,
+      "funnelStage": "consideration",
+      "theme": "Product explainer",
+      "title": "Contain before you remove",
+      "hook": "Mould work starts with plastic on the wall, not a scraper.",
+      "message": "Contain the work area before disturbing mould-affected material. Poly hangers and containment weights hold sheeting in place without damaging the room.",
+      "products": [
+        "Poly-Hanger #1 and #2 Wall Clips",
+        "Phoenix Containment Weights"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-poly-hanger-1-wall",
+        "water-damage-restoration/ccw-poly-hanger-2-wall",
+        "water-damage-restoration/ccw-phoenix-containment-weight"
+      ],
+      "cta": "Ask CCW about containment",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d3-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d4-am",
+      "slotKey": "2026-12-10-ccw-video-1",
+      "date": "10/12/2026",
+      "weekday": "Thursday",
+      "slotAest": "07:00",
+      "week": 4,
+      "funnelStage": "conversion",
+      "theme": "Build your kit",
+      "title": "A drying kit that works together",
+      "hook": "Air movers, a dehumidifier and a scrubber are one system, not three purchases.",
+      "message": "Air movers lift the water into the air, the dehumidifier takes it out, and a scrubber cleans the air where needed. Ask CCW to size a kit for the jobs you do.",
+      "products": [
+        "XPOWER X-400 Multi Drying Kit",
+        "Dri-Eaz LGR BD2500",
+        "Razorback MaxxGuard 550"
+      ],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-xpower-air-mover-400-multi-drying-kit-x-400-mdk",
+        "water-damage-restoration/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt",
+        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber"
+      ],
+      "cta": "Ask CCW to size your kit",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d4-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d4-pm",
+      "slotKey": "2026-12-10-ccw-video-2",
+      "date": "10/12/2026",
+      "weekday": "Thursday",
+      "slotAest": "17:30",
+      "week": 4,
+      "funnelStage": "conversion",
+      "theme": "Finance",
+      "title": "Have the kit before the work",
+      "hook": "The storm job will not wait for the equipment budget.",
+      "message": "Equipment finance through Equipped Commercial Finance covers rental, lease or chattel mortgage. The broker is accredited with more than 20 lenders.",
+      "products": ["Dri-Eaz LGR 7000XLi", "XPOWER X-800 Multi Drying Kit"],
+      "referenceSubjects": [
+        "water-damage-restoration/ccw-dri-eaz-dehumidifier-lgr-7000xl-230volt",
+        "water-damage-restoration/ccw-xpower-air-mover-800-multi-drying-kit-x-800-mdk"
+      ],
+      "cta": "See finance options",
+      "channels": ["linkedin", "facebook", "instagram", "youtube"],
+      "landingBase": "https://ccwonline.com.au/pages/finance-options",
+      "landingUrl": "https://ccwonline.com.au/pages/finance-options?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d4-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d5-am",
+      "slotKey": "2026-12-11-ccw-video-1",
+      "date": "11/12/2026",
+      "weekday": "Friday",
+      "slotAest": "07:00",
+      "week": 4,
+      "funnelStage": "conversion",
+      "theme": "Find CCW",
+      "title": "Three CCW sites, three states",
+      "hook": "Pick it up in Boondall, Seven Hills or Bayswater North.",
+      "message": "CCW runs its own sites in QLD, NSW and VIC, with partner agents in SA, WA and TAS. Call or visit before the holiday break.",
+      "products": ["Carpet cleaning wand", "XPOWER X-800 Air Mover"],
+      "referenceSubjects": [
+        "carpet-cleaning/carpet-cleaning-wand",
+        "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp"
+      ],
+      "cta": "Find your nearest CCW",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/pages/contact-us",
+      "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d5-am",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    },
+    {
+      "id": "ccw-w4-d5-pm",
+      "slotKey": "2026-12-11-ccw-video-2",
+      "date": "11/12/2026",
+      "weekday": "Friday",
+      "slotAest": "17:30",
+      "week": 4,
+      "funnelStage": "retention",
+      "theme": "Season wrap",
+      "title": "Five checks before the wet",
+      "hook": "Save this. Five checks to run before the next storm.",
+      "message": "Filters, glides, hoses, cords and a phone call to CCW for anything that does not sound right. Then follow CCW for the rest of the season.",
+      "products": ["Cleaned carpet result", "Carpet grooming"],
+      "referenceSubjects": [
+        "carpet-cleaning/carpet-cleaning-result",
+        "carpet-cleaning/carpet-cleaning-grooming",
+        "carpet-cleaning/ccw-sapphire-12-titanium-carpet-cleaning-wand"
+      ],
+      "cta": "Read more on the CCW blog",
+      "channels": ["instagram", "facebook", "youtube", "linkedin"],
+      "landingBase": "https://ccwonline.com.au/blogs/news",
+      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d5-pm",
+      "lengthSeconds": 30,
+      "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
+      "status": "script-draft"
+    }
+  ]
+}
