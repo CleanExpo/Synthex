@@ -57,33 +57,33 @@ accent, plain professional English.
 
 ## Table K: checks (each scored pass or fail with evidence)
 
-| ID  | Check                                         | Pass means                                                                                                        | Evidence                     |
-| --- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| K1  | Every procedural claim maps to a register row | Each claim cites an R number                                                                                      | Script annotation            |
-| K2  | Only VERIFIED rows stated as fact             | No UNVERIFIED or NEEDS-PRIMARY-SOURCE claim stated as fact                                                        | Register lookup              |
-| K3  | No unsupported numbers                        | No 48-hour scrub, no fixed cut distance, no pressure figure outside a written plan                                | Script search                |
-| K4  | Australian property                           | Brick veneer, weatherboard, fibro or masonry; tiled or Colorbond roof; Australian fittings and power points       | Frame review                 |
-| K5  | Australian materials words                    | Plasterboard, skirting, cornice, subfloor, roof space; never drywall, baseboard, crawlspace, attic                | Transcript scan              |
-| K6  | Australian units                              | Pa, degrees Celsius, m2, mm, litres, 230 V                                                                        | Transcript and graphics scan |
-| K7  | Real, owned equipment                         | Every machine shown is an owned reference or our own footage, correct model and 230 V                             | Reference ids                |
-| K8  | PPE correct for the task                      | P2 minimum or P3, fitted, gloves, overalls, eye protection where needed                                           | Frame review                 |
-| K9  | Hazard checks shown                           | Asbestos, lead, electrical, Category 3 water as relevant to the scenario                                          | Frame and script             |
-| K10 | Containment before demolition                 | No cutting shown before the work area is sealed, where the job needs it                                           | Shot order                   |
-| K11 | Cause named                                   | The water or moisture source is stated and who fixes it                                                           | Script                       |
-| K12 | Documentation shown                           | Readings, photos or a report appear on screen                                                                     | Frame review                 |
-| K13 | Credentials truthful                          | Only certifications the named person holds; no implied mould licence                                              | Credential list              |
-| K14 | No kill or cure claims                        | No "kills mould", "eliminates", "guaranteed"                                                                      | Transcript scan              |
-| K15 | Margot voice                                  | Margot's ElevenLabs voice, Australian accent, plain professional English                                          | Audio check                  |
-| K16 | Australian English                            | Mould, colour, metre; DD/MM/YYYY; AUD                                                                             | Spell scan                   |
-| K17 | Hook in 2 seconds                             | First frame shows the problem or a person in context; first words within 0.5 s                                    | Measured metrics             |
-| K18 | On-screen spelling                            | Zero spelling errors in any text on screen                                                                        | Frame text review            |
-| K19 | Numbering and sequence                        | Every step numbered on screen appears, in order, none skipped                                                     | Frame review                 |
-| K20 | Readable pacing                               | Holds of 2 to 4 s on procedural steps; picture changes about every 4 s; no flash cuts on safety steps             | Measured cuts                |
-| K21 | Readable captions                             | Caption height at least 4 percent of frame, high contrast, inside safe areas                                      | Frame review                 |
-| K22 | Audio standard                                | About -16 LUFS integrated, true peak at or below -1 dBTP, voice on top, music low                                 | Measured loudness            |
-| K23 | No third-party footage                        | Nothing taken from another creator's video                                                                        | Asset provenance             |
-| K24 | A provider test is visible                    | At least one of the five provider tests from why-five-layers.md is shown                                          | Script map                   |
-| K25 | Right brand, honest next step                 | RestoreAssist, CARSI or Disaster Recovery / NRPG only; no Unite Group; no emoji; call to action is real and works | Final review                 |
+| ID  | Check                                         | Pass means                                                                                                                      | Evidence                     |
+| --- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| K1  | Every procedural claim maps to a register row | Each claim cites an R number                                                                                                    | Script annotation            |
+| K2  | Only VERIFIED rows stated as fact             | No UNVERIFIED or NEEDS-PRIMARY-SOURCE claim stated as fact                                                                      | Register lookup              |
+| K3  | No unsupported numbers                        | No 48-hour scrub, no fixed cut distance; any figure stated is a standard minimum with its R row (-5 Pa, 4 air changes per hour) | Script search                |
+| K4  | Australian property                           | Brick veneer, weatherboard, fibro or masonry; tiled or Colorbond roof; Australian fittings and power points                     | Frame review                 |
+| K5  | Australian materials words                    | Plasterboard, skirting, cornice, subfloor, roof space; never drywall, baseboard, crawlspace, attic                              | Transcript scan              |
+| K6  | Australian units                              | Pa, degrees Celsius, m2, mm, litres, 230 V                                                                                      | Transcript and graphics scan |
+| K7  | Real, owned equipment                         | Every machine shown is an owned reference or our own footage, correct model and 230 V                                           | Reference ids                |
+| K8  | PPE correct for the task                      | P2 minimum or P3, fitted, gloves, overalls, eye protection where needed                                                         | Frame review                 |
+| K9  | Hazard checks shown                           | Asbestos, lead, electrical, Category 3 water as relevant to the scenario                                                        | Frame and script             |
+| K10 | Containment before demolition                 | No cutting shown before the work area is sealed, where the job needs it                                                         | Shot order                   |
+| K11 | Cause named                                   | The water or moisture source is stated and who fixes it                                                                         | Script                       |
+| K12 | Documentation shown                           | Readings, photos or a report appear on screen                                                                                   | Frame review                 |
+| K13 | Credentials truthful                          | Only certifications the named person holds; no implied mould licence                                                            | Credential list              |
+| K14 | No kill or cure claims                        | No "kills mould", "eliminates", "guaranteed"                                                                                    | Transcript scan              |
+| K15 | Margot voice                                  | Margot's ElevenLabs voice, Australian accent, plain professional English                                                        | Audio check                  |
+| K16 | Australian English                            | Mould, colour, metre; DD/MM/YYYY; AUD                                                                                           | Spell scan                   |
+| K17 | Hook in 2 seconds                             | First frame shows the problem or a person in context; first words within 0.5 s                                                  | Measured metrics             |
+| K18 | On-screen spelling                            | Zero spelling errors in any text on screen                                                                                      | Frame text review            |
+| K19 | Numbering and sequence                        | Every step numbered on screen appears, in order, none skipped                                                                   | Frame review                 |
+| K20 | Readable pacing                               | Holds of 2 to 4 s on procedural steps; picture changes about every 4 s; no flash cuts on safety steps                           | Measured cuts                |
+| K21 | Readable captions                             | Caption height at least 4 percent of frame, high contrast, inside safe areas                                                    | Frame review                 |
+| K22 | Audio standard                                | About -16 LUFS integrated, true peak at or below -1 dBTP, voice on top, music low                                               | Measured loudness            |
+| K23 | No third-party footage                        | Nothing taken from another creator's video                                                                                      | Asset provenance             |
+| K24 | A provider test is visible                    | At least one of the five provider tests from why-five-layers.md is shown                                                        | Script map                   |
+| K25 | Right brand, honest next step                 | RestoreAssist, CARSI or Disaster Recovery / NRPG only; no Unite Group; no emoji; call to action is real and works               | Final review                 |
 
 ## Round protocol
 
@@ -111,7 +111,7 @@ K5, K6, K15 fail by design). They set the floor our round 1 must beat on every o
 | ------ | ------------------------------------------------------------------------------------ | ------------------------- |
 | Reel 1 | K4, K5, K6, K15, K22 (quiet audio)                                                   | K11 (cause), K17 (hook)   |
 | Reel 2 | K3 (48 h), K13 (licence implied), K18, K19 (step 6 missing), K22 (peaks)             | K10 (containment first)   |
-| Reel 3 | K3 risk (surfactant claim), K9 (no hazard check)                                     | K17, K24 (homeowner test) |
+| Reel 3 | K3 risk ("without re-wetting" claim), K9 (no hazard check)                           | K17, K24 (homeowner test) |
 | Reel 4 | K9 (asbestos in old vinyl), K10 (no containment), K18 (spelling), K20 (1.17 s shots) | K8 (PPE), K17             |
 | Reel 5 | K12 (smoke pen and manometer claimed in caption, not shown), K22 (peaks)             | K10                       |
 | Reel 6 | K2 (indicator claim unverified), K23 (third-party slide)                             | K17, K24                  |

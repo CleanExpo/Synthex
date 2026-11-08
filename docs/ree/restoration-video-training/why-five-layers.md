@@ -35,6 +35,8 @@ Why should a business be held to these steps rather than doing what is fastest? 
 ## Layer 3: Why a standard and the law require it
 
 - Australia now has its own standards: AS-IICRC S500:2025 for water damage and AS-IICRC S520:2025 for mould. They turn the physics into a written procedure that insurers and scopes can call up. (R21)
+- The standard puts numbers on the physics: containment held at a minimum of -5 Pa negative pressure and at least 4 air changes per hour, checked with a manometer or indicator smoke, and work stops if pressure is lost. (R2, R10, R32)
+- It sorts water by risk, Category 1 clean to Category 3 grossly contaminated, and the category can worsen with time and temperature. That is why a fast response matters. (R33, R34)
 - Work health and safety law puts duties on the business to protect workers; SafeWork NSW guidance names a properly fitted P2 respirator, training, hand washing (which it says must be provided) and dust control. (R12, R22, R31)
 - The same law makes the other hazards non-optional. Before a wall in an older home is cut: asbestos (pre-1990), lead paint, live wiring, sewage-contaminated water. (R18, R19, R27; the lead-paint age threshold, R23, is still being verified)
 - There are no safe-air numbers for mould, so the job cannot be "passed" by one air test. It is judged against a procedure and a visual and documented verification. (R28, R6)
@@ -50,7 +52,7 @@ Compliance is the floor. A professional provider is the one who can prove, after
 - The right equipment, of a known standard: HEPA filtration, HEPA vacuums, dehumidifiers and air movers, moisture meters, PPE that fits. (R2, R4, R12)
 - A written plan before work starts, revised when hidden damage turns up (reel 4's lesson). (R1, R15)
 - Documentation: moisture readings, photos at each stage, waste bagged and recorded, the hazard checks done. (R18, R30)
-- Independent verification at the end rather than marking their own homework. (R6)
+- Independent verification at the end rather than marking their own homework. The standard says a post-remediation verification is done by an independent third-party Indoor Environmental Professional, and a remediator's own check is not one. (R6)
 - Honesty about limits: no "kills mould", no made-up numbers, no implied licence. (R5, R7, R20, R24)
 
 Why does that matter to the person paying? Layer 5.

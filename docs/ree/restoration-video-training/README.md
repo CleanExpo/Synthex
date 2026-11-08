@@ -70,11 +70,11 @@ Missing (blocks rendering; owner Phill):
 - An asbestos test result or clearance document (with consent) to show the check.
 - A post-remediation verification report.
 - Margot narration recorded for restoration scripts.
-- The standards texts themselves (AS-IICRC S500:2025 and S520:2025), to verify clauses.
+- The Australian editions (AS-IICRC S500:2025 and S520:2025) and their Australian modifications. Unite Group holds the ANSI/IICRC base texts (S500:2021, S520:2024) in Google Drive, and the register now cites their clauses.
 
 ## Status and what is not done
 
-- The register marks 18 of 31 claims VERIFIED from sources the lead session opened; 13 remain UNVERIFIED or need the paid standards.
+- The register marks 25 of 34 claims VERIFIED from sources the lead session opened, including clauses read in the S520:2024 and S500:2021 texts on 08/11/2026; 9 remain UNVERIFIED (a claim no source supports, or a helper finding not yet reopened).
 - Not yet independently reviewed. The TRD policy asks for an independent Claude review and a JEV triage before this is called verified training material.
 - Round 1 of the 25-round plan has not been run. It is scripts only until owned job footage exists.
 

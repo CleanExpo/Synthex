@@ -39,14 +39,14 @@ Measured: 25.9 s, 720x1280, 30 fps, 0 hard cuts (one close POV take), -14.1 LUFS
 
 ## Standards and safety check
 
-| Observed                                 | Verdict for an Australian video                                                                                                | Register |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------- |
-| Source capture: HEPA vacuum at the blade | Good practice; no standard found that names it                                                                                 | R9       |
-| Surfactant mist "without re-wetting"     | SafeWork NSW advises a water mist; surfactant and the no-rewet claim are unsupported. Check electrical risk before any wetting | R8, R19  |
-| Cut line "above the water damage"        | Sensible; no standard distance exists, so never state one                                                                      | R7       |
-| Nitrile gloves, coverall                 | Good; the face and respirator are out of frame. An Australian video should show P2 at least once                               | R12      |
-| Older-home skirting and plasterboard     | Before cutting any pre-1990 lining or joint compound, asbestos check; pre-1970 paint, lead check                               | R18, R23 |
-| "Botanical" product named generically    | No antimicrobial efficacy claim made; keep it that way                                                                         | R24      |
+| Observed                                 | Verdict for an Australian video                                                                                                                                                                                                       | Register |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Source capture: HEPA vacuum at the blade | Good practice; no standard found that names it                                                                                                                                                                                        | R9       |
+| Surfactant mist "without re-wetting"     | S520:2024 cl. 9.1.6 supports misting with surfactant-amended water for dust; "without re-wetting" is unsupported (the standard warns against excess moisture and says wipe up settled mist). Check electrical risk before any wetting | R8, R19  |
+| Cut line "above the water damage"        | Sensible; no standard distance exists, so never state one                                                                                                                                                                             | R7       |
+| Nitrile gloves, coverall                 | Good; the face and respirator are out of frame. An Australian video should show P2 at least once                                                                                                                                      | R12      |
+| Older-home skirting and plasterboard     | Before cutting any pre-1990 lining or joint compound, asbestos check; pre-1970 paint, lead check                                                                                                                                      | R18, R23 |
+| "Botanical" product named generically    | No antimicrobial efficacy claim made; keep it that way                                                                                                                                                                                | R24      |
 
 ## Gaps
 
