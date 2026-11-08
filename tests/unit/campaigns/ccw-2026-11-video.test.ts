@@ -272,6 +272,40 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     );
   });
 
+  it('gives w1-d5-pm a CTA that matches its contact-page link and the three units it shows', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d5-pm')!;
+    expect(s.cta).toBe('Call CCW on 1800 686 869');
+    // The contact page (read 08/11/2026) prints "PHONE: 1800 686 869".
+    expect(s.landingBase).toBe('https://ccwonline.com.au/pages/contact-us');
+    expect(s.landingUrl).toBe(
+      'https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d5-pm'
+    );
+    // CCW's listing names, read 08/11/2026.
+    expect(s.products).toEqual([
+      'Razorback MaxxGuard 550UV Air Scrubber with UV-C 50HZ/230V/AU',
+      'XPOWER X-800 Air Mover 1 hp with Carpet Clamp',
+      'Dri-Eaz BD2500 LGR Dehumidifier 230V',
+    ]);
+    const plan = CCW_SHOT_PLANS.find(p => p.videoId === 'ccw-w1-d5-pm')!;
+    expect(plan.cta).toBe(s.cta);
+    // The draft's unsourced or paraphrased lines, and any season or forecast
+    // line, stay out of the calendar copy and the screen.
+    const copy = [
+      s.title,
+      s.hook,
+      s.message,
+      ...plan.shots.flatMap(x => [
+        ...(x.floorLines ?? []),
+        ...(x.kinetic ?? []),
+        x.sourceSlip ?? '',
+        ...(x.place ?? []).map(u => u.slip ?? ''),
+      ]),
+    ].join(' ');
+    expect(copy).not.toMatch(
+      /most problems|stocked parts|wet morning|storm-ready check|one fewer|April|cyclone|season|quiet|forecast|BOM/i
+    );
+  });
+
   it('keeps every water-sorting and standards line out of w1-d4-am (orchestrator ruling, 08/11/2026)', () => {
     const found = bannedInD4Am(d4amBrandCopy());
     expect(found).toEqual([]);

@@ -57,6 +57,7 @@ describe('SYN-1404 CCW zero-cost shot plans', () => {
       'ccw-w1-d4-am',
       'ccw-w1-d4-pm',
       'ccw-w1-d5-am',
+      'ccw-w1-d5-pm',
     ]);
   });
 

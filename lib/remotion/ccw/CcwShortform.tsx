@@ -567,6 +567,29 @@ function Fullbleed({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
 }
 
 /**
+ * A CTA that carries a phone number keeps the number on one line, so a
+ * wrapped pill never splits "1800 686 869" (ccw-w1-d5-pm). CTAs without a
+ * number render exactly as before.
+ */
+function CtaText({ cta }: { cta: string }) {
+  const parts = cta.split(/(\d[\d ]*\d)/);
+  if (parts.length === 1) return <>{cta}</>;
+  return (
+    <>
+      {parts.map((p, i) =>
+        i % 2 === 1 ? (
+          <span key={i} style={{ whiteSpace: 'nowrap' }}>
+            {p}
+          </span>
+        ) : (
+          <React.Fragment key={i}>{p}</React.Fragment>
+        )
+      )}
+    </>
+  );
+}
+
+/**
  * Scene end card, at most 3 s: the camera keeps pushing on the real job photo
  * (prepared crop), the real CCW logo arrives on a white plate set in depth,
  * then the CTA pill and the web address.
@@ -657,7 +680,7 @@ function SceneEndCard({
             transform: `translateY(${interpolate(enter(frame, fps, 8), [0, 1], [24, 0])}px) scale(${pulse})`,
           }}
         >
-          {cta}
+          <CtaText cta={cta} />
         </div>
         <div style={{ marginTop: 26, opacity: enter(frame, fps, 12) }}>
           <span
@@ -774,7 +797,7 @@ function EndCard({
             transform: `translateY(${interpolate(enter(frame, fps, 8), [0, 1], [24, 0])}px) scale(${pulse})`,
           }}
         >
-          {cta}
+          <CtaText cta={cta} />
         </div>
         <div
           style={{

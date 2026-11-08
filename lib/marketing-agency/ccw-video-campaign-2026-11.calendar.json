@@ -291,25 +291,30 @@
       "slotAest": "17:30",
       "week": 1,
       "funnelStage": "conversion",
-      "theme": "Storm-ready check",
-      "title": "Book a storm-ready check",
-      "hook": "Find the fault now, not on the first wet morning.",
-      "message": "Call CCW and describe how your kit is running. CCW's technicians diagnose most problems over the phone, and stocked parts go out the same day.",
+      "theme": "Parts and servicing",
+      "title": "Diagnosed over the phone",
+      "hook": "Malfunctioning tools and equipment are a liability, not an asset.",
+      "message": "CCW's technicians are able to diagnose 99% of problems over the phone. CCW has the part that you need in stock, and dispatches it on the same day. Keep the X-800's inlet grille clear; check the BD2500's filter at every equipment swap.",
       "products": [
-        "Razorback MaxxGuard 550UV Air Scrubber",
-        "XPOWER X-800 Air Mover",
-        "Dri-Eaz LGR BD2500 Dehumidifier"
+        "Razorback MaxxGuard 550UV Air Scrubber with UV-C 50HZ/230V/AU",
+        "XPOWER X-800 Air Mover 1 hp with Carpet Clamp",
+        "Dri-Eaz BD2500 LGR Dehumidifier 230V"
       ],
       "referenceSubjects": [
         "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber-with-uv-c-light-sterilization-technology",
         "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp",
-        "water-damage-restoration/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt"
+        "water-damage-restoration/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt",
+        "carpet-cleaning/carpet-cleaning-solution",
+        "carpet-cleaning/carpet-cleaning-rotary",
+        "carpet-cleaning/carpet-cleaning-grooming",
+        "carpet-cleaning/carpet-cleaning-extraction",
+        "carpet-cleaning/carpet-cleaning-result"
       ],
       "cta": "Call CCW on 1800 686 869",
       "channels": ["instagram", "facebook", "youtube", "linkedin"],
       "landingBase": "https://ccwonline.com.au/pages/contact-us",
       "landingUrl": "https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d5-pm",
-      "lengthSeconds": 30,
+      "lengthSeconds": 25,
       "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
       "status": "script-draft"
     },

@@ -588,6 +588,105 @@ const X600_A = img(X600, '20568724865177');
 const VELO_VAN = img(VELO, '29703296135');
 const GROOMING = 'carpet-cleaning/carpet-cleaning-grooming';
 
+// ccw-w1-d5-pm: "Over the phone first". CCW's own Parts and Servicing lines
+// (about page) over the three units, cut from their catalogue photos and set
+// flat on owned job-room carpet; the two care lines are quoted from the X-800
+// and BD2500 product pages. The hook is the crew's own kit in an open van.
+// No forecast line. The MaxxGuard 550UV product page could not be read
+// (08/11/2026), so no line is quoted from it: the unit carries only its name.
+const MAXX_UV = `${WDR}/ccw-razorback-maxxguard-550-cfm-air-scrubber-with-uv-c-light-sterilization-technology`;
+const UV_OPEN = img(MAXX_UV, '31894804922521');
+const UV_TOP = img(MAXX_UV, '31894804988057');
+const UV_SIDE = img(MAXX_UV, '31894804955289');
+/**
+ * Outlines of the three 550UV cut-outs: convex hull of the red housing and
+ * black panels, measured from the owned photos; drops the light grey floor
+ * plate baked into the catalogue render (see CcwPlaced.matte).
+ */
+const MATTE_UV_OPEN: [number, number][] = [
+  [0.033, 0.227],
+  [0.038, 0.211],
+  [0.065, 0.148],
+  [0.073, 0.135],
+  [0.134, 0.089],
+  [0.498, 0.05],
+  [0.746, 0.077],
+  [0.861, 0.122],
+  [0.939, 0.211],
+  [0.962, 0.427],
+  [0.963, 0.497],
+  [0.938, 0.728],
+  [0.933, 0.746],
+  [0.82, 0.872],
+  [0.81, 0.878],
+  [0.758, 0.902],
+  [0.705, 0.907],
+  [0.161, 0.862],
+  [0.083, 0.806],
+  [0.073, 0.795],
+  [0.064, 0.778],
+  [0.038, 0.714],
+];
+const MATTE_UV_SIDE: [number, number][] = [
+  [0.038, 0.217],
+  [0.041, 0.206],
+  [0.142, 0.065],
+  [0.509, 0.014],
+  [0.839, 0.046],
+  [0.869, 0.053],
+  [0.944, 0.126],
+  [0.959, 0.19],
+  [0.952, 0.676],
+  [0.922, 0.78],
+  [0.917, 0.786],
+  [0.855, 0.841],
+  [0.813, 0.858],
+  [0.606, 0.906],
+  [0.518, 0.925],
+  [0.453, 0.938],
+  [0.322, 0.957],
+  [0.3, 0.952],
+  [0.179, 0.909],
+  [0.11, 0.86],
+  [0.102, 0.853],
+  [0.057, 0.783],
+  [0.051, 0.772],
+  [0.045, 0.753],
+];
+const MATTE_UV_TOP: [number, number][] = [
+  [0.065, 0.249],
+  [0.069, 0.233],
+  [0.075, 0.217],
+  [0.093, 0.187],
+  [0.166, 0.131],
+  [0.242, 0.077],
+  [0.301, 0.038],
+  [0.319, 0.032],
+  [0.341, 0.029],
+  [0.367, 0.032],
+  [0.836, 0.215],
+  [0.848, 0.226],
+  [0.885, 0.281],
+  [0.931, 0.354],
+  [0.938, 0.375],
+  [0.93, 0.617],
+  [0.903, 0.751],
+  [0.892, 0.775],
+  [0.871, 0.802],
+  [0.761, 0.919],
+  [0.699, 0.962],
+  [0.654, 0.965],
+  [0.619, 0.962],
+  [0.352, 0.833],
+  [0.191, 0.75],
+  [0.129, 0.702],
+  [0.115, 0.681],
+  [0.093, 0.606],
+];
+const BD_A = img(BD2500, '40568829935829');
+const X800_FRONT = img(X800, '20568158994585');
+const X800_ANGLE = img(X800, '20568160796825');
+
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
     videoId: 'ccw-w1-d1-am',
@@ -1741,6 +1840,165 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [ROTARY],
         images: [`${ROTARY}-04.webp`],
         crop: ROOM,
+      },
+    ],
+  },
+  {
+    // Concept B "Over the phone first" (blind pick 37/60, tied with A at 37
+    // and ahead of C at 34, 08/11/2026; picked for the turn at 4 s, with the
+    // judge's two fixes: the hook is the crew's kit in a van, not bare floor,
+    // and the care lines are what to do, not faults on a named unit). CTA
+    // matches the landing link (/pages/contact-us prints the number).
+    videoId: 'ccw-w1-d5-pm',
+    cta: 'Call CCW on 1800 686 869',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        // Hook: the crew's kit at the open van; the line slams onto its floor.
+        trigger: 'Malfunctioning',
+        kind: 'floor',
+        subjects: [SOLUTION],
+        images: [scene('solution-01')],
+        crop: { x: 880, y: 0, w: 349, h: 620 },
+        floorLines: ['A LIABILITY,'],
+        floorSize: 132,
+        slam: true,
+        noCaptions: true,
+      },
+      {
+        trigger: 'not an asset',
+        kind: 'floor',
+        subjects: [ROTARY],
+        images: [`${ROTARY}-01.webp`],
+        crop: { x: 300, y: 0, w: 405, h: 720 },
+        floorLines: ['NOT AN', 'ASSET'],
+        floorSize: 170,
+        rippleTo: 1,
+        rippleFrom: 0.3,
+        noCaptions: true,
+      },
+      {
+        // The turn: CCW's technicians, over the dehumidifier being described.
+        trigger: "CCW's technicians",
+        kind: 'floor',
+        subjects: [GROOM, BD2500],
+        images: [`${GROOM}-01.webp`, BD_A],
+        crop: { x: 622, y: 40, w: 360, h: 640 },
+        place: [{ img: 1, x: 560, y: 800, w: 600, silhouette: true }],
+        floorLines: ["CCW'S TECHNICIANS", 'DIAGNOSE'],
+        floorSize: 92,
+        noCaptions: true,
+      },
+      {
+        trigger: '99%',
+        kind: 'floor',
+        subjects: [EXTRACTION, X800],
+        images: [`${EXTRACTION}-03.webp`, X800_ANGLE],
+        crop: { x: 440, y: 40, w: 360, h: 640 },
+        place: [{ img: 1, x: 560, y: 800, w: 520, silhouette: true }],
+        floorLines: ['99% OF PROBLEMS', 'OVER THE PHONE'],
+        floorSize: 96,
+        noCaptions: true,
+      },
+      {
+        trigger: 'CCW has the part',
+        kind: 'floor',
+        subjects: [ROTARY, MAXX_UV],
+        images: [`${ROTARY}-02.webp`, UV_OPEN],
+        crop: { x: 722, y: 40, w: 360, h: 640 },
+        place: [
+          {
+            img: 1,
+            x: 560,
+            y: 800,
+            w: 600,
+            silhouette: true,
+            matte: MATTE_UV_OPEN,
+            slip: 'MaxxGuard 550UV',
+          },
+        ],
+        floorLines: ['THE PART YOU NEED', 'IN STOCK'],
+        floorSize: 92,
+        noCaptions: true,
+      },
+      {
+        trigger: 'and dispatches',
+        kind: 'floor',
+        subjects: [RESULT, MAXX_UV],
+        images: [`${RESULT}-01.webp`, UV_TOP],
+        crop: { x: 322, y: 40, w: 360, h: 640 },
+        place: [
+          {
+            img: 1,
+            x: 560,
+            y: 790,
+            w: 620,
+            silhouette: true,
+            matte: MATTE_UV_TOP,
+          },
+        ],
+        floorLines: ['DISPATCHED ON', 'THE SAME DAY'],
+        floorSize: 104,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Keep the inlet',
+        kind: 'floor',
+        subjects: [EXTRACTION, X800],
+        images: [`${EXTRACTION}-02.webp`, X800_FRONT],
+        crop: { x: 882, y: 40, w: 360, h: 640 },
+        place: [{ img: 1, x: 540, y: 800, w: 500, slip: 'XPOWER X-800' }],
+        floorLines: ['KEEP THE INLET', 'GRILLE CLEAR'],
+        floorSize: 100,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Check the filter',
+        kind: 'floor',
+        subjects: [ROTARY, BD2500],
+        images: [`${ROTARY}-03.webp`, BD_A],
+        crop: { x: 760, y: 0, w: 405, h: 720 },
+        place: [
+          {
+            img: 1,
+            x: 540,
+            y: 810,
+            w: 620,
+            silhouette: true,
+            slip: 'Dri-Eaz BD2500',
+          },
+        ],
+        floorLines: ['CHECK THE FILTER', 'AT EVERY SWAP'],
+        floorSize: 92,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Call CCW',
+        kind: 'floor',
+        subjects: [RESULT, MAXX_UV],
+        images: [`${RESULT}-02.webp`, UV_SIDE],
+        crop: { x: 760, y: 40, w: 360, h: 640 },
+        place: [
+          {
+            img: 1,
+            x: 560,
+            y: 790,
+            w: 600,
+            silhouette: true,
+            matte: MATTE_UV_SIDE,
+          },
+        ],
+        floorLines: ['CALL CCW ON', '1800 686 869'],
+        floorSize: 110,
+        noCaptions: true,
+      },
+      {
+        trigger: 'six eight six',
+        kind: 'end',
+        subjects: [ROTARY],
+        images: [`${ROTARY}-04.webp`],
+        crop: ROOM,
+        noCaptions: true,
       },
     ],
   },
