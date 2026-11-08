@@ -28,7 +28,7 @@ Why do those visible steps matter? Layer 2.
 - Porous materials hold growth inside them, where wiping cannot reach. So plasterboard, insulation and carpet that grew mould are removed, not cleaned. (R3)
 - Dead mould still causes reactions, so killing it is not enough; it has to be physically removed. (R24)
 - Wet materials left more than 24 to 48 hours become the next mould job. (R29)
-- Some moulds tell time: a slow grower such as Chaetomium suggests the material stayed wet for a long time, which points back to the cause. (R13, R14: unverified, so used as a question for the lab, not a claim)
+- An open question for the lab, not a claim: can the type of mould found say how long a material stayed wet? Reel 6 says Chaetomium does; that is unverified (R13, R14), so our videos do not state it.
 
 Why should a business be held to these steps rather than doing what is fastest? Layer 3.
 

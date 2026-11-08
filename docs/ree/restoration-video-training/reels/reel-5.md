@@ -13,7 +13,13 @@ Measured: 32.4 s, 720x1280, 28 fps, 1 hard cut at 26.6 s, -18.1 LUFS, true peak 
 
 ## Transcript
 
-> Well, I tell you what, if you ever need to seal off the wall cavity for negative pressure in a remediation zone, Retrotec's got your back. I mean, this worked out really well. Just one span of the roll right here, right across, and then I literally just cut it with scissors at each of the studs and then just folded it in, and then good old squeegee. Easy peasy. Side note: works wonderful for supply ducts too.
+Summary of the narration:
+
+- Recommends a Retrotec sealing film for closing off an open wall cavity so the remediation zone holds negative pressure.
+- Method shown: run one length of the roll across the opening, cut it at each stud, fold it in, and press it flat with a squeegee.
+- Adds that the same film works on supply ducts.
+
+(The full transcript is kept in the local working files only and is not committed: the narration is another creator's work.)
 
 ## Frame timeline
 

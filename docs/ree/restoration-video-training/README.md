@@ -36,21 +36,21 @@ carries the message for silent viewing.
 
 ## US to Australian glossary (check K5, K6)
 
-| US reel says                     | Australian video says                                        |
-| -------------------------------- | ------------------------------------------------------------ |
-| mold                             | mould                                                        |
-| drywall, sheetrock               | plasterboard (or gyprock as the common name)                 |
-| baseboard                        | skirting board                                               |
-| crown molding                    | cornice                                                      |
-| 2x4, 2x6                         | 90x45, 140x45 timber framing                                 |
-| crawlspace                       | subfloor                                                     |
-| attic                            | roof space, roof cavity                                      |
-| air handler closet, HVAC         | ducted air-conditioning unit, return air                     |
-| N95, P100                        | P2, P3 (AS/NZS 1715 and 1716)                                |
-| inches of water column           | pascals (Pa)                                                 |
-| Fahrenheit, square feet, gallons | degrees Celsius, square metres, litres                       |
-| 110-120 V equipment              | 230 V equipment with Australian plugs                        |
-| state mould licence              | no mould licence found in Australia; IICRC credentials (R20) |
+| US reel says                     | Australian video says                                                                                                             |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| mold                             | mould                                                                                                                             |
+| drywall, sheetrock               | plasterboard (or gyprock as the common name)                                                                                      |
+| baseboard                        | skirting board                                                                                                                    |
+| crown molding                    | cornice                                                                                                                           |
+| 2x4, 2x6                         | 90x45, 140x45 timber framing                                                                                                      |
+| crawlspace                       | subfloor                                                                                                                          |
+| attic                            | roof space, roof cavity                                                                                                           |
+| air handler closet, HVAC         | ducted air-conditioning unit, return air                                                                                          |
+| N95, P100                        | P2, P3 (AS/NZS 1715 and 1716)                                                                                                     |
+| inches of water column           | pascals (Pa)                                                                                                                      |
+| Fahrenheit, square feet, gallons | degrees Celsius, square metres, litres                                                                                            |
+| 110-120 V equipment              | 230 V equipment with Australian plugs                                                                                             |
+| state mould licence              | do not imply any licence; whether Australia has a mould licence is unverified (R20); name only IICRC credentials the person holds |
 
 ## References we have and references missing
 

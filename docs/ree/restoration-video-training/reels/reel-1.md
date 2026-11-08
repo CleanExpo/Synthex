@@ -13,9 +13,13 @@ Measured (harness `analyze.py --single`, whisper.cpp small.en): 24.4 s, 720x1280
 
 ## Transcript
 
-Inspector's site-walk narration (whisper.cpp small.en, lightly cleaned):
+Summary of the inspector's site-walk narration (from a whisper.cpp small.en transcript):
 
-> We are inside the theatre room now. You can see suspect microbial growth on the back side of this plywood. That's the air handler closet. So this is the drywall on the right-hand side of the air handler closet, also suspect microbial growth on that 2x6. This is the drywall on the back side of the air handler closet, this wall.
+- Walks from a home theatre room into the air-handler closet.
+- Points out "suspect microbial growth" on the back of the plywood, on a timber stud and on the plasterboard either side of the closet.
+- Uses the hedged term throughout rather than calling it mould.
+
+(The full transcript is kept in the local working files only and is not committed: the narration is another creator's work.)
 
 ## Frame timeline
 

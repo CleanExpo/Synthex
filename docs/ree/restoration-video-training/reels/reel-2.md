@@ -45,17 +45,17 @@ No speech. The audio is a licensed music track (lyrics not transcribed or reprod
 
 ## Standards and safety check
 
-| Observed                                          | Verdict for an Australian video                                                                | Register |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------- |
-| Containment with zip door before any removal      | Matches standard practice                                                                      | R1       |
-| Negative air with HEPA unit                       | Matches; any pressure figure must come from the written plan, not the video                    | R2       |
-| Remove porous materials that cannot be cleaned    | Matches                                                                                        | R3       |
-| "Run HEPA air filtration 48 hours"                | Not found in any standard; do not state 48 h as a rule                                         | R5       |
-| Pass PRV, "usually by an independent third party" | S520 describes PRV by an independent IEP; full text not seen                                   | R6       |
-| Step 6 missing on screen                          | An editing defect: a viewer counts steps. Our QA must check numbering                          | Test K19 |
-| Credentials: WRT and ASD                          | Those are water and drying credentials. The IICRC mould credential is AMRT, which requires WRT | R20      |
-| Texas mould licence                               | No Australian mould licence found; do not imply one                                            | R20      |
-| No workers or PPE on screen                       | An Australian version should show PPE and the person accountable                               | R12      |
+| Observed                                          | Verdict for an Australian video                                                                                    | Register |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------- |
+| Containment with zip door before any removal      | Matches standard practice                                                                                          | R1       |
+| Negative air with HEPA unit                       | Matches; any pressure figure must come from the written plan, not the video                                        | R2       |
+| Remove porous materials that cannot be cleaned    | Matches                                                                                                            | R3       |
+| "Run HEPA air filtration 48 hours"                | Not found in any standard; do not state 48 h as a rule                                                             | R5       |
+| Pass PRV, "usually by an independent third party" | S520 describes PRV by an independent IEP; full text not seen                                                       | R6       |
+| Step 6 missing on screen                          | An editing defect: a viewer counts steps. Our QA must check numbering                                              | Test K19 |
+| Credentials: WRT and ASD                          | Those are water and drying credentials. The IICRC mould credential is AMRT; its prerequisites are unverified (R20) | R20      |
+| Texas mould licence                               | Whether Australia has a mould licence is unverified (R20); never imply one                                         | R20      |
+| No workers or PPE on screen                       | An Australian version should show PPE and the person accountable                                                   | R12      |
 
 ## Gaps
 

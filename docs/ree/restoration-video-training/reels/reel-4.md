@@ -13,7 +13,13 @@ Measured: 24.6 s, 720x1280, 30 fps, 20 hard cuts, average shot 1.17 s, -14.3 LUF
 
 ## Transcript
 
-> They told me they didn't have any mold. I told them, trust me, you do. And guess what? I was right. The mold was there. You know how I knew? Because I'm smart. And a professional, by the way. But seriously, it's actually pretty simple. Mold tends to show up in the same places and moisture problems leave warning signs. Your house is constantly giving you clues. You're just not paying attention. It's literally screaming at you, hey, homeowner, I'm rotting over here. Are you gonna do something about it? So learn to listen to your house. Sometimes it's telling you a lot more than you think.
+Summary of the narration:
+
+- Opens with a playful boast: the owners said there was no mould, the presenter said there was, and was right.
+- Turns serious: mould shows up in predictable places, and moisture problems leave warning signs.
+- Closing message: the house keeps giving clues; learn to notice them.
+
+(The full transcript is kept in the local working files only and is not committed: the narration is another creator's work.)
 
 ## Frame timeline
 

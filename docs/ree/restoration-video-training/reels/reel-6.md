@@ -13,9 +13,14 @@ Measured: 39.2 s, 720x1280, 30 fps, 1 hard cut at 5.9 s plus punch-ins, -14.1 LU
 
 ## Transcript
 
-> Here's another one. This is Chaetomium. And Chaetomium are, they look like little brown lemons when you look at them underneath the microscope. A really, another really cool mould. The unique thing about Chaetomium is it is an indicator that there has been water sitting here for a very long time, because it's a super slow grower. They grow in these little, like, Pac-Man-looking capsules that burst open and then release all of the spores. These are much larger. This is the same magnification as the image before. So you can see how, in comparison, how much larger they are to Penicillium and Aspergillus spores.
+Summary of the narration:
 
-(Whisper heard "Katomium"; corrected to Chaetomium from the slide and caption. Caption gives the pronunciation "kee-TOE-mee-um".)
+- Introduces Chaetomium from a lecture slide (caption pronunciation "kee-TOE-mee-um"; the speech-to-text heard "Katomium").
+- Describes the spores under the microscope as looking like small brown lemons.
+- Claims it indicates water present for a long time because it grows slowly (register R13: unverified).
+- Says the spores are released from capsules that burst, and are much larger than Penicillium and Aspergillus spores at the same magnification (R14: unverified).
+
+(The full transcript is kept in the local working files only and is not committed: the narration is another creator's work.)
 
 ## Frame timeline
 
@@ -40,12 +45,12 @@ Measured: 39.2 s, 720x1280, 30 fps, 1 hard cut at 5.9 s plus punch-ins, -14.1 LU
 
 ## Standards and safety check
 
-| Observed                                                       | Verdict for an Australian video                                                                                                                                                                                         | Register |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| Chaetomium indicates long-standing wetting                     | Unverified so far (cellulose decomposer per a helper search of University of Adelaide mycology; "long-term indicator" only in secondary sources). Phrase as "commonly found where materials stayed wet for a long time" | R13      |
-| Spores much larger than Penicillium and Aspergillus            | Direction consistent across sources (about 9 to 12 micrometres versus 2 to 6); no primary reference opened                                                                                                              | R14      |
-| Species identification needs a lab                             | Our videos must name the lab and the sample type if we show a result                                                                                                                                                    | R16      |
-| enHealth: routine home mould testing generally not recommended | Do not imply every home needs sampling                                                                                                                                                                                  | R16      |
+| Observed                                                       | Verdict for an Australian video                                                                                                                                                                       | Register |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Chaetomium indicates long-standing wetting                     | Unverified so far (cellulose decomposer per a helper search of University of Adelaide mycology; "long-term indicator" only in secondary sources). Do not state it in our videos until R13 is verified | R13      |
+| Spores much larger than Penicillium and Aspergillus            | Direction consistent across sources (about 9 to 12 micrometres versus 2 to 6); no primary reference opened                                                                                            | R14      |
+| Species identification needs a lab                             | Our videos must name the lab and the sample type if we show a result                                                                                                                                  | R16      |
+| enHealth: routine home mould testing generally not recommended | Do not imply every home needs sampling                                                                                                                                                                | R16      |
 
 ## Gaps
 

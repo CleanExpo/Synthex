@@ -14,7 +14,15 @@ Measured: 25.9 s, 720x1280, 30 fps, 0 hard cuts (one close POV take), -14.1 LUFS
 
 ## Transcript
 
-> This is how drywall should be cut during a remediation to control dust and particles. This cut line is going above the water damage behind the baseboard. A botanical surfactant can be lightly sprayed to weigh down the dust without rewetting the contamination. You can see how the HEPA vacuum closely follows the saw, and any qualified remediation company should be using methods like this. If yours doesn't, find another. NEST not only does assessments, but we oversee protocols and projects to help keep your home healthier.
+Summary of the narration:
+
+- Shows how to cut plasterboard during remediation to control dust.
+- The cut line runs above the water damage behind the skirting.
+- A botanical surfactant is lightly sprayed to weigh the dust down, claimed to work "without rewetting".
+- A HEPA vacuum follows the saw blade.
+- Tells homeowners to choose a company that works this way, then promotes the creator's assessment and project-oversight service.
+
+(The full transcript is kept in the local working files only and is not committed: the narration is another creator's work.)
 
 ## Frame timeline
 
