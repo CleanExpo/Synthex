@@ -147,7 +147,8 @@ export function evaluateDelivery(
     }
     if (m.meanVolumeDb === null || m.meanVolumeDb <= -60)
       f.push(`sound is silent (mean ${m.meanVolumeDb ?? 'unmeasured'} dB)`);
-    if (m.maxVolumeDb !== null && m.maxVolumeDb > spec.maxPeakDb)
+    if (m.maxVolumeDb === null) f.push('peak level could not be measured');
+    else if (m.maxVolumeDb > spec.maxPeakDb)
       f.push(`peak ${m.maxVolumeDb} dB above ${spec.maxPeakDb} dB`);
     if (m.longestSilenceSeconds === null)
       f.push('silence could not be measured');

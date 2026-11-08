@@ -126,6 +126,9 @@ describe('delivery readiness', () => {
   it('refuses unmeasured loudness or silence rather than passing it', () => {
     expect(check({ integratedLufs: null }).ready).toBe(false);
     expect(check({ longestSilenceSeconds: null }).ready).toBe(false);
+    expect(check({ maxVolumeDb: null }).failures).toContain(
+      'peak level could not be measured'
+    );
   });
 });
 
