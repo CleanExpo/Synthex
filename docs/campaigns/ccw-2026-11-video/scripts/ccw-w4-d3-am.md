@@ -57,8 +57,8 @@ Killing mould is not the same as removing it. The mould standard and the CCW Act
 | Claim                                                                                                                                     | Source                                                                          | Status              |
 | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------- |
 | Source removal always comes first                                                                                                         | CCW blog, Actichem mould guide, 22/10/2026: https://ccwonline.com.au/blogs/news | Verified 08/11/2026 |
-| Biocides are not a substitute for removal                                                                                                 | EPA; ANSI/IICRC S520:2024 cl 9.1.6 to 9.1.7 (Unite Group standards register)    | Verified 08/11/2026 |
-| Contain the work area before mould-affected material is disturbed                                                                         | EPA; SafeWork NSW; S520:2024 cl 9.3.3 (standards register)                      | Verified 08/11/2026 |
+| Biocides are not a substitute for removal                                                                                                 | EPA; ANSI/IICRC S520:2024 cl 9.1.6 to 9.1.7 (standards register R24)            | Verified 08/11/2026 |
+| Contain the work area before mould-affected material is disturbed                                                                         | EPA; SafeWork NSW; S520:2024 cl 9.3.3 (standards register R1)                   | Verified 08/11/2026 |
 | Hook wording: the hook uses the word "killing" only to separate it from removal; no line in the script credits a product with that effect | Writing rule for this campaign                                                  | Verified 08/11/2026 |
 
 ## Rule score

@@ -56,14 +56,14 @@ Calls to 1800 686 869 cannot be tagged; ask Toby's team to note "saw the video" 
 
 ## What is blocked and who owns it
 
-| Item                                                                  | Blocked on                                                                                                      | Owner                        |
-| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Renders                                                               | A1 spend approval                                                                                               | Phill                        |
-| Side-by-side check of each equipment image against the real CCW photo | Renders                                                                                                         | This lane after A1           |
-| CCW logo for compositing                                              | A full logo set is in `public/logos/ccw/` (`primary.svg`, `inverted.svg`); Toby confirms it is his current logo | Toby, via Phill (part of A3) |
-| Gold short-form batch (the quality bar in the `sda-video` skill)      | Lives on the MacBook, not this Mac                                                                              | This lane, on the MacBook    |
-| Independent review of the scripts                                     | Not yet run; the rule scores are self-scores                                                                    | Next review lane             |
-| Water-damage standard rows used in 5 scripts                          | Register sits on branch `feature/syn-1403-restoration-video-training`, not yet merged                           | SYN-1403 lane                |
+| Item                                                                  | Blocked on                                                                                                                                                                          | Owner                        |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| Renders                                                               | A1 spend approval                                                                                                                                                                   | Phill                        |
+| Side-by-side check of each equipment image against the real CCW photo | Renders                                                                                                                                                                             | This lane after A1           |
+| CCW logo for compositing                                              | A full logo set is in `public/logos/ccw/` (`primary.svg`, `inverted.svg`); Toby confirms it is his current logo                                                                     | Toby, via Phill (part of A3) |
+| Gold short-form batch (the quality bar in the `sda-video` skill)      | Lives on the MacBook, not this Mac                                                                                                                                                  | This lane, on the MacBook    |
+| Review findings (non-blocking)                                        | One independent review passed with no blocking finding on 08/11/2026; smaller items are in SYN-1405                                                                                 | This lane                    |
+| Standards lines checked against the Australian 2025 editions          | The register (now on main) uses the base texts; each standards line is checked against AS-IICRC S500:2025 and S520:2025 before it posts; 3 week-4 scripts still need a register row | This lane, before render     |
 
 ## Rules this campaign keeps
 

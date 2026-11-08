@@ -55,7 +55,7 @@ Mould work starts with plastic on the wall, not a scraper. Contain the work area
 
 | Claim                                                                                                                              | Source                                                                                   | Status              |
 | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------- |
-| Contain the work area before disturbing mould-affected material; do not disturb contaminated material until containment is erected | EPA; SafeWork NSW; S520:2024 cl 9.3.3 (standards register)                               | Verified 08/11/2026 |
+| Contain the work area before disturbing mould-affected material; do not disturb contaminated material until containment is erected | EPA; SafeWork NSW; S520:2024 cl 9.3.3 (standards register R1)                            | Verified 08/11/2026 |
 | Poly-Hanger clips and Phoenix containment weights hold sheeting in place without damaging the room                                 | Row message; product performance is not on the verified source list: `[TOBY TO CONFIRM]` | Pending Toby        |
 | CCW stocks Poly-Hanger #1 and #2 and Phoenix containment weights                                                                   | CCW product pages (named in the calendar row): `[TOBY TO CONFIRM]` current range         | Pending Toby        |
 
