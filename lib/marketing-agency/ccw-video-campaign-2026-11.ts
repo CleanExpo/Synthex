@@ -85,6 +85,47 @@ export function ccwVideoLink(
   });
 }
 
+/** utm_medium for a boosted (paid) post; organic posts use CCW_VIDEO_UTM_MEDIUM. */
+export const CCW_VIDEO_UTM_MEDIUM_PAID = 'paid_social';
+
+/**
+ * Where a viewer can tap a link for one video. On-screen URLs cannot be
+ * tapped, so every post carries its link in a clickable place:
+ * - facebookReelCaption: links in a Facebook Reel caption are clickable.
+ * - instagramStorySticker: Instagram Reel captions are not clickable, so the
+ *   Reel is reshared to a Story with a link sticker.
+ * - instagramBio: the profile link while this video is the newest post.
+ * - boostedCta: the call-to-action button if the post is boosted (paid).
+ */
+export type CcwVideoPlacementLinks = {
+  facebookReelCaption: string;
+  instagramStorySticker: string;
+  instagramBio: string;
+  boostedCta: string;
+};
+
+export function ccwVideoPlacementLinks(
+  slot: CcwVideoSlot
+): CcwVideoPlacementLinks {
+  const link = (source: string, medium: string, content: string) =>
+    buildUtmUrl(slot.landingBase, {
+      source,
+      medium,
+      campaign: CCW_VIDEO_CAMPAIGN_SLUG,
+      content,
+    });
+  return {
+    facebookReelCaption: link('facebook', CCW_VIDEO_UTM_MEDIUM, slot.id),
+    instagramStorySticker: link(
+      'instagram',
+      CCW_VIDEO_UTM_MEDIUM,
+      `${slot.id}-story`
+    ),
+    instagramBio: link('instagram', CCW_VIDEO_UTM_MEDIUM, `${slot.id}-bio`),
+    boostedCta: link('facebook', CCW_VIDEO_UTM_MEDIUM_PAID, slot.id),
+  };
+}
+
 /**
  * calendar_posts.scheduled_for is timestamp without time zone; like the EOFY
  * calendar, store the intended AEST wall-clock value.
@@ -122,6 +163,7 @@ export type CcwVideoDraft = {
     products: string[];
     referenceSubjects: string[];
     links: Record<string, string>;
+    placements: CcwVideoPlacementLinks;
     scriptPath: string;
     externalPublishBlocked: true;
     approvalState: 'awaiting_phill_batch_approval';
@@ -174,6 +216,7 @@ export function buildCcwVideoCalendarDrafts(ctx: {
         products: slot.products,
         referenceSubjects: slot.referenceSubjects,
         links,
+        placements: ccwVideoPlacementLinks(slot),
         scriptPath: `docs/campaigns/ccw-2026-11-video/scripts/${slot.id}.md`,
         externalPublishBlocked: true as const,
         approvalState: 'awaiting_phill_batch_approval' as const,

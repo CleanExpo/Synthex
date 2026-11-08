@@ -7,6 +7,7 @@ import {
   CCW_VIDEO_CAMPAIGN_SLUG,
   buildCcwVideoCalendarDrafts,
   ccwVideoLink,
+  ccwVideoPlacementLinks,
   ccwVideoScheduledAt,
   ccwVideoSlots,
 } from '@/lib/marketing-agency/ccw-video-campaign-2026-11';
@@ -73,6 +74,26 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     const li = new URL(ccwVideoLink(s, 'linkedin'));
     expect(ig.searchParams.get('utm_source')).toBe('instagram');
     expect(li.searchParams.get('utm_source')).toBe('linkedin');
+  });
+
+  it('gives every post a tappable, tracked link per placement', () => {
+    for (const s of ccwVideoSlots) {
+      const p = ccwVideoPlacementLinks(s);
+      const fb = new URL(p.facebookReelCaption);
+      const story = new URL(p.instagramStorySticker);
+      const paid = new URL(p.boostedCta);
+      for (const u of [fb, story, paid, new URL(p.instagramBio)]) {
+        expect(`${u.origin}${u.pathname}`).toBe(s.landingBase);
+        expect(u.searchParams.get('utm_campaign')).toBe('ccw-video-2026-11');
+      }
+      expect(fb.searchParams.get('utm_source')).toBe('facebook');
+      expect(fb.searchParams.get('utm_content')).toBe(s.id);
+      expect(story.searchParams.get('utm_source')).toBe('instagram');
+      expect(story.searchParams.get('utm_content')).toBe(`${s.id}-story`);
+      expect(paid.searchParams.get('utm_medium')).toBe('paid_social');
+      // Every landing page is a real page, not the bare home page.
+      expect(new URL(s.landingBase).pathname).not.toBe('/');
+    }
   });
 
   it('covers every funnel stage', () => {

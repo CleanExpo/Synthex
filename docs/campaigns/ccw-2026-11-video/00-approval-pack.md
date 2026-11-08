@@ -20,11 +20,11 @@ Funnel mix: 9 awareness, 15 consideration, 7 conversion, 9 retention.
 
 ## How we will know it worked
 
-Every video links to a ccwonline.com.au page with its own tag (`utm_campaign=ccw-video-2026-11`,
-`utm_content=<video id>`, `utm_source=<channel>`). The visits land on Toby's own Shopify shop, so
-the results sit in his analytics, not in Synthex. Whether his reports break visits and sales down by
-these tags is `[TOBY TO CONFIRM]`; we need him to share that report weekly or give us read access.
-Calls to 1800 686 869 cannot be tagged; ask Toby's team to note "saw the video" on phone enquiries.
+Every video carries a tappable link to a ccwonline.com.au page (Facebook caption, Instagram Story
+sticker, boosted-post button), tagged `utm_campaign=ccw-video-2026-11` and `utm_content=<video id>`.
+Visits land in Toby's analytics, not Synthex. The 08/11 audit (`03-tracking-audit.md`) found GA4 and
+the Meta Pixel installed, but two GA4 properties, no Organization or WebSite schema, and Meta cart
+events unconfirmed (A7). Calls to 1800 686 869 cannot be tagged; ask Toby's team to note "saw the video".
 
 ## What is ready
 
@@ -36,14 +36,15 @@ Calls to 1800 686 869 cannot be tagged; ask Toby's team to note "saw the video" 
 
 ## What needs your yes (each is separate)
 
-| #   | Approve                                                    | Why it waits on you                                                                                                                                                                                                                                                                                                                                                                                   |
-| --- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | Render method: no render spend (was about US$348)          | Motion built in code (Remotion) over CCW's own photos; Margot's voice on the existing ElevenLabs plan. The two 16/11 videos are rendered as a proof. No paid shots so far; any later one is US$0.2419 a second and comes to you first. Trade-off: no on-camera Margot, so it reads as moving product shots until Toby sends real clips. Remotion is free up to 3 employees; confirm Unite Group fits. |
-| A2  | Load the 40 draft slots into Synthex for CCW (`--execute`) | Production database write. Confirm the CCW organisation slug (`ccw` or `ccwarehouse`).                                                                                                                                                                                                                                                                                                                |
-| A3  | Send Toby the plan and the "storm-ready check" idea        | Client contact. The check is CCW's existing phone fault-finding, framed for the season.                                                                                                                                                                                                                                                                                                               |
-| A4  | Each finished batch of 10 before it posts                  | Nothing posts without you.                                                                                                                                                                                                                                                                                                                                                                            |
-| A5  | Push the branch                                            | A pushed Synthex branch merges to main automatically on green. Local commits only until you say so.                                                                                                                                                                                                                                                                                                   |
-| A6  | Margot as CCW's voice                                      | Your brief says Margot; a repo test says client brands choose their own voice. Confirm with Toby (A3).                                                                                                                                                                                                                                                                                                |
+| #   | Approve                                                    | Why it waits on you                                                                                                                                                                                                                                                                                           |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A1  | Render method: no render spend (was about US$348)          | Remotion motion over CCW's own photos; Margot on the existing ElevenLabs plan. 16/11 proof rendered. Any later paid shot (US$0.2419 a second) comes to you first. Trade-off: moving product shots, no on-camera Margot, until Toby sends clips. Remotion is free up to 3 employees; confirm Unite Group fits. |
+| A2  | Load the 40 draft slots into Synthex for CCW (`--execute`) | Production database write. Confirm the CCW organisation slug (`ccw` or `ccwarehouse`).                                                                                                                                                                                                                        |
+| A3  | Send Toby the plan and the "storm-ready check" idea        | Client contact. The check is CCW's existing phone fault-finding, framed for the season.                                                                                                                                                                                                                       |
+| A4  | Each finished batch of 10 before it posts                  | Nothing posts without you.                                                                                                                                                                                                                                                                                    |
+| A5  | Push the branch                                            | A pushed Synthex branch merges to main automatically on green. Local commits only until you say so.                                                                                                                                                                                                           |
+| A6  | Margot as CCW's voice                                      | Your brief says Margot; a repo test says client brands choose their own voice. Confirm with Toby (A3).                                                                                                                                                                                                        |
+| A7  | Tracking and schema fixes on ccwonline.com.au              | Needs Toby's admin access. Fix list and theme snippet in `03-tracking-audit.md`; we change nothing on his site.                                                                                                                                                                                               |
 
 ## What Toby must confirm before anything posts
 
@@ -72,4 +73,4 @@ Real CCW photos only (owned or supplier-authorised); no owned photo means the sh
 numbers, no prices in videos, no competitor named or shown, no other Unite Group brand in frame.
 Australian English, metric, 230 V.
 
-**Approve:** reply with the numbers you approve (for example "A1, A2, A3, A5").
+**Approve:** reply with the numbers you approve (for example "A1, A3, A7").
