@@ -80,6 +80,14 @@ export type CcwPlaced = {
   flip?: boolean;
   /** Seconds into the shot when the unit cuts in, already grounded (default 0). */
   at?: number;
+  /**
+   * Hide the bottom of the cut-out (fraction of `w`), e.g. a cord hanging below
+   * the feet, so the feet become the base. A crop of the owned photo, nothing
+   * generated.
+   */
+  clipBottom?: number;
+  /** Add a dark, blurred copy of the outline under an angled unit as its shadow. */
+  silhouette?: boolean;
 };
 
 export type CcwShotPlan = {
@@ -319,7 +327,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
           { img: 2, x: 290, y: 770, w: 240 },
           { img: 4, x: 770, y: 780, w: 210 },
           { img: 3, x: 220, y: 1520, w: 400 },
-          { img: 1, x: 810, y: 1430, w: 330, flip: true },
+          { img: 1, x: 810, y: 1430, w: 330, flip: true, clipBottom: 0.105 },
         ],
         floorLines: ['4 PLACED', 'BEAT 2', 'POWERFUL'],
         floorSize: 150,
@@ -357,7 +365,8 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [VELO],
         images: [img(VELO, '29703296135')],
         crop: { x: 385, y: 196, w: 484, h: 860 },
-        kinetic: ['Unit', 'count.'],
+        floorLines: ['UNIT', 'COUNT'],
+        floorSize: 150,
         noCaptions: true,
       },
       {
@@ -387,7 +396,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
           { img: 3, x: 250, y: 560, w: 210 },
           { img: 2, x: 800, y: 590, w: 210, flip: true },
           { img: 4, x: 860, y: 1250, w: 300, flip: true },
-          { img: 1, x: 250, y: 1560, w: 420 },
+          { img: 1, x: 250, y: 1560, w: 420, silhouette: true },
         ],
         floorLines: ['PLACEMENT', 'MATTERS'],
         floorSize: 140,

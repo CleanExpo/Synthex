@@ -55,6 +55,8 @@ export type CcwPmWorldProps = {
     w: number;
     flip?: boolean;
     at?: number;
+    clipBottom?: number;
+    silhouette?: boolean;
   }[];
 };
 
@@ -162,9 +164,36 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
             transformOrigin: '540px 1213.44px',
           }}
         >
-          {place.map((u, i) =>
-            t < (u.at ?? 0) ? null : (
+          {place.map((u, i) => {
+            if (t < (u.at ?? 0)) return null;
+            // Optional crop of the cut-out's bottom (a dangling cord).
+            const clip = (u.clipBottom ?? 0) * u.w;
+            const box = {
+              position: 'absolute' as const,
+              left: u.x - u.w / 2,
+              top: u.y - u.w + clip,
+              width: u.w,
+              height: u.w,
+              objectFit: 'contain' as const,
+              objectPosition: '50% 100%',
+              clipPath: clip ? `inset(0 0 ${clip}px 0)` : undefined,
+            };
+            return (
               <React.Fragment key={`${u.src}-${i}`}>
+                {/* Optional silhouette shadow: the unit's own outline, dark,
+                    blurred and nudged down, so an angled unit is dark along
+                    its whole bottom edge, not only under its centre. */}
+                {u.silhouette ? (
+                  <Img
+                    src={staticFile(u.src)}
+                    style={{
+                      ...box,
+                      filter: `brightness(0) blur(${Math.round(u.w * 0.012)}px)`,
+                      opacity: 0.75,
+                      transform: `translateY(${u.w * 0.022}px) scaleX(${u.flip ? -1 : 1})`,
+                    }}
+                  />
+                ) : null}
                 {/* Soft ambient shadow, wider than the unit. */}
                 <div
                   style={{
@@ -194,20 +223,14 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                 <Img
                   src={staticFile(u.src)}
                   style={{
-                    position: 'absolute',
-                    left: u.x - u.w / 2,
-                    top: u.y - u.w,
-                    width: u.w,
-                    height: u.w,
-                    objectFit: 'contain',
-                    objectPosition: '50% 100%',
+                    ...box,
                     filter: 'saturate(0.92) brightness(0.96) sepia(0.06)',
                     transform: `scaleX(${u.flip ? -1 : 1})`,
                   }}
                 />
               </React.Fragment>
-            )
-          )}
+            );
+          })}
         </AbsoluteFill>
       ) : null}
 
