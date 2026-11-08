@@ -298,26 +298,97 @@ export function measureDelivery(file: string): DeliveryMeasures {
   };
 }
 
-/** Words as compared: lower case, letters, numbers and slashes only. */
-export function normaliseWords(text: string): string[] {
-  return text
-    .split(/\s+/)
-    .map(w => w.toLowerCase().replace(/[^a-z0-9/]/g, ''))
-    .filter(Boolean);
+const UNITS: Record<string, number> = {
+  zero: 0,
+  oh: 0,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  thirteen: 13,
+  fourteen: 14,
+  fifteen: 15,
+  sixteen: 16,
+  seventeen: 17,
+  eighteen: 18,
+  nineteen: 19,
+};
+const TENS: Record<string, number> = {
+  twenty: 20,
+  thirty: 30,
+  forty: 40,
+  fifty: 50,
+  sixty: 60,
+  seventy: 70,
+  eighty: 80,
+  ninety: 90,
+};
+/** Transcripts spell the same words differently from our scripts. */
+const SAME_WORD: Record<string, string> = { grill: 'grille', color: 'colour' };
+
+/**
+ * What the voiceover says, as one comparable string. A transcript writes
+ * "X Power", "21", "centimeters", "1-800-686-869" where the script has
+ * "XPOWER", "twenty-one", "centimetres", "one eight hundred, six eight six...".
+ * So: lower case, number words to digits, US -ter to AU -tre, then every
+ * separator dropped (09/11/2026: word-by-word matching failed two correct
+ * CCW voiceovers at 84% and 89.7% on exactly these differences).
+ */
+export function speechStream(text: string): string {
+  const words =
+    text
+      .toLowerCase()
+      .replace(/%/g, ' percent ')
+      .match(/[a-z]+|\d+/g) ?? [];
+  const out: string[] = [];
+  for (let i = 0; i < words.length; ) {
+    const w = words[i];
+    if (w in UNITS || w in TENS) {
+      let n = UNITS[w] ?? TENS[w];
+      i += 1;
+      if (w in TENS && words[i] in UNITS && UNITS[words[i]] < 10)
+        n += UNITS[words[i++]];
+      if (words[i] === 'hundred') {
+        n *= 100;
+        i += 1;
+      }
+      out.push(String(n));
+      continue;
+    }
+    const au = w.replace(/ter$/, 'tre');
+    out.push(SAME_WORD[au] ?? au);
+    i += 1;
+  }
+  return out.join('');
 }
 
-/** 2 x longest common word subsequence / total words (difflib-style ratio). */
-export function wordMatchRatio(heard: string[], expected: string[]): number {
-  if (heard.length + expected.length === 0) return 1;
-  let prev = new Array<number>(expected.length + 1).fill(0);
-  for (const h of heard) {
-    const cur = new Array<number>(expected.length + 1).fill(0);
-    for (let j = 1; j <= expected.length; j++)
+/**
+ * 2 x longest common subsequence / total length, over speechStream text.
+ * Measured on the ten CCW week-1 files: each against its own script 0.98 or
+ * more; against any other script 0.47 at most; a voiceover missing its last
+ * two sentences 0.88.
+ */
+export function speechMatchRatio(heard: string, script: string): number {
+  const a = speechStream(heard);
+  const b = speechStream(script);
+  if (a.length + b.length === 0) return 1;
+  let prev = new Uint16Array(b.length + 1);
+  for (let i = 0; i < a.length; i++) {
+    const cur = new Uint16Array(b.length + 1);
+    for (let j = 1; j <= b.length; j++)
       cur[j] =
-        h === expected[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]);
+        a[i] === b[j - 1] ? prev[j - 1] + 1 : Math.max(prev[j], cur[j - 1]);
     prev = cur;
   }
-  return (2 * prev[expected.length]) / (heard.length + expected.length);
+  return (2 * prev[b.length]) / (a.length + b.length);
 }
 
 /**
@@ -351,7 +422,7 @@ export function measureSpeechMatch(
       { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }
     );
     if (r.status !== 0) return null;
-    return wordMatchRatio(normaliseWords(r.stdout), normaliseWords(script));
+    return speechMatchRatio(r.stdout, script);
   } finally {
     fs.rmSync(wav, { force: true });
   }

@@ -9,8 +9,8 @@ import {
   SHORT_FORM_DELIVERY,
   evaluateDelivery,
   moovBeforeMdat,
-  normaliseWords,
-  wordMatchRatio,
+  speechMatchRatio,
+  speechStream,
 } from '@/lib/video/delivery-readiness';
 import { ccwVoiceover } from '../../../scripts/check-video-delivery';
 
@@ -169,18 +169,36 @@ describe('spoken words', () => {
     );
   });
 
-  it('measures the word match like difflib, ignoring case and punctuation', () => {
-    const script = normaliseWords('Cyclone season is open. Check your kit!');
+  // Real whisper transcripts of two correct CCW voiceovers (09/11/2026) that
+  // word-by-word matching failed at 84% and 89.7%.
+  const d5pmScript =
+    'Keep the inlet grille clear. Check the filter at every equipment swap. Call CCW on one eight hundred, six eight six, eight six nine.';
+  const d5pmHeard =
+    'Keep the inlet grill clear. Check the filter at every equipment swap. Call CCW on 1-800-686-869.';
+  const d2pmScript =
+    'The XPOWER PL-700A stands twenty-one centimetres high. It fits under toe-kicks, beds and furniture. The Dri-Eaz Velo is half the height of a snail-shell dryer.';
+  const d2pmHeard =
+    'The X Power PL700A stands 21 centimeters high. It fits under toe kicks, beds, and furniture. The dry ease Velo is half the height of a snail shell dryer.';
+
+  it('matches a correct voiceover despite digits, hyphens and US spelling', () => {
+    expect(speechMatchRatio(d5pmHeard, d5pmScript)).toBe(1);
+    expect(speechMatchRatio(d2pmHeard, d2pmScript)).toBeGreaterThanOrEqual(
+      0.95
+    );
+  });
+
+  it('turns spoken numbers into digits the way a transcript writes them', () => {
+    expect(speechStream('one eight hundred, six eight six')).toBe('1800686');
+    expect(speechStream('twenty-one centimetres')).toBe('21centimetres');
+    expect(speechStream('99%')).toBe('99percent');
+  });
+
+  it('fails the wrong voiceover and a voiceover that stops early', () => {
+    expect(speechMatchRatio(d2pmHeard, d5pmScript)).toBeLessThan(0.6);
     expect(
-      wordMatchRatio(
-        normaliseWords('cyclone season is open check your kit'),
-        script
-      )
-    ).toBe(1);
-    expect(wordMatchRatio([], script)).toBe(0);
-    expect(
-      wordMatchRatio(normaliseWords('cyclone season check kit'), script)
-    ).toBeCloseTo(8 / 11);
+      speechMatchRatio('Keep the inlet grill clear.', d5pmScript)
+    ).toBeLessThan(0.9);
+    expect(speechMatchRatio('', d5pmScript)).toBe(0);
   });
 
   it('reads the CCW voiceover lines, without their timing notes', () => {
