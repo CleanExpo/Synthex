@@ -35,8 +35,8 @@ Why should a business be held to these steps rather than doing what is fastest? 
 ## Layer 3: Why a standard and the law require it
 
 - Australia now has its own standards: AS-IICRC S500:2025 for water damage and AS-IICRC S520:2025 for mould. They turn the physics into a written procedure that insurers and scopes can call up. (R21)
-- Work health and safety law puts duties on the business: fitted P2 respirators, training, hand washing, and controlling dust. (R12, R22, R31)
-- The same law makes the other hazards non-optional. Before a wall in an older home is cut: asbestos (pre-1990), lead paint (pre-1970), live wiring, sewage-contaminated water. (R18, R19, R23, R27)
+- Work health and safety law puts duties on the business to protect workers; SafeWork NSW guidance names a properly fitted P2 respirator, training, hand washing (which it says must be provided) and dust control. (R12, R22, R31)
+- The same law makes the other hazards non-optional. Before a wall in an older home is cut: asbestos (pre-1990), lead paint, live wiring, sewage-contaminated water. (R18, R19, R27; the lead-paint age threshold, R23, is still being verified)
 - There are no safe-air numbers for mould, so the job cannot be "passed" by one air test. It is judged against a procedure and a visual and documented verification. (R28, R6)
 - The standard itself draws a line: correcting the cause belongs to the owner or their agent unless the remediator is contracted to do it. A professional says so in writing, so the cause does not fall between two parties. (R26)
 
@@ -46,7 +46,7 @@ Why does following a written standard make someone a professional and not just c
 
 Compliance is the floor. A professional provider is the one who can prove, after they leave, what they did and why:
 
-- Trained and certified people: IICRC WRT for water; AMRT for mould (which needs WRT first). Named on the job, not just in the logo. (R20)
+- Trained and certified people: IICRC WRT for water and AMRT for mould (the prerequisite path is still being verified, R20). Named on the job, not just in the logo.
 - The right equipment, of a known standard: HEPA filtration, HEPA vacuums, dehumidifiers and air movers, moisture meters, PPE that fits. (R2, R4, R12)
 - A written plan before work starts, revised when hidden damage turns up (reel 4's lesson). (R1, R15)
 - Documentation: moisture readings, photos at each stage, waste bagged and recorded, the hazard checks done. (R18, R30)

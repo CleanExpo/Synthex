@@ -22,11 +22,11 @@ Measured: 39.2 s, 720x1280, 30 fps, 1 hard cut at 5.9 s plus punch-ins, -14.1 LU
 | Time (s) | What is on screen                                                                                                      | Purpose                      |
 | -------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
 | 0        | Lecture room, presenter at a lectern, slide "Mould Sampling: Indicator Moulds, Chaetomium". Yellow name pill top left. | Authority set-up             |
-| 1        | Punch-in to the slide micrograph; captions start, yellow and white condensed caps, bottom centre.                      | Show the thing               |
-| 4        | Tight on the brown lemon-shaped spores.                                                                                | "Little brown lemons" visual |
+| 1        | Captions start, yellow and white condensed caps, bottom centre; still the wide of the room and slide.                  | Show the thing               |
+| 4        | Punch-in to the slide micrograph, tight on the brown lemon-shaped spores (the measured hard cut is at 5.9 s).          | "Little brown lemons" visual |
 | 9        | Pull back to the full slide.                                                                                           | Context                      |
 | 13       | Caption "is an indicator" on the slide.                                                                                | Key claim                    |
-| 22       | Cut to presenter, hands describing the capsule bursting.                                                               | Human gesture                |
+| 22       | Camera moves off the slide to the presenter (a pan, not a hard cut), hands describing the capsule bursting.            | Human gesture                |
 | 28       | Presenter compares sizes with hand gestures.                                                                           | Comparison                   |
 | 38       | Ends on "Penicillium and Aspergillus".                                                                                 | Abrupt end                   |
 
@@ -40,12 +40,12 @@ Measured: 39.2 s, 720x1280, 30 fps, 1 hard cut at 5.9 s plus punch-ins, -14.1 LU
 
 ## Standards and safety check
 
-| Observed                                                       | Verdict for an Australian video                                                                                                                                                                | Register |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| Chaetomium indicates long-standing wetting                     | Cellulose decomposer confirmed by University of Adelaide mycology; "long-term indicator" seen only in secondary sources. Phrase as "commonly found where materials stayed wet for a long time" | R13      |
-| Spores much larger than Penicillium and Aspergillus            | Direction consistent across sources (about 9 to 12 micrometres versus 2 to 6); no primary reference opened                                                                                     | R14      |
-| Species identification needs a lab                             | Our videos must name the lab and the sample type if we show a result                                                                                                                           | R16      |
-| enHealth: routine home mould testing generally not recommended | Do not imply every home needs sampling                                                                                                                                                         | R16      |
+| Observed                                                       | Verdict for an Australian video                                                                                                                                                                                         | Register |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Chaetomium indicates long-standing wetting                     | Unverified so far (cellulose decomposer per a helper search of University of Adelaide mycology; "long-term indicator" only in secondary sources). Phrase as "commonly found where materials stayed wet for a long time" | R13      |
+| Spores much larger than Penicillium and Aspergillus            | Direction consistent across sources (about 9 to 12 micrometres versus 2 to 6); no primary reference opened                                                                                                              | R14      |
+| Species identification needs a lab                             | Our videos must name the lab and the sample type if we show a result                                                                                                                                                    | R16      |
+| enHealth: routine home mould testing generally not recommended | Do not imply every home needs sampling                                                                                                                                                                                  | R16      |
 
 ## Gaps
 
