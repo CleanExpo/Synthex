@@ -1,14 +1,15 @@
 /**
- * SYN-1404 ccw-w1-d1-pm, concept A "Quiet on paper": the world, built on the
- * owned job photo carpet-cleaning-extraction-01 (wet tiles, work boots,
- * extractor). The scene image is a tight crop of that photo, resized with
- * lanczos + unsharp (no AI), prepared into the render work folder.
+ * SYN-1404 ccw-w1-d1-pm, concept A "Quiet on paper": the world, built on
+ * owned job photos (wet tiles, work boots, extractor; carpet extraction; the
+ * van). Each scene image is a tight crop of the photo, resized with lanczos +
+ * unsharp (no AI), prepared into the render work folder by
+ * scripts/render-ccw-shortform.ts.
  *
- * Hero frame = the turn: "QUIET ON PAPER" lies flat on the wet tiles, the
- * camera pushes over it and a water ripple breaks the letters; the spoken line
- * "Quiet does not mean dry." is the kinetic type. The source sits on the floor
- * as a printed slip. Text boxes carry className="ccw-text" for the safe-zone
- * mask check.
+ * Type lies flat on the floor plane and the camera pushes low over it; at the
+ * turn a water ripple breaks the letters and the spoken line "Quiet does not
+ * mean dry." is the kinetic type. The source sits on the floor as a printed
+ * slip. With no floor lines it is a plain 2.5D push over the photo. Text boxes
+ * carry className="ccw-text" for the safe-zone mask check.
  */
 
 import React from 'react';
@@ -20,7 +21,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { CCW, TEXT_MASK_CSS } from './CcwShortform';
+import { CCW, TEXT_MASK_CSS } from './brand';
 
 const FONT =
   '"Helvetica Neue", "Arial Black", Arial, system-ui, -apple-system, sans-serif';
@@ -28,21 +29,27 @@ const FONT =
 export type CcwPmWorldProps = {
   /** Prepared scene image under the public dir (1188x2112). */
   scene: string;
-  floorLines: string[];
-  kinetic: string[];
-  sourceSlip: string;
+  floorLines?: string[];
+  /** Floor type size in px. */
+  floorSize?: number;
+  kinetic?: string[];
+  sourceSlip?: string;
   /** 0 to 1: how far the turn ripple has gone at the end of the clip. */
-  rippleTo: number;
+  rippleTo?: number;
+  /** Fraction of the clip at which the ripple starts. */
+  rippleFrom?: number;
   /** Render text boxes white on black for the safe-zone check. */
   textMask?: boolean;
 };
 
 export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   scene,
-  floorLines,
-  kinetic,
+  floorLines = [],
+  floorSize = 188,
+  kinetic = [],
   sourceSlip,
-  rippleTo,
+  rippleTo = 0,
+  rippleFrom = 0.35,
   textMask,
 }) => {
   const frame = useCurrentFrame();
@@ -53,11 +60,19 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   const push = interpolate(ease(p), [0, 1], [1.0, 1.1]);
   // Floor type slides toward the lens as the camera passes over it.
   const floorY = interpolate(ease(p), [0, 1], [0, 70]);
-  const ripple = interpolate(p, [0.35, 1], [0, rippleTo], {
+  const ripple =
+    rippleTo > 0
+      ? interpolate(p, [rippleFrom, 1], [0, rippleTo], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+  const t = frame / fps;
+  // Floor type settles onto the floor in the first 0.4 s.
+  const land = interpolate(t, [0, 0.4], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const t = frame / fps;
 
   return (
     <AbsoluteFill
@@ -84,7 +99,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
         </filter>
       </svg>
 
-      {/* The real wet-tile room. */}
+      {/* The real room. */}
       <Img
         src={staticFile(scene)}
         style={{
@@ -98,103 +113,109 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
         }}
       />
 
-      {/* Floor plane: type and the source slip lie flat on the tiles. */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: 690,
-          height: 430,
-          perspective: 900,
-          perspectiveOrigin: '50% -40%',
-        }}
-      >
+      {/* Floor plane: type and the source slip lie flat on the floor. */}
+      {floorLines.length ? (
         <div
           style={{
             position: 'absolute',
-            left: 96,
-            top: 0,
-            transform: `translateY(${floorY}px) rotateX(58deg) rotateZ(-5deg)`,
-            transformOrigin: '50% 100%',
+            left: 0,
+            right: 0,
+            top: 690,
+            height: 430,
+            perspective: 900,
+            perspectiveOrigin: '50% -40%',
           }}
         >
-          {/* Printed slip on the floor carrying the source. */}
           <div
-            className="ccw-text"
             style={{
-              marginBottom: 22,
-              marginLeft: 14,
-              width: 'max-content',
-              fontFamily: FONT,
-              fontWeight: 700,
-              fontSize: 34,
-              color: CCW.ink,
-              background: '#fbfaf6',
-              padding: '10px 18px',
-              boxShadow: '0 6px 10px rgba(30,40,50,0.25)',
-              transform: 'rotateZ(2deg)',
+              position: 'absolute',
+              left: 96,
+              top: 0,
+              opacity: land,
+              transform: `translateY(${floorY + (1 - land) * -60}px) rotateX(58deg) rotateZ(-5deg)`,
+              transformOrigin: '50% 100%',
             }}
           >
-            {sourceSlip}
-          </div>
-          <div style={{ filter: 'url(#ccw-ripple)' }}>
-            {floorLines.map((l, i) => (
+            {sourceSlip ? (
               <div
-                key={l}
                 className="ccw-text"
                 style={{
-                  fontFamily: FONT,
-                  fontWeight: 900,
-                  fontSize: 188,
-                  lineHeight: 0.86,
-                  letterSpacing: -7,
+                  marginBottom: 22,
+                  marginLeft: 14,
                   width: 'max-content',
-                  color:
-                    i === floorLines.length - 1
-                      ? 'rgba(243,114,21,0.92)'
-                      : 'rgba(255,255,255,0.94)',
-                  textShadow: '0 0 1px rgba(0,0,0,0.25)',
+                  fontFamily: FONT,
+                  fontWeight: 700,
+                  fontSize: 34,
+                  color: CCW.ink,
+                  background: '#fbfaf6',
+                  padding: '10px 18px',
+                  boxShadow: '0 6px 10px rgba(30,40,50,0.25)',
+                  transform: 'rotateZ(2deg)',
                 }}
               >
-                {l}
+                {sourceSlip}
               </div>
-            ))}
+            ) : null}
+            <div style={{ filter: ripple > 0 ? 'url(#ccw-ripple)' : 'none' }}>
+              {floorLines.map((l, i) => (
+                <div
+                  key={l}
+                  className="ccw-text"
+                  style={{
+                    fontFamily: FONT,
+                    fontWeight: 900,
+                    fontSize: floorSize,
+                    lineHeight: 0.86,
+                    letterSpacing: -7,
+                    width: 'max-content',
+                    color:
+                      i === floorLines.length - 1
+                        ? 'rgba(243,114,21,0.92)'
+                        : 'rgba(255,255,255,0.94)',
+                    textShadow: '0 0 1px rgba(0,0,0,0.25)',
+                  }}
+                >
+                  {l}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
-      {/* Kinetic line: Margot's words as the type itself. */}
-      <div style={{ position: 'absolute', left: 84, right: 84, top: 300 }}>
-        {kinetic.map((w, i) => {
-          const at = 0.08 + i * 0.07;
-          const k = interpolate(p, [at, at + 0.12], [0, 1], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          });
-          return (
-            <span
-              key={`${w}-${i}`}
-              className="ccw-text"
-              style={{
-                display: 'inline-block',
-                marginRight: 22,
-                fontFamily: FONT,
-                fontWeight: 900,
-                fontSize: 104,
-                lineHeight: 1.02,
-                letterSpacing: -3,
-                color: i === kinetic.length - 1 ? CCW.orange : CCW.paper,
-                textShadow: '0 4px 18px rgba(10,20,40,0.45)',
-                opacity: k,
-                transform: `translateY(${(1 - ease(k)) * 40}px)`,
-              }}
-            >
-              {w}
-            </span>
-          );
-        })}
-      </div>
+      {/* Kinetic line: Margot's words as the type itself, word by word. */}
+      {kinetic.length ? (
+        <div style={{ position: 'absolute', left: 84, right: 84, top: 300 }}>
+          {kinetic.map((w, i) => {
+            const at = 0.05 + i * 0.24;
+            const k = interpolate(t, [at, at + 0.22], [0, 1], {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            });
+            return (
+              <span
+                key={`${w}-${i}`}
+                className="ccw-text"
+                style={{
+                  display: 'inline-block',
+                  marginRight: 22,
+                  fontFamily: FONT,
+                  fontWeight: 900,
+                  fontSize: 104,
+                  lineHeight: 1.02,
+                  letterSpacing: -3,
+                  color: i === kinetic.length - 1 ? CCW.orange : CCW.paper,
+                  textShadow: '0 4px 18px rgba(10,20,40,0.45)',
+                  opacity: k,
+                  transform: `translateY(${(1 - ease(k)) * 40}px)`,
+                }}
+              >
+                {w}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
     </AbsoluteFill>
   );
 };

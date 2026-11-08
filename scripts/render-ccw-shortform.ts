@@ -251,6 +251,37 @@ export function deliveryCopy(master: string, copy: string) {
   );
 }
 
+/**
+ * Floor shots and scene end cards name a crop of the owned photo. Cut it and
+ * scale it to the 1188x2112 world frame with lanczos + unsharp (ffmpeg, no
+ * AI), so the browser never stretches a small soft crop.
+ */
+export function prepareCrop<
+  S extends {
+    images: string[];
+    crop?: { x: number; y: number; w: number; h: number };
+  },
+>(shot: S, pub: string): S {
+  if (!shot.crop) return shot;
+  const { x, y, w, h } = shot.crop;
+  const rel = `prep/${path.basename(shot.images[0], '.webp')}-${x}-${y}-${w}-${h}.png`;
+  const out = path.join(pub, rel);
+  if (!fs.existsSync(out)) {
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    execFileSync('ffmpeg', [
+      '-y',
+      '-loglevel',
+      'error',
+      '-i',
+      path.join(pub, shot.images[0]),
+      '-vf',
+      `crop=${w}:${h}:${x}:${y},scale=1188:2112:flags=lanczos,unsharp=5:5:0.8:5:5:0`,
+      out,
+    ]);
+  }
+  return { ...shot, images: [rel, ...shot.images.slice(1)] };
+}
+
 function main() {
   const video = arg('--video');
   const work = path.resolve(arg('--work'));
@@ -272,14 +303,15 @@ function main() {
     fs.readFileSync(path.join(work, `${video}-align.json`), 'utf8')
   ) as { text: string; alignment: CcwAlignment };
 
-  const shots = timeShots(text, alignment, plan.shots);
-  const files = new Set(shots.flatMap(s => s.images));
+  const timed = timeShots(text, alignment, plan.shots);
+  const files = new Set(timed.flatMap(s => s.images));
   for (const rel of files) {
     const src = path.join(root, 'public/reference-library', rel);
     if (!fs.existsSync(src)) throw new Error(`missing owned photo ${rel}`);
     fs.mkdirSync(path.dirname(path.join(pub, rel)), { recursive: true });
     fs.copyFileSync(src, path.join(pub, rel));
   }
+  const shots = timed.map(s => prepareCrop(s, pub));
   fs.mkdirSync(path.join(pub, 'logos/ccw'), { recursive: true });
   fs.copyFileSync(
     path.join(root, 'public/logos/ccw/primary.svg'),

@@ -21,15 +21,10 @@ import {
   useVideoConfig,
 } from 'remotion';
 import type { CcwShot } from './shot-plans';
+import { CCW, TEXT_MASK_CSS } from './brand';
+import { CcwPmWorld } from './CcwPmWorld';
 
-export const CCW = {
-  blue: '#007CC3',
-  green: '#39B54A',
-  orange: '#F37215',
-  ink: '#231F20',
-  paper: '#FFFFFF',
-  mist: '#EEF6FC',
-};
+export { CCW, TEXT_MASK_CSS };
 
 const FONT =
   '"Helvetica Neue", "Arial Black", Arial, system-ui, -apple-system, sans-serif';
@@ -572,6 +567,115 @@ function Fullbleed({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
 }
 
 /**
+ * Scene end card, at most 3 s: the camera keeps pushing on the real job photo
+ * (prepared crop), the real CCW logo arrives on a white plate set in depth,
+ * then the CTA pill and the web address.
+ */
+function SceneEndCard({
+  shot,
+  logo,
+  cta,
+  url,
+}: {
+  shot: CcwTimedShot;
+  logo: string;
+  cta: string;
+  url: string;
+}) {
+  const { frame, fps, dur } = useLocal();
+  const t = interpolate(frame, [0, dur], [0, 1]);
+  const s = enter(frame, fps, 2);
+  const pulse = 1 + Math.sin(frame / 4) * 0.03 * enter(frame, fps, 12);
+  return (
+    <AbsoluteFill style={{ background: CCW.ink, overflow: 'hidden' }}>
+      <Img
+        src={staticFile(shot.images[0])}
+        style={{
+          position: 'absolute',
+          width: 1188,
+          height: 2112,
+          left: -54,
+          top: -96,
+          transform: `scale(${interpolate(t, [0, 1], [1.1, 1.16])})`,
+          transformOrigin: '50% 62%',
+        }}
+      />
+      <div style={{ position: 'absolute', inset: 0, perspective: 1200 }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 150,
+            top: 330,
+            width: 780,
+            height: 330,
+            background: 'rgba(255,255,255,0.96)',
+            borderRadius: 26,
+            boxShadow: '0 30px 60px rgba(10,20,40,0.35)',
+            opacity: s,
+            transform: `translateZ(${interpolate(s, [0, 1], [-500, 0])}px) rotateY(${interpolate(t, [0, 1], [-14, -8])}deg)`,
+          }}
+        >
+          <Img
+            className="ccw-text"
+            src={staticFile(logo)}
+            style={{
+              position: 'absolute',
+              inset: 36,
+              width: 708,
+              height: 258,
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          left: 84,
+          right: 84,
+          top: 820,
+          textAlign: 'center',
+          fontFamily: FONT,
+        }}
+      >
+        <div
+          className="ccw-text"
+          style={{
+            display: 'inline-block',
+            background: CCW.blue,
+            color: CCW.paper,
+            fontWeight: 900,
+            fontSize: 72,
+            padding: '24px 44px',
+            borderRadius: 18,
+            boxShadow: '0 16px 40px rgba(10,20,40,0.35)',
+            opacity: enter(frame, fps, 8),
+            transform: `translateY(${interpolate(enter(frame, fps, 8), [0, 1], [24, 0])}px) scale(${pulse})`,
+          }}
+        >
+          {cta}
+        </div>
+        <div style={{ marginTop: 26, opacity: enter(frame, fps, 12) }}>
+          <span
+            className="ccw-text"
+            style={{
+              background: 'rgba(255,255,255,0.94)',
+              padding: '8px 22px',
+              borderRadius: 12,
+              fontWeight: 800,
+              fontSize: 54,
+              color: CCW.ink,
+            }}
+          >
+            {url}
+          </span>
+        </div>
+      </div>
+    </AbsoluteFill>
+  );
+}
+
+/**
  * End card, at most 3 s: a blue sweep wipes in, the real CCW logo scales up,
  * three products fly in on a 3D turn and keep moving, the CTA pill pulses.
  */
@@ -591,6 +695,8 @@ function EndCard({
   const wipe = enter(frame, fps);
   const s = enter(frame, fps, 3);
   const pulse = 1 + Math.sin(frame / 4) * 0.035 * enter(frame, fps, 12);
+  if (shot.crop)
+    return <SceneEndCard shot={shot} logo={logo} cta={cta} url={url} />;
   return (
     <AbsoluteFill style={{ background: CCW.paper, overflow: 'hidden' }}>
       <div
@@ -691,9 +797,12 @@ function EndCard({
 function Captions({
   words,
   hideFrom,
+  hidden = [],
 }: {
   words: CcwCaptionWord[];
   hideFrom: number;
+  /** Spans (seconds) where a shot's own type carries the words. */
+  hidden?: { from: number; to: number }[];
 }) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -720,6 +829,7 @@ function Captions({
         (lines[i + 1] ? lines[i + 1][0].from - 0.05 : l[l.length - 1].to + 0.6)
   );
   if (!line || t >= hideFrom) return null;
+  if (hidden.some(h => t >= h.from && t < h.to)) return null;
   return (
     <div
       style={{
@@ -781,6 +891,18 @@ function ShotView({
       return <Detail shot={shot} accent={accent} />;
     case 'fullbleed':
       return <Fullbleed shot={shot} accent={accent} />;
+    case 'floor':
+      return (
+        <CcwPmWorld
+          scene={shot.images[0]}
+          floorLines={shot.floorLines}
+          floorSize={shot.floorSize}
+          kinetic={shot.kinetic}
+          sourceSlip={shot.sourceSlip}
+          rippleTo={shot.rippleTo}
+          rippleFrom={shot.rippleFrom}
+        />
+      );
     case 'end':
       return (
         <EndCard
@@ -794,16 +916,6 @@ function ShotView({
       return <Hero shot={shot} accent={accent} />;
   }
 }
-
-export const TEXT_MASK_CSS = `
-  .ccw-root, .ccw-root * { background: transparent !important; color: transparent !important;
-    box-shadow: none !important; border-color: transparent !important; }
-  .ccw-root { background: #000 !important; }
-  .ccw-root img, .ccw-root svg { visibility: hidden !important; }
-  .ccw-root .ccw-text, .ccw-root .ccw-text * { background: #fff !important; }
-  .ccw-root img.ccw-text { visibility: visible !important; background: transparent !important;
-    filter: brightness(0) invert(1) !important; mix-blend-mode: normal !important; }
-`;
 
 export const CcwShortform: React.FC<CcwShortformProps> = props => {
   const { fps } = useVideoConfig();
@@ -830,6 +942,7 @@ export const CcwShortform: React.FC<CcwShortformProps> = props => {
             ? props.shots[props.shots.length - 1].from
             : Infinity
         }
+        hidden={props.shots.filter(s => s.noCaptions)}
       />
       <Audio src={staticFile(props.voice)} />
     </AbsoluteFill>
