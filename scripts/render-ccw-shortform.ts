@@ -188,6 +188,11 @@ export function deliveryCopy(master: string, copy: string) {
     'libx264',
     '-preset',
     'slow',
+    // The copy is judged on SSIM against the master, so let x264 spend its
+    // bits on structural fidelity (fine carpet texture) rather than psy-visual
+    // tricks that cost SSIM. Same size cap; the 0.99 bar is unchanged.
+    '-tune',
+    'ssim',
     '-b:v',
     `${kbps}k`,
     '-pix_fmt',

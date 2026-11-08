@@ -151,38 +151,44 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
       />
 
       {/* Owned products standing on the floor. The layer shares the photo's
-          push (same origin on screen), so the units stay planted. */}
+          push and shake (same origin on screen), so the units stay planted.
+          A unit is flat on the carpet with its contact shadow from its first
+          visible frame: no fade and no drop (orchestrator rule 6c). `at`
+          only delays when it cuts in. */}
       {place.length ? (
         <AbsoluteFill
           style={{
-            transform: `scale(${push})`,
+            transform: `translateY(${shakeY}px) scale(${push})`,
             transformOrigin: '540px 1213.44px',
           }}
         >
-          {place.map((u, i) => {
-            const k = interpolate(
-              t,
-              [u.at ?? -1, (u.at ?? -1) + 0.35],
-              [0, 1],
-              {
-                extrapolateLeft: 'clamp',
-                extrapolateRight: 'clamp',
-              }
-            );
-            const drop = (1 - ease(k)) * -90;
-            return (
+          {place.map((u, i) =>
+            t < (u.at ?? 0) ? null : (
               <React.Fragment key={`${u.src}-${i}`}>
+                {/* Soft ambient shadow, wider than the unit. */}
                 <div
                   style={{
                     position: 'absolute',
-                    left: u.x - u.w * 0.55,
-                    top: u.y - u.w * 0.07,
-                    width: u.w * 1.1,
-                    height: u.w * 0.13,
+                    left: u.x - u.w * 0.6,
+                    top: u.y - u.w * 0.08,
+                    width: u.w * 1.2,
+                    height: u.w * 0.16,
                     borderRadius: '50%',
                     background:
-                      'radial-gradient(closest-side, rgba(20,16,12,0.9), rgba(20,16,12,0.5) 55%, rgba(20,16,12,0))',
-                    opacity: k,
+                      'radial-gradient(closest-side, rgba(20,16,12,0.55), rgba(20,16,12,0))',
+                  }}
+                />
+                {/* Tight, dark contact shadow right under the base. */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: u.x - u.w * 0.44,
+                    top: u.y - u.w * 0.035,
+                    width: u.w * 0.88,
+                    height: u.w * 0.06,
+                    borderRadius: '50%',
+                    background:
+                      'radial-gradient(closest-side, rgba(12,10,8,0.95), rgba(12,10,8,0.6) 60%, rgba(12,10,8,0))',
                   }}
                 />
                 <Img
@@ -195,14 +201,13 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                     height: u.w,
                     objectFit: 'contain',
                     objectPosition: '50% 100%',
-                    opacity: k,
                     filter: 'saturate(0.92) brightness(0.96) sepia(0.06)',
-                    transform: `translateY(${drop}px) scaleX(${u.flip ? -1 : 1})`,
+                    transform: `scaleX(${u.flip ? -1 : 1})`,
                   }}
                 />
               </React.Fragment>
-            );
-          })}
+            )
+          )}
         </AbsoluteFill>
       ) : null}
 

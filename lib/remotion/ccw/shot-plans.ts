@@ -78,7 +78,7 @@ export type CcwPlaced = {
   w: number;
   /** Mirror the photo so the unit faces the other way. */
   flip?: boolean;
-  /** Seconds into the shot when the unit lands (default 0: already there). */
+  /** Seconds into the shot when the unit cuts in, already grounded (default 0). */
   at?: number;
 };
 
@@ -297,8 +297,10 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
     // Concept A "Two in the middle" (blind pick, 08/11/2026). Owned air mover
     // catalogue photos, cut from white, stand in owned job rooms; the count
     // lies on the floor. No drying scene is implied: these are empty rooms.
+    // Every line on screen and in the voiceover is CCW's own wording on the
+    // air movers collection page (read 08/11/2026; see the script doc).
     videoId: 'ccw-w1-d2-am',
-    cta: 'Read the buying guide',
+    cta: 'See the air mover range',
     url: 'ccwonline.com.au',
     shots: [
       {
@@ -316,23 +318,23 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         place: [
           { img: 2, x: 290, y: 770, w: 240 },
           { img: 4, x: 770, y: 780, w: 210 },
-          { img: 3, x: 220, y: 1520, w: 400, at: 0.1 },
-          { img: 1, x: 810, y: 1430, w: 330, flip: true, at: 0.3 },
+          { img: 3, x: 220, y: 1520, w: 400 },
+          { img: 1, x: 810, y: 1430, w: 330, flip: true },
         ],
-        floorLines: ['4 PLACED', 'BEAT', '2 BIG'],
+        floorLines: ['4 PLACED', 'BEAT 2', 'POWERFUL'],
         floorSize: 150,
         noCaptions: true,
       },
       {
-        trigger: 'two big ones',
+        trigger: 'two powerful ones',
         kind: 'floor',
         subjects: [ROTARY, X800],
         images: [`${ROTARY}-03.webp`, img(X800, '20568160796825')],
         crop: { x: 760, y: 0, w: 405, h: 720 },
         // Side view: the pair face each other, aimed at the middle.
         place: [
-          { img: 1, x: 300, y: 690, w: 380, flip: true },
-          { img: 1, x: 790, y: 690, w: 380 },
+          { img: 1, x: 300, y: 780, w: 380, flip: true },
+          { img: 1, x: 790, y: 780, w: 380 },
         ],
         floorLines: ['THE', 'MIDDLE'],
         floorSize: 150,
@@ -347,28 +349,6 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         floorLines: ['SURFACE', 'AREA'],
         rippleTo: 0.3,
         rippleFrom: 0.2,
-        noCaptions: true,
-      },
-      {
-        trigger: 'Spread the airflow',
-        kind: 'floor',
-        subjects: [ROTARY, VELO, XLOW, GALE, MINI],
-        images: [
-          `${ROTARY}-02.webp`,
-          img(VELO, '51412267729109'),
-          img(XLOW, '7796773257275'),
-          img(GALE, '28712740978841'),
-          img(MINI, '37228686180565'),
-        ],
-        crop: { x: 500, y: 0, w: 405, h: 720 },
-        place: [
-          { img: 3, x: 250, y: 560, w: 210 },
-          { img: 2, x: 800, y: 590, w: 210, flip: true },
-          { img: 4, x: 860, y: 1250, w: 300, flip: true },
-          { img: 1, x: 250, y: 1560, w: 420 },
-        ],
-        floorLines: ['SPREAD', 'IT OUT'],
-        floorSize: 160,
         noCaptions: true,
       },
       {
@@ -387,38 +367,39 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         images: [scene('extraction-04'), img(X800, '20568158994585')],
         crop: { x: 0, y: 0, w: 405, h: 720 },
         place: [{ img: 1, x: 600, y: 700, w: 360 }],
-        floorLines: ['ONE', 'RATING'],
+        floorLines: ['COUNT', 'OVER SPEC'],
+        floorSize: 150,
         noCaptions: true,
       },
       {
-        // Callback to the hook: the four units, already placed.
-        trigger: 'Read the buying guide',
+        trigger: 'Placement',
         kind: 'floor',
-        subjects: [ROTARY, X400, XLOW, VELO, MINI],
+        subjects: [ROTARY, VELO, XLOW, GALE, MINI],
         images: [
-          `${ROTARY}-04.webp`,
-          img(X400, '20568472191129'),
-          img(XLOW, '20570371195033'),
-          img(VELO, '50827539546325'),
-          img(MINI, '29365645703'),
+          `${ROTARY}-02.webp`,
+          img(VELO, '51412267729109'),
+          img(XLOW, '7796773257275'),
+          img(GALE, '28712740978841'),
+          img(MINI, '37228686180565'),
         ],
-        crop: ROOM,
+        crop: { x: 500, y: 0, w: 405, h: 720 },
         place: [
-          { img: 2, x: 300, y: 715, w: 200 },
-          { img: 4, x: 740, y: 720, w: 170 },
-          { img: 3, x: 220, y: 1520, w: 400 },
-          { img: 1, x: 810, y: 1430, w: 330, flip: true },
+          { img: 3, x: 250, y: 560, w: 210 },
+          { img: 2, x: 800, y: 590, w: 210, flip: true },
+          { img: 4, x: 860, y: 1250, w: 300, flip: true },
+          { img: 1, x: 250, y: 1560, w: 420 },
         ],
-        floorLines: ['BUYING', 'GUIDE'],
-        floorSize: 170,
+        floorLines: ['PLACEMENT', 'MATTERS'],
+        floorSize: 140,
         noCaptions: true,
       },
       {
-        trigger: 'page at CCW',
+        trigger: 'See the air mover range',
         kind: 'end',
         subjects: [ROTARY],
-        images: [`${ROTARY}-02.webp`],
-        crop: { x: 500, y: 0, w: 405, h: 720 },
+        // Back to the hook room: a hard cut, not the placement room again.
+        images: [`${ROTARY}-04.webp`],
+        crop: ROOM,
       },
     ],
   },
