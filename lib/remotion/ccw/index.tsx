@@ -27,6 +27,12 @@ const CcwRoot: React.FC = () => (
     width={1080}
     height={1920}
     defaultProps={defaults}
+    calculateMetadata={({ props }) => ({
+      // The video ends where the last shot (the end card) ends.
+      durationInFrames: props.shots.length
+        ? Math.round(props.shots[props.shots.length - 1].to * 30)
+        : 900,
+    })}
   />
 );
 

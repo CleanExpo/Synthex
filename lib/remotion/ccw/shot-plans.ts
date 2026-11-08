@@ -52,7 +52,8 @@ const MAXX = `${WDR}/ccw-razorback-maxxguard-550-cfm-air-scrubber`;
 const CLAW = `${WDR}/ccw-waterclaw-large-deluxe`;
 const STRYKER = `${WDR}/ccw-dri-eaz-extraction-wand-stryker`;
 const LOWPRO = `${WDR}/ccw-xpower-low-profile-airmover`;
-const RESULT = 'carpet-cleaning/carpet-cleaning-result';
+const PREFILTER = `${WDR}/ccw-injectidry-interceptor-pre-filter-10pack`;
+const HEPA = `${WDR}/ccw-injectidry-interceptor-replacement-hepa-filter`;
 
 const img = (subject: string, id: string) =>
   `${subject.split('/')[0]}/${subject.split('/')[1]}-${id}.webp`;
@@ -116,10 +117,10 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
       },
       {
         trigger: 'If something needs a part',
-        kind: 'fullbleed',
-        subjects: [RESULT],
-        images: ['carpet-cleaning/carpet-cleaning-result-01.webp'],
-        smallText: 'Find the part this week',
+        kind: 'lineup',
+        subjects: [PREFILTER, HEPA],
+        images: [img(PREFILTER, '25279590203545'), img(HEPA, '25279593545881')],
+        label: 'Spares and filters',
       },
       {
         trigger: 'See the drying range',
@@ -198,7 +199,8 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         callouts: ['Extraction tools', 'Air movers', 'Truck loaded'],
       },
       {
-        trigger: 'See the drying range',
+        // PM voiceover runs 3.7 s past "See the drying range"; re-voice with a shorter close before rendering.
+        trigger: 'at CCW',
         kind: 'end',
         subjects: [CLAW, LOWPRO, STRYKER],
         images: [

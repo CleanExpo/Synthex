@@ -65,9 +65,9 @@ describe('SYN-1404 CCW zero-cost shot plans', () => {
         }
         for (const rel of shot.images) {
           expect(listed.has(rel)).toBe(true);
-          expect(
-            fs.existsSync(path.join(ROOT, 'public/reference-library', rel))
-          ).toBe(true);
+          const file = path.join(ROOT, 'public/reference-library', rel);
+          expect(fs.existsSync(file)).toBe(true);
+          expect(fs.statSync(file).size).toBeGreaterThan(0);
         }
       }
     }
@@ -78,7 +78,9 @@ describe('SYN-1404 CCW zero-cost shot plans', () => {
       const text = voiceover(plan.videoId);
       const timed = timeShots(text, fakeAlignment(text), plan.shots);
       expect(timed[0].from).toBe(0);
-      expect(timed[timed.length - 1].to).toBe(30);
+      const last = timed[timed.length - 1];
+      expect(last.to).toBeLessThanOrEqual(30);
+      expect(last.to - last.from).toBeLessThanOrEqual(3);
       for (let i = 1; i < timed.length; i++) {
         expect(timed[i].from).toBeGreaterThan(timed[i - 1].from);
         expect(timed[i - 1].to).toBe(timed[i].from);
@@ -95,6 +97,17 @@ describe('SYN-1404 CCW zero-cost shot plans', () => {
         { trigger: 'never said', kind: 'hero', subjects: [], images: [] },
       ])
     ).toThrow(/trigger not spoken/);
+  });
+
+  it('refuses an end card longer than 3 s', () => {
+    const text =
+      'Cyclone season. See the range at CCW, today, tomorrow and all week long.';
+    expect(() =>
+      timeShots(text, fakeAlignment(text), [
+        { trigger: 'x', kind: 'hook', subjects: [], images: [] },
+        { trigger: 'See the range', kind: 'end', subjects: [], images: [] },
+      ])
+    ).toThrow(/end card would run/);
   });
 
   it('turns the character alignment into caption words', () => {

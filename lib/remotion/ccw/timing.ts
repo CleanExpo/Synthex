@@ -5,7 +5,10 @@
 
 import type { CcwShot } from './shot-plans';
 
+/** Longest a video may run; the actual length follows the voiceover. */
 export const CCW_VIDEO_SECONDS = 30;
+/** Phill's review, 08/11/2026: the end card runs 3 s at most. */
+export const CCW_END_CARD_MAX_SECONDS = 3;
 
 export type CcwAlignment = {
   characters: string[];
@@ -45,9 +48,22 @@ export function timeShots(text: string, a: CcwAlignment, shots: CcwShot[]) {
       throw new Error(`shot ${i + 1} starts before shot ${i}`);
     }
   });
+  // The end card holds just past the last spoken word: at least 2.5 s, at
+  // most CCW_END_CARD_MAX_SECONDS, and never past CCW_VIDEO_SECONDS.
+  const voiceEnd = Math.max(...a.character_end_times_seconds);
+  const lastFrom = starts[starts.length - 1];
+  const end = Math.min(
+    CCW_VIDEO_SECONDS,
+    Math.max(lastFrom + 2.5, voiceEnd + 0.4)
+  );
+  if (end - lastFrom > CCW_END_CARD_MAX_SECONDS + 0.05) {
+    throw new Error(
+      `end card would run ${(end - lastFrom).toFixed(2)} s; start it later in the voiceover`
+    );
+  }
   return shots.map((s, i) => ({
     ...s,
     from: starts[i],
-    to: i + 1 < shots.length ? starts[i + 1] : CCW_VIDEO_SECONDS,
+    to: i + 1 < shots.length ? starts[i + 1] : end,
   }));
 }

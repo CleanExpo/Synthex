@@ -175,27 +175,62 @@ function cardStyle(src: string): React.CSSProperties {
     : { objectFit: 'contain', mixBlendMode: 'multiply' };
 }
 
+/**
+ * A real camera-style move on every product: a 3D turn (perspective rotateY),
+ * a hard push-in and a sideways drift, with a backdrop disc travelling the
+ * opposite way so the product separates from the background (parallax).
+ */
 function Product({
   src,
-  size = 820,
-  top = 380,
+  size = 980,
+  top = 300,
   drift = 1,
+  backdrop = CCW.mist,
 }: {
   src: string;
   size?: number;
   top?: number;
   drift?: number;
+  backdrop?: string | null;
 }) {
+  // A framed photo fills its whole square, so it would run off the frame
+  // under the push-in; keep it smaller and centred on the same point.
+  if (isFramed(src)) {
+    top += size * 0.14;
+    size *= 0.72;
+  }
   const { frame, fps, dur } = useLocal();
   const s = enter(frame, fps);
-  const push = interpolate(frame, [0, dur], [1, 1.1], {
-    easing: Easing.out(Easing.quad),
+  const t = interpolate(frame, [0, dur], [0, 1], {
+    easing: Easing.inOut(Easing.sin),
   });
+  const push = interpolate(t, [0, 1], [1, 1.24]);
+  const turn = interpolate(t, [0, 1], [-14 * drift, 9 * drift]);
+  const slide = interpolate(t, [0, 1], [50 * drift, -50 * drift]);
+  const disc = interpolate(t, [0, 1], [-140 * drift, 140 * drift]);
+  const discSize = size * 1.05;
   return (
     <>
+      {backdrop ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: (1080 - discSize) / 2 + disc,
+            top: top + (size - discSize) / 2,
+            width: discSize,
+            height: discSize,
+            borderRadius: '50%',
+            background: backdrop,
+            opacity: s,
+            transform: `scale(${interpolate(s, [0, 1], [0.6, 1])})`,
+          }}
+        />
+      ) : null}
       {isFramed(src) ? null : (
         <Shadow top={top + size * 0.9} width={size * 0.8} />
       )}
+      {/* perspective() lives in the img's own transform: a wrapper would
+          isolate the multiply blend and show the photo's white background. */}
       <Img
         src={staticFile(src)}
         style={{
@@ -205,7 +240,7 @@ function Product({
           width: size,
           height: size,
           ...cardStyle(src),
-          transform: `translateX(${interpolate(s, [0, 1], [140 * drift, 0])}px) scale(${push * interpolate(s, [0, 1], [0.92, 1])})`,
+          transform: `perspective(1800px) translateX(${interpolate(s, [0, 1], [220 * drift, 0]) + slide}px) rotateY(${turn}deg) scale(${push * interpolate(s, [0, 1], [0.86, 1])})`,
         }}
       />
     </>
@@ -217,7 +252,7 @@ function Hook({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
   const words = (shot.bigText ?? '').split(' ');
   return (
     <AbsoluteFill style={{ background: CCW.paper }}>
-      <Product src={shot.images[0]} size={680} top={700} />
+      <Product src={shot.images[0]} size={860} top={640} />
       <div
         style={{
           position: 'absolute',
@@ -313,41 +348,72 @@ function TypeBehind({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
           {shot.smallText}
         </div>
       ) : null}
-      <Product src={shot.images[0]} size={660} top={660} drift={-1} />
+      <Product
+        src={shot.images[0]}
+        size={880}
+        top={600}
+        drift={-1}
+        backdrop={null}
+      />
     </AbsoluteFill>
   );
 }
 
+const LINEUP_SLOTS: Record<number, { x: number; top: number; size: number }[]> =
+  {
+    2: [
+      { x: -60, top: 330, size: 720 },
+      { x: 420, top: 700, size: 720 },
+    ],
+    3: [
+      { x: 10, top: 340, size: 540 },
+      { x: 530, top: 400, size: 540 },
+      { x: 270, top: 840, size: 540 },
+    ],
+  };
+
 function Lineup({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
   const { frame, fps, dur } = useLocal();
-  const pan = interpolate(frame, [0, dur], [30, -30]);
-  const slots = [
-    { x: 40, top: 520, size: 320 },
-    { x: 380, top: 760, size: 320 },
-    { x: 720, top: 520, size: 320 },
-  ];
+  const t = interpolate(frame, [0, dur], [0, 1], {
+    easing: Easing.inOut(Easing.sin),
+  });
+  const imgs = shot.images.slice(0, 3);
+  const slots = LINEUP_SLOTS[imgs.length] ?? LINEUP_SLOTS[3];
+  const speeds = [-90, 70, -40];
   return (
-    <AbsoluteFill style={{ background: CCW.paper }}>
-      {shot.images.slice(0, 3).map((src, i) => {
-        const s = enter(frame, fps, i * 6);
+    <AbsoluteFill style={{ background: CCW.paper, overflow: 'hidden' }}>
+      <div
+        style={{
+          position: 'absolute',
+          left: interpolate(t, [0, 1], [-300, 100]),
+          top: 560,
+          width: 1300,
+          height: 620,
+          background: CCW.mist,
+          transform: 'rotate(-8deg)',
+        }}
+      />
+      {imgs.map((src, i) => {
+        const s = enter(frame, fps, i * 5);
         const p = slots[i];
+        const turn = interpolate(t, [0, 1], [i % 2 ? 12 : -12, i % 2 ? -6 : 6]);
         return (
           <Img
             key={src}
             src={staticFile(src)}
             style={{
               position: 'absolute',
-              left: p.x + pan * (i - 1) * 0.6,
-              top: p.top + interpolate(s, [0, 1], [200, 0]),
+              left: p.x,
+              top: p.top,
               width: p.size,
               height: p.size,
               ...cardStyle(src),
               opacity: s,
+              transform: `perspective(1600px) translateX(${speeds[i] * t}px) translateY(${interpolate(s, [0, 1], [260, 0])}px) rotateY(${turn}deg) scale(${interpolate(t, [0, 1], [1, 1.12])})`,
             }}
           />
         );
       })}
-      <Shadow top={1150} width={980} />
       {shot.label ? <Chip text={shot.label} accent={accent} /> : null}
     </AbsoluteFill>
   );
@@ -365,8 +431,8 @@ function Detail({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
       extrapolateRight: 'clamp',
     }
   );
-  const size = 1000;
-  const top = 380;
+  const size = 1060;
+  const top = 330;
   const ring = interpolate(frame, [dur * 0.45, dur * 0.65], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -384,7 +450,7 @@ function Detail({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
           objectFit: 'contain',
           mixBlendMode: 'multiply',
           transformOrigin: `${f.x * 100}% ${f.y * 100}%`,
-          transform: `scale(${z})`,
+          transform: `perspective(1800px) rotateY(${interpolate(frame, [0, dur], [-10, 4])}deg) scale(${z})`,
         }}
       />
       <div
@@ -448,7 +514,7 @@ function Hero({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
           transform: 'rotate(-6deg)',
         }}
       />
-      <Product src={shot.images[0]} size={820} top={390} />
+      <Product src={shot.images[0]} size={1000} top={300} />
       {shot.label ? <Chip text={shot.label} accent={accent} /> : null}
       {shot.callouts ? (
         <Callouts items={shot.callouts} accent={accent} />
@@ -497,6 +563,10 @@ function Fullbleed({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
   );
 }
 
+/**
+ * End card, at most 3 s: a blue sweep wipes in, the real CCW logo scales up,
+ * three products fly in on a 3D turn and keep moving, the CTA pill pulses.
+ */
 function EndCard({
   shot,
   logo,
@@ -508,58 +578,65 @@ function EndCard({
   cta: string;
   url: string;
 }) {
-  const { frame, fps } = useLocal();
-  const s = enter(frame, fps);
+  const { frame, fps, dur } = useLocal();
+  const t = interpolate(frame, [0, dur], [0, 1]);
+  const wipe = enter(frame, fps);
+  const s = enter(frame, fps, 3);
+  const pulse = 1 + Math.sin(frame / 4) * 0.035 * enter(frame, fps, 12);
   return (
-    <AbsoluteFill style={{ background: CCW.paper }}>
+    <AbsoluteFill style={{ background: CCW.paper, overflow: 'hidden' }}>
+      <div
+        style={{
+          position: 'absolute',
+          left: -300,
+          top: 600,
+          width: 1700,
+          height: 520,
+          background: CCW.mist,
+          transform: `translateX(${interpolate(wipe, [0, 1], [-1700, 0]) + t * 120}px) rotate(-7deg)`,
+        }}
+      />
       <Img
         src={staticFile(logo)}
         style={{
           position: 'absolute',
-          left: 190,
-          top: 240,
-          width: 700,
-          height: 360,
+          left: 140,
+          top: 200,
+          width: 800,
+          height: 380,
           objectFit: 'contain',
           opacity: s,
-          transform: `scale(${interpolate(s, [0, 1], [0.85, 1])})`,
+          transform: `scale(${interpolate(s, [0, 1], [0.6, 1]) * interpolate(t, [0, 1], [1, 1.06])})`,
         }}
       />
-      <div
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          top: 640,
-          display: 'flex',
-          justifyContent: 'center',
-          gap: 10,
-        }}
-      >
-        {shot.images.slice(0, 3).map((src, i) => {
-          const e = enter(frame, fps, 6 + i * 5);
-          const float = Math.sin((frame + i * 20) / 22) * 12;
-          return (
-            <Img
-              key={src}
-              src={staticFile(src)}
-              style={{
-                width: 310,
-                height: 310,
-                ...cardStyle(src),
-                opacity: e,
-                transform: `translateY(${interpolate(e, [0, 1], [80, 0]) + float}px)`,
-              }}
-            />
-          );
-        })}
-      </div>
+      {shot.images.slice(0, 3).map((src, i) => {
+        const e = enter(frame, fps, 4 + i * 3);
+        const from = [-700, 0, 700][i];
+        const x = [30, 380, 730][i];
+        const float = Math.sin((frame + i * 14) / 9) * 14;
+        return (
+          <Img
+            key={src}
+            src={staticFile(src)}
+            style={{
+              position: 'absolute',
+              left: x,
+              top: 620,
+              width: 320,
+              height: 320,
+              ...cardStyle(src),
+              opacity: e,
+              transform: `perspective(1400px) translateX(${interpolate(e, [0, 1], [from, 0]) + (i - 1) * t * 30}px) translateY(${interpolate(e, [0, 1], [i === 1 ? 500 : 0, 0]) + float}px) rotateY(${interpolate(e, [0, 1], [i === 0 ? 60 : i === 2 ? -60 : 0, (i - 1) * -10])}deg) scale(${interpolate(t, [0, 1], [1, 1.12])})`,
+            }}
+          />
+        );
+      })}
       <div
         style={{
           position: 'absolute',
           left: 72,
           right: 72,
-          top: 1040,
+          top: 1030,
           textAlign: 'center',
           fontFamily: FONT,
         }}
@@ -570,10 +647,11 @@ function EndCard({
             background: CCW.blue,
             color: CCW.paper,
             fontWeight: 900,
-            fontSize: 70,
+            fontSize: 72,
             padding: '24px 44px',
             borderRadius: 18,
-            opacity: enter(frame, fps, 12),
+            opacity: enter(frame, fps, 8),
+            transform: `translateY(${interpolate(enter(frame, fps, 8), [0, 1], [120, 0])}px) scale(${pulse})`,
           }}
         >
           {cta}
@@ -582,9 +660,9 @@ function EndCard({
           style={{
             marginTop: 26,
             fontWeight: 800,
-            fontSize: 52,
+            fontSize: 54,
             color: CCW.ink,
-            opacity: enter(frame, fps, 18),
+            opacity: enter(frame, fps, 12),
           }}
         >
           {url}
