@@ -194,7 +194,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         kind: 'floor',
         subjects: [EXTRACTION],
         images: [scene('extraction-01')],
-        crop: TILES,
+        crop: { x: 380, y: 60, w: 340, h: 605 },
         floorLines: ['QUIET', 'ON PAPER'],
         noCaptions: true,
       },
@@ -204,6 +204,9 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [EXTRACTION],
         images: [scene('extraction-02')],
         crop: { x: 560, y: 0, w: 405, h: 720 },
+        floorLines: ['QLD COAST', 'NEAR NORMAL'],
+        floorSize: 132,
+        noCaptions: true,
       },
       {
         trigger: 'and one system',
@@ -211,6 +214,9 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [EXTRACTION],
         images: [scene('extraction-03')],
         crop: { x: 600, y: 0, w: 405, h: 720 },
+        floorLines: ['ONE SYSTEM', 'SERIOUS', 'DAMAGE'],
+        floorSize: 140,
+        noCaptions: true,
       },
       {
         trigger: 'Quiet does not',

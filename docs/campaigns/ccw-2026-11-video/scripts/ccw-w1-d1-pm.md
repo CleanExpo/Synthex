@@ -33,9 +33,9 @@ paid render). Plan: `lib/remotion/ccw/shot-plans.ts`; render: `scripts/render-cc
 | --- | ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | 1   | "Five to eight"        | Low over wet tiles, boot and extractor; "5 TO 8 CYCLONES" lies on the tiles; source slip                 | carpet-cleaning-extraction-01         |
 | 2   | "against a long-term"  | Floor level on carpet by the hose; "AVERAGE 11" lies on the carpet; source slip                          | carpet-cleaning-extraction-04         |
-| 3   | "Quiet, on paper"      | Back on the wet tiles; "QUIET ON PAPER" on the floor                                                     | carpet-cleaning-extraction-01         |
-| 4   | "Near the Queensland"  | Extraction wand on carpet, floor level, slow push; captions                                              | carpet-cleaning-extraction-02         |
-| 5   | "and one system"       | Wand at the skirting by the orange corner guard; captions                                                | carpet-cleaning-extraction-03         |
+| 3   | "Quiet, on paper"      | Wet tiles, wider on the extractor; "QUIET ON PAPER" on the floor                                         | carpet-cleaning-extraction-01         |
+| 4   | "Near the Queensland"  | Extraction wand on carpet, floor level; "QLD COAST NEAR NORMAL" on the carpet                            | carpet-cleaning-extraction-02         |
+| 5   | "and one system"       | Wand at the skirting by the orange corner guard; "ONE SYSTEM SERIOUS DAMAGE" on the carpet               | carpet-cleaning-extraction-03         |
 | 6   | "Quiet does not"       | The turn: camera pushes over "QUIET ON PAPER", a water ripple breaks it; the spoken line is kinetic type | carpet-cleaning-extraction-01         |
 | 7   | "Be ready"             | Stryker wand and XPOWER X-800 line-up; captions                                                          | CCW catalogue photos                  |
 | 8   | "Load the truck"       | Technician at the open van, hose reel, driveway; captions                                                | carpet-cleaning-solution-01           |
@@ -43,9 +43,9 @@ paid render). Plan: `lib/remotion/ccw/shot-plans.ts`; render: `scripts/render-cc
 
 ## On-screen text
 
-- Hook and turn: the type lies on the floor (shots 1 to 3 and 6); no caption boxes there.
+- Hook and turn: the type lies on the floor (shots 1 to 6); no caption boxes there.
 - Source on the floor, shots 1, 2 and 6: "5 to 8 cyclones: ECMWF modelling, via ABC News".
-- Captions: Margot's words, burned in, CCW colours, shots 4, 5, 7 and 8.
+- Captions: Margot's words, burned in, CCW colours, shots 7 and 8.
 - No full-frame text cards.
 
 ## Post caption

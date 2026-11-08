@@ -145,7 +145,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                   width: 'max-content',
                   fontFamily: FONT,
                   fontWeight: 700,
-                  fontSize: 34,
+                  fontSize: 38,
                   color: CCW.ink,
                   background: '#fbfaf6',
                   padding: '10px 18px',
