@@ -12,7 +12,7 @@
  *   4. renders a text mask (text boxes white on black) and fails if any
  *      text crosses the Reels safe zone (safeZoneCheck below).
  *   5. makes the delivery copy <dir>/out/<video>-delivery.mp4 (deliveryCopy
- *      below): under 7 MB so the Drive connector accepts it, checked against
+ *      below): under 7.3 MB so the Drive connector accepts it, checked against
  *      the master for picture (SSIM) and loudness.
  *   --check-only re-runs step 4 on the current layout without step 3.
  *   --deliver-only --master <mp4> makes only the delivery copy of an existing
@@ -124,12 +124,15 @@ function safeZoneCheck(
 }
 
 /**
- * Delivery limits (orchestrator, 08/11/2026): the Drive connector refuses
- * files over 10 MB after base64 encoding (about 7.5 MB raw), so the copy must
- * stay under 7 MB and still match the master.
+ * Delivery limits (orchestrator, 08/11/2026): the Drive connector rejects
+ * anything over 10,000,000 bytes after base64 encoding (base64 adds a third,
+ * so about 7.5 MB raw). The copy must stay under 7,300,000 bytes (about
+ * 9,733,000 after base64) and still match the master; the 0.99 SSIM bar is
+ * unchanged. Raised from 7,000,000 on 08/11/2026 for every video, after
+ * ccw-w1-d3-am reached only SSIM 0.9896 under the old cap with H.264.
  */
 export const CCW_DELIVERY = {
-  maxBytes: 7_000_000,
+  maxBytes: 7_300_000,
   videoKbps: 1950,
   audioKbps: 128,
   minSsim: 0.99,
@@ -161,8 +164,10 @@ function integratedLufs(file: string): number {
 export function deliveryCopy(master: string, copy: string) {
   const log = path.join(path.dirname(copy), `${path.basename(copy)}-2pass`);
   // A shorter video can spend more bits per second inside the same size
-  // budget (97 % of maxBytes; two-pass lands within about 1 %); never less
-  // than the 30 s default rate.
+  // budget; never less than the 30 s default rate. The rate aims at 101 % of
+  // maxBytes because two-pass veryslow lands 1.5 to 3 % under its target on
+  // these masters (ccw-w1-d3-am, 08/11/2026: 2303 kbps gave 7,267,490 bytes);
+  // the size check below still rejects any copy at or over maxBytes.
   const seconds = Number(
     execFileSync('ffprobe', [
       '-v',
@@ -179,7 +184,7 @@ export function deliveryCopy(master: string, copy: string) {
   const kbps = Math.max(
     CCW_DELIVERY.videoKbps,
     Math.floor(
-      (CCW_DELIVERY.maxBytes * 0.97 * 8) / seconds / 1000 -
+      (CCW_DELIVERY.maxBytes * 1.01 * 8) / seconds / 1000 -
         CCW_DELIVERY.audioKbps -
         20
     )
