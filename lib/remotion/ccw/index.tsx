@@ -48,11 +48,11 @@ const CcwRootWithPm: React.FC = () => (
       width={1080}
       height={1920}
       defaultProps={{
-        scene:
-          'reference-library/carpet-cleaning/carpet-cleaning-extraction-01.webp',
-        lines: ['QUIET', 'ON PAPER'],
-        sourceTag: '5 to 8 cyclones forecast. ECMWF modelling, via ABC News',
-        caption: 'Quiet does not mean dry.',
+        scene: 'scene-extraction-01.png',
+        floorLines: ['QUIET', 'ON PAPER'],
+        kinetic: ['Quiet', 'does', 'not', 'mean', 'dry.'],
+        sourceSlip: '5 to 8 cyclones: ECMWF modelling, via ABC News',
+        rippleTo: 0.35,
       }}
     />
   </>

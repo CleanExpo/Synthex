@@ -795,7 +795,7 @@ function ShotView({
   }
 }
 
-const TEXT_MASK_CSS = `
+export const TEXT_MASK_CSS = `
   .ccw-root, .ccw-root * { background: transparent !important; color: transparent !important;
     box-shadow: none !important; border-color: transparent !important; }
   .ccw-root { background: #000 !important; }
