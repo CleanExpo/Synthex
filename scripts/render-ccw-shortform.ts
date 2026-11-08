@@ -11,8 +11,15 @@
  *   3. renders 1080x1920 at 30 fps, then levels the mix to -16 LUFS,
  *   4. renders a text mask (text boxes white on black) and fails if any
  *      text crosses the Reels safe zone (safeZoneCheck below).
+ *   5. makes the delivery copy <dir>/out/<video>-delivery.mp4 (deliveryCopy
+ *      below): under 7 MB so the Drive connector accepts it, checked against
+ *      the master for picture (SSIM) and loudness.
  *   --check-only re-runs step 4 on the current layout without step 3.
+ *   --deliver-only --master <mp4> makes only the delivery copy of an existing
+ *      approved master, without re-rendering it.
  * Output: <dir>/out/<video>.mp4. Local preview only; nothing is published.
+ * Delivery copies go to the orchestrator, who uploads them through the Drive
+ * connector; never rclone a file Toby has to open.
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -116,9 +123,146 @@ function safeZoneCheck(
   console.log(`safe zone PASS for ${video} (mask ${mask})`);
 }
 
+/**
+ * Delivery limits (orchestrator, 08/11/2026): the Drive connector refuses
+ * files over 10 MB after base64 encoding (about 7.5 MB raw), so the copy must
+ * stay under 7 MB and still match the master.
+ */
+export const CCW_DELIVERY = {
+  maxBytes: 7_000_000,
+  videoKbps: 1950,
+  audioKbps: 128,
+  minSsim: 0.99,
+  maxLoudnessDiffLu: 0.3,
+};
+
+function integratedLufs(file: string): number {
+  const res = spawnSync(
+    'ffmpeg',
+    [
+      '-hide_banner',
+      '-nostats',
+      '-i',
+      file,
+      '-af',
+      'ebur128',
+      '-f',
+      'null',
+      '-',
+    ],
+    { encoding: 'utf8' }
+  );
+  const all = [...res.stderr.matchAll(/I:\s+(-?[\d.]+) LUFS/g)];
+  if (!all.length) throw new Error(`no loudness reading for ${file}`);
+  return Number(all[all.length - 1][1]);
+}
+
+/** Two-pass x264 copy of the master; throws unless size, SSIM and loudness pass. */
+export function deliveryCopy(master: string, copy: string) {
+  const log = path.join(path.dirname(copy), `${path.basename(copy)}-2pass`);
+  const v = [
+    '-c:v',
+    'libx264',
+    '-preset',
+    'slow',
+    '-b:v',
+    `${CCW_DELIVERY.videoKbps}k`,
+    '-pix_fmt',
+    'yuv420p',
+    '-passlogfile',
+    log,
+  ];
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-i',
+    master,
+    ...v,
+    '-pass',
+    '1',
+    '-an',
+    '-f',
+    'mp4',
+    '/dev/null',
+  ]);
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-i',
+    master,
+    ...v,
+    '-pass',
+    '2',
+    '-c:a',
+    'aac',
+    '-b:a',
+    `${CCW_DELIVERY.audioKbps}k`,
+    '-movflags',
+    '+faststart',
+    copy,
+  ]);
+  for (const f of fs.readdirSync(path.dirname(copy)))
+    if (f.startsWith(path.basename(log)))
+      fs.rmSync(path.join(path.dirname(copy), f));
+
+  const bytes = fs.statSync(copy).size;
+  const ssimRes = spawnSync(
+    'ffmpeg',
+    [
+      '-hide_banner',
+      '-i',
+      copy,
+      '-i',
+      master,
+      '-lavfi',
+      'ssim',
+      '-f',
+      'null',
+      '-',
+    ],
+    { encoding: 'utf8' }
+  );
+  const ssim = Number(/All:([\d.]+)/.exec(ssimRes.stderr)?.[1] ?? NaN);
+  const lufsMaster = integratedLufs(master);
+  const lufsCopy = integratedLufs(copy);
+  const report = {
+    master,
+    copy,
+    bytes,
+    ssim,
+    lufsMaster,
+    lufsCopy,
+    ok:
+      bytes < CCW_DELIVERY.maxBytes &&
+      ssim >= CCW_DELIVERY.minSsim &&
+      Math.abs(lufsCopy - lufsMaster) <= CCW_DELIVERY.maxLoudnessDiffLu,
+  };
+  fs.writeFileSync(
+    copy.replace(/\.mp4$/, '.json'),
+    JSON.stringify(report, null, 2)
+  );
+  if (!report.ok)
+    throw new Error(`DELIVERY COPY FAIL: ${JSON.stringify(report)}`);
+  console.log(
+    `delivery copy PASS: ${(bytes / 1e6).toFixed(2)} MB, SSIM ${ssim.toFixed(4)}, ` +
+      `${lufsCopy} vs ${lufsMaster} LUFS`
+  );
+}
+
 function main() {
   const video = arg('--video');
   const work = path.resolve(arg('--work'));
+  if (process.argv.includes('--deliver-only')) {
+    const out = path.join(work, 'out');
+    fs.mkdirSync(out, { recursive: true });
+    deliveryCopy(
+      path.resolve(arg('--master')),
+      path.join(out, `${video}-delivery.mp4`)
+    );
+    return;
+  }
   const plan = CCW_SHOT_PLANS.find(p => p.videoId === video);
   if (!plan) throw new Error(`no shot plan for ${video}`);
   // Run from the repository root.
@@ -202,6 +346,11 @@ function main() {
   );
   console.log(`rendered ${path.join(out, `${video}.mp4`)}`);
   safeZoneCheck(root, work, video, props, pub);
+  deliveryCopy(
+    path.join(out, `${video}.mp4`),
+    path.join(out, `${video}-delivery.mp4`)
+  );
 }
 
-main();
+// Run only when called as a script, so the checks can be imported.
+if (process.argv[1]?.endsWith('render-ccw-shortform.ts')) main();
