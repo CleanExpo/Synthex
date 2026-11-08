@@ -37,7 +37,7 @@ HEAD = (
 PRIVATE = {"sources", "prepared", "source", "decision", "likenessConsent", "conflicts", "resolved",
            "previousLogos", "previousHeroes", "previousEditions", "rotationReason", "supersededReason",
            "videoNote", "urlNote", "shopUrlNote", "contactSource", "visitorLinksSource", "reviewPromptsSource",
-           "placeIdSource", "profileUrlSource", "titleSource"}
+           "placeIdSource", "profileUrlSource", "titleSource", "emailNameSource"}
 # Phill 24/10/2026: no certifications on the card. Checked at any length; the record check skips short text.
 NO_CREDENTIALS = ("IICRC", "47496", "BFRS", "GBAC")
 

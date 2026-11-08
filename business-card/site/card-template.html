@@ -1295,7 +1295,8 @@ const INBOX = (P.inbox && P.inbox.status !== "missing" && P.inbox.address) || (P
 $("inbox-addr").textContent = INBOX || "no address supplied";
 // Visitors get one quiet way to write straight away, under Save
 if (/^[^\s@<>"]+@[^\s@<>"]+\.[a-z]{2,}$/i.test(INBOX)) {
-  const first = (P.name || "").split(" ")[0];
+  // person.emailName (optional) names who the button writes to; without it, the card owner's first name
+  const first = (typeof P.emailName === "string" && P.emailName.trim()) || (P.name || "").split(" ")[0];
   $("email-direct").href = "mailto:" + INBOX + "?subject=" + encodeURIComponent("[Card] Hello" + (first ? " " + first : ""));
   $("email-direct").textContent = first ? "Email " + first : "Email";
   $("email-direct").hidden = false;
