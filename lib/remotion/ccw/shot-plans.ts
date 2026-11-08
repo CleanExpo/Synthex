@@ -107,6 +107,12 @@ export type CcwPlaced = {
    * an angled unit is grounded along every edge it stands on.
    */
   footprint?: [number, number][];
+  /**
+   * Twin only: printed areas of the photo (maker's decal, plate) as
+   * [x0, y0, x1, y1] fractions of the w x w box, unflipped. They are blurred
+   * on the twin so its mirrored print never reads backwards.
+   */
+  decal?: [number, number, number, number][];
 };
 
 export type CcwShotPlan = {
@@ -623,6 +629,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
             twin: true,
             silhouette: true,
             slip: 'Illustration: US 115 V model',
+            decal: [[0, 0.22, 0.3, 0.46]],
           },
         ],
         kinetic: ['Two', 'machines', 'can', 'look', 'the', 'same'],
@@ -648,6 +655,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
             twin: true,
             silhouette: true,
             slip: 'Illustration: US 115 V model',
+            decal: [[0, 0.22, 0.3, 0.46]],
           },
         ],
         floorLines: ['NOT THE SAME', 'MACHINE'],
@@ -673,6 +681,10 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
             twin: true,
             silhouette: true,
             slip: 'Illustration: US 115 V model',
+            decal: [
+              [0.49, 0.27, 0.9, 0.49],
+              [0.59, 0.68, 0.79, 0.89],
+            ],
           },
         ],
         floorLines: ["DRY AIR'S", 'US LISTING'],
@@ -698,6 +710,10 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
             twin: true,
             silhouette: true,
             slip: 'Illustration: US 115 V model',
+            decal: [
+              [0.49, 0.27, 0.9, 0.49],
+              [0.59, 0.68, 0.79, 0.89],
+            ],
           },
           { img: 1, x: 800, y: 700, w: 420 },
         ],

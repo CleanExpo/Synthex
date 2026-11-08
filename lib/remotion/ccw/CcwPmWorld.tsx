@@ -61,8 +61,23 @@ export type CcwPmWorldProps = {
     twin?: boolean;
     slip?: string;
     footprint?: [number, number][];
+    decal?: [number, number, number, number][];
   }[];
 };
+
+/** Feathered ellipses over [x0, y0, x1, y1] box fractions, as a CSS mask. */
+function decalMask(decal: [number, number, number, number][]) {
+  const m = decal
+    .map(([x0, y0, x1, y1]) => {
+      const cx = ((x0 + x1) / 2) * 100;
+      const cy = ((y0 + y1) / 2) * 100;
+      const rx = ((x1 - x0) / 2) * 125;
+      const ry = ((y1 - y0) / 2) * 125;
+      return `radial-gradient(${rx.toFixed(1)}% ${ry.toFixed(1)}% at ${cx.toFixed(1)}% ${cy.toFixed(1)}%, #000 70%, transparent 100%)`;
+    })
+    .join(', ');
+  return { maskImage: m, WebkitMaskImage: m };
+}
 
 export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   scene,
@@ -284,6 +299,21 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                     transform: `scaleX(${u.flip ? -1 : 1})`,
                   }}
                 />
+                {u.twin && u.decal?.length ? (
+                  // The twin's print, blurred: the same image again, blurred
+                  // hard and masked to the decal areas with feathered edges.
+                  // The mask is in the image's own (unflipped) space, so it
+                  // mirrors with the image.
+                  <Img
+                    src={staticFile(u.src)}
+                    style={{
+                      ...box,
+                      filter: `grayscale(1) sepia(0.3) hue-rotate(175deg) brightness(1.04) contrast(0.7) blur(${Math.max(4, Math.round(u.w * 0.018))}px)`,
+                      transform: `scaleX(${u.flip ? -1 : 1})`,
+                      ...decalMask(u.decal),
+                    }}
+                  />
+                ) : null}
                 {u.slip ? (
                   <div
                     className="ccw-text"
