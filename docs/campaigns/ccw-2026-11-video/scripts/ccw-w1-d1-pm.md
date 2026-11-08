@@ -29,23 +29,23 @@ Concept A "Quiet on paper" (blind judge pick and accuracy check, 08/11/2026).
 Every picture is an owned job or catalogue photo, moved in 2.5D in Remotion (no generated imagery, no
 paid render). Plan: `lib/remotion/ccw/shot-plans.ts`; render: `scripts/render-ccw-shortform.ts`.
 
-| #   | Trigger words          | Shot                                                                                                     | Source photo                          |
-| --- | ---------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| 1   | "Five to eight"        | Low over wet tiles, boot and extractor; "5 TO 8 CYCLONES" lies on the tiles; source slip                 | carpet-cleaning-extraction-01         |
-| 2   | "against a long-term"  | Floor level on carpet by the hose; "AVERAGE 11" lies on the carpet; source slip                          | carpet-cleaning-extraction-04         |
-| 3   | "Quiet, on paper"      | Wet tiles, wider on the extractor; "QUIET ON PAPER" on the floor                                         | carpet-cleaning-extraction-01         |
-| 4   | "Near the Queensland"  | Extraction wand on carpet, floor level; "QLD COAST NEAR NORMAL" on the carpet                            | carpet-cleaning-extraction-02         |
-| 5   | "and one system"       | Wand at the skirting by the orange corner guard; "ONE SYSTEM SERIOUS DAMAGE" on the carpet               | carpet-cleaning-extraction-03         |
-| 6   | "Quiet does not"       | The turn: camera pushes over "QUIET ON PAPER", a water ripple breaks it; the spoken line is kinetic type | carpet-cleaning-extraction-01         |
-| 7   | "Be ready"             | Stryker wand and XPOWER X-800 line-up; captions                                                          | CCW catalogue photos                  |
-| 8   | "Load the truck"       | Technician at the open van, hose reel, driveway; captions                                                | carpet-cleaning-solution-01           |
-| 9   | "See the drying range" | End card, under 3 s: real CCW logo on a plate in depth over the van photo, CTA, web address              | carpet-cleaning-solution-01, CCW logo |
+| #   | Trigger words          | Shot                                                                                                                             | Source photo                                         |
+| --- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| 1   | "Five to eight"        | Low over wet tiles, boot and extractor; "5 TO 8 CYCLONES" slams onto the tiles with a camera jolt and splash ripple; source slip | carpet-cleaning-extraction-01                        |
+| 2   | "against a long-term"  | Floor level on carpet by the hose; "AVERAGE 11" lies on the carpet; source slip                                                  | carpet-cleaning-extraction-04                        |
+| 3   | "Quiet, on paper"      | Wet tiles, wider on the extractor; "QUIET ON PAPER" on the floor                                                                 | carpet-cleaning-extraction-01                        |
+| 4   | "Near the Queensland"  | Extraction wand on carpet, floor level; "QLD COAST NEAR NORMAL" on the carpet                                                    | carpet-cleaning-extraction-02                        |
+| 5   | "and one system"       | Wand at the skirting by the orange corner guard; "ONE SYSTEM SERIOUS DAMAGE" on the carpet                                       | carpet-cleaning-extraction-03                        |
+| 6   | "Quiet does not"       | The turn: camera pushes over "QUIET ON PAPER", a water ripple breaks it; the spoken line is kinetic type                         | carpet-cleaning-extraction-01                        |
+| 7   | "Be ready"             | XPOWER X-800 cut-out (white keyed out) set on the carpet with a shadow; "Ready for the work." kinetic                            | carpet-cleaning-extraction-02, X-800 catalogue photo |
+| 8   | "Load the truck"       | Technician at the open van, driveway; "Load the truck." kinetic                                                                  | carpet-cleaning-solution-01                          |
+| 9   | "See the drying range" | End card, under 3 s: real CCW logo flies in and lands on the van door while the camera pushes, CTA, web address                  | carpet-cleaning-solution-01, CCW logo                |
 
 ## On-screen text
 
 - Hook and turn: the type lies on the floor (shots 1 to 6); no caption boxes there.
 - Source on the floor, shots 1, 2 and 6: "5 to 8 cyclones: ECMWF modelling, via ABC News".
-- Captions: Margot's words, burned in, CCW colours, shots 7 and 8.
+- No burned-in captions: every line is type in the scene, kinetic type or the end card.
 - No full-frame text cards.
 
 ## Post caption

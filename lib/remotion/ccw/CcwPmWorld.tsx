@@ -38,6 +38,13 @@ export type CcwPmWorldProps = {
   rippleTo?: number;
   /** Fraction of the clip at which the ripple starts. */
   rippleFrom?: number;
+  /** Hook: floor type slams onto the floor in 0.3 s with a camera jolt and splash ripple. */
+  slam?: boolean;
+  /**
+   * A product cut-out (white keyed out by the render script) set on the
+   * floor, with a contact shadow that follows its outline.
+   */
+  product?: { src: string; x: number; y: number; w: number };
   /** Render text boxes white on black for the safe-zone check. */
   textMask?: boolean;
   /** Owned product cut-outs standing on the floor (prepared PNGs). */
@@ -59,6 +66,8 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   sourceSlip,
   rippleTo = 0,
   rippleFrom = 0.35,
+  slam,
+  product,
   textMask,
   place = [],
 }) => {
@@ -70,19 +79,37 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   const push = interpolate(ease(p), [0, 1], [1.0, 1.1]);
   // Floor type slides toward the lens as the camera passes over it.
   const floorY = interpolate(ease(p), [0, 1], [0, 70]);
+  const t0 = frame / fps;
+  // Slam: type drops from above the lens and hits the floor at 0.3 s.
+  const hit = slam
+    ? interpolate(t0, [0, 0.3], [0, 1], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      })
+    : 1;
+  const sinceHit = Math.max(0, t0 - 0.3);
+  const jolt = slam && t0 >= 0.3 ? Math.exp(-sinceHit * 9) : 0;
+  const shakeY = jolt * 18 * Math.sin(sinceHit * 60);
+  const splash = slam ? jolt * 0.5 : 0;
   const ripple =
-    rippleTo > 0
-      ? interpolate(p, [rippleFrom, 1], [0, rippleTo], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
+    splash > 0.01
+      ? splash
+      : rippleTo > 0
+        ? interpolate(p, [rippleFrom, 1], [0, rippleTo], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+          })
+        : 0;
   const t = frame / fps;
-  // Floor type settles onto the floor in the first 0.4 s.
-  const land = interpolate(t, [0, 0.4], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  // Floor type settles onto the floor in the first 0.4 s (or slams in).
+  const land = slam
+    ? 1
+    : interpolate(t, [0, 0.4], [0, 1], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      });
+  const dropY = slam ? (1 - hit * hit) * -160 : 0;
+  const dropScale = 1;
 
   return (
     <AbsoluteFill
@@ -118,7 +145,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
           height: 2112,
           left: -54,
           top: -96,
-          transform: `scale(${push})`,
+          transform: `translateY(${shakeY}px) scale(${push})`,
           transformOrigin: '50% 62%',
         }}
       />
@@ -179,6 +206,28 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
         </AbsoluteFill>
       ) : null}
 
+      {product ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: product.x,
+            top: product.y,
+            width: product.w,
+            transform: `translateY(${shakeY}px) scale(${push})`,
+            transformOrigin: '50% 100%',
+          }}
+        >
+          <Img
+            src={staticFile(product.src)}
+            style={{
+              width: '100%',
+              display: 'block',
+              filter: 'drop-shadow(0 22px 14px rgba(20,25,30,0.45))',
+            }}
+          />
+        </div>
+      ) : null}
+
       {/* Floor plane: type and the source slip lie flat on the floor. */}
       {floorLines.length ? (
         <div
@@ -197,8 +246,8 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
               position: 'absolute',
               left: 96,
               top: 0,
-              opacity: land,
-              transform: `translateY(${floorY + (1 - land) * -60}px) rotateX(58deg) rotateZ(-5deg)`,
+              opacity: slam ? Math.min(1, hit * 1.6) : land,
+              transform: `translateY(${floorY + (1 - land) * -60 + dropY + shakeY}px) scale(${dropScale}) rotateX(58deg) rotateZ(-5deg)`,
               transformOrigin: '50% 100%',
             }}
           >
@@ -238,7 +287,8 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                       i === floorLines.length - 1
                         ? 'rgba(243,114,21,0.92)'
                         : 'rgba(255,255,255,0.94)',
-                    textShadow: '0 0 1px rgba(0,0,0,0.25)',
+                    textShadow:
+                      '0 2px 2px rgba(0,0,0,0.55), 0 8px 18px rgba(0,0,0,0.45)',
                   }}
                 >
                   {l}

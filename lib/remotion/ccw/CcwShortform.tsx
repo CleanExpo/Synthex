@@ -584,7 +584,11 @@ function SceneEndCard({
 }) {
   const { frame, fps, dur } = useLocal();
   const t = interpolate(frame, [0, dur], [0, 1]);
-  const s = enter(frame, fps, 2);
+  const s = spring({
+    frame: frame - 1,
+    fps,
+    config: { damping: 11, stiffness: 140, mass: 0.8 },
+  });
   const pulse = 1 + Math.sin(frame / 4) * 0.03 * enter(frame, fps, 12);
   return (
     <AbsoluteFill style={{ background: CCW.ink, overflow: 'hidden' }}>
@@ -596,7 +600,7 @@ function SceneEndCard({
           height: 2112,
           left: -54,
           top: -96,
-          transform: `scale(${interpolate(t, [0, 1], [1.1, 1.16])})`,
+          transform: `translateX(${interpolate(t, [0, 1], [0, -40])}px) scale(${interpolate(t, [0, 1], [1.1, 1.26])})`,
           transformOrigin: '50% 62%',
         }}
       />
@@ -611,8 +615,8 @@ function SceneEndCard({
             background: 'rgba(255,255,255,0.96)',
             borderRadius: 26,
             boxShadow: '0 30px 60px rgba(10,20,40,0.35)',
-            opacity: s,
-            transform: `translateZ(${interpolate(s, [0, 1], [-500, 0])}px) rotateY(${interpolate(t, [0, 1], [-14, -8])}deg)`,
+            opacity: Math.min(1, s * 1.4),
+            transform: `translateZ(${interpolate(s, [0, 1], [260, 0])}px) rotateY(${interpolate(s, [0, 1], [-35, -10])}deg) rotateZ(${interpolate(s, [0, 1], [-8, 0])}deg)`,
           }}
         >
           <Img
@@ -902,6 +906,12 @@ function ShotView({
           rippleTo={shot.rippleTo}
           rippleFrom={shot.rippleFrom}
           place={shot.place?.map(u => ({ ...u, src: shot.images[u.img] }))}
+          slam={shot.slam}
+          product={
+            shot.product
+              ? { ...shot.product, src: shot.images[shot.product.image] }
+              : undefined
+          }
         />
       );
     case 'end':
