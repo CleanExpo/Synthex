@@ -260,21 +260,26 @@
       "funnelStage": "consideration",
       "theme": "Did you know",
       "title": "Count units per vehicle",
-      "hook": "The air mover that fits in the van is the one that dries the house.",
-      "message": "Stackability and footprint decide how many jobs a crew covers in a day. Count units per vehicle, not horsepower.",
+      "hook": "Count units per vehicle, not horsepower.",
+      "message": "Stackability and footprint decide how many jobs a crew covers in a day. A unit that will not nest costs you more than its wattage gains. The X-600AC is stackable up to 4 units; the X-800 moves more air but stacks 3 high rather than 4.",
       "products": [
-        "XPOWER X-600AC Air Mover with clamp",
-        "XPOWER X-800 Multi Drying Kit"
+        "XPOWER X-600AC Air Mover 3/4 hp with Carpet Clamp",
+        "XPOWER X-800 Air Mover 1 hp with Carpet Clamp"
       ],
       "referenceSubjects": [
         "water-damage-restoration/ccw-xpower-airmover-x600ac-3-4hp-inc-clamp",
-        "water-damage-restoration/ccw-xpower-air-mover-800-multi-drying-kit-x-800-mdk"
+        "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp",
+        "water-damage-restoration/ccw-dri-eaz-velo-low-profile-air-mover",
+        "carpet-cleaning/carpet-cleaning-grooming",
+        "carpet-cleaning/carpet-cleaning-rotary",
+        "carpet-cleaning/carpet-cleaning-result",
+        "carpet-cleaning/carpet-cleaning-extraction"
       ],
       "cta": "See the air movers",
       "channels": ["instagram", "facebook", "youtube", "linkedin"],
       "landingBase": "https://ccwonline.com.au/collections/airmovers",
       "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d5-am",
-      "lengthSeconds": 30,
+      "lengthSeconds": 26,
       "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
       "status": "script-draft"
     },

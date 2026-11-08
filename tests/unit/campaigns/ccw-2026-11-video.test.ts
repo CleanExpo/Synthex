@@ -247,6 +247,31 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     );
   });
 
+  it('gives w1-d5-am a CTA that matches its air movers landing link and the two units it shows', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d5-am')!;
+    expect(s.cta).toBe('See the air movers');
+    expect(s.landingBase).toBe(
+      'https://ccwonline.com.au/collections/airmovers'
+    );
+    expect(s.landingUrl).toBe(
+      'https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d5-am'
+    );
+    // The Airmovers collection (read 08/11/2026) lists both units by these
+    // names. The X-800 Multi Drying Kit is out: its owned photo is the X-400
+    // kit photo, byte for byte.
+    expect(s.products).toEqual([
+      'XPOWER X-600AC Air Mover 3/4 hp with Carpet Clamp',
+      'XPOWER X-800 Air Mover 1 hp with Carpet Clamp',
+    ]);
+    const plan = CCW_SHOT_PLANS.find(p => p.videoId === 'ccw-w1-d5-am')!;
+    expect(plan.cta).toBe(s.cta);
+    // The draft hook had no source; no wattage is stated (the collection and
+    // product pages disagree on the PL-700A).
+    expect(`${s.hook} ${s.message}`).not.toMatch(
+      /dries the house|fits in the van|multi drying kit|\d+\s?W\b|watts?\b/i
+    );
+  });
+
   it('keeps every water-sorting and standards line out of w1-d4-am (orchestrator ruling, 08/11/2026)', () => {
     const found = bannedInD4Am(d4amBrandCopy());
     expect(found).toEqual([]);

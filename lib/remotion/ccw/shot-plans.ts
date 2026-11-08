@@ -577,6 +577,17 @@ const MATTE_C: [number, number][] = [
 // the tool is never shown as protection.
 const CLAW_L = `${WDR}/ccw-waterclaw-large-deluxe`;
 
+// ccw-w1-d5-am: "The van count". Every line quotes CCW's air movers collection
+// page or the X-600AC product page. The hook van is CCW's Dri-Eaz Velo photo,
+// named on a slip so it never reads as the XPOWER units. The lines that say
+// what NOT to buy ("not horsepower", "will not nest") sit on bare floor with
+// no unit, so no product is made the one that does not nest. The X-800 Multi
+// Drying Kit is not shown: its owned photo is byte-identical to the X-400 kit.
+const X600 = `${WDR}/ccw-xpower-airmover-x600ac-3-4hp-inc-clamp`;
+const X600_A = img(X600, '20568724865177');
+const VELO_VAN = img(VELO, '29703296135');
+const GROOMING = 'carpet-cleaning/carpet-cleaning-grooming';
+
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
     videoId: 'ccw-w1-d1-am',
@@ -1584,6 +1595,152 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [RESULT],
         images: [`${RESULT}-02.webp`],
         crop: { x: 272, y: 40, w: 360, h: 640 },
+      },
+    ],
+  },
+  {
+    // Concept A "The van count" (blind pick 40/60 against 28 and 27,
+    // 08/11/2026). CTA matches the landing link (/collections/airmovers).
+    videoId: 'ccw-w1-d5-am',
+    cta: 'See the air movers',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        // Hook: the van stacked five high; the count slams onto its floor.
+        trigger: 'Count units',
+        kind: 'floor',
+        subjects: [VELO],
+        images: [VELO_VAN],
+        crop: { x: 385, y: 196, w: 484, h: 860 },
+        floorLines: ['COUNT UNITS', 'PER VEHICLE'],
+        floorSize: 120,
+        sourceSlip: 'Pictured: Dri-Eaz Velo',
+        slam: true,
+        noCaptions: true,
+      },
+      {
+        // Bare carpet: no unit is made the horsepower one.
+        trigger: 'not horsepower',
+        kind: 'floor',
+        subjects: [GROOMING],
+        images: [`${GROOMING}-01.webp`],
+        crop: { x: 820, y: 0, w: 405, h: 720 },
+        floorLines: ['NOT', 'HORSEPOWER'],
+        floorSize: 110,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Stackability',
+        kind: 'floor',
+        subjects: [VELO],
+        images: [VELO_VAN],
+        crop: { x: 446, y: 330, w: 360, h: 640 },
+        floorLines: ['STACKABILITY', 'AND FOOTPRINT'],
+        floorSize: 92,
+        sourceSlip: 'Pictured: Dri-Eaz Velo',
+        noCaptions: true,
+      },
+      {
+        // A job in progress: the rotary machine at work in the room (no
+        // other brand's print in frame).
+        trigger: 'how many jobs',
+        kind: 'floor',
+        subjects: [ROTARY],
+        images: [`${ROTARY}-02.webp`],
+        crop: { x: 0, y: 0, w: 405, h: 720 },
+        floorLines: ['HOW MANY JOBS', 'A CREW COVERS', 'IN A DAY'],
+        floorSize: 92,
+        noCaptions: true,
+      },
+      {
+        // The turn: the type alone on an empty floor, and it breaks up.
+        trigger: 'A unit that',
+        kind: 'floor',
+        subjects: [RESULT],
+        images: [`${RESULT}-02.webp`],
+        crop: { x: 760, y: 40, w: 360, h: 640 },
+        floorLines: ['WILL NOT', 'NEST'],
+        floorSize: 170,
+        rippleTo: 1,
+        rippleFrom: 0.4,
+        noCaptions: true,
+      },
+      {
+        trigger: 'costs you more',
+        kind: 'floor',
+        subjects: [RESULT],
+        images: [`${RESULT}-01.webp`],
+        crop: { x: 680, y: 0, w: 405, h: 720 },
+        floorLines: ['COSTS MORE THAN', 'ITS WATTAGE GAINS'],
+        floorSize: 84,
+        noCaptions: true,
+      },
+      {
+        trigger: 'The X-600AC',
+        kind: 'floor',
+        subjects: [ROTARY, X600],
+        images: [`${ROTARY}-02.webp`, X600_A],
+        crop: { x: 500, y: 0, w: 405, h: 720 },
+        place: [
+          {
+            img: 1,
+            x: 560,
+            y: 790,
+            w: 470,
+            silhouette: true,
+          },
+        ],
+        floorLines: ['X-600AC', 'STACKABLE UP TO 4'],
+        floorSize: 104,
+        noCaptions: true,
+      },
+      {
+        trigger: '40 by 40',
+        kind: 'floor',
+        subjects: [ROTARY, X600],
+        images: [`${ROTARY}-03.webp`, X600_A],
+        crop: { x: 760, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 520, y: 800, w: 560, silhouette: true }],
+        floorLines: ['40 X 40 X 42 CM'],
+        floorSize: 96,
+        noCaptions: true,
+      },
+      {
+        trigger: 'The X-800',
+        kind: 'floor',
+        subjects: [EXTRACTION, X800],
+        images: [`${EXTRACTION}-03.webp`, img(X800, '20568158994585')],
+        crop: { x: 440, y: 40, w: 360, h: 640 },
+        place: [{ img: 1, x: 540, y: 790, w: 470 }],
+        floorLines: ['X-800', 'MOVES MORE AIR'],
+        floorSize: 96,
+        noCaptions: true,
+      },
+      {
+        trigger: 'but stacks',
+        kind: 'floor',
+        subjects: [EXTRACTION, X800],
+        images: [`${EXTRACTION}-02.webp`, img(X800, '20568160796825')],
+        crop: { x: 560, y: 40, w: 360, h: 640 },
+        place: [
+          {
+            img: 1,
+            x: 540,
+            y: 800,
+            w: 500,
+            silhouette: true,
+          },
+        ],
+        floorLines: ['X-800', 'STACKS 3 HIGH'],
+        floorSize: 110,
+        noCaptions: true,
+      },
+      {
+        trigger: 'See the air movers',
+        kind: 'end',
+        subjects: [ROTARY],
+        images: [`${ROTARY}-04.webp`],
+        crop: ROOM,
       },
     ],
   },
