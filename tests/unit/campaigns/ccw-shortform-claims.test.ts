@@ -1,8 +1,8 @@
 /**
  * SYN-1404: every claim line we put on screen in a CCW short-form video must
- * rest on a quoted source. The line's words (floor type or kinetic type, not
- * the CTA or the brand) must appear in that video's "Claims and sources"
- * table, in a row whose source cell quotes the source sentence and gives its
+ * rest on a quoted source. The line's words (floor type, kinetic type or a
+ * label on a placed unit; not the CTA or the brand) must appear in that
+ * video's "Claims and sources" table, in a row whose source cell quotes the source sentence and gives its
  * URL. Added 08/11/2026 after "as much as" reached screen with no source.
  */
 
@@ -72,7 +72,8 @@ export function unsourcedLines(
   );
   const missing: string[] = [];
   for (const shot of plan.shots) {
-    for (const words of [shot.floorLines, shot.kinetic]) {
+    const slips = (shot.place ?? []).flatMap(u => (u.slip ? [[u.slip]] : []));
+    for (const words of [shot.floorLines, shot.kinetic, ...slips]) {
       if (!words?.length) continue;
       const line = words.join(' ');
       const ok = sourced.some(r => norm(r.claim).includes(norm(line)));
@@ -102,6 +103,23 @@ describe('SYN-1404 CCW on-screen claims carry a quoted source', () => {
     };
     expect(unsourcedLines(planted, claimRows('ccw-w1-d2-am'))).toContain(
       'TWICE AS FAST'
+    );
+  });
+
+  it('catches a planted unsourced label on a placed unit', () => {
+    const plan = CCW_SHOT_PLANS.find(p => p.videoId === 'ccw-w1-d3-am')!;
+    const shot = plan.shots[0];
+    const planted = {
+      ...plan,
+      shots: [
+        {
+          ...shot,
+          place: [{ img: 1, x: 500, y: 900, w: 400, slip: 'Twice as quiet' }],
+        },
+      ],
+    };
+    expect(unsourcedLines(planted, claimRows('ccw-w1-d3-am'))).toContain(
+      'Twice as quiet'
     );
   });
 });

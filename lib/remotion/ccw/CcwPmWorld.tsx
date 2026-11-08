@@ -58,6 +58,9 @@ export type CcwPmWorldProps = {
     clipBottom?: number;
     silhouette?: boolean;
     outline?: boolean;
+    twin?: boolean;
+    slip?: string;
+    footprint?: [number, number][];
   }[];
 };
 
@@ -195,45 +198,113 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                     }}
                   />
                 ) : null}
-                {/* Soft ambient shadow, wider than the unit. */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: u.x - u.w * 0.6,
-                    top: u.y - u.w * 0.08,
-                    width: u.w * 1.2,
-                    height: u.w * 0.16,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(closest-side, rgba(20,16,12,0.55), rgba(20,16,12,0))',
-                  }}
-                />
-                {/* Tight, dark contact shadow right under the base. */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: u.x - u.w * 0.44,
-                    top: u.y - u.w * 0.035,
-                    width: u.w * 0.88,
-                    height: u.w * 0.06,
-                    borderRadius: '50%',
-                    background:
-                      'radial-gradient(closest-side, rgba(12,10,8,0.95), rgba(12,10,8,0.6) 60%, rgba(12,10,8,0))',
-                  }}
-                />
+                {u.footprint ? (
+                  // Footprint shadow: the unit's base as seen in the photo
+                  // (fractions of its w x w box), dark and blurred, so an
+                  // angled unit is grounded along every edge it stands on.
+                  [
+                    { grow: 1.28, blur: 0.05, a: 0.6, dy: 0.035 },
+                    { grow: 1.06, blur: 0.012, a: 0.92, dy: 0.018 },
+                  ].map((s, k) => {
+                    const pts = u.footprint!.map(([fx, fy]) => {
+                      const px = u.flip ? 1 - fx : fx;
+                      const cx = 0.5 + (px - 0.5) * s.grow;
+                      const cy = 0.75 + (fy - 0.75) * s.grow + s.dy;
+                      return `${(cx * 100).toFixed(2)}% ${(cy * 100).toFixed(2)}%`;
+                    });
+                    return (
+                      <div
+                        key={`fp-${k}`}
+                        style={{
+                          position: 'absolute',
+                          left: u.x - u.w / 2,
+                          top: u.y - u.w,
+                          width: u.w,
+                          height: u.w,
+                          // Blur on the parent, clip on the child: CSS applies
+                          // filter before clip-path on one element.
+                          filter: `blur(${Math.max(1, Math.round(u.w * s.blur))}px)`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            background: `rgba(12,10,8,${s.a})`,
+                            clipPath: `polygon(${pts.join(', ')})`,
+                          }}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <>
+                    {/* Soft ambient shadow, wider than the unit. */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: u.x - u.w * 0.6,
+                        top: u.y - u.w * 0.08,
+                        width: u.w * 1.2,
+                        height: u.w * 0.16,
+                        borderRadius: '50%',
+                        background:
+                          'radial-gradient(closest-side, rgba(20,16,12,0.55), rgba(20,16,12,0))',
+                      }}
+                    />
+                    {/* Tight, dark contact shadow right under the base. */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: u.x - u.w * 0.44,
+                        top: u.y - u.w * 0.035,
+                        width: u.w * 0.88,
+                        height: u.w * 0.06,
+                        borderRadius: '50%',
+                        background:
+                          'radial-gradient(closest-side, rgba(12,10,8,0.95), rgba(12,10,8,0.6) 60%, rgba(12,10,8,0))',
+                      }}
+                    />
+                  </>
+                )}
                 <Img
                   src={staticFile(u.src)}
                   style={{
                     ...box,
                     // Outline: a flat dark shape with a pale rim, so it can
-                    // never read as a photo of a second machine.
+                    // never read as a photo of a second machine. Twin: the
+                    // same owned photo graded cool and grey (mirrored by
+                    // `flip`), labelled by its slip as an illustration.
                     filter: u.outline
                       ? 'brightness(0) invert(0.12) drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 2px rgba(255,255,255,1))'
-                      : 'saturate(0.92) brightness(0.96) sepia(0.06)',
+                      : u.twin
+                        ? 'grayscale(1) sepia(0.3) hue-rotate(175deg) brightness(1.04) contrast(0.82) blur(0.6px)'
+                        : 'saturate(0.92) brightness(0.96) sepia(0.06)',
                     opacity: u.outline ? 0.62 : 1,
                     transform: `scaleX(${u.flip ? -1 : 1})`,
                   }}
                 />
+                {u.slip ? (
+                  <div
+                    className="ccw-text"
+                    style={{
+                      position: 'absolute',
+                      left: u.x,
+                      top: u.y - u.w * 0.42,
+                      transform: 'translateX(-50%) rotateZ(-2deg)',
+                      width: 'max-content',
+                      fontFamily: FONT,
+                      fontWeight: 700,
+                      fontSize: 30,
+                      color: CCW.ink,
+                      background: '#fbfaf6',
+                      padding: '8px 16px',
+                      boxShadow: '0 6px 10px rgba(30,40,50,0.3)',
+                    }}
+                  >
+                    {u.slip}
+                  </div>
+                ) : null}
               </React.Fragment>
             );
           })}

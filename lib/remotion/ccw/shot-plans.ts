@@ -94,6 +94,19 @@ export type CcwPlaced = {
    * source). Same footing and contact shadow; nothing added to the shape.
    */
   outline?: boolean;
+  /**
+   * Draw the unit as the same owned photo graded cool and grey (use with
+   * `flip`): a stand-in for a model CCW does not sell. Pair with `slip`.
+   */
+  twin?: boolean;
+  /** A small printed label on the unit (an on-screen line: sourced). */
+  slip?: string;
+  /**
+   * The unit's base as it appears in its photo, as [x, y] fractions of the
+   * w x w box: drawn as a blurred footprint shadow instead of the ellipses, so
+   * an angled unit is grounded along every edge it stands on.
+   */
+  footprint?: [number, number][];
 };
 
 export type CcwShotPlan = {
@@ -139,8 +152,9 @@ const SCENE = (name: string) => `carpet-cleaning/carpet-cleaning-${name}.webp`;
 /** Door jamb, corner guard and carpet (result-01), seen from above. */
 const JAMB = { x: 680, y: 0, w: 405, h: 720 };
 
-// ccw-w1-d3-am: "The twin". The red Max Force stands beside a flat outline of
-// itself: the US 115 V model, which CCW's page says Dry Air lists. Every spec
+// ccw-w1-d3-am: "The twin". The red Max Force stands beside its twin: the same
+// owned photo mirrored and graded cool, labelled "Illustration: US 115 V
+// model" (the US model, which CCW's page says Dry Air lists). Every spec
 // on the floor is quoted from CCW's Max Force and BD2500 listings.
 const MAXF = `${WDR}/ccw-dry-air-maxforce-ventilator-50hz-220v-au-plug`;
 const BD2500 = `${WDR}/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt`;
@@ -581,8 +595,9 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
     url: 'ccwonline.com.au',
     shots: [
       {
-        // Hook: the red unit on the carpet; its flat twin cuts in beside it
-        // with a camera jolt at 0.3 s.
+        // Hook: the red unit on the carpet; its twin (the same owned photo,
+        // mirrored and graded cool, labelled as an illustration) cuts in
+        // beside it with a camera jolt at 0.3 s.
         trigger: 'Two machines',
         kind: 'floor',
         subjects: [ROTARY, MAXF],
@@ -590,35 +605,68 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         crop: ROOM,
         place: [
           { img: 1, x: 290, y: 1240, w: 520 },
-          { img: 1, x: 800, y: 1200, w: 500, at: 0.3, outline: true },
+          {
+            img: 1,
+            x: 740,
+            y: 1200,
+            w: 480,
+            at: 0.3,
+            flip: true,
+            twin: true,
+            silhouette: true,
+            slip: 'Illustration: US 115 V model',
+          },
         ],
         kinetic: ['Two', 'machines', 'can', 'look', 'the', 'same'],
         slam: true,
         noCaptions: true,
       },
       {
-        // Same room, the camera swings in on the twin.
+        // Same room, the camera swings in on the twin; the real unit stays
+        // in frame.
         trigger: 'and still not',
         kind: 'floor',
         subjects: [ROTARY, MAXF],
         images: [`${ROTARY}-04.webp`, img(MAXF, '24131841654937')],
         crop: { x: 760, y: 200, w: 326, h: 580 },
         place: [
-          { img: 1, x: 40, y: 700, w: 520 },
-          { img: 1, x: 640, y: 690, w: 500, outline: true },
+          { img: 1, x: 170, y: 700, w: 480 },
+          {
+            img: 1,
+            x: 660,
+            y: 690,
+            w: 500,
+            flip: true,
+            twin: true,
+            silhouette: true,
+            slip: 'Illustration: US 115 V model',
+          },
         ],
         floorLines: ['NOT THE SAME', 'MACHINE'],
         floorSize: 130,
         noCaptions: true,
       },
       {
-        // The turn: the twin is Dry Air's US listing, labelled on the floor.
+        // The turn: the twin is Dry Air's US listing, labelled on the floor;
+        // the real unit stands behind it, so the source slip sits with it.
         trigger: 'Dry Air Technology',
         kind: 'floor',
         subjects: [RESULT, MAXF],
         images: [`${RESULT}-01.webp`, img(MAXF, '51412332478677')],
         crop: { x: 200, y: 0, w: 405, h: 720 },
-        place: [{ img: 1, x: 560, y: 720, w: 600, outline: true }],
+        place: [
+          { img: 1, x: 250, y: 600, w: 300 },
+          {
+            img: 1,
+            x: 600,
+            y: 760,
+            w: 560,
+            flip: true,
+            twin: true,
+            silhouette: true,
+            slip: 'Illustration: US 115 V model',
+          },
+        ],
         floorLines: ["DRY AIR'S", 'US LISTING'],
         floorSize: 130,
         sourceSlip: "Source: CCW's Max Force page",
@@ -633,8 +681,17 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         images: [`${EXTRACTION}-02.webp`, img(MAXF, '51412332478677')],
         crop: { x: 150, y: 0, w: 405, h: 720 },
         place: [
-          { img: 1, x: 300, y: 720, w: 470, outline: true, flip: true },
-          { img: 1, x: 790, y: 700, w: 440 },
+          {
+            img: 1,
+            x: 340,
+            y: 720,
+            w: 460,
+            flip: true,
+            twin: true,
+            silhouette: true,
+            slip: 'Illustration: US 115 V model',
+          },
+          { img: 1, x: 800, y: 700, w: 420 },
         ],
         floorLines: ['US MODEL:', '115 V'],
         floorSize: 150,
@@ -672,7 +729,21 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [EXTRACTION, BD2500],
         images: [`${EXTRACTION}-04.webp`, img(BD2500, '40568829935829')],
         crop: { x: 450, y: 0, w: 405, h: 720 },
-        place: [{ img: 1, x: 540, y: 720, w: 620 }],
+        // Grounded on its footprint from the first frame.
+        place: [
+          {
+            img: 1,
+            x: 540,
+            y: 720,
+            w: 620,
+            footprint: [
+              [0.093, 0.59],
+              [0.444, 0.989],
+              [0.819, 0.877],
+              [0.468, 0.478],
+            ],
+          },
+        ],
         floorLines: ['BD2500: THE', '230 V VERSION'],
         floorSize: 120,
         sourceSlip: "From CCW's BD2500 listing",
@@ -686,7 +757,20 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [EXTRACTION, BD2500],
         images: [`${EXTRACTION}-03.webp`, img(BD2500, '40568829935829')],
         crop: { x: 0, y: 0, w: 405, h: 720 },
-        place: [{ img: 1, x: 560, y: 710, w: 600 }],
+        place: [
+          {
+            img: 1,
+            x: 560,
+            y: 710,
+            w: 600,
+            footprint: [
+              [0.093, 0.59],
+              [0.444, 0.989],
+              [0.819, 0.877],
+              [0.468, 0.478],
+            ],
+          },
+        ],
         floorLines: ['CHECK THE PLUG', 'AND THE FREQUENCY'],
         floorSize: 88,
         noCaptions: true,
