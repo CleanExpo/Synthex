@@ -12,6 +12,54 @@ import {
   ccwVideoScheduledAt,
   ccwVideoSlots,
 } from '@/lib/marketing-agency/ccw-video-campaign-2026-11';
+import fs from 'node:fs';
+import path from 'node:path';
+import { CCW_SHOT_PLANS } from '@/lib/remotion/ccw/shot-plans';
+
+/**
+ * Orchestrator ruling, 08/11/2026: no IICRC, S500, "standard" (the water
+ * damage standard) or category line anywhere in ccw-w1-d4-am's brand copy.
+ */
+const D4AM_BANNED = /IICRC|S500|\bstandards?\b|\bcategor(y|ies)\b/i;
+
+/** Every piece of ccw-w1-d4-am copy: screen, voiceover, post, calendar. */
+function d4amBrandCopy(): string[] {
+  const root = path.resolve(__dirname, '../../..');
+  const docs = path.join(root, 'docs/campaigns/ccw-2026-11-video');
+  const slot = ccwVideoSlots.find(v => v.id === 'ccw-w1-d4-am')!;
+  const plan = CCW_SHOT_PLANS.find(p => p.videoId === 'ccw-w1-d4-am')!;
+  const calendarRows = fs
+    .readFileSync(path.join(docs, '02-calendar.md'), 'utf8')
+    .split('\n')
+    .filter(l => l.includes('ccw-w1-d4-am'));
+  return [
+    // The whole script file: voiceover, on-screen text, post caption,
+    // claims table and notes.
+    ...fs
+      .readFileSync(path.join(docs, 'scripts/ccw-w1-d4-am.md'), 'utf8')
+      .split('\n'),
+    slot.title,
+    slot.hook,
+    slot.message,
+    slot.cta,
+    ...slot.products,
+    ...calendarRows,
+    plan.cta,
+    ...plan.shots.flatMap(s => [
+      ...(s.floorLines ?? []),
+      ...(s.kinetic ?? []),
+      s.sourceSlip ?? '',
+      s.bigText ?? '',
+      s.smallText ?? '',
+      s.label ?? '',
+      ...(s.place ?? []).map(u => u.slip ?? ''),
+    ]),
+  ];
+}
+
+function bannedInD4Am(lines: string[]): string[] {
+  return lines.filter(l => D4AM_BANNED.test(l));
+}
 
 const ctx = {
   organizationId: 'org_ccw',
@@ -177,6 +225,39 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     expect(`${s.hook} ${s.message}`).not.toMatch(
       /cheapest|most expensive|S500|IICRC/i
     );
+  });
+
+  it('gives w1-d4-am a CTA that matches its flood extraction landing link and only the Water Claw', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d4-am')!;
+    expect(s.cta).toBe('See the flood extraction tools');
+    expect(s.landingUrl).toBe(
+      'https://ccwonline.com.au/collections/flood-extraction?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-am'
+    );
+    // /blogs/news (read 08/11/2026) has no post on sewage or flood infection
+    // risk, so it may not come back as this video's landing page.
+    expect(s.landingBase).not.toMatch(/blogs/);
+    // The one product is the Water Claw Large Deluxe, which the flood
+    // extraction collection lists. No air scrubber or meter is named next to
+    // an infection hazard (that would read as a protection claim).
+    expect(s.products).toEqual([
+      'Water Claw Large Deluxe Flood Extraction Tool',
+    ]);
+    expect(`${s.hook} ${s.message}`).not.toMatch(
+      /hydro shark|maxxguard|scrubber|prevent|protects? (you|the crew)|safe to/i
+    );
+  });
+
+  it('keeps every water-sorting and standards line out of w1-d4-am (orchestrator ruling, 08/11/2026)', () => {
+    const found = bannedInD4Am(d4amBrandCopy());
+    expect(found).toEqual([]);
+  });
+
+  it('the w1-d4-am ban check catches a planted line (the check can fail)', () => {
+    expect(
+      bannedInD4Am(['WATER IS SORTED INTO', 'Category 1, 2 and 3'])
+    ).toEqual(['Category 1, 2 and 3']);
+    expect(bannedInD4Am(['the water damage standard'])).toHaveLength(1);
+    expect(bannedInD4Am(['IICRC S500'])).toHaveLength(1);
   });
 
   it('covers every funnel stage', () => {

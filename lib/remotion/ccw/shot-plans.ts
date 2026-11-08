@@ -571,6 +571,12 @@ const MATTE_C: [number, number][] = [
   [0.016, 0.248],
 ];
 
+// ccw-w1-d4-am: flood clean-up hazards for the crew, quoted from SafeWork NSW
+// and WorkSafe Queensland; the one product is the Water Claw Large Deluxe,
+// quoted from its CCW page. No photo of the person-on-tool shots is used, so
+// the tool is never shown as protection.
+const CLAW_L = `${WDR}/ccw-waterclaw-large-deluxe`;
+
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
     videoId: 'ccw-w1-d1-am',
@@ -1450,6 +1456,130 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
       },
       {
         trigger: 'filters and spares',
+        kind: 'end',
+        subjects: [RESULT],
+        images: [`${RESULT}-02.webp`],
+        crop: { x: 272, y: 40, w: 360, h: 640 },
+      },
+    ],
+  },
+  {
+    // Concept A "The hazard list" (blind pick 41/60 against 36 and 33,
+    // 08/11/2026). CTA matches the landing link (/collections/flood-extraction).
+    videoId: 'ccw-w1-d4-am',
+    cta: 'See the flood extraction tools',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        // Hook: boots on the wet tiles; the hazard slams onto the floor.
+        trigger: 'In flood clean-up',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-01.webp`],
+        crop: { x: 740, y: 40, w: 360, h: 640 },
+        floorLines: ['SEWAGE', 'HARMFUL BACTERIA'],
+        floorSize: 100,
+        slam: true,
+        noCaptions: true,
+      },
+      {
+        trigger: 'may have overflowed',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-03.webp`],
+        crop: { x: 440, y: 40, w: 360, h: 640 },
+        floorLines: ['OVERFLOWED', 'INSIDE A BUILDING'],
+        floorSize: 94,
+        noCaptions: true,
+      },
+      {
+        trigger: 'WorkSafe Queensland',
+        kind: 'floor',
+        subjects: [SOLUTION],
+        images: [`${SOLUTION}-02.webp`],
+        crop: { x: 300, y: 0, w: 405, h: 720 },
+        floorLines: ['WORKSAFE QLD:', 'AN INFECTION'],
+        floorSize: 124,
+        noCaptions: true,
+      },
+      {
+        trigger: 'caused by carrying',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-02.webp`],
+        crop: { x: 560, y: 40, w: 360, h: 640 },
+        floorLines: ['CAUSED BY', 'CARRYING OUT WORK'],
+        floorSize: 92,
+        noCaptions: true,
+      },
+      {
+        // The turn: the type alone on an empty floor, and it breaks up.
+        trigger: 'is a notifiable',
+        kind: 'floor',
+        subjects: [RESULT],
+        images: [`${RESULT}-02.webp`],
+        crop: { x: 760, y: 40, w: 360, h: 640 },
+        floorLines: ['NOTIFIABLE', 'INCIDENT'],
+        floorSize: 156,
+        sourceSlip: 'Source: WorkSafe QLD',
+        rippleTo: 1,
+        rippleFrom: 0.4,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Where contact',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-04.webp`],
+        crop: { x: 160, y: 40, w: 360, h: 640 },
+        floorLines: ['WHERE CONTACT', 'IS UNAVOIDABLE'],
+        floorSize: 112,
+        noCaptions: true,
+      },
+      {
+        trigger: 'wear enclosed',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-01.webp`],
+        crop: { x: 780, y: 0, w: 300, h: 533 },
+        floorLines: ['ENCLOSED', 'FOOTWEAR'],
+        floorSize: 156,
+        noCaptions: true,
+      },
+      {
+        trigger: 'gloves and',
+        kind: 'floor',
+        subjects: [SOLUTION],
+        images: [`${SOLUTION}-02.webp`],
+        crop: { x: 330, y: 0, w: 300, h: 533 },
+        floorLines: ['GLOVES AND', 'SUITABLE CLOTHING'],
+        floorSize: 92,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Water Claw',
+        kind: 'floor',
+        subjects: [EXTRACTION, CLAW_L],
+        images: [`${EXTRACTION}-02.webp`, img(CLAW_L, '51412067156181')],
+        crop: { x: 100, y: 40, w: 360, h: 640 },
+        place: [{ img: 1, x: 560, y: 800, w: 760, silhouette: true }],
+        floorLines: ['WATER CLAW', 'LARGE DELUXE'],
+        floorSize: 128,
+        noCaptions: true,
+      },
+      {
+        trigger: 'carpet and pad',
+        kind: 'floor',
+        subjects: [ROTARY, CLAW_L],
+        images: [`${ROTARY}-02.webp`, img(CLAW_L, '51412067156181')],
+        crop: { x: 720, y: 40, w: 360, h: 640 },
+        place: [{ img: 1, x: 520, y: 860, w: 940, silhouette: true }],
+        floorLines: ['CARPET AND PAD', 'TOGETHER'],
+        floorSize: 112,
+        noCaptions: true,
+      },
+      {
+        trigger: 'extraction tools',
         kind: 'end',
         subjects: [RESULT],
         images: [`${RESULT}-02.webp`],

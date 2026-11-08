@@ -1,79 +1,129 @@
-# ccw-w1-d4-am: Not all water is the same
+# ccw-w1-d4-am: Flood clean-up hazards for the crew
 
-| Field             | Value                                                                                                                                 |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| Date and time     | Thursday 12/11/2026, 07:00 AEST                                                                                                       |
-| Funnel stage      | awareness                                                                                                                             |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                   |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                             |
-| Call to action    | Read CCW's guides                                                                                                                     |
-| Landing link      | https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-am |
-| Calendar slot key | 2026-11-19-ccw-video-1                                                                                                                |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                       |
+| Field             | Value                                                                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date and time     | Thursday 12/11/2026, 07:00 AEST                                                                                                                         |
+| Funnel stage      | awareness                                                                                                                                               |
+| Length            | 27.5 s, 1080x1920, type in the world                                                                                                                    |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                               |
+| Call to action    | See the flood extraction tools                                                                                                                          |
+| Landing link      | https://ccwonline.com.au/collections/flood-extraction?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-am |
+| Calendar slot key | 2026-11-12-ccw-video-1                                                                                                                                  |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                         |
+
+Status: PREVIEW. Rewritten 08/11/2026 on the orchestrator's ruling. The old title "Not all water is the same" and
+its water-sorting lines are cut from the voiceover, the screen, the post and the calendar. The video is now about
+what a flood clean-up does to the crew: every hazard line quotes SafeWork NSW or WorkSafe Queensland, and keeps the
+scope of its source (flood clean-up, flood recovery work, Queensland). Nothing says a tool protects anyone from
+infection or makes sewage safe.
+
+Products. The Hydro Shark moisture sensor and the Razorback MaxxGuard 550 are dropped: no regulator line ties
+either to these hazards, and an air scrubber next to "infection" would read as a protection claim. The one product
+is the Water Claw Large Deluxe, and its line is its CCW page's own words. Only the photo of the tool with its bag is
+used; the product photos of a person standing on a Water Claw are left out, so the tool is never shown as protection.
+
+Landing page. The old link (`/blogs/news`, read 08/11/2026) has no post on sewage or flood infection risk. The new
+one is CCW's flood extraction collection (read 08/11/2026), which lists the Water Claw Large Deluxe; the CTA names it.
+
+The draft's HeyGen avatar and generated shots are dropped: real owned photos only, no paid render.
 
 ## Voiceover
 
-Voice: Margot, ElevenLabs `tAtHhBlA3E0eKZJKNSKE`. About 73 words, 30 seconds.
+Voice: Margot, ElevenLabs `tAtHhBlA3E0eKZJKNSKE`. 58 words; voiced 08/11/2026 (28.6 s), then the four pauses
+between sentences trimmed to 0.35 s each (27.0 s of voice) so the delivery copy fits under its size cap at the
+script's rate floor. Concept A "The hazard list" (blind pick 41/60 against 36 and 33, 08/11/2026). Each line quotes
+a source (see Claims).
 
-1. (0 to 3 s) Clean water, grey water and sewage
-2. (3 to 7 s) are three different jobs, and each needs its own plan.
-3. (7 to 11 s) The water damage standard sorts water into Category 1, 2 and 3.
-4. (11 to 15 s) Category 1 is a sanitary source. Category 2 is significantly contaminated.
-5. (15 to 19 s) Category 3 is grossly contaminated, such as sewage.
-6. (19 to 23 s) Time and temperature can move water from one category to a worse one.
-7. (23 to 26.5 s) The category decides the method and the protection.
-8. (26.5 to 30 s) Read CCW's guides. Link below.
+1. (0 to 6.1 s) In flood clean-up, sewage containing harmful bacteria may have overflowed inside a building.
+2. (6.6 to 12.6 s) WorkSafe Queensland: an infection caused by carrying out work is a notifiable incident.
+3. (13.1 to 19.6 s) Where contact with floodwater and mud is unavoidable, wear enclosed footwear, gloves and suitable clothing.
+4. (20.1 to 23.6 s) Water Claw: pulls water out of carpet and pad together.
+5. (24.1 to 27.0 s) See the flood extraction tools at CCW.
 
 ## Shot list
 
-Every shot starts on its trigger words and holds 3 to 4 s. No shot repeats. Pictures come only from
-the sanctioned pipeline, grounded in the named CCW reference photos.
+Every picture is an owned job or catalogue photo, moved in 2.5D in Remotion (no generated imagery, no paid render).
+The Water Claw is cut from its white catalogue photo by the border flood fill (no AI) and stands flat on the carpet
+with a silhouette contact shadow from its first frame. Plan: `lib/remotion/ccw/shot-plans.ts`; render:
+`scripts/render-ccw-shortform.ts`. The job photos are carpet cleaning jobs; the type never says what the job was.
 
-| #   | Time       | Trigger words               | Shot                                                                                                         | Source                                                                                                                                                                    |
-| --- | ---------- | --------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | 0 to 3     | "Clean water"               | Margot to camera in a bright CCW-style warehouse aisle, morning light                                        | HeyGen avatar from Margot's voice (`heygen-director`)                                                                                                                     |
-| 2   | 3 to 7     | "three different jobs"      | Hydro Shark moisture probe reading a clean carpet in a bright room, slow push-in                             | `generateImage` grounded on `water-damage-restoration/ccw-hydro-shark-moisture-probe`, then `submitGenerativeVideo` image-to-video                                        |
-| 3   | 7 to 11    | "Category 1, 2 and 3"       | Whiteboard reads "Category 1 / 2 / 3" behind the moisture probe (text composited in the edit, not generated) | `generateImage` plate grounded on `water-damage-restoration/ccw-hydro-shark-moisture-probe`, then Blender insert (`blender_title.py`) composited in the edit, CCW colours |
-| 4   | 11 to 15   | "sanitary source"           | Moisture probe held against a clean skirting in daylight, close-up                                           | `generateImage` grounded on `water-damage-restoration/ccw-hydro-shark-moisture-probe`, then `submitGenerativeVideo` image-to-video                                        |
-| 5   | 15 to 19   | "grossly contaminated"      | Razorback MaxxGuard 550 air scrubber set up in a bright hallway, ready for work                              | `generateImage` grounded on `water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber`, then `submitGenerativeVideo` image-to-video                          |
-| 6   | 19 to 23   | "Time and temperature"      | Sunlit window and warm room with the moisture probe on a carpet edge                                         | `generateImage` grounded on `water-damage-restoration/ccw-hydro-shark-moisture-probe`, then `submitGenerativeVideo` image-to-video                                        |
-| 7   | 23 to 26.5 | "method and the protection" | MaxxGuard 550 running in a clean, dry room, the outcome                                                      | `generateImage` grounded on `water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber`, then `submitGenerativeVideo` image-to-video                          |
-| 8   | 26.5 to 30 | "CCW's guides"              | Margot beside the Razorback range; CCW logo composited on the wall                                           | HeyGen avatar; approved CCW logo file composited in the edit                                                                                                              |
+| #   | Time         | Trigger words         | Shot                                                                                | Source photos                        |
+| --- | ------------ | --------------------- | ----------------------------------------------------------------------------------- | ------------------------------------ |
+| 1   | 0 to 3.6     | "In flood clean-up"   | Hook: boots on wet tiles; "SEWAGE / HARMFUL BACTERIA" slams onto the wet floor      | carpet-cleaning-extraction-01        |
+| 2   | 3.6 to 6.5   | "may have overflowed" | Extraction wand on the carpet in a job room; "OVERFLOWED / INSIDE A BUILDING"       | carpet-cleaning-extraction-03        |
+| 3   | 6.5 to 9.0   | "WorkSafe Queensland" | Technician in gloves and boots; "WORKSAFE QLD: / AN INFECTION"                      | carpet-cleaning-solution-02          |
+| 4   | 9.0 to 10.9  | "caused by carrying"  | The extraction wand at work on the carpet; "CAUSED BY / CARRYING OUT WORK"          | carpet-cleaning-extraction-02        |
+| 5   | 10.9 to 13.0 | "is a notifiable"     | The turn: the type alone on an empty floor, and it breaks up; source slip           | carpet-cleaning-result-02            |
+| 6   | 13.0 to 16.5 | "Where contact"       | Hose across the carpet; "WHERE CONTACT / IS UNAVOIDABLE"                            | carpet-cleaning-extraction-04        |
+| 7   | 16.5 to 18.2 | "wear enclosed"       | Tight on the work boots on the wet tiles; "ENCLOSED / FOOTWEAR"                     | carpet-cleaning-extraction-01 (crop) |
+| 8   | 18.2 to 20.0 | "gloves and"          | Tight on the technician's gloves and work clothes; "GLOVES AND / SUITABLE CLOTHING" | carpet-cleaning-solution-02 (crop)   |
+| 9   | 20.0 to 22.0 | "Water Claw"          | The Water Claw and its bag by the skirting; "WATER CLAW / LARGE DELUXE"             | carpet-cleaning-extraction-02; claw  |
+| 10  | 22.0 to 24.6 | "carpet and pad"      | The Water Claw, larger, in a new room; "CARPET AND PAD / TOGETHER"                  | carpet-cleaning-rotary-02; claw      |
+| 11  | 24.6 to 27.5 | "extraction tools"    | Scene end card: CCW logo plate, "See the flood extraction tools", web address       | carpet-cleaning-result-02, CCW logo  |
 
-Footage share: shots 2 to 7, 23.5 s of 30 s (78%). Margot alone: shots 1 and 8, 6.5 s (22%).
+No photo is in more than two shots; the longest hold is 3.6 s (shot 1). Water Claw photo: catalogue ID
+51412067156181 (tool and carry bag), not mirrored.
 
 ## On-screen text
 
-- Shot 3: "Category 1 / 2 / 3" in the world (whiteboard), 4 s.
-- Captions: Margot's words, burned in, CCW colours.
+- Floor type: "SEWAGE / HARMFUL BACTERIA", "OVERFLOWED / INSIDE A BUILDING", "WORKSAFE QLD: / AN INFECTION",
+  "CAUSED BY / CARRYING OUT WORK", "NOTIFIABLE / INCIDENT", "WHERE CONTACT / IS UNAVOIDABLE", "ENCLOSED /
+  FOOTWEAR", "GLOVES AND / SUITABLE CLOTHING", "WATER CLAW / LARGE DELUXE", "CARPET AND PAD / TOGETHER".
+- Source slip on the floor: "Source: WorkSafe QLD".
+- Captions: none burned in; every shot carries its words as floor type.
+- End card: CCW logo, "See the flood extraction tools", ccwonline.com.au.
 - No full-frame text cards.
 
 ## Post caption
 
-Clean water, grey water and sewage are three different jobs. The water damage standard sorts water into Category 1, 2 and 3, and time and temperature can move it to a worse category. The category decides the method and the protection. CCW's guides: link in bio.
+In flood clean-up, sewage containing harmful bacteria may have overflowed inside a building (SafeWork NSW). In Queensland, an infection caused by carrying out work is a notifiable incident (WorkSafe Queensland). Where contact with floodwater and mud is unavoidable, wear enclosed footwear, gloves and suitable clothing. The Water Claw Large Deluxe pulls water out of carpet and pad together: https://www.ccwonline.com.au/products/waterclaw-large-deluxe. See the flood extraction tools: link in bio.
 
 ## Claims and sources
 
-| Claim                                                                                                                                                                               | Source                                               | Status              |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------- |
-| Water is sorted into Category 1 (sanitary source), 2 (significant contamination) and 3 (grossly contaminated, e.g. sewage); time and temperature can move water to a worse category | Standards register R33: water damage standard (S500) | Verified 08/11/2026 |
-| The category decides the method and the protection                                                                                                                                  | Calendar row ccw-w1-d4-am                            | Verified 08/11/2026 |
+Web pages read 08/11/2026 through the Exa page reader (direct fetches of ccwonline.com.au return HTTP 429). Each
+claim quotes the source sentence it rests on.
+
+| Claim                                                                                                                                                                                                        | Source                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Status              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| In flood clean-up, sewage containing harmful bacteria may have overflowed inside a building. On screen: SEWAGE HARMFUL BACTERIA; OVERFLOWED INSIDE A BUILDING                                                | SafeWork NSW media release, 29/05/2025, on flood clean-up: "Common hazards include sewage containing harmful bacteria that may have overflowed inside a building, wet, slippery and unstable surfaces, and wild animals including rodents, snakes and spiders." Scope, same release: "SafeWork NSW is urging those in flood-affected areas to be alert for hazards as they return to the workplace and begin the cleanup process." https://www.safework.nsw.gov.au/news/safework-media-releases/safework-nsw-urges-workplaces-to-beware-of-hazards-as-flood-cleanup-begins (accessed 08/11/2026) | Verified 08/11/2026 |
+| WorkSafe Queensland: an infection caused by carrying out work is a notifiable incident. On screen: WORKSAFE QLD: AN INFECTION; CAUSED BY CARRYING OUT WORK; NOTIFIABLE INCIDENT; slip "Source: WorkSafe QLD" | WorkSafe Queensland, "Infection risks from flood recovery and response work": "An infection that is caused by carrying out work is a notifiable incident." https://www.worksafe.qld.gov.au/safety-and-prevention/hazards/hazardous-exposures/biological-hazards/infection-risks-from-flood-recovery-and-response-work (accessed 08/11/2026). Attributed to the Queensland regulator in the voiceover and the slip.                                                                                                                                                                               | Verified 08/11/2026 |
+| Where contact with floodwater and mud is unavoidable, wear enclosed footwear, gloves and suitable clothing. On screen: WHERE CONTACT IS UNAVOIDABLE; ENCLOSED FOOTWEAR; GLOVES AND SUITABLE CLOTHING         | WorkSafe Queensland, "Storms and floods", Infection risks from floodwater: "Where contact with flood water and mud is unavoidable, wear enclosed footwear, gloves and suitable clothing." https://www.worksafe.qld.gov.au/safety-and-prevention/hazards/workplace-hazards/dangers-in-your-workplace/storms-and-floods (accessed 08/11/2026)                                                                                                                                                                                                                                                      | Verified 08/11/2026 |
+| The Water Claw pulls water out of carpet and pad together. On screen: WATER CLAW LARGE DELUXE; CARPET AND PAD TOGETHER                                                                                       | CCW Water Claw Large Deluxe page, title "Water Claw Large Deluxe Flood Extraction Tool, 12 x 21 Inch"; Product Overview: "A 12 x 21 inch (305 x 533 mm) head that pulls water out of carpet and pad together without lifting the carpet." https://www.ccwonline.com.au/products/waterclaw-large-deluxe (accessed 08/11/2026)                                                                                                                                                                                                                                                                     | Verified 08/11/2026 |
+| See the flood extraction tools: the landing link is CCW's flood extraction collection, which lists the Water Claw Large Deluxe                                                                               | CCW Flood Extraction collection: "The range covers Water Claw flood extraction tools in medium, large and medium deluxe with injection, plus the Flash Spotter and Spot Lifter" and lists "Water Claw Large Deluxe Flood Extraction Tool, 12 x 21 Inch". https://ccwonline.com.au/collections/flood-extraction (accessed 08/11/2026)                                                                                                                                                                                                                                                             | Verified 08/11/2026 |
+
+Held back:
+
+- "Grey water". No SafeWork NSW or WorkSafe Queensland sentence on grey water as a clean-up hazard was found
+  (Exa search, 08/11/2026). The nearest, WorkSafe Queensland's "Non-potable water" page, lists "recycled greywater"
+  as non-potable water used at work, a different scope. So the copy names sewage and floodwater only.
+- "Workers who are involved with flood recovery and response work may be exposed to infection risks from contact
+  with contaminated floodwater, soil and mud." (WorkSafe Queensland) and "Where possible, avoid using high pressure
+  washers as this may generate infectious aerosols that can be breathed in." Both sourced; cut for length.
+- The collection page's line on injection tools and contaminated water in underlay: it would read as a tool that
+  makes sewage safe. Not used.
+- No claim that any CCW product prevents infection, protects the crew, or makes sewage safe.
 
 ## Rule score
 
-Self-score on the script, 08/11/2026 (see `03-rule-score.md`).
+Self-score on the cut, 08/11/2026 (see `03-rule-score.md`). The file is labelled PREVIEW.
 
-| Rule                              | Result  | Note                                                         |
-| --------------------------------- | ------- | ------------------------------------------------------------ |
-| S1 Margot, plain English          | PASS    | Margot named; no slang                                       |
-| S2 Hook in 2 s                    | PASS    | Row hook opens line 1; no question                           |
-| S3 Picture every ~4 s, no repeats | PASS    | 8 shots, holds 3 to 4 s                                      |
-| S4 Footage 75%+, Margot 10 to 28% | PASS    | 78% / 22% on the plan; re-measure on render                  |
-| S5 Bright, moving, outcome        | PASS    | Daylight scenes; ends on the result or the range             |
-| S6 Owned references only          | PASS    | Every non-Margot shot names a reference subject from the row |
-| S7 Side-by-side equipment check   | PENDING | At render                                                    |
-| S8 No invented claims             | PASS    | All claims sourced                                           |
-| S9 AS-IICRC procedure claims      | PASS    | R33 only                                                     |
-| S10 AU English, metric, no emoji  | PASS    |                                                              |
-| S11 One CTA with UTM link         | PASS    |                                                              |
-| S12 CCW brand only                | PASS    | No other brand or competitor named                           |
+Blind judges scored the cuts on frames only: first cut 41/60 (chemical bottles under the work and gloves lines:
+replaced), a second cut 38/60 (the turn moved onto bare carpet: put back on the technician), a third 41/60 and the
+final cut 38/60. What the judges keep naming needs photos we do not own, not a new edit: a visibly wet or
+flood-affected room for "overflowed inside a building", a crew member at work on a wet job for "notifiable
+incident", and the Water Claw in use on wet carpet in place of the cut-out. Photo request for Toby: those three.
+
+| Rule                              | Result  | Note                                                                      |
+| --------------------------------- | ------- | ------------------------------------------------------------------------- |
+| S1 Margot, plain English          | PASS    | Margot named; no slang                                                    |
+| S2 Hook in 2 s                    | PASS    | "SEWAGE / HARMFUL BACTERIA" slams down at 0.3 s; "sewage" spoken at 1.3 s |
+| S3 Picture every ~4 s, no repeats | PASS    | 11 shots, longest hold 3.6 s; no photo in more than two shots             |
+| S4 Footage 75%+, Margot 10 to 28% | PASS    | All job or product photos; Margot is voice only                           |
+| S5 Bright, moving, outcome        | PARTIAL | Daylight rooms; the job photos are cleaning jobs, not floods              |
+| S6 Owned references only          | PASS    | Every shot names its owned manifest subjects                              |
+| S7 Side-by-side equipment check   | PASS    | The cut-out is the catalogue photo itself, not mirrored                   |
+| S8 No invented claims             | PASS    | Every line quoted; grey water held back for want of a source              |
+| S9 Procedure claims               | PASS    | None made                                                                 |
+| S10 AU English, metric, no emoji  | PASS    |                                                                           |
+| S11 One CTA with UTM link         | PASS    | CTA matches the flood extraction collection it links to                   |
+| S12 CCW brand only                | PASS    | No other brand or competitor named                                        |

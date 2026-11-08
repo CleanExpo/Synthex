@@ -199,22 +199,22 @@
       "week": 1,
       "funnelStage": "awareness",
       "theme": "Did you know",
-      "title": "Not all water is the same",
-      "hook": "Clean water, grey water and sewage are three different jobs.",
-      "message": "The water damage standard sorts water into Category 1, 2 and 3. Time and temperature can move it to a worse category. The category decides the method and the protection.",
-      "products": [
-        "Hydro Shark Moisture Sensor",
-        "Razorback MaxxGuard 550 Air Scrubber"
-      ],
+      "title": "Flood clean-up hazards for the crew",
+      "hook": "In flood clean-up, sewage containing harmful bacteria may have overflowed inside a building.",
+      "message": "WorkSafe Queensland: an infection caused by carrying out work is a notifiable incident. Where contact with floodwater and mud is unavoidable, wear enclosed footwear, gloves and suitable clothing. The Water Claw Large Deluxe pulls water out of carpet and pad together.",
+      "products": ["Water Claw Large Deluxe Flood Extraction Tool"],
       "referenceSubjects": [
-        "water-damage-restoration/ccw-hydro-shark-moisture-probe",
-        "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber"
+        "water-damage-restoration/ccw-waterclaw-large-deluxe",
+        "carpet-cleaning/carpet-cleaning-extraction",
+        "carpet-cleaning/carpet-cleaning-solution",
+        "carpet-cleaning/carpet-cleaning-result",
+        "carpet-cleaning/carpet-cleaning-rotary"
       ],
-      "cta": "Read CCW's guides",
+      "cta": "See the flood extraction tools",
       "channels": ["instagram", "facebook", "youtube", "linkedin"],
-      "landingBase": "https://ccwonline.com.au/blogs/news",
-      "landingUrl": "https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-am",
-      "lengthSeconds": 30,
+      "landingBase": "https://ccwonline.com.au/collections/flood-extraction",
+      "landingUrl": "https://ccwonline.com.au/collections/flood-extraction?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-am",
+      "lengthSeconds": 27,
       "voice": "Margot (ElevenLabs tAtHhBlA3E0eKZJKNSKE)",
       "status": "script-draft"
     },
