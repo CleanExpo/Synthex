@@ -37,30 +37,33 @@ paid render). Products are cut from their white catalogue backgrounds by a borde
 flat on the floor with a contact shadow from their first frame. Plan: `lib/remotion/ccw/shot-plans.ts`;
 render: `scripts/render-ccw-shortform.ts`.
 
-| #   | Trigger words          | Shot                                                                                                    | Source photos                                     |
-| --- | ---------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 1   | "Most of the wet area" | Hook: wet tiles against a kitchen cabinet base, floor level; "UNDER SOMETHING" slams onto the tiles     | carpet-cleaning-extraction-01                     |
-| 2   | "in a furnished home"  | Same cabinet, tight on the toe-kick gap; "MOST OF THE WET AREA" on the tiles                            | carpet-cleaning-extraction-01                     |
-| 3   | "Low profile goes"     | The turn: a Velo sits on the carpet of an empty room; the line is the kinetic type                      | carpet-cleaning-rotary-04; Dri-Eaz Velo           |
-| 4   | "under a bed"          | Floor-height run along a skirting; kinetic "Under a bed,"                                               | carpet-cleaning-extraction-03                     |
-| 5   | "against a skirting"   | Two stacked Velos on the carpet by a skirting; kinetic "against a skirting,"                            | carpet-cleaning-result-02; Dri-Eaz Velo (stacked) |
-| 6   | "beneath a vanity"     | Floor-height carpet with a cleaning pad; kinetic "beneath a vanity."                                    | carpet-cleaning-rotary-03                         |
-| 7   | "The XPOWER"           | A PL-700A on the carpet by a door jamb; "XPOWER PL-700A" on the floor                                   | carpet-cleaning-result-01; XPOWER PL-700A         |
-| 8   | "twenty-one"           | Close on the PL-700A on the carpet pile; "21 CM HIGH" on the floor                                      | carpet-cleaning-grooming-01; XPOWER PL-700A       |
-| 9   | "It fits under"        | Floor-level carpet to the skirting; "UNDER TOE-KICKS" on the floor                                      | carpet-cleaning-extraction-02                     |
-| 10  | "beds and furniture"   | Floor-level carpet by a doorway; "BEDS AND FURNITURE" on the floor                                      | carpet-cleaning-extraction-03                     |
-| 11  | "The Dri-Eaz Velo"     | A Velo on the carpet under a window; "HALF THE HEIGHT", with a slip naming the comparison               | carpet-cleaning-rotary-04; Dri-Eaz Velo           |
-| 12  | "low-profile units"    | Scene end card, 2.7 s: real CCW logo plate over the door jamb, "See the low-profile units", web address | carpet-cleaning-result-01, CCW logo               |
+| #   | Trigger words          | Shot                                                                                                                                           | Source photos                                       |
+| --- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| 1   | "Most of the wet area" | Hook: wet tiles against a vanity base, floor level; "BENEATH A VANITY" slams onto the tiles and "Most of the wet area" is the kinetic type     | carpet-cleaning-extraction-01                       |
+| 2   | "is under something"   | The camera drops to carpet height, looking along the floor to the skirting; no type                                                            | carpet-cleaning-extraction-02                       |
+| 3   | "Low profile goes"     | The turn: a Velo sits on the carpet of an empty room; the line is the kinetic type                                                             | carpet-cleaning-rotary-04; Dri-Eaz Velo             |
+| 4   | "under a bed"          | Floor-height run along a skirting; no type (no bed photo is owned)                                                                             | carpet-cleaning-extraction-03                       |
+| 5   | "against a skirting"   | Two stacked Velos on the carpet by a skirting; kinetic "against a skirting,"                                                                   | carpet-cleaning-result-02; Dri-Eaz Velo (stacked)   |
+| 6   | "beneath a vanity"     | Floor-height carpet with a cleaning pad; no type                                                                                               | carpet-cleaning-rotary-03                           |
+| 7   | "The XPOWER"           | A PL-700A standing on the carpet by a door jamb; "XPOWER PL-700A" on the floor                                                                 | carpet-cleaning-result-01; XPOWER PL-700A (upright) |
+| 8   | "twenty-one"           | Close on the PL-700A lying flat on the carpet pile; "21 CM HIGH" on the floor                                                                  | carpet-cleaning-grooming-01; XPOWER PL-700A         |
+| 9   | "It fits under"        | Back to the hook's vanity, tight on the toe-kick: the flat PL-700A sits at the kick line with a contact shadow; "UNDER TOE-KICKS" on the tiles | carpet-cleaning-extraction-01; XPOWER PL-700A       |
+| 10  | "beds and furniture"   | Floor-level carpet by a doorway; no type (no bed or furniture photo is owned)                                                                  | carpet-cleaning-extraction-03                       |
+| 11  | "The Dri-Eaz Velo"     | A Velo on the carpet under a window; "HALF THE HEIGHT", with a slip naming the comparison                                                      | carpet-cleaning-rotary-04; Dri-Eaz Velo             |
+| 12  | "low-profile units"    | Scene end card, 2.7 s: real CCW logo plate over the door jamb, "See the low-profile units", web address                                        | carpet-cleaning-result-01, CCW logo                 |
 
 Units on raised camera angles use the `product` prop (outline drop shadow, full opacity from the first frame);
-none is placed on the wet tiles, so no drying job is implied.
+the toe-kick shot uses `place` with a silhouette and contact shadow from its first frame. No unit is shown running.
 
 ## On-screen text
 
-- Floor type: "UNDER SOMETHING", "MOST OF THE WET AREA", "XPOWER PL-700A", "21 CM HIGH", "UNDER TOE-KICKS",
-  "BEDS AND FURNITURE", "HALF THE HEIGHT" with the slip "Dri-Eaz: half the height of snail-shell dryers".
-- Kinetic type: "Low profile goes where standard cannot." and "Under a bed, / against a skirting, / beneath a vanity."
-- Captions: none burned in; every shot carries its words as floor or kinetic type (one type style, judge round 2).
+- Floor type: "BENEATH A VANITY" (over the vanity base), "XPOWER PL-700A", "21 CM HIGH", "UNDER TOE-KICKS" (over the
+  toe-kick with the unit at it), "HALF THE HEIGHT" with the slip "Dri-Eaz: half the height of snail-shell dryers".
+- Kinetic type: "Most of the wet area" (over the wet tiles), "Low profile goes where standard cannot." and
+  "against a skirting," (over the units by the skirting).
+- Every on-screen line sits over a picture that shows it. "Under a bed" and "beds and furniture" are voiceover
+  only: we own no bed or furniture photo (orchestrator, 08/11/2026).
+- Captions: none burned in.
 - End card: CCW logo, "See the low-profile units", ccwonline.com.au.
 - No full-frame text cards.
 
@@ -72,13 +75,13 @@ Most of the wet area in a furnished home is under something: a bed, a skirting, 
 
 All three pages opened 08/11/2026.
 
-| Claim                                                                                                                                                  | Source                                                                                                          | Status              |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------------------- |
-| Most of the wet area in a furnished home is under something; low profile goes where standard cannot: under a bed, against a skirting, beneath a vanity | Calendar row ccw-w1-d2-pm; CCW air movers page, "How to choose": https://ccwonline.com.au/collections/airmovers | Verified 08/11/2026 |
-| The XPOWER PL-700A is 21 cm high and gets under kitchen cabinets and toe-kicks, beneath beds and furniture                                             | CCW PL-700A page, "Where It Fits": https://www.ccwonline.com.au/products/xpower-low-profile-airmover            | Verified 08/11/2026 |
-| The Dri-Eaz Velo is half the height of snail-shell dryers (a Dri-Eaz comparison)                                                                       | CCW Velo page, "Key Features": https://www.ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover         | Verified 08/11/2026 |
-| Both are low-profile units sold by CCW                                                                                                                 | CCW air movers page lists both: https://ccwonline.com.au/collections/airmovers                                  | Verified 08/11/2026 |
-| Low-profile units move air across the floor where furniture blocks it                                                                                  | General product description: `[TOBY TO CONFIRM]`. Not in the voiceover or on screen                             | Pending Toby        |
+| Claim                                                                                                                                                  | Source                                                                                                                                                                                                                                                                    | Status              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Most of the wet area in a furnished home is under something; low profile goes where standard cannot: under a bed, against a skirting, beneath a vanity | Calendar row ccw-w1-d2-pm; CCW air movers page, "How to choose": "Low profile goes where standard cannot. Under a bed, against a skirting, beneath a vanity. On a furnished residential loss that is most of the wet area" https://ccwonline.com.au/collections/airmovers | Verified 08/11/2026 |
+| The XPOWER PL-700A is 21 cm high; it gets under toe-kicks, kitchen cabinets, beds and furniture                                                        | CCW PL-700A page, "Where It Fits": "At 21 cm high, the PL-700A gets where a standard air mover will not: under kitchen cabinets and toe-kicks, beneath beds and furniture" https://www.ccwonline.com.au/products/xpower-low-profile-airmover                              | Verified 08/11/2026 |
+| The Dri-Eaz Velo is half the height of snail-shell dryers (a Dri-Eaz comparison)                                                                       | CCW Velo page, "Key Features": "Low profile. Half the height of snail shell dryers and 25% shorter than competitive models (Dri-Eaz comparison)" https://www.ccwonline.com.au/products/dri-eaz-velo-low-profile-air-mover                                                 | Verified 08/11/2026 |
+| Both are low-profile units sold by CCW                                                                                                                 | CCW air movers page lists both: https://ccwonline.com.au/collections/airmovers                                                                                                                                                                                            | Verified 08/11/2026 |
+| Low-profile units move air across the floor where furniture blocks it                                                                                  | General product description: `[TOBY TO CONFIRM]`. Not in the voiceover or on screen                                                                                                                                                                                       | Pending Toby        |
 
 No standards-register row is needed: the video makes no procedure or safety claim, only product facts from CCW's
 pages.
