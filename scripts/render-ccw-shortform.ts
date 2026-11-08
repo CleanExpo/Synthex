@@ -160,14 +160,77 @@ function integratedLufs(file: string): number {
   return Number(all[all.length - 1][1]);
 }
 
+/**
+ * Rate aims, as a share of maxBytes, tried in order. The first aims above the
+ * cap because two-pass lands under its target; if that copy still comes out at
+ * or over the cap (a hard-to-compress master), retry once at 0.97. This is a
+ * retry, not a lower bar: every attempt is judged on size, SSIM and loudness.
+ */
+export const CCW_DELIVERY_AIMS = [1.01, 0.97];
+
+export type DeliveryAttempt = {
+  aim: number;
+  bytes: number;
+  ssim: number;
+  ok: boolean;
+};
+
+/**
+ * Runs the encode at each aim until one passes. Retries only when the copy
+ * failed on size; a copy under the cap that misses SSIM or loudness stops
+ * here, because a lower rate cannot raise SSIM.
+ */
+export function runDeliveryAttempts<
+  R extends { bytes: number; ssim: number; ok: boolean },
+>(
+  encode: (aim: number) => R,
+  aims: number[] = CCW_DELIVERY_AIMS,
+  maxBytes: number = CCW_DELIVERY.maxBytes
+): { report: R; attempts: DeliveryAttempt[] } {
+  const attempts: DeliveryAttempt[] = [];
+  let report: R | undefined;
+  for (const aim of aims) {
+    report = encode(aim);
+    attempts.push({
+      aim,
+      bytes: report.bytes,
+      ssim: report.ssim,
+      ok: report.ok,
+    });
+    if (report.ok || report.bytes < maxBytes) break;
+  }
+  if (!report) throw new Error('no delivery aims');
+  return { report, attempts };
+}
+
 /** Two-pass x264 copy of the master; throws unless size, SSIM and loudness pass. */
 export function deliveryCopy(master: string, copy: string) {
+  const { report, attempts } = runDeliveryAttempts(aim =>
+    encodeDelivery(master, copy, aim)
+  );
+  fs.writeFileSync(
+    copy.replace(/\.mp4$/, '.json'),
+    JSON.stringify({ ...report, attempts }, null, 2)
+  );
+  if (!report.ok)
+    throw new Error(
+      `DELIVERY COPY FAIL: ${JSON.stringify({ ...report, attempts })}`
+    );
+  console.log(
+    `delivery copy PASS (attempt ${attempts.length}, aim ${attempts[attempts.length - 1].aim}): ` +
+      `${(report.bytes / 1e6).toFixed(2)} MB, SSIM ${report.ssim.toFixed(4)}, ` +
+      `${report.lufsCopy} vs ${report.lufsMaster} LUFS`
+  );
+}
+
+/** One two-pass x264 encode of the master at a rate aim; measures, never throws. */
+function encodeDelivery(master: string, copy: string, aim: number) {
   const log = path.join(path.dirname(copy), `${path.basename(copy)}-2pass`);
   // A shorter video can spend more bits per second inside the same size
-  // budget; never less than the 30 s default rate. The rate aims at 101 % of
+  // budget; never less than the 30 s default rate. The first aim is 101 % of
   // maxBytes because two-pass veryslow lands 1.5 to 3 % under its target on
   // these masters (ccw-w1-d3-am, 08/11/2026: 2303 kbps gave 7,267,490 bytes);
-  // the size check below still rejects any copy at or over maxBytes.
+  // the size check still rejects any copy at or over maxBytes.
   const seconds = Number(
     execFileSync('ffprobe', [
       '-v',
@@ -184,7 +247,7 @@ export function deliveryCopy(master: string, copy: string) {
   const kbps = Math.max(
     CCW_DELIVERY.videoKbps,
     Math.floor(
-      (CCW_DELIVERY.maxBytes * 1.01 * 8) / seconds / 1000 -
+      (CCW_DELIVERY.maxBytes * aim * 8) / seconds / 1000 -
         CCW_DELIVERY.audioKbps -
         20
     )
@@ -263,9 +326,10 @@ export function deliveryCopy(master: string, copy: string) {
   const ssim = Number(/All:([\d.]+)/.exec(ssimRes.stderr)?.[1] ?? NaN);
   const lufsMaster = integratedLufs(master);
   const lufsCopy = integratedLufs(copy);
-  const report = {
+  return {
     master,
     copy,
+    aim,
     bytes,
     ssim,
     lufsMaster,
@@ -275,16 +339,6 @@ export function deliveryCopy(master: string, copy: string) {
       ssim >= CCW_DELIVERY.minSsim &&
       Math.abs(lufsCopy - lufsMaster) <= CCW_DELIVERY.maxLoudnessDiffLu,
   };
-  fs.writeFileSync(
-    copy.replace(/\.mp4$/, '.json'),
-    JSON.stringify(report, null, 2)
-  );
-  if (!report.ok)
-    throw new Error(`DELIVERY COPY FAIL: ${JSON.stringify(report)}`);
-  console.log(
-    `delivery copy PASS: ${(bytes / 1e6).toFixed(2)} MB, SSIM ${ssim.toFixed(4)}, ` +
-      `${lufsCopy} vs ${lufsMaster} LUFS`
-  );
 }
 
 /**
