@@ -8,6 +8,7 @@
 import React from 'react';
 import { Composition, registerRoot } from 'remotion';
 import { CcwShortform, type CcwShortformProps } from './CcwShortform';
+import { CcwPmWorld } from './CcwPmWorld';
 
 const defaults: CcwShortformProps = {
   voice: 'voice.mp3',
@@ -36,4 +37,25 @@ const CcwRoot: React.FC = () => (
   />
 );
 
-registerRoot(CcwRoot);
+const CcwRootWithPm: React.FC = () => (
+  <>
+    <CcwRoot />
+    <Composition
+      id="CcwPmWorld"
+      component={CcwPmWorld}
+      durationInFrames={120}
+      fps={30}
+      width={1080}
+      height={1920}
+      defaultProps={{
+        scene:
+          'reference-library/carpet-cleaning/carpet-cleaning-extraction-01.webp',
+        lines: ['QUIET', 'ON PAPER'],
+        sourceTag: '5 to 8 cyclones forecast. ECMWF modelling, via ABC News',
+        caption: 'Quiet does not mean dry.',
+      }}
+    />
+  </>
+);
+
+registerRoot(CcwRootWithPm);
