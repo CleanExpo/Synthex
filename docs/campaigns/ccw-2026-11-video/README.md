@@ -19,7 +19,7 @@ the campaign landing page with this campaign's UTM tags.
 
 ## Dates
 
-16/11/2026 to 11/12/2026, Monday to Friday, two videos a day (07:00 and 17:30 AEST, Brisbane time;
+09/11/2026 to 04/12/2026, Monday to Friday, two videos a day (07:00 and 17:30 AEST, Brisbane time;
 add one hour for Sydney and Melbourne during daylight saving).
 
 ## Gates that still bind (nothing here changes them)

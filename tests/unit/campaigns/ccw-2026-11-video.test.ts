@@ -5,6 +5,7 @@
 import manifest from '@/public/reference-library/manifest.json';
 import {
   CCW_VIDEO_CAMPAIGN_SLUG,
+  CCW_VIDEO_UTM_CAMPAIGN,
   buildCcwVideoCalendarDrafts,
   ccwVideoLink,
   ccwVideoPlacementLinks,
@@ -19,7 +20,7 @@ const ctx = {
 };
 
 describe('SYN-1404 CCW video campaign funnel wiring', () => {
-  it('has 40 slots, two on each weekday from 16/11/2026 to 11/12/2026', () => {
+  it('has 40 slots, two on each weekday from 09/11/2026 to 04/12/2026', () => {
     expect(ccwVideoSlots).toHaveLength(40);
     const perDay = new Map<string, number>();
     for (const s of ccwVideoSlots)
@@ -31,8 +32,8 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
       expect(d.getUTCDay()).toBeGreaterThanOrEqual(1);
       expect(d.getUTCDay()).toBeLessThanOrEqual(5);
       expect(
-        d >= new Date(Date.UTC(2026, 10, 16)) &&
-          d < new Date(Date.UTC(2026, 11, 12))
+        d >= new Date(Date.UTC(2026, 10, 9)) &&
+          d < new Date(Date.UTC(2026, 11, 5))
       ).toBe(true);
     }
   });
@@ -49,11 +50,11 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
   it('stores AEST wall-clock time, matching the EOFY convention', () => {
     const first = ccwVideoSlots.find(s => s.id === 'ccw-w1-d1-am')!;
     expect(ccwVideoScheduledAt(first).toISOString()).toBe(
-      '2026-11-16T07:00:00.000Z'
+      '2026-11-09T07:00:00.000Z'
     );
     const last = ccwVideoSlots.find(s => s.id === 'ccw-w4-d5-pm')!;
     expect(ccwVideoScheduledAt(last).toISOString()).toBe(
-      '2026-12-11T17:30:00.000Z'
+      '2026-12-04T17:30:00.000Z'
     );
   });
 
@@ -62,9 +63,11 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
       expect(s.landingUrl).toBe(ccwVideoLink(s, s.channels[0]));
       const u = new URL(s.landingUrl);
       expect(u.origin).toBe('https://ccwonline.com.au');
-      expect(u.searchParams.get('utm_campaign')).toBe(CCW_VIDEO_CAMPAIGN_SLUG);
-      expect(u.searchParams.get('utm_content')).toBe(s.id);
-      expect(u.searchParams.get('utm_medium')).toBe('organic_social');
+      expect(u.searchParams.get('utm_campaign')).toBe(
+        'ccw-2026-11-storm-season'
+      );
+      expect(u.searchParams.get('utm_content')).toBe(s.id.replace('ccw-', ''));
+      expect(u.searchParams.get('utm_medium')).toBe('social');
     }
   });
 
@@ -84,16 +87,39 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
       const paid = new URL(p.boostedCta);
       for (const u of [fb, story, paid, new URL(p.instagramBio)]) {
         expect(`${u.origin}${u.pathname}`).toBe(s.landingBase);
-        expect(u.searchParams.get('utm_campaign')).toBe('ccw-video-2026-11');
+        expect(u.searchParams.get('utm_campaign')).toBe(CCW_VIDEO_UTM_CAMPAIGN);
       }
+      const short = s.id.replace('ccw-', '');
       expect(fb.searchParams.get('utm_source')).toBe('facebook');
-      expect(fb.searchParams.get('utm_content')).toBe(s.id);
+      expect(fb.searchParams.get('utm_medium')).toBe('social');
+      expect(fb.searchParams.get('utm_content')).toBe(short);
       expect(story.searchParams.get('utm_source')).toBe('instagram');
-      expect(story.searchParams.get('utm_content')).toBe(`${s.id}-story`);
+      expect(story.searchParams.get('utm_content')).toBe(short);
+      expect(new URL(p.instagramBio).searchParams.get('utm_content')).toBe(
+        `${short}-bio`
+      );
       expect(paid.searchParams.get('utm_medium')).toBe('paid_social');
       // Every landing page is a real page, not the bare home page.
       expect(new URL(s.landingBase).pathname).not.toBe('/');
     }
+  });
+
+  it('sends the first post (approved v3) to the structural drying page with the exact links Toby has', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d1-am')!;
+    expect(s.date).toBe('09/11/2026');
+    expect(s.approvedRender).toContain('0e687840f');
+    const p = ccwVideoPlacementLinks(s);
+    const base = 'https://ccwonline.com.au/collections/structural-drying';
+    const tail = 'utm_campaign=ccw-2026-11-storm-season';
+    expect(p.facebookReelCaption).toBe(
+      `${base}?utm_source=facebook&utm_medium=social&${tail}&utm_content=w1-d1-am`
+    );
+    expect(p.instagramBio).toBe(
+      `${base}?utm_source=instagram&utm_medium=social&${tail}&utm_content=w1-d1-am-bio`
+    );
+    expect(p.boostedCta).toBe(
+      `${base}?utm_source=facebook&utm_medium=paid_social&${tail}&utm_content=w1-d1-am`
+    );
   });
 
   it('covers every funnel stage', () => {
@@ -142,7 +168,7 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
       expect(d.metadata.toby).toBe('not_sent');
       expect(d.tags).toContain(CCW_VIDEO_CAMPAIGN_SLUG);
       expect(d.organizationId).toBe('org_ccw');
-      expect(d.content).toContain('utm_campaign=ccw-video-2026-11');
+      expect(d.content).toContain('utm_campaign=ccw-2026-11-storm-season');
       expect(Object.keys(d.metadata.links).sort()).toEqual(
         [...d.platforms].sort()
       );

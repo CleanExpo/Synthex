@@ -1,15 +1,15 @@
 # ccw-w1-d4-am: Not all water is the same
 
-| Field             | Value                                                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Date and time     | Thursday 19/11/2026, 07:00 AEST                                                                                                            |
-| Funnel stage      | awareness                                                                                                                                  |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                        |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                  |
-| Call to action    | Read CCW's guides                                                                                                                          |
-| Landing link      | https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d4-am |
-| Calendar slot key | 2026-11-19-ccw-video-1                                                                                                                     |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                            |
+| Field             | Value                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Date and time     | Thursday 12/11/2026, 07:00 AEST                                                                                                       |
+| Funnel stage      | awareness                                                                                                                             |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                   |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                             |
+| Call to action    | Read CCW's guides                                                                                                                     |
+| Landing link      | https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-am |
+| Calendar slot key | 2026-11-19-ccw-video-1                                                                                                                |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                       |
 
 ## Voiceover
 

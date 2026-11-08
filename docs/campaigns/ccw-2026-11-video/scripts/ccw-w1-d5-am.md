@@ -1,15 +1,15 @@
 # ccw-w1-d5-am: Count units per vehicle
 
-| Field             | Value                                                                                                                                                 |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Date and time     | Friday 20/11/2026, 07:00 AEST                                                                                                                         |
-| Funnel stage      | consideration                                                                                                                                         |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                                   |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                             |
-| Call to action    | See the air movers                                                                                                                                    |
-| Landing link      | https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d5-am |
-| Calendar slot key | 2026-11-20-ccw-video-1                                                                                                                                |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                       |
+| Field             | Value                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Date and time     | Friday 13/11/2026, 07:00 AEST                                                                                                                    |
+| Funnel stage      | consideration                                                                                                                                    |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                              |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                        |
+| Call to action    | See the air movers                                                                                                                               |
+| Landing link      | https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d5-am |
+| Calendar slot key | 2026-11-20-ccw-video-1                                                                                                                           |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                  |
 
 ## Voiceover
 

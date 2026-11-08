@@ -1,15 +1,15 @@
 # ccw-w3-d4-am: A water softener in the van
 
-| Field             | Value                                                                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Date and time     | Thursday 03/12/2026, 07:00 AEST                                                                                                                  |
-| Funnel stage      | consideration                                                                                                                                    |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                              |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                        |
-| Call to action    | Ask CCW about water softeners                                                                                                                    |
-| Landing link      | https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d4-am |
-| Calendar slot key | 2026-12-03-ccw-video-1                                                                                                                           |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                  |
+| Field             | Value                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date and time     | Thursday 26/11/2026, 07:00 AEST                                                                                                             |
+| Funnel stage      | consideration                                                                                                                               |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                         |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                   |
+| Call to action    | Ask CCW about water softeners                                                                                                               |
+| Landing link      | https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w3-d4-am |
+| Calendar slot key | 2026-12-03-ccw-video-1                                                                                                                      |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                             |
 
 ## Voiceover
 

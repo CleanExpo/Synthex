@@ -1,15 +1,15 @@
 # ccw-w1-d1-pm: A quiet forecast is not a dry season
 
-| Field             | Value                                                                                                                                                 |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Date and time     | Monday 16/11/2026, 17:30 AEST                                                                                                                         |
-| Funnel stage      | awareness                                                                                                                                             |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                                   |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                             |
-| Call to action    | See the drying range                                                                                                                                  |
-| Landing link      | https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w1-d1-pm |
-| Calendar slot key | 2026-11-16-ccw-video-2                                                                                                                                |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                       |
+| Field             | Value                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Date and time     | Monday 09/11/2026, 17:30 AEST                                                                                                                    |
+| Funnel stage      | awareness                                                                                                                                        |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                              |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                        |
+| Call to action    | See the drying range                                                                                                                             |
+| Landing link      | https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d1-pm |
+| Calendar slot key | 2026-11-16-ccw-video-2                                                                                                                           |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                  |
 
 ## Voiceover
 

@@ -1,15 +1,15 @@
 # ccw-w3-d2-am: Check your glides
 
-| Field             | Value                                                                                                                                                             |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Date and time     | Tuesday 01/12/2026, 07:00 AEST                                                                                                                                    |
-| Funnel stage      | retention                                                                                                                                                         |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                                               |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                                         |
-| Call to action    | See glides and spares                                                                                                                                             |
-| Landing link      | https://ccwonline.com.au/collections/sapphire-scientific-1?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d2-am |
-| Calendar slot key | 2026-12-01-ccw-video-1                                                                                                                                            |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                                   |
+| Field             | Value                                                                                                                                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Date and time     | Tuesday 24/11/2026, 07:00 AEST                                                                                                                               |
+| Funnel stage      | retention                                                                                                                                                    |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                                          |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                                    |
+| Call to action    | See glides and spares                                                                                                                                        |
+| Landing link      | https://ccwonline.com.au/collections/sapphire-scientific-1?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w3-d2-am |
+| Calendar slot key | 2026-12-01-ccw-video-1                                                                                                                                       |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                              |
 
 ## Voiceover
 

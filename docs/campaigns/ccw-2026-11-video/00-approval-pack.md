@@ -1,6 +1,6 @@
 # CCW storm-ready video campaign: approval pack for Phill
 
-SYN-1404 | Prepared 08/11/2026 | 40 videos, 16/11/2026 to 11/12/2026 | No charge to Toby this month
+SYN-1404 | Prepared 08/11/2026 | 40 videos, 09/11/2026 to 04/12/2026 | No charge to Toby this month
 
 ## What it is
 
@@ -11,17 +11,17 @@ same-day parts, prices shown online, three company-run sites, and Toby's own exp
 
 | Week | Dates          | Theme                                 | Main goal                    |
 | ---- | -------------- | ------------------------------------- | ---------------------------- |
-| 1    | 16/11 to 20/11 | Storm season is open                  | Get noticed                  |
-| 2    | 23/11 to 27/11 | Did you know, what you may not know   | Teach and build trust        |
-| 3    | 30/11 to 04/12 | Service your equipment before the wet | Calls about faults and parts |
-| 4    | 07/12 to 11/12 | Ready for the wet                     | Kit sales, finance, visits   |
+| 1    | 09/11 to 13/11 | Storm season is open                  | Get noticed                  |
+| 2    | 16/11 to 20/11 | Did you know, what you may not know   | Teach and build trust        |
+| 3    | 23/11 to 27/11 | Service your equipment before the wet | Calls about faults and parts |
+| 4    | 30/11 to 04/12 | Ready for the wet                     | Kit sales, finance, visits   |
 
 Funnel mix: 9 awareness, 15 consideration, 7 conversion, 9 retention.
 
 ## How we will know it worked
 
 Every video carries a tappable link to a ccwonline.com.au page (Facebook caption, Instagram Story
-sticker, boosted-post button), tagged `utm_campaign=ccw-video-2026-11` and `utm_content=<video id>`.
+sticker, boosted-post button), tagged as Toby has them (`utm_campaign=ccw-2026-11-storm-season`).
 Visits land in Toby's analytics, not Synthex. The 08/11 audit (`03-tracking-audit.md`) found GA4 and
 the Meta Pixel installed, but two GA4 properties, no Organization or WebSite schema, and Meta cart
 events unconfirmed (A7). Calls to 1800 686 869 cannot be tagged; ask Toby's team to note "saw the video".
@@ -36,15 +36,15 @@ events unconfirmed (A7). Calls to 1800 686 869 cannot be tagged; ask Toby's team
 
 ## What needs your yes (each is separate)
 
-| #   | Approve                                                    | Why it waits on you                                                                                                                                                                                                                                                                                           |
-| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A1  | Render method: no render spend (was about US$348)          | Remotion motion over CCW's own photos; Margot on the existing ElevenLabs plan. 16/11 proof rendered. Any later paid shot (US$0.2419 a second) comes to you first. Trade-off: moving product shots, no on-camera Margot, until Toby sends clips. Remotion is free up to 3 employees; confirm Unite Group fits. |
-| A2  | Load the 40 draft slots into Synthex for CCW (`--execute`) | Production database write. Confirm the CCW organisation slug (`ccw` or `ccwarehouse`).                                                                                                                                                                                                                        |
-| A3  | Send Toby the plan and the "storm-ready check" idea        | Client contact. The check is CCW's existing phone fault-finding, framed for the season.                                                                                                                                                                                                                       |
-| A4  | Each finished batch of 10 before it posts                  | Nothing posts without you.                                                                                                                                                                                                                                                                                    |
-| A5  | Push the branch                                            | A pushed Synthex branch merges to main automatically on green. Local commits only until you say so.                                                                                                                                                                                                           |
-| A6  | Margot as CCW's voice                                      | Your brief says Margot; a repo test says client brands choose their own voice. Confirm with Toby (A3).                                                                                                                                                                                                        |
-| A7  | Tracking and schema fixes on ccwonline.com.au              | Needs Toby's admin access. Fix list and theme snippet in `03-tracking-audit.md`; we change nothing on his site.                                                                                                                                                                                               |
+| #   | Approve                                                    | Why it waits on you                                                                                                                                                                                                                                                                                                |
+| --- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A1  | Render method: no render spend (was about US$348)          | Remotion motion over CCW's own photos; Margot on the existing ElevenLabs plan. 09/11 video approved (v3). Any later paid shot (US$0.2419 a second) comes to you first. Trade-off: moving product shots, no on-camera Margot, until Toby sends clips. Remotion is free up to 3 employees; confirm Unite Group fits. |
+| A2  | Load the 40 draft slots into Synthex for CCW (`--execute`) | Production database write. Confirm the CCW organisation slug (`ccw` or `ccwarehouse`).                                                                                                                                                                                                                             |
+| A3  | Send Toby the plan and the "storm-ready check" idea        | Client contact. The check is CCW's existing phone fault-finding, framed for the season.                                                                                                                                                                                                                            |
+| A4  | Each finished batch of 10 before it posts                  | Nothing posts without you.                                                                                                                                                                                                                                                                                         |
+| A5  | Push the branch                                            | A pushed Synthex branch merges to main automatically on green. Local commits only until you say so.                                                                                                                                                                                                                |
+| A6  | Margot as CCW's voice                                      | Your brief says Margot; a repo test says client brands choose their own voice. Confirm with Toby (A3).                                                                                                                                                                                                             |
+| A7  | Tracking and schema fixes on ccwonline.com.au              | Needs Toby's admin access. Fix list and theme snippet in `03-tracking-audit.md`; we change nothing on his site.                                                                                                                                                                                                    |
 
 ## What Toby must confirm before anything posts
 
@@ -61,7 +61,7 @@ events unconfirmed (A7). Calls to 1800 686 869 cannot be tagged; ask Toby's team
 
 | Item                                                             | Blocked on                                                                                                               | Owner                        |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| Renders                                                          | Proof for 16/11 rendered locally (a preview, not approved); the other 38 videos need their shot plans                    | This lane                    |
+| Renders                                                          | w1-d1-am v3 approved by Phill for 09/11 (commit 0e687840f); w1-d1-pm next under the story-first bar; 38 need shot plans  | This lane                    |
 | CCW logo for compositing                                         | A full logo set is in `public/logos/ccw/` (`primary.svg`, `inverted.svg`); Toby confirms it is his current logo          | Toby, via Phill (part of A3) |
 | Gold short-form batch (the quality bar in the `sda-video` skill) | Lives on the MacBook, not this Mac                                                                                       | This lane, on the MacBook    |
 | Review findings (non-blocking)                                   | One independent review passed with no blocking finding on 08/11/2026; smaller items are in SYN-1405                      | This lane                    |

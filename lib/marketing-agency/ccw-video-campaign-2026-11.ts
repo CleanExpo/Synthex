@@ -1,5 +1,5 @@
 /**
- * CCW 4-week short-form video campaign (SYN-1404), 16/11/2026 to 11/12/2026.
+ * CCW 4-week short-form video campaign (SYN-1404), 09/11/2026 to 04/12/2026.
  *
  * The plan data lives beside this file (ccw-video-campaign-2026-11.calendar.json;
  * docs/ is excluded from the Vercel upload). Scripts and the pack are in
@@ -10,8 +10,10 @@
  * CalendarPost payload. Drafts are blocked from external publishing and wait
  * for Phill's batch approval; nothing here publishes or writes to a database.
  *
- * Measurement: every link carries utm_campaign=ccw-video-2026-11 and
- * utm_content=<video id>, so visits and enquiries on ccwonline.com.au can be
+ * Measurement: every link uses the tags Toby already has (Phill, 08/11/2026):
+ * utm_source=facebook|instagram|..., utm_medium=social (paid_social when
+ * boosted), utm_campaign=ccw-2026-11-storm-season and utm_content=<short id>
+ * such as w1-d1-am (profile links add -bio). Visits on ccwonline.com.au can be
  * traced to the exact video and channel.
  */
 
@@ -21,7 +23,9 @@ import calendar from './ccw-video-campaign-2026-11.calendar.json';
 
 export const CCW_VIDEO_CAMPAIGN_SLUG = 'ccw-video-2026-11';
 export const CCW_VIDEO_CAMPAIGN_NAME = 'CCW Storm-Ready Video Campaign 2026';
-export const CCW_VIDEO_UTM_MEDIUM = 'organic_social';
+/** utm_campaign on every link; the internal campaign slug stays CCW_VIDEO_CAMPAIGN_SLUG. */
+export const CCW_VIDEO_UTM_CAMPAIGN = 'ccw-2026-11-storm-season';
+export const CCW_VIDEO_UTM_MEDIUM = 'social';
 /** CCW's live shop. ccwarehouse.com.au is email only (teardown, 08/11/2026). */
 export const CCW_LANDING_ORIGIN = 'https://ccwonline.com.au';
 
@@ -62,6 +66,8 @@ export const ccwVideoSlotSchema = z.object({
   lengthSeconds: z.number().positive().max(60),
   voice: z.string().min(1),
   status: z.string().min(1),
+  /** The approved, locked render for this slot; never re-render it. */
+  approvedRender: z.string().min(1).optional(),
 });
 
 export type CcwVideoSlot = z.infer<typeof ccwVideoSlotSchema>;
@@ -72,6 +78,11 @@ export const ccwVideoSlots: CcwVideoSlot[] = z
   .length(40)
   .parse(calendar.videos);
 
+/** utm_content for a video: its id without the ccw- prefix (w1-d1-am). */
+export function ccwVideoShortId(slot: Pick<CcwVideoSlot, 'id'>): string {
+  return slot.id.replace(/^ccw-/, '');
+}
+
 /** The tracked link for one video on one channel. */
 export function ccwVideoLink(
   slot: CcwVideoSlot,
@@ -80,8 +91,8 @@ export function ccwVideoLink(
   return buildUtmUrl(slot.landingBase, {
     source: channel,
     medium: CCW_VIDEO_UTM_MEDIUM,
-    campaign: CCW_VIDEO_CAMPAIGN_SLUG,
-    content: slot.id,
+    campaign: CCW_VIDEO_UTM_CAMPAIGN,
+    content: ccwVideoShortId(slot),
   });
 }
 
@@ -111,18 +122,15 @@ export function ccwVideoPlacementLinks(
     buildUtmUrl(slot.landingBase, {
       source,
       medium,
-      campaign: CCW_VIDEO_CAMPAIGN_SLUG,
+      campaign: CCW_VIDEO_UTM_CAMPAIGN,
       content,
     });
+  const id = ccwVideoShortId(slot);
   return {
-    facebookReelCaption: link('facebook', CCW_VIDEO_UTM_MEDIUM, slot.id),
-    instagramStorySticker: link(
-      'instagram',
-      CCW_VIDEO_UTM_MEDIUM,
-      `${slot.id}-story`
-    ),
-    instagramBio: link('instagram', CCW_VIDEO_UTM_MEDIUM, `${slot.id}-bio`),
-    boostedCta: link('facebook', CCW_VIDEO_UTM_MEDIUM_PAID, slot.id),
+    facebookReelCaption: link('facebook', CCW_VIDEO_UTM_MEDIUM, id),
+    instagramStorySticker: link('instagram', CCW_VIDEO_UTM_MEDIUM, id),
+    instagramBio: link('instagram', CCW_VIDEO_UTM_MEDIUM, `${id}-bio`),
+    boostedCta: link('facebook', CCW_VIDEO_UTM_MEDIUM_PAID, id),
   };
 }
 

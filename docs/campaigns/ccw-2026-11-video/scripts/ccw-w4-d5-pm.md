@@ -1,15 +1,15 @@
 # ccw-w4-d5-pm: Five checks before the wet
 
-| Field             | Value                                                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Date and time     | Friday 11/12/2026, 17:30 AEST                                                                                                              |
-| Funnel stage      | retention                                                                                                                                  |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                        |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                  |
-| Call to action    | Read more on the CCW blog                                                                                                                  |
-| Landing link      | https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d5-pm |
-| Calendar slot key | 2026-12-11-ccw-video-2                                                                                                                     |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                            |
+| Field             | Value                                                                                                                                 |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Date and time     | Friday 04/12/2026, 17:30 AEST                                                                                                         |
+| Funnel stage      | retention                                                                                                                             |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                   |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                             |
+| Call to action    | Read more on the CCW blog                                                                                                             |
+| Landing link      | https://ccwonline.com.au/blogs/news?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w4-d5-pm |
+| Calendar slot key | 2026-12-11-ccw-video-2                                                                                                                |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                       |
 
 ## Voiceover
 

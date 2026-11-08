@@ -1,15 +1,15 @@
 # ccw-w3-d5-pm: Last call before the wet
 
-| Field             | Value                                                                                                                                            |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Date and time     | Friday 04/12/2026, 17:30 AEST                                                                                                                    |
-| Funnel stage      | conversion                                                                                                                                       |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                              |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                        |
-| Call to action    | Call CCW on 1800 686 869                                                                                                                         |
-| Landing link      | https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d5-pm |
-| Calendar slot key | 2026-12-04-ccw-video-2                                                                                                                           |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                  |
+| Field             | Value                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date and time     | Friday 27/11/2026, 17:30 AEST                                                                                                               |
+| Funnel stage      | conversion                                                                                                                                  |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                         |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                   |
+| Call to action    | Call CCW on 1800 686 869                                                                                                                    |
+| Landing link      | https://ccwonline.com.au/pages/contact-us?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w3-d5-pm |
+| Calendar slot key | 2026-12-04-ccw-video-2                                                                                                                      |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                             |
 
 ## Voiceover
 

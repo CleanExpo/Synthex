@@ -1,15 +1,15 @@
 # ccw-w3-d3-pm: Air mover check in two minutes
 
-| Field             | Value                                                                                                                                                 |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Date and time     | Wednesday 02/12/2026, 17:30 AEST                                                                                                                      |
-| Funnel stage      | retention                                                                                                                                             |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                                   |
-| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                             |
-| Call to action    | See the air movers                                                                                                                                    |
-| Landing link      | https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w3-d3-pm |
-| Calendar slot key | 2026-12-02-ccw-video-2                                                                                                                                |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                       |
+| Field             | Value                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Date and time     | Wednesday 25/11/2026, 17:30 AEST                                                                                                                 |
+| Funnel stage      | retention                                                                                                                                        |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                              |
+| Channels          | Instagram Reels, Facebook Reels, YouTube Shorts, LinkedIn                                                                                        |
+| Call to action    | See the air movers                                                                                                                               |
+| Landing link      | https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w3-d3-pm |
+| Calendar slot key | 2026-12-02-ccw-video-2                                                                                                                           |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                  |
 
 ## Voiceover
 

@@ -1,15 +1,15 @@
 # ccw-w4-d4-pm: Have the kit before the work
 
-| Field             | Value                                                                                                                                                |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Date and time     | Thursday 10/12/2026, 17:30 AEST                                                                                                                      |
-| Funnel stage      | conversion                                                                                                                                           |
-| Length            | 30 s, 1080x1920, captions burned in                                                                                                                  |
-| Channels          | LinkedIn, Facebook Reels, Instagram Reels, YouTube Shorts                                                                                            |
-| Call to action    | See finance options                                                                                                                                  |
-| Landing link      | https://ccwonline.com.au/pages/finance-options?utm_source=linkedin&utm_medium=organic_social&utm_campaign=ccw-video-2026-11&utm_content=ccw-w4-d4-pm |
-| Calendar slot key | 2026-12-10-ccw-video-2                                                                                                                               |
-| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                      |
+| Field             | Value                                                                                                                                           |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Date and time     | Thursday 03/12/2026, 17:30 AEST                                                                                                                 |
+| Funnel stage      | conversion                                                                                                                                      |
+| Length            | 30 s, 1080x1920, captions burned in                                                                                                             |
+| Channels          | LinkedIn, Facebook Reels, Instagram Reels, YouTube Shorts                                                                                       |
+| Call to action    | See finance options                                                                                                                             |
+| Landing link      | https://ccwonline.com.au/pages/finance-options?utm_source=linkedin&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w4-d4-pm |
+| Calendar slot key | 2026-12-10-ccw-video-2                                                                                                                          |
+| Production chain  | `sda-video` skill, steps 1 to 9                                                                                                                 |
 
 ## Voiceover
 

@@ -86,7 +86,7 @@ async function main() {
       data: {
         name: CCW_VIDEO_CAMPAIGN_NAME,
         description:
-          'SYN-1404: 40 short-form videos, 16/11/2026 to 11/12/2026. No charge to CCW this month.',
+          'SYN-1404: 40 short-form videos, 09/11/2026 to 04/12/2026. No charge to CCW this month.',
         platform: 'multi',
         status: 'draft',
         userId: owner.id,
