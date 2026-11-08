@@ -8,14 +8,14 @@ the campaign landing page with this campaign's UTM tags.
 
 ## What is in this folder
 
-| File                        | What it is                                                             |
-| --------------------------- | ---------------------------------------------------------------------- |
-| `00-approval-pack.md`       | One page for Phill: what is ready, what needs his yes, what is blocked |
-| `01-competitor-teardown.md` | Advanced SE versus CCW, with sources                                   |
-| `02-calendar.md`            | The 40 videos as a readable table                                      |
-| `calendar.json`             | The same 40 videos as data (read by the funnel config and the test)    |
-| `03-rule-score.md`          | The 12 rules every script is scored against                            |
-| `scripts/<id>.md`           | One script, beat map and shot list per video                           |
+| File                                                            | What it is                                                             |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `00-approval-pack.md`                                           | One page for Phill: what is ready, what needs his yes, what is blocked |
+| `01-competitor-teardown.md`                                     | Advanced SE versus CCW, with sources                                   |
+| `02-calendar.md`                                                | The 40 videos as a readable table                                      |
+| `lib/marketing-agency/ccw-video-campaign-2026-11.calendar.json` | The same 40 videos as data, kept beside the code that reads it         |
+| `03-rule-score.md`                                              | The 12 rules every script is scored against                            |
+| `scripts/<id>.md`                                               | One script, beat map and shot list per video                           |
 
 ## Dates
 

@@ -21,14 +21,15 @@ Funnel mix: 9 awareness, 15 consideration, 7 conversion, 9 retention.
 ## How we will know it worked
 
 Every video links to a ccwonline.com.au page with its own tag (`utm_campaign=ccw-video-2026-11`,
-`utm_content=<video id>`, `utm_source=<channel>`). Toby's Shopify analytics then shows visits and
-sales per video and channel. Calls to 1800 686 869 cannot be tagged; ask Toby's team to note
-"saw the video" on phone enquiries.
+`utm_content=<video id>`, `utm_source=<channel>`). The visits land on Toby's own Shopify shop, so
+the results sit in his analytics, not in Synthex. Whether his reports break visits and sales down by
+these tags is `[TOBY TO CONFIRM]`; we need him to share that report weekly or give us read access.
+Calls to 1800 686 869 cannot be tagged; ask Toby's team to note "saw the video" on phone enquiries.
 
 ## What is ready
 
 - Competitor teardown with sources: `01-competitor-teardown.md`
-- 40-video calendar: `02-calendar.md` and `calendar.json`
+- 40-video calendar: `02-calendar.md` (data: `lib/marketing-agency/ccw-video-campaign-2026-11.calendar.json`)
 - 40 scripts with voiceover, shot list (picture change about every 4 seconds) and rule score: `scripts/`
 - Synthex wiring: `lib/marketing-agency/ccw-video-campaign-2026-11.ts` builds every tracked link and the
   40 draft calendar slots (blocked from publishing); unit test passes; loader script runs dry by default.
@@ -41,6 +42,8 @@ sales per video and channel. Calls to 1800 686 869 cannot be tagged; ask Toby's 
 | A2  | Load the 40 draft slots into Synthex for CCW (`--execute`)        | Production database write. Confirm the CCW organisation slug (`ccw` or `ccwarehouse`).                                                                                                                                     |
 | A3  | Send Toby the plan and the "storm-ready check" idea               | Client contact. The check is CCW's existing phone fault-finding, framed for the season.                                                                                                                                    |
 | A4  | Each finished batch of 10 before it posts                         | Nothing posts without you.                                                                                                                                                                                                 |
+| A5  | Push the branch                                                   | In Synthex a pushed branch is opened and merged to main automatically once Build and Lint pass. Until you say so this is a local commit only.                                                                              |
+| A6  | Margot as CCW's voice                                             | Your brief says Margot; a repo test note says client brands such as CCW choose their own voice. Confirm with Toby as part of A3.                                                                                           |
 
 ## What Toby must confirm before anything posts
 
@@ -69,4 +72,4 @@ blocked. Margot voices every video. Bright, moving pictures that show the result
 numbers, no prices in videos, no competitor named or shown, no other Unite Group brand in frame.
 Australian English, metric, 230 V.
 
-**Approve:** reply with the numbers you approve (for example "A1 week 1 only, A2, A3").
+**Approve:** reply with the numbers you approve (for example "A1 week 1 only, A2, A3, A5").

@@ -1,7 +1,9 @@
 /**
  * CCW 4-week short-form video campaign (SYN-1404), 16/11/2026 to 11/12/2026.
  *
- * The plan lives in docs/campaigns/ccw-2026-11-video/calendar.json. This module
+ * The plan data lives beside this file (ccw-video-campaign-2026-11.calendar.json;
+ * docs/ is excluded from the Vercel upload). Scripts and the pack are in
+ * docs/campaigns/ccw-2026-11-video/. This module
  * is the funnel wiring for it, following the CCW EOFY pattern
  * (ccw-eofy-calendar.ts): it validates the plan, builds every outbound link
  * through the canonical UTM builder, and turns each slot into a draft
@@ -15,7 +17,7 @@
 
 import { z } from 'zod';
 import { buildUtmUrl } from '@/lib/utm/build-utm-url';
-import calendar from '@/docs/campaigns/ccw-2026-11-video/calendar.json';
+import calendar from './ccw-video-campaign-2026-11.calendar.json';
 
 export const CCW_VIDEO_CAMPAIGN_SLUG = 'ccw-video-2026-11';
 export const CCW_VIDEO_CAMPAIGN_NAME = 'CCW Storm-Ready Video Campaign 2026';

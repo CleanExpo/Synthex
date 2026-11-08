@@ -1,6 +1,6 @@
 # 40-video calendar (16/11/2026 to 11/12/2026)
 
-Times AEST (Brisbane). Two videos a weekday, 30 seconds each, voiced by Margot. Source of truth: `calendar.json`.
+Times AEST (Brisbane). Two videos a weekday, 30 seconds each, voiced by Margot. Source of truth: `lib/marketing-agency/ccw-video-campaign-2026-11.calendar.json`.
 
 Funnel stages: awareness (new to the topic), consideration (choosing kit), conversion (call, finance, visit), retention (care for kit already owned).
 
