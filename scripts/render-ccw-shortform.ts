@@ -160,13 +160,36 @@ function integratedLufs(file: string): number {
 /** Two-pass x264 copy of the master; throws unless size, SSIM and loudness pass. */
 export function deliveryCopy(master: string, copy: string) {
   const log = path.join(path.dirname(copy), `${path.basename(copy)}-2pass`);
+  // A shorter video can spend more bits per second inside the same size
+  // budget (95 % of maxBytes); never less than the 30 s default rate.
+  const seconds = Number(
+    execFileSync('ffprobe', [
+      '-v',
+      'error',
+      '-show_entries',
+      'format=duration',
+      '-of',
+      'csv=p=0',
+      master,
+    ])
+      .toString()
+      .trim()
+  );
+  const kbps = Math.max(
+    CCW_DELIVERY.videoKbps,
+    Math.floor(
+      (CCW_DELIVERY.maxBytes * 0.95 * 8) / seconds / 1000 -
+        CCW_DELIVERY.audioKbps -
+        20
+    )
+  );
   const v = [
     '-c:v',
     'libx264',
     '-preset',
     'slow',
     '-b:v',
-    `${CCW_DELIVERY.videoKbps}k`,
+    `${kbps}k`,
     '-pix_fmt',
     'yuv420p',
     '-passlogfile',
@@ -282,7 +305,73 @@ export function prepareCrop<
   return { ...shot, images: [rel, ...shot.images.slice(1)] };
 }
 
-function main() {
+/**
+ * Cut an owned catalogue photo out of its white background: flood fill from
+ * the border through near-white pixels (no AI, no generated pixels), soften
+ * the edge by one pixel, trim to the product. Writes a PNG with alpha.
+ */
+export async function cutout(src: string, out: string) {
+  const sharp = (await import('sharp')).default;
+  const { data, info } = await sharp(src)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width: W, height: H } = info;
+  const white = (p: number) =>
+    data[p * 4] > 236 && data[p * 4 + 1] > 236 && data[p * 4 + 2] > 236;
+  const bg = new Uint8Array(W * H);
+  const stack: number[] = [];
+  for (let x = 0; x < W; x++) stack.push(x, (H - 1) * W + x);
+  for (let y = 0; y < H; y++) stack.push(y * W, y * W + W - 1);
+  while (stack.length) {
+    const p = stack.pop() as number;
+    if (bg[p] || !white(p)) continue;
+    bg[p] = 1;
+    const x = p % W;
+    if (x > 0) stack.push(p - 1);
+    if (x < W - 1) stack.push(p + 1);
+    if (p >= W) stack.push(p - W);
+    if (p < W * (H - 1)) stack.push(p + W);
+  }
+  for (let p = 0; p < W * H; p++) {
+    if (bg[p]) {
+      data[p * 4 + 3] = 0;
+      continue;
+    }
+    // Edge pixels next to the background are half transparent.
+    const x = p % W;
+    const edge =
+      (x > 0 && bg[p - 1]) ||
+      (x < W - 1 && bg[p + 1]) ||
+      (p >= W && bg[p - W]) ||
+      (p < W * (H - 1) && bg[p + W]);
+    if (edge) data[p * 4 + 3] = 140;
+  }
+  await sharp(data, { raw: { width: W, height: H, channels: 4 } })
+    .trim({ threshold: 1 })
+    .png()
+    .toFile(out);
+}
+
+/** Placed products on a floor shot become prepared cut-outs. */
+export async function prepareCutouts<
+  S extends { images: string[]; place?: { img: number }[] },
+>(shot: S, pub: string): Promise<S> {
+  if (!shot.place?.length) return shot;
+  const images = [...shot.images];
+  for (const idx of new Set(shot.place.map(u => u.img))) {
+    const rel = `prep/${path.basename(shot.images[idx], '.webp')}-cut.png`;
+    const out = path.join(pub, rel);
+    if (!fs.existsSync(out)) {
+      fs.mkdirSync(path.dirname(out), { recursive: true });
+      await cutout(path.join(pub, shot.images[idx]), out);
+    }
+    images[idx] = rel;
+  }
+  return { ...shot, images };
+}
+
+async function main() {
   const video = arg('--video');
   const work = path.resolve(arg('--work'));
   if (process.argv.includes('--deliver-only')) {
@@ -311,7 +400,9 @@ function main() {
     fs.mkdirSync(path.dirname(path.join(pub, rel)), { recursive: true });
     fs.copyFileSync(src, path.join(pub, rel));
   }
-  const shots = timed.map(s => prepareCrop(s, pub));
+  const shots = [];
+  for (const s of timed)
+    shots.push(await prepareCutouts(prepareCrop(s, pub), pub));
   fs.mkdirSync(path.join(pub, 'logos/ccw'), { recursive: true });
   fs.copyFileSync(
     path.join(root, 'public/logos/ccw/primary.svg'),
@@ -385,4 +476,8 @@ function main() {
 }
 
 // Run only when called as a script, so the checks can be imported.
-if (process.argv[1]?.endsWith('render-ccw-shortform.ts')) main();
+if (process.argv[1]?.endsWith('render-ccw-shortform.ts'))
+  main().catch(e => {
+    console.error(e);
+    process.exit(1);
+  });

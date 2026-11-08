@@ -901,6 +901,7 @@ function ShotView({
           sourceSlip={shot.sourceSlip}
           rippleTo={shot.rippleTo}
           rippleFrom={shot.rippleFrom}
+          place={shot.place?.map(u => ({ ...u, src: shot.images[u.img] }))}
         />
       );
     case 'end':

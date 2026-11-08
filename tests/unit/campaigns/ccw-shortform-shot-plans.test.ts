@@ -46,11 +46,33 @@ function fakeAlignment(text: string) {
 }
 
 describe('SYN-1404 CCW zero-cost shot plans', () => {
-  it('covers the week 1 day 1 proof videos', () => {
+  it('covers the week 1 videos built so far', () => {
     expect(CCW_SHOT_PLANS.map(p => p.videoId).sort()).toEqual([
       'ccw-w1-d1-am',
       'ccw-w1-d1-pm',
+      'ccw-w1-d2-am',
     ]);
+  });
+
+  it('never uses one photo in more than two shots of a video', () => {
+    for (const plan of CCW_SHOT_PLANS) {
+      // The two day 1 cuts were built before the rule and stay unchanged.
+      if (plan.videoId.startsWith('ccw-w1-d1-')) continue;
+      const uses = new Map<string, number>();
+      for (const shot of plan.shots)
+        for (const rel of new Set(shot.images))
+          uses.set(rel, (uses.get(rel) ?? 0) + 1);
+      for (const [rel, n] of uses) expect([rel, n <= 2]).toEqual([rel, true]);
+    }
+  });
+
+  it('places products only from the shot images, never the scene itself', () => {
+    for (const plan of CCW_SHOT_PLANS)
+      for (const shot of plan.shots)
+        for (const u of shot.place ?? []) {
+          expect(u.img).toBeGreaterThanOrEqual(1);
+          expect(u.img).toBeLessThan(shot.images.length);
+        }
   });
 
   it('uses only owned photos that the manifest lists for the named subject', () => {

@@ -40,6 +40,15 @@ export type CcwPmWorldProps = {
   rippleFrom?: number;
   /** Render text boxes white on black for the safe-zone check. */
   textMask?: boolean;
+  /** Owned product cut-outs standing on the floor (prepared PNGs). */
+  place?: {
+    src: string;
+    x: number;
+    y: number;
+    w: number;
+    flip?: boolean;
+    at?: number;
+  }[];
 };
 
 export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
@@ -51,6 +60,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   rippleTo = 0,
   rippleFrom = 0.35,
   textMask,
+  place = [],
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig();
@@ -112,6 +122,62 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
           transformOrigin: '50% 62%',
         }}
       />
+
+      {/* Owned products standing on the floor. The layer shares the photo's
+          push (same origin on screen), so the units stay planted. */}
+      {place.length ? (
+        <AbsoluteFill
+          style={{
+            transform: `scale(${push})`,
+            transformOrigin: '540px 1213.44px',
+          }}
+        >
+          {place.map((u, i) => {
+            const k = interpolate(
+              t,
+              [u.at ?? -1, (u.at ?? -1) + 0.35],
+              [0, 1],
+              {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              }
+            );
+            const drop = (1 - ease(k)) * -90;
+            return (
+              <React.Fragment key={`${u.src}-${i}`}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: u.x - u.w * 0.55,
+                    top: u.y - u.w * 0.07,
+                    width: u.w * 1.1,
+                    height: u.w * 0.13,
+                    borderRadius: '50%',
+                    background:
+                      'radial-gradient(closest-side, rgba(20,16,12,0.9), rgba(20,16,12,0.5) 55%, rgba(20,16,12,0))',
+                    opacity: k,
+                  }}
+                />
+                <Img
+                  src={staticFile(u.src)}
+                  style={{
+                    position: 'absolute',
+                    left: u.x - u.w / 2,
+                    top: u.y - u.w,
+                    width: u.w,
+                    height: u.w,
+                    objectFit: 'contain',
+                    objectPosition: '50% 100%',
+                    opacity: k,
+                    filter: 'saturate(0.92) brightness(0.96) sepia(0.06)',
+                    transform: `translateY(${drop}px) scaleX(${u.flip ? -1 : 1})`,
+                  }}
+                />
+              </React.Fragment>
+            );
+          })}
+        </AbsoluteFill>
+      ) : null}
 
       {/* Floor plane: type and the source slip lie flat on the floor. */}
       {floorLines.length ? (

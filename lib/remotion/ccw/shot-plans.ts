@@ -56,6 +56,26 @@ export type CcwShot = {
   rippleFrom?: number;
   /** No burned-in captions while this shot is on (its type is the words). */
   noCaptions?: boolean;
+  /**
+   * Floor shots: owned product photos set into the scene. Each one is cut
+   * from its white catalogue background (flood fill from the border, no AI)
+   * by the render script and stands on the floor with a contact shadow.
+   */
+  place?: CcwPlaced[];
+};
+
+export type CcwPlaced = {
+  /** Index into `images` (0 is the scene, so 1 or more). */
+  img: number;
+  /** Bottom centre of the product on screen (1080x1920), in px. */
+  x: number;
+  y: number;
+  /** Width on screen in px. */
+  w: number;
+  /** Mirror the photo so the unit faces the other way. */
+  flip?: boolean;
+  /** Seconds into the shot when the unit lands (default 0: already there). */
+  at?: number;
 };
 
 export type CcwShotPlan = {
@@ -84,6 +104,16 @@ const SOURCE = '5 to 8 cyclones: ECMWF modelling, via ABC News';
 
 const img = (subject: string, id: string) =>
   `${subject.split('/')[0]}/${subject.split('/')[1]}-${id}.webp`;
+
+// ccw-w1-d2-am: owned air mover catalogue photos set into owned job rooms.
+const X400 = `${WDR}/ccw-xpower-airmover-x400-1-2hp`;
+const XLOW = `${WDR}/ccw-xpower-low-profile-airmover`;
+const VELO = `${WDR}/ccw-dri-eaz-velo-low-profile-air-mover`;
+const MINI = `${WDR}/ccw-airmover-mini-p-230at-1-4hp`;
+const GALE = `${WDR}/ccw-dry-air-gale-force-axial-airmover`;
+const ROTARY = 'carpet-cleaning/carpet-cleaning-rotary';
+/** Empty room, window and corner (rotary-04), clear of the machine. */
+const ROOM = { x: 700, y: 0, w: 405, h: 720 };
 
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
@@ -251,6 +281,135 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [SOLUTION],
         images: [scene('solution-01')],
         crop: VAN,
+      },
+    ],
+  },
+  {
+    // Concept A "Two in the middle" (blind pick, 08/11/2026). Owned air mover
+    // catalogue photos, cut from white, stand in owned job rooms; the count
+    // lies on the floor. No drying scene is implied: these are empty rooms.
+    videoId: 'ccw-w1-d2-am',
+    cta: 'Read the buying guide',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        trigger: 'Four air movers',
+        kind: 'floor',
+        subjects: [ROTARY, X400, XLOW, VELO, MINI],
+        images: [
+          `${ROTARY}-04.webp`,
+          img(X400, '20568472191129'),
+          img(XLOW, '20570371195033'),
+          img(VELO, '50827539546325'),
+          img(MINI, '29365645703'),
+        ],
+        crop: ROOM,
+        place: [
+          { img: 2, x: 290, y: 770, w: 240 },
+          { img: 4, x: 770, y: 780, w: 210 },
+          { img: 3, x: 220, y: 1520, w: 400, at: 0.1 },
+          { img: 1, x: 810, y: 1430, w: 330, flip: true, at: 0.3 },
+        ],
+        floorLines: ['4 PLACED', 'BEAT', '2 BIG'],
+        floorSize: 150,
+        noCaptions: true,
+      },
+      {
+        trigger: 'two big ones',
+        kind: 'floor',
+        subjects: [ROTARY, X800],
+        images: [`${ROTARY}-03.webp`, img(X800, '20568160796825')],
+        crop: { x: 760, y: 0, w: 405, h: 720 },
+        // Side view: the pair face each other, aimed at the middle.
+        place: [
+          { img: 1, x: 300, y: 690, w: 380, flip: true },
+          { img: 1, x: 790, y: 690, w: 380 },
+        ],
+        floorLines: ['THE', 'MIDDLE'],
+        floorSize: 150,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Evaporation',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [scene('extraction-02')],
+        crop: { x: 430, y: 0, w: 405, h: 720 },
+        floorLines: ['SURFACE', 'AREA'],
+        rippleTo: 0.3,
+        rippleFrom: 0.2,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Spread the airflow',
+        kind: 'floor',
+        subjects: [ROTARY, VELO, XLOW, GALE, MINI],
+        images: [
+          `${ROTARY}-02.webp`,
+          img(VELO, '51412267729109'),
+          img(XLOW, '7796773257275'),
+          img(GALE, '28712740978841'),
+          img(MINI, '37228686180565'),
+        ],
+        crop: { x: 500, y: 0, w: 405, h: 720 },
+        place: [
+          { img: 3, x: 250, y: 560, w: 210 },
+          { img: 2, x: 800, y: 590, w: 210, flip: true },
+          { img: 4, x: 860, y: 1250, w: 300, flip: true },
+          { img: 1, x: 250, y: 1560, w: 420 },
+        ],
+        floorLines: ['SPREAD', 'IT OUT'],
+        floorSize: 160,
+        noCaptions: true,
+      },
+      {
+        trigger: 'That is why',
+        kind: 'floor',
+        subjects: [VELO],
+        images: [img(VELO, '29703296135')],
+        crop: { x: 385, y: 196, w: 484, h: 860 },
+        kinetic: ['Unit', 'count.'],
+        noCaptions: true,
+      },
+      {
+        trigger: 'any one',
+        kind: 'floor',
+        subjects: [EXTRACTION, X800],
+        images: [scene('extraction-04'), img(X800, '20568158994585')],
+        crop: { x: 0, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 600, y: 700, w: 360 }],
+        floorLines: ['ONE', 'RATING'],
+        noCaptions: true,
+      },
+      {
+        // Callback to the hook: the four units, already placed.
+        trigger: 'Read the buying guide',
+        kind: 'floor',
+        subjects: [ROTARY, X400, XLOW, VELO, MINI],
+        images: [
+          `${ROTARY}-04.webp`,
+          img(X400, '20568472191129'),
+          img(XLOW, '20570371195033'),
+          img(VELO, '50827539546325'),
+          img(MINI, '29365645703'),
+        ],
+        crop: ROOM,
+        place: [
+          { img: 2, x: 300, y: 715, w: 200 },
+          { img: 4, x: 740, y: 720, w: 170 },
+          { img: 3, x: 220, y: 1520, w: 400 },
+          { img: 1, x: 810, y: 1430, w: 330, flip: true },
+        ],
+        floorLines: ['BUYING', 'GUIDE'],
+        floorSize: 170,
+        noCaptions: true,
+      },
+      {
+        trigger: 'page at CCW',
+        kind: 'end',
+        subjects: [ROTARY],
+        images: [`${ROTARY}-02.webp`],
+        crop: { x: 500, y: 0, w: 405, h: 720 },
       },
     ],
   },
