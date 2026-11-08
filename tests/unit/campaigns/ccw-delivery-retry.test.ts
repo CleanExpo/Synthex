@@ -7,6 +7,7 @@ import {
   CCW_DELIVERY,
   CCW_DELIVERY_AIMS,
   deliveryVideoKbps,
+  masterLoudnessOk,
   runDeliveryAttempts,
 } from '../../../scripts/render-ccw-shortform';
 
@@ -93,4 +94,17 @@ describe('CCW delivery attempts', () => {
       expect(retryBytes).toBeLessThan(CAP);
     }
   );
+
+  // ccw-w1-d5-pm, 08/11/2026: the master came out at -16.6 LUFS and nothing
+  // stopped it, because only copy-vs-master loudness was checked.
+  it.each([
+    [-16, true],
+    [-16.3, true],
+    [-15.7, true],
+    [-16.4, false],
+    [-16.6, false],
+    [-15.5, false],
+  ])('a master at %s LUFS passes the -16 +/- 0.3 bar: %s', (lufs, ok) => {
+    expect(masterLoudnessOk(lufs)).toBe(ok);
+  });
 });

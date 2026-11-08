@@ -138,6 +138,77 @@ export const CCW_DELIVERY = {
   maxLoudnessDiffLu: 0.3,
 };
 
+/**
+ * Master mix: -16 LUFS within 0.3 LU (orchestrator bar). One-pass loudnorm
+ * landed short when the voice peaks hit its -1.5 dBTP ceiling
+ * (ccw-w1-d5-pm, 08/11/2026: -16.6 LUFS), and a limiter in front of it did
+ * not help on a quiet raw mix. levelMaster measures the mix, applies the gain
+ * that reaches -16, limits peaks at -1.5 dBFS, and corrects the gain again for
+ * what the limiter took back (three rounds land on -16.0 on every master
+ * tried: d5-pm raw -22.2, d3-am -16.4, d4-pm -16.5).
+ */
+export const CCW_MASTER_LOUDNESS = { targetLufs: -16, maxOffLu: 0.3 };
+
+export function masterLoudnessOk(lufs: number): boolean {
+  return (
+    Math.abs(lufs - CCW_MASTER_LOUDNESS.targetLufs) <=
+    CCW_MASTER_LOUDNESS.maxOffLu + 1e-9
+  );
+}
+
+/** Integrated loudness of a mix, measured, then levelled; returns the final LUFS. */
+function levelMaster(raw: string, master: string): number {
+  const audio = master.replace(/\.mp4$/, '-level.m4a');
+  let gain = 0;
+  let lufs = integratedLufs(raw);
+  for (let round = 0; round < 3; round++) {
+    gain += CCW_MASTER_LOUDNESS.targetLufs - lufs;
+    execFileSync('ffmpeg', [
+      '-y',
+      '-loglevel',
+      'error',
+      '-i',
+      raw,
+      '-vn',
+      '-af',
+      `volume=${gain.toFixed(2)}dB,alimiter=limit=0.84:level=false:attack=5:release=50`,
+      '-ar',
+      '48000',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '192k',
+      audio,
+    ]);
+    lufs = integratedLufs(audio);
+    if (
+      masterLoudnessOk(lufs) &&
+      Math.abs(lufs - CCW_MASTER_LOUDNESS.targetLufs) < 0.05
+    )
+      break;
+  }
+  execFileSync('ffmpeg', [
+    '-y',
+    '-loglevel',
+    'error',
+    '-i',
+    raw,
+    '-i',
+    audio,
+    '-map',
+    '0:v',
+    '-map',
+    '1:a',
+    '-c',
+    'copy',
+    '-movflags',
+    '+faststart',
+    master,
+  ]);
+  fs.rmSync(audio);
+  return integratedLufs(master);
+}
+
 function integratedLufs(file: string): number {
   const res = spawnSync(
     'ffmpeg',
@@ -552,27 +623,13 @@ async function main() {
     ],
     { cwd: root, stdio: 'inherit' }
   );
-  execFileSync(
-    'ffmpeg',
-    [
-      '-y',
-      '-loglevel',
-      'error',
-      '-i',
-      raw,
-      '-c:v',
-      'copy',
-      '-af',
-      'loudnorm=I=-16:TP=-1.5:LRA=11',
-      '-c:a',
-      'aac',
-      '-b:a',
-      '192k',
-      path.join(out, `${video}.mp4`),
-    ],
-    { stdio: 'inherit' }
-  );
-  console.log(`rendered ${path.join(out, `${video}.mp4`)}`);
+  const lufs = levelMaster(raw, path.join(out, `${video}.mp4`));
+  if (!masterLoudnessOk(lufs))
+    throw new Error(
+      `MASTER LOUDNESS FAIL: ${lufs} LUFS, target ${CCW_MASTER_LOUDNESS.targetLufs} ` +
+        `within ${CCW_MASTER_LOUDNESS.maxOffLu} LU`
+    );
+  console.log(`rendered ${path.join(out, `${video}.mp4`)} at ${lufs} LUFS`);
   safeZoneCheck(root, work, video, props, pub);
   deliveryCopy(
     path.join(out, `${video}.mp4`),
