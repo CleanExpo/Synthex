@@ -136,6 +136,16 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     );
   });
 
+  it('gives w1-d3-am a CTA that matches its air movers landing link', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d3-am')!;
+    expect(s.cta).toBe('See the air mover range');
+    expect(s.cta).not.toMatch(/product page/i);
+    expect(s.message).not.toMatch(/plate/i);
+    expect(s.landingUrl).toBe(
+      'https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d3-am'
+    );
+  });
+
   it('covers every funnel stage', () => {
     expect(new Set(ccwVideoSlots.map(s => s.funnelStage))).toEqual(
       new Set(['awareness', 'consideration', 'conversion', 'retention'])

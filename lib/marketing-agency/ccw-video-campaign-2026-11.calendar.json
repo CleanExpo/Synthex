@@ -143,7 +143,7 @@
       "theme": "What you may not know",
       "title": "Check the plug and the frequency",
       "hook": "Two machines can look the same and still not be the same machine.",
-      "message": "Equipment built for Australia is specified at 50 Hz with an AU plug. An imported 60 Hz unit is not the same machine. Check the plate before you buy.",
+      "message": "Check the plug and the frequency. Anything specified at 50 Hz 220 V with an AU plug is built for this market. Imported units at 60 Hz are not the same machine.",
       "products": [
         "Dry Air Max Force Ventilator 50 Hz AU plug",
         "Dri-Eaz LGR BD2500 Dehumidifier 230 V"
@@ -152,7 +152,7 @@
         "water-damage-restoration/ccw-dry-air-maxforce-ventilator-50hz-220v-au-plug",
         "water-damage-restoration/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt"
       ],
-      "cta": "Check the specs on the product page",
+      "cta": "See the air mover range",
       "channels": ["instagram", "facebook", "youtube", "linkedin"],
       "landingBase": "https://ccwonline.com.au/collections/airmovers",
       "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d3-am",

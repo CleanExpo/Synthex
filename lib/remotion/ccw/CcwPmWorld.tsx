@@ -57,6 +57,7 @@ export type CcwPmWorldProps = {
     at?: number;
     clipBottom?: number;
     silhouette?: boolean;
+    outline?: boolean;
   }[];
 };
 
@@ -224,7 +225,12 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                   src={staticFile(u.src)}
                   style={{
                     ...box,
-                    filter: 'saturate(0.92) brightness(0.96) sepia(0.06)',
+                    // Outline: a flat dark shape with a pale rim, so it can
+                    // never read as a photo of a second machine.
+                    filter: u.outline
+                      ? 'brightness(0) invert(0.12) drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 3px rgba(255,255,255,1)) drop-shadow(0 0 2px rgba(255,255,255,1))'
+                      : 'saturate(0.92) brightness(0.96) sepia(0.06)',
+                    opacity: u.outline ? 0.62 : 1,
                     transform: `scaleX(${u.flip ? -1 : 1})`,
                   }}
                 />

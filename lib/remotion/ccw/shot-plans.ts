@@ -88,6 +88,12 @@ export type CcwPlaced = {
   clipBottom?: number;
   /** Add a dark, blurred copy of the outline under an angled unit as its shadow. */
   silhouette?: boolean;
+  /**
+   * Draw the unit as a flat dark outline of the owned photo, not the photo:
+   * a stand-in for a model CCW does not sell (labelled on the floor with its
+   * source). Same footing and contact shadow; nothing added to the shape.
+   */
+  outline?: boolean;
 };
 
 export type CcwShotPlan = {
@@ -132,6 +138,13 @@ const ROOM = { x: 700, y: 0, w: 405, h: 720 };
 const SCENE = (name: string) => `carpet-cleaning/carpet-cleaning-${name}.webp`;
 /** Door jamb, corner guard and carpet (result-01), seen from above. */
 const JAMB = { x: 680, y: 0, w: 405, h: 720 };
+
+// ccw-w1-d3-am: "The twin". The red Max Force stands beside a flat outline of
+// itself: the US 115 V model, which CCW's page says Dry Air lists. Every spec
+// on the floor is quoted from CCW's Max Force and BD2500 listings.
+const MAXF = `${WDR}/ccw-dry-air-maxforce-ventilator-50hz-220v-au-plug`;
+const BD2500 = `${WDR}/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt`;
+const RESULT = 'carpet-cleaning/carpet-cleaning-result';
 
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
@@ -557,6 +570,133 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: ['carpet-cleaning/carpet-cleaning-result'],
         images: [SCENE('result-01')],
         crop: JAMB,
+      },
+    ],
+  },
+  {
+    // Concept A "The twin" (blind pick 39/60, 08/11/2026). CTA matches the
+    // landing link (/collections/airmovers), orchestrator note 08/11/2026.
+    videoId: 'ccw-w1-d3-am',
+    cta: 'See the air mover range',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        // Hook: the red unit on the carpet; its flat twin cuts in beside it
+        // with a camera jolt at 0.3 s.
+        trigger: 'Two machines',
+        kind: 'floor',
+        subjects: [ROTARY, MAXF],
+        images: [`${ROTARY}-04.webp`, img(MAXF, '24131841654937')],
+        crop: ROOM,
+        place: [
+          { img: 1, x: 290, y: 1240, w: 520 },
+          { img: 1, x: 800, y: 1200, w: 500, at: 0.3, outline: true },
+        ],
+        kinetic: ['Two', 'machines', 'can', 'look', 'the', 'same'],
+        slam: true,
+        noCaptions: true,
+      },
+      {
+        // Same room, the camera swings in on the twin.
+        trigger: 'and still not',
+        kind: 'floor',
+        subjects: [ROTARY, MAXF],
+        images: [`${ROTARY}-04.webp`, img(MAXF, '24131841654937')],
+        crop: { x: 760, y: 200, w: 326, h: 580 },
+        place: [
+          { img: 1, x: 40, y: 700, w: 520 },
+          { img: 1, x: 640, y: 690, w: 500, outline: true },
+        ],
+        floorLines: ['NOT THE SAME', 'MACHINE'],
+        floorSize: 130,
+        noCaptions: true,
+      },
+      {
+        // The turn: the twin is Dry Air's US listing, labelled on the floor.
+        trigger: 'Dry Air Technology',
+        kind: 'floor',
+        subjects: [RESULT, MAXF],
+        images: [`${RESULT}-01.webp`, img(MAXF, '51412332478677')],
+        crop: { x: 200, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 560, y: 720, w: 600, outline: true }],
+        floorLines: ["DRY AIR'S", 'US LISTING'],
+        floorSize: 130,
+        sourceSlip: "Source: CCW's Max Force page",
+        noCaptions: true,
+      },
+      {
+        // A new room at floor height: the twin and the real unit side by
+        // side, the US label lying in front of the twin.
+        trigger: 'Max Force at',
+        kind: 'floor',
+        subjects: [EXTRACTION, MAXF],
+        images: [`${EXTRACTION}-02.webp`, img(MAXF, '51412332478677')],
+        crop: { x: 150, y: 0, w: 405, h: 720 },
+        place: [
+          { img: 1, x: 300, y: 720, w: 470, outline: true, flip: true },
+          { img: 1, x: 790, y: 700, w: 440 },
+        ],
+        floorLines: ['US MODEL:', '115 V'],
+        floorSize: 150,
+        noCaptions: true,
+      },
+      {
+        // The real one, from behind; the type sits on the carpet, clear of
+        // the maker's plate.
+        trigger: 'This is the 220',
+        kind: 'floor',
+        subjects: [ROTARY, MAXF],
+        images: [`${ROTARY}-03.webp`, img(MAXF, '51412332904661')],
+        crop: { x: 640, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 560, y: 710, w: 620 }],
+        floorLines: ['THE 220 V / 50 HZ', 'VERSION'],
+        floorSize: 112,
+        sourceSlip: "From CCW's Max Force listing",
+        noCaptions: true,
+      },
+      {
+        // Same unit, the camera tracks round to its right side.
+        trigger: 'with an Australian',
+        kind: 'floor',
+        subjects: [ROTARY, MAXF],
+        images: [`${ROTARY}-03.webp`, img(MAXF, '51412332904661')],
+        crop: { x: 380, y: 100, w: 349, h: 620 },
+        place: [{ img: 1, x: 700, y: 740, w: 600 }],
+        floorLines: ['WITH AN', 'AUSTRALIAN PLUG'],
+        floorSize: 96,
+        noCaptions: true,
+      },
+      {
+        trigger: 'BD2500 is',
+        kind: 'floor',
+        subjects: [EXTRACTION, BD2500],
+        images: [`${EXTRACTION}-04.webp`, img(BD2500, '40568829935829')],
+        crop: { x: 450, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 540, y: 720, w: 620 }],
+        floorLines: ['BD2500: THE', '230 V VERSION'],
+        floorSize: 120,
+        sourceSlip: "From CCW's BD2500 listing",
+        noCaptions: true,
+      },
+      {
+        trigger: 'Check the plug',
+        kind: 'floor',
+        // The dehumidifier again, closer, in a new room (each
+        // Max Force photo is already in two shots).
+        subjects: [EXTRACTION, BD2500],
+        images: [`${EXTRACTION}-03.webp`, img(BD2500, '40568829935829')],
+        crop: { x: 0, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 560, y: 710, w: 600 }],
+        floorLines: ['CHECK THE PLUG', 'AND THE FREQUENCY'],
+        floorSize: 88,
+        noCaptions: true,
+      },
+      {
+        trigger: 'See the air mover range',
+        kind: 'end',
+        subjects: [RESULT],
+        images: [`${RESULT}-02.webp`],
+        crop: { x: 250, y: 0, w: 405, h: 720 },
       },
     ],
   },
