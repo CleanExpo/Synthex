@@ -40,20 +40,21 @@ flat on the floor with a contact shadow from their first frame. The angled Velo 
 blurred copy of its own outline; the hook X-400 is cropped above its hanging cord (a crop, nothing generated). Plan: `lib/remotion/ccw/shot-plans.ts`; render:
 `scripts/render-ccw-shortform.ts`.
 
-| #   | Trigger words             | Shot                                                                                                        | Source photos                                                                  |
-| --- | ------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 1   | "Four air movers"         | Hook: empty room, four units already placed, two at the back wall, two in front; "4 PLACED BEAT 2 POWERFUL" | carpet-cleaning-rotary-04; X-400, XPOWER low-profile, Velo, P-230AT            |
-| 2   | "two powerful ones"       | Two XPOWER X-800s face each other in the middle of the room; "THE MIDDLE" on the carpet                     | carpet-cleaning-rotary-03; X-800 (side view)                                   |
-| 3   | "Evaporation"             | The turn (6.0 s): floor-level carpet, "SURFACE AREA" lies on it and a ripple runs through it                | carpet-cleaning-extraction-02                                                  |
-| 4   | "That is why"             | Real photo of a van packed with Velo units, slow push; "UNIT COUNT" in the same 3D floor type               | Dri-Eaz Velo catalogue photo (van)                                             |
-| 5   | "any one"                 | One X-800 alone on the carpet by the hose; "COUNT OVER SPEC" on the floor                                   | carpet-cleaning-extraction-04; X-800 (front view)                              |
-| 6   | "Placement"               | Four units spread across the floor at different depths; "PLACEMENT MATTERS" on the carpet                   | carpet-cleaning-rotary-02; Velo stack, XPOWER low-profile, Gale Force, P-230AT |
-| 7   | "See the air mover range" | Scene end card, under 3 s: real CCW logo plate over the room, "See the air mover range", web address        | carpet-cleaning-rotary-04 (hook room), CCW logo                                |
+| #   | Trigger words             | Shot                                                                                                        | Source photos                                                                     |
+| --- | ------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | "Four air movers"         | Hook: empty room, four units already placed, two at the back wall, two in front; "4 PLACED BEAT 2 POWERFUL" | carpet-cleaning-rotary-04; X-400, XPOWER low-profile, Velo, P-230AT               |
+| 2   | "two powerful ones"       | Two XPOWER X-800s face each other in the middle of the room; "THE MIDDLE" on the carpet                     | carpet-cleaning-rotary-03; X-800 (side view)                                      |
+| 3   | "Evaporation"             | The turn (6.0 s): floor-level carpet, "SURFACE AREA" lies on it and a ripple runs through it                | carpet-cleaning-extraction-02                                                     |
+| 4   | "That is why"             | Real photo of a van packed with Velo units, slow push; "UNIT COUNT" in the same 3D floor type               | Dri-Eaz Velo catalogue photo (van)                                                |
+| 5   | "any one"                 | Four units spread across the floor at different depths; "PLACEMENT MATTERS" on the carpet                   | carpet-cleaning-rotary-02; Velo stack, XPOWER low-profile, Gale Force, P-230AT    |
+| 6   | "Placement"               | Camera moves right along the same skirting: a second spread of four units; "AS MUCH AS POWER" on the carpet | carpet-cleaning-rotary-02 (right side); X-800 (front), low-profile, Gale, P-230AT |
+| 7   | "See the air mover range" | Scene end card, under 3 s: real CCW logo plate over the room, "See the air mover range", web address        | carpet-cleaning-rotary-04 (hook room), CCW logo                                   |
 
 ## On-screen text
 
 - Floor type (every shot before the end card): "4 PLACED BEAT 2 POWERFUL", "THE MIDDLE", "SURFACE AREA",
-  "UNIT COUNT", "COUNT OVER SPEC", "PLACEMENT MATTERS". No caption boxes and no flat type.
+  "UNIT COUNT", "PLACEMENT MATTERS", "AS MUCH AS POWER". No caption boxes and no flat type. "COUNT OVER SPEC"
+  was cut on 08/11/2026 (orchestrator): "UNIT COUNT" on the van carries that idea once.
 - Captions: none burned in. Every beat carries its words as floor type (judge round 1 found the van captions
   read as fragments; the 08/11/2026 polish round moved "Unit count." from flat type into the floor type).
 - End card: CCW logo, "See the air mover range", ccwonline.com.au.
@@ -69,13 +70,13 @@ The standards register (`docs/ree/restoration-video-training/standards-register.
 read 08/11/2026) has no row on air mover numbers or placement, so every claim here maps to CCW's own page.
 Page read 08/11/2026 through the Exa page reader; direct fetches returned HTTP 429.
 
-| Claim (voiceover or screen)                                                                                  | Source: CCW air movers collection page, https://ccwonline.com.au/collections/airmovers, accessed 08/11/2026                                                    | Status              |
-| ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| Four air movers in the right places beat two powerful ones aimed at the middle ("4 PLACED BEAT 2 POWERFUL")  | "four correctly placed units will beat two powerful ones aimed at the middle of the room every time"                                                           | Verified 08/11/2026 |
-| Evaporation is a surface-area problem ("SURFACE AREA")                                                       | "Evaporation is a surface-area problem"                                                                                                                        | Verified 08/11/2026 |
-| The number of units usually matters more than any one unit's specification ("UNIT COUNT", "COUNT OVER SPEC") | "the number of air movers usually matters more than the specification of any one of them"; "Count units per vehicle, not horsepower"                           | Verified 08/11/2026 |
-| Placement matters as much as power ("PLACEMENT MATTERS")                                                     | Paraphrase of the first quote: placed units beat more powerful ones; also "low profile units often dry a house faster than more powerful ones aimed across it" | Verified 08/11/2026 |
-| Mini, mid-size and low-profile units each cover a different part of the floor; place along the wet edges     | General placement advice, not a standard: `[TOBY TO CONFIRM]`. Not in the voiceover or on screen                                                               | Pending Toby        |
+| Claim (voiceover or screen)                                                                                 | Source: CCW air movers collection page, https://ccwonline.com.au/collections/airmovers, accessed 08/11/2026                                                    | Status              |
+| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Four air movers in the right places beat two powerful ones aimed at the middle ("4 PLACED BEAT 2 POWERFUL") | "four correctly placed units will beat two powerful ones aimed at the middle of the room every time"                                                           | Verified 08/11/2026 |
+| Evaporation is a surface-area problem ("SURFACE AREA")                                                      | "Evaporation is a surface-area problem"                                                                                                                        | Verified 08/11/2026 |
+| The number of units usually matters more than any one unit's specification ("UNIT COUNT")                   | "the number of air movers usually matters more than the specification of any one of them"; "Count units per vehicle, not horsepower"                           | Verified 08/11/2026 |
+| Placement matters as much as power ("PLACEMENT MATTERS", "AS MUCH AS POWER")                                | Paraphrase of the first quote: placed units beat more powerful ones; also "low profile units often dry a house faster than more powerful ones aimed across it" | Verified 08/11/2026 |
+| Mini, mid-size and low-profile units each cover a different part of the floor; place along the wet edges    | General placement advice, not a standard: `[TOBY TO CONFIRM]`. Not in the voiceover or on screen                                                               | Pending Toby        |
 
 ## Rule score
 
@@ -85,7 +86,7 @@ Self-score on the script, 08/11/2026 (see `03-rule-score.md`).
 | --------------------------------- | ------ | -------------------------------------------------------------------------- |
 | S1 Margot, plain English          | PASS   | Margot named; no slang                                                     |
 | S2 Hook in 2 s                    | PASS   | Four units and "4 PLACED BEAT 2 POWERFUL" on screen from the first frame   |
-| S3 Picture every ~4 s, no repeats | PASS   | 7 shots; no photo in more than two shots                                   |
+| S3 Picture every ~4 s, no repeats | PASS   | 7 shots, longest hold 3.9 s; no photo in more than two shots               |
 | S4 Footage 75%+, Margot 10 to 28% | PASS   | All job or product photos; Margot is voice only                            |
 | S5 Bright, moving, outcome        | PASS   | Daylight rooms; ends on the range                                          |
 | S6 Owned references only          | PASS   | Every shot names its owned manifest subjects                               |

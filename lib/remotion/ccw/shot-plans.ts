@@ -370,18 +370,9 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         noCaptions: true,
       },
       {
+        // "COUNT OVER SPEC" cut (orchestrator, 08/11/2026): UNIT COUNT on the
+        // van carries that idea once; its time goes to PLACEMENT MATTERS.
         trigger: 'any one',
-        kind: 'floor',
-        subjects: [EXTRACTION, X800],
-        images: [scene('extraction-04'), img(X800, '20568158994585')],
-        crop: { x: 0, y: 0, w: 405, h: 720 },
-        place: [{ img: 1, x: 600, y: 700, w: 360 }],
-        floorLines: ['COUNT', 'OVER SPEC'],
-        floorSize: 150,
-        noCaptions: true,
-      },
-      {
-        trigger: 'Placement',
         kind: 'floor',
         subjects: [ROTARY, VELO, XLOW, GALE, MINI],
         images: [
@@ -399,6 +390,30 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
           { img: 1, x: 250, y: 1560, w: 420, silhouette: true },
         ],
         floorLines: ['PLACEMENT', 'MATTERS'],
+        floorSize: 140,
+        noCaptions: true,
+      },
+      {
+        // Same room, the camera moves right along the skirting: a second
+        // spread of units, so no hold runs past 4.5 s.
+        trigger: 'Placement',
+        kind: 'floor',
+        subjects: [ROTARY, X800, XLOW, GALE, MINI],
+        images: [
+          `${ROTARY}-02.webp`,
+          img(X800, '20568158994585'),
+          img(XLOW, '7796773257275'),
+          img(GALE, '28712740978841'),
+          img(MINI, '37228686180565'),
+        ],
+        crop: { x: 860, y: 0, w: 405, h: 720 },
+        place: [
+          { img: 3, x: 260, y: 560, w: 210 },
+          { img: 1, x: 800, y: 600, w: 270, flip: true },
+          { img: 4, x: 850, y: 1240, w: 280 },
+          { img: 2, x: 290, y: 1540, w: 400 },
+        ],
+        floorLines: ['AS MUCH', 'AS POWER'],
         floorSize: 140,
         noCaptions: true,
       },

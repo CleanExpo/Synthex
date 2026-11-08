@@ -161,7 +161,8 @@ function integratedLufs(file: string): number {
 export function deliveryCopy(master: string, copy: string) {
   const log = path.join(path.dirname(copy), `${path.basename(copy)}-2pass`);
   // A shorter video can spend more bits per second inside the same size
-  // budget (95 % of maxBytes); never less than the 30 s default rate.
+  // budget (97 % of maxBytes; two-pass lands within about 1 %); never less
+  // than the 30 s default rate.
   const seconds = Number(
     execFileSync('ffprobe', [
       '-v',
@@ -178,7 +179,7 @@ export function deliveryCopy(master: string, copy: string) {
   const kbps = Math.max(
     CCW_DELIVERY.videoKbps,
     Math.floor(
-      (CCW_DELIVERY.maxBytes * 0.95 * 8) / seconds / 1000 -
+      (CCW_DELIVERY.maxBytes * 0.97 * 8) / seconds / 1000 -
         CCW_DELIVERY.audioKbps -
         20
     )
@@ -187,7 +188,7 @@ export function deliveryCopy(master: string, copy: string) {
     '-c:v',
     'libx264',
     '-preset',
-    'slow',
+    'slower',
     // The copy is judged on SSIM against the master, so let x264 spend its
     // bits on structural fidelity (fine carpet texture) rather than psy-visual
     // tricks that cost SSIM. Same size cap; the 0.99 bar is unchanged.
