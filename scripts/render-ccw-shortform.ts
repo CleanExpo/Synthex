@@ -133,7 +133,6 @@ function safeZoneCheck(
  */
 export const CCW_DELIVERY = {
   maxBytes: 7_300_000,
-  videoKbps: 1950,
   audioKbps: 128,
   minSsim: 0.99,
   maxLoudnessDiffLu: 0.3,
@@ -223,11 +222,26 @@ export function deliveryCopy(master: string, copy: string) {
   );
 }
 
+/**
+ * Video bitrate for a master of `seconds` at a rate aim (share of maxBytes),
+ * less the audio and about 20 kbps of container overhead. The size cap alone
+ * sets the rate: a fixed 1950 kbps floor (removed 08/11/2026) made any master
+ * over about 28.1 s unable to fit the cap and made the 0.97 retry a no-op
+ * (ccw-w1-d4-am at 28.96 s: both attempts 7,530,818 bytes).
+ */
+export function deliveryVideoKbps(seconds: number, aim: number): number {
+  return Math.floor(
+    (CCW_DELIVERY.maxBytes * aim * 8) / seconds / 1000 -
+      CCW_DELIVERY.audioKbps -
+      20
+  );
+}
+
 /** One two-pass x264 encode of the master at a rate aim; measures, never throws. */
 function encodeDelivery(master: string, copy: string, aim: number) {
   const log = path.join(path.dirname(copy), `${path.basename(copy)}-2pass`);
   // A shorter video can spend more bits per second inside the same size
-  // budget; never less than the 30 s default rate. The first aim is 101 % of
+  // budget (deliveryVideoKbps). The first aim is 101 % of
   // maxBytes because two-pass veryslow lands 1.5 to 3 % under its target on
   // these masters (ccw-w1-d3-am, 08/11/2026: 2303 kbps gave 7,267,490 bytes);
   // the size check still rejects any copy at or over maxBytes.
@@ -244,14 +258,7 @@ function encodeDelivery(master: string, copy: string, aim: number) {
       .toString()
       .trim()
   );
-  const kbps = Math.max(
-    CCW_DELIVERY.videoKbps,
-    Math.floor(
-      (CCW_DELIVERY.maxBytes * aim * 8) / seconds / 1000 -
-        CCW_DELIVERY.audioKbps -
-        20
-    )
-  );
+  const kbps = deliveryVideoKbps(seconds, aim);
   const v = [
     '-c:v',
     'libx264',

@@ -6,6 +6,7 @@
 import {
   CCW_DELIVERY,
   CCW_DELIVERY_AIMS,
+  deliveryVideoKbps,
   runDeliveryAttempts,
 } from '../../../scripts/render-ccw-shortform';
 
@@ -77,4 +78,19 @@ describe('CCW delivery attempts', () => {
     expect(calls).toEqual([1.01]);
     expect(report.ok).toBe(false);
   });
+
+  // ccw-w1-d4-am, 08/11/2026: a fixed 1950 kbps floor made every master over
+  // about 28.1 s unable to fit the cap, and made the 0.97 retry a no-op (both
+  // attempts gave 7,530,818 bytes). The cap must govern the rate.
+  it.each([20, 24.2, 28.96, 30, 35])(
+    'a %s s master aims inside the cap, and the retry aims lower',
+    seconds => {
+      const first = deliveryVideoKbps(seconds, CCW_DELIVERY_AIMS[0]);
+      const retry = deliveryVideoKbps(seconds, CCW_DELIVERY_AIMS[1]);
+      expect(retry).toBeLessThan(first);
+      const retryBytes =
+        ((retry + CCW_DELIVERY.audioKbps) * 1000 * seconds) / 8;
+      expect(retryBytes).toBeLessThan(CAP);
+    }
+  );
 });
