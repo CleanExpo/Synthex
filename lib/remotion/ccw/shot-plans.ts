@@ -126,6 +126,13 @@ const ROTARY = 'carpet-cleaning/carpet-cleaning-rotary';
 /** Empty room, window and corner (rotary-04), clear of the machine. */
 const ROOM = { x: 700, y: 0, w: 405, h: 720 };
 
+// ccw-w1-d2-pm: the floor's-eye view. Owned job photos at floor height (a real
+// cabinet toe-kick, skirtings, a door jamb) with the two low-profile units cut
+// from their catalogue photos. No bed, vanity or running job is shown.
+const SCENE = (name: string) => `carpet-cleaning/carpet-cleaning-${name}.webp`;
+/** Door jamb, corner guard and carpet (result-01), seen from above. */
+const JAMB = { x: 680, y: 0, w: 405, h: 720 };
+
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
     videoId: 'ccw-w1-d1-am',
@@ -424,6 +431,136 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         // Back to the hook room: a hard cut, not the placement room again.
         images: [`${ROTARY}-04.webp`],
         crop: ROOM,
+      },
+    ],
+  },
+  {
+    // Concept B "Floor's-eye view" with concept A's hook (blind pick,
+    // 08/11/2026). Every line is on CCW's own product and collection pages.
+    // Units on a raised photo angle use `product` (outline drop shadow).
+    videoId: 'ccw-w1-d2-pm',
+    cta: 'See the low-profile units',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        trigger: 'Most of the wet area',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [SCENE('extraction-01')],
+        crop: { x: 250, y: 0, w: 405, h: 720 },
+        floorLines: ['UNDER', 'SOMETHING'],
+        floorSize: 150,
+        slam: true,
+        noCaptions: true,
+      },
+      {
+        // Same cabinet, tight on the toe-kick gap.
+        trigger: 'in a furnished home',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [SCENE('extraction-01')],
+        crop: { x: 330, y: 120, w: 337, h: 600 },
+        floorLines: ['MOST OF THE', 'WET AREA'],
+        floorSize: 132,
+        noCaptions: true,
+      },
+      {
+        trigger: 'Low profile goes',
+        kind: 'floor',
+        subjects: [ROTARY, VELO],
+        images: [SCENE('rotary-04'), img(VELO, '50827539546325')],
+        crop: ROOM,
+        product: { image: 1, x: 420, y: 760, w: 440 },
+        kinetic: ['Low', 'profile', 'goes', 'where', 'standard', 'cannot.'],
+        noCaptions: true,
+      },
+      {
+        trigger: 'under a bed',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [SCENE('extraction-03')],
+        crop: { x: 0, y: 0, w: 405, h: 720 },
+        kinetic: ['Under', 'a', 'bed,'],
+        noCaptions: true,
+      },
+      {
+        trigger: 'against a skirting',
+        kind: 'floor',
+        subjects: ['carpet-cleaning/carpet-cleaning-result', VELO],
+        images: [SCENE('result-02'), img(VELO, '51412267729109')],
+        crop: { x: 250, y: 0, w: 405, h: 720 },
+        product: { image: 1, x: 420, y: 1180, w: 440 },
+        kinetic: ['against', 'a', 'skirting,'],
+        noCaptions: true,
+      },
+      {
+        trigger: 'beneath a vanity',
+        kind: 'floor',
+        subjects: [ROTARY],
+        images: [SCENE('rotary-03')],
+        crop: { x: 640, y: 0, w: 405, h: 720 },
+        kinetic: ['beneath', 'a', 'vanity.'],
+        noCaptions: true,
+      },
+      {
+        trigger: 'The XPOWER',
+        kind: 'floor',
+        subjects: ['carpet-cleaning/carpet-cleaning-result', XLOW],
+        images: [SCENE('result-01'), img(XLOW, '20570371195033')],
+        crop: JAMB,
+        product: { image: 1, x: 200, y: 330, w: 560 },
+        floorLines: ['XPOWER', 'PL-700A'],
+        floorSize: 150,
+        noCaptions: true,
+      },
+      {
+        trigger: 'twenty-one',
+        kind: 'floor',
+        subjects: ['carpet-cleaning/carpet-cleaning-grooming', XLOW],
+        images: [SCENE('grooming-01'), img(XLOW, '20570371195033')],
+        crop: { x: 500, y: 0, w: 405, h: 720 },
+        product: { image: 1, x: 220, y: 300, w: 640 },
+        floorLines: ['21 CM', 'HIGH'],
+        noCaptions: true,
+      },
+      {
+        trigger: 'It fits under',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [SCENE('extraction-02')],
+        crop: { x: 150, y: 0, w: 405, h: 720 },
+        floorLines: ['UNDER', 'TOE-KICKS'],
+        floorSize: 150,
+        noCaptions: true,
+      },
+      {
+        trigger: 'beds and furniture',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [SCENE('extraction-03')],
+        crop: { x: 560, y: 0, w: 405, h: 720 },
+        floorLines: ['BEDS AND', 'FURNITURE'],
+        floorSize: 140,
+        noCaptions: true,
+      },
+      {
+        trigger: 'The Dri-Eaz Velo',
+        kind: 'floor',
+        subjects: [ROTARY, VELO],
+        images: [SCENE('rotary-04'), img(VELO, '50827539546325')],
+        crop: { x: 470, y: 0, w: 405, h: 720 },
+        product: { image: 1, x: 640, y: 430, w: 360 },
+        floorLines: ['HALF THE', 'HEIGHT'],
+        floorSize: 160,
+        sourceSlip: 'Dri-Eaz: half the height of snail-shell dryers',
+        noCaptions: true,
+      },
+      {
+        trigger: 'low-profile units',
+        kind: 'end',
+        subjects: ['carpet-cleaning/carpet-cleaning-result'],
+        images: [SCENE('result-01')],
+        crop: JAMB,
       },
     ],
   },
