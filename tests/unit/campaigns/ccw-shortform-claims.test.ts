@@ -19,22 +19,16 @@ const ROOT = path.resolve(__dirname, '../../..');
  * Owner: the builder of each video; remove the entry when its table is fixed.
  */
 const KNOWN_GAPS: Record<string, string[]> = {
-  // Monday 17:30 file (merged v3): the table cites ABC News by URL but does
-  // not quote the sentence each line rests on, and the kinetic lines are ours.
+  // Monday 17:30 file (merged v3). The facts are now quoted from ABC News in the
+  // claims table. What is left: "ONE SYSTEM SERIOUS DAMAGE" (the source says
+  // "serious impacts"; the file is approved and posts as is, so the wording gap
+  // stays visible here), and three lines that are calls to action, not claims.
   'ccw-w1-d1-pm': [
-    '5 TO 8 CYCLONES',
-    'AVERAGE 11',
-    'QUIET ON PAPER',
-    'QLD COAST NEAR NORMAL',
     'ONE SYSTEM SERIOUS DAMAGE',
-    'QUIET ON PAPER',
     'Quiet does not mean dry.',
     'Ready for the work.',
     'Load the truck.',
   ],
-  // Tuesday 17:30, in progress on 08/11/2026 (another builder): this entry
-  // only applies while that plan is in the tree.
-  'ccw-w1-d2-pm': ['UNDER TOE-KICKS'],
 };
 
 const norm = (s: string) =>
