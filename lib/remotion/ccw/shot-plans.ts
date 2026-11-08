@@ -420,7 +420,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
           { img: 4, x: 850, y: 1240, w: 280 },
           { img: 2, x: 290, y: 1540, w: 400 },
         ],
-        floorLines: ['AS MUCH', 'AS POWER'],
+        floorLines: ['BEATS', 'POWER'],
         floorSize: 140,
         noCaptions: true,
       },
