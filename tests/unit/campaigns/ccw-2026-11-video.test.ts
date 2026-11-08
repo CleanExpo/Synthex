@@ -153,6 +153,9 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     // No source says when the 24 to 48 hours start (SafeWork NSW gives the
     // window only), so the hook quotes the window, not a starting clock.
     expect(s.hook).not.toMatch(/clock starts/i);
+    // The S500 line is cut until the founder signs off IICRC citations in
+    // brand copy (orchestrator ruling, 08/11/2026).
+    expect(`${s.hook} ${s.message}`).not.toMatch(/S500|IICRC|mitigation/i);
     expect(s.landingUrl).toBe(
       'https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d3-pm'
     );

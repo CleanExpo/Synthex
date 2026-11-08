@@ -57,6 +57,14 @@ describe('SYN-1404 CCW zero-cost shot plans', () => {
     ]);
   });
 
+  it('keeps every IICRC / S500 line out of w1-d3-pm until the founder signs it off', () => {
+    const plan = CCW_SHOT_PLANS.find(p => p.videoId === 'ccw-w1-d3-pm')!;
+    const onScreen = JSON.stringify(plan.shots);
+    expect(onScreen).not.toMatch(
+      /S500|IICRC|mitigation|water damage standard/i
+    );
+  });
+
   it('never uses one photo in more than two shots of a video', () => {
     for (const plan of CCW_SHOT_PLANS) {
       // The two day 1 cuts were built before the rule and stay unchanged.

@@ -810,8 +810,9 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   },
   {
     // Concept A "Wet tiles, then the kit" (blind pick 42/60, 08/11/2026).
-    // Every line quotes SafeWork NSW, the register's S500 row or CCW's
-    // product pages. CTA matches the landing link (/collections/airmovers).
+    // Every line quotes SafeWork NSW or CCW's product pages; the S500 line
+    // was cut (founder signs off IICRC citations, ruling 08/11/2026). CTA
+    // matches the landing link (/collections/airmovers).
     videoId: 'ccw-w1-d3-pm',
     cta: 'See the air mover range',
     url: 'ccwonline.com.au',
@@ -841,30 +842,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         noCaptions: true,
       },
       {
-        // The turn: the standard, over a technician at work in a full room.
-        trigger: 'The water damage standard',
-        kind: 'floor',
-        subjects: [SOLUTION],
-        images: [`${SOLUTION}-02.webp`],
-        crop: { x: 560, y: 60, w: 371, h: 660 },
-        floorLines: ['BEGIN', 'MITIGATION'],
-        floorSize: 150,
-        sourceSlip: 'Source: IICRC S500 water damage standard',
-        noCaptions: true,
-      },
-      {
-        // Same room, the camera moves along to the doorway.
-        trigger: 'as soon as',
-        kind: 'floor',
-        subjects: [EXTRACTION],
-        images: [`${EXTRACTION}-03.webp`],
-        crop: { x: 760, y: 80, w: 360, h: 640 },
-        floorLines: ['AS SOON AS', 'SAFELY POSSIBLE'],
-        floorSize: 100,
-        noCaptions: true,
-      },
-      {
-        // The operator stands on the Water Claw on dry carpet.
+        // The turn: the operator stands on the Water Claw on dry carpet.
         trigger: 'The Water Claw',
         kind: 'floor',
         subjects: [ROTARY, CLAW],
