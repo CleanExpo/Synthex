@@ -44,6 +44,8 @@ export type CcwShortformProps = {
   logo: string;
   shots: CcwTimedShot[];
   words: CcwCaptionWord[];
+  /** QA only: render text boxes white on black (safe-zone check). */
+  textMask?: boolean;
 };
 
 const ACCENTS = [CCW.blue, CCW.green, CCW.orange];
@@ -84,11 +86,13 @@ function Chip({ text, accent }: { text: string; accent: string }) {
   const s = enter(frame, fps, 4);
   return (
     <div
+      className="ccw-text"
       style={{
         position: 'absolute',
-        left: 72,
-        top: 250,
-        transform: `translateX(${interpolate(s, [0, 1], [-420, 0])}px)`,
+        left: 84,
+        top: 300,
+        opacity: s,
+        transform: `translateX(${interpolate(s, [0, 1], [-16, 0])}px)`,
         background: accent,
         color: CCW.paper,
         fontFamily: FONT,
@@ -110,8 +114,8 @@ function Callouts({ items, accent }: { items: string[]; accent: string }) {
     <div
       style={{
         position: 'absolute',
-        right: 64,
-        top: 360,
+        right: 84,
+        top: 400,
         display: 'flex',
         flexDirection: 'column',
         gap: 18,
@@ -123,9 +127,10 @@ function Callouts({ items, accent }: { items: string[]; accent: string }) {
         return (
           <div
             key={t}
+            className="ccw-text"
             style={{
               opacity: s,
-              transform: `translateX(${interpolate(s, [0, 1], [160, 0])}px)`,
+              transform: `translateX(${interpolate(s, [0, 1], [16, 0])}px)`,
               display: 'flex',
               alignItems: 'center',
               gap: 14,
@@ -252,16 +257,17 @@ function Hook({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
   const words = (shot.bigText ?? '').split(' ');
   return (
     <AbsoluteFill style={{ background: CCW.paper }}>
-      <Product src={shot.images[0]} size={860} top={640} />
+      <Product src={shot.images[0]} size={940} top={760} />
       <div
+        className="ccw-text"
         style={{
           position: 'absolute',
-          left: 72,
-          right: 72,
-          top: 230,
+          left: 84,
+          right: 84,
+          top: 320,
           fontFamily: FONT,
           fontWeight: 900,
-          fontSize: 132,
+          fontSize: 128,
           lineHeight: 1.02,
           color: CCW.ink,
           letterSpacing: -2,
@@ -305,7 +311,7 @@ function Hook({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
 function TypeBehind({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
   const { frame, fps, dur } = useLocal();
   const s = enter(frame, fps);
-  const slide = interpolate(frame, [0, dur], [40, -40]);
+  const slide = interpolate(frame, [0, dur], [20, -20]);
   return (
     <AbsoluteFill style={{ background: CCW.mist }}>
       <div
@@ -318,17 +324,17 @@ function TypeBehind({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
           fontFamily: FONT,
           fontWeight: 900,
           fontSize: Math.min(
-            170,
-            Math.floor(1700 / Math.max(1, (shot.bigText ?? '').length))
+            150,
+            Math.floor(1400 / Math.max(1, (shot.bigText ?? '').length))
           ),
           letterSpacing: -4,
           color: accent,
           opacity: s,
-          transform: `translateX(${slide}px) scale(${interpolate(s, [0, 1], [1.2, 1])})`,
+          transform: `translateX(${slide}px) scale(${interpolate(s, [0, 1], [1.08, 1])})`,
           whiteSpace: 'nowrap',
         }}
       >
-        {shot.bigText}
+        <span className="ccw-text">{shot.bigText}</span>
       </div>
       {shot.smallText ? (
         <div
@@ -345,13 +351,13 @@ function TypeBehind({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
             opacity: enter(frame, fps, 6),
           }}
         >
-          {shot.smallText}
+          <span className="ccw-text">{shot.smallText}</span>
         </div>
       ) : null}
       <Product
         src={shot.images[0]}
-        size={880}
-        top={600}
+        size={980}
+        top={680}
         drift={-1}
         backdrop={null}
       />
@@ -362,13 +368,13 @@ function TypeBehind({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
 const LINEUP_SLOTS: Record<number, { x: number; top: number; size: number }[]> =
   {
     2: [
-      { x: -60, top: 330, size: 720 },
-      { x: 420, top: 700, size: 720 },
+      { x: -60, top: 420, size: 760 },
+      { x: 380, top: 860, size: 760 },
     ],
     3: [
-      { x: 10, top: 340, size: 540 },
-      { x: 530, top: 400, size: 540 },
-      { x: 270, top: 840, size: 540 },
+      { x: 10, top: 420, size: 560 },
+      { x: 510, top: 480, size: 560 },
+      { x: 260, top: 960, size: 600 },
     ],
   };
 
@@ -431,8 +437,8 @@ function Detail({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
       extrapolateRight: 'clamp',
     }
   );
-  const size = 1060;
-  const top = 330;
+  const size = 1120;
+  const top = 420;
   const ring = interpolate(frame, [dur * 0.45, dur * 0.65], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -470,9 +476,9 @@ function Detail({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
         <div
           style={{
             position: 'absolute',
-            left: 72,
-            right: 72,
-            top: 230,
+            left: 84,
+            right: 84,
+            top: 320,
             fontFamily: FONT,
             fontWeight: 900,
             fontSize: 110,
@@ -481,6 +487,7 @@ function Detail({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
           }}
         >
           <span
+            className="ccw-text"
             style={{
               background: 'rgba(255,255,255,0.95)',
               padding: '8px 24px',
@@ -514,7 +521,7 @@ function Hero({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
           transform: 'rotate(-6deg)',
         }}
       />
-      <Product src={shot.images[0]} size={1000} top={300} />
+      <Product src={shot.images[0]} size={1080} top={400} />
       {shot.label ? <Chip text={shot.label} accent={accent} /> : null}
       {shot.callouts ? (
         <Callouts items={shot.callouts} accent={accent} />
@@ -542,10 +549,11 @@ function Fullbleed({ shot, accent }: { shot: CcwTimedShot; accent: string }) {
       />
       {shot.smallText ? (
         <div
+          className="ccw-text"
           style={{
             position: 'absolute',
-            left: 72,
-            top: 250,
+            left: 84,
+            top: 300,
             background: accent,
             color: CCW.paper,
             fontFamily: FONT,
@@ -597,11 +605,12 @@ function EndCard({
         }}
       />
       <Img
+        className="ccw-text"
         src={staticFile(logo)}
         style={{
           position: 'absolute',
           left: 140,
-          top: 200,
+          top: 270,
           width: 800,
           height: 380,
           objectFit: 'contain',
@@ -621,7 +630,7 @@ function EndCard({
             style={{
               position: 'absolute',
               left: x,
-              top: 620,
+              top: 650,
               width: 320,
               height: 320,
               ...cardStyle(src),
@@ -634,14 +643,15 @@ function EndCard({
       <div
         style={{
           position: 'absolute',
-          left: 72,
-          right: 72,
-          top: 1030,
+          left: 84,
+          right: 84,
+          top: 1000,
           textAlign: 'center',
           fontFamily: FONT,
         }}
       >
         <div
+          className="ccw-text"
           style={{
             display: 'inline-block',
             background: CCW.blue,
@@ -651,7 +661,7 @@ function EndCard({
             padding: '24px 44px',
             borderRadius: 18,
             opacity: enter(frame, fps, 8),
-            transform: `translateY(${interpolate(enter(frame, fps, 8), [0, 1], [120, 0])}px) scale(${pulse})`,
+            transform: `translateY(${interpolate(enter(frame, fps, 8), [0, 1], [24, 0])}px) scale(${pulse})`,
           }}
         >
           {cta}
@@ -665,14 +675,26 @@ function EndCard({
             opacity: enter(frame, fps, 12),
           }}
         >
-          {url}
+          <span className="ccw-text">{url}</span>
         </div>
       </div>
     </AbsoluteFill>
   );
 }
 
-function Captions({ words }: { words: CcwCaptionWord[] }) {
+/**
+ * Captions sit inside the Reels safe zone: the line grows upward from
+ * y 1150, so it never reaches the bottom 35 % or the right-hand button
+ * column (x > 853 below y 1152). Hidden on the end card, whose CTA button
+ * shows the same words.
+ */
+function Captions({
+  words,
+  hideFrom,
+}: {
+  words: CcwCaptionWord[];
+  hideFrom: number;
+}) {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -697,14 +719,15 @@ function Captions({ words }: { words: CcwCaptionWord[] }) {
       t <
         (lines[i + 1] ? lines[i + 1][0].from - 0.05 : l[l.length - 1].to + 0.6)
   );
-  if (!line) return null;
+  if (!line || t >= hideFrom) return null;
   return (
     <div
       style={{
         position: 'absolute',
-        left: 60,
-        right: 60,
-        top: 1420,
+        left: 84,
+        right: 84,
+        // 1130 leaves room for the 10 px pill padding below the line box.
+        bottom: 1920 - 1130,
         textAlign: 'center',
         fontFamily: FONT,
         fontWeight: 900,
@@ -713,6 +736,7 @@ function Captions({ words }: { words: CcwCaptionWord[] }) {
       }}
     >
       <span
+        className="ccw-text"
         style={{
           background: 'rgba(255,255,255,0.94)',
           boxDecorationBreak: 'clone',
@@ -771,10 +795,21 @@ function ShotView({
   }
 }
 
+const TEXT_MASK_CSS = `
+  .ccw-root, .ccw-root * { background: transparent !important; color: transparent !important;
+    box-shadow: none !important; border-color: transparent !important; }
+  .ccw-root { background: #000 !important; }
+  .ccw-root img, .ccw-root svg { visibility: hidden !important; }
+  .ccw-root .ccw-text, .ccw-root .ccw-text * { background: #fff !important; }
+  .ccw-root img.ccw-text { visibility: visible !important; background: transparent !important;
+    filter: brightness(0) invert(1) !important; mix-blend-mode: normal !important; }
+`;
+
 export const CcwShortform: React.FC<CcwShortformProps> = props => {
   const { fps } = useVideoConfig();
   return (
-    <AbsoluteFill style={{ background: CCW.paper }}>
+    <AbsoluteFill className="ccw-root" style={{ background: CCW.paper }}>
+      {props.textMask ? <style>{TEXT_MASK_CSS}</style> : null}
       {props.shots.map((shot, i) => {
         const from = Math.round(shot.from * fps);
         const to = Math.round(shot.to * fps);
@@ -788,7 +823,14 @@ export const CcwShortform: React.FC<CcwShortformProps> = props => {
           </Sequence>
         );
       })}
-      <Captions words={props.words} />
+      <Captions
+        words={props.words}
+        hideFrom={
+          props.shots.length
+            ? props.shots[props.shots.length - 1].from
+            : Infinity
+        }
+      />
       <Audio src={staticFile(props.voice)} />
     </AbsoluteFill>
   );

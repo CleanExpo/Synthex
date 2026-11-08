@@ -12,6 +12,8 @@ scripts/render-ccw-shortform.ts). Checks, each printed PASS or FAIL:
             sheet; no black or empty frame
   pacing    every shot 2.0 to 5.0 s, the end card at most 3.2 s
   captions  caption words equal the script voiceover words; no US spellings
+  safezone  text mask scan from the render script: no text in the top 14 %,
+            bottom 35 %, 6 % sides or the right-hand button column
   speech    (optional) whisper.cpp transcript matches the script, >= 90%
 Exit 0 only when every check that ran passed. A skipped check is reported
 as SKIPPED, never as PASS. Read-only apart from the qa/ folder.
@@ -124,6 +126,14 @@ def main():
     us = [w for i, w in enumerate(cap) if w in US_SPELLINGS and not (w.startswith("meter") and i and cap[i - 1] in METER_OK)]
     check("captions", cap == ref and not us,
           f"{len(cap)} caption words {'match' if cap == ref else 'DO NOT match'} the script; US spellings: {us or 'none'}")
+
+    # safe zone, written by the render script's text-mask scan
+    sz_file = os.path.join(work, f"{vid}-safezone.json")
+    if os.path.exists(sz_file) and os.path.getmtime(sz_file) >= os.path.getmtime(mp4):
+        sz = json.load(open(sz_file))
+        check("safezone", sz["ok"], "no text in the Reels overlay areas" if sz["ok"] else "; ".join(sz["breaches"]))
+    else:
+        check("safezone", False, "no safe-zone result newer than the video; re-run the render script")
 
     # speech, optional
     if model and os.path.exists(model):
