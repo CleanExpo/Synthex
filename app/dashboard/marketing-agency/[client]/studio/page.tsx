@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import useSWR from 'swr';
 
 interface StudioDraft {
@@ -43,13 +43,23 @@ export default function ClientStudioPage({
     fetcher
   );
 
+  const [approveError, setApproveError] = useState<string | null>(null);
+
   async function approve(draftId: string): Promise<void> {
-    await fetch(endpoint, {
+    setApproveError(null);
+    const res = await fetch(endpoint, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ draftId }),
     });
+    // A refused approval must never look like a silent success.
+    if (!res.ok) {
+      const body = (await res.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      setApproveError(body?.error ?? `Approval failed (HTTP ${res.status}).`);
+    }
     await mutate();
   }
 
@@ -66,6 +76,11 @@ export default function ClientStudioPage({
       {isLoading && <p className="mt-6 text-slate-400">Loading…</p>}
       {error && (
         <p className="mt-6 text-red-400">Failed to load the studio board.</p>
+      )}
+      {approveError && (
+        <p role="alert" className="mt-6 text-red-400">
+          {approveError}
+        </p>
       )}
 
       {data && (
@@ -93,7 +108,17 @@ export default function ClientStudioPage({
                       <p className="text-sm font-medium text-slate-100">
                         {draft.topic}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400">
+                      {draft.videoUrl && (
+                        <video
+                          controls
+                          playsInline
+                          preload="metadata"
+                          src={draft.videoUrl}
+                          aria-label={`Video: ${draft.topic}`}
+                          className="mt-2 aspect-[9/16] w-full rounded-md bg-black"
+                        />
+                      )}
+                      <p className="mt-1 whitespace-pre-line text-xs text-slate-400">
                         {draft.script}
                       </p>
                       {col.key === 'awaiting_approval' && (
