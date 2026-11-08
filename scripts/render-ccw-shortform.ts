@@ -282,6 +282,35 @@ export function prepareCrop<
   return { ...shot, images: [rel, ...shot.images.slice(1)] };
 }
 
+/**
+ * Floor shots that place a product: the catalogue photo is on white, so key
+ * the white out (ffmpeg colorkey, no AI) into a transparent PNG cut-out.
+ */
+export function prepareProduct<
+  S extends { images: string[]; product?: { image: number } },
+>(shot: S, pub: string): S {
+  if (!shot.product) return shot;
+  const i = shot.product.image;
+  const rel = `prep/${path.basename(shot.images[i], '.webp')}-cutout.png`;
+  const out = path.join(pub, rel);
+  if (!fs.existsSync(out)) {
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    execFileSync('ffmpeg', [
+      '-y',
+      '-loglevel',
+      'error',
+      '-i',
+      path.join(pub, shot.images[i]),
+      '-vf',
+      'format=rgba,colorkey=0xFFFFFF:0.12:0.06',
+      out,
+    ]);
+  }
+  const images = [...shot.images];
+  images[i] = rel;
+  return { ...shot, images };
+}
+
 function main() {
   const video = arg('--video');
   const work = path.resolve(arg('--work'));
@@ -311,7 +340,7 @@ function main() {
     fs.mkdirSync(path.dirname(path.join(pub, rel)), { recursive: true });
     fs.copyFileSync(src, path.join(pub, rel));
   }
-  const shots = timed.map(s => prepareCrop(s, pub));
+  const shots = timed.map(s => prepareProduct(prepareCrop(s, pub), pub));
   fs.mkdirSync(path.join(pub, 'logos/ccw'), { recursive: true });
   fs.copyFileSync(
     path.join(root, 'public/logos/ccw/primary.svg'),

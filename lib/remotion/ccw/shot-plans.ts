@@ -54,6 +54,10 @@ export type CcwShot = {
   /** Floor shots: water ripple through the floor type (0 to 1). */
   rippleTo?: number;
   rippleFrom?: number;
+  /** Floor shots: the hook type slams onto the floor. */
+  slam?: boolean;
+  /** Floor shots: a product photo set on the floor (image index into images). */
+  product?: { image: number; x: number; y: number; w: number };
   /** No burned-in captions while this shot is on (its type is the words). */
   noCaptions?: boolean;
 };
@@ -69,7 +73,6 @@ const WDR = 'water-damage-restoration';
 const X800 = `${WDR}/ccw-xpower-airmover-x800-1hp-w-clamp`;
 const LGR = `${WDR}/ccw-dri-eaz-dehumidifier-lgr-7000xl-230volt`;
 const MAXX = `${WDR}/ccw-razorback-maxxguard-550-cfm-air-scrubber`;
-const STRYKER = `${WDR}/ccw-dri-eaz-extraction-wand-stryker`;
 const PREFILTER = `${WDR}/ccw-injectidry-interceptor-pre-filter-10pack`;
 const HEPA = `${WDR}/ccw-injectidry-interceptor-replacement-hepa-filter`;
 
@@ -176,6 +179,7 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         crop: TILES,
         floorLines: ['5 TO 8', 'CYCLONES'],
         floorSize: 156,
+        slam: true,
         sourceSlip: SOURCE,
         noCaptions: true,
       },
@@ -233,10 +237,13 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
       },
       {
         trigger: 'Be ready',
-        kind: 'lineup',
-        subjects: [STRYKER, X800],
-        images: [img(STRYKER, '51412327399637'), img(X800, '20568158994585')],
-        label: 'Ready for the work',
+        kind: 'floor',
+        subjects: [EXTRACTION, X800],
+        images: [scene('extraction-02'), img(X800, '20568158994585')],
+        crop: { x: 300, y: 0, w: 405, h: 720 },
+        product: { image: 1, x: 330, y: 880, w: 520 },
+        kinetic: ['Ready', 'for', 'the', 'work.'],
+        noCaptions: true,
       },
       {
         trigger: 'Load the truck',
@@ -244,6 +251,8 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
         subjects: [SOLUTION],
         images: [scene('solution-01')],
         crop: VAN,
+        kinetic: ['Load', 'the', 'truck.'],
+        noCaptions: true,
       },
       {
         trigger: 'See the drying range',
