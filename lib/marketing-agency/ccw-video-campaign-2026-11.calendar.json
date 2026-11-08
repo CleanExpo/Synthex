@@ -228,16 +228,19 @@
       "funnelStage": "retention",
       "theme": "Service your equipment",
       "title": "The pre-filter protects the HEPA",
-      "hook": "The cheapest filter in an air scrubber protects the most expensive one.",
-      "message": "Air scrubber filters are staged. The pre-filter protects the HEPA. Running without it, or past its life, turns a cheap filter change into an expensive one.",
+      "hook": "The pre-filter protects the HEPA.",
+      "message": "The pre-filter takes the coarse dust so the HEPA/activated carbon filter behind it does not have to. Running without it, or past its life, is what turns a cheap filter change into an expensive one. CCW recommends changing it every 2 to 3 months.",
       "products": [
         "Razorback MaxxGuard 550 Air Scrubber",
-        "Dri-Eaz Velo HEPA Pre-Filter"
+        "Razorback MaxxGuard 550 MERV-10 Pre-Filter 5 Pack",
+        "Razorback MaxxGuard 550 HEPA/Activated Carbon Filter"
       ],
       "referenceSubjects": [
         "water-damage-restoration/ccw-razorback-maxxguard-550-cfm-air-scrubber",
-        "water-damage-restoration/ccw-dri-eaz-pre-filter-velo-hepa-20-pack",
-        "water-damage-restoration/ccw-dri-eaz-velo-hepa-primary-filter-replacement"
+        "carpet-cleaning/carpet-cleaning-result",
+        "carpet-cleaning/carpet-cleaning-rotary",
+        "carpet-cleaning/carpet-cleaning-extraction",
+        "carpet-cleaning/carpet-cleaning-grooming"
       ],
       "cta": "See Razorback filters and spares",
       "channels": ["instagram", "facebook", "youtube", "linkedin"],

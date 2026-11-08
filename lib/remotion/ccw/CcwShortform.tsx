@@ -905,6 +905,7 @@ function ShotView({
           sourceSlip={shot.sourceSlip}
           rippleTo={shot.rippleTo}
           rippleFrom={shot.rippleFrom}
+          sceneBlur={shot.sceneBlur}
           place={shot.place?.map(u => ({ ...u, src: shot.images[u.img] }))}
           slam={shot.slam}
           product={

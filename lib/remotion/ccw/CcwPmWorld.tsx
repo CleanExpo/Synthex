@@ -38,6 +38,8 @@ export type CcwPmWorldProps = {
   rippleTo?: number;
   /** Fraction of the clip at which the ripple starts. */
   rippleFrom?: number;
+  /** Soft focus on the room photo, in px (the placed units stay sharp). */
+  sceneBlur?: number;
   /** Hook: floor type slams onto the floor in 0.3 s with a camera jolt and splash ripple. */
   slam?: boolean;
   /**
@@ -62,6 +64,7 @@ export type CcwPmWorldProps = {
     slip?: string;
     footprint?: [number, number][];
     decal?: [number, number, number, number][];
+    matte?: [number, number][];
   }[];
 };
 
@@ -87,6 +90,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
   sourceSlip,
   rippleTo = 0,
   rippleFrom = 0.35,
+  sceneBlur,
   slam,
   product,
   textMask,
@@ -168,6 +172,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
           top: -96,
           transform: `translateY(${shakeY}px) scale(${push})`,
           transformOrigin: '50% 62%',
+          filter: sceneBlur ? `blur(${sceneBlur}px)` : undefined,
         }}
       />
 
@@ -187,15 +192,31 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
             if (t < (u.at ?? 0)) return null;
             // Optional crop of the cut-out's bottom (a dangling cord).
             const clip = (u.clipBottom ?? 0) * u.w;
+            // Matte: the unit's own outline (box fractions), so a catalogue
+            // render's baked grey floor shadow is clipped away. The clip is
+            // in the image's own space, so it mirrors with `flip`.
+            const matte = u.matte
+              ? `polygon(${u.matte
+                  .map(
+                    ([fx, fy]) =>
+                      `${(fx * 100).toFixed(1)}% ${(fy * 100).toFixed(1)}%`
+                  )
+                  .join(', ')})`
+              : undefined;
+            // With a matte, the unit's lowest outline point (not the bottom
+            // of the trimmed render) stands on u.y.
+            const drop = u.matte
+              ? (1 - Math.max(...u.matte.map(([, fy]) => fy))) * u.w
+              : 0;
             const box = {
               position: 'absolute' as const,
               left: u.x - u.w / 2,
-              top: u.y - u.w + clip,
+              top: u.y - u.w + clip + drop,
               width: u.w,
               height: u.w,
               objectFit: 'contain' as const,
               objectPosition: '50% 100%',
-              clipPath: clip ? `inset(0 0 ${clip}px 0)` : undefined,
+              clipPath: matte ?? (clip ? `inset(0 0 ${clip}px 0)` : undefined),
             };
             return (
               <React.Fragment key={`${u.src}-${i}`}>
@@ -233,7 +254,7 @@ export const CcwPmWorld: React.FC<CcwPmWorldProps> = ({
                         style={{
                           position: 'absolute',
                           left: u.x - u.w / 2,
-                          top: u.y - u.w,
+                          top: u.y - u.w + drop,
                           width: u.w,
                           height: u.w,
                           // Blur on the parent, clip on the child: CSS applies

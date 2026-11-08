@@ -161,6 +161,24 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     );
   });
 
+  it('gives w1-d4-pm a CTA that matches its Razorback landing link and only Razorback filters', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d4-pm')!;
+    expect(s.cta).toBe('See Razorback filters and spares');
+    expect(s.landingUrl).toBe(
+      'https://ccwonline.com.au/collections/razorback?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d4-pm'
+    );
+    // CCW lists a MERV-10 pre-filter and a HEPA/activated carbon filter for
+    // the MaxxGuard 550 (read 08/11/2026). The Dri-Eaz Velo pre-filter does
+    // not fit it, so no other brand's filter may be paired with the unit.
+    expect(JSON.stringify(s.products)).not.toMatch(/dri-eaz|velo/i);
+    expect(s.referenceSubjects.join(' ')).not.toMatch(/dri-eaz|velo/i);
+    // The calendar hook ("the cheapest filter ... the most expensive one")
+    // has no source in those words, and no IICRC/S500 line is made.
+    expect(`${s.hook} ${s.message}`).not.toMatch(
+      /cheapest|most expensive|S500|IICRC/i
+    );
+  });
+
   it('covers every funnel stage', () => {
     expect(new Set(ccwVideoSlots.map(s => s.funnelStage))).toEqual(
       new Set(['awareness', 'consideration', 'conversion', 'retention'])
