@@ -188,7 +188,9 @@ export function deliveryCopy(master: string, copy: string) {
     '-c:v',
     'libx264',
     '-preset',
-    'slower',
+    // veryslow (was slower, 08/11/2026): about +0.0002 SSIM at the same
+    // bitrate; only the encode takes longer.
+    'veryslow',
     // The copy is judged on SSIM against the master, so let x264 spend its
     // bits on structural fidelity (fine carpet texture) rather than psy-visual
     // tricks that cost SSIM. Same size cap; the 0.99 bar is unchanged.
