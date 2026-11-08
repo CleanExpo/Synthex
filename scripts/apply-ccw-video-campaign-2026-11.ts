@@ -18,6 +18,7 @@ import {
   buildCcwVideoCalendarDrafts,
   ccwVideoSlots,
 } from '../lib/marketing-agency/ccw-video-campaign-2026-11';
+import { assertCalendarPostClean } from '../lib/marketing-calendar/prompt-guard';
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -124,6 +125,7 @@ async function main() {
     campaignId: campaign.id,
   })) {
     if (have.has(draft.metadata.slotKey)) continue;
+    assertCalendarPostClean(org.slug, draft);
     await prisma.calendarPost.create({ data: draft });
     created += 1;
   }
