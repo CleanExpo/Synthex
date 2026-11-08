@@ -14,7 +14,20 @@
 
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 import { CCW_DELIVERY } from './render-ccw-shortform';
+import {
+  DEFAULT_WHISPER_MODEL,
+  MIN_SPEECH_MATCH,
+  ccwVoiceover,
+} from './check-video-delivery';
+import {
+  DeliveryNotReadyError,
+  SHORT_FORM_DELIVERY,
+  evaluateDelivery,
+  measureDelivery,
+  measureSpeechMatch,
+} from '../lib/video/delivery-readiness';
 import { ccwVideoSlots } from '../lib/marketing-agency/ccw-video-campaign-2026-11';
 import {
   CCW_REVIEW_BUCKET,
@@ -41,10 +54,30 @@ async function main() {
   const videos = Object.entries(files).map(([id, file]) => {
     const slot = ccwVideoSlots.find(s => s.id === id);
     if (!slot) throw new Error(`unknown video id ${id}`);
-    const buf = fs.readFileSync(file);
-    if (buf.length >= CCW_DELIVERY.maxBytes) {
-      throw new Error(`${id}: ${buf.length} bytes is over the delivery cap`);
+    // The client watches exactly this file: it must pass the full delivery
+    // check (format every player decodes, sound the whole length, levelled,
+    // spoken words match the script) before it goes anywhere near the board.
+    const measures = measureDelivery(file);
+    const md = path.resolve(
+      'docs/campaigns/ccw-2026-11-video/scripts',
+      `${id}.md`
+    );
+    measures.speechMatch = fs.existsSync(md)
+      ? measureSpeechMatch(
+          file,
+          ccwVoiceover(fs.readFileSync(md, 'utf8')),
+          process.env.WHISPER_MODEL || DEFAULT_WHISPER_MODEL
+        )
+      : null;
+    const ready = evaluateDelivery(measures, {
+      ...SHORT_FORM_DELIVERY,
+      maxBytes: CCW_DELIVERY.maxBytes,
+      minSpeechMatch: MIN_SPEECH_MATCH,
+    });
+    if (!ready.ready) {
+      throw new DeliveryNotReadyError(file, ready.failures);
     }
+    const buf = fs.readFileSync(file);
     return {
       slot,
       file,

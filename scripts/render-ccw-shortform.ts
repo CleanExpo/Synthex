@@ -25,6 +25,11 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import {
+  SHORT_FORM_DELIVERY,
+  evaluateDelivery,
+  measureDelivery,
+} from '../lib/video/delivery-readiness';
 import { CCW_SHOT_PLANS } from '../lib/remotion/ccw/shot-plans';
 import {
   timeShots,
@@ -344,8 +349,15 @@ function encodeDelivery(master: string, copy: string, aim: number) {
     'ssim',
     '-b:v',
     `${kbps}k`,
+    // Masters come out of the browser render as full-range (yuvj420p).
+    // Convert to the limited range every player and platform expects, and
+    // say so in the stream, so the delivery check sees yuv420p.
+    '-vf',
+    'scale=out_range=tv',
     '-pix_fmt',
     'yuv420p',
+    '-color_range',
+    'tv',
     '-passlogfile',
     log,
   ];
@@ -372,8 +384,18 @@ function encodeDelivery(master: string, copy: string, aim: number) {
     ...v,
     '-pass',
     '2',
+    // 48 kHz stereo AAC-LC, set explicitly: a master levelled by loudnorm
+    // carried 96 kHz through to six week-1 copies, and Windows plays sound
+    // above 48 kHz as silence (09/11/2026, Toby: "Is there supposed to be any
+    // sound?"). The delivery check below refuses any other format.
     '-c:a',
     'aac',
+    '-profile:a',
+    'aac_low',
+    '-ar',
+    '48000',
+    '-ac',
+    '2',
     '-b:a',
     `${CCW_DELIVERY.audioKbps}k`,
     '-movflags',
@@ -394,7 +416,9 @@ function encodeDelivery(master: string, copy: string, aim: number) {
       '-i',
       master,
       '-lavfi',
-      'ssim',
+      // Both sides in the same (limited) range, so SSIM measures the encode,
+      // not the range conversion.
+      '[0:v]scale=out_range=tv,format=yuv420p[c];[1:v]scale=out_range=tv,format=yuv420p[m];[c][m]ssim',
       '-f',
       'null',
       '-',
@@ -404,6 +428,10 @@ function encodeDelivery(master: string, copy: string, aim: number) {
   const ssim = Number(/All:([\d.]+)/.exec(ssimRes.stderr)?.[1] ?? NaN);
   const lufsMaster = integratedLufs(master);
   const lufsCopy = integratedLufs(copy);
+  const delivery = evaluateDelivery(measureDelivery(copy), {
+    ...SHORT_FORM_DELIVERY,
+    maxBytes: CCW_DELIVERY.maxBytes,
+  });
   return {
     master,
     copy,
@@ -412,7 +440,9 @@ function encodeDelivery(master: string, copy: string, aim: number) {
     ssim,
     lufsMaster,
     lufsCopy,
+    deliveryFailures: delivery.failures,
     ok:
+      delivery.ready &&
       bytes < CCW_DELIVERY.maxBytes &&
       ssim >= CCW_DELIVERY.minSsim &&
       Math.abs(lufsCopy - lufsMaster) <= CCW_DELIVERY.maxLoudnessDiffLu,
