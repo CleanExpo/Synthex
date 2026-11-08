@@ -353,6 +353,8 @@
   },
   "person": {
     "name": "Phill McGurk",
+    "emailName": "Margot",
+    "emailNameSource": "Phill via Linear SYN-1406 (09/11/2026): the quiet email button reads Email Margot; recipient inbox unchanged",
     "cardUrl": "https://card.unite-group.ink",
     "likenessConsent": {
       "date": "22/10/2026",
