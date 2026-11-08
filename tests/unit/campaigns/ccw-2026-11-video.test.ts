@@ -146,6 +146,18 @@ describe('SYN-1404 CCW video campaign funnel wiring', () => {
     );
   });
 
+  it('gives w1-d3-pm a CTA that matches its air movers landing link and a sourced hook', () => {
+    const s = ccwVideoSlots.find(v => v.id === 'ccw-w1-d3-pm')!;
+    expect(s.cta).toBe('See the air mover range');
+    expect(s.cta).not.toMatch(/drying range/i);
+    // No source says when the 24 to 48 hours start (SafeWork NSW gives the
+    // window only), so the hook quotes the window, not a starting clock.
+    expect(s.hook).not.toMatch(/clock starts/i);
+    expect(s.landingUrl).toBe(
+      'https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d3-pm'
+    );
+  });
+
   it('covers every funnel stage', () => {
     expect(new Set(ccwVideoSlots.map(s => s.funnelStage))).toEqual(
       new Set(['awareness', 'consideration', 'conversion', 'retention'])

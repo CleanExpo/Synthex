@@ -170,8 +170,8 @@
       "funnelStage": "awareness",
       "theme": "Storm season",
       "title": "The first 24 to 48 hours",
-      "hook": "On a water job, the clock starts when the water stops.",
-      "message": "Australian workplace guidance says clean up wet areas within 24 to 48 hours, and the water damage standard says start mitigation as soon as it is safe. Have the extraction and drying gear ready to load.",
+      "hook": "Clean up water damage promptly, within 24 to 48 hours.",
+      "message": "SafeWork NSW says clean up wet areas and water damage promptly, within 24 to 48 hours, and the water damage standard says mitigation should begin as soon as safely possible. The Water Claw and SOS Pro pull water out of carpet and pad; the X-800 is designed to dry your floors.",
       "products": [
         "Water Claw Medium Deluxe with Injection",
         "SOS Pro Sub Surface Extraction Tool",
@@ -182,7 +182,7 @@
         "water-damage-restoration/ccw-sos-pro-sub-surface-extraction-tool",
         "water-damage-restoration/ccw-xpower-airmover-x800-1hp-w-clamp"
       ],
-      "cta": "See the drying range",
+      "cta": "See the air mover range",
       "channels": ["instagram", "facebook", "youtube", "linkedin"],
       "landingBase": "https://ccwonline.com.au/collections/airmovers",
       "landingUrl": "https://ccwonline.com.au/collections/airmovers?utm_source=instagram&utm_medium=social&utm_campaign=ccw-2026-11-storm-season&utm_content=w1-d3-pm",

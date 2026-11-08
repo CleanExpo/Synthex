@@ -160,6 +160,14 @@ const MAXF = `${WDR}/ccw-dry-air-maxforce-ventilator-50hz-220v-au-plug`;
 const BD2500 = `${WDR}/ccw-dri-eaz-lgr-dehumidifier-bd2500-230volt`;
 const RESULT = 'carpet-cleaning/carpet-cleaning-result';
 
+// ccw-w1-d3-pm: "Wet tiles, then the kit". The real wet job (extraction-01)
+// opens on the SafeWork NSW clean-up window; the three tools are cut from
+// their catalogue photos and set flat on dry carpet. No unit is shown running
+// in a wet room.
+const CLAW = `${WDR}/ccw-waterclaw-med-dlx-with-injection`;
+const SOSPRO = `${WDR}/ccw-sos-pro-sub-surface-extraction-tool`;
+const GROOM = 'carpet-cleaning/carpet-cleaning-grooming';
+
 export const CCW_SHOT_PLANS: CcwShotPlan[] = [
   {
     videoId: 'ccw-w1-d1-am',
@@ -777,6 +785,137 @@ export const CCW_SHOT_PLANS: CcwShotPlan[] = [
       },
       {
         trigger: 'See the air mover range',
+        kind: 'end',
+        subjects: [RESULT],
+        images: [`${RESULT}-02.webp`],
+        crop: { x: 250, y: 0, w: 405, h: 720 },
+      },
+    ],
+  },
+  {
+    // Concept A "Wet tiles, then the kit" (blind pick 42/60, 08/11/2026).
+    // Every line quotes SafeWork NSW, the register's S500 row or CCW's
+    // product pages. CTA matches the landing link (/collections/airmovers).
+    videoId: 'ccw-w1-d3-pm',
+    cta: 'See the air mover range',
+    url: 'ccwonline.com.au',
+    shots: [
+      {
+        // Hook: the real wet job, low over the tiles; the line slams onto
+        // the wet floor.
+        trigger: 'Clean up water',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-01.webp`],
+        crop: { x: 760, y: 60, w: 371, h: 660 },
+        floorLines: ['CLEAN UP', 'PROMPTLY'],
+        floorSize: 170,
+        slam: true,
+        noCaptions: true,
+      },
+      {
+        trigger: 'within 24',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-02.webp`],
+        crop: { x: 300, y: 0, w: 405, h: 720 },
+        floorLines: ['WITHIN 24 TO', '48 HOURS'],
+        floorSize: 140,
+        sourceSlip: 'Source: SafeWork NSW, Mould at work',
+        noCaptions: true,
+      },
+      {
+        // The turn: the standard, on the next room's carpet.
+        trigger: 'The water damage standard',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-03.webp`],
+        crop: { x: 0, y: 0, w: 405, h: 720 },
+        floorLines: ['BEGIN', 'MITIGATION'],
+        floorSize: 150,
+        sourceSlip: 'Source: IICRC S500 water damage standard',
+        noCaptions: true,
+      },
+      {
+        // Same room, the camera moves along to the doorway.
+        trigger: 'as soon as',
+        kind: 'floor',
+        subjects: [EXTRACTION],
+        images: [`${EXTRACTION}-03.webp`],
+        crop: { x: 760, y: 80, w: 360, h: 640 },
+        floorLines: ['AS SOON AS', 'SAFELY POSSIBLE'],
+        floorSize: 100,
+        noCaptions: true,
+      },
+      {
+        // The operator stands on the Water Claw on dry carpet.
+        trigger: 'The Water Claw',
+        kind: 'floor',
+        subjects: [ROTARY, CLAW],
+        images: [`${ROTARY}-04.webp`, img(CLAW, '51733981921493')],
+        crop: ROOM,
+        place: [{ img: 1, x: 560, y: 840, w: 900 }],
+        floorLines: ['OUT OF CARPET', 'AND PAD'],
+        floorSize: 120,
+        noCaptions: true,
+      },
+      {
+        trigger: 'without removing',
+        kind: 'floor',
+        subjects: [EXTRACTION, CLAW],
+        images: [`${EXTRACTION}-04.webp`, img(CLAW, '51733981888725')],
+        crop: { x: 300, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 620, y: 760, w: 700 }],
+        floorLines: ['WITHOUT LIFTING', 'THE PAD'],
+        floorSize: 116,
+        noCaptions: true,
+      },
+      {
+        trigger: 'The SOS',
+        kind: 'floor',
+        subjects: [RESULT, SOSPRO],
+        images: [`${RESULT}-01.webp`, img(SOSPRO, '51412401029333')],
+        crop: { x: 300, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 560, y: 760, w: 640 }],
+        floorLines: ['SOS PRO:', 'CLEAR TOP'],
+        floorSize: 150,
+        noCaptions: true,
+      },
+      {
+        trigger: 'shows what',
+        kind: 'floor',
+        subjects: [GROOM, SOSPRO],
+        images: [`${GROOM}-01.webp`, img(SOSPRO, '51412400832725')],
+        crop: { x: 600, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 560, y: 760, w: 720 }],
+        floorLines: ['SEE WHAT IS', 'COMING OUT'],
+        floorSize: 136,
+        noCaptions: true,
+      },
+      {
+        trigger: 'The X-800',
+        kind: 'floor',
+        subjects: [ROTARY, X800],
+        images: [`${ROTARY}-02.webp`, img(X800, '20568160796825')],
+        crop: { x: 700, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 560, y: 760, w: 560 }],
+        floorLines: ['XPOWER', 'X-800'],
+        floorSize: 160,
+        noCaptions: true,
+      },
+      {
+        trigger: 'dry your floors',
+        kind: 'floor',
+        subjects: [ROTARY, X800],
+        images: [`${ROTARY}-03.webp`, img(X800, '20568158994585')],
+        crop: { x: 640, y: 0, w: 405, h: 720 },
+        place: [{ img: 1, x: 580, y: 740, w: 600 }],
+        floorLines: ['DESIGNED TO DRY', 'YOUR FLOORS'],
+        floorSize: 104,
+        noCaptions: true,
+      },
+      {
+        trigger: 'air mover range',
         kind: 'end',
         subjects: [RESULT],
         images: [`${RESULT}-02.webp`],
