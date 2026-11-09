@@ -845,6 +845,7 @@ describe("the organisation's publish-safety state gates Studio posts like autopi
   it('a CCW sign-off-only draft on a shadow-mode organisation is approved and schedules nothing', async () => {
     const built = buildCcwStudioDraft(ccwVideoSlots[0], 'org-carsi', {
       videoUrl: 'https://example.test/signed.mp4',
+      voiceover: 'Final spoken words.',
       storagePath: 'ccw/x.mp4',
       sha256: 'a'.repeat(64),
       bytes: 1,
