@@ -77,6 +77,8 @@ import {
   type StudioScheduleAttempt,
   type StudioTransactionRunner,
 } from '@/lib/marketing-agency/studio/approve-and-schedule';
+import { buildCcwStudioDraft } from '@/lib/marketing-agency/ccw-video-campaign-2026-11-studio';
+import { ccwVideoSlots } from '@/lib/marketing-agency/ccw-video-campaign-2026-11';
 
 const NOW = new Date('2026-09-02T14:00:00.000Z');
 const LIVE_GATE = {
@@ -835,6 +837,45 @@ describe("the organisation's publish-safety state gates Studio posts like autopi
       ],
     });
     expect(h.draft()?.status).toBe('awaiting_approval');
+  });
+
+  // SYN-1404: Toby signs CCW videos off on the board while CCW is not live.
+  // The CCW drafts carry no platforms, so the sign-off commits and nothing is
+  // scheduled, whatever the organisation's publish state.
+  it('a CCW sign-off-only draft on a shadow-mode organisation is approved and schedules nothing', async () => {
+    const built = buildCcwStudioDraft(ccwVideoSlots[0], 'org-carsi', {
+      videoUrl: 'https://example.test/signed.mp4',
+      voiceover: 'Final spoken words.',
+      storagePath: 'ccw/x.mp4',
+      sha256: 'a'.repeat(64),
+      bytes: 1,
+    });
+    const h = harness({
+      row: draftRow({
+        platforms: built.platforms,
+        metadata: built.metadata as Record<string, unknown>,
+        videoUrl: built.videoUrl,
+      }),
+    });
+    h.publishGate.mockResolvedValue({
+      allowed: false,
+      reason: "Organisation calendar mode is 'shadow'",
+      calendarMode: 'shadow',
+      autoPublishPaused: false,
+    });
+
+    const result = await approveAndScheduleStudioDraft(INPUT, h.deps);
+
+    expect(built.platforms).toEqual([]);
+    expect(h.schedule).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      approved: true,
+      outcome: 'approved',
+      scheduled: [],
+      skipped: [],
+    });
+    expect(h.draft()?.status).toBe('approved');
+    expect(h.metadata().externalPublishingAllowed).toBeUndefined();
   });
 
   it('a paused organisation gets blocked with the pause named', async () => {
