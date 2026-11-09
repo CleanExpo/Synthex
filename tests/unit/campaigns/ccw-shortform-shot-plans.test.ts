@@ -147,6 +147,31 @@ describe('SYN-1404 CCW zero-cost shot plans', () => {
     ).toThrow(/end card would run/);
   });
 
+  it('refuses a voiceover or last shot beyond the 30 s limit', () => {
+    const text = 'Cyclone season. See the range.';
+    const at = (lastStart: number, end: number) => {
+      const a = fakeAlignment(text);
+      return {
+        ...a,
+        character_start_times_seconds: a.character_start_times_seconds.map(
+          (t, i) => (i >= text.indexOf('See') ? lastStart : t)
+        ),
+        character_end_times_seconds: a.character_end_times_seconds.map(
+          (t, i) => (i === text.length - 1 ? end : t)
+        ),
+      };
+    };
+    const shots = [
+      { trigger: 'x', kind: 'hook', subjects: [], images: [] },
+      { trigger: 'See the range', kind: 'end', subjects: [], images: [] },
+    ] as Parameters<typeof timeShots>[2];
+    expect(() => timeShots(text, at(28, 30.5), shots)).toThrow(
+      /voiceover runs/
+    );
+    expect(() => timeShots(text, at(28.5, 29.5), shots)).toThrow(/last shot/);
+    expect(() => timeShots(text, at(27, 29.5), shots)).not.toThrow();
+  });
+
   it('turns the character alignment into caption words', () => {
     const text = 'Quiet does not mean dry.';
     const w = wordsFromAlignment(text, fakeAlignment(text));

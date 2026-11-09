@@ -62,13 +62,13 @@ async function main() {
       'docs/campaigns/ccw-2026-11-video/scripts',
       `${id}.md`
     );
-    measures.speechMatch = fs.existsSync(md)
-      ? measureSpeechMatch(
-          file,
-          ccwVoiceover(fs.readFileSync(md, 'utf8')),
-          process.env.WHISPER_MODEL || DEFAULT_WHISPER_MODEL
-        )
-      : null;
+    if (!fs.existsSync(md)) throw new Error(`no finalised script for ${id}`);
+    const voiceover = ccwVoiceover(fs.readFileSync(md, 'utf8'));
+    measures.speechMatch = measureSpeechMatch(
+      file,
+      voiceover,
+      process.env.WHISPER_MODEL || DEFAULT_WHISPER_MODEL
+    );
     const ready = evaluateDelivery(measures, {
       ...SHORT_FORM_DELIVERY,
       maxBytes: CCW_DELIVERY.maxBytes,
@@ -81,6 +81,7 @@ async function main() {
     return {
       slot,
       file,
+      voiceover,
       buf,
       bytes: buf.length,
       sha256: createHash('sha256').update(buf).digest('hex'),
@@ -92,6 +93,7 @@ async function main() {
     for (const v of videos) {
       const draft = buildCcwStudioDraft(v.slot, '<ccw org>', {
         videoUrl: '<signed url>',
+        voiceover: v.voiceover,
         storagePath: v.storagePath,
         sha256: v.sha256,
         bytes: v.bytes,

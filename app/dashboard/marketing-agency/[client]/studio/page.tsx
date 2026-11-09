@@ -47,19 +47,27 @@ export default function ClientStudioPage({
 
   async function approve(draftId: string): Promise<void> {
     setApproveError(null);
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ draftId }),
-    });
-    // A refused approval must never look like a silent success.
-    if (!res.ok) {
-      const body = (await res.json().catch(() => null)) as {
-        error?: string;
-      } | null;
-      setApproveError(body?.error ?? `Approval failed (HTTP ${res.status}).`);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draftId }),
+      });
+      // A refused approval must never look like a silent success.
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        setApproveError(body?.error ?? `Approval failed (HTTP ${res.status}).`);
+      }
+    } catch {
+      // The request may or may not have reached the server, so say neither.
+      setApproveError(
+        'We could not confirm that approval. Check the status on this page before approving again.'
+      );
     }
+    // Re-read the board either way: it shows what was actually recorded.
     await mutate();
   }
 

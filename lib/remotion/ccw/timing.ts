@@ -52,6 +52,17 @@ export function timeShots(text: string, a: CcwAlignment, shots: CcwShot[]) {
   // most CCW_END_CARD_MAX_SECONDS, and never past CCW_VIDEO_SECONDS.
   const voiceEnd = Math.max(...a.character_end_times_seconds);
   const lastFrom = starts[starts.length - 1];
+  // Clamping alone would cut Margot off or leave a flash of end card.
+  if (voiceEnd > CCW_VIDEO_SECONDS) {
+    throw new Error(
+      `voiceover runs ${voiceEnd.toFixed(2)} s; the limit is ${CCW_VIDEO_SECONDS} s`
+    );
+  }
+  if (lastFrom + 2.5 > CCW_VIDEO_SECONDS) {
+    throw new Error(
+      `last shot starts at ${lastFrom.toFixed(2)} s; it needs 2.5 s before ${CCW_VIDEO_SECONDS} s`
+    );
+  }
   const end = Math.min(
     CCW_VIDEO_SECONDS,
     Math.max(lastFrom + 2.5, voiceEnd + 0.4)

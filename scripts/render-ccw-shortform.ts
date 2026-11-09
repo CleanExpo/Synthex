@@ -30,6 +30,7 @@ import {
   evaluateDelivery,
   measureDelivery,
 } from '../lib/video/delivery-readiness';
+import { ccwVideoSlots } from '../lib/marketing-agency/ccw-video-campaign-2026-11';
 import { CCW_SHOT_PLANS } from '../lib/remotion/ccw/shot-plans';
 import {
   timeShots,
@@ -56,6 +57,51 @@ export const CCW_UNSAFE_REGIONS = [
   { name: 'right 6%', x: 1015, y: 0, w: 65, h: 1920 },
   { name: 'button column', x: 853, y: 1152, w: 227, h: 96 },
 ];
+
+/**
+ * Sample times where one region of the text mask shows text. A scan that did
+ * not run, or ran and measured nothing, throws: it must never read as clear.
+ */
+export function safeZoneHits(
+  region: string,
+  res: { status: number | null; stderr: string | null }
+): number[] {
+  if (res.status !== 0 || !res.stderr) {
+    throw new Error(
+      `SAFE ZONE SCAN FAILED for ${region}: ffmpeg exit ${res.status}`
+    );
+  }
+  let at = 0;
+  let measured = 0;
+  const hits: number[] = [];
+  for (const line of res.stderr.split('\n')) {
+    const tm = /pts_time:([\d.]+)/.exec(line);
+    if (tm) at = Number(tm[1]);
+    const ym = /YMAX=(\d+)/.exec(line);
+    if (!ym) continue;
+    measured++;
+    // Text boxes are white (235 in video range); 120 allows for fades.
+    if (Number(ym[1]) > 120) hits.push(at);
+  }
+  if (measured === 0) {
+    throw new Error(`SAFE ZONE SCAN FAILED for ${region}: no frames measured`);
+  }
+  return hits;
+}
+
+/**
+ * A slot Phill has approved is locked: a fresh render would replace the exact
+ * cut he passed. To change one, remove approvedRender in the calendar first.
+ */
+export function refuseLockedRender(
+  video: string,
+  slots: { id: string; approvedRender?: string }[]
+) {
+  const locked = slots.find(s => s.id === video)?.approvedRender;
+  if (locked) {
+    throw new Error(`${video} is locked (${locked}); not re-rendering it`);
+  }
+}
 
 /** Render the text mask and scan it 10 times a second; throws on a breach. */
 function safeZoneCheck(
@@ -101,15 +147,7 @@ function safeZoneCheck(
       ],
       { encoding: 'utf8' }
     );
-    let at = 0;
-    const hits: number[] = [];
-    for (const line of res.stderr.split('\n')) {
-      const tm = /pts_time:([\d.]+)/.exec(line);
-      if (tm) at = Number(tm[1]);
-      const ym = /YMAX=(\d+)/.exec(line);
-      // Text boxes are white (235 in video range); 120 allows for fades.
-      if (ym && Number(ym[1]) > 120) hits.push(at);
-    }
+    const hits = safeZoneHits(r.name, res);
     if (hits.length) {
       breaches.push(
         `${r.name}: text at ${hits.length} sampled frames, first ${hits[0].toFixed(1)} s, last ${hits[hits.length - 1].toFixed(1)} s`
@@ -587,6 +625,8 @@ async function main() {
     );
     return;
   }
+  if (!process.argv.includes('--check-only'))
+    refuseLockedRender(video, ccwVideoSlots);
   const plan = CCW_SHOT_PLANS.find(p => p.videoId === video);
   if (!plan) throw new Error(`no shot plan for ${video}`);
   // Run from the repository root.

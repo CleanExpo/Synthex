@@ -17,6 +17,7 @@ import {
 const week1 = ccwVideoSlots.filter(slot => slot.week === 1);
 const video = (id: string) => ({
   videoUrl: `https://example.test/${id}.mp4`,
+  voiceover: `The final spoken words of ${id}.`,
   storagePath: `ccw/${id}.mp4`,
   sha256: 'b'.repeat(64),
   bytes: 7_000_000,
@@ -40,7 +41,9 @@ describe('CCW studio review drafts', () => {
       expect(meta.review).toBe('client_sign_off');
       expect(meta.plannedChannels).toEqual(slot.channels);
       expect(meta.postAt).toBe(ccwPostAtIso(slot));
-      expect(draft.script).toContain(slot.hook);
+      // The card shows the finalised words, not the first-draft calendar copy.
+      expect(draft.script).toContain(`The final spoken words of ${slot.id}.`);
+      expect(draft.script).not.toContain(slot.message);
       expect(draft.script).toContain(slot.landingBase);
       // Each planned channel gets its own tracked link.
       const links = meta.links as Record<string, string>;

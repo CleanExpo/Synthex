@@ -8,8 +8,11 @@ import {
   CCW_DELIVERY_AIMS,
   deliveryVideoKbps,
   masterLoudnessOk,
+  refuseLockedRender,
   runDeliveryAttempts,
+  safeZoneHits,
 } from '../../../scripts/render-ccw-shortform';
+import { ccwVideoSlots } from '../../../lib/marketing-agency/ccw-video-campaign-2026-11';
 
 const CAP = CCW_DELIVERY.maxBytes;
 
@@ -106,5 +109,44 @@ describe('CCW delivery attempts', () => {
     [-15.5, false],
   ])('a master at %s LUFS passes the -16 +/- 0.3 bar: %s', (lufs, ok) => {
     expect(masterLoudnessOk(lufs)).toBe(ok);
+  });
+});
+
+describe('CCW safe-zone scan', () => {
+  const frame = (t: number, y: number) =>
+    `frame:0 pts_time:${t}\nlavfi.signalstats.YMAX=${y}`;
+
+  it('reports the times text appears in the region', () => {
+    const stderr = [frame(0, 16), frame(0.1, 235), frame(0.2, 16)].join('\n');
+    expect(safeZoneHits('top', { status: 0, stderr })).toEqual([0.1]);
+  });
+
+  it('a clear region returns no hits', () => {
+    expect(safeZoneHits('top', { status: 0, stderr: frame(0, 16) })).toEqual(
+      []
+    );
+  });
+
+  it.each([
+    ['ffmpeg failed', { status: 1, stderr: frame(0, 16) }],
+    ['ffmpeg never started', { status: null, stderr: null }],
+    ['nothing was measured', { status: 0, stderr: 'no frames here' }],
+  ])('throws rather than reading clear when %s', (_why, res) => {
+    expect(() => safeZoneHits('top', res)).toThrow(/SAFE ZONE SCAN FAILED/);
+  });
+});
+
+describe('locked CCW renders', () => {
+  it('refuses a fresh render of a slot Phill approved', () => {
+    const locked = ccwVideoSlots.find(s => s.approvedRender);
+    expect(locked).toBeDefined();
+    expect(() => refuseLockedRender(locked!.id, ccwVideoSlots)).toThrow(
+      /is locked/
+    );
+  });
+
+  it('allows a slot with no approved render', () => {
+    const open = ccwVideoSlots.find(s => !s.approvedRender);
+    expect(() => refuseLockedRender(open!.id, ccwVideoSlots)).not.toThrow();
   });
 });

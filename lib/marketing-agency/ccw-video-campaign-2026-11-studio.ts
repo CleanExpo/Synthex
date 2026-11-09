@@ -30,6 +30,8 @@ export const CCW_REVIEW_LINK_TTL_SECONDS = 35 * 24 * 60 * 60;
 export interface CcwReviewVideo {
   /** Signed URL of the delivery copy. */
   videoUrl: string;
+  /** Finalised spoken script, so the card shows what the video says. */
+  voiceover: string;
   /** Path inside CCW_REVIEW_BUCKET. */
   storagePath: string;
   sha256: string;
@@ -75,9 +77,9 @@ export function buildCcwStudioDraft(
     organizationId,
     clientSlug: CCW_STUDIO_CLIENT_SLUG,
     topic: `${slot.weekday} ${slot.date}, ${slot.slotAest}: ${slot.title}`,
-    script: [slot.hook, slot.message, `${slot.cta}: ${slot.landingBase}`].join(
-      '\n\n'
-    ),
+    // Never the calendar's hook and message: those are the first draft and
+    // some lines changed in review. The client signs off these words.
+    script: [video.voiceover, `${slot.cta}: ${slot.landingBase}`].join('\n\n'),
     // Sign-off only: no platform means Approve can never schedule a post.
     platforms: [],
     videoProvider: 'remotion',

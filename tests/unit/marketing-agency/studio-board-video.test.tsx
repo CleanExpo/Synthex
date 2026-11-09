@@ -88,6 +88,25 @@ describe('studio board as a review portal', () => {
     expect(mutate).toHaveBeenCalled();
   });
 
+  it('says the approval is unconfirmed when the request itself fails', async () => {
+    global.fetch = jest
+      .fn()
+      .mockRejectedValue(
+        new TypeError('Failed to fetch')
+      ) as unknown as typeof fetch;
+    await renderBoard();
+    mutate.mockClear();
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Approve' })[0]);
+    });
+
+    expect(screen.getByRole('alert').textContent).toMatch(
+      /could not confirm that approval/
+    );
+    expect(mutate).toHaveBeenCalled();
+  });
+
   it('shows no error after an accepted Approve', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
