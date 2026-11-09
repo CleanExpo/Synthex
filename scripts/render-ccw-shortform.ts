@@ -60,11 +60,13 @@ export const CCW_UNSAFE_REGIONS = [
 
 /**
  * Sample times where one region of the text mask shows text. A scan that did
- * not run, or ran and measured nothing, throws: it must never read as clear.
+ * not run, or measured less than the whole video, throws: it must never read
+ * as clear.
  */
 export function safeZoneHits(
   region: string,
-  res: { status: number | null; stderr: string | null }
+  res: { status: number | null; stderr: string | null },
+  minFrames: number
 ): number[] {
   if (res.status !== 0 || !res.stderr) {
     throw new Error(
@@ -83,8 +85,10 @@ export function safeZoneHits(
     // Text boxes are white (235 in video range); 120 allows for fades.
     if (Number(ym[1]) > 120) hits.push(at);
   }
-  if (measured === 0) {
-    throw new Error(`SAFE ZONE SCAN FAILED for ${region}: no frames measured`);
+  if (!(minFrames > 0) || measured < minFrames) {
+    throw new Error(
+      `SAFE ZONE SCAN FAILED for ${region}: measured ${measured} frames, need ${minFrames}`
+    );
   }
   return hits;
 }
@@ -131,6 +135,23 @@ function safeZoneCheck(
     ],
     { cwd: root, stdio: 'inherit' }
   );
+  // 10 samples a second over the mask's real length, less 5 % for rounding.
+  const maskSeconds = Number(
+    execFileSync(
+      'ffprobe',
+      [
+        '-v',
+        'error',
+        '-show_entries',
+        'format=duration',
+        '-of',
+        'csv=p=0',
+        mask,
+      ],
+      { encoding: 'utf8' }
+    )
+  );
+  const minFrames = Math.floor(maskSeconds * 10 * 0.95);
   const breaches: string[] = [];
   for (const r of CCW_UNSAFE_REGIONS) {
     const crop = `crop=${r.w / 2}:${r.h / 2}:${r.x / 2}:${r.y / 2}`;
@@ -147,7 +168,7 @@ function safeZoneCheck(
       ],
       { encoding: 'utf8' }
     );
-    const hits = safeZoneHits(r.name, res);
+    const hits = safeZoneHits(r.name, res, minFrames);
     if (hits.length) {
       breaches.push(
         `${r.name}: text at ${hits.length} sampled frames, first ${hits[0].toFixed(1)} s, last ${hits[hits.length - 1].toFixed(1)} s`

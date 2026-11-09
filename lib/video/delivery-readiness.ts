@@ -92,6 +92,16 @@ export function evaluateDelivery(
   spec: DeliverySpec
 ): DeliveryResult {
   const f: string[] = [];
+  // The one place a reading is accepted. Every comparison below goes through
+  // it, so null, undefined or NaN is a failure and can never compare as fine.
+  const known = (
+    name: string,
+    value: number | null | undefined
+  ): value is number => {
+    if (typeof value === 'number' && Number.isFinite(value)) return true;
+    f.push(`${name} could not be measured`);
+    return false;
+  };
 
   if (!m.formatNames.split(',').includes('mp4'))
     f.push(`container is ${m.formatNames}, not mp4`);
@@ -128,40 +138,44 @@ export function evaluateDelivery(
         `audio sample rate ${a.sampleRate} Hz; Windows and many players play only 44100 or 48000 Hz, so the client hears nothing`
       );
     if (a.channels !== 2) f.push(`${a.channels} audio channels, expected 2`);
-    if (v && a.duration < v.duration - 0.25)
+    if (
+      v &&
+      known('picture length', v.duration) &&
+      known('sound length', a.duration) &&
+      a.duration < v.duration - 0.25
+    )
       f.push(
         `sound ends at ${a.duration.toFixed(2)} s, picture runs to ${v.duration.toFixed(2)} s`
       );
   }
 
   if (a) {
-    if (m.integratedLufs === null || !Number.isFinite(m.integratedLufs)) {
-      f.push('loudness could not be measured');
-    } else if (
-      Math.abs(m.integratedLufs - spec.targetLufs) >
-      spec.maxOffLu + 1e-9
+    if (
+      known('loudness', m.integratedLufs) &&
+      Math.abs(m.integratedLufs - spec.targetLufs) > spec.maxOffLu + 1e-9
     ) {
       f.push(
         `loudness ${m.integratedLufs} LUFS, target ${spec.targetLufs} +/- ${spec.maxOffLu}`
       );
     }
-    if (m.meanVolumeDb === null || m.meanVolumeDb <= -60)
-      f.push(`sound is silent (mean ${m.meanVolumeDb ?? 'unmeasured'} dB)`);
-    if (m.maxVolumeDb === null) f.push('peak level could not be measured');
-    else if (m.maxVolumeDb > spec.maxPeakDb)
+    if (known('mean volume', m.meanVolumeDb) && m.meanVolumeDb <= -60)
+      f.push(`sound is silent (mean ${m.meanVolumeDb} dB)`);
+    if (known('peak level', m.maxVolumeDb) && m.maxVolumeDb > spec.maxPeakDb)
       f.push(`peak ${m.maxVolumeDb} dB above ${spec.maxPeakDb} dB`);
-    if (m.longestSilenceSeconds === null)
-      f.push('silence could not be measured');
-    else if (m.longestSilenceSeconds > spec.maxSilenceSeconds)
+    if (
+      known('silence', m.longestSilenceSeconds) &&
+      m.longestSilenceSeconds > spec.maxSilenceSeconds
+    )
       f.push(
         `${m.longestSilenceSeconds.toFixed(1)} s of silence (most allowed ${spec.maxSilenceSeconds} s)`
       );
   }
 
   if (spec.minSpeechMatch !== undefined) {
-    if (m.speechMatch === null || m.speechMatch === undefined)
-      f.push('spoken words were not checked against the script');
-    else if (m.speechMatch < spec.minSpeechMatch)
+    if (
+      known('spoken words against the script', m.speechMatch) &&
+      m.speechMatch < spec.minSpeechMatch
+    )
       f.push(
         `spoken words match the script at ${Math.round(m.speechMatch * 100)}%, need ${Math.round(spec.minSpeechMatch * 100)}%`
       );

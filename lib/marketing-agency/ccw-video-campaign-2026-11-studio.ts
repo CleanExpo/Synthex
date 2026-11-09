@@ -56,6 +56,10 @@ export function buildCcwStudioDraft(
   organizationId: string,
   video: CcwReviewVideo
 ): SaveStudioDraftInput {
+  // Scripts sit outside the type-check, so a missing value must stop here.
+  if (!video.voiceover?.trim()) {
+    throw new Error(`${slot.id}: no finalised voiceover for the sign-off card`);
+  }
   const links = Object.fromEntries(
     slot.channels.map(channel => [channel, ccwVideoLink(slot, channel)])
   );

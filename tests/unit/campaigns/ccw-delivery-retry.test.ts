@@ -118,11 +118,11 @@ describe('CCW safe-zone scan', () => {
 
   it('reports the times text appears in the region', () => {
     const stderr = [frame(0, 16), frame(0.1, 235), frame(0.2, 16)].join('\n');
-    expect(safeZoneHits('top', { status: 0, stderr })).toEqual([0.1]);
+    expect(safeZoneHits('top', { status: 0, stderr }, 3)).toEqual([0.1]);
   });
 
   it('a clear region returns no hits', () => {
-    expect(safeZoneHits('top', { status: 0, stderr: frame(0, 16) })).toEqual(
+    expect(safeZoneHits('top', { status: 0, stderr: frame(0, 16) }, 1)).toEqual(
       []
     );
   });
@@ -132,7 +132,19 @@ describe('CCW safe-zone scan', () => {
     ['ffmpeg never started', { status: null, stderr: null }],
     ['nothing was measured', { status: 0, stderr: 'no frames here' }],
   ])('throws rather than reading clear when %s', (_why, res) => {
-    expect(() => safeZoneHits('top', res)).toThrow(/SAFE ZONE SCAN FAILED/);
+    expect(() => safeZoneHits('top', res, 1)).toThrow(/SAFE ZONE SCAN FAILED/);
+  });
+
+  it('throws when only part of the video was measured', () => {
+    const res = { status: 0, stderr: frame(0, 16) };
+    expect(() => safeZoneHits('top', res, 285)).toThrow(/measured 1 frames/);
+  });
+
+  it('throws when the video length itself was unknown', () => {
+    const res = { status: 0, stderr: frame(0, 16) };
+    expect(() => safeZoneHits('top', res, NaN)).toThrow(
+      /SAFE ZONE SCAN FAILED/
+    );
   });
 });
 

@@ -53,6 +53,17 @@ describe('CCW studio review drafts', () => {
     }
   );
 
+  it('refuses to build a card with no finalised words', () => {
+    const { voiceover: _dropped, ...noWords } = video(week1[0].id);
+    expect(() =>
+      buildCcwStudioDraft(
+        week1[0],
+        'org-ccw',
+        noWords as ReturnType<typeof video>
+      )
+    ).toThrow(/no finalised voiceover/);
+  });
+
   it('posting times are Queensland time, from the DD/MM/YYYY calendar', () => {
     expect(ccwPostAtIso({ date: '09/11/2026', slotAest: '07:00' })).toBe(
       '2026-11-09T07:00:00+10:00'

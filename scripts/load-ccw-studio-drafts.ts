@@ -89,15 +89,23 @@ async function main() {
     };
   });
 
+  // One builder, so the dry run proves exactly what --execute saves.
+  const draftFor = (
+    v: (typeof videos)[number],
+    organizationId: string,
+    videoUrl: string
+  ) =>
+    buildCcwStudioDraft(v.slot, organizationId, {
+      videoUrl,
+      voiceover: v.voiceover,
+      storagePath: v.storagePath,
+      sha256: v.sha256,
+      bytes: v.bytes,
+    });
+
   if (!execute) {
     for (const v of videos) {
-      const draft = buildCcwStudioDraft(v.slot, '<ccw org>', {
-        videoUrl: '<signed url>',
-        voiceover: v.voiceover,
-        storagePath: v.storagePath,
-        sha256: v.sha256,
-        bytes: v.bytes,
-      });
+      const draft = draftFor(v, '<ccw org>', '<signed url>');
       console.log(
         `${v.slot.id}  ${v.bytes} bytes  sha256 ${v.sha256}\n  ${draft.topic}\n  -> ${CCW_REVIEW_BUCKET}/${v.storagePath}`
       );
@@ -147,14 +155,7 @@ async function main() {
       [v.storagePath],
       CCW_REVIEW_LINK_TTL_SECONDS
     );
-    const row = await saveStudioDraft(
-      buildCcwStudioDraft(v.slot, org.id, {
-        videoUrl,
-        storagePath: v.storagePath,
-        sha256: v.sha256,
-        bytes: v.bytes,
-      })
-    );
+    const row = await saveStudioDraft(draftFor(v, org.id, videoUrl));
     console.log(`${v.slot.id}: draft ${row.id} (${row.status})`);
   }
   await prisma.$disconnect();

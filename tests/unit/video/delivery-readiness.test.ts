@@ -132,6 +132,37 @@ describe('delivery readiness', () => {
   });
 });
 
+describe('a reading that is not a number never passes', () => {
+  it.each([NaN, null, undefined, Infinity])('%s', bad => {
+    const spoken = { ...SHORT_FORM_DELIVERY, minSpeechMatch: 0.9 };
+    const failures = (patch: Partial<DeliveryMeasures>) =>
+      evaluateDelivery({ ...good, speechMatch: 1, ...patch }, spoken).failures;
+    const n = bad as number;
+    expect(failures({})).toEqual([]);
+    expect(failures({ integratedLufs: n })).toEqual([
+      'loudness could not be measured',
+    ]);
+    expect(failures({ meanVolumeDb: n })).toEqual([
+      'mean volume could not be measured',
+    ]);
+    expect(failures({ maxVolumeDb: n })).toEqual([
+      'peak level could not be measured',
+    ]);
+    expect(failures({ longestSilenceSeconds: n })).toEqual([
+      'silence could not be measured',
+    ]);
+    expect(failures({ speechMatch: n })).toEqual([
+      'spoken words against the script could not be measured',
+    ]);
+    expect(
+      failures({ audioStreams: [{ ...good.audioStreams[0], duration: n }] })
+    ).toEqual(['sound length could not be measured']);
+    expect(
+      failures({ videoStreams: [{ ...good.videoStreams[0], duration: n }] })
+    ).toEqual(['picture length could not be measured']);
+  });
+});
+
 describe('moovBeforeMdat', () => {
   const box = (type: string, size = 16) => {
     const b = Buffer.alloc(size);
@@ -159,7 +190,7 @@ describe('spoken words', () => {
   it('fails a client send whose spoken words were not checked', () => {
     const r = evaluateDelivery({ ...good, speechMatch: null }, spec);
     expect(r.failures).toContain(
-      'spoken words were not checked against the script'
+      'spoken words against the script could not be measured'
     );
   });
 
