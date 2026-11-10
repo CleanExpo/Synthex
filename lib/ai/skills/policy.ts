@@ -55,6 +55,22 @@ export type InvocableSkill = (typeof PRODUCT_INVOCABLE_SKILLS)[number];
 
 const INVOCABLE = new Set<string>(PRODUCT_INVOCABLE_SKILLS);
 
+/**
+ * Old slug -> current slug for renamed skills. Saved workflow steps and drafts
+ * can still carry the old slug, so it keeps resolving to the renamed skill.
+ * Exact strings only; an alias must point at an allowlisted slug.
+ */
+const RENAMED_SKILLS: Readonly<Record<string, InvocableSkill>> = {
+  'creative-director': 'synthex-copy-calibration',
+};
+
+/** Map a renamed skill's old slug to its current slug; anything else passes through. */
+export function resolveSkillSlug(slug: string): string {
+  return Object.prototype.hasOwnProperty.call(RENAMED_SKILLS, slug)
+    ? RENAMED_SKILLS[slug]
+    : slug;
+}
+
 export class SkillNotInvocableError extends Error {
   readonly code = 'skill-not-invocable';
 
