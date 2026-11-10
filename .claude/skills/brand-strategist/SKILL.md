@@ -49,7 +49,7 @@ Run the NEVER list (below) over every output before forwarding. Failures route b
 
 ### M-5 Clean orchestration API
 
-Output is structured (see Output contract). brand-voice-enforce consumes the directive field as its mechanical gate input · senior-copywriter consumes the voice tag + applicable taboos · creative-director consumes the voice tag for visual treatment alignment · senior-strategist consumes the action field for routing.
+Output is structured (see Output contract). brand-voice-enforce consumes the directive field as its mechanical gate input · senior-copywriter consumes the voice tag + applicable taboos · synthex-copy-calibration consumes the voice tag for visual treatment alignment · senior-strategist consumes the action field for routing.
 
 ## NEVER list (junior failure modes — auto-reject)
 
@@ -108,7 +108,7 @@ interface BrandStrategistDecision {
   forward_to:
     | 'brand-voice-enforce'
     | 'senior-copywriter'
-    | 'creative-director'
+    | 'synthex-copy-calibration'
     | 'senior-strategist'
     | 'foundation-keeper'
     | 'ceo-batch-queue';

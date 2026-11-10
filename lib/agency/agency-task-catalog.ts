@@ -127,7 +127,7 @@ export const AGENCY_TASK_CATALOG: AgencyTaskDefinition[] = [
     serviceLine: 'Creative',
     ceoTop15: true,
     defaultTaskType: 'design',
-    owningSkills: ['creative-director'],
+    owningSkills: ['synthex-copy-calibration'],
   },
   {
     id: 'AT-011',

@@ -8,7 +8,7 @@ consumes_from:
     customer-insights-lead,
     senior-strategist,
     brand-strategist,
-    creative-director,
+    synthex-copy-calibration,
     cro-specialist,
     email-specialist,
     brand-voice-enforce,
@@ -23,7 +23,7 @@ The drafting engine. Customer-insights-lead supplies the JTBD; senior-strategist
 
 ## When invoked
 
-- Any drafting task initiated by senior-strategist · brand-strategist · creative-director · cro-specialist · email-specialist · or CEO direct
+- Any drafting task initiated by senior-strategist · brand-strategist · synthex-copy-calibration · cro-specialist · email-specialist · or CEO direct
 - Re-draft request after brand-voice-enforce reject
 - Phase 4 voice-amendment surface — drafts that drift from amendments route back here with the amendment cited
 - Direct invocation by analytics-lead when a recommendation requires a copy treatment
@@ -48,7 +48,7 @@ Run the NEVER list (below) over every draft before forwarding. Failures route ba
 
 ### M-5 Clean orchestration API
 
-Output is structured (see Output contract). Other skills (brand-voice-enforce, creative-director, senior-strategist, performance-attribution-lead) consume the structured fields, not just the prose. Prose is for the surface; the fields are for the orchestrator.
+Output is structured (see Output contract). Other skills (brand-voice-enforce, synthex-copy-calibration, senior-strategist, performance-attribution-lead) consume the structured fields, not just the prose. Prose is for the surface; the fields are for the orchestrator.
 
 ## NEVER list (junior failure modes — auto-reject)
 
@@ -122,7 +122,7 @@ interface SeniorCopywriterOutput {
   ceo_attention_required: boolean; // true only for thought-leadership · founder-voice surfaces · gate-state-flip drafts
   forward_to:
     | 'brand-voice-enforce'
-    | 'creative-director'
+    | 'synthex-copy-calibration'
     | 'senior-strategist'
     | 'ceo-batch-queue';
   prose_summary: string; // for the CEO; ≤ 8 sentences
@@ -134,7 +134,7 @@ interface SeniorCopywriterOutput {
 - **LinkedIn:** Phase 4 Why-led + How-substance + 60/40 mix
 - **Hub article (CCW):** Q3.4.3 paired-primary + neutral comparison + named-expert byline
 - **Email sequence:** Q2.5.3 cadence per trigger + frequency cap awareness (consumed via `EmailSequenceOutput.sequence_design`)
-- **Remotion script:** Phase 4 Remotion Evidence Protocol (REM-1/2/3 — pairs with `creative-director` `CreativeDirectorOutput`)
+- **Remotion script:** Phase 4 Remotion Evidence Protocol (REM-1/2/3 — pairs with `synthex-copy-calibration` `CreativeDirectorOutput`)
 - **Manifesto Opener (Post 01):** LOCKED in foundation · do NOT re-draft without `[CEO override]`
 
 ## Hook craft (first-line surfaces)
@@ -221,9 +221,9 @@ Inline citations: `S520 §6.3 · 2020`, `CARSI 2025 retrospective n=89`, `Q4 202
 
 **CEO attention required:** no (routine production · sage register · audience-evidence verified · single placeholder claim flagged for rework before brand-voice-enforce).
 
-`forward_to: 'creative-director'` (next hop: paired Hub article visual treatment per cross-channel coherence).
+`forward_to: 'synthex-copy-calibration'` (next hop: paired Hub article visual treatment per cross-channel coherence).
 
 ## Versioning
 
-- v0.3 (2026-04-28): SYN-806 senior calibration uplift — added 5 markers (M-1 through M-5), explicit NEVER list (10 entries), structured `SeniorCopywriterOutput` contract for orchestration, worked example (Post 06 Sovereignty Series RA/CARSI with real self-audit fail on VG-05 placeholder citation, demonstrating the M-4 mechanical gate). Surface patterns + hard rules retained from v0.2. Pairs with the Phase-1 trio (#107 #108 #109), senior-strategist v0.3 (#110), and creative-director v0.3 (#111).
+- v0.3 (2026-04-28): SYN-806 senior calibration uplift — added 5 markers (M-1 through M-5), explicit NEVER list (10 entries), structured `SeniorCopywriterOutput` contract for orchestration, worked example (Post 06 Sovereignty Series RA/CARSI with real self-audit fail on VG-05 placeholder citation, demonstrating the M-4 mechanical gate). Surface patterns + hard rules retained from v0.2. Pairs with the Phase-1 trio (#107 #108 #109), senior-strategist v0.3 (#110), and synthex-copy-calibration v0.3 (#111).
 - v0.2 (2026-04-27): slimmed · brand-protocol matrices removed · delegates to foundation Phase 3.X for brand rules.

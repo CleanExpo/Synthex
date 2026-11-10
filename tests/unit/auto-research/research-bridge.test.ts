@@ -103,13 +103,13 @@ describe('buildResearchBridge', () => {
     expect(handoff.linearEnabled).toBe(false);
   });
 
-  it('routes creative categories to the creative-director', () => {
+  it('routes creative categories to the synthex-copy-calibration', () => {
     const build = buildResearchBridge(
       [insight({ id: 'v', category: 'visual_style' })],
       ctx
     );
 
-    expect(build.handoffs[0].ownerRoute).toBe('creative-director');
+    expect(build.handoffs[0].ownerRoute).toBe('synthex-copy-calibration');
   });
 });
 

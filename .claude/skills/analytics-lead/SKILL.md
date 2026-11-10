@@ -36,7 +36,7 @@ Output structure is non-negotiable. Every narrative renders five blocks in this 
 Run the NEVER list (below) over every output before forwarding. Failures route back for rewrite, not soften.
 
 ### M-5 Clean orchestration API
-Output is structured (see Output contract). Other skills (creative-director, senior-strategist, senior-cmo, performance-attribution-lead) consume the structured fields, not the prose. Prose is for the CEO; the fields are for the orchestrator.
+Output is structured (see Output contract). Other skills (synthex-copy-calibration, senior-strategist, senior-cmo, performance-attribution-lead) consume the structured fields, not the prose. Prose is for the CEO; the fields are for the orchestrator.
 
 ## NEVER list (junior failure modes — auto-reject)
 
@@ -81,7 +81,7 @@ interface AnalyticsLeadOutput {
   };
   considered_and_rejected: { option: string; why_rejected: string }[]; // ≥2 entries
   ceo_attention_required: boolean;
-  forward_to: 'senior-strategist' | 'creative-director' | 'cro-specialist' | 'senior-cmo' | 'ceo-batch-queue';
+  forward_to: 'senior-strategist' | 'synthex-copy-calibration' | 'cro-specialist' | 'senior-cmo' | 'ceo-batch-queue';
   prose_summary: string;       // for the CEO; ≤ 8 sentences
 }
 ```

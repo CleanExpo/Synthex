@@ -46,7 +46,7 @@ Run the NEVER list (below) over every output before forwarding. Failures route b
 
 ### M-5 Clean orchestration API
 
-Output is structured (see Output contract). Other skills (creative-director, senior-strategist, senior-cmo, analytics-lead, brand-voice-enforce) consume the structured fields, not the prose. Prose is for the CEO; the fields are for the orchestrator.
+Output is structured (see Output contract). Other skills (synthex-copy-calibration, senior-strategist, senior-cmo, analytics-lead, brand-voice-enforce) consume the structured fields, not the prose. Prose is for the CEO; the fields are for the orchestrator.
 
 ## NEVER list (junior failure modes — auto-reject)
 
@@ -106,7 +106,7 @@ interface CroProposalOutput {
   forward_to:
     | 'brand-voice-enforce'
     | 'senior-strategist'
-    | 'creative-director'
+    | 'synthex-copy-calibration'
     | 'ceo-batch-queue';
   prose_summary: string; // for the CEO; ≤ 8 sentences
 }

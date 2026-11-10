@@ -99,7 +99,7 @@ discarded assigneeId) and AT-026 (silent workflow no-op).
 | AT-005 | Tier-1 `loadAgencyBrandMetrics` from org-scoped Leads + gateCounts (cron + POST)            | #867          |
 | AT-009 | Brand-voice QualityScorer fail-closed to 0 on provider failure                              | #868          |
 | AT-008 | `POST /api/marketing/tier3-portfolio-review` invokes `senior-cmo`; pending_review only      | (this)        |
-| AT-010 | `POST /api/admin/remotion` creative-director pending Remotion brief; status poll; no render | (this)        |
+| AT-010 | `POST /api/admin/remotion` synthex-copy-calibration pending Remotion brief; status poll; no render | (this)        |
 | AT-021 | `POST /api/marketing/platform-score` invokes `platform-content-optimiser`; pending_review   | (this)        |
 | AT-013 | Audience insights org-scoped + on-demand Instagram demographics sync; honest empty          | (this)        |
 | AT-014 | Pre-export gate: distribute/publish blocked until status=approved + owner/admin permission  | #873          |

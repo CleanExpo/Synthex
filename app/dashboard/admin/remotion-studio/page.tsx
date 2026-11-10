@@ -454,13 +454,13 @@ export default function RemotionStudioPage() {
             </Card>
           )}
 
-          {/* AT-010 — submit creative-director brief for pending review */}
+          {/* AT-010 — submit synthex-copy-calibration brief for pending review */}
           <Card variant="glass">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm">Submit brief for review</CardTitle>
               <CardDescription className="text-[11px]">
                 Creates an org-scoped pending Remotion brief via
-                creative-director. Never auto-publishes or starts a server
+                synthex-copy-calibration. Never auto-publishes or starts a server
                 render.
               </CardDescription>
             </CardHeader>

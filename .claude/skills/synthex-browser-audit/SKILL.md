@@ -1,5 +1,5 @@
 ---
-name: playwright-cli
+name: synthex-browser-audit
 description: >-
   Authenticated browser automation for Synthex — drive real Chrome to log in,
   screenshot, and audit dashboard/integration surfaces. Use for live visual

@@ -125,7 +125,7 @@ interface EmailSequenceOutput {
   forward_to:
     | 'brand-voice-enforce'
     | 'senior-strategist'
-    | 'creative-director'
+    | 'synthex-copy-calibration'
     | 'marketing-operations-director'
     | 'ceo-batch-queue';
   prose_summary: string; // for the CEO; ≤ 8 sentences

@@ -1,7 +1,7 @@
 /**
  * AT-010 — POST/GET /api/admin/remotion pending Remotion brief.
  *
- * POST must invoke creative-director and persist an org-scoped review draft.
+ * POST must invoke synthex-copy-calibration and persist an org-scoped review draft.
  * It must NOT return the old preview-only placeholder or start a render.
  */
 
@@ -69,7 +69,7 @@ beforeEach(() => {
   mockVerifyAdmin.mockResolvedValue({ isAdmin: true, userId: 'admin-1' });
   getEffectiveOrganizationIdMock.mockResolvedValue('org-1');
   invokeSkillMock.mockResolvedValue({
-    skill: { slug: 'creative-director', name: 'Creative Director' },
+    skill: { slug: 'synthex-copy-calibration', name: 'Creative Director' },
     content: 'Structured CreativeDirectorOutput draft',
     model: 'mock-balanced',
     foundationIncluded: [{ filename: 'ceo-foundation.md', truncated: false }],
@@ -144,7 +144,7 @@ describe('POST /api/admin/remotion — AT-010', () => {
     expect(invokeSkillMock).not.toHaveBeenCalled();
   });
 
-  test('creates pending_review remotion brief via creative-director', async () => {
+  test('creates pending_review remotion brief via synthex-copy-calibration', async () => {
     const response = await POST(makeRequest({ body: VALID_REQUEST }));
     const json = await response.json();
 
@@ -157,7 +157,7 @@ describe('POST /api/admin/remotion — AT-010', () => {
 
     expect(invokeSkillMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        skill: 'creative-director',
+        skill: 'synthex-copy-calibration',
         prompt: expect.stringContaining('remotion-video'),
       })
     );

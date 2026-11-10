@@ -34,7 +34,6 @@ export const PRODUCT_INVOCABLE_SKILLS = [
   'analytics-lead',
   'brand-voice-enforce',
   'client-retention',
-  'creative-director',
   'cro-specialist',
   'customer-insights-lead',
   'email-specialist',
@@ -49,6 +48,7 @@ export const PRODUCT_INVOCABLE_SKILLS = [
   'senior-cmo',
   'senior-copywriter',
   'senior-strategist',
+  'synthex-copy-calibration',
 ] as const;
 
 export type InvocableSkill = (typeof PRODUCT_INVOCABLE_SKILLS)[number];
