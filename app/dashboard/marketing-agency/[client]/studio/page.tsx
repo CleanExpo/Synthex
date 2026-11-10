@@ -9,6 +9,8 @@ interface StudioDraft {
   script: string;
   status: string;
   videoUrl?: string | null;
+  /** Why the video cannot be shown (the link could not be signed). */
+  videoError?: string;
   platforms?: string[];
 }
 
@@ -30,6 +32,51 @@ const COLUMNS: Array<{ key: string; label: string }> = [
   { key: 'approved', label: 'Approved' },
   { key: 'published', label: 'Published' },
 ];
+
+/**
+ * The API signs a new 6-hour link on every read, and SWR re-reads on focus
+ * and after Approve. Keep the first link so a video being watched is not
+ * reloaded mid-play. If it stops working (expired), use a newer link if one
+ * has arrived; otherwise ask the board for one, once per link, and switch
+ * to it when it arrives.
+ */
+function ReviewVideo({
+  url,
+  label,
+  onStale,
+}: {
+  url: string;
+  label: string;
+  onStale: () => void;
+}) {
+  const [src, setSrc] = useState(url);
+  const [waitingFor, setWaitingFor] = useState<string | null>(null);
+  // A refresh was asked for and a different link has now arrived: take it.
+  // (Setting state while rendering is React's pattern for adjusting state to
+  // a new prop.)
+  if (waitingFor !== null && url !== waitingFor) {
+    setSrc(url);
+    setWaitingFor(null);
+  }
+  return (
+    <video
+      controls
+      playsInline
+      preload="metadata"
+      src={src}
+      onError={() => {
+        if (url !== src) {
+          setSrc(url);
+        } else if (waitingFor !== src) {
+          setWaitingFor(src);
+          onStale();
+        }
+      }}
+      aria-label={label}
+      className="mt-2 aspect-[9/16] w-full rounded-md bg-black"
+    />
+  );
+}
 
 export default function ClientStudioPage({
   params,
@@ -116,14 +163,16 @@ export default function ClientStudioPage({
                       <p className="text-sm font-medium text-slate-100">
                         {draft.topic}
                       </p>
+                      {draft.videoError && (
+                        <p role="alert" className="mt-2 text-xs text-red-400">
+                          {draft.videoError}
+                        </p>
+                      )}
                       {draft.videoUrl && (
-                        <video
-                          controls
-                          playsInline
-                          preload="metadata"
-                          src={draft.videoUrl}
-                          aria-label={`Video: ${draft.topic}`}
-                          className="mt-2 aspect-[9/16] w-full rounded-md bg-black"
+                        <ReviewVideo
+                          url={draft.videoUrl}
+                          label={`Video: ${draft.topic}`}
+                          onStale={() => void mutate()}
                         />
                       )}
                       <p className="mt-1 whitespace-pre-line text-xs text-slate-400">
