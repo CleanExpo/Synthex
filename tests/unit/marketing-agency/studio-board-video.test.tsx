@@ -3,7 +3,13 @@
  * to watch the video on the card, and a refused Approve must say why instead
  * of looking like nothing happened.
  */
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from '@testing-library/react';
 import useSWR from 'swr';
 import ClientStudioPage from '@/app/dashboard/marketing-agency/[client]/studio/page';
 
@@ -14,6 +20,8 @@ const board = {
   clientSlug: 'ccw',
   displayName: 'CCW',
   total: 2,
+  canApprove: true,
+  approveRefusal: null,
   board: {
     awaiting_approval: [
       {
@@ -35,6 +43,78 @@ const board = {
     published: [],
   },
 };
+
+type Refusal =
+  | 'STUDIO_APPROVE_ROLE_REQUIRED'
+  | 'STUDIO_APPROVE_NOT_ORG_MEMBER'
+  | 'STUDIO_APPROVE_CHECK_UNAVAILABLE'
+  | null;
+
+const ROLE_LINE =
+  'You can view this board. Approving needs an editor, admin or owner role in this organisation. An owner or admin of this organisation can change your role.';
+const MEMBER_LINE =
+  'You can view this board from the parent workspace. Approving needs membership of this organisation itself. An owner or admin of this organisation can add you.';
+const CHECK_LINE =
+  'Approval could not be checked just now. Reload the page to try again.';
+const ACCESS_LINE =
+  'Access could not be checked just now. Reload the page to try again.';
+
+async function renderWith(state: {
+  data?: unknown;
+  error?: unknown;
+  isLoading?: boolean;
+}) {
+  (useSWR as jest.Mock).mockReturnValue({
+    data: state.data,
+    error: state.error,
+    isLoading: state.isLoading ?? false,
+    mutate,
+  });
+  await act(async () => {
+    render(<ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />);
+  });
+}
+
+function boardWith(canApprove: boolean | undefined, refusal?: unknown) {
+  const { canApprove: _drop, approveRefusal: _drop2, ...rest } = board;
+  void _drop;
+  void _drop2;
+  return {
+    ...rest,
+    ...(canApprove === undefined ? {} : { canApprove }),
+    ...(refusal === undefined ? {} : { approveRefusal: refusal as Refusal }),
+  };
+}
+
+const approveButtons = () =>
+  screen.queryAllByRole('button', { name: 'Approve' });
+const pageText = () => document.body.textContent ?? '';
+
+type BoardError = Error & { status?: number; code?: string };
+
+/** Runs the fetcher the page handed to useSWR against a mocked fetch. */
+async function runPageFetcher(
+  response: { ok: boolean; status: number; body: unknown } | 'network-failure'
+): Promise<{ result?: unknown; error?: BoardError }> {
+  global.fetch = (response === 'network-failure'
+    ? jest.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+    : jest.fn().mockResolvedValue({
+        ok: response.ok,
+        status: response.status,
+        json: async () => response.body,
+      })) as unknown as typeof fetch;
+  await renderBoard();
+  const fetcher = (useSWR as jest.Mock).mock.calls[0][1] as unknown;
+  expect(typeof fetcher).toBe('function');
+  try {
+    const result = await (fetcher as (url: string) => Promise<unknown>)(
+      '/api/marketing-agency/studio/ccw'
+    );
+    return { result };
+  } catch (e) {
+    return { error: e as BoardError };
+  }
+}
 
 async function renderBoard() {
   (useSWR as jest.Mock).mockReturnValue({
@@ -270,5 +350,142 @@ describe('studio board as a review portal', () => {
     });
 
     expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('shows Approve when canApprove is true', async () => {
+    await renderWith({ data: boardWith(true, null) });
+    expect(approveButtons()).toHaveLength(2);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('shows the server sentence in the alert when approve is refused', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({
+        error: ROLE_LINE,
+        code: 'STUDIO_APPROVE_ROLE_REQUIRED',
+      }),
+    }) as unknown as typeof fetch;
+    await renderWith({ data: boardWith(true, null) });
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Approve' })[0]);
+    });
+
+    expect(screen.getByRole('alert').textContent).toBe(ROLE_LINE);
+  });
+
+  it('hides Approve when canApprove is false', async () => {
+    await renderWith({
+      data: boardWith(false, 'STUDIO_APPROVE_ROLE_REQUIRED'),
+    });
+    expect(approveButtons()).toHaveLength(0);
+  });
+
+  it('hides Approve when canApprove is missing', async () => {
+    await renderWith({ data: boardWith(undefined) });
+    expect(approveButtons()).toHaveLength(0);
+  });
+
+  it('hides Approve, your and the refusal line while the first load is in flight', async () => {
+    await renderWith({ data: undefined, error: undefined, isLoading: true });
+    expect(approveButtons()).toHaveLength(0);
+    expect(pageText()).not.toMatch(/\byour\b/);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('says your sign-off in the heading only when canApprove is true', async () => {
+    await renderWith({ data: boardWith(true, null) });
+    expect(pageText()).toMatch(/awaiting your sign-off/);
+    cleanup();
+    await renderWith({
+      data: boardWith(false, 'STUDIO_APPROVE_ROLE_REQUIRED'),
+    });
+    expect(pageText()).toMatch(/awaiting sign-off/);
+    expect(pageText()).not.toMatch(/\byour sign-off/);
+  });
+
+  it('hides Approve, your and the refusal line when the fetch has failed with earlier data held', async () => {
+    await renderWith({
+      data: boardWith(true, null),
+      error: Object.assign(new Error('Server error'), { status: 500 }),
+    });
+    expect(approveButtons()).toHaveLength(0);
+    expect(pageText()).not.toMatch(/\byour\b/);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('shows the role line for STUDIO_APPROVE_ROLE_REQUIRED', async () => {
+    await renderWith({
+      data: boardWith(false, 'STUDIO_APPROVE_ROLE_REQUIRED'),
+    });
+    expect(screen.queryByRole('status')?.textContent).toBe(ROLE_LINE);
+  });
+
+  it('shows the membership line for STUDIO_APPROVE_NOT_ORG_MEMBER', async () => {
+    await renderWith({
+      data: boardWith(false, 'STUDIO_APPROVE_NOT_ORG_MEMBER'),
+    });
+    expect(screen.queryByRole('status')?.textContent).toBe(MEMBER_LINE);
+  });
+
+  it('shows the unavailable line for STUDIO_APPROVE_CHECK_UNAVAILABLE', async () => {
+    await renderWith({
+      data: boardWith(false, 'STUDIO_APPROVE_CHECK_UNAVAILABLE'),
+    });
+    expect(screen.queryByRole('status')?.textContent).toBe(CHECK_LINE);
+  });
+
+  it('shows no refusal line for an unrecognised approveRefusal code', async () => {
+    await renderWith({ data: boardWith(false, 'SOMETHING_NEW') });
+    expect(approveButtons()).toHaveLength(0);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('shows the server sentence when the board read answers 503 STUDIO_ACCESS_CHECK_UNAVAILABLE', async () => {
+    const { error } = await runPageFetcher({
+      ok: false,
+      status: 503,
+      body: { error: ACCESS_LINE, code: 'STUDIO_ACCESS_CHECK_UNAVAILABLE' },
+    });
+    expect(error).toBeInstanceOf(Error);
+    cleanup();
+    await renderWith({ data: undefined, error });
+    expect(pageText()).toContain(ACCESS_LINE);
+    expect(pageText()).not.toContain('Failed to load the studio board.');
+  });
+
+  it('the board fetcher keeps the status, code and sentence of a failed read', async () => {
+    const { error } = await runPageFetcher({
+      ok: false,
+      status: 403,
+      body: { error: ROLE_LINE, code: 'STUDIO_APPROVE_ROLE_REQUIRED' },
+    });
+    expect(error).toBeInstanceOf(Error);
+    expect(error?.message).toBe(ROLE_LINE);
+    expect(error?.status).toBe(403);
+    expect(error?.code).toBe('STUDIO_APPROVE_ROLE_REQUIRED');
+  });
+
+  it('retries a failed board read only for 5xx and network errors', async () => {
+    await renderBoard();
+    const options = (useSWR as jest.Mock).mock.calls[0][2] as
+      | {
+          shouldRetryOnError?: unknown;
+          errorRetryCount?: number;
+        }
+      | undefined;
+    expect(options?.errorRetryCount).toBe(3);
+    expect(typeof options?.shouldRetryOnError).toBe('function');
+    const retry = options?.shouldRetryOnError as (e: unknown) => boolean;
+    const withStatus = (status: number) =>
+      Object.assign(new Error('x'), { status });
+    expect(retry(withStatus(500))).toBe(true);
+    expect(retry(withStatus(503))).toBe(true);
+    expect(retry(new TypeError('Failed to fetch'))).toBe(true);
+    expect(retry(withStatus(401))).toBe(false);
+    expect(retry(withStatus(403))).toBe(false);
+    expect(retry(withStatus(404))).toBe(false);
   });
 });
