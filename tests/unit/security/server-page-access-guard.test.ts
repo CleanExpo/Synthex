@@ -28,8 +28,10 @@
  *       gate is called without that import. The import under another local
  *       name is not the gate.
  *   unclassified    a file under app/ whose type is on neither list below, or
- *       a page or layout with an import() or require() whose module name is
- *       not exactly one plain string literal (it may be the client).
+ *       a scanned file with an import() or require() whose module name is
+ *       not exactly one plain string literal (it may be the client), or any
+ *       use of the name `require` other than the direct callee of such a call
+ *       (wrapped, assigned, passed, re-bound; a property name is not a use).
  *   stale-register  a register entry that is gone or no longer imports a client.
  *
  * Register: the ONLY files allowed to import a client without the gate, each
@@ -111,6 +113,14 @@ const IGNORED_EXTENSIONS = [
 
 /** Ignored whatever their type: Finder writes the first into any folder it opens. */
 const IGNORED_NAMES = ['.DS_Store', '.gitkeep'];
+
+/** Specifier extension -> the TypeScript extensions the bundler tries in its place. */
+const TS_FOR_JS_EXTENSION: Readonly<Record<string, readonly string[]>> = {
+  '.js': ['.ts', '.tsx'],
+  '.jsx': ['.tsx'],
+  '.mjs': ['.mts'],
+  '.cjs': ['.cts'],
+};
 
 const GATE_NAME = 'requireOrganisationPageAccess';
 const GATE_MODULE = 'lib/auth/page-access.ts';
@@ -224,6 +234,16 @@ function functionLabel(fn: FunctionNode): string {
   return 'the default export';
 }
 
+/** The expression after `extends` in a class runs when the class is defined, though the parser types it as a type node. */
+function isClassExtendsExpression(node: ts.Node): boolean {
+  return (
+    ts.isExpressionWithTypeArguments(node) &&
+    ts.isHeritageClause(node.parent) &&
+    node.parent.token === ts.SyntaxKind.ExtendsKeyword &&
+    ts.isClassLike(node.parent.parent)
+  );
+}
+
 /** True when the identifier reads a binding, not when it names a property, a declaration or a type. */
 function isValueReference(id: ts.Identifier): boolean {
   const parent: ts.Node & { name?: ts.Node; propertyName?: ts.Node } =
@@ -233,7 +253,7 @@ function isValueReference(id: ts.Identifier): boolean {
     return false;
   }
   for (let node: ts.Node | undefined = parent; node; node = node.parent) {
-    if (ts.isTypeNode(node)) return false;
+    if (ts.isTypeNode(node) && !isClassExtendsExpression(node)) return false;
   }
   return true;
 }
@@ -259,6 +279,40 @@ function gateStatementCallee(
     }
   }
   return null;
+}
+
+/**
+ * True when the identifier only names something and neither reads nor binds a
+ * variable: a property after a dot, an object key, a class or interface member,
+ * a qualified type name, an imported or exported name (not the local one), a
+ * destructuring key, a JSX attribute. Everything else counts as a reference or
+ * a binding.
+ */
+function isNameNotReference(id: ts.Identifier): boolean {
+  const p = id.parent;
+  if (ts.isPropertyAccessExpression(p) || ts.isPropertyAssignment(p)) {
+    return p.name === id;
+  }
+  if (ts.isQualifiedName(p)) return p.right === id;
+  if (
+    ts.isPropertyDeclaration(p) ||
+    ts.isPropertySignature(p) ||
+    ts.isMethodDeclaration(p) ||
+    ts.isMethodSignature(p) ||
+    ts.isGetAccessorDeclaration(p) ||
+    ts.isSetAccessorDeclaration(p) ||
+    ts.isEnumMember(p) ||
+    ts.isJsxAttribute(p)
+  ) {
+    return p.name === id;
+  }
+  if (ts.isBindingElement(p)) return p.propertyName === id;
+  if (ts.isImportSpecifier(p)) return p.propertyName === id;
+  if (ts.isExportSpecifier(p)) {
+    const reexport = !!p.parent.parent.moduleSpecifier;
+    return reexport || (!!p.propertyName && p.name === id);
+  }
+  return false;
 }
 
 /** True when the identifier is the name a declaration binds (any kind, any depth). */
@@ -317,8 +371,12 @@ function scanAppTree(root: string, register: Register): Violation[] {
     } else return null;
     const known = resolved.get(base);
     if (known !== undefined) return known;
+    // A .js-style specifier names the TypeScript file the bundler resolves it to.
+    const written = path.extname(base);
+    const typed = TS_FOR_JS_EXTENSION[written];
     const candidates = [
       base,
+      ...(typed ? typed.map(ext => base.slice(0, -written.length) + ext) : []),
       ...CODE_EXTENSIONS.map(ext => base + ext),
       ...CODE_EXTENSIONS.map(ext => path.join(base, `index${ext}`)),
     ];
@@ -468,9 +526,6 @@ function scanAppTree(root: string, register: Register): Violation[] {
     let callsGateByName = false;
     const gateBindings: ts.Identifier[] = [];
     const unreadable: string[] = [];
-    const isPageOrLayout = ['page', 'layout'].includes(
-      path.basename(file, ext)
-    );
     const dynamicLoad = (how: string, specifier: string): void => {
       const target = resolveImport(specifier, file);
       if (isPrismaPackage(specifier) || (target && isClientModule(target))) {
@@ -492,7 +547,6 @@ function scanAppTree(root: string, register: Register): Violation[] {
         if (how) {
           if (arg && ts.isStringLiteralLike(arg)) dynamicLoad(how, arg.text);
           if (
-            isPageOrLayout &&
             !(node.arguments.length === 1 && arg && ts.isStringLiteralLike(arg))
           ) {
             unreadable.push(
@@ -503,6 +557,19 @@ function scanAppTree(root: string, register: Register): Violation[] {
         if (ts.isIdentifier(callee) && callee.text === GATE_NAME) {
           callsGateByName = true;
         }
+      }
+      // Allow-list: the name `require` may appear only as the direct callee of
+      // a call (read above) or as a name that is not a reference. Any other
+      // occurrence, wrapped, assigned, passed, re-bound, is not understood.
+      if (
+        ts.isIdentifier(node) &&
+        node.text === 'require' &&
+        !isNameNotReference(node) &&
+        !(ts.isCallExpression(node.parent) && node.parent.expression === node)
+      ) {
+        unreadable.push(
+          `uses the name "require" in a form this guard cannot follow (wrapped, assigned, passed, re-bound or used as a value); it may load the database client, so call require('...') directly with a literal module name`
+        );
       }
       if (
         ts.isImportEqualsDeclaration(node) &&
@@ -804,6 +871,32 @@ export default async function Layout({ children }: { children: unknown }) {
           [PAGE]: page,
         })
       ).toEqual([{ file: PAGE, rule: 'R3' }]);
+    });
+
+    it.each([
+      ['an @ alias', `import prisma from '@/lib/prisma.js';`],
+      ['a relative path', `import prisma from '../../lib/prisma.js';`],
+    ])(
+      'flags a client imported with a .js specifier through %s',
+      (_t, line) => {
+        expect(
+          scanPlanted({
+            [PAGE]: unguardedPage(line, 'prisma.campaign.findMany()'),
+          })
+        ).toEqual([{ file: PAGE, rule: 'R3' }]);
+      }
+    );
+
+    it('flags a query in the extends expression of a class at module level', () => {
+      const page = `${CLIENT_IMPORT}${GATE_IMPORT}
+class Rows extends (prisma.campaign.findMany() as any) {}
+
+${PAGE_OPEN}${GATE}  return { Rows, organisation };
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R2' },
+      ]);
     });
 
     it('flags a nested function that queries', () => {
@@ -1139,6 +1232,162 @@ export default async function Page() {
       });
     });
 
+    describe('a require that is not the plain call of the name cannot be classified', () => {
+      const requirePage = (body: string): string =>
+        `export default async function Page() {
+  ${body}
+  return 1;
+}
+`;
+      it.each([
+        [
+          'flags a require wrapped in parentheses',
+          `const db = (require)('@/lib/prisma');`,
+        ],
+        [
+          'flags a require wrapped in an as cast',
+          `const db = (require as any)('@/lib/prisma');`,
+        ],
+        [
+          'flags a require followed by a non-null assertion',
+          `const db = require!('@/lib/prisma');`,
+        ],
+        [
+          'flags a require wrapped in a satisfies expression',
+          `const db = (require satisfies unknown)('@/lib/prisma');`,
+        ],
+        [
+          'flags a require assigned to a variable and called through it',
+          `const r = require;\n  const db = r('@/lib/prisma');`,
+        ],
+        [
+          'flags a require reached through call',
+          `const db = require.call(null, '@/lib/prisma');`,
+        ],
+        [
+          'flags a require reached through resolve',
+          `const where = require.resolve('@/lib/prisma');`,
+        ],
+        ['flags a typeof applied to require', `const kind = typeof require;`],
+        [
+          'flags a require passed as an argument',
+          `const out = [1].map(require);`,
+        ],
+        [
+          'flags a require used as a shorthand property',
+          `const bag = { require };`,
+        ],
+      ])('%s', (_title, statement) => {
+        expect(scanPlanted({ [PAGE]: requirePage(statement) })).toEqual([
+          { file: PAGE, rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags a require wrapped in an angle-bracket cast', () => {
+        const page = requirePage(`const db = (<any>require)('@/lib/prisma');`);
+        expect(scanPlanted({ 'app/x/page.ts': page })).toEqual([
+          { file: 'app/x/page.ts', rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags a wrapped require in a layout too', () => {
+        const layout = `export default async function Layout({ children }: { children: unknown }) {
+  const db = (require)('@/lib/prisma');
+  return children;
+}
+`;
+        expect(scanPlanted({ 'app/x/layout.tsx': layout })).toEqual([
+          { file: 'app/x/layout.tsx', rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags a parameter named require', () => {
+        const page = `export default async function Page(require: unknown) {
+  return 1;
+}
+`;
+        expect(scanPlanted({ [PAGE]: page })).toEqual([
+          { file: PAGE, rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags a function named require', () => {
+        const page = `function require(name: string) {
+  return name;
+}
+
+export default async function Page() {
+  return require('./chart');
+}
+`;
+        expect(scanPlanted({ [PAGE]: page })).toEqual([
+          { file: PAGE, rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags an import binding named require', () => {
+        const page = `import { require } from './loader';
+
+export default async function Page() {
+  return require('./chart');
+}
+`;
+        expect(scanPlanted({ [PAGE]: page })).toEqual([
+          { file: PAGE, rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags a re-bound require, and the call through it still counts as a client load', () => {
+        const page = `export default async function Page() {
+  const require = makeRequire();
+  const db = require('@/lib/prisma');
+  return db.campaign.findMany();
+}
+declare function makeRequire(): (name: string) => any;
+`;
+        expect(scanPlanted({ [PAGE]: page })).toEqual([
+          { file: PAGE, rule: 'R1' },
+          { file: PAGE, rule: 'unclassified' },
+        ]);
+      });
+    });
+
+    describe('the unreadable-load rules cover every scanned file, not only pages and layouts', () => {
+      it.each([
+        [
+          'flags a wrapped require in a template',
+          'app/a/template.tsx',
+          `export default function Template() {\n  const db = (require)('@/lib/prisma');\n  return db;\n}\n`,
+        ],
+        [
+          'flags a dynamic import with a variable module name in a helper file',
+          'app/a/helpers.ts',
+          `export async function load(name: string) {\n  return import(name);\n}\n`,
+        ],
+        [
+          'flags a require assigned to a variable in a not-found file',
+          'app/a/not-found.tsx',
+          `export default function NotFound() {\n  const r = require;\n  return r;\n}\n`,
+        ],
+        [
+          'flags a require with a variable module name in a client component',
+          'app/a/widget.tsx',
+          `'use client';\nexport function Widget(name: string) {\n  return require(name);\n}\n`,
+        ],
+      ])('%s', (_title, file, text) => {
+        expect(scanPlanted({ [file]: text })).toEqual([
+          { file, rule: 'unclassified' },
+        ]);
+      });
+
+      it('leaves route handlers and files under app/api unflagged, as the scanner skips them (control)', () => {
+        const text = `export async function GET(name: string) {\n  const db = (require)(name);\n  return import(name);\n}\n`;
+        expect(
+          scanPlanted({ 'app/y/route.ts': text, 'app/api/z/helper.ts': text })
+        ).toEqual([]);
+      });
+    });
+
     it('flags a stale register entry', () => {
       // An entry whose file is gone.
       expect(
@@ -1202,6 +1451,74 @@ export default function Page(props: Props) {
 }
 `;
       expect(scanPlanted({ [PAGE]: page })).toEqual([]);
+    });
+
+    it('passes a plain require of an unrelated module in a page with no database import', () => {
+      const page = `export default async function Page() {
+  const chart = require('./chart');
+  const plain = require(\`./plain\`);
+  return { chart, plain };
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([]);
+    });
+
+    it('passes an import-equals require of an unrelated module', () => {
+      const page = `import chart = require('./chart');
+
+export default function Page() {
+  return chart;
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([]);
+    });
+
+    it('passes the word require as a property name, an object key, a member name, a string and a comment', () => {
+      const page = `declare const foo: { require: boolean };
+
+interface Needs {
+  require: boolean;
+  require2(): void;
+}
+
+class Holder {
+  require = 1;
+  require() {
+    return 2;
+  }
+}
+
+// require('@/lib/prisma')
+export default function Page() {
+  const note = "require('@/lib/prisma')";
+  const bag = { require: true, other: foo.require };
+  return { note, bag };
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([]);
+    });
+
+    it('still flags a plain require of the client as a client load (control)', () => {
+      const page = `export default async function Page() {
+  const db = require('@/lib/prisma');
+  return db.default.campaign.findMany();
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R1' },
+      ]);
+    });
+
+    it('still flags an import-equals require of the client as a client load (control)', () => {
+      const page = `import db = require('@/lib/prisma');
+
+export default async function Page() {
+  return db.default.campaign.findMany();
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R1' },
+      ]);
     });
 
     it('ignores route files and files under app/api', () => {
