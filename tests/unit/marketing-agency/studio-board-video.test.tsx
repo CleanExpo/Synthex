@@ -212,6 +212,51 @@ describe('studio board as a review portal', () => {
     );
   });
 
+  it('asks for a fresh link once when the only link has expired, and plays the new one', async () => {
+    const withUrl = (url: string) => ({
+      data: {
+        ...board,
+        board: {
+          ...board.board,
+          awaiting_approval: [
+            { ...board.board.awaiting_approval[0], videoUrl: url },
+          ],
+        },
+      },
+      error: undefined,
+      isLoading: false,
+      mutate,
+    });
+    (useSWR as jest.Mock).mockReturnValue(
+      withUrl('https://example.test/expired')
+    );
+    let view: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      view = render(
+        <ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />
+      );
+    });
+    const video = () => document.querySelector('video')!;
+    await act(async () => {
+      fireEvent.error(video());
+    });
+    await act(async () => {
+      fireEvent.error(video());
+    });
+    // One re-read per dead link, never a loop.
+    expect(mutate).toHaveBeenCalledTimes(1);
+
+    (useSWR as jest.Mock).mockReturnValue(
+      withUrl('https://example.test/fresh')
+    );
+    await act(async () => {
+      view!.rerender(
+        <ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />
+      );
+    });
+    expect(video().getAttribute('src')).toBe('https://example.test/fresh');
+  });
+
   it('shows no error after an accepted Approve', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,

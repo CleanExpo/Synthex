@@ -54,6 +54,12 @@ describe('studio review links', () => {
     ['another client folder', stored('carsi/a.mp4')],
     ['a bucket outside the review list', stored('ccw/a.mp4', 'brand-assets')],
     ['a path that climbs out of the folder', stored('ccw/../carsi/a.mp4')],
+    ['an encoded climb', stored('ccw/%2e%2e/ccw-2/a.mp4')],
+    ['a backslash climb', stored('ccw/..\\ccw-2\\a.mp4')],
+    ['a leading slash', stored('/ccw/a.mp4')],
+    ['a sibling client sharing the prefix', stored('ccw-2/a.mp4')],
+    ['an empty segment', stored('ccw//a.mp4')],
+    ['the folder itself with no file', stored('ccw')],
     [
       'a bucket with no path',
       {

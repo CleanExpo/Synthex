@@ -36,10 +36,28 @@ const COLUMNS: Array<{ key: string; label: string }> = [
 /**
  * The API signs a new 6-hour link on every read, and SWR re-reads on focus
  * and after Approve. Keep the first link so a video being watched is not
- * reloaded mid-play; if it stops working (expired), take the latest one.
+ * reloaded mid-play. If it stops working (expired), use a newer link if one
+ * has arrived; otherwise ask the board for one, once per link, and switch
+ * to it when it arrives.
  */
-function ReviewVideo({ url, label }: { url: string; label: string }) {
+function ReviewVideo({
+  url,
+  label,
+  onStale,
+}: {
+  url: string;
+  label: string;
+  onStale: () => void;
+}) {
   const [src, setSrc] = useState(url);
+  const [waitingFor, setWaitingFor] = useState<string | null>(null);
+  // A refresh was asked for and a different link has now arrived: take it.
+  // (Setting state while rendering is React's pattern for adjusting state to
+  // a new prop.)
+  if (waitingFor !== null && url !== waitingFor) {
+    setSrc(url);
+    setWaitingFor(null);
+  }
   return (
     <video
       controls
@@ -47,7 +65,12 @@ function ReviewVideo({ url, label }: { url: string; label: string }) {
       preload="metadata"
       src={src}
       onError={() => {
-        if (src !== url) setSrc(url);
+        if (url !== src) {
+          setSrc(url);
+        } else if (waitingFor !== src) {
+          setWaitingFor(src);
+          onStale();
+        }
       }}
       aria-label={label}
       className="mt-2 aspect-[9/16] w-full rounded-md bg-black"
@@ -149,6 +172,7 @@ export default function ClientStudioPage({
                         <ReviewVideo
                           url={draft.videoUrl}
                           label={`Video: ${draft.topic}`}
+                          onStale={() => void mutate()}
                         />
                       )}
                       <p className="mt-1 whitespace-pre-line text-xs text-slate-400">

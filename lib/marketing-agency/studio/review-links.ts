@@ -17,6 +17,9 @@ export const STUDIO_REVIEW_LINK_TTL_SECONDS = 6 * 60 * 60;
 /** Private buckets that hold client review copies. */
 export const STUDIO_REVIEW_BUCKETS: readonly string[] = ['media-uploads'];
 
+/** One object-key segment: nothing that can be decoded or normalised. */
+const SAFE_SEGMENT = /^[A-Za-z0-9._-]+$/;
+
 export type SignUrls = (
   bucket: string,
   paths: string[],
@@ -47,9 +50,21 @@ function storedCopy(
   if (
     typeof bucket !== 'string' ||
     typeof path !== 'string' ||
-    !STUDIO_REVIEW_BUCKETS.includes(bucket) ||
-    !path.startsWith(`${clientSlug}/`) ||
-    path.split('/').some(part => part === '' || part === '.' || part === '..')
+    !STUDIO_REVIEW_BUCKETS.includes(bucket)
+  ) {
+    return 'not-allowed';
+  }
+  // Allow-list, not deny-list: every segment is plain letters, digits, dot,
+  // dash or underscore (so no %-encoding, backslash or empty segment can
+  // reach the signer), no segment is '.' or '..', and the first segment is
+  // exactly this client's folder.
+  const segments = path.split('/');
+  if (
+    segments.length < 2 ||
+    segments[0] !== clientSlug ||
+    !segments.every(
+      part => SAFE_SEGMENT.test(part) && part !== '.' && part !== '..'
+    )
   ) {
     return 'not-allowed';
   }
