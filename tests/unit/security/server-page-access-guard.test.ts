@@ -22,8 +22,14 @@
  *   R3  a top-level function uses a client binding without
  *       `await requireOrganisationPageAccess(...)` as a direct statement of its
  *       body before the first use.
- *   R4  the gate that is called was not imported from lib/auth/page-access.ts.
- *   unclassified    a file under app/ whose type is on neither list below.
+ *   R4  the gate name has any binding other than the one named import from
+ *       lib/auth/page-access.ts (a local declaration of any kind at any depth,
+ *       a parameter, a catch binding, an import from another module), or the
+ *       gate is called without that import. The import under another local
+ *       name is not the gate.
+ *   unclassified    a file under app/ whose type is on neither list below, or
+ *       a page or layout with an import() or require() whose module name is
+ *       not exactly one plain string literal (it may be the client).
  *   stale-register  a register entry that is gone or no longer imports a client.
  *
  * Register: the ONLY files allowed to import a client without the gate, each
@@ -255,6 +261,27 @@ function gateStatementCallee(
   return null;
 }
 
+/** True when the identifier is the name a declaration binds (any kind, any depth). */
+function isBindingName(id: ts.Identifier): boolean {
+  const p = id.parent;
+  return (
+    (ts.isVariableDeclaration(p) ||
+      ts.isBindingElement(p) ||
+      ts.isParameter(p) ||
+      ts.isFunctionDeclaration(p) ||
+      ts.isFunctionExpression(p) ||
+      ts.isClassDeclaration(p) ||
+      ts.isClassExpression(p) ||
+      ts.isEnumDeclaration(p) ||
+      ts.isModuleDeclaration(p) ||
+      ts.isImportClause(p) ||
+      ts.isImportSpecifier(p) ||
+      ts.isNamespaceImport(p) ||
+      ts.isImportEqualsDeclaration(p)) &&
+    p.name === id
+  );
+}
+
 function isServerActionFile(sf: ts.SourceFile): boolean {
   for (const statement of sf.statements) {
     if (
@@ -401,7 +428,7 @@ function scanAppTree(root: string, register: Register): Violation[] {
     // alone, so no rule below can change whether a register entry is stale.
     const sf = parse(file, true);
     const clientNames = new Set<string>();
-    const gateNames = new Set<string>();
+    const gateImports = new Set<ts.Identifier>();
     const loads: string[] = [];
     for (const statement of sf.statements) {
       if (
@@ -427,9 +454,10 @@ function scanAppTree(root: string, register: Register): Violation[] {
         for (const element of bindings.elements) {
           if (
             !element.isTypeOnly &&
+            element.name.text === GATE_NAME &&
             (element.propertyName ?? element.name).text === GATE_NAME
           ) {
-            gateNames.add(element.name.text);
+            gateImports.add(element.name);
           }
         }
       }
@@ -438,6 +466,11 @@ function scanAppTree(root: string, register: Register): Violation[] {
     const misplaced: string[] = [];
     const firstUse = new Map<FunctionNode, { name: string; start: number }>();
     let callsGateByName = false;
+    const gateBindings: ts.Identifier[] = [];
+    const unreadable: string[] = [];
+    const isPageOrLayout = ['page', 'layout'].includes(
+      path.basename(file, ext)
+    );
     const dynamicLoad = (how: string, specifier: string): void => {
       const target = resolveImport(specifier, file);
       if (isPrismaPackage(specifier) || (target && isClientModule(target))) {
@@ -450,11 +483,21 @@ function scanAppTree(root: string, register: Register): Violation[] {
       if (ts.isCallExpression(node)) {
         const callee = node.expression;
         const arg = node.arguments[0];
-        if (arg && ts.isStringLiteralLike(arg)) {
-          if (callee.kind === ts.SyntaxKind.ImportKeyword) {
-            dynamicLoad('a dynamic import()', arg.text);
-          } else if (ts.isIdentifier(callee) && callee.text === 'require') {
-            dynamicLoad('require()', arg.text);
+        const how =
+          callee.kind === ts.SyntaxKind.ImportKeyword
+            ? 'a dynamic import()'
+            : ts.isIdentifier(callee) && callee.text === 'require'
+              ? 'require()'
+              : null;
+        if (how) {
+          if (arg && ts.isStringLiteralLike(arg)) dynamicLoad(how, arg.text);
+          if (
+            isPageOrLayout &&
+            !(node.arguments.length === 1 && arg && ts.isStringLiteralLike(arg))
+          ) {
+            unreadable.push(
+              `has ${how} whose module name is not exactly one plain string literal; it may load the database client, so write the module name as a literal`
+            );
           }
         }
         if (ts.isIdentifier(callee) && callee.text === GATE_NAME) {
@@ -468,6 +511,13 @@ function scanAppTree(root: string, register: Register): Violation[] {
         ts.isStringLiteralLike(node.moduleReference.expression)
       ) {
         dynamicLoad('import = require()', node.moduleReference.expression.text);
+      }
+      if (
+        ts.isIdentifier(node) &&
+        node.text === GATE_NAME &&
+        isBindingName(node)
+      ) {
+        gateBindings.push(node);
       }
       if (
         ts.isIdentifier(node) &&
@@ -506,8 +556,9 @@ function scanAppTree(root: string, register: Register): Violation[] {
     };
     visit(sf);
 
-    if (clientNames.size === 0 && loads.length === 0) continue;
-    triggeredFiles.add(rel);
+    const triggered = clientNames.size > 0 || loads.length > 0;
+    if (!triggered && unreadable.length === 0) continue;
+    if (triggered) triggeredFiles.add(rel);
     if (registered.has(rel)) continue;
 
     const action = isServerActionFile(sf)
@@ -517,6 +568,9 @@ function scanAppTree(root: string, register: Register): Violation[] {
       violations.push({ file: rel, rule, detail: detail + action });
     };
 
+    // unclassified: a module name that is not a plain literal cannot be read.
+    for (const detail of unreadable) report('unclassified', detail);
+
     // R1: a load whose bindings cannot be followed, or a client of the page's own.
     for (const detail of loads) report('R1', detail);
 
@@ -525,7 +579,7 @@ function scanAppTree(root: string, register: Register): Violation[] {
 
     // R3: each such function awaits the gate, as a direct statement of its
     // body, before its first use of a client binding.
-    const accepted = new Set([GATE_NAME, ...gateNames]);
+    const accepted = new Set([GATE_NAME]);
     for (const [fn, use] of firstUse) {
       const body = fn.body;
       const gated =
@@ -544,11 +598,16 @@ function scanAppTree(root: string, register: Register): Violation[] {
       }
     }
 
-    // R4: the gate called is the one exported by lib/auth/page-access.ts.
-    if (callsGateByName && !gateNames.has(GATE_NAME)) {
+    // R4: the gate name has one binding, the named import from lib/auth/page-access.ts.
+    const otherBindings = gateBindings.filter(id => !gateImports.has(id));
+    if (
+      otherBindings.length > 0 ||
+      gateImports.size > 1 ||
+      (callsGateByName && gateImports.size === 0)
+    ) {
       report(
         'R4',
-        `calls ${GATE_NAME}, but that name was not imported from ${GATE_MODULE}; a local function or another module's function of the same name does not count`
+        `${GATE_NAME} must have exactly one binding in the file, the named import from ${GATE_MODULE}; found ${otherBindings.length} other binding(s) and ${gateImports.size} such import(s)${callsGateByName ? ' and a call by that name' : ''}. A local function, a parameter or another module's function of the same name does not count, and neither does an import under another name`
       );
     }
   }
@@ -874,6 +933,212 @@ ${PAGE_OPEN}${GATE}  return { campaigns: await campaigns, organisation };
       ]);
     });
 
+    it('flags a gate re-declared as a local const arrow function beside the real import', () => {
+      const page =
+        CLIENT_IMPORT +
+        GATE_IMPORT +
+        `export default async function Page() {
+  const requireOrganisationPageAccess = async (_slug: string, _returnTo: string) => ({});
+  await requireOrganisationPageAccess('x', '/x');
+  return prisma.campaign.findMany();
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R4' },
+      ]);
+    });
+
+    it('flags a gate re-declared as a function declaration nested in the page body', () => {
+      const page =
+        CLIENT_IMPORT +
+        GATE_IMPORT +
+        `export default async function Page() {
+  async function requireOrganisationPageAccess(_slug: string, _returnTo: string) {
+    return {};
+  }
+  await requireOrganisationPageAccess('x', '/x');
+  return prisma.campaign.findMany();
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R4' },
+      ]);
+    });
+
+    it('flags a gate name used as a parameter of a helper', () => {
+      const page =
+        CLIENT_IMPORT +
+        GATE_IMPORT +
+        `function helper(requireOrganisationPageAccess: unknown) {
+  return requireOrganisationPageAccess;
+}
+
+export default async function Page() {
+  await requireOrganisationPageAccess('x', '/x');
+  return { helper, rows: await prisma.campaign.findMany() };
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R4' },
+      ]);
+    });
+
+    it('flags a second import that binds the gate name from another module', () => {
+      const page =
+        CLIENT_IMPORT +
+        GATE_IMPORT +
+        `import { other as requireOrganisationPageAccess } from '@/lib/other-access';\n` +
+        PAGE_OPEN +
+        GATE +
+        QUERY +
+        PAGE_CLOSE;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R4' },
+      ]);
+    });
+
+    it.each([
+      [
+        'a destructured const',
+        `const { requireOrganisationPageAccess } = {} as any;`,
+      ],
+      [
+        'a renamed destructured const',
+        `const { gate: requireOrganisationPageAccess } = {} as any;`,
+      ],
+      [
+        'an array pattern',
+        `const [requireOrganisationPageAccess] = [] as any[];`,
+      ],
+      ['a var', `var requireOrganisationPageAccess = 1;`],
+      ['a let', `let requireOrganisationPageAccess = 1;`],
+      [
+        'a destructured parameter',
+        `function helper({ requireOrganisationPageAccess }: any) { return 1; }`,
+      ],
+      [
+        'an arrow function parameter',
+        `const helper = (requireOrganisationPageAccess: unknown) => 1;`,
+      ],
+      [
+        'a named function expression',
+        `const helper = function requireOrganisationPageAccess() { return 1; };`,
+      ],
+      [
+        'a catch clause',
+        `try { helper(); } catch (requireOrganisationPageAccess) { helper(); }\nfunction helper() {}`,
+      ],
+      ['a class declaration', `class requireOrganisationPageAccess {}`],
+      ['an enum declaration', `enum requireOrganisationPageAccess { A }`],
+      [
+        'a namespace declaration',
+        `namespace requireOrganisationPageAccess { export const a = 1; }`,
+      ],
+      [
+        'a default import',
+        `import requireOrganisationPageAccess from '@/lib/other-access';`,
+      ],
+      [
+        'a namespace import',
+        `import * as requireOrganisationPageAccess from '@/lib/other-access';`,
+      ],
+      [
+        'an import equals require',
+        `import requireOrganisationPageAccess = require('@/lib/other-access');`,
+      ],
+    ])('flags a gate name bound by %s', (_label, declaration) => {
+      const page =
+        CLIENT_IMPORT +
+        GATE_IMPORT +
+        declaration +
+        '\n' +
+        PAGE_OPEN +
+        GATE +
+        QUERY +
+        PAGE_CLOSE;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R4' },
+      ]);
+    });
+
+    it('does not accept the real gate imported under another local name', () => {
+      const page =
+        CLIENT_IMPORT +
+        `import { requireOrganisationPageAccess as gate } from '@/lib/auth/page-access';\n` +
+        PAGE_OPEN +
+        `  const { organisation } = await gate(client, returnTo);\n` +
+        QUERY +
+        PAGE_CLOSE;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([
+        { file: PAGE, rule: 'R3' },
+      ]);
+    });
+
+    describe('a module name that is not a plain string cannot be classified', () => {
+      const dynamicPage = (
+        statement: string
+      ): string => `export default async function Page() {
+  ${statement}
+  return db.campaign.findMany();
+}
+`;
+      it.each([
+        [
+          'flags a dynamic import whose module name has a substitution',
+          'const { default: db } = await import(`@/lib/${"prisma"}`);',
+        ],
+        [
+          'flags a dynamic import whose module name is concatenated',
+          `const { default: db } = await import('@/lib/' + 'prisma');`,
+        ],
+        [
+          'flags a dynamic import whose module name is an identifier',
+          `const name = '@/lib/prisma';\n  const { default: db } = await import(name);`,
+        ],
+        [
+          'flags a dynamic import whose module name is a call',
+          `const { default: db } = await import(String('@/lib/prisma'));`,
+        ],
+        [
+          'flags a dynamic import with no module name',
+          `const { default: db } = await import();`,
+        ],
+        [
+          'flags a dynamic import with a second argument',
+          `const { default: db } = await import('./chart', { with: {} });`,
+        ],
+        [
+          'flags a require whose module name is not a literal',
+          `const db = require('@/lib/' + 'prisma');`,
+        ],
+        [
+          'flags a require whose module name is an identifier',
+          `const name = '@/lib/prisma';\n  const db = require(name);`,
+        ],
+        ['flags a require with no module name', `const db = require();`],
+        [
+          'flags a require with two arguments',
+          `const db = require('./chart', 'x');`,
+        ],
+      ])('%s', (_title, statement) => {
+        expect(scanPlanted({ [PAGE]: dynamicPage(statement) })).toEqual([
+          { file: PAGE, rule: 'unclassified' },
+        ]);
+      });
+
+      it('flags an unreadable import in a layout too', () => {
+        const layout = `export default async function Layout({ children }: { children: unknown }) {
+  const { default: db } = await import(\`@/lib/\${'prisma'}\`);
+  await db.campaign.count();
+  return children;
+}
+`;
+        expect(scanPlanted({ 'app/x/layout.tsx': layout })).toEqual([
+          { file: 'app/x/layout.tsx', rule: 'unclassified' },
+        ]);
+      });
+    });
+
     it('flags a stale register entry', () => {
       // An entry whose file is gone.
       expect(
@@ -924,6 +1189,16 @@ type Props = {
 
 export default function Page(props: Props) {
   return props.where ? 1 : 0;
+}
+`;
+      expect(scanPlanted({ [PAGE]: page })).toEqual([]);
+    });
+
+    it('passes a literal dynamic import of an unrelated module in a page with no database import', () => {
+      const page = `export default async function Page() {
+  const chart = await import('./chart');
+  const plain = await import(\`./plain\`);
+  return { chart, plain };
 }
 `;
       expect(scanPlanted({ [PAGE]: page })).toEqual([]);
