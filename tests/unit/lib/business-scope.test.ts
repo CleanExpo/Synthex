@@ -38,6 +38,14 @@ import {
   OrgAccessError,
 } from '@/lib/multi-business/business-scope';
 import { setActiveOrganization } from '@/lib/multi-business/owner-utils';
+import { checkOrganizationAccess } from '@/lib/multi-business/business-scope';
+import { logger } from '@/lib/logger';
+import {
+  createPrismaRowStore,
+  type RowStoreMethod,
+  type RowStoreModel,
+  type RowStoreTarget,
+} from '@/tests/helpers/prisma-row-store';
 
 describe('business-scope — org access (SYN-847)', () => {
   beforeEach(() => {
@@ -408,5 +416,265 @@ describe('setActiveOrganization — rejects a non-member target (SYN-1104)', () 
       setActiveOrganization('owner', 'suspended-membership-org')
     ).rejects.toThrow(/inactive/i);
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
+  });
+});
+
+// -- SYN-1412 -- the access rule with read errors preserved -------------------
+// checkOrganizationAccess is the rule; hasOrganizationAccess is the same rule
+// with a failed read logged and answered as "no access". These cases run both
+// over stored rows (tests/helpers/prisma-row-store.ts), reached through the
+// same mocked client as the cases above: each read applies its own `where` to
+// the rows, decoys included, and a failed read rejects with the planted error.
+describe('organisation access with read errors preserved (SYN-1412)', () => {
+  const accessRows = createPrismaRowStore();
+
+  type Read = (args: unknown) => Promise<unknown>;
+  const rowRead =
+    (model: RowStoreModel, method: RowStoreMethod): Read =>
+    args =>
+      (accessRows.client[model] as Record<RowStoreMethod, Read>)[method](args);
+
+  const USER_ID = 'user-1';
+  const TARGET_ID = 'org-child';
+  const PARENT_ID = 'org-parent';
+
+  interface Caller {
+    /** The organisation user-1 belongs to. */
+    home: string;
+    isMultiBusinessOwner: boolean;
+    /** user-1's ownership of the target organisation, if a row exists. */
+    ownership: 'active' | 'inactive' | 'none';
+  }
+
+  // The five fixtures of the truth table. Each differs from a neighbour in one
+  // field: the owner without the flag from the active owner (the flag), the
+  // stranger from the parent-workspace member (the home organisation).
+  const DIRECT_MEMBER: Caller = {
+    home: TARGET_ID,
+    isMultiBusinessOwner: false,
+    ownership: 'none',
+  };
+  const ACTIVE_OWNER: Caller = {
+    home: 'org-other',
+    isMultiBusinessOwner: true,
+    ownership: 'active',
+  };
+  const OWNER_WITHOUT_FLAG: Caller = {
+    home: 'org-other',
+    isMultiBusinessOwner: false,
+    ownership: 'active',
+  };
+  const PARENT_MEMBER: Caller = {
+    home: PARENT_ID,
+    isMultiBusinessOwner: true,
+    ownership: 'inactive',
+  };
+  const STRANGER: Caller = {
+    home: 'org-other',
+    isMultiBusinessOwner: true,
+    ownership: 'inactive',
+  };
+
+  /**
+   * Seed who exists. Beside user-1 there are decoys that must not count for
+   * user-1: another user who is a member and an active owner of the target;
+   * another user in the parent workspace; and user-1's own active ownership
+   * of a sibling organisation.
+   */
+  function seedCaller(caller: Caller) {
+    accessRows.seed({
+      organization: [
+        {
+          id: PARENT_ID,
+          name: 'Parent Workspace',
+          slug: 'parent',
+          parentOrgId: null,
+        },
+        {
+          id: TARGET_ID,
+          name: 'Child Brand',
+          slug: 'child',
+          parentOrgId: PARENT_ID,
+        },
+        {
+          id: 'org-other',
+          name: 'Sibling Brand',
+          slug: 'sibling',
+          parentOrgId: PARENT_ID,
+        },
+      ],
+      user: [
+        {
+          id: USER_ID,
+          organizationId: caller.home,
+          isMultiBusinessOwner: caller.isMultiBusinessOwner,
+        },
+        { id: 'user-2', organizationId: TARGET_ID, isMultiBusinessOwner: true },
+        {
+          id: 'user-3',
+          organizationId: PARENT_ID,
+          isMultiBusinessOwner: false,
+        },
+      ],
+      businessOwnership: [
+        { ownerId: 'user-2', organizationId: TARGET_ID, isActive: true },
+        { ownerId: USER_ID, organizationId: 'org-other', isActive: true },
+        ...(caller.ownership === 'none'
+          ? []
+          : [
+              {
+                ownerId: USER_ID,
+                organizationId: TARGET_ID,
+                isActive: caller.ownership === 'active',
+              },
+            ]),
+      ],
+    });
+  }
+
+  // The rule's four reads, each named by the question it asks. `organization`
+  // is read twice: by the target's id (its membership) and by the parent's id.
+  const USER_READ: RowStoreTarget = { model: 'user' };
+  const OWNERSHIP_READ: RowStoreTarget = { model: 'businessOwnership' };
+  const MEMBERSHIP_READ: RowStoreTarget = {
+    model: 'organization',
+    where: where => where.id === TARGET_ID,
+  };
+  const PARENT_READ: RowStoreTarget = {
+    model: 'organization',
+    where: where => where.id === PARENT_ID,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    accessRows.reset();
+    mockPrisma.user.findUnique.mockImplementation(
+      rowRead('user', 'findUnique')
+    );
+    mockPrisma.businessOwnership.findUnique.mockImplementation(
+      rowRead('businessOwnership', 'findUnique')
+    );
+    mockPrisma.organization.findUnique.mockImplementation(
+      rowRead('organization', 'findUnique')
+    );
+    mockPrisma.organization.findFirst.mockImplementation(
+      rowRead('organization', 'findFirst')
+    );
+  });
+
+  afterEach(() => {
+    // A query the row store does not know is a fault in the test set-up, even
+    // when hasOrganizationAccess caught it and answered false.
+    expect(accessRows.usageErrors).toEqual([]);
+  });
+
+  /**
+   * The caller is a member of the parent workspace only: the rule reaches all
+   * four of its reads for that caller and then grants, which the first line
+   * shows. One thing then differs: one read fails.
+   */
+  async function checkThrowsWhenReadFails(target: RowStoreTarget) {
+    seedCaller(PARENT_MEMBER);
+    expect(await checkOrganizationAccess(USER_ID, TARGET_ID)).toBe(true);
+
+    const planted = new Error('planted: this read failed');
+    accessRows.fail(target, planted);
+
+    await expect(checkOrganizationAccess(USER_ID, TARGET_ID)).rejects.toBe(
+      planted
+    );
+  }
+
+  /** The same failure through the wrapper: logged once, answered as false. */
+  async function hasAnswersFalseAndLogsWhenReadFails(target: RowStoreTarget) {
+    seedCaller(PARENT_MEMBER);
+    expect(await hasOrganizationAccess(USER_ID, TARGET_ID)).toBe(true);
+    expect(logger.error).not.toHaveBeenCalled();
+
+    const planted = new Error('planted: this read failed');
+    accessRows.fail(target, planted);
+
+    expect(await hasOrganizationAccess(USER_ID, TARGET_ID)).toBe(false);
+    expect(logger.error).toHaveBeenCalledTimes(1);
+    expect(logger.error).toHaveBeenCalledWith(
+      'Failed to check organization access',
+      {
+        userId: USER_ID,
+        organizationId: TARGET_ID,
+        error: 'planted: this read failed',
+      }
+    );
+  }
+
+  /**
+   * Both functions give the stated answer for this caller, with the parent
+   * workspace counted (the default) and with it left out.
+   */
+  async function bothAnswer(
+    caller: Caller,
+    expected: { withParent: boolean; direct: boolean }
+  ) {
+    seedCaller(caller);
+    const direct = { includeParentWorkspace: false };
+
+    const checked = await checkOrganizationAccess(USER_ID, TARGET_ID);
+    expect(checked).toBe(expected.withParent);
+    expect(await hasOrganizationAccess(USER_ID, TARGET_ID)).toBe(checked);
+
+    const checkedDirect = await checkOrganizationAccess(
+      USER_ID,
+      TARGET_ID,
+      direct
+    );
+    expect(checkedDirect).toBe(expected.direct);
+    expect(await hasOrganizationAccess(USER_ID, TARGET_ID, direct)).toBe(
+      checkedDirect
+    );
+    expect(logger.error).not.toHaveBeenCalled();
+  }
+
+  describe('checkOrganizationAccess lets a failed read throw', () => {
+    it('checkOrganizationAccess throws when the user read fails', () =>
+      checkThrowsWhenReadFails(USER_READ));
+
+    it('checkOrganizationAccess throws when the ownership read fails', () =>
+      checkThrowsWhenReadFails(OWNERSHIP_READ));
+
+    it('checkOrganizationAccess throws when the organisation membership read fails', () =>
+      checkThrowsWhenReadFails(MEMBERSHIP_READ));
+
+    it('checkOrganizationAccess throws when the parent organisation read fails', () =>
+      checkThrowsWhenReadFails(PARENT_READ));
+  });
+
+  describe('hasOrganizationAccess keeps treating a failed read as no access', () => {
+    it('hasOrganizationAccess still returns false and logs when the user read fails', () =>
+      hasAnswersFalseAndLogsWhenReadFails(USER_READ));
+
+    it('hasOrganizationAccess still returns false and logs when the ownership read fails', () =>
+      hasAnswersFalseAndLogsWhenReadFails(OWNERSHIP_READ));
+
+    it('hasOrganizationAccess still returns false and logs when the organisation membership read fails', () =>
+      hasAnswersFalseAndLogsWhenReadFails(MEMBERSHIP_READ));
+
+    it('hasOrganizationAccess still returns false and logs when the parent organisation read fails', () =>
+      hasAnswersFalseAndLogsWhenReadFails(PARENT_READ));
+  });
+
+  describe('the two functions agree when every read works', () => {
+    it('checkOrganizationAccess and hasOrganizationAccess agree for a direct member', () =>
+      bothAnswer(DIRECT_MEMBER, { withParent: true, direct: true }));
+
+    it('checkOrganizationAccess and hasOrganizationAccess agree for an active owner with the multi-business flag', () =>
+      bothAnswer(ACTIVE_OWNER, { withParent: true, direct: true }));
+
+    it('checkOrganizationAccess and hasOrganizationAccess agree for an owner without the multi-business flag', () =>
+      bothAnswer(OWNER_WITHOUT_FLAG, { withParent: false, direct: false }));
+
+    it('checkOrganizationAccess and hasOrganizationAccess agree for a parent-workspace member', () =>
+      bothAnswer(PARENT_MEMBER, { withParent: true, direct: false }));
+
+    it('checkOrganizationAccess and hasOrganizationAccess agree for a stranger', () =>
+      bothAnswer(STRANGER, { withParent: false, direct: false }));
   });
 });

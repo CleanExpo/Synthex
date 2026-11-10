@@ -5,7 +5,7 @@
 > **538 API routes · 101 dashboard pages · 116 Prisma models in use**
 > Auth: 431 user-authed · 23 admin-only · 27 cron · 57 public
 >
-> Last audited: 2026-10-07 — opportunity proposals API and dashboard slice only; counts above are the original generated inventory.
+> Last audited: 2026-11-11 — Client Content Studio board API (`/api/marketing-agency/studio/[client]`) only; before that 2026-10-07, opportunity proposals API and dashboard slice only; counts above are the original generated inventory.
 
 ---
 
@@ -531,6 +531,8 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 
 - `GET /api/marketing-agency/opportunities` — user — _marketingAgencyOpportunity,marketingAgencySignal_
 - `POST /api/marketing-agency/campaigns` — user — _draft campaign package only_
+- `GET /api/marketing-agency/studio/[client]` — user — board read for the organisation whose slug is `[client]`: organisation access through `checkOrganizationAccess` (`lib/multi-business/business-scope.ts`), parent workspace included; 403 without access, 503 `STUDIO_ACCESS_CHECK_UNAVAILABLE` when the access check cannot be read; the answer carries `canApprove` and `approveRefusal`, decided by the same function the POST gates on — _organization,studioContentDraft,user,businessOwnership,teamMember,userRole_
+- `POST /api/marketing-agency/studio/[client]` — user — approve and schedule a draft: the approver must be a direct member of the organisation (the parent workspace does not count) and hold an editor, admin or owner role there, decided only by `resolveStudioApprovalAuthority` (`lib/marketing-agency/studio/approval-authority.ts`); 403 `STUDIO_APPROVE_NOT_ORG_MEMBER` or `STUDIO_APPROVE_ROLE_REQUIRED`, 503 `STUDIO_APPROVE_CHECK_UNAVAILABLE` when the check cannot be read — _organization,studioContentDraft,user,businessOwnership,teamMember,userRole_
 
 ### media
 

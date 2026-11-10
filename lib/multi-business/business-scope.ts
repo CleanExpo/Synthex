@@ -303,81 +303,96 @@ export async function getEffectiveQueryFilter(
  *   organisation itself (its member, owner, or direct user) — a member of the
  *   parent workspace who holds no role in the child is then refused.
  * @returns True if user has access
+ * @throws whatever a failed database read throws. A caller that must tell
+ *   "no access" from "could not check" uses this export; a caller that wants
+ *   a failed read treated as no access uses hasOrganizationAccess below.
+ */
+export async function checkOrganizationAccess(
+  userId: string,
+  organizationId: string,
+  options: { includeParentWorkspace?: boolean } = {}
+): Promise<boolean> {
+  const includeParentWorkspace = options.includeParentWorkspace ?? true;
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      isMultiBusinessOwner: true,
+      organizationId: true,
+    },
+  });
+
+  if (!user) {
+    return false;
+  }
+
+  // Path 1 — Direct membership: the user's own organization matches.
+  if (user.organizationId === organizationId) {
+    return true;
+  }
+
+  // Path 2 — Multi-business owner: active BusinessOwnership over the target.
+  if (user.isMultiBusinessOwner) {
+    const ownership = await prisma.businessOwnership.findUnique({
+      where: {
+        ownerId_organizationId: {
+          ownerId: userId,
+          organizationId,
+        },
+      },
+      select: { isActive: true },
+    });
+
+    if (ownership?.isActive) {
+      return true;
+    }
+  }
+
+  // Path 3 — SYN-847 workspace membership / master-admin-over-child.
+  // Resolve the target org's parent (if any) and the set of orgs the user is
+  // a member of. Access is granted when the user is a member of the target
+  // org directly, OR a member of the target's parent workspace (master admin).
+  const target = await prisma.organization.findUnique({
+    where: { id: organizationId },
+    select: {
+      parentOrgId: true,
+      users: { where: { id: userId }, select: { id: true } },
+    },
+  });
+
+  if (!target) {
+    return false;
+  }
+
+  // Member of the target child/brand org directly.
+  if (target.users.length > 0) {
+    return true;
+  }
+
+  // Master admin: member of the target's parent workspace org.
+  if (includeParentWorkspace && target.parentOrgId) {
+    const parentMembership = await prisma.organization.findFirst({
+      where: { id: target.parentOrgId, users: { some: { id: userId } } },
+      select: { id: true },
+    });
+    if (parentMembership) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/**
+ * The same rule with a failed read treated as "no access": the error is
+ * logged and false is returned. Behaviour unchanged for existing callers.
  */
 export async function hasOrganizationAccess(
   userId: string,
   organizationId: string,
   options: { includeParentWorkspace?: boolean } = {}
 ): Promise<boolean> {
-  const includeParentWorkspace = options.includeParentWorkspace ?? true;
   try {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        isMultiBusinessOwner: true,
-        organizationId: true,
-      },
-    });
-
-    if (!user) {
-      return false;
-    }
-
-    // Path 1 — Direct membership: the user's own organization matches.
-    if (user.organizationId === organizationId) {
-      return true;
-    }
-
-    // Path 2 — Multi-business owner: active BusinessOwnership over the target.
-    if (user.isMultiBusinessOwner) {
-      const ownership = await prisma.businessOwnership.findUnique({
-        where: {
-          ownerId_organizationId: {
-            ownerId: userId,
-            organizationId,
-          },
-        },
-        select: { isActive: true },
-      });
-
-      if (ownership?.isActive) {
-        return true;
-      }
-    }
-
-    // Path 3 — SYN-847 workspace membership / master-admin-over-child.
-    // Resolve the target org's parent (if any) and the set of orgs the user is
-    // a member of. Access is granted when the user is a member of the target
-    // org directly, OR a member of the target's parent workspace (master admin).
-    const target = await prisma.organization.findUnique({
-      where: { id: organizationId },
-      select: {
-        parentOrgId: true,
-        users: { where: { id: userId }, select: { id: true } },
-      },
-    });
-
-    if (!target) {
-      return false;
-    }
-
-    // Member of the target child/brand org directly.
-    if (target.users.length > 0) {
-      return true;
-    }
-
-    // Master admin: member of the target's parent workspace org.
-    if (includeParentWorkspace && target.parentOrgId) {
-      const parentMembership = await prisma.organization.findFirst({
-        where: { id: target.parentOrgId, users: { some: { id: userId } } },
-        select: { id: true },
-      });
-      if (parentMembership) {
-        return true;
-      }
-    }
-
-    return false;
+    return await checkOrganizationAccess(userId, organizationId, options);
   } catch (error) {
     logger.error('Failed to check organization access', {
       userId,
