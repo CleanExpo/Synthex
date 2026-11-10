@@ -1,7 +1,7 @@
 /**
  * Reference-library resolver — single source of truth over
  * public/reference-library/manifest.json. Returns OWNED-ONLY image paths for
- * grounding (creative-director REM-1 / CCW authority-manifest "no fake renders").
+ * grounding (synthex-copy-calibration REM-1 / CCW authority-manifest "no fake renders").
  * Returns site-relative paths; the caller resolves them to absolute URLs.
  */
 import { detectIndustry } from '@/lib/demo/industry-classifier';
