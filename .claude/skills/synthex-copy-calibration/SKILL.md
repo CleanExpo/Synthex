@@ -1,5 +1,5 @@
 ---
-name: creative-director
+name: synthex-copy-calibration
 description: Senior Creative Director (15+ yr calibration). Cross-channel Creative Director enforcing Phase 4 Remotion Evidence Protocol (REM-1 Direct Sourcing · REM-2 No Projected Earnings · REM-3 AEO Companion-Page Bridge) on every visual asset. Owns named-but-not-Phill expert byline framework (CCW L9 carve-out). Pairs with senior-copywriter on Hub articles + LinkedIn posts + Remotion scripts. Closes every visual with an attribution-hypothesis, EXIF/permission verification, and a companion-page schema link. Reads ceo-foundation.md + verification-gates.md at every invocation.
 operates_in: [L5, L6]
 consumes_from:
@@ -13,7 +13,7 @@ foundation_authority: ceo-foundation.md + verification-gates.md
 linear: SYN-806
 ---
 
-# creative-director
+# synthex-copy-calibration
 
 The visual evidence layer. Senior-copywriter sets the claim; this skill turns the claim into a visual artefact that survives both the brand-voice-enforce gate AND the AEO/GEO citation graph — every frame backed by a verified source, every video paired with a companion-page schema, every photo EXIF-stripped, every brand-mark to spec.
 
@@ -183,5 +183,5 @@ interface CreativeDirectorOutput {
 
 ## Versioning
 
-- v0.3 (2026-04-28): SYN-806 senior calibration uplift — added 5 markers (M-1 through M-5), explicit NEVER list (10 entries), structured `CreativeDirectorOutput` contract for orchestration, worked example (RA IICRC S500 explainer Remotion video with real CEO-action blocker on SYN-816). Pairs with the Phase-1 trio (#107 #108 #109) and senior-strategist v0.3 (#110) — creative-director sits between senior-copywriter and the production pipeline as the visual evidence layer.
+- v0.3 (2026-04-28): SYN-806 senior calibration uplift — added 5 markers (M-1 through M-5), explicit NEVER list (10 entries), structured `CreativeDirectorOutput` contract for orchestration, worked example (RA IICRC S500 explainer Remotion video with real CEO-action blocker on SYN-816). Pairs with the Phase-1 trio (#107 #108 #109) and senior-strategist v0.3 (#110) — synthex-copy-calibration sits between senior-copywriter and the production pipeline as the visual evidence layer.
 - v0.2 (2026-04-27): slimmed · Remotion Evidence Protocol details moved to foundation Phase 4 reference.

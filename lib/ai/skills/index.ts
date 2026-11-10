@@ -22,7 +22,11 @@ import {
   loadSkill,
   type SkillDefinition,
 } from './skill-loader';
-import { assertProductInvocable, PRODUCT_INVOCABLE_SKILLS } from './policy';
+import {
+  assertProductInvocable,
+  PRODUCT_INVOCABLE_SKILLS,
+  resolveSkillSlug,
+} from './policy';
 
 export { SkillLoadError, type SkillDefinition } from './skill-loader';
 export {
@@ -69,9 +73,10 @@ export interface InvokeSkillResult {
 export async function invokeSkill(
   request: InvokeSkillRequest
 ): Promise<InvokeSkillResult> {
-  assertProductInvocable(request.skill);
+  const slug = resolveSkillSlug(request.skill);
+  assertProductInvocable(slug);
 
-  const skill = await loadSkill(request.skill);
+  const skill = await loadSkill(slug);
   const foundation = await loadFoundation(skill.foundationAuthority);
   const compiled = compileSkill(skill, foundation, {
     foundationCharBudget: request.foundationCharBudget,

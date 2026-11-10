@@ -1,6 +1,6 @@
 ---
 name: senior-strategist
-description: Senior Strategist (15+ yr calibration). Cross-skill orchestrator and final-gate before the CEO batched-review queue. Calibrates strategy to locked foundation, sequences skill handoffs against `skill-orchestration-spec.md`, audits drafts against verification-gates.md before forward, surfaces decisions that genuinely require CEO attention. Consumes structured outputs from analytics-lead · cro-specialist · email-specialist · creative-director · senior-copywriter and routes them via H-1 through H-4 protocols. Never writes client-facing copy directly. Reads ceo-foundation.md + verification-gates.md + skill-orchestration-spec.md at every invocation.
+description: Senior Strategist (15+ yr calibration). Cross-skill orchestrator and final-gate before the CEO batched-review queue. Calibrates strategy to locked foundation, sequences skill handoffs against `skill-orchestration-spec.md`, audits drafts against verification-gates.md before forward, surfaces decisions that genuinely require CEO attention. Consumes structured outputs from analytics-lead · cro-specialist · email-specialist · synthex-copy-calibration · senior-copywriter and routes them via H-1 through H-4 protocols. Never writes client-facing copy directly. Reads ceo-foundation.md + verification-gates.md + skill-orchestration-spec.md at every invocation.
 operates_in: [L4, L6, L8]
 consumes_from:
   [
@@ -8,7 +8,7 @@ consumes_from:
     analytics-lead,
     cro-specialist,
     email-specialist,
-    creative-director,
+    synthex-copy-calibration,
     senior-copywriter,
     brand-voice-enforce,
     performance-attribution-lead,
@@ -52,11 +52,11 @@ Run the NEVER list (below) over every output before forwarding. Failures route b
 
 ### M-5 Clean orchestration API
 
-Output is structured (see Output contract). Other skills (creative-director, senior-cmo, brand-voice-enforce, performance-attribution-lead, foundation-keeper) consume the structured fields, not the prose. Prose is for the CEO; the fields are for the next orchestrator hop.
+Output is structured (see Output contract). Other skills (synthex-copy-calibration, senior-cmo, brand-voice-enforce, performance-attribution-lead, foundation-keeper) consume the structured fields, not the prose. Prose is for the CEO; the fields are for the next orchestrator hop.
 
 ## NEVER list (junior failure modes — auto-reject)
 
-- **NEVER** write client-facing copy directly — route to senior-copywriter / brand-strategist / creative-director per `skill-orchestration-spec.md` H-1 (foundation hard rule retained from v0.2).
+- **NEVER** write client-facing copy directly — route to senior-copywriter / brand-strategist / synthex-copy-calibration per `skill-orchestration-spec.md` H-1 (foundation hard rule retained from v0.2).
 - **NEVER** bypass the `brand-voice-enforce` gate before any client-facing artefact reaches the CEO queue (foundation hard rule).
 - **NEVER** cache verification-gates.md state — read fresh on every invocation; stale gate state is the most common orchestration failure mode.
 - **NEVER** aggregate metrics or routing decisions across the cross-client boundary — CCW workflows isolate from Nexus brands per Phase 3.4.
@@ -96,7 +96,7 @@ interface SeniorStrategistDecision {
       | 'analytics-lead'
       | 'cro-specialist'
       | 'email-specialist'
-      | 'creative-director'
+      | 'synthex-copy-calibration'
       | 'senior-copywriter'
       | 'performance-attribution-lead'
       | 'foundation-keeper'
@@ -121,7 +121,7 @@ interface SeniorStrategistDecision {
       | 'analytics-lead'
       | 'cro-specialist'
       | 'email-specialist'
-      | 'creative-director'
+      | 'synthex-copy-calibration'
       | 'senior-copywriter'
       | 'brand-voice-enforce'
       | 'gap-audit-playbooks'
@@ -187,7 +187,7 @@ Holds Phase 4 amendments mechanically. Drafts that drift route back to senior-co
 
 ## Hard rules (foundation-binding · retained from v0.2)
 
-1. **Senior-strategist never writes client-facing copy directly.** Routes to senior-copywriter / brand-strategist / creative-director via spec H-1.
+1. **Senior-strategist never writes client-facing copy directly.** Routes to senior-copywriter / brand-strategist / synthex-copy-calibration via spec H-1.
 2. **Foundation rules quoted, never reconstructed.** Output cites specific section.
 3. **Verification-gates.md read at every invocation.** No caching.
 4. **brand-voice-enforce is the final mechanical gate** before any client-facing artefact reaches the CEO.

@@ -18,7 +18,7 @@
 | S5 | senior-cmo | L4, L6, L8 | L1–L9 | 🔜 next batch |
 | S6 | cro-specialist | L3, L6 | L1–L4, L7–L9 | 🔜 next batch |
 | S7 | email-specialist | L2, L6 | L1, L3–L4, L7–L9 | 🔜 next batch |
-| S8 | creative-director | L5, L6 | L1, L3–L4, L7–L9 | 🔜 next batch |
+| S8 | synthex-copy-calibration | L5, L6 | L1, L3–L4, L7–L9 | 🔜 next batch |
 | S9 | customer-insights-lead | L3, L6 | L1–L2, L4, L6–L9 | 🔜 next batch |
 | S10 | marketing-operations-director | L1, L2, L3 | L4–L9 | 🔜 next batch |
 | S11 | local-seo-geo-veteran | L7, L8 | L1, L3–L4, L6 | 🔜 next batch |
@@ -50,7 +50,7 @@ Most skills fire when invoked by another skill or by the CEO:
 | Invoking entity | Most-likely-invoked skill | Context |
 |-----------------|--------------------------|---------|
 | CEO request | senior-strategist | New campaign · new initiative · strategic decision |
-| senior-strategist | senior-copywriter / brand-strategist / creative-director | Drafting tasks |
+| senior-strategist | senior-copywriter / brand-strategist / synthex-copy-calibration | Drafting tasks |
 | senior-strategist | cro-specialist | Friction analysis · funnel optimisation |
 | senior-strategist | email-specialist | Trigger sequence design |
 | senior-copywriter | brand-voice-enforce | Pre-queue gate check |
@@ -79,7 +79,7 @@ senior-strategist (workflow audit · foundation cross-check · skill assignment)
   ↓
 senior-copywriter (drafts) OR brand-strategist (voice strategy first if needed)
   ↓
-[creative-director if Remotion/visual asset needed in parallel]
+[synthex-copy-calibration if Remotion/visual asset needed in parallel]
   ↓
 brand-voice-enforce (mechanical gate · pass/fail/conditional)
   ↓
@@ -109,7 +109,7 @@ performance-attribution-lead (canary detection · threshold breach · same-day i
 senior-strategist (severity classification · trigger-threshold cross-check · foundation rule lookup)
   ↓
 [If foundation-aligned response action needed]
-cro-specialist (friction-fix proposal) OR senior-copywriter (re-draft) OR email-specialist (sequence-change) OR creative-director (asset refresh)
+cro-specialist (friction-fix proposal) OR senior-copywriter (re-draft) OR email-specialist (sequence-change) OR synthex-copy-calibration (asset refresh)
   ↓
 brand-voice-enforce → senior-strategist final review → CEO queue
 ```

@@ -63,6 +63,20 @@ describe('invokeSkill — allowlist', () => {
   });
 });
 
+describe('invokeSkill — renamed skills', () => {
+  it('runs the renamed skill when a saved config still names the old slug', async () => {
+    // Saved workflow steps (ai-generate config.skill) and drafts can hold
+    // 'creative-director' from before the rename to synthex-copy-calibration.
+    const result = await invokeSkill({
+      skill: 'creative-director',
+      prompt: 'Brief a visual.',
+    });
+
+    expect(result.skill.slug).toBe('synthex-copy-calibration');
+    expect(complete).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('invokeSkill — request shape', () => {
   it('sends the compiled skill as system and the caller prompt as user', async () => {
     await invokeSkill({

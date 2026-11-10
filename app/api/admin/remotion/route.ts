@@ -2,7 +2,7 @@
  * Remotion Compositions API (God Mode) — AT-010
  *
  * GET  /api/admin/remotion — List compositions, or poll a pending brief (?draftId=)
- * POST /api/admin/remotion — Create org-scoped Remotion visual brief via creative-director
+ * POST /api/admin/remotion — Create org-scoped Remotion visual brief via synthex-copy-calibration
  *
  * Never auto-publishes. Never triggers server-side / Lambda render (not configured).
  * Auth: verifyAdmin() — owner-only via isOwnerEmail or admin role.
@@ -166,7 +166,7 @@ export async function GET(request: NextRequest) {
       serverSideRender: false,
       lambdaRender: false,
       autoPublish: false,
-      note: 'POST creates an org-scoped pending Remotion brief (creative-director). Use the Studio page for client-side preview. Server-side and Lambda rendering are not configured.',
+      note: 'POST creates an org-scoped pending Remotion brief (synthex-copy-calibration). Use the Studio page for client-side preview. Server-side and Lambda rendering are not configured.',
     },
   });
 }
@@ -213,7 +213,7 @@ export async function POST(request: NextRequest) {
       }
 
       const result = await invokeSkill({
-        skill: 'creative-director',
+        skill: 'synthex-copy-calibration',
         prompt: buildCreativeDirectorPrompt(organizationId, input),
       });
 

@@ -112,7 +112,7 @@ function ownerRouteForCategory(category: string): string {
       return 'marketing-strategy';
     case 'visual_style':
     case 'format':
-      return 'creative-director';
+      return 'synthex-copy-calibration';
     case 'hashtag':
       return 'social-content';
     default:
