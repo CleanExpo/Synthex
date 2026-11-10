@@ -107,6 +107,111 @@ describe('studio board as a review portal', () => {
     expect(mutate).toHaveBeenCalled();
   });
 
+  it('says why a video cannot be shown instead of an empty player', async () => {
+    (useSWR as jest.Mock).mockReturnValue({
+      data: {
+        ...board,
+        board: {
+          ...board.board,
+          awaiting_approval: [
+            {
+              id: 'd3',
+              topic: 'Link failed',
+              script: 'x',
+              status: 'awaiting_approval',
+              videoUrl: null,
+              videoError:
+                'The video link could not be created just now. Reload the page to try again.',
+            },
+          ],
+        },
+      },
+      error: undefined,
+      isLoading: false,
+      mutate,
+    });
+    await act(async () => {
+      render(<ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />);
+    });
+    expect(document.querySelectorAll('video')).toHaveLength(0);
+    expect(screen.getByRole('alert').textContent).toMatch(
+      /could not be created/
+    );
+  });
+
+  it('keeps the first signed link while the page is open, so a playing video is not reloaded', async () => {
+    const withUrl = (url: string) => ({
+      data: {
+        ...board,
+        board: {
+          ...board.board,
+          awaiting_approval: [
+            { ...board.board.awaiting_approval[0], videoUrl: url },
+          ],
+        },
+      },
+      error: undefined,
+      isLoading: false,
+      mutate,
+    });
+    (useSWR as jest.Mock).mockReturnValue(
+      withUrl('https://example.test/first')
+    );
+    let view: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      view = render(
+        <ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />
+      );
+    });
+    (useSWR as jest.Mock).mockReturnValue(
+      withUrl('https://example.test/second')
+    );
+    await act(async () => {
+      view!.rerender(
+        <ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />
+      );
+    });
+    expect(document.querySelector('video')?.getAttribute('src')).toBe(
+      'https://example.test/first'
+    );
+  });
+
+  it('takes the latest signed link when the kept one stops playing', async () => {
+    const withUrl = (url: string) => ({
+      data: {
+        ...board,
+        board: {
+          ...board.board,
+          awaiting_approval: [
+            { ...board.board.awaiting_approval[0], videoUrl: url },
+          ],
+        },
+      },
+      error: undefined,
+      isLoading: false,
+      mutate,
+    });
+    (useSWR as jest.Mock).mockReturnValue(withUrl('https://example.test/old'));
+    let view: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      view = render(
+        <ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />
+      );
+    });
+    (useSWR as jest.Mock).mockReturnValue(withUrl('https://example.test/new'));
+    await act(async () => {
+      view!.rerender(
+        <ClientStudioPage params={Promise.resolve({ client: 'ccw' })} />
+      );
+    });
+    await act(async () => {
+      fireEvent.error(document.querySelector('video')!);
+    });
+    expect(document.querySelector('video')?.getAttribute('src')).toBe(
+      'https://example.test/new'
+    );
+  });
+
   it('shows no error after an accepted Approve', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,

@@ -75,6 +75,11 @@ jest.mock('@/lib/marketing-agency/studio/approve-and-schedule', () => ({
   },
 }));
 
+const mockSignedUrls = jest.fn();
+jest.mock('@/lib/storage/object-storage', () => ({
+  signedUrls: (...args: unknown[]) => mockSignedUrls(...args),
+}));
+
 jest.mock('@/lib/logger', () => ({ logger: { error: jest.fn() } }));
 const mockTrackError = jest.fn();
 jest.mock('@/lib/observability/error-tracker', () => ({
@@ -201,6 +206,45 @@ describe('GET /api/marketing-agency/studio/[client]', () => {
       organizationId: 'org-ra',
       clientSlug: 'restoreassist',
     });
+  });
+});
+
+describe('GET review links', () => {
+  const stored = {
+    id: 'd1',
+    status: 'awaiting_approval',
+    topic: 'A',
+    videoUrl: 'https://old.example/expired',
+    metadata: {
+      storageBucket: 'media-uploads',
+      storagePath: 'restoreassist/a-delivery.mp4',
+    },
+  };
+
+  it('signs each stored review copy on every read, never serving the saved link', async () => {
+    mockListStudioDrafts.mockResolvedValue([stored]);
+    mockSignedUrls.mockResolvedValue(['https://signed.example/fresh']);
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.board.awaiting_approval[0].videoUrl).toBe(
+      'https://signed.example/fresh'
+    );
+    expect(mockSignedUrls).toHaveBeenCalledWith(
+      'media-uploads',
+      ['restoreassist/a-delivery.mp4'],
+      6 * 60 * 60
+    );
+  });
+
+  it('reports a failed signing on the card and still serves the board', async () => {
+    mockListStudioDrafts.mockResolvedValue([stored]);
+    mockSignedUrls.mockRejectedValue(new Error('storage down'));
+    const res = await GET(createMockNextRequest({ url: 'http://x' }), ctx);
+    expect(res.status).toBe(200);
+    const card = (await res.json()).board.awaiting_approval[0];
+    expect(card.videoUrl).toBeNull();
+    expect(card.videoError).toMatch(/could not be created/);
   });
 });
 

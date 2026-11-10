@@ -25,6 +25,8 @@ import { logger } from '@/lib/logger';
 import { trackError } from '@/lib/observability/error-tracker';
 import prisma from '@/lib/prisma';
 import { listStudioDrafts } from '@/lib/marketing-agency/studio/draft-store';
+import { withFreshReviewLinks } from '@/lib/marketing-agency/studio/review-links';
+import { signedUrls } from '@/lib/storage/object-storage';
 import {
   approveAndScheduleStudioDraft,
   InvalidClearanceError,
@@ -83,10 +85,24 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
 
   try {
-    const drafts = (await listStudioDrafts({
-      organizationId,
-      clientSlug: client,
-    })) as Array<{ status: string }>;
+    // Review copies are signed on every read, so a link saved at load time
+    // can never expire on the client. A link that cannot be signed is
+    // reported on the card (videoError), never served stale.
+    const drafts = await withFreshReviewLinks(
+      (await listStudioDrafts({
+        organizationId,
+        clientSlug: client,
+      })) as Array<{ status: string; metadata?: unknown }>,
+      client,
+      signedUrls,
+      (bucket, error) =>
+        logger.error('studio review link signing failed', {
+          clientSlug: client,
+          organizationId,
+          bucket,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
+    );
 
     const board: Record<string, Array<{ status: string }>> = {
       awaiting_approval: [],
