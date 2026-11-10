@@ -57,6 +57,13 @@
  *       the merged tree: two pull requests that are each clean can merge into
  *       a tree that is not, and the first sign is main's unit tests failing
  *       after the merge.
+ *   L6  The scanner reads three ways of loading a module: a static import or
+ *       export-from, import(), and the identifier `require`. A load that uses
+ *       none of them is not seen: a property named require (module.require,
+ *       globalThis.require), createRequire, eval, new Function, the client
+ *       read from the global lib/prisma.ts stores it on, or a database client
+ *       other than Prisma. Closing this needs a check at run time, not more
+ *       scanner cases (SYN-1413 F-12).
  */
 
 import * as fs from 'node:fs';
