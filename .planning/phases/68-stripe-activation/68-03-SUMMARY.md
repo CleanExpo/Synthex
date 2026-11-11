@@ -63,7 +63,7 @@ completed: 2026-03-03
 - Re-authenticated Stripe CLI via browser OAuth (acct_1SzE5KGib5mMf28d — Synthex account)
 - Created Stripe products: Professional (`prod_U50OoAyEnr7OT7`) and Business (`prod_U50O0ZrTq6hmPH`)
 - Created recurring monthly prices: Professional AUD $249 (`price_1T6qNuGib5mMf28dqhxMIsP7`), Business AUD $399 (`price_1T6qO3Gib5mMf28d44AXcz6c`)
-- Registered webhook endpoint at `https://synthex.vercel.app/api/webhooks/stripe` with all 6 required events (`whsec_ULes6feFHFXjMqLhT0wfsauKqhJbYZVc`)
+- Registered webhook endpoint at `https://synthex.vercel.app/api/webhooks/stripe` with all 6 required events (`whsec_[REDACTED-ROTATE]`)
 - Configured all 5 Stripe env vars in Vercel across Production + Preview + Development
 - Triggered production redeployment → `https://synthex.social` live with new env vars
 
