@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import { requireOrganisationPageAccess } from '@/lib/auth/page-access';
 import { ccwEofyCampaignCalendar } from '@/lib/marketing-agency/ccw-eofy-calendar';
 
 export const dynamic = 'force-dynamic';
@@ -31,10 +32,15 @@ function formatDate(value: Date | string | null | undefined): string {
 }
 
 export default async function CcwEofyPackagePage() {
+  const { organisation } = await requireOrganisationPageAccess(
+    'ccw',
+    '/dashboard/marketing-agency/ccw-eofy'
+  );
+
   const campaign = await prisma.marketingAgencyCampaign.findFirst({
     where: {
       slug: CAMPAIGN_SLUG,
-      organization: { slug: 'ccw' },
+      organizationId: organisation.id,
     },
     include: {
       organization: true,
@@ -63,7 +69,7 @@ export default async function CcwEofyPackagePage() {
   const appCampaign = await prisma.campaign.findFirst({
     where: {
       name: 'CCW EOFY Sales Acceleration 2026',
-      organization: { slug: 'ccw' },
+      organizationId: organisation.id,
       deletedAt: null,
     },
     include: {
@@ -73,7 +79,7 @@ export default async function CcwEofyPackagePage() {
 
   const studioDraft = await prisma.studioContentDraft.findFirst({
     where: {
-      organizationId: campaign?.organizationId ?? '__missing__',
+      organizationId: organisation.id,
       clientSlug: 'ccw',
       metadata: { path: ['campaignSlug'], equals: CAMPAIGN_SLUG },
     },

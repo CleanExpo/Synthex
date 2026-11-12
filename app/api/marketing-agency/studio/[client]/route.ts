@@ -10,6 +10,13 @@
  * (g9 — no hardcoded client registry), then access is checked before any
  * organisation-scoped reads/writes.
  *
+ * SYN-1412: reading the board needs access to the organisation (the parent
+ * workspace counts); approving needs direct membership and an editor, admin or
+ * owner role. Who may approve is decided in one place,
+ * `resolveStudioApprovalAuthority`, which GET (`canApprove`, `approveRefusal`)
+ * and the POST gate both call. A read that fails while either rule is checked
+ * answers 503, never a refusal.
+ *
  * @module app/api/marketing-agency/studio/[client]/route
  */
 
@@ -19,8 +26,7 @@ import {
   APISecurityChecker,
   DEFAULT_POLICIES,
 } from '@/lib/security/api-security-checker';
-import { hasOrganizationAccess } from '@/lib/multi-business';
-import { hasDirectOrganizationAccess } from '@/lib/multi-business/business-scope';
+import { checkOrganizationAccess } from '@/lib/multi-business/business-scope';
 import { logger } from '@/lib/logger';
 import { trackError } from '@/lib/observability/error-tracker';
 import prisma from '@/lib/prisma';
@@ -32,6 +38,7 @@ import {
   InvalidClearanceError,
 } from '@/lib/marketing-agency/studio/approve-and-schedule';
 import { resolveStudioClient } from '@/lib/marketing-agency/studio/clients';
+import { resolveStudioApprovalAuthority } from '@/lib/marketing-agency/studio/approval-authority';
 
 export const runtime = 'nodejs';
 
@@ -70,7 +77,34 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
   const organizationId = organization.id;
 
   const userId = security.context.userId!;
-  const canAccessClient = await hasOrganizationAccess(userId, organizationId);
+  let canAccessClient: boolean;
+  try {
+    canAccessClient = await checkOrganizationAccess(userId, organizationId);
+  } catch (error) {
+    // A read that failed is not a refusal: say the check could not be made.
+    const code = 'STUDIO_ACCESS_CHECK_UNAVAILABLE';
+    logger.error('studio board access check failed', {
+      userId,
+      organizationId,
+      clientSlug: client,
+      code,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    trackError(error, {
+      operation: 'studio/board-access',
+      userId,
+      metadata: { organizationId, clientSlug: client, code },
+    });
+    return APISecurityChecker.createSecureResponse(
+      {
+        error:
+          'Access could not be checked just now. Reload the page to try again.',
+        code: 'STUDIO_ACCESS_CHECK_UNAVAILABLE' satisfies typeof code,
+      },
+      503,
+      security.context
+    );
+  }
   if (!canAccessClient) {
     return APISecurityChecker.createSecureResponse(
       { error: 'Forbidden' },
@@ -79,10 +113,23 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
     );
   }
   // The board may be read from the parent workspace; approving needs direct
-  // membership. Tell the client which of the two it holds, computed by the
-  // same function the POST gates on, so a button is never shown that the
-  // POST will refuse.
-  const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
+  // membership and an editor-or-above role. Tell the client whether it may
+  // approve, decided by the same function the POST gates on, so a button is
+  // never shown that the POST will refuse.
+  const authority = await resolveStudioApprovalAuthority(
+    userId,
+    organizationId
+  );
+  const approveRefusal = authority.allowed ? null : authority.code;
+  if (approveRefusal !== null) {
+    // The page hides the button, so a refused person never sends the POST
+    // that would have logged: this line is the only trace of a lost approve.
+    logger.info('studio approve refused', {
+      userId,
+      organizationId,
+      code: approveRefusal,
+    });
+  }
 
   try {
     // Review copies are signed on every read, so a link saved at load time
@@ -124,7 +171,8 @@ export async function GET(request: NextRequest, { params }: RouteCtx) {
         videoConfigured: studioClient.video !== null,
         configSource: studioClient.configSource,
         warnings: studioClient.warnings,
-        canApprove,
+        canApprove: authority.allowed,
+        approveRefusal,
         board,
         total: drafts.length,
       },
@@ -196,21 +244,68 @@ export async function POST(request: NextRequest, { params }: RouteCtx) {
 
   // Approving publishes on the organisation's behalf: the approver must belong
   // to THIS organisation (member, owner, or user), not merely to its parent
-  // workspace. Reading the board (GET) keeps the wider check.
+  // workspace, and hold an editor, admin or owner role there. Reading the
+  // board (GET) keeps the wider check.
   const userId = security.context.userId!;
-  const canApprove = await hasDirectOrganizationAccess(userId, organizationId);
-  if (!canApprove) {
-    // Distinguishable from the board's 403: this caller may be able to READ
-    // the board (parent workspace) and still not speak for the organisation.
-    return APISecurityChecker.createSecureResponse(
-      {
-        error:
-          'Approval requires membership of this organisation (its own member or an active business owner), not of its parent workspace',
-        organizationId,
-      },
-      403,
-      security.context
-    );
+  const authority = await resolveStudioApprovalAuthority(
+    userId,
+    organizationId
+  );
+  if (!authority.allowed) {
+    logger.warn('studio approve refused', {
+      userId,
+      organizationId,
+      reason: authority.reason,
+      code: authority.code,
+    });
+    // Each code is written out where it is answered, and checked against the
+    // code the authority module gives for that reason: a renamed or swapped
+    // code fails type-check.
+    switch (authority.reason) {
+      case 'not_member':
+        // Distinguishable from the board's 403: this caller may be able to
+        // READ the board (parent workspace) and still not speak for the
+        // organisation.
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'Approval requires membership of this organisation (its own member or an active business owner), not of its parent workspace',
+            organizationId,
+            code: 'STUDIO_APPROVE_NOT_ORG_MEMBER' satisfies typeof authority.code,
+          },
+          403,
+          security.context
+        );
+      case 'insufficient_role':
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'You can view this board. Approving needs an editor, admin or owner role in this organisation. An owner or admin of this organisation can change your role.',
+            code: 'STUDIO_APPROVE_ROLE_REQUIRED' satisfies typeof authority.code,
+          },
+          403,
+          security.context
+        );
+      case 'unavailable':
+        // A read failed and nothing that was read allows: not a refusal.
+        return APISecurityChecker.createSecureResponse(
+          {
+            error:
+              'Approval could not be checked just now. Reload the page to try again.',
+            code: 'STUDIO_APPROVE_CHECK_UNAVAILABLE' satisfies typeof authority.code,
+          },
+          503,
+          security.context
+        );
+      default: {
+        // A reason added to the union without a case here fails type-check;
+        // if one ever arrives at run time, nothing is approved.
+        const unhandled: never = authority;
+        throw new Error(
+          `Unhandled studio approval refusal: ${JSON.stringify(unhandled)}`
+        );
+      }
+    }
   }
 
   try {

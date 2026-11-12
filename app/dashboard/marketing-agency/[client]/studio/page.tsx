@@ -2,6 +2,7 @@
 
 import { use, useState } from 'react';
 import useSWR from 'swr';
+import type { StudioApprovalRefusalCode } from '@/lib/marketing-agency/studio/approval-authority';
 
 interface StudioDraft {
   id: string;
@@ -19,13 +20,72 @@ interface StudioBoard {
   displayName?: string;
   board: Record<string, StudioDraft[]>;
   total: number;
+  /** Whether this person may approve; decided by the server. */
+  canApprove?: boolean;
+  /** Why not, as a machine code; null when they may. */
+  approveRefusal?: string | null;
 }
 
-const fetcher = (url: string): Promise<StudioBoard> =>
-  fetch(url, { credentials: 'include' }).then(r => {
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    return r.json();
-  });
+/** A failed board read, with what the server answered. */
+interface BoardFetchError extends Error {
+  status?: number;
+  code?: string;
+}
+
+const fetcher = async (url: string): Promise<StudioBoard> => {
+  const res = await fetch(url, { credentials: 'include' });
+  if (!res.ok) {
+    // Keep the server's answer: its sentence, its status and its code.
+    const body = (await res.json().catch(() => null)) as {
+      error?: unknown;
+      code?: unknown;
+    } | null;
+    const failure: BoardFetchError = new Error(
+      typeof body?.error === 'string' ? body.error : `HTTP ${res.status}`
+    );
+    failure.status = res.status;
+    if (typeof body?.code === 'string') failure.code = body.code;
+    throw failure;
+  }
+  return res.json();
+};
+
+/**
+ * Retry only what may pass: a server fault (5xx) or a network error, which
+ * has no status. A 401, 403 or 404 is an answer, and asking again does not
+ * change it.
+ */
+const shouldRetryBoardRead = (failure: BoardFetchError): boolean =>
+  failure.status === undefined || failure.status >= 500;
+
+/** Why Approve is not offered, in words, for each code the server may give. */
+const REFUSAL_LINES = new Map<string, string>(
+  Object.entries({
+    STUDIO_APPROVE_ROLE_REQUIRED:
+      'You can view this board. Approving needs an editor, admin or owner role in this organisation. An owner or admin of this organisation can change your role.',
+    STUDIO_APPROVE_NOT_ORG_MEMBER:
+      'You can view this board from the parent workspace. Approving needs membership of this organisation itself. An owner or admin of this organisation can add you.',
+    STUDIO_APPROVE_CHECK_UNAVAILABLE:
+      'Approval could not be checked just now. Reload the page to try again.',
+  } satisfies Record<StudioApprovalRefusalCode, string>)
+);
+
+/**
+ * What is known about approving, which decides the button, the heading and
+ * the refusal line together: `pending` while the first load is in flight;
+ * `unknown` when the latest read failed, even if an earlier board is still
+ * held; `allowed` only when the server said so; otherwise `refused`.
+ */
+type ApproveState = 'pending' | 'unknown' | 'allowed' | 'refused';
+
+function approveStateOf(
+  data: StudioBoard | undefined,
+  error: unknown
+): ApproveState {
+  if (error) return 'unknown';
+  if (!data) return 'pending';
+  return data.canApprove === true ? 'allowed' : 'refused';
+}
 
 const COLUMNS: Array<{ key: string; label: string }> = [
   { key: 'awaiting_approval', label: 'Awaiting approval' },
@@ -85,10 +145,19 @@ export default function ClientStudioPage({
 }) {
   const { client } = use(params);
   const endpoint = `/api/marketing-agency/studio/${client}`;
-  const { data, error, isLoading, mutate } = useSWR<StudioBoard>(
-    endpoint,
-    fetcher
-  );
+  const { data, error, isLoading, mutate } = useSWR<
+    StudioBoard,
+    BoardFetchError
+  >(endpoint, fetcher, {
+    shouldRetryOnError: shouldRetryBoardRead,
+    errorRetryCount: 3,
+  });
+
+  const approveState = approveStateOf(data, error);
+  const refusalLine =
+    approveState === 'refused' && typeof data?.approveRefusal === 'string'
+      ? REFUSAL_LINES.get(data.approveRefusal)
+      : undefined;
 
   const [approveError, setApproveError] = useState<string | null>(null);
 
@@ -124,13 +193,23 @@ export default function ClientStudioPage({
         {data?.displayName ?? client} — Content Studio
       </h1>
       <p className="mt-1 text-sm text-slate-400">
-        Avatar + voice updates awaiting your sign-off. Nothing publishes to a
-        client surface without approval.
+        Avatar + voice updates awaiting{' '}
+        {approveState === 'allowed' ? 'your sign-off' : 'sign-off'}. Nothing
+        publishes to a client surface without approval.
       </p>
+      {refusalLine && (
+        <p role="status" className="mt-1 text-sm text-slate-400">
+          {refusalLine}
+        </p>
+      )}
 
       {isLoading && <p className="mt-6 text-slate-400">Loading…</p>}
       {error && (
-        <p className="mt-6 text-red-400">Failed to load the studio board.</p>
+        <p className="mt-6 text-red-400">
+          {error.code === 'STUDIO_ACCESS_CHECK_UNAVAILABLE'
+            ? error.message
+            : 'Failed to load the studio board.'}
+        </p>
       )}
       {approveError && (
         <p role="alert" className="mt-6 text-red-400">
@@ -178,15 +257,16 @@ export default function ClientStudioPage({
                       <p className="mt-1 whitespace-pre-line text-xs text-slate-400">
                         {draft.script}
                       </p>
-                      {col.key === 'awaiting_approval' && (
-                        <button
-                          type="button"
-                          onClick={() => approve(draft.id)}
-                          className="mt-3 rounded-md bg-orange-500 px-3 py-1 text-xs font-medium text-white hover:bg-orange-400"
-                        >
-                          Approve
-                        </button>
-                      )}
+                      {col.key === 'awaiting_approval' &&
+                        approveState === 'allowed' && (
+                          <button
+                            type="button"
+                            onClick={() => approve(draft.id)}
+                            className="mt-3 rounded-md bg-orange-500 px-3 py-1 text-xs font-medium text-white hover:bg-orange-400"
+                          >
+                            Approve
+                          </button>
+                        )}
                     </li>
                   ))}
                 </ul>

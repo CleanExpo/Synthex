@@ -11,7 +11,7 @@ export default function DashboardNotFound() {
     <DashboardEmptyState
       icon={FileQuestion}
       title="Page Not Found"
-      description="The page you're looking for doesn't exist or has been moved."
+      description="The page you're looking for doesn't exist, has been moved, or isn't available to your account."
       action={{
         label: 'Go to Dashboard',
         onClick: () => router.push('/dashboard'),

@@ -63,6 +63,11 @@
       "firstSeen": "5e4e9438"
     },
     {
+      "text": "- Error codes, `docs/api/error-codes.md`: 18 structured error codes, with HTTP status and meaning.",
+      "file": "public/llms.txt",
+      "firstSeen": "334d9131"
+    },
+    {
       "text": "- FEATURE_NOT_PROVISIONED: HTTP 503, unresolved - GA4_EDIT_CONSENT_REQUIRED: HTTP 403",
       "file": "public/llms.txt",
       "firstSeen": "dba7235d"
@@ -126,6 +131,11 @@
       "text": "- Routes that return 429 without a limiter this scan reads: 25; see docs/api/rate-limits.md",
       "file": "public/llms.txt",
       "firstSeen": "771c20a3"
+    },
+    {
+      "text": "- SERVICE_NOT_CONFIGURED: HTTP 501 - UNPRICEABLE_REQUEST: HTTP 422",
+      "file": "public/llms.txt",
+      "firstSeen": "537a1991"
     },
     {
       "text": "- SERVICE_NOT_CONFIGURED: HTTP 501 ## Rate limits",

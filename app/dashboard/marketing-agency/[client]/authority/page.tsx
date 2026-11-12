@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import { requireOrganisationPageAccess } from '@/lib/auth/page-access';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,10 +33,14 @@ function formatDate(value: Date | string | null | undefined): string {
 
 export default async function ClientAuthorityPackagePage({ params }: RouteCtx) {
   const { client } = await params;
+  const { organisation } = await requireOrganisationPageAccess(
+    client,
+    `/dashboard/marketing-agency/${encodeURIComponent(client)}/authority`
+  );
 
   const campaign = await prisma.marketingAgencyCampaign.findFirst({
     where: {
-      organization: { slug: client },
+      organizationId: organisation.id,
       metadata: { path: ['campaignFamily'], equals: 'portfolio-authority' },
     },
     orderBy: { updatedAt: 'desc' },
@@ -54,7 +59,7 @@ export default async function ClientAuthorityPackagePage({ params }: RouteCtx) {
   const appCampaign = await prisma.campaign.findFirst({
     where: {
       name: campaign.name,
-      organizationId: campaign.organizationId,
+      organizationId: organisation.id,
       deletedAt: null,
     },
     include: {
@@ -64,7 +69,7 @@ export default async function ClientAuthorityPackagePage({ params }: RouteCtx) {
 
   const studioDrafts = await prisma.studioContentDraft.findMany({
     where: {
-      organizationId: campaign.organizationId,
+      organizationId: organisation.id,
       clientSlug: client,
       metadata: { path: ['campaignFamily'], equals: 'portfolio-authority' },
     },
