@@ -3,8 +3,9 @@
 /**
  * Onboarding — Step 3: Connect Social Platforms
  *
- * Platform OAuth is Coming soon. Users can finish setup and connect later
- * from Dashboard → Platforms when the feature ships.
+ * Platform OAuth is not open yet. Users finish setup and see a labelled
+ * sample campaign on Home (SYN-1217); accounts connect later from
+ * Dashboard → Platforms.
  *
  * @module app/(onboarding)/onboarding/connect/page
  */
@@ -109,7 +110,7 @@ function ComingSoonBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm border-[0.5px] border-dashed border-white/15 bg-white/2 text-white/45">
       <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden />
-      <span className="text-xs font-medium tracking-wide">Coming soon</span>
+      <span className="text-xs font-medium tracking-wide">Not open yet</span>
     </span>
   );
 }
@@ -185,7 +186,7 @@ function ConnectPageInner() {
         setDetectedPlatforms(detected);
       }
     } catch {
-      // No pipeline cache — show all platforms as coming soon
+      // No pipeline cache — show all platforms as not open yet
     }
   }, []);
 
@@ -276,7 +277,11 @@ function ConnectPageInner() {
           <ol className="text-sm text-white/60 font-light space-y-1.5 list-decimal list-inside">
             <li>Finish setup — your workspace is ready.</li>
             <li>Optional: answer six questions for a 90-day marketing plan.</li>
-            <li>Open Home and write your first post.</li>
+            <li>
+              Open Home: a sample campaign shows what a finished week looks
+              like. It is invented, never posted, and you can hide it.
+            </li>
+            <li>Write your first post. Drafting never needs a connection.</li>
           </ol>
         </div>
 
@@ -284,12 +289,12 @@ function ConnectPageInner() {
           <Lock className="w-4 h-4 text-orange-400/80 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm text-white/70 font-light">
-              Platform connect — coming soon
+              Account connections are not open yet
             </p>
             <p className="text-xs text-white/35 mt-1 leading-relaxed">
-              OAuth linking is intentionally locked so nothing fakes a
-              successful connection. Finish onboarding and continue in Mission
-              Control.
+              We keep sign-in to social accounts switched off until it works end
+              to end, so nothing pretends to be connected. You do not need an
+              account to finish setup, read the sample campaign or write drafts.
             </p>
           </div>
         </div>
@@ -313,7 +318,7 @@ function ConnectPageInner() {
               Search & local presence
             </h2>
             <p className="text-xs text-white/35">
-              Also coming soon — optional SEO and GBP tools
+              Not open yet. Optional SEO and Google Business Profile tools.
             </p>
           </div>
 

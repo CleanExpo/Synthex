@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { DashboardThisWeekHome } from '@/components/dashboard/DashboardThisWeekHome';
 import type { DashboardStats } from '@/components/dashboard/types';
 
@@ -56,6 +56,15 @@ describe('DashboardThisWeekHome', () => {
     expect(screen.getByText('get-started')).toBeInTheDocument();
   });
 
+  it('shows the labelled sample campaign to a new user with no connection (SYN-1217)', async () => {
+    window.localStorage.clear();
+    render(<DashboardThisWeekHome stats={emptyStats} />);
+    await act(async () => {});
+    expect(
+      screen.getByText('Sample only, not posted anywhere')
+    ).toBeInTheDocument();
+  });
+
   it('shows booked and posted counts for a returning user', () => {
     render(
       <DashboardThisWeekHome
@@ -71,6 +80,9 @@ describe('DashboardThisWeekHome', () => {
     expect(screen.getByText('3 scheduled')).toBeInTheDocument();
     expect(screen.getByText('8 posts so far')).toBeInTheDocument();
     expect(screen.queryByText('get-started')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Sample only, not posted anywhere')
+    ).not.toBeInTheDocument();
   });
 
   it('lists failed posts on Home so approvals are not a new nav item', () => {
