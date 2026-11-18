@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { isInviteOnlyMode } from '@/lib/auth/invite-mode';
 import { HelpVideo } from '@/components/ui/HelpVideo';
+import { safeReturnPath, withReturnPath } from '@/lib/auth/safe-return-path';
 
 /** Shape of per-field validation details returned by the signup API */
 interface ValidationDetail {
@@ -52,6 +53,16 @@ export default function SignupPage() {
   const [resendStatus, setResendStatus] = useState<'idle' | 'sent' | 'error'>(
     'idle'
   );
+  // SYN-1215: a same-site ?redirect= (e.g. an invite link) survives sign-up.
+  // Read from window.location so this page needs no Suspense boundary.
+  const [returnPath, setReturnPath] = useState<string | null>(null);
+  useEffect(() => {
+    setReturnPath(
+      safeReturnPath(
+        new URLSearchParams(window.location.search).get('redirect')
+      )
+    );
+  }, []);
 
   // Countdown timer for rate limit cooldown
   useEffect(() => {
@@ -170,7 +181,11 @@ export default function SignupPage() {
       }
 
       toast.success('Account created successfully!');
-      router.push('/onboarding');
+      router.push(
+        safeReturnPath(
+          new URLSearchParams(window.location.search).get('redirect')
+        ) ?? '/onboarding'
+      );
     } catch {
       toast.error('Network error. Please check your connection and try again.');
     } finally {
@@ -734,7 +749,7 @@ export default function SignupPage() {
         <p className="text-center text-[10px] text-white/60 mt-5">
           Already have an account?{' '}
           <Link
-            href="/login"
+            href={withReturnPath('/login', returnPath)}
             className="text-amber-500/70 hover:text-amber-500/90 transition-colors"
           >
             Sign in

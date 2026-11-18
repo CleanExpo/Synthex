@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { HelpVideo } from '@/components/ui/HelpVideo';
+import { safeReturnPath, withReturnPath } from '@/lib/auth/safe-return-path';
 
 /** Map provider keys to human-readable display names */
 const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
@@ -33,6 +34,9 @@ function getProviderDisplayName(provider: string): string {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // SYN-1215: proxy.ts and the invite page send signed-out visitors here with
+  // ?redirect=<path>; only a same-site path is honoured.
+  const returnPath = safeReturnPath(searchParams.get('redirect'));
   const [isLoading, setIsLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState(false);
   const [accountExistsError, setAccountExistsError] = useState<{
@@ -176,7 +180,10 @@ function LoginContent() {
 
       toast.success('Welcome back!');
       router.push(
-        data.user?.onboardingComplete === true ? '/dashboard' : '/onboarding'
+        returnPath ??
+          (data.user?.onboardingComplete === true
+            ? '/dashboard'
+            : '/onboarding')
       );
     } catch {
       const msg = 'Login failed. Please check your connection and try again.';
@@ -510,7 +517,7 @@ function LoginContent() {
         <p className="mt-5 text-center text-[11px] text-sx-text-muted">
           Don&apos;t have an account?{' '}
           <Link
-            href="/signup"
+            href={withReturnPath('/signup', returnPath)}
             className="text-sx-accent transition-colors hover:text-sx-accent-hover"
           >
             Create one
