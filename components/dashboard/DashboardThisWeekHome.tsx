@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/dashboard/page-header';
 import { GetStartedChecklist } from '@/components/dashboard/get-started-checklist';
 import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
+import { SampleCampaignPanel } from '@/components/dashboard/SampleCampaignPanel';
 import type { DashboardStats } from '@/components/dashboard/types';
 import { DashboardAtmosphere, DashboardPanel } from './DashboardAtmosphere';
 import { useMemo } from 'react';
@@ -210,6 +211,12 @@ export function DashboardThisWeekHome({ stats }: DashboardThisWeekHomeProps) {
           </Link>
         </div>
       )}
+
+      <SampleCampaignPanel
+        organizationId={activeOrganizationId ?? null}
+        totalPosts={posted}
+        scheduledPosts={scheduled}
+      />
 
       <WelcomeCard
         connectedPlatforms={connected}

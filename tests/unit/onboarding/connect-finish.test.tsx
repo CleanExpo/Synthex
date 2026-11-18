@@ -65,7 +65,7 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
     window.sessionStorage.clear();
   });
 
-  it('completes with every channel Coming soon and navigates to the 90-day plan', async () => {
+  it('completes with every channel not open yet and navigates to the 90-day plan', async () => {
     global.fetch = jest.fn().mockImplementation((url: unknown) => {
       if (String(url).includes('/api/onboarding/complete')) {
         return Promise.resolve({
@@ -79,7 +79,8 @@ describe('Connect page — Finish setup (SYN-1216)', () => {
     render(<ConnectPage />);
     await settle();
 
-    expect(screen.getAllByText('Coming soon').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not open yet').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Coming soon')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /finish setup/i }));
     await settle();
 
