@@ -39,8 +39,11 @@ export function safeReturnPath(raw: string | null | undefined): string | null {
   }
   if (decodedPath.startsWith('//') || decodedPath.includes('\\')) return null;
 
+  // Match on the decoded, lower-cased path: Next.js routes the decoded path,
+  // so '/%6cogin' is /login and must not slip past as a different page.
+  const routePath = decodedPath.toLowerCase();
   const isBlocked = BLOCKED_PREFIXES.some(
-    p => url.pathname === p || url.pathname.startsWith(`${p}/`)
+    p => routePath === p || routePath.startsWith(`${p}/`)
   );
   if (isBlocked) return null;
 

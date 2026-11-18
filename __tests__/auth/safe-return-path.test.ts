@@ -30,6 +30,13 @@ describe('safeReturnPath', () => {
     ['/login?redirect=/dashboard'],
     ['/signup'],
     ['/api/auth/user'],
+    // Percent-encoded forms decode to the same route (Codex review, 57afaffe).
+    ['/%6cogin?redirect=/%6cogin'],
+    ['/%6C%6F%67%69%6E'],
+    ['/%73ignup'],
+    ['/%61pi/auth/user'],
+    ['/LOGIN'],
+    ['/%E0%A4%A'],
     ['/' + 'a'.repeat(2100)],
   ])('drops the unsafe or looping value %p', raw => {
     expect(safeReturnPath(raw as string | null | undefined)).toBeNull();
