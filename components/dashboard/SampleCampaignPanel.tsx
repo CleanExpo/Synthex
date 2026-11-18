@@ -43,12 +43,17 @@ export function SampleCampaignPanel({
   scheduledPosts: number;
 }) {
   const key = sampleCampaignDismissKey(organizationId);
-  // Start hidden until the browser choice is read, so a hidden sample never
-  // flashes back on load.
-  const [dismissed, setDismissed] = useState<boolean | null>(null);
+  // The choice is stored with the key it was read for. Until this
+  // organisation's choice is read (first load, or just after switching
+  // organisation) the panel stays hidden, so a hidden sample never flashes.
+  const [choice, setChoice] = useState<{
+    key: string;
+    dismissed: boolean;
+  } | null>(null);
+  const dismissed = choice?.key === key ? choice.dismissed : null;
 
   useEffect(() => {
-    setDismissed(readDismissed(key));
+    setChoice({ key, dismissed: readDismissed(key) });
   }, [key]);
 
   if (
@@ -64,7 +69,7 @@ export function SampleCampaignPanel({
     } catch {
       // Storage blocked: still hide for this visit.
     }
-    setDismissed(true);
+    setChoice({ key, dismissed: true });
   };
 
   return (
@@ -86,8 +91,8 @@ export function SampleCampaignPanel({
               {SAMPLE_CAMPAIGN.name}
             </h2>
             <p className="text-sm text-white/45 leading-relaxed">
-              This is what a finished week looks like in Synthex. The business (
-              {SAMPLE_CAMPAIGN.businessName}) and every post are invented. No
+              This is what a finished week looks like in Synthex. The business,{' '}
+              {SAMPLE_CAMPAIGN.businessName}, and every post are invented. No
               account is needed to read it, and nothing here can be scheduled or
               sent.
             </p>
