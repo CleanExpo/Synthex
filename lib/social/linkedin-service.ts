@@ -23,6 +23,7 @@ import {
   PlatformError,
 } from './base-platform-service';
 import { logger } from '@/lib/logger';
+import { linkedInAuthorUrn } from './linkedin-organization';
 
 // ============================================================================
 // LINKEDIN API RESPONSE TYPES
@@ -761,21 +762,24 @@ export class LinkedInService extends BasePlatformService {
       // - If platformUserId is a purely numeric string it is a LinkedIn organisation page ID
       //   (e.g. "112760720") and we post as that company page (requires w_organization_social).
       // - Otherwise we post as the authenticated member's personal profile.
+      // The URN rule has one owner: linkedInAuthorUrn (SYN-1144).
       let authorUrn: string;
       const storedUserId = this.credentials?.platformUserId;
-      if (storedUserId && /^\d+$/.test(storedUserId)) {
-        // Company page posting — use organisation URN
-        authorUrn = `urn:li:organization:${storedUserId}`;
-        logger.info('[linkedin] Posting as organisation', {
-          organizationUrn: authorUrn,
-        });
+      const storedAuthorUrn = linkedInAuthorUrn(storedUserId);
+      if (storedAuthorUrn) {
+        authorUrn = storedAuthorUrn;
+        if (authorUrn.startsWith('urn:li:organization:')) {
+          logger.info('[linkedin] Posting as organisation', {
+            organizationUrn: authorUrn,
+          });
+        }
       } else {
         // Personal profile posting. The OpenID scopes we request cannot read
         // the legacy /me endpoint (403 me.GET.NO_VERSION); the member id is
         // the OpenID `sub`, stored at connect time or read from /userinfo.
-        const memberId =
-          storedUserId ||
-          (await this.makeRequest<LinkedInUserInfoResponse>('/userinfo')).sub;
+        const memberId = (
+          await this.makeRequest<LinkedInUserInfoResponse>('/userinfo')
+        ).sub;
         if (!memberId) {
           throw new PlatformError('linkedin', 'LinkedIn member id unavailable');
         }

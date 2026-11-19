@@ -38,6 +38,26 @@ const EMPTY_RESOLUTION: LinkedInOrganizationResolution = {
   adminOrganizationIds: [],
 };
 
+/**
+ * The one rule for turning a stored LinkedIn connection profileId into the
+ * post author URN (SYN-1144). Every publish path calls this; none copies it.
+ *
+ * - a full `urn:li:` URN is used as stored;
+ * - a purely numeric id is a company page: `urn:li:organization:{id}`;
+ * - anything else is the OpenID member id: `urn:li:person:{id}`;
+ * - an empty id returns null so the caller fails closed instead of posting
+ *   under a malformed author.
+ */
+export function linkedInAuthorUrn(
+  profileId: string | null | undefined
+): string | null {
+  const id = profileId?.trim();
+  if (!id) return null;
+  if (id.startsWith('urn:li:')) return id;
+  if (/^\d+$/.test(id)) return `urn:li:organization:${id}`;
+  return `urn:li:person:${id}`;
+}
+
 /** True when the granted OAuth scope allows organisation publishing. */
 export function scopeGrantsOrganizationSocial(
   scope: string | null | undefined
