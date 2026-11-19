@@ -32,6 +32,7 @@ import { runSafetyChecks } from './safetyChecks';
 import { publishToInstagram } from './platformAdapters/instagram';
 import { publishToFacebook } from './platformAdapters/facebook';
 import { publishToLinkedIn } from './platformAdapters/linkedin';
+import { linkedInAuthorUrn } from '@/lib/social/linkedin-organization';
 import { publishToTwitter } from './platformAdapters/twitter';
 import { isTwitterOAuth2Connection } from '@/lib/social/twitter-oauth-credentials';
 import { publishToThreads } from './platformAdapters/threads';
@@ -244,10 +245,17 @@ export async function dispatchToPlatform(
       });
 
     case 'linkedin': {
-      // profileId for LinkedIn is the person/org ID; construct the URN
-      const authorUrn = profileId.startsWith('urn:li:')
-        ? profileId
-        : `urn:li:person:${profileId}`;
+      // SYN-1144: a numeric profileId is a company page and must post as
+      // urn:li:organization — building urn:li:person for it made LinkedIn
+      // reject every company-page post from this queue.
+      const authorUrn = linkedInAuthorUrn(profileId);
+      if (!authorUrn) {
+        return {
+          success: false,
+          error:
+            'LinkedIn connection has no profile id; reconnect LinkedIn or set the organisation id',
+        };
+      }
       return publishToLinkedIn({
         accessToken,
         authorUrn,
