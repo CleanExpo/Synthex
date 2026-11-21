@@ -18,13 +18,17 @@ import {
   classifyKey,
   createBrandVideoClient,
   createBrandVideoLogger,
+  BRAND_VIDEO_PUBLIC_ERROR_CODES,
   formatBrandVideoPreflight,
+  publicErrorSummary,
+  publicJobId,
   projectRefFromUrl,
   redactBrandVideoSecrets,
   resolveBrandVideoConfig,
   resolveBucket,
   runBrandVideoPreflight,
 } from '@/lib/brand-video/connection';
+import { BrandVideoQueueError } from '@/lib/brand-video/planner';
 
 const REF_A = 'fakeprojectaaaaaaaaa'; // 20 characters, like a real reference
 const REF_B = 'fakeprojectbbbbbbbbb';
@@ -430,6 +434,102 @@ describe('no value ever reaches output', () => {
       }
     }
     expect(column.length).toBeLessThanOrEqual(500);
+  });
+});
+
+describe('values that were never configured are withheld too', () => {
+  // Review round on 0997c21f9: the redactor removed only configured values, so
+  // an unrelated URL or reference in row or provider text reached the log.
+  const env = {
+    SUPABASE_URL: urlFor(REF_A),
+    SUPABASE_SERVICE_ROLE_KEY: SECRET,
+  };
+  const OTHER_URL = 'https://private.example/path?q=1';
+  const OTHER_REF = 'abcdabcdabcdabcdabcd';
+  const OTHER_HOST = `${REF_B}.supabase.co`;
+  const OTHER_JWT = fakeJwt({ ref: REF_B, role: 'service_role' });
+  const OTHER_SECRET = 'sb_secret_otherFAKEvalue1234';
+  const OTHER_PUBLISHABLE = 'sb_publishable_otherFAKEvalue1234';
+  const unconfigured = [
+    OTHER_URL,
+    OTHER_REF,
+    OTHER_HOST,
+    OTHER_JWT,
+    OTHER_SECRET,
+    OTHER_PUBLISHABLE,
+    REF_B,
+  ];
+  const text = `provider sent ${OTHER_URL} and project ${OTHER_REF} on ${OTHER_HOST} with ${OTHER_JWT}, ${OTHER_SECRET}, ${OTHER_PUBLISHABLE}`;
+
+  it('redacts them in the log, the error stream and the job error column', () => {
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    const logger = createBrandVideoLogger(
+      env,
+      l => stdout.push(l),
+      l => stderr.push(l)
+    );
+    logger.log(text);
+    logger.error(text);
+    const column = logger.forColumn(text);
+    for (const out of [stdout[0], stderr[0], column]) {
+      for (const v of unconfigured) expect(out).not.toContain(v);
+      expect(out).toContain('provider sent [redacted]');
+    }
+  });
+
+  it('keeps ordinary words, ids and counts readable', () => {
+    expect(
+      redactBrandVideoSecrets(
+        'Job 00000000-0000-4000-8000-000000000001: 12 beats, voiceover done',
+        env
+      )
+    ).toBe(
+      'Job 00000000-0000-4000-8000-000000000001: 12 beats, voiceover done'
+    );
+  });
+});
+
+describe('publicJobId and publicErrorSummary (what the public log may show)', () => {
+  it('shows a job id only when it is a UUID', () => {
+    const id = '00000000-0000-4000-8000-000000000001';
+    expect(publicJobId(id)).toBe(id);
+    expect(publicJobId(urlFor(REF_A))).toBe('(id withheld)');
+    expect(publicJobId(42)).toBe('(id withheld)');
+  });
+
+  it('shows a code from the closed set and never the message', () => {
+    const sensitive = `${urlFor(REF_A)} ${SECRET} abcdabcdabcdabcdabcd`;
+    const cases: Array<[unknown, string]> = [
+      [
+        new BrandVideoQueueError('QUEUE_READ_FAILED', sensitive, 'PGRST301'),
+        'QUEUE_READ_FAILED PGRST301',
+      ],
+      [
+        new BrandVideoQueueError('QUEUE_CLAIM_FAILED', sensitive, '40P01'),
+        'QUEUE_CLAIM_FAILED 40P01',
+      ],
+      [
+        new BrandVideoQueueError('STATUS_WRITE_FAILED', sensitive),
+        'STATUS_WRITE_FAILED',
+      ],
+      // A database code of any other shape is dropped, not shown.
+      [
+        new BrandVideoQueueError('QUEUE_READ_FAILED', sensitive, sensitive),
+        'QUEUE_READ_FAILED',
+      ],
+      [new BrandVideoConfigError(sensitive), 'CONFIG_INVALID'],
+      [new Error(sensitive), 'UNEXPECTED'],
+      [sensitive, 'UNEXPECTED'],
+    ];
+    for (const [err, want] of cases) {
+      const got = publicErrorSummary(err);
+      expect(got).toBe(want);
+      expect(BRAND_VIDEO_PUBLIC_ERROR_CODES).toContain(got.split(' ')[0]);
+    }
+    expect(publicErrorSummary(new Error(sensitive), 'RENDER_FAILED')).toBe(
+      'RENDER_FAILED'
+    );
   });
 });
 

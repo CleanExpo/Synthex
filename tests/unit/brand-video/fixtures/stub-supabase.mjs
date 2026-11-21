@@ -33,7 +33,12 @@ globalThis.fetch = async (input, init = {}) => {
     return json(scenario.buckets ?? []);
   }
   if (u.pathname === '/rest/v1/brand_video_jobs') {
-    if (method === 'GET') return json(scenario.queue ?? []);
+    if (method === 'GET') {
+      if (scenario.queueError) {
+        return json(scenario.queueError.body, scenario.queueError.status);
+      }
+      return json(scenario.queue ?? []);
+    }
     if (method === 'PATCH') {
       const body = JSON.parse(String(init.body ?? '{}'));
       if (body.status === 'rendering') {

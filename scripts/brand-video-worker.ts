@@ -80,6 +80,8 @@ import {
   createBrandVideoClient,
   createBrandVideoLogger,
   formatBrandVideoPreflight,
+  publicErrorSummary,
+  publicJobId,
   resolveBrandVideoConfig,
   runBrandVideoPreflight,
 } from '@/lib/brand-video/connection';
@@ -146,8 +148,10 @@ const STYLE_PROMPTS: Record<string, { positive: string; negative: string }> = {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 // Every line the worker writes, and every job error it stores, goes through
-// this one redacting logger: row fields and provider errors can carry text
-// the worker did not write, and this repository's Actions logs are public.
+// this one logger. This repository's Actions logs are public, so a public line
+// is composed only from fixed text, publicJobId() and publicErrorSummary():
+// never a row field or an error message, which can carry any text. The raw
+// message goes only to the job's private error column (out.forColumn).
 const out = createBrandVideoLogger(process.env);
 const log = out.log;
 
@@ -337,7 +341,7 @@ async function processJob(
   job: BrandVideoJob,
   bucket: string
 ): Promise<void> {
-  log(`Job ${job.id}: ${job.brand} / ${job.style}`);
+  log(`Job ${publicJobId(job.id)}`);
   const jobDir = path.join(WORK_DIR, job.id);
   const imgDir = path.join(jobDir, 'images');
   ensureDir(imgDir);
@@ -406,10 +410,12 @@ async function processJob(
     });
     // The public URL contains the project address; the row holds it, the
     // public log does not.
-    log(`  Done: job ${job.id} output_url set.`);
+    log(`  Done: job ${publicJobId(job.id)} output_url set.`);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    log(`  ERROR: ${message}`);
+    log(
+      `  ERROR: job ${publicJobId(job.id)} failed (${publicErrorSummary(err, 'RENDER_FAILED')}); detail is in its error column.`
+    );
     await setJobStatus(supabase, job.id, {
       status: 'failed',
       error: out.forColumn(message),
@@ -450,8 +456,8 @@ async function main(): Promise<void> {
 }
 
 main().catch(err => {
-  // Database and provider errors are relayed, with any configured address or
-  // key removed first: this repository's workflow logs are public.
-  out.error(err instanceof Error ? (err.stack ?? err.message) : String(err));
+  // The public log shows a code from a closed set, never the message:
+  // database and provider text can carry anything.
+  out.error(`brand-video-worker: stopped (${publicErrorSummary(err)}).`);
   process.exit(1);
 });

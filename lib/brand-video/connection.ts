@@ -24,6 +24,7 @@
  * question it cannot answer is answered "no", never "yes".
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { BrandVideoQueueError } from '@/lib/brand-video/planner';
 
 /** The bucket that exists in the Synthex project (singular). */
 export const DEFAULT_BRAND_VIDEO_BUCKET = 'brand-video';
@@ -276,10 +277,26 @@ export function brandVideoPreflightPassed(r: BrandVideoPreflight): boolean {
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
+ * Shapes of the values this worker must never show, configured or not: any
+ * URL, a Supabase host without a scheme, a JWT-shaped key, an sb_ key, and a
+ * 20-character project-reference-shaped token.
+ */
+const SENSITIVE_SHAPES: RegExp[] = [
+  /\b[a-z][a-z0-9+.-]*:\/\/[^\s'"<>`]+/gi,
+  /\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.supabase\.(?:co|in|com)\b/gi,
+  /\beyJ[\w-]*\.[\w-]+\.[\w-]+/g,
+  /\bsb_(?:secret|publishable)_[\w-]+/gi,
+  /\b[a-z0-9]{20}\b/g,
+];
+
+/**
  * Replace every configured URL, project reference, key and bucket name in
- * `text`. The bucket is matched as a whole name only, so 'brand-video' is
- * removed from "Bucket brand-video not found" but 'brand-video-worker' is
- * left alone.
+ * `text`, then every value of a sensitive shape (SENSITIVE_SHAPES). The bucket
+ * is matched as a whole name only, so 'brand-video' is removed from "Bucket
+ * brand-video not found" but 'brand-video-worker' is left alone.
+ *
+ * This is the second line of defence. The first is that the public log never
+ * carries text the worker did not compose (createBrandVideoLogger).
  */
 export function redactBrandVideoSecrets(
   text: string,
@@ -299,14 +316,62 @@ export function redactBrandVideoSecrets(
     new RegExp(`(?<![\\w-])${escapeRegExp(bucket)}(?![\\w-])`, 'g'),
     '[redacted]'
   );
+  for (const shape of SENSITIVE_SHAPES) out = out.replace(shape, '[redacted]');
   return out;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A job id for the public log: a UUID as stored, anything else withheld. */
+export function publicJobId(id: unknown): string {
+  return typeof id === 'string' && UUID.test(id) ? id : '(id withheld)';
+}
+
+/** Every error summary the public log can show. */
+export const BRAND_VIDEO_PUBLIC_ERROR_CODES = [
+  'QUEUE_READ_FAILED',
+  'QUEUE_CLAIM_FAILED',
+  'STATUS_WRITE_FAILED',
+  'CONFIG_INVALID',
+  'RENDER_FAILED',
+  'UNEXPECTED',
+] as const;
+export type BrandVideoPublicErrorCode =
+  (typeof BRAND_VIDEO_PUBLIC_ERROR_CODES)[number];
+
+/** A PostgREST (PGRST123) or Postgres (SQLSTATE, five characters) error code. */
+const DB_CODE = /^(?:PGRST\d{3}|[0-9A-Z]{5})$/;
+
+/**
+ * The only description of an error the public log shows: a code from a closed
+ * set, plus the database error code when it has that exact shape. Never the
+ * message, which can carry text from the database or a provider.
+ */
+export function publicErrorSummary(
+  err: unknown,
+  fallback: BrandVideoPublicErrorCode = 'UNEXPECTED'
+): string {
+  if (err instanceof BrandVideoQueueError) {
+    const db =
+      typeof err.dbCode === 'string' && DB_CODE.test(err.dbCode)
+        ? ` ${err.dbCode}`
+        : '';
+    return `${err.code}${db}`;
+  }
+  if (err instanceof BrandVideoConfigError) return 'CONFIG_INVALID';
+  return fallback;
 }
 
 /**
  * The worker's only way to write to stdout, stderr or a job's `error` column.
- * Every line passes through redactBrandVideoSecrets, so text from the
- * database (row fields) or a provider (error messages) cannot carry a
- * configured value into the public Actions log or the queue.
+ *
+ * Public log (stdout, stderr; this repository's Actions logs are public): the
+ * worker passes only text it composed itself from fixed words, publicJobId and
+ * publicErrorSummary, never a row field or an error message. Every line is
+ * also run through redactBrandVideoSecrets as a second line of defence.
+ *
+ * Job error column (private, in the database): the raw message, redacted the
+ * same way and cut to 500 characters, so an operator can see what failed.
  */
 export function createBrandVideoLogger(
   env: Env = process.env,
@@ -322,7 +387,7 @@ export function createBrandVideoLogger(
     error(message: string): void {
       err(`${redactBrandVideoSecrets(message, env)}\n`);
     },
-    /** Redacted and cut to the column's 500-character budget. */
+    /** For the private job error column only: redacted, at most 500 characters. */
     forColumn(message: string): string {
       return redactBrandVideoSecrets(message, env).slice(0, 500);
     },

@@ -33,7 +33,23 @@ function fakeJwt(ref: string): string {
 }
 const KEY = fakeJwt(REF);
 const KEY_OTHER = fakeJwt(OTHER);
-const SENTINELS = [REF, OTHER, URL_A, KEY, KEY_OTHER, 'entrypointsentinelsig'];
+// Values never configured anywhere, carried in row and provider text.
+const UNCONFIGURED = [
+  'https://private.example/path',
+  'abcdabcdabcdabcdabcd',
+  'sb_secret_unconfiguredFAKE0000',
+];
+const SENTINELS = [
+  REF,
+  OTHER,
+  URL_A,
+  KEY,
+  KEY_OTHER,
+  'entrypointsentinelsig',
+  // Plain row text with no sensitive shape: only the allow-list keeps it out.
+  'rowtextsentinel',
+  ...UNCONFIGURED,
+];
 
 const BUCKETS = [{ id: 'brand-video', name: 'brand-video', public: true }];
 
@@ -155,8 +171,9 @@ describeOrSkip('brand-video worker entrypoint (stubbed network)', () => {
 
   const job = {
     id: '00000000-0000-4000-8000-000000000001',
-    // Row text the worker did not write, carrying configured values.
-    brand: `${URL_A} ${KEY}`,
+    // Row text the worker did not write, carrying configured and
+    // unconfigured values.
+    brand: `${URL_A} ${KEY} ${UNCONFIGURED.join(' ')} rowtextsentinel`,
     style: REF,
     topic: '',
     count: 1,
@@ -173,8 +190,31 @@ describeOrSkip('brand-video worker entrypoint (stubbed network)', () => {
       statusRows: [],
     });
     expect(r.code).toBe(1);
-    expect(r.output).toMatch(/0 rows changed, expected 1/);
+    // The public log names the failure by code, never by message.
+    expect(r.output).toMatch(/failed \(STATUS_WRITE_FAILED\)/);
+    expect(r.output).toMatch(/stopped \(STATUS_WRITE_FAILED\)\./);
     expect(r.output).not.toMatch(/Done:/);
+    expectNoSentinel(r.output);
+  });
+
+  it('names a failed queue read by code and withholds the database message', () => {
+    const r = runWorker(['--loop'], GOOD, {
+      buckets: BUCKETS,
+      queueError: {
+        status: 401,
+        body: {
+          code: 'PGRST301',
+          message: `Invalid API key for ${UNCONFIGURED.join(' ')} ${URL_A}`,
+        },
+      },
+    });
+    expect(r.code).toBe(1);
+    expect(r.output).toMatch(/stopped \(QUEUE_READ_FAILED PGRST301\)\./);
+    expect(r.output).not.toMatch(/Invalid API key/);
+    expect(r.requests).toEqual([
+      'GET /storage/v1/bucket',
+      'GET /rest/v1/brand_video_jobs',
+    ]);
     expectNoSentinel(r.output);
   });
 

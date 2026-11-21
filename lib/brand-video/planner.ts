@@ -46,6 +46,31 @@ export function toBeats(topic: string): string[] {
     .filter(beat => /[\p{L}\p{N}]/u.test(beat));
 }
 
+/** What went wrong, from a closed set: the only error detail the public log shows. */
+export type BrandVideoErrorCode =
+  | 'QUEUE_READ_FAILED'
+  | 'QUEUE_CLAIM_FAILED'
+  | 'STATUS_WRITE_FAILED';
+
+/**
+ * A queue failure. `message` carries the database's own text and may hold
+ * anything, so it is stored only in the job's private error column; the public
+ * log shows `code` and, when it has the database error-code shape, `dbCode`.
+ */
+export class BrandVideoQueueError extends Error {
+  constructor(
+    readonly code: BrandVideoErrorCode,
+    message: string,
+    readonly dbCode?: string
+  ) {
+    super(message);
+    this.name = 'BrandVideoQueueError';
+  }
+}
+
+const dbCodeOf = (error: { code?: unknown }): string | undefined =>
+  typeof error.code === 'string' ? error.code : undefined;
+
 /**
  * Minimal shape of the query client this module needs. The worker injects its
  * own client; tests supply a fake.
@@ -77,8 +102,10 @@ export async function claimJob(
   // and slept while the queue backed up. Only the lost-update race may return
   // null; everything else has to surface.
   if (selectError) {
-    throw new Error(
-      `Failed to read the Brand Video queue: ${selectError.message}`
+    throw new BrandVideoQueueError(
+      'QUEUE_READ_FAILED',
+      `Failed to read the Brand Video queue: ${selectError.message}`,
+      dbCodeOf(selectError)
     );
   }
 
@@ -97,8 +124,10 @@ export async function claimJob(
     .maybeSingle();
 
   if (claimError) {
-    throw new Error(
-      `Failed to claim Brand Video job ${job.id}: ${claimError.message}`
+    throw new BrandVideoQueueError(
+      'QUEUE_CLAIM_FAILED',
+      `Failed to claim Brand Video job ${job.id}: ${claimError.message}`,
+      dbCodeOf(claimError)
     );
   }
 
@@ -129,13 +158,16 @@ export async function setJobStatus(
     .select('id');
 
   if (error) {
-    throw new Error(
-      `Failed to set Brand Video job ${jobId} to ${patch.status}: ${error.message}`
+    throw new BrandVideoQueueError(
+      'STATUS_WRITE_FAILED',
+      `Failed to set Brand Video job ${jobId} to ${patch.status}: ${error.message}`,
+      dbCodeOf(error)
     );
   }
   const rows = Array.isArray(data) ? data.length : 0;
   if (rows !== 1) {
-    throw new Error(
+    throw new BrandVideoQueueError(
+      'STATUS_WRITE_FAILED',
       `Failed to set Brand Video job ${jobId} to ${patch.status}: ${rows} rows changed, expected 1`
     );
   }
