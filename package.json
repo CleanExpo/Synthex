@@ -322,7 +322,8 @@
     },
     "node-polyfill-webpack-plugin": "4.1.0",
     "jsdom": "27.3.0",
-    "@asamuzakjp/css-color": "4.0.5"
+    "@asamuzakjp/css-color": "4.0.5",
+    "basic-ftp": "^6.2.4"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
