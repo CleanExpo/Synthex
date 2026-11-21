@@ -13,7 +13,8 @@
  *  - no exit-at-startup stub for the removed client;
  *  - client and bucket come from lib/brand-video/connection.ts (bucket default
  *    'brand-video', not the old 'brand-videos' that does not exist);
- *  - the preflight runs before the queue is read;
+ *  - output only through the redacting logger, status only through
+ *    setJobStatus, and the worker is the only importer of the connection;
  *  - the workflow schedule is on, with a preflight step before the render.
  */
 import * as fs from 'fs';
@@ -42,14 +43,9 @@ describe('Brand Video worker wiring', () => {
     expect(worker).not.toMatch(/process\.env\.BRAND_VIDEO_BUCKET/);
   });
 
-  it('runs the preflight before the first queue read', () => {
-    const main = worker.slice(worker.indexOf('async function main('));
-    const preflightAt = main.indexOf('runBrandVideoPreflight(');
-    const claimAt = main.indexOf('claimJob(');
-    expect(preflightAt).toBeGreaterThan(-1);
-    expect(claimAt).toBeGreaterThan(preflightAt);
-    expect(main.indexOf('brandVideoPreflightPassed(')).toBeLessThan(claimAt);
-  });
+  // Preflight-before-queue and voice-id-after-preflight are behaviours, proven
+  // in worker-entrypoint.test.ts by running the worker. Source-order checks
+  // for them were removed: they stayed green under a `false &&` bypass.
 
   it('writes output only through the redacting logger', () => {
     // A direct console or stdout write would bypass redaction of row fields
@@ -63,17 +59,6 @@ describe('Brand Video worker wiring', () => {
     // setJobStatus requires exactly one changed row (job-status.test.ts).
     expect(worker).toMatch(/setJobStatus\(supabase, job\.id/);
     expect(worker).not.toMatch(/\.update\(/);
-  });
-
-  it('resolves the voice id after the preflight-only exit, not at import', () => {
-    const main = worker.slice(worker.indexOf('async function main('));
-    const beforeMain = worker.slice(0, worker.indexOf('async function main('));
-    expect(beforeMain).not.toMatch(/resolveElevenLabsVoiceId\(\)/);
-    const preflightOnly = main.indexOf("includes('--preflight')");
-    const voice = main.indexOf('resolveElevenLabsVoiceId()');
-    expect(preflightOnly).toBeGreaterThan(-1);
-    expect(voice).toBeGreaterThan(preflightOnly);
-    expect(main.indexOf('claimJob(')).toBeGreaterThan(voice);
   });
 
   it('keeps the shared client retired outside the worker path', () => {

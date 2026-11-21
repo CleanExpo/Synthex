@@ -20,7 +20,6 @@ import * as path from 'path';
 import { pathToFileURL } from 'url';
 
 const ROOT = path.resolve(__dirname, '../../..');
-const TSX = path.join(ROOT, 'node_modules/tsx/dist/cli.mjs');
 const PRELOAD = path.join(__dirname, 'fixtures/stub-supabase.mjs');
 
 const REF = 'fakeentrypointaaaaaa';
@@ -38,16 +37,16 @@ const SENTINELS = [REF, OTHER, URL_A, KEY, KEY_OTHER, 'entrypointsentinelsig'];
 
 const BUCKETS = [{ id: 'brand-video', name: 'brand-video', public: true }];
 
-// The worker loads .env.local (override) and .env from the repository root.
-// With either present, real values would replace the fake ones; the stub would
-// then refuse the real host, but the results would no longer test this code.
-const envFile = ['.env', '.env.local'].find(f =>
-  fs.existsSync(path.join(ROOT, f))
-);
-const describeOrSkip = envFile && !process.env.CI ? describe.skip : describe;
-if (envFile && process.env.CI) {
-  throw new Error(`${envFile} exists at the repository root in CI`);
+// The worker loads .env.local from the repository root with override, so its
+// values would replace the fake ones below (.env is loaded without override
+// and cannot). The stub would then refuse the real host, so nothing real is
+// contacted, but the results would no longer test this code: skip locally,
+// fail in CI, where no job writes the file.
+const hasEnvLocal = fs.existsSync(path.join(ROOT, '.env.local'));
+if (hasEnvLocal && process.env.CI) {
+  throw new Error('.env.local exists at the repository root in CI');
 }
+const describeOrSkip = hasEnvLocal ? describe.skip : describe;
 
 interface Run {
   code: number | null;
@@ -66,7 +65,9 @@ function runWorker(
   try {
     const r = spawnSync(
       process.execPath,
-      [TSX, 'scripts/brand-video-worker.ts', ...args],
+      // The tsx loader, not the tsx CLI: the CLI opens an IPC socket, which
+      // sandboxed runners refuse (EPERM in the round-2 review sandbox).
+      ['--import', 'tsx', 'scripts/brand-video-worker.ts', ...args],
       {
         cwd: ROOT,
         timeout: 90_000,
