@@ -6,9 +6,9 @@
  *
  * The worker is an ESM entrypoint that runs main() on import, so it cannot be
  * imported here (see worker-semantics.test.ts). Its behaviour is proven by
- * running it against a stub; these assertions pin the wiring that the
- * founder's 22/11/2026 ruling restored, so a later change cannot quietly
- * switch it off again:
+ * worker-entrypoint.test.ts, which runs it against a stub; a source check
+ * cannot catch a behavioural bypass such as `false && …`. These assertions are
+ * cheap tripwires on the wiring that the founder's 22/11/2026 ruling restored:
  *
  *  - no exit-at-startup stub for the removed client;
  *  - client and bucket come from lib/brand-video/connection.ts (bucket default
