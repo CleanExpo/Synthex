@@ -51,6 +51,31 @@ describe('Brand Video worker wiring', () => {
     expect(main.indexOf('brandVideoPreflightPassed(')).toBeLessThan(claimAt);
   });
 
+  it('writes output only through the redacting logger', () => {
+    // A direct console or stdout write would bypass redaction of row fields
+    // and provider errors in this public repository's Actions log.
+    expect(worker).toMatch(/createBrandVideoLogger\(/);
+    expect(worker).not.toMatch(/console\.(log|error|warn|info)\(/);
+    expect(worker).not.toMatch(/process\.(stdout|stderr)\.write\(/);
+  });
+
+  it('records final status through setJobStatus, never a bare update', () => {
+    // setJobStatus requires exactly one changed row (job-status.test.ts).
+    expect(worker).toMatch(/setJobStatus\(supabase, job\.id/);
+    expect(worker).not.toMatch(/\.update\(/);
+  });
+
+  it('resolves the voice id after the preflight-only exit, not at import', () => {
+    const main = worker.slice(worker.indexOf('async function main('));
+    const beforeMain = worker.slice(0, worker.indexOf('async function main('));
+    expect(beforeMain).not.toMatch(/resolveElevenLabsVoiceId\(\)/);
+    const preflightOnly = main.indexOf("includes('--preflight')");
+    const voice = main.indexOf('resolveElevenLabsVoiceId()');
+    expect(preflightOnly).toBeGreaterThan(-1);
+    expect(voice).toBeGreaterThan(preflightOnly);
+    expect(main.indexOf('claimJob(')).toBeGreaterThan(voice);
+  });
+
   it('keeps the shared client retired outside the worker path', () => {
     // Only the worker may import the reinstated connection module.
     const importers = (dir: string): string[] =>

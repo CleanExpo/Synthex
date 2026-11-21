@@ -124,8 +124,35 @@ export function classifyKey(key: string | undefined): BrandVideoKeyInfo {
 }
 
 /**
- * The worker's configuration. Throws BrandVideoConfigError when a variable is
- * missing or the two URL variables point at different places.
+ * The one canonical form of a project address: `https://<ref>.supabase.co`.
+ * A URL with a path, query, port or credentials, or one that is not a hosted
+ * project, has no canonical form (null) and is refused.
+ */
+function canonicalProjectUrl(url: string): string | null {
+  const ref = projectRefFromUrl(url);
+  if (!ref) return null;
+  const parsed = new URL(url);
+  if (
+    (parsed.pathname !== '/' && parsed.pathname !== '') ||
+    parsed.search ||
+    parsed.hash ||
+    parsed.port ||
+    parsed.username ||
+    parsed.password
+  ) {
+    return null;
+  }
+  return `https://${ref}.supabase.co`;
+}
+
+/**
+ * The worker's configuration, and the single rule for whether it is usable:
+ * the preflight calls this too, so the preflight can never pass a
+ * configuration the render step then refuses.
+ *
+ * Throws BrandVideoConfigError when a variable is missing, a URL is not a
+ * plain hosted project address, or the two URL variables name different
+ * projects. Messages name variables, never values.
  */
 export function resolveBrandVideoConfig(
   env: Env = process.env
@@ -136,16 +163,22 @@ export function resolveBrandVideoConfig(
       'NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL is required'
     );
   }
-  if (new Set(urls.map(u => u.replace(/\/+$/, ''))).size > 1) {
+  const canonical = urls.map(canonicalProjectUrl);
+  if (canonical.some(u => u === null)) {
     throw new BrandVideoConfigError(
-      'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_URL point at different addresses'
+      'the Supabase URL must be a plain https://<project>.supabase.co address'
+    );
+  }
+  if (new Set(canonical).size > 1) {
+    throw new BrandVideoConfigError(
+      'NEXT_PUBLIC_SUPABASE_URL and SUPABASE_URL point at different projects'
     );
   }
   const key = read(env, 'SUPABASE_SERVICE_ROLE_KEY');
   if (!key) {
     throw new BrandVideoConfigError('SUPABASE_SERVICE_ROLE_KEY is required');
   }
-  return { url: urls[0], key, bucket: resolveBucket(env) };
+  return { url: canonical[0] as string, key, bucket: resolveBucket(env) };
 }
 
 type ClientFactory = typeof createClient;
@@ -177,10 +210,11 @@ export interface BrandVideoPreflight {
 /**
  * Answer the three preflight questions. Never throws; every failure is "no".
  *
- * Same project: every URL variable that is set names the same hosted project,
- * a JWT key's `ref` claim names that project too, and the project accepts the
- * key (an authenticated bucket listing succeeds). An `sb_secret_` key has no
- * `ref` claim, so for it the accepted listing is the whole proof.
+ * Same project: the configuration resolves (resolveBrandVideoConfig, the same
+ * rule the render step uses), a JWT key's `ref` claim names the configured
+ * project, and the project accepts the key (an authenticated bucket listing
+ * succeeds). An `sb_secret_` key has no `ref` claim, so for it the accepted
+ * listing is the whole proof.
  */
 export async function runBrandVideoPreflight(
   env: Env = process.env,
@@ -193,33 +227,30 @@ export async function runBrandVideoPreflight(
   };
 
   try {
-    const key = read(env, 'SUPABASE_SERVICE_ROLE_KEY');
-    const info = classifyKey(key);
+    const info = classifyKey(read(env, 'SUPABASE_SERVICE_ROLE_KEY'));
     result.privilegedKey =
       info.kind === 'service_role' || info.kind === 'secret';
 
-    const refs = configuredUrls(env).map(projectRefFromUrl);
-    const urlRef =
-      refs.length > 0 && refs.every(r => r !== null && r === refs[0])
-        ? refs[0]
-        : null;
+    let config: BrandVideoConfig;
+    try {
+      config = resolveBrandVideoConfig(env);
+    } catch {
+      return result;
+    }
+    const urlRef = projectRefFromUrl(config.url);
     const refsAgree =
       urlRef !== null && (info.kind === 'secret' || info.ref === urlRef);
+    if (!refsAgree || !result.privilegedKey) return result;
 
-    if (!key || !urlRef || !refsAgree || !result.privilegedKey) return result;
-
-    const client = createBrandVideoClient(
-      { url: configuredUrls(env)[0], key, bucket: resolveBucket(env) },
-      factory,
-      { fetch: fetchWithTimeout(PROBE_TIMEOUT_MS) }
-    );
+    const client = createBrandVideoClient(config, factory, {
+      fetch: fetchWithTimeout(PROBE_TIMEOUT_MS),
+    });
     const { data, error } = await client.storage.listBuckets();
     if (error || !Array.isArray(data)) return result;
 
     result.sameProject = true;
-    const bucket = resolveBucket(env);
     result.bucketExists = data.some(
-      b => b?.name === bucket || b?.id === bucket
+      b => b?.name === config.bucket || b?.id === config.bucket
     );
   } catch {
     // A probe that throws answers nothing; the defaults stay "no".
@@ -242,10 +273,13 @@ export function brandVideoPreflightPassed(r: BrandVideoPreflight): boolean {
   return r.sameProject && r.privilegedKey && r.bucketExists;
 }
 
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 /**
- * Replace any configured URL, key or project reference in `text` before it is
- * logged or stored, for messages the worker did not write itself (provider
- * and database errors).
+ * Replace every configured URL, project reference, key and bucket name in
+ * `text`. The bucket is matched as a whole name only, so 'brand-video' is
+ * removed from "Bucket brand-video not found" but 'brand-video-worker' is
+ * left alone.
  */
 export function redactBrandVideoSecrets(
   text: string,
@@ -260,5 +294,37 @@ export function redactBrandVideoSecrets(
   for (const v of values.sort((a, b) => b.length - a.length)) {
     out = out.split(v).join('[redacted]');
   }
+  const bucket = resolveBucket(env);
+  out = out.replace(
+    new RegExp(`(?<![\\w-])${escapeRegExp(bucket)}(?![\\w-])`, 'g'),
+    '[redacted]'
+  );
   return out;
+}
+
+/**
+ * The worker's only way to write to stdout, stderr or a job's `error` column.
+ * Every line passes through redactBrandVideoSecrets, so text from the
+ * database (row fields) or a provider (error messages) cannot carry a
+ * configured value into the public Actions log or the queue.
+ */
+export function createBrandVideoLogger(
+  env: Env = process.env,
+  out: (line: string) => void = line => process.stdout.write(line),
+  err: (line: string) => void = line => process.stderr.write(line),
+  now: () => Date = () => new Date()
+) {
+  const stamp = () => now().toISOString().slice(11, 19);
+  return {
+    log(message: string): void {
+      out(`[${stamp()}] ${redactBrandVideoSecrets(message, env)}\n`);
+    },
+    error(message: string): void {
+      err(`${redactBrandVideoSecrets(message, env)}\n`);
+    },
+    /** Redacted and cut to the column's 500-character budget. */
+    forColumn(message: string): string {
+      return redactBrandVideoSecrets(message, env).slice(0, 500);
+    },
+  };
 }

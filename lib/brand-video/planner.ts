@@ -104,3 +104,39 @@ export async function claimJob(
 
   return (claimed as BrandVideoJob) ?? null;
 }
+
+/** The fields the worker may set when a job finishes or fails. */
+export interface BrandVideoJobStatusPatch {
+  status: 'done' | 'failed';
+  output_url?: string | null;
+  error?: string | null;
+}
+
+/**
+ * Record a job's final status. Exactly one row must change: a query error and
+ * a zero-row update (the row was deleted or its id is wrong) both throw, so a
+ * status write that did not happen can never be logged as done (SYN-1145).
+ */
+export async function setJobStatus(
+  platform: JobQueueClient,
+  jobId: string,
+  patch: BrandVideoJobStatusPatch
+): Promise<void> {
+  const { data, error } = await platform
+    .from('brand_video_jobs')
+    .update({ ...patch, updated_at: new Date().toISOString() })
+    .eq('id', jobId)
+    .select('id');
+
+  if (error) {
+    throw new Error(
+      `Failed to set Brand Video job ${jobId} to ${patch.status}: ${error.message}`
+    );
+  }
+  const rows = Array.isArray(data) ? data.length : 0;
+  if (rows !== 1) {
+    throw new Error(
+      `Failed to set Brand Video job ${jobId} to ${patch.status}: ${rows} rows changed, expected 1`
+    );
+  }
+}

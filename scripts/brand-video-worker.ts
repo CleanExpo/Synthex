@@ -72,13 +72,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   toBeats,
   claimJob,
+  setJobStatus,
   type BrandVideoJob,
 } from '@/lib/brand-video/planner';
 import {
   brandVideoPreflightPassed,
   createBrandVideoClient,
+  createBrandVideoLogger,
   formatBrandVideoPreflight,
-  redactBrandVideoSecrets,
   resolveBrandVideoConfig,
   runBrandVideoPreflight,
 } from '@/lib/brand-video/connection';
@@ -95,8 +96,10 @@ dotenv.config({ path: path.join(ROOT_DIR, '.env') });
 const WORK_DIR = path.join(ROOT_DIR, 'tmp', 'brand-video');
 
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
-// Fails closed: throws at startup when the key is set but no voice id is.
-const ELEVEN_VOICE_ID = ELEVEN_API_KEY ? resolveElevenLabsVoiceId() : undefined;
+// Fails closed: main() resolves this before the first job is claimed and
+// throws when the key is set but no voice id is. It is not resolved at import,
+// so `--preflight` answers its three questions whatever the voice settings.
+let ELEVEN_VOICE_ID: string | undefined;
 
 // Per-style image prompt tokens — mirrors .claude/skills/brand-video/styles.md.
 const STYLE_PROMPTS: Record<string, { positive: string; negative: string }> = {
@@ -142,10 +145,11 @@ const STYLE_PROMPTS: Record<string, { positive: string; negative: string }> = {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function log(message: string): void {
-  const ts = new Date().toISOString().slice(11, 19);
-  process.stdout.write(`[${ts}] ${message}\n`);
-}
+// Every line the worker writes, and every job error it stores, goes through
+// this one redacting logger: row fields and provider errors can carry text
+// the worker did not write, and this repository's Actions logs are public.
+const out = createBrandVideoLogger(process.env);
+const log = out.log;
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -328,24 +332,6 @@ async function stitch(
 
 // ── Job lifecycle ──────────────────────────────────────────────────────────
 
-async function finish(
-  supabase: SupabaseClient,
-  jobId: string,
-  patch: { status: string; output_url?: string | null; error?: string | null }
-): Promise<void> {
-  // A failed status write must not look like success: the job would sit in
-  // 'rendering' while the log said it finished.
-  const { error } = await supabase
-    .from('brand_video_jobs')
-    .update({ ...patch, updated_at: new Date().toISOString() })
-    .eq('id', jobId);
-  if (error) {
-    throw new Error(
-      `Failed to set Brand Video job ${jobId} to ${patch.status}: ${error.message}`
-    );
-  }
-}
-
 async function processJob(
   supabase: SupabaseClient,
   job: BrandVideoJob,
@@ -359,7 +345,7 @@ async function processJob(
   try {
     const beats = toBeats(job.topic);
     if (beats.length === 0) {
-      await finish(supabase, job.id, {
+      await setJobStatus(supabase, job.id, {
         status: 'failed',
         error: 'Empty topic',
       });
@@ -371,7 +357,7 @@ async function processJob(
     log(`  Voiceover (${beats.length} beats)...`);
     const voiced = await generateVoiceover(job.topic, audioPath);
     if (!voiced) {
-      await finish(supabase, job.id, {
+      await setJobStatus(supabase, job.id, {
         status: 'failed',
         error: 'Voiceover failed — check ELEVENLABS_API_KEY',
       });
@@ -414,7 +400,7 @@ async function processJob(
       .from(bucket)
       .getPublicUrl(objectPath);
 
-    await finish(supabase, job.id, {
+    await setJobStatus(supabase, job.id, {
       status: 'done',
       output_url: pub.publicUrl,
     });
@@ -422,13 +408,11 @@ async function processJob(
     // public log does not.
     log(`  Done: job ${job.id} output_url set.`);
   } catch (err) {
-    const message = redactBrandVideoSecrets(
-      err instanceof Error ? err.message : String(err)
-    );
+    const message = err instanceof Error ? err.message : String(err);
     log(`  ERROR: ${message}`);
-    await finish(supabase, job.id, {
+    await setJobStatus(supabase, job.id, {
       status: 'failed',
-      error: message.slice(0, 500),
+      error: out.forColumn(message),
     });
   }
 }
@@ -442,12 +426,14 @@ async function main(): Promise<void> {
   const preflight = await runBrandVideoPreflight(process.env);
   for (const line of formatBrandVideoPreflight(preflight)) log(line);
   if (!brandVideoPreflightPassed(preflight)) {
-    console.error(
+    out.error(
       'brand-video-worker: preflight failed. Nothing was read or rendered.'
     );
     process.exit(1);
   }
   if (process.argv.includes('--preflight')) return;
+
+  ELEVEN_VOICE_ID = ELEVEN_API_KEY ? resolveElevenLabsVoiceId() : undefined;
 
   const config = resolveBrandVideoConfig(process.env);
   const supabase = createBrandVideoClient(config);
@@ -466,7 +452,6 @@ async function main(): Promise<void> {
 main().catch(err => {
   // Database and provider errors are relayed, with any configured address or
   // key removed first: this repository's workflow logs are public.
-  const text = err instanceof Error ? (err.stack ?? err.message) : String(err);
-  console.error(redactBrandVideoSecrets(text));
+  out.error(err instanceof Error ? (err.stack ?? err.message) : String(err));
   process.exit(1);
 });

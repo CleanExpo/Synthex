@@ -17,6 +17,7 @@ import {
   brandVideoPreflightPassed,
   classifyKey,
   createBrandVideoClient,
+  createBrandVideoLogger,
   formatBrandVideoPreflight,
   projectRefFromUrl,
   redactBrandVideoSecrets,
@@ -265,6 +266,83 @@ describe('runBrandVideoPreflight', () => {
   });
 });
 
+describe('preflight and render step share one configuration rule', () => {
+  // A preflight that passes a configuration the render step then refuses
+  // would let the scheduled run fail after reporting three yes answers.
+  const variants: Array<[string, Record<string, string>]> = [
+    ['one plain URL', { SUPABASE_URL: urlFor(REF_A) }],
+    ['trailing slash', { SUPABASE_URL: `${urlFor(REF_A)}/` }],
+    [
+      'both URLs, same project',
+      {
+        NEXT_PUBLIC_SUPABASE_URL: urlFor(REF_A),
+        SUPABASE_URL: `${urlFor(REF_A)}/`,
+      },
+    ],
+    [
+      'same project, upper-case host',
+      {
+        NEXT_PUBLIC_SUPABASE_URL: urlFor(REF_A)
+          .toUpperCase()
+          .replace('HTTPS', 'https'),
+        SUPABASE_URL: urlFor(REF_A),
+      },
+    ],
+    [
+      'same project, one URL with a path',
+      {
+        NEXT_PUBLIC_SUPABASE_URL: urlFor(REF_A),
+        SUPABASE_URL: `${urlFor(REF_A)}/rest`,
+      },
+    ],
+    ['URL with a port', { SUPABASE_URL: `${urlFor(REF_A)}:8443` }],
+    ['URL with a query', { SUPABASE_URL: `${urlFor(REF_A)}?x=1` }],
+    [
+      'two projects',
+      { NEXT_PUBLIC_SUPABASE_URL: urlFor(REF_A), SUPABASE_URL: urlFor(REF_B) },
+    ],
+  ];
+
+  it.each(variants)(
+    '%s: preflight passes exactly when the config resolves',
+    async (_name, urls) => {
+      const env = { ...urls, SUPABASE_SERVICE_ROLE_KEY: SECRET };
+      let resolves = true;
+      try {
+        resolveBrandVideoConfig(env);
+      } catch {
+        resolves = false;
+      }
+      const { factory } = fakeFactory(bucketsOk);
+      const passed = brandVideoPreflightPassed(
+        await runBrandVideoPreflight(env, factory)
+      );
+      expect(passed).toBe(resolves);
+    }
+  );
+
+  it('refuses a URL with a path, which the old preflight passed', async () => {
+    const env = {
+      NEXT_PUBLIC_SUPABASE_URL: urlFor(REF_A),
+      SUPABASE_URL: `${urlFor(REF_A)}/rest`,
+      SUPABASE_SERVICE_ROLE_KEY: SECRET,
+    };
+    const { factory } = fakeFactory(bucketsOk);
+    const r = await runBrandVideoPreflight(env, factory);
+    expect(r.sameProject).toBe(false);
+    expect(() => resolveBrandVideoConfig(env)).toThrow(BrandVideoConfigError);
+  });
+
+  it('hands the client the canonical project address', () => {
+    expect(
+      resolveBrandVideoConfig({
+        SUPABASE_URL: `${urlFor(REF_A)}/`,
+        SUPABASE_SERVICE_ROLE_KEY: SECRET,
+      }).url
+    ).toBe(urlFor(REF_A));
+  });
+});
+
 describe('no value ever reaches output', () => {
   const sentinels = [
     REF_A,
@@ -301,6 +379,57 @@ describe('no value ever reaches output', () => {
     for (const s of [REF_A, urlFor(REF_A), SECRET])
       expect(out).not.toContain(s);
     expect(out).toContain('[redacted]');
+  });
+
+  it('redacts the bucket name as a whole name, not inside a longer word', () => {
+    const env = { BRAND_VIDEO_BUCKET: 'brand-video' };
+    expect(redactBrandVideoSecrets('Bucket brand-video not found', env)).toBe(
+      'Bucket [redacted] not found'
+    );
+    expect(redactBrandVideoSecrets("bucket 'brand-video'.", env)).toBe(
+      "bucket '[redacted]'."
+    );
+    expect(
+      redactBrandVideoSecrets('brand-video-worker: preflight failed', env)
+    ).toBe('brand-video-worker: preflight failed');
+    // The default bucket is redacted too when the variable is unset.
+    expect(redactBrandVideoSecrets('no brand-video here', {})).toBe(
+      'no [redacted] here'
+    );
+  });
+
+  it('routes every log line, error line and stored job error through redaction', () => {
+    // Row fields and provider errors are text the worker did not write. A
+    // sentinel placed in each must not reach stdout, stderr or the column.
+    const env = {
+      SUPABASE_URL: urlFor(REF_A),
+      SUPABASE_SERVICE_ROLE_KEY: SERVICE_A,
+      BRAND_VIDEO_BUCKET: 'brand-video',
+    };
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    const logger = createBrandVideoLogger(
+      env,
+      l => stdout.push(l),
+      l => stderr.push(l),
+      () => new Date('2026-11-22T01:02:03Z')
+    );
+    const rowBrand = `${urlFor(REF_A)} ${SERVICE_A}`;
+    logger.log(`Job job-1: ${rowBrand} / ${REF_A}`);
+    logger.error(
+      `Storage upload failed: Bucket brand-video not found ${SERVICE_A}`
+    );
+    const column = logger.forColumn(
+      `provider said ${SERVICE_A} ${'x'.repeat(600)}`
+    );
+
+    expect(stdout[0]).toMatch(/^\[01:02:03\] Job job-1: /);
+    for (const text of [...stdout, ...stderr, column]) {
+      for (const s of [...sentinels, 'brand-video ']) {
+        expect(text).not.toContain(s);
+      }
+    }
+    expect(column.length).toBeLessThanOrEqual(500);
   });
 });
 
