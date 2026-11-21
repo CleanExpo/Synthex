@@ -28,21 +28,28 @@
  *
  * Status lifecycle: queued -> rendering -> done | failed
  *
- * CURRENTLY DISABLED: steps 1 and 5 need the removed Supabase client, so the
- * worker exits 1 at startup (see getSupabase()).
+ * Database: the queue and the upload use the Supabase client from
+ * lib/brand-video/connection.ts, reinstated for this worker only by the
+ * founder's 22/11/2026 ruling (SYN-1145, DECISIONS A-24). Before it touches
+ * the queue the worker runs a preflight that prints only yes or no for: the
+ * address and key belong to the same project, the key is a service-role or
+ * sb_secret_ key, and the bucket exists. Any "no" exits 1 with nothing read.
  *
  * Usage:
- *   npx tsx scripts/brand-video-worker.ts            # claim + render one job
- *   npx tsx scripts/brand-video-worker.ts --loop     # keep claiming until empty
+ *   npx tsx scripts/brand-video-worker.ts              # claim + render one job
+ *   npx tsx scripts/brand-video-worker.ts --loop       # keep claiming until empty
+ *   npx tsx scripts/brand-video-worker.ts --preflight  # preflight only, then exit
  *
  * Required env:
- *   DATABASE_URL (or SUPABASE_URL)
- *   DATABASE_URL
+ *   NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL — the Synthex project URL (if both
+ *                                 are set they must name the same project)
+ *   SUPABASE_SERVICE_ROLE_KEY     — that project's service-role or sb_secret_ key
  *   ELEVENLABS_API_KEY            — voiceover (job fails without it)
- *   BRAND_VIDEO_BUCKET           — Supabase Storage bucket for finished mp4s
+ * Optional env:
+ *   BRAND_VIDEO_BUCKET           — Storage bucket for finished mp4s
+ *                                 (default 'brand-video')
  *   (image generation env — STABILITY_API_KEY / OPENAI_API_KEY / GEMINI_API_KEY /
  *   fal keys — is owned by lib/services/ai/image-generation.ts, not this worker)
- * Optional env:
  *   ELEVENLABS_VOICE_ID          — voice (required with the key; no default voice)
  */
 
@@ -61,11 +68,20 @@ import {
 } from '@/lib/ai/generation-context';
 import { fetchImageAsBase64 } from '@/lib/services/media/fetch-image-base64';
 import { resolveElevenLabsVoiceId } from './lib/elevenlabs-voice';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   toBeats,
   claimJob,
   type BrandVideoJob,
 } from '@/lib/brand-video/planner';
+import {
+  brandVideoPreflightPassed,
+  createBrandVideoClient,
+  formatBrandVideoPreflight,
+  redactBrandVideoSecrets,
+  resolveBrandVideoConfig,
+  runBrandVideoPreflight,
+} from '@/lib/brand-video/connection';
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -81,8 +97,6 @@ const WORK_DIR = path.join(ROOT_DIR, 'tmp', 'brand-video');
 const ELEVEN_API_KEY = process.env.ELEVENLABS_API_KEY;
 // Fails closed: throws at startup when the key is set but no voice id is.
 const ELEVEN_VOICE_ID = ELEVEN_API_KEY ? resolveElevenLabsVoiceId() : undefined;
-
-const BRAND_VIDEO_BUCKET = process.env.BRAND_VIDEO_BUCKET || 'brand-videos';
 
 // Per-style image prompt tokens — mirrors .claude/skills/brand-video/styles.md.
 const STYLE_PROMPTS: Record<string, { positive: string; negative: string }> = {
@@ -135,18 +149,6 @@ function log(message: string): void {
 
 function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-// The job queue (brand_video_jobs) and the mp4 upload both went through the
-// Supabase client, which has been removed; brand_video_jobs has no Prisma model
-// (the /api/brand-video routes answer FEATURE_NOT_PROVISIONED). Exit 1 before
-// claiming or rendering anything rather than pretend a job ran.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getSupabase(): any {
-  console.error(
-    'brand-video-worker: requires the removed Supabase client (brand_video_jobs queue + Storage upload). Nothing was rendered.'
-  );
-  process.exit(1);
 }
 
 // toBeats and claimJob live in lib/brand-video/planner.ts so they can be tested
@@ -327,19 +329,27 @@ async function stitch(
 // ── Job lifecycle ──────────────────────────────────────────────────────────
 
 async function finish(
-  supabase: ReturnType<typeof getSupabase>,
+  supabase: SupabaseClient,
   jobId: string,
   patch: { status: string; output_url?: string | null; error?: string | null }
 ): Promise<void> {
-  await supabase
+  // A failed status write must not look like success: the job would sit in
+  // 'rendering' while the log said it finished.
+  const { error } = await supabase
     .from('brand_video_jobs')
     .update({ ...patch, updated_at: new Date().toISOString() })
     .eq('id', jobId);
+  if (error) {
+    throw new Error(
+      `Failed to set Brand Video job ${jobId} to ${patch.status}: ${error.message}`
+    );
+  }
 }
 
 async function processJob(
-  supabase: ReturnType<typeof getSupabase>,
-  job: BrandVideoJob
+  supabase: SupabaseClient,
+  job: BrandVideoJob,
+  bucket: string
 ): Promise<void> {
   log(`Job ${job.id}: ${job.brand} / ${job.style}`);
   const jobDir = path.join(WORK_DIR, job.id);
@@ -390,10 +400,10 @@ async function processJob(
     await stitch(imagePaths, audioPath, outPath, jobDir);
 
     // 5. Upload to Supabase Storage + finish
-    log(`  Uploading to bucket '${BRAND_VIDEO_BUCKET}'...`);
+    log('  Uploading to the Brand Video bucket...');
     const objectPath = `${job.id}/final-1080p.mp4`;
     const { error: upErr } = await supabase.storage
-      .from(BRAND_VIDEO_BUCKET)
+      .from(bucket)
       .upload(objectPath, fs.readFileSync(outPath), {
         contentType: 'video/mp4',
         upsert: true,
@@ -401,16 +411,20 @@ async function processJob(
     if (upErr) throw new Error(`Storage upload failed: ${upErr.message}`);
 
     const { data: pub } = supabase.storage
-      .from(BRAND_VIDEO_BUCKET)
+      .from(bucket)
       .getPublicUrl(objectPath);
 
     await finish(supabase, job.id, {
       status: 'done',
       output_url: pub.publicUrl,
     });
-    log(`  Done -> ${pub.publicUrl}`);
+    // The public URL contains the project address; the row holds it, the
+    // public log does not.
+    log(`  Done: job ${job.id} output_url set.`);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = redactBrandVideoSecrets(
+      err instanceof Error ? err.message : String(err)
+    );
     log(`  ERROR: ${message}`);
     await finish(supabase, job.id, {
       status: 'failed',
@@ -423,7 +437,20 @@ async function processJob(
 
 async function main(): Promise<void> {
   const loop = process.argv.includes('--loop');
-  const supabase = getSupabase();
+
+  // Preflight before anything reads the queue. It prints yes or no only.
+  const preflight = await runBrandVideoPreflight(process.env);
+  for (const line of formatBrandVideoPreflight(preflight)) log(line);
+  if (!brandVideoPreflightPassed(preflight)) {
+    console.error(
+      'brand-video-worker: preflight failed. Nothing was read or rendered.'
+    );
+    process.exit(1);
+  }
+  if (process.argv.includes('--preflight')) return;
+
+  const config = resolveBrandVideoConfig(process.env);
+  const supabase = createBrandVideoClient(config);
   ensureDir(WORK_DIR);
 
   do {
@@ -432,11 +459,14 @@ async function main(): Promise<void> {
       log('No queued jobs.');
       break;
     }
-    await processJob(supabase, job);
+    await processJob(supabase, job, config.bucket);
   } while (loop);
 }
 
 main().catch(err => {
-  console.error(err);
+  // Database and provider errors are relayed, with any configured address or
+  // key removed first: this repository's workflow logs are public.
+  const text = err instanceof Error ? (err.stack ?? err.message) : String(err);
+  console.error(redactBrandVideoSecrets(text));
   process.exit(1);
 });
