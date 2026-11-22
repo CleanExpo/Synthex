@@ -7,13 +7,12 @@ name: Brand Video Render
 
 on:
   workflow_dispatch:
-  # Schedule disabled (SYN-1070 fallout): scripts/brand-video-worker.ts:149 calls
-  # requireEnv() with no argument (process.env[undefined] -> exit 1) AND its DB client
-  # is the removed Supabase stub, so every scheduled run has FAILED since 2026-08-18,
-  # burning ~288 Actions runs/day and drowning real CI signal. Re-enable only after the
-  # worker is repaired (real client + valid requireEnv call) or the feature is removed.
-  # schedule:
-  #   - cron: '*/5 * * * *'
+  # Re-enabled by SYN-1145 (founder ruling 22/11/2026, "Bring it back"): the worker
+  # has a real client again (lib/brand-video/connection.ts) and a yes/no preflight
+  # that stops a run before the queue is read when the address, key or bucket is
+  # wrong. The schedule was off from SYN-1070 because every run failed.
+  schedule:
+    - cron: '*/5 * * * *'
 
 # Don't overlap renders; let an in-flight run finish.
 concurrency:
@@ -48,13 +47,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Prints yes or no only, never a value. Fails before the queue is read.
+      - name: Preflight (same project, privileged key, bucket exists)
+        run: npx tsx scripts/brand-video-worker.ts --preflight
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BRAND_VIDEO_BUCKET: ${{ secrets.BRAND_VIDEO_BUCKET }}
+
       - name: Render queued jobs
         run: npx tsx scripts/brand-video-worker.ts --loop
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
-          # Provide whichever you created — the worker accepts either name.
+          # Either URL name works; when both are set they must name the same project.
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
