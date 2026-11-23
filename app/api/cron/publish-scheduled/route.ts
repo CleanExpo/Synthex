@@ -37,6 +37,10 @@ import { CAMPAIGN_AUTHORITY_MANIFEST_KEY } from '@/lib/marketing-agency/campaign
 import { ensureCampaignAuthorityManifest } from '@/lib/marketing-agency/minimal-authority-manifest';
 import { assertCampaignPublishable } from '@/lib/marketing-agency/publish-gate';
 import {
+  checkPostPublishApproval,
+  heldForApprovalMetadata,
+} from '@/lib/approvals/post-publish-approval';
+import {
   claimPostForPublish,
   releasePostClaim,
   reclaimStalePublishingPosts,
@@ -460,6 +464,61 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
           `Post blocked on ${platform}`,
           'Your scheduled post requires an approved campaign authority manifest before publishing.',
           { postId: post.id, platform, blockers: publishGate.blockers }
+        );
+
+        blocked++;
+        results.push({
+          id: post.id,
+          platform,
+          status: 'blocked',
+          error: errorMessage,
+        });
+        continue;
+      }
+
+      // -- Guard: the approval still covers this wording (SYN-1256) ----------
+      // Checked against the row this run is about to send (text, platform,
+      // images, link). An edit after the final approval, by any writer, or a
+      // bound approval that is not final, holds the post in pending_approval;
+      // approving the current wording puts it back in the queue. A failed
+      // lookup throws into the catch below, so it never publishes.
+      const approvalVerdict = await checkPostPublishApproval(post);
+      if (approvalVerdict.kind === 'held') {
+        const errorMessage =
+          approvalVerdict.reason === 'approved_content_changed'
+            ? 'The post changed after it was approved; it needs approval again'
+            : 'The post is waiting for its approval to finish';
+        logger.warn(`[publish-scheduled] Post ${post.id}: ${errorMessage}`, {
+          approvalId: approvalVerdict.approvalId,
+          reason: approvalVerdict.reason,
+        });
+
+        await prisma.post.update({
+          where: { id: post.id },
+          data: {
+            status: 'pending_approval',
+            metadata: jsonSafe(
+              heldForApprovalMetadata(
+                {
+                  ...metadata,
+                  [CAMPAIGN_AUTHORITY_MANIFEST_KEY]: authorityManifest,
+                },
+                approvalVerdict,
+                new Date().toISOString()
+              )
+            ),
+          },
+        });
+        await createNotification(
+          userId,
+          'post_approval_required',
+          `Post held on ${platform}`,
+          `Your scheduled post was not published: ${errorMessage}.`,
+          {
+            postId: post.id,
+            platform,
+            blockers: [approvalVerdict.reason],
+          }
         );
 
         blocked++;

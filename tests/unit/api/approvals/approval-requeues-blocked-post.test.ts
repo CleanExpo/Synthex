@@ -113,6 +113,12 @@ const mockPrisma: Record<string, any> = {
           }
         : null;
     },
+    // SYN-1256: the cron reads the post's latest approval request.
+    findFirst: async ({ where }: { where: Row }) =>
+      [...mockDb.approvals.values()]
+        .filter(row => mockMatches(row, where))
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .map(row => mockClone(row))[0] ?? null,
     update: async ({ where, data }: { where: Row; data: Row }) => {
       const row = mockDb.approvals.get(where.id)!;
       Object.assign(row, mockClone(data), { updatedAt: new Date() });

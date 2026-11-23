@@ -348,7 +348,7 @@ Routes grouped by prefix. Format: `METHOD /api/path — auth — _models_`
 - `GET /api/cron/gsc-monitor` — cron — _gSCProperty,gSCSnapshot,notification,user_
 - `GET /api/cron/health-score` — cron
 - `GET /api/cron/proactive-insights` — cron — _analyticsEvent,notification,platformMetrics,subscription,userHealthScore,userStreak_
-- `GET /api/cron/publish-scheduled` — cron — _notification,platformConnection,platformPost,post_
+- `GET /api/cron/publish-scheduled` — cron — _approvalRequest,notification,platformConnection,platformPost,post_
 - `GET /api/cron/refresh-tokens` — cron — _notification,platformConnection_
 - `GET /api/cron/revalidate-api-keys` — cron — _aPICredential_
 - `GET /api/cron/seo-audits` — cron — _sEOAudit_
@@ -732,8 +732,8 @@ Both routes use the existing `APISecurityChecker` authenticated read/write polic
 
 ### scheduler
 
-- `DELETE,GET,PATCH,POST /api/scheduler/posts` — user — _campaign,post_
-- `DELETE,GET,PATCH /api/scheduler/posts/[postId]` — user — _post_
+- `DELETE,GET,PATCH,POST /api/scheduler/posts` — user — _approvalRequest,campaign,post_
+- `DELETE,GET,PATCH /api/scheduler/posts/[postId]` — user — _approvalRequest,post_
 - `GET /api/scheduler/stats` — user — _campaign,post_
 - `POST /api/scheduler/posts/bulk` — user — _post_
 
