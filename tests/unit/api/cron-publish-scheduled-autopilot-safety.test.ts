@@ -34,6 +34,8 @@ const mockPrisma = {
   platformConnection: { findFirst: jest.fn() },
   notification: { create: jest.fn() },
   platformPost: { create: jest.fn() },
+  // SYN-1256: the cron reads the post's latest approval request. None here.
+  approvalRequest: { findFirst: async () => null },
 };
 jest.mock('@/lib/prisma', () => ({
   __esModule: true,

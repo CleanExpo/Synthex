@@ -124,6 +124,7 @@ import { getScheduleConnectionWarnings } from '@/lib/social/connection-warnings'
 import { logger } from '@/lib/logger';
 import { getRedisClient } from '@/lib/redis-client';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
+import { approvalHoldForEdit } from '@/lib/approvals/post-publish-approval';
 
 const SCHEDULER_POSTS_CACHE_TTL = 60; // seconds
 
@@ -541,6 +542,18 @@ export async function PATCH(request: NextRequest) {
 
     if (data.status === 'published') {
       updatePayload.publishedAt = new Date();
+    }
+
+    // SYN-1256: an approved post whose wording this edit changes is held
+    // until the new wording is approved, instead of staying scheduled.
+    const hold = await approvalHoldForEdit(
+      existingPost!,
+      data,
+      new Date().toISOString()
+    );
+    if (hold) {
+      updatePayload.status = hold.status;
+      updatePayload.metadata = hold.metadata;
     }
 
     const post = await prisma.post.update({

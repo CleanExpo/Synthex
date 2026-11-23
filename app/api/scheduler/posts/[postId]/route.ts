@@ -18,6 +18,7 @@ import {
 } from '@/lib/security/api-security-checker';
 import { getEffectiveOrganizationId } from '@/lib/multi-business/business-scope';
 import { invalidatePostStats } from '@/lib/cache/invalidate-stats';
+import { approvalHoldForEdit } from '@/lib/approvals/post-publish-approval';
 import { logger } from '@/lib/logger';
 
 /**
@@ -238,6 +239,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         : null;
     }
     if (data.metadata !== undefined) updatePayload.metadata = data.metadata;
+
+    // SYN-1256: an approved post whose wording this edit changes is held
+    // until the new wording is approved, instead of staying scheduled.
+    const hold = await approvalHoldForEdit(
+      existingPost,
+      data,
+      new Date().toISOString()
+    );
+    if (hold) {
+      updatePayload.status = hold.status;
+      updatePayload.metadata = hold.metadata;
+    }
 
     // Update post
     const updatedPost = await prisma.post.update({
